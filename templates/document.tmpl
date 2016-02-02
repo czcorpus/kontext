@@ -194,13 +194,13 @@ define('conf', [], function () {
 
 <header id="topbar">
     <div class="navig-wrapper">
-        <a id="logo-wrapper" href="$theme.logo_href"><img id="logo-image" class="over-img"
-            src="$theme.logo_path"
-            alt="Kontext logo"
-            title="$theme.logo_title"
-            style="$theme.logo_inline_css"
-            data-alt-img="$theme.logo_mouseover_path" /></a>
         <div id="menu-bar">
+            <a id="logo-wrapper" href="$theme.logo_href"><img id="logo-image" class="over-img"
+                src="$theme.logo_path"
+                alt="Kontext logo"
+                title="$theme.logo_title"
+                style="$theme.logo_inline_css"
+                data-alt-img="$theme.logo_mouseover_path" /></a>
             <ul id="menu-level-1">
                 <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
                     <ul class="submenu">
@@ -217,7 +217,6 @@ define('conf', [], function () {
                         <li class="$menu_status('menu-corpora:new-subcorpus')"><a title="$_('Create new subcorpus')" href="${root_url}subcorpus/subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
                     </ul>
                 </li>
-                <li class="separator">&nbsp;</li>
                 <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger">$_("Save")</a>
                     <ul class="submenu">
                         #set $i = 0
@@ -310,28 +309,6 @@ define('conf', [], function () {
                 </li>
             </ul>
         </div>
-
-        #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
-        <div id="corpus-citation-box">
-            <h3>$_('How to cite the corpus')</h3>
-            <h4>#filter None#$($_('Corpus <em class="corpname">%s</em> as a language resource') % $human_corpname)#end filter#:</h4>
-            #filter None# $citation_info.default_ref #end filter#
-
-            #if len($citation_info.article_ref) > 0
-                <h4>$_('Reference(s)'):</h4>
-                <ul>
-                #for $article_item in $citation_info.article_ref
-                    <li>#filter None# $article_item #end filter#</li>
-                #end for
-                </ul>
-            #end if
-
-            #if $citation_info.other_bibliography
-            <h4>$_('General references'):</h4>
-            #filter None# $citation_info.other_bibliography #end filter#
-            #end if
-        </div>
-        #end if
 
         #if $corpname
         #block state_navigation
@@ -499,37 +476,18 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 #def query_overview_bar()
 <section class="corpus-and-query">
 
-#if $human_corpname
-<div id="active-corpus">
-    <strong>$_('Corpus'):</strong>
-    <a id="corpus-desc-link" class="corpus-desc" href="#"
-    title="$_('click for details')">$human_corpname</a>#if $usesubcorp#<span class="subcorpus" title="$_('subcorpus')">:$usesubcorp</span>#end if#
-    | <span class="corp-size-information">
-    <strong>$_('Size'):</strong>
-    #filter None
-    #if $usesubcorp
-        <span>#filter $FloatFormatter#$subcorp_size#end filter#</span>
-        ($($_('of total %s) positions') % $human_corpsize())
-    #else
-        $($_('<span>%s</span> positions') % $human_corpsize())
-        <a id="positions-help-link" class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" />
-        </a>
-    #end if
-    #end filter
-    </span>
-    #if $varExists('citation_info') and 'default_ref' in $citation_info and $citation_info.default_ref
-    | <span id="corpus-citation-link">
-        <a>$_('How to cite the corpus')?</a>
-    </span>
-    #end if
-</div>
-#end if
-
 <ul id="query-overview-bar">
+    #if $human_corpname
+    <li id="active-corpus">
+        <strong>$_('Corpus'):</strong>
+        <a id="corpus-desc-link" class="corpus-desc" href="#"
+        title="$_('click for details')">$human_corpname</a>#if $usesubcorp#<span class="subcorpus" title="$_('subcorpus')">:$usesubcorp</span>#end if#
+    </li>
+    #end if
     #set $i = 0
     #for $item in $getVar('query_overview', [])
     <li>
-    #if $i > 0#<span class="transition">&\#9654;</span>#end if#
+    <span class="transition">&\#9654;</span>
     <strong>$item.op:</strong>
     <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
     title="#filter $HtmlEscape#$item.arg#end filter#">

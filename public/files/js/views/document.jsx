@@ -123,7 +123,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     structlist: [],
                     size: null,
                     description: null,
-                    url: null
+                    url: null,
+                    citation_info: null
                 };
             },
 
@@ -170,8 +171,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     return (
                         <div id="corpus-details-box">
                             <div className="top">
-                                <h4 className="corpus-name">{this.state.corpname}</h4>
-
+                                <h2 className="corpus-name">{this.state.corpname}</h2>
+                                <p className="corpus-description">{this.state.description}</p>
                                 <p className="metadata">
                                     <strong>{this.translate('global__size')}: </strong>
                                     <span className="size">{this.state.size}</span> {this.translate('global__positions')}<br />
@@ -180,7 +181,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                     {webLink}
                                 </p>
                             </div>
-                            <p className="corpus-description">{this.state.description}</p>
+
+                            <h3>{this.translate('global__corpus_info_metadata_heading')}</h3>
+
                             <table className="structs-and-attrs" border="0">
                                 <tr>
                                     <td>
@@ -192,6 +195,36 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                 </tr>
                             </table>
                             <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
+
+                            <h3>{this.translate('global__how_to_cite_corpus')}</h3>
+
+                            <h4>
+                                {this.translate('global__corpus_as_resource_{corpus}', {corpus: this.state.corpname})}:
+                            </h4>
+
+                            <div dangerouslySetInnerHTML={{__html: this.state.citation_info.default_ref}} />
+
+                            {
+                                this.state.citation_info.article_ref
+                                ?   <div>
+                                        <h4>{this.translate('global__references')}:</h4>
+                                        <ul>
+                                        {this.state.citation_info.article_ref.map((item, i) => {
+                                            return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
+                                        })}
+                                        </ul>
+                                    </div>
+                                : null
+                            }
+
+                            {
+                                this.state.citation_info.other_bibliography
+                                ? <div>
+                                        <h4>{this.translate('global__general_references')}:</h4>
+                                        <div dangerouslySetInnerHTML={{__html: this.state.citation_info.other_bibliography}} />
+                                    </div>
+                                : null
+                            }
                         </div>
                     );
                 }

@@ -794,11 +794,6 @@ class Kontext(Controller):
 
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = self._corp().size()
-        corp_conf_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-        if corp_conf_info is not None:
-            result['corp_web'] = corp_conf_info.get('web', None)
-        else:
-            result['corp_web'] = ''
         if self.args.usesubcorp:
             result['subcorp_size'] = self._corp().search_size()
         else:
@@ -840,7 +835,6 @@ class Kontext(Controller):
                                               ('lpos', self.args.lpos),
                                               ('usesubcorp', self.args.usesubcorp),
                                               ])
-        result['citation_info'] = corp_conf_info.get('citation_info', '')
 
     def _setup_optional_plugins_js(self, result):
         """

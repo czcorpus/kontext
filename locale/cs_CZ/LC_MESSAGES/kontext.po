@@ -1417,10 +1417,6 @@ msgstr "klikněte pro zobrazení podrobností"
 msgid "of total %s) positions"
 msgstr "z celkem %s) pozic"
 
-#: cmpltmpl/document.py:2580 cmpltmpl/document.py:2660
-msgid "How to cite the corpus"
-msgstr "Jak citovat korpus"
-
 msgid "Reference(s)"
 msgstr "Literatura"
 

@@ -55,7 +55,7 @@ header .navig-wrapper {
 
 section.corpus-and-query {
   display: block;
-  margin: 0.3em 0 0.5em 0;
+  margin: 1.3em 0 0.5em 0;
   /*
   border: 1px solid @color-bg-light-blue;
   background-color: @color-bg-light-blue;
@@ -116,6 +116,15 @@ section h2 {
   border: none;
   min-width: 0;
   padding: 0;
+}
+
+#corpus-details-box h3 {
+    margin-top: 1.2em;
+    margin-bottom: 0.3em;
+}
+
+#corpus-details-box h4 {
+    margin-bottom: 0;
 }
 
 #corpus-details-box h2 {
@@ -263,7 +272,7 @@ a#logo-wrapper {
 
 #logo-wrapper img {
   display: inline-block;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 #add-searched-lang-widget {
@@ -363,15 +372,13 @@ a#logo-wrapper {
 }
 
 #menu-bar {
-  margin: 4px 0 0 1em; // TODO remove once the logo is OK
+  margin: 0;
   display: inline-block;
-  vertical-align: top;
   white-space: nowrap;
-  background-color: @color-logo-blue;
-  font-size: 1.1em;
+  background-color: transparent;
+  font-size: 1.2em;
   width: auto;
-  line-height: 2.0em;
-  padding-right: 1em;
+  height: 3em;
   border-radius: @input-border-radius;
 }
 
@@ -388,20 +395,20 @@ a#logo-wrapper {
 }
 
 #menu-level-1 {
-  margin: 0 0 0 15px;
+  margin: 0 0 0 1em;
   padding: 0;
   display: inline-block;
   list-style-type: none;
+  height: 100%;
+  vertical-align: middle;
 }
 
 #menu-level-1 > li {
   display: inline-block;
-  padding: 0.2em 0.3em;
-  font-weight: bold;
-  position: relative;
-  border-width: 1px 1px 0 1px;
-  border-style: solid;
-  border-color: transparent;
+  padding: 0 0.3em 0 0.3em;
+  height: 3.2em;
+  line-height: 3.2em;
+  font-weight: normal;
 }
 
 #menu-level-1 li ul {
@@ -419,19 +426,14 @@ a#logo-wrapper {
 }
 
 #menu-level-1 > li a {
-  display: block;
+  display: inline;
   text-decoration: none;
-  color: #FFFFFF;;
+  color: @color-default-text;
+  vertical-align: middle;
 }
 
 #menu-level-1 > a:hover {
   color: #FFFFFF;
-}
-
-#menu-level-1 > li.separator {
-  width: 0.025em;
-  padding: 0;
-  background-color: @color-light-grey;
 }
 
 #menu-level-1 > li a:hover {
@@ -439,11 +441,8 @@ a#logo-wrapper {
 }
 
 #menu-level-1 > li.active {
-  background-color: @color-logo-blue-shining;
+  background-color: @color-default-green;
   border-radius: @border-radius-menu;
-  border-width: 1px 1px 0 1px;
-  border-style: solid;
-  border-color: @color-logo-blue;
   position: relative;
 }
 
@@ -451,13 +450,14 @@ a#logo-wrapper {
   display: none;
   position: absolute;
   left: 0;
-  background-color: @color-logo-blue;
+  background-color: @color-default-green;
   box-shadow: @portal-box-shadow;
   margin: 3px 0 0 0;
   z-index: 500;
   font-weight: normal;
   margin: 0;
   padding: 0;
+  line-height: 1.8em;
   border-radius: 6px;
   min-width: 110px;
   list-style: none;
@@ -473,7 +473,7 @@ a#logo-wrapper {
   }
 
   li:hover {
-    background-color: @color-logo-blue-shining;
+    background-color: @color-light-green;
   }
 
   li.disabled a {
@@ -485,10 +485,6 @@ a#logo-wrapper {
     border-style: solid;
     border-color: #FFFFFF;
   }
-}
-
-#active-corpus {
-  margin-bottom: 0;
 }
 
 #active-corpus a {
@@ -525,7 +521,7 @@ a#logo-wrapper {
     padding: 0;
   }
 
-  h4.corpus-name {
+  h2.corpus-name {
     font-size: 17pt;
     font-weight: normal;
     margin: 0 0 0.7em 0;
@@ -1376,14 +1372,6 @@ fieldset.options legend:first-letter {
 
 fieldset.options input[type='text'] {
     margin-left: 5pt;
-}
-
-.corp-size-information {
-  display: inline-block;
-}
-
-#corpus-citation-link {
-  display: inline-block;
 }
 
 #corpus-citation-box {
