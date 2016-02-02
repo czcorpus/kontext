@@ -54,6 +54,9 @@ class CitationInfo(DictLike):
         self.article_ref = None
         self.other_bibliography = None
 
+    def to_dict(self):
+        return dict((k, v) for k, v in self.__dict__.items())
+
 
 class CorpusInfo(DictLike):
     """

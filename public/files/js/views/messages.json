@@ -3,7 +3,7 @@
 		"global__remark_figures_denote_different_attributes": "Remark: figures listed denote a number of different attributes / structures (i.e. types) in the corpus.",
 		"global__structures": "Structures",
 		"global__attributes": "Attributes",
-		"global__website": "Website",
+		"global__website": "website",
 		"global__positions": "Positions",
 		"global__size": "size",
 		"global__there_are_unsaved_changes": "There are unsaved changes on the page. Do you want to continue without saving them?",
@@ -85,7 +85,12 @@
         "linesel__line_selection_link_heading": "A URL of this line selection",
         "linesel__you_have_no_sel_lines": "There are no selected lines to work with",
         "linesel__you_have_unsaved_line_sel": "You have an unsaved line selection. Click the link to select an operation.",
-        "linesel__you_have_saved_line_groups": "You have a saved line selection. Click the link to see available operations."
+        "linesel__you_have_saved_line_groups": "You have a saved line selection. Click the link to see available operations.",
+        "global__how_to_cite_corpus": "How to cite the corpus",
+        "global__corpus_info_metadata_heading": "Available metadata",
+        "global__corpus_as_resource_{corpus}": "Corpus {corpus} as a language resource",
+        "global__general_references": "General references",
+        "global__references": "References"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -174,6 +179,11 @@
         "linesel__line_selection_link_heading": "URL adresa tohoto výběru řádků",
         "linesel__you_have_no_sel_lines": "Nemáte vybrány žádné řádky",
         "linesel__you_have_unsaved_line_sel": "Máte neuložený výběr řádek. Klikněte na odkaz pro výběr operace.",
-        "linesel__you_have_saved_line_groups": "Máte uložený výběr řádek. Klikněte na odkaz pro zobrazení dostupných operací."
+        "linesel__you_have_saved_line_groups": "Máte uložený výběr řádek. Klikněte na odkaz pro zobrazení dostupných operací.",
+        "global__how_to_cite_corpus": "Jak citovat korpus",
+        "global__corpus_info_metadata_heading": "Dostupná metadata",
+        "global__corpus_as_resource_{corpus}": "Korpus {corpus} jako zdroj dat",
+        "global__general_references": "Obecné odkazy",
+        "global__references": "Literatura"
 	}
 }

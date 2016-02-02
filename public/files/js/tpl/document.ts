@@ -729,10 +729,11 @@ export class PageModel implements Kontext.PluginProvider {
                         box.getRootElement(), {doneCallback: finalize.bind(self)});
             },
             {
-                width: 'auto',
+                width: 'nice',
                 closeIcon: true,
                 translator: self.translate.bind(self),
                 type: 'plain',
+                timeout: 0,
                 onClose: function () {
                     self.unmountReactComponent(this.getRootElement());
                 }
@@ -749,25 +750,6 @@ export class PageModel implements Kontext.PluginProvider {
 
         popupbox.bind($('#positions-help-link'), self.translate('global__what_are_positions'),
             {translator: self.translate.bind(self), width: '30%'});
-
-        popupbox.bind('#corpus-citation-link a',
-            function (box, finalizeCallback) {
-                $(box.getRootElement()).html(citationHtml).find('a').attr('target', '_blank');
-                $('#corpus-citation-box').empty();
-                finalizeCallback();
-            },
-            {
-                type: 'plain',
-                domId: 'citation-information',
-                closeIcon: true,
-                calculatePosition: true,
-                timeout: null,
-                translator: self.translate.bind(self),
-                width: '40%',
-                onClose: function () {
-                    $('#corpus-citation-box').html(citationHtml);
-                }
-            });
 
         // 'Select all' buttons for structural attribute lists
         $('table.envelope input[class="select-all"]').each(function () {
