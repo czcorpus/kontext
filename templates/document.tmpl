@@ -202,7 +202,8 @@ define('conf', [], function () {
                 style="$theme.logo_inline_css"
                 data-alt-img="$theme.logo_mouseover_path" /></a>
             <ul id="menu-level-1">
-                <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
+                <li id="menu-new-query" class="$menu_status('menu-new-query')">
+                    <a class="trigger" title="$_("Query")">$_("Query")</a>
                     <ul class="submenu">
                         <li class="separ"><a title="$_('Enter new query')" href="${root_url}first_form?$corpname_url&amp;lemma=$lemma&amp;lpos=$lpos&amp;align=$align&amp;usesubcorp=$usesubcorp">$_('New query')&#8230;</a></li>
                         <li class="separ $menu_status('menu-new-query:history')"><a title="$_('List of recent queries')" href="${root_url}user/query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
@@ -210,14 +211,16 @@ define('conf', [], function () {
                             href="${root_url}wordlist_form?$join_params($corpname_url, 'include_nonwords=1')">$_("Word List")&#8230;</a></li>
                     </ul>
                 </li>
-                <li id="menu-corpora" class="$menu_status('menu-corpora')"><a class="trigger">$_("Corpora")</a>
+                <li id="menu-corpora" class="$menu_status('menu-corpora')">
+                    <a class="trigger">$_("Corpora")</a>
                     <ul class="submenu">
                         <li class="separ"><a href="${root_url}corpora/corplist">$_('Available corpora')&#8230;</a></li>
                         <li class="$menu_status('menu-corpora:my-subcorpora')"><a title="$_('List of my subcorpora')" href="${root_url}subcorpus/subcorp_list?$join_params($q, $globals)">$_('My subcorpora')&#8230;</a></li>
                         <li class="$menu_status('menu-corpora:new-subcorpus')"><a title="$_('Create new subcorpus')" href="${root_url}subcorpus/subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
                     </ul>
                 </li>
-                <li id="menu-save" class="$menu_status('menu-save')"><a class="trigger">$_("Save")</a>
+                <li id="menu-save" class="$menu_status('menu-save')">
+                    <a class="trigger">$_("Save")</a>
                     <ul class="submenu">
                         #set $i = 0
                         #for $item in $save_menu
@@ -229,7 +232,8 @@ define('conf', [], function () {
                     </ul>
                 </li>
 
-                <li id="menu-concordance" class="$menu_status('menu-concordance')"><a class="trigger">$_("Concordance")</a>
+                <li id="menu-concordance" class="$menu_status('menu-concordance')">
+                    <a class="trigger">$_("Concordance")</a>
                     <ul class="submenu">
                         <li class="separ"><a title="$_('Concordance based on current parameters')" href="${root_url}view?$join_params($q, $globals)">$_('Current concordance')</a></li>
                         <li class="separ"><a title="$_("Complex sorting options")" href="${root_url}sort?$join_params($q, $globals)">$_('Sorting')&#8230;</a></li>
@@ -249,14 +253,16 @@ define('conf', [], function () {
                     </ul>
                 </li>
 
-                <li id="menu-filter" class="$menu_status('menu-filter')"><a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
+                <li id="menu-filter" class="$menu_status('menu-filter')">
+                    <a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
                     <ul class="submenu">
                         <li class="separ"><a href="${root_url}filter_form?$join_params($q, $globals, 'pnfilter=p')">$_('Positive')&#8230;</a></li>
                         <li><a href="${root_url}filter_form?$join_params($q, $globals, 'pnfilter=n')">$_('Negative')&#8230;</a></li>
                     </ul>
                 </li>
 
-                <li id="menu-frequency" class="$menu_status('menu-frequency')"><a class="trigger">$_('Frequency')</a>
+                <li id="menu-frequency" class="$menu_status('menu-frequency')">
+                    <a class="trigger">$_('Frequency')</a>
                     <ul class="submenu">
                         #if 'tag' in [x['n'] for x in $getVar('AttrList', ())]
                         <li class="separ"><a title="$_("Show frequencies of lemmas")" href="${root_url}freqs?$join_params($q, $globals, 'fcrit=lemma/e+0~0>0', 'ml=0')">$_("Lemmas")</a></li>
@@ -272,13 +278,15 @@ define('conf', [], function () {
                     </ul>
                 </li>
 
-                <li id="menu-collocations" class="$menu_status('menu-collocations')"><a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
+                <li id="menu-collocations" class="$menu_status('menu-collocations')">
+                    <a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
                     <ul class="submenu">
                         <li><a href="${root_url}coll?$join_params($q, $globals)">$_('Custom')&#8230;</a></li>
                     </ul>
                 </li>
 
-                <li id="menu-view" class="$menu_status('menu-view')"><a class="trigger">$_('View')</a>
+                <li id="menu-view" class="$menu_status('menu-view')">
+                    <a class="trigger">$_('View')</a>
                     <ul class="submenu">
                         <li class="separ $menu_status('menu-view:kwic-sentence')">
                         #if not $align
@@ -302,7 +310,8 @@ define('conf', [], function () {
                     </ul>
                 </li>
 
-                <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
+                <li id="menu-help" class="$menu_status('menu-help')">
+                    <a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
                     <ul class="submenu">
                     #filter None#$render_custom_menu_items('menu-help')#end filter#
                     </ul>
