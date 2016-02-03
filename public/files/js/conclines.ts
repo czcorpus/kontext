@@ -204,6 +204,6 @@ export class ConcLinesStorage {
  * @param {function} [errorHandler] see ConcLinesStorage documentation
  * @returns {ConcLinesStorage}
  */
-export function openStorage(errorHandler) {
+export function openStorage(errorHandler):ConcLinesStorage {
     return new ConcLinesStorage(errorHandler);
 }

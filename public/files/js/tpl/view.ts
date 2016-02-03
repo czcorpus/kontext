@@ -20,39 +20,47 @@
 /**
  * This module contains functionality related directly to the first_form.tmpl template
  */
-define(function (require, exports, module) {
-    'use strict';
-
-    var win = require('win');
-    var $ = require('jquery');
-    var jqueryPeriodic = require('vendor/jquery.periodic');
-    var documentModule = require('tpl/document');
-    var detail = require('detail');
-    var popupBox = require('popupbox');
-    var conclines = require('conclines');
-    var concViews = require('views/concordance');
-    var concStores = require('stores/concordance');
-    var SoundManager = require('SoundManager');
-    var d3 = require('vendor/d3');
-    require('vendor/jscrollpane');
-
-    var lib = {};
-
-    lib.layoutModel = null;
 
 
-    // TODO this is an experimental touch event handler.
+/// <amd-dependency path="vendor/jscrollpane" />
+/// <reference path="../../ts/declarations/common.d.ts" />
+/// <reference path="../../ts/declarations/popupbox.d.ts" />
+/// <reference path="../../ts/declarations/modernizr.d.ts" />
+/// <reference path="../../ts/declarations/soundmanager.d.ts" />
+/// <reference path="../../ts/declarations/d3.d.ts" />
+/// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
+/// <reference path="../../ts/declarations/detail.d.ts" />
+/// <reference path="../../ts/declarations/views/concordance.d.ts" />
+
+import win = require('win');
+import $ = require('jquery');
+import jqueryPeriodic = require('vendor/jquery.periodic');
+import documentModule = require('tpl/document');
+import detail = require('detail');
+import popupBox = require('popupbox');
+import conclines = require('conclines');
+import concViews = require('views/concordance');
+import concStores = require('stores/concordance');
+import SoundManager = require('SoundManager');
+import d3 = require('vendor/d3');
+declare var Modernizr:Modernizr.ModernizrStatic;
+declare var jqueryPeriodic:any;
+
+// TODO this is an experimental touch event handler.
     // Default behavior of the 'view' component should be observed carefully first.
-    function TouchHandler() {
+class TouchHandler {
 
-        this.startX = null;
-        this.startY = null;
-        this.currX = null;
-        this.currY = null;
-        this.area = null;
+    startX = null;
+    startY = null;
+    currX = null;
+    currY = null;
+    area = null;
 
+    private _getPos;
+
+    constructor() {
         this._getPos = function (evt) {
-            var touch = evt.originalEvent.changedTouches[0];
+            let touch = evt.originalEvent.changedTouches[0];
             if (touch) {
                 return [touch.clientX, touch.clientY];
 
@@ -60,40 +68,69 @@ define(function (require, exports, module) {
                 return [null, null];
             }
         }
-
-
-        this.attachTouchEvents = function (area, fn) {
-            var pos;
-            var self = this;
-            var deltaX = 0;
-
-            this.area = area;
-
-            $(area).on('touchstart', function (evt) {
-                pos = self._getPos(evt);
-                this.startX = pos.clientX;
-                this.startY = pos.clientY;
-                this.currX = this.startX;
-                this.currY = this.startY;
-            });
-            $(area).on('touchmove', function (evt) {
-                pos = self._getPos(evt);
-                deltaX = pos[0] - this.currX;
-                fn(deltaX);
-                this.currX = pos[0];
-                this.currY = pos[1];
-                evt.preventDefault();
-            });
-            $(area).on('touchend', function (evt) {
-                pos = self._getPos(evt);
-                this.startX = null;
-                this.startY = null;
-            });
-        }
     }
 
-    function getUISelectionMode() {
-        var conclines = $('#conclines');
+    attachTouchEvents(area, fn):void {
+        let pos;
+        let self = this;
+        let deltaX = 0;
+
+        this.area = area;
+
+        $(area).on('touchstart', function (evt) {
+            pos = self._getPos(evt);
+            this.startX = pos.clientX;
+            this.startY = pos.clientY;
+            this.currX = this.startX;
+            this.currY = this.startY;
+        });
+        $(area).on('touchmove', function (evt) {
+            pos = self._getPos(evt);
+            deltaX = pos[0] - this.currX;
+            fn(deltaX);
+            this.currX = pos[0];
+            this.currY = pos[1];
+            evt.preventDefault();
+        });
+        $(area).on('touchend', function (evt) {
+            pos = self._getPos(evt);
+            this.startX = null;
+            this.startY = null;
+        });
+    }
+}
+
+
+class ViewPage {
+
+    private layoutModel:documentModule.PageModel;
+
+    private lineSelectionStore:concStores.LineSelectionStore;
+
+    private hasLockedGroups:boolean;
+
+    private views:any; // TODO
+
+    private touchHandler:TouchHandler;
+
+
+    constructor(layoutModel:documentModule.PageModel, views:any, lineSelectionStore:concStores.LineSelectionStore,
+            hasLockedGroups:boolean) {
+        this.layoutModel = layoutModel;
+        this.views = views;
+        this.lineSelectionStore = lineSelectionStore;
+        this.hasLockedGroups = hasLockedGroups;
+        this.touchHandler = new TouchHandler();
+    }
+
+
+    private translate(s:string, values?:any):string {
+        return this.layoutModel.translate(s, values);
+    }
+
+
+    getUISelectionMode():string {
+        let conclines = $('#conclines');
         if (conclines.find('td.manual-selection input[type=\'checkbox\']').length > 0) {
             return 'simple';
 
@@ -104,17 +141,17 @@ define(function (require, exports, module) {
     }
 
 
-    function setDefinedGroups() {
+    private setDefinedGroups():void {
         $('#selection-mode-switch')
             .val('groups')
             .attr('disabled', 'disabled');
         $('#conclines tr').each(function () {
-            var elm = $(this).find('.manual-selection');
-            var groupElm = window.document.createElement('span');
-            var inputElm = elm.find('input');
-            var kwiclen = inputElm.attr('data-kwiclen');
-            var position = inputElm.attr('data-position');
-            var lineNum = inputElm.attr('data-linenum');
+            let elm = $(this).find('.manual-selection');
+            let groupElm = window.document.createElement('span');
+            let inputElm = elm.find('input');
+            let kwiclen = inputElm.attr('data-kwiclen');
+            let position = inputElm.attr('data-position');
+            let lineNum = inputElm.attr('data-linenum');
 
             $(groupElm)
                 .attr('data-kwiclen', kwiclen)
@@ -132,11 +169,12 @@ define(function (require, exports, module) {
      * lines and (un)checks them appropriately. In case sessionStorage is not
      * supported all the checkboxes are disabled.
      */
-    function refreshSelection() {
+    refreshSelection():void {
+        let self = this;
         function applyOn(currMode, setValFn) {
             return function (i, item) {
-                rowSelectionEvent(item, currMode);
-                if (!lib.lineSelectionStore.supportsSessionStorage()) {
+                self.rowSelectionEvent(item, currMode);
+                if (!self.lineSelectionStore.supportsSessionStorage()) {
                     $(item).attr('disabled', 'disabled');
 
                 } else {
@@ -144,14 +182,14 @@ define(function (require, exports, module) {
                 }
             }
         }
-        var storeMode = lib.lineSelectionStore.getMode();
-        if (getUISelectionMode() !== storeMode) {
-            switchSelectionModeUI();
+        let storeMode = this.lineSelectionStore.getMode();
+        if (this.getUISelectionMode() !== storeMode) {
+            self.updateUISelectionMode();
         }
         $('#selection-mode-switch').val(storeMode);
         if (storeMode === 'simple') {
-            $('#conclines td.manual-selection input[type=\'checkbox\']').each(applyOn(storeMode, function (item) {
-                if (lib.lineSelectionStore.containsLine($(item).attr('data-position'))) {
+            $('#conclines td.manual-selection input[type=\'checkbox\']').each(applyOn(storeMode, (item) => {
+                if (self.lineSelectionStore.containsLine($(item).attr('data-position'))) {
                     item.checked = true;
 
                 } else {
@@ -160,71 +198,67 @@ define(function (require, exports, module) {
             }));
 
         } else if (storeMode === 'groups') {
-            $('#conclines td.manual-selection input[type=\'text\']').each(applyOn(storeMode, function (item) {
-                var data = lib.lineSelectionStore.getLine($(item).attr('data-position'));
-
+            $('#conclines td.manual-selection input[type=\'text\']').each(applyOn(storeMode, (item) => {
+                let data = self.lineSelectionStore.getLine($(item).attr('data-position'));
                 if (data) {
                     $(item).val(data[1]);
                 }
             }));
         }
-        reinitSelectionMenuLink();
+        self.reinitSelectionMenuLink();
     }
 
-    function showGroupsStats(rootElm) {
+    showGroupsStats(rootElm):void {
+        let self = this;
 
-        function renderChart(data) {
-            var width = 200,
-                height = 200,
-                radius = Math.min(width, height) / 2;
+        function renderChart(data):d3.scale.Ordinal<string, string> {
+            let width = 200;
+            let height = 200;
+            let radius = Math.min(width, height) / 2;
+            let color = d3.scale.category20();
 
-            var color = d3.scale.category20();
-
-            var arc = d3.svg.arc()
+            let arc = d3.svg.arc()
                 .outerRadius(radius - 10)
                 .innerRadius(0);
 
-            var labelArc = d3.svg.arc()
+            let labelArc = d3.svg.arc()
                 .outerRadius(radius - 40)
                 .innerRadius(radius - 40);
 
-            var pie = d3.layout.pie()
-                .value(function(d) { return d['count']; });
+            let pie = d3.layout.pie()
+                .value((d) => d['count']);
 
             data = pie(data);
 
-            var wrapper = d3.select(rootElm).append('svg')
+            let wrapper = d3.select(rootElm).append('svg')
                 .attr('width', width)
                 .attr('height', height)
                 .append('g')
                     .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')')
                     .attr('class', 'chart-wrapper');
 
-            var g = wrapper.selectAll('.arc')
+            let g = wrapper.selectAll('.arc')
                 .data(data).enter()
                     .append('g')
                     .attr('class', 'arc');
 
             g.append('path')
                 .attr('d', arc)
-                .style('fill', function(d, i) { return color(i);});
+                .style('fill', (d, i:any) => color(i));
             g.append('text')
-                .attr('transform', function(d) {
-                        return 'translate(' + labelArc.centroid(d) + ')';
-                        }
-                    )
-                .text(function(d) { return d.data['group']; });
+                .attr('transform', (d:any) => ('translate(' + labelArc.centroid(d) + ')'))
+                .text((d:any) => d.data['group']);
             return color;
         }
 
-        function renderLabels(data, colors, rootElm) {
-            var wrapper = window.document.createElement('div');
-            var spanElm;
-            var innerSpanElm;
+        function renderLabels(data, colors, rootElm):void {
+            let wrapper:HTMLElement = window.document.createElement('div');
+            let spanElm:HTMLElement;
+            let innerSpanElm:HTMLElement;
 
             $(wrapper).addClass('chart-label');
 
-            data.forEach(function (item, i) {
+            data.forEach((item, i) => {
                 spanElm = window.document.createElement('span');
                 $(spanElm)
                     .addClass('label-text')
@@ -243,74 +277,75 @@ define(function (require, exports, module) {
             $(rootElm).append(wrapper);
         }
 
-        lib.layoutModel.ajax(
+        this.layoutModel.ajax(
             'GET',
-            lib.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
-                    + lib.layoutModel.getConf('stateParams'),
+            this.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
+                    + this.layoutModel.getConf('stateParams'),
             {},
             {contentType : 'application/x-www-form-urlencoded'}
         ).then(
             function (data) {
-                var chartData = [],
-                    p,
-                    colors;
+                let chartData = [];
+                let colors:any;
 
-                for (p in data) {
+                for (let p in data) {
                     chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
                 }
                 $(rootElm).append(
-                    '<h4>' + lib.layoutModel.translate('linesel__groups_stats_heading') + '</h4>'
+                    '<h4>' + self.translate('linesel__groups_stats_heading') + '</h4>'
                 );
-                colors = renderChart(chartData, rootElm);
+                colors = renderChart(chartData);
                 renderLabels(chartData, colors, rootElm);
             },
             function (err) {
-                lib.layoutModel.message('error', err);
+                self.layoutModel.showMessage('error', err);
             }
         );
     }
 
-    function reEnableLineGroupEditing() {
-        lib.layoutModel.ajax(
+    reEnableLineGroupEditing():void {
+        let self = this;
+
+        this.layoutModel.ajax(
             'GET',
-            lib.layoutModel.createActionUrl('ajax_get_line_selection?')
-                + lib.layoutModel.getConf('stateParams'),
+            this.layoutModel.createActionUrl('ajax_get_line_selection?')
+                + this.layoutModel.getConf('stateParams'),
             {},
             {contentType : 'application/x-www-form-urlencoded'}
 
         ).then(
-            function (data) {
+            function (data:number[][]) {
                 $('#selection-mode-switch')
                     .attr('disabled', null);
-                lib.hasLockedGroups = false;
-                lib.lineSelectionStore.importData(data);
-                switchSelectionModeUI();
-                bindSelectionModeSwitch();
-                reinitSelectionMenuLink();
+                self.hasLockedGroups = false;
+                self.lineSelectionStore.importData(data);
+                self.updateUISelectionMode();
+                self.bindSelectionModeSwitch();
+                self.reinitSelectionMenuLink();
             },
             function (err) {
-                lib.layoutModel.showMessage('error', err);
+                self.layoutModel.showMessage('error', err);
             }
         );
     }
 
-    function getNumSelectedItems() {
-        if (lib.hasLockedGroups) {
-            return lib.layoutModel.getConf('numLinesInGroups');
+    getNumSelectedItems():number {
+        if (this.hasLockedGroups) {
+            return this.layoutModel.getConf<number>('numLinesInGroups');
 
         } else {
-            return lib.lineSelectionStore.size();
+            return this.lineSelectionStore.size();
         }
     }
 
-    function toggleWarning(targetElm) {
-        if (lib.hasLockedGroups) {
+    toggleWarning(targetElm):void {
+        if (this.hasLockedGroups) {
             targetElm.addClass('info');
-            targetElm.attr('title', lib.layoutModel.translate('linesel__you_have_saved_line_groups'));
+            targetElm.attr('title', this.translate('linesel__you_have_saved_line_groups'));
 
-        } else if (getNumSelectedItems() > 0) {
+        } else if (this.getNumSelectedItems() > 0) {
             targetElm.addClass('warn');
-            targetElm.attr('title', lib.layoutModel.translate('linesel__you_have_unsaved_line_sel'));
+            targetElm.attr('title', this.translate('linesel__you_have_unsaved_line_sel'));
 
         } else {
             targetElm.removeClass('warn');
@@ -322,40 +357,39 @@ define(function (require, exports, module) {
      *
      * @param numSelected
      */
-    function reinitSelectionMenuLink() {
-        var linesSelectionWrap = $('#result-info .lines-selection'),
-            createContent,
-            createContentChecked,
-            numSelected = getNumSelectedItems(),
-            viewMenuLink;
+    private reinitSelectionMenuLink():void {
+        let linesSelectionWrap = $('#result-info .lines-selection');
+        let createContent:(box:popupBox.TooltipBox, finalize:()=>void)=>void;
+        let createContentChecked:(box:popupBox.TooltipBox, finalize:()=>void)=>void;
+        let self = this;
 
         linesSelectionWrap.empty();
 
-        if (lib.hasLockedGroups) {
+        if (this.hasLockedGroups) {
             createContent = function (box, finalize) {
-                var actionRegId = lib.layoutModel.dispatcher.register(function (payload) {
+                let actionRegId = self.layoutModel.dispatcher.register((payload) => {
                     if (payload.actionType === 'ERROR') {
                         box.close();
-                        lib.layoutModel.dispatcher.unregister(actionRegId);
+                        self.layoutModel.dispatcher.unregister(actionRegId);
                     }
                 });
-                lib.lineSelectionStore.addActionFinishHandler(function () {
+                self.lineSelectionStore.addActionFinishHandler(() => {
                     box.close();
                 });
-                lib.layoutModel.renderReactComponent(
-                    lib.views.LockedLineGroupsMenu,
+                self.layoutModel.renderReactComponent(
+                    self.views.LockedLineGroupsMenu,
                     box.getRootElement(),
                     {
-                        doneCallback: function () {
-                            finalize.call(lib.layoutModel);
+                        doneCallback: () => {
+                            finalize.call(self.layoutModel);
                         },
-                        chartCallback: function () {
+                        chartCallback: () => {
                             $(box.getRootElement()).find('.chart-area').empty();
-                            showGroupsStats($(box.getRootElement()).find('.chart-area').get(0));
+                            self.showGroupsStats($(box.getRootElement()).find('.chart-area').get(0));
                         },
-                        reEnableEditCallback : function () {
+                        reEnableEditCallback : () => {
                             box.close();
-                            reEnableLineGroupEditing();
+                            self.reEnableLineGroupEditing();
                         },
                         checkpointUrl: window.location.href
                      }
@@ -364,46 +398,47 @@ define(function (require, exports, module) {
 
         } else {
             createContent = function (box, finalize) {
-                var actionRegId = lib.layoutModel.dispatcher.register(function (payload) {
+                var actionRegId = self.layoutModel.dispatcher.register(function (payload) {
                     if (payload.actionType === 'ERROR') {
                         box.close();
-                        lib.layoutModel.dispatcher.unregister(actionRegId);
+                        self.layoutModel.dispatcher.unregister(actionRegId);
                     }
                 });
-                lib.lineSelectionStore.addActionFinishHandler(function () {
+                self.lineSelectionStore.addActionFinishHandler(function () {
                     box.close();
                 });
-                lib.layoutModel.renderReactComponent(
-                    lib.views.LineSelectionMenu,
+                self.layoutModel.renderReactComponent(
+                    self.views.LineSelectionMenu,
                     box.getRootElement(),
                     {
-                        doneCallback: finalize.bind(lib.layoutModel)
+                        doneCallback: finalize.bind(self.layoutModel)
                     }
                  );
             };
         }
 
         createContentChecked = function (box, finalize) {
-            if (getNumSelectedItems() > 0) {
+            if (self.getNumSelectedItems() > 0) {
                 createContent(box, finalize);
 
             } else {
-                $(box.getRootElement()).append(lib.layoutModel.translate('linesel__you_have_no_sel_lines'));
+                $(box.getRootElement()).append(self.translate('linesel__you_have_no_sel_lines'));
                 finalize();
             }
         }
 
-        viewMenuLink = window.document.createElement('a');
+        let numSelected = this.getNumSelectedItems();
+        let viewMenuLink:HTMLElement = window.document.createElement('a');
         $(viewMenuLink).append('<span class="value">' + numSelected + '</span> '
-                + lib.layoutModel.translate('global__selected_lines'));
+                + self.translate('global__selected_lines'));
         if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
             popupBox.bind(viewMenuLink, createContentChecked, {
                 type : 'plain',
                 closeIcon : true,
                 timeout: null,
-                onClose: function () {
-                    lib.layoutModel.unmountReactComponent(this.getRootElement());
-                    lib.lineSelectionStore.removeAllActionFinishHandlers();
+                onClose: function () { // beware - 'this' refers to the popupbox instance
+                    self.layoutModel.unmountReactComponent(this.getRootElement());
+                    self.lineSelectionStore.removeAllActionFinishHandlers();
                 }
             });
         }
@@ -411,14 +446,19 @@ define(function (require, exports, module) {
             .append('(')
             .append(viewMenuLink)
             .append(')');
-        toggleWarning(linesSelectionWrap);
+        self.toggleWarning(linesSelectionWrap);
     }
 
-    // TODO refactor this (redundant code)
-    function switchSelectionModeUI() {
-        var mode = lib.lineSelectionStore.getMode();
+    /**
+     * Updates selection mode (group vs. simple) in UI according
+     * to a state in the lineSelectionStore.
+     */
+    updateUISelectionMode():void {
+        let self = this;
+        let mode = this.lineSelectionStore.getMode();
+
         function applyStoredValue(jqElm) {
-            var line = lib.lineSelectionStore.getLine(jqElm.attr('data-position'));
+            let line = self.lineSelectionStore.getLine(jqElm.attr('data-position'));
             if (line && mode === 'groups') {
                 jqElm.val(line[1]);
 
@@ -427,12 +467,11 @@ define(function (require, exports, module) {
             }
         }
 
-
         $('#conclines').find('td.manual-selection > *').each(function (item) {
-            var inputElm = window.document.createElement('input');
-            var kwiclen = $(this).attr('data-kwiclen');
-            var position = $(this).attr('data-position');
-            var lineNum = $(this).attr('data-linenum');
+            let inputElm = window.document.createElement('input');
+            let kwiclen = $(this).attr('data-kwiclen');
+            let position = $(this).attr('data-position');
+            let lineNum = $(this).attr('data-linenum');
             $(inputElm)
                 .attr('type', mode === 'simple' ? 'checkbox' : 'text')
                 .attr('data-kwiclen', kwiclen)
@@ -445,54 +484,58 @@ define(function (require, exports, module) {
             }
             $(this).replaceWith(inputElm);
             applyStoredValue($(inputElm));
-            rowSelectionEvent(inputElm, mode);
+            self.rowSelectionEvent(inputElm, mode);
         });
     }
 
-
-    function bindSelectionModeSwitch() {
+    /**
+     * Handle manual mode selection
+     */
+    private bindSelectionModeSwitch():void {
         $('#selection-mode-switch')
             .off('change')
-            .on('change', function (evt) {
-                var mode = $(evt.currentTarget).val();
-                lib.lineSelectionStore.setMode(mode);
-                switchSelectionModeUI();
-                reinitSelectionMenuLink();
+            .on('change', (evt) => {
+                let mode = $(evt.currentTarget).val();
+                this.lineSelectionStore.setMode(mode);
+                this.updateUISelectionMode();
+                this.reinitSelectionMenuLink();
             }
         );
     }
 
     /**
-     * Handles clicking on concordance line checkbox or updating line group
+     * Handle click on concordance line checkboxes or change in line group text input fields
      */
-    function rowSelectionEvent(elm, mode) {
-        var jqLineSel = $('.lines-selection');
+    rowSelectionEvent(elm, mode):void {
+        let self = this;
+        let jqLineSel = $('.lines-selection');
 
         if (mode === 'simple') {
             $(elm).on('click', function (e) {
-                var id = $(e.currentTarget).attr('data-position'),
-                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10);
+                let id = $(e.currentTarget).attr('data-position');
+                let kwiclen:number = parseInt($(e.currentTarget).attr('data-kwiclen') || '1', 10);
+
                 if ($(e.currentTarget).is(':checked')) {
-                    lib.lineSelectionStore.addLine(id, kwiclen, null);
+                    self.lineSelectionStore.addLine(id, kwiclen, null);
 
                 } else {
-                    lib.lineSelectionStore.removeLine(id);
+                    self.lineSelectionStore.removeLine(id);
                 }
-                jqLineSel.find('.value').text(getNumSelectedItems());
-                toggleWarning(jqLineSel);
+                jqLineSel.find('.value').text(String(self.getNumSelectedItems()));
+                self.toggleWarning(jqLineSel);
             });
 
         } else if (mode === 'groups') {
             $(elm).on('change keyup', function (e) {
-                var id = $(e.currentTarget).attr('data-position'),
-                    kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || 1, 10),
-                    groupId = parseInt($(e.currentTarget).val() || 0, 10),
-                    inputValue = $(e.currentTarget).val();
+                let id = $(e.currentTarget).attr('data-position');
+                let kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || '1', 10);
+                let groupId = parseInt($(e.currentTarget).val() || 0, 10);
+                let inputValue = $(e.currentTarget).val();
 
                 if (inputValue !== '') {
                     if (/\d+/.exec(inputValue)) {
                         $(e.currentTarget).removeClass('error');
-                        lib.lineSelectionStore.addLine(id, kwiclen, groupId);
+                        self.lineSelectionStore.addLine(id, kwiclen, groupId);
 
                     } else {
                         $(e.currentTarget).addClass('error');
@@ -500,10 +543,10 @@ define(function (require, exports, module) {
 
                 } else {
                     $(e.currentTarget).removeClass('error');
-                    lib.lineSelectionStore.removeLine(id);
+                    self.lineSelectionStore.removeLine(id);
                 }
-                jqLineSel.find('.value').text(getNumSelectedItems());
-                toggleWarning(jqLineSel);
+                jqLineSel.find('.value').text(String(self.getNumSelectedItems()));
+                self.toggleWarning(jqLineSel);
             });
         }
     }
@@ -511,9 +554,9 @@ define(function (require, exports, module) {
     /**
      * Ensures that concordance lines are serialized once user leaves the page.
      */
-    function onUnloadSerialize() {
-        $(win).on('unload', function () {
-            lib.lineSelectionStore.serialize();
+    private onUnloadSerialize():void {
+        $(win).on('unload', () => {
+            this.lineSelectionStore.serialize();
         });
     }
 
@@ -521,10 +564,11 @@ define(function (require, exports, module) {
      * User must be notified in case he wants to leave the page but at the same time he
      * has selected some concordance lines without using them in a filter.
      */
-    function onBeforeUnloadAsk() {
-        $(win).on('beforeunload.alert_unsaved', function (event) {
-            if (lib.lineSelectionStore.size() > 0) {
-                event.returnValue = lib.layoutModel.translate('global__are_you_sure_to_leave');
+    private onBeforeUnloadAsk():any {
+        let self = this;
+        $(win).on('beforeunload.alert_unsaved', function (event:any) {
+            if (self.lineSelectionStore.size() > 0) {
+                event.returnValue = self.translate('global__are_you_sure_to_leave');
                 return event.returnValue;
             }
             return undefined; // !! any other value will cause the dialog window to be shown
@@ -534,7 +578,7 @@ define(function (require, exports, module) {
     /**
      * Some links/forms must be allowed to avoid beforeunload check (e.g. pagination)
      */
-    function grantPaginationPageLeave() {
+    private grantPaginationPageLeave():void {
         $('.bonito-pagination form').on('submit', function () {
             $(win).off('beforeunload.alert_unsaved');
         });
@@ -545,16 +589,19 @@ define(function (require, exports, module) {
     }
 
     /**
-     *
+     * Let's bother poor user with a notification in
+     * case she is not logged-in.
      */
-    function anonymousUserWarning() {
-        var left,
-            box,
-            top;
+    private anonymousUserWarning():void {
+        let left:number;
+        let top:number;
+        let box:popupBox.TooltipBox;
 
-        box = popupBox.open(lib.layoutModel.translate('global__anonymous_user_warning',
-                {login_url: lib.layoutModel.getConf('loginUrl')}),
-                {top: 0, left: 0}, {type: 'warning'});
+        box = popupBox.open(
+            this.translate('global__anonymous_user_warning',
+            {login_url: this.layoutModel.getConf('loginUrl')}),
+            {top: 0, left: 0}, {type: 'warning'}
+        );
         left = $(win).width() / 2 - box.getPosition().width / 2;
         top = $('#conc-wrapper').offset().top + 40;
         box.setCss('left', left + 'px');
@@ -563,19 +610,19 @@ define(function (require, exports, module) {
         box.setCss('height', '70px');
     }
 
-    function attachMouseWheelEvents(area, fn) {
+    attachMouseWheelEvents(area, fn):void {
         area = $(area).get(0);
-        area.addEventListener("mousewheel", fn, false);
+        area.addEventListener('mousewheel', fn, false);
 	    // Firefox
-	    area.addEventListener("DOMMouseScroll", fn, false);
+	    area.addEventListener('DOMMouseScroll', fn, false);
     }
 
     /**
      * This function is taken from jscrollpane demo page
      */
-    function initConcViewScrollbar() {
-        var elm = $('#conclines-wrapper'),
-            api;
+    private initConcViewScrollbar():void {
+        let elm = $('#conclines-wrapper');
+        let api;
 
         elm.jScrollPane();
         api = elm.data('jsp');
@@ -596,7 +643,7 @@ define(function (require, exports, module) {
             }
         });
 
-        attachMouseWheelEvents(elm, function (evt) {
+        this.attachMouseWheelEvents(elm, function (evt) {
             if (evt.shiftKey) {
                 var delta = Math.max(-1, Math.min(1, (evt.wheelDelta || -evt.detail)));
                 api.scrollBy(delta * 40, 0, false);
@@ -604,7 +651,7 @@ define(function (require, exports, module) {
             }
         });
 
-        lib.touchHandler.attachTouchEvents(elm, function (delta) {
+        this.touchHandler.attachTouchEvents(elm, function (delta) {
             api.scrollBy(-delta, 0, false);
         });
     }
@@ -615,11 +662,11 @@ define(function (require, exports, module) {
      * @param {string|number} nStr number string (/\d+(.\d*)?)
      * @return {string} number string with thousands separated by the ',' (comma) character
      */
-    function addCommas(nStr) {
-        var x,
-            x1,
-            x2,
-            rgx = /(\d+)(\d{3})/;
+    addCommas(nStr:string):string {
+        let x;
+        let x1;
+        let x2;
+        let rgx = /(\d+)(\d{3})/;
 
         nStr += '';
         x = nStr.split('.');
@@ -634,13 +681,14 @@ define(function (require, exports, module) {
     /**
      * @todo refactor this
      */
-    function misc() {
-        $('#groupmenu').attr('corpname', lib.layoutModel.conf.corpname);
-        $('#groupmenu').attr('queryparams', lib.layoutModel.conf.q);
-        $('#groupmenu').mouseleave(lib.close_menu);
+    private misc():void {
+        let self = this;
+
+        $('#groupmenu').attr('corpname', this.layoutModel.getConf<string>('corpname'));
+        $('#groupmenu').attr('queryparams', this.layoutModel.getConf<string>('q'));
 
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
-            var jqRealTarget = null;
+            let jqRealTarget = null;
 
             if ($(event.target).data('url')) {
                 jqRealTarget = $(event.target);
@@ -653,8 +701,8 @@ define(function (require, exports, module) {
                 event.currentTarget,
                 jqRealTarget.data('url'),
                 jqRealTarget.data('params'),
-                lib.layoutModel,
-                lib.viewDetailDoneCallback
+                self.layoutModel,
+                self.viewDetailDoneCallback.bind(self)
             );
             event.stopPropagation();
         });
@@ -666,9 +714,9 @@ define(function (require, exports, module) {
                 $(event.target).data('url'),
                 $(event.target).data('params'),
                 function (jqXHR, textStatus, errorThrown) {
-                    lib.layoutModel.showMessage('error', errorThrown);
+                    self.layoutModel.showMessage('error', errorThrown);
                 },
-                lib.layoutModel
+                self.layoutModel
             );
             event.stopPropagation();
         });
@@ -685,13 +733,13 @@ define(function (require, exports, module) {
         });
     }
 
-    function addWarnings() {
-        var jqTriggerElm;
+    private addWarnings():void {
+        let jqTriggerElm;
 
         jqTriggerElm = $('#result-info').find('.size-warning');
         popupBox.bind(
             jqTriggerElm,
-            lib.layoutModel.translate('global__size_warning', {size: jqTriggerElm.data('size-limit')}),
+            this.translate('global__size_warning', {size: jqTriggerElm.data('size-limit')}),
             {
                 type: 'warning',
                 width: 'nice'
@@ -699,7 +747,7 @@ define(function (require, exports, module) {
         );
     }
 
-    function soundManagerInit() {
+    private soundManagerInit():void {
         SoundManager.soundManager.setup({
             url: '../files/misc/soundmanager2/',
             flashVersion: 9,
@@ -712,48 +760,51 @@ define(function (require, exports, module) {
      *
      * @param boxInst
      */
-    lib.viewDetailDoneCallback = function (boxInst) {
+    viewDetailDoneCallback(boxInst):void {
+        let self = this;
         $('a.expand-link').each(function () {
             $(this).one('click', function (event) {
                 detail.showDetail(
                     event.currentTarget,
                     $(this).data('url'),
                     $(this).data('params'),
-                    lib.layoutModel,
+                    self.layoutModel,
                     // Expand link, when clicked, must bind the same event handler
                     // for the new expand link. That's why this 'callback recursion' is present.
-                    lib.viewDetailDoneCallback
+                    self.viewDetailDoneCallback.bind(self)
                 );
                 event.preventDefault();
             });
         });
-        lib.layoutModel.mouseOverImages(boxInst.getRootElement());
-    };
+        this.layoutModel.mouseOverImages(boxInst.getRootElement());
+    }
 
     /**
      *
      */
-    lib.reloadHits = function () {
-        var freq = 500;
+    reloadHits():void {
+        let self = this;
+        let freq = 500;
 
         $('#conc-loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="'
-            + lib.layoutModel.translate('global__calculating')
-            + '" title="' + lib.layoutModel.translate('global__calculating')
+            + this.translate('global__calculating')
+            + '" title="' + this.translate('global__calculating')
             + '" style="width: 24px; height: 24px" />');
-        $('#arf').empty().html(lib.layoutModel.translate('global__calculating'));
+        $('#arf').empty().html(this.translate('global__calculating'));
         /*
          * Checks periodically for the current state of a concordance calculation
          */
         jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
-            $.ajax({
-                url: 'get_cached_conc_sizes?' + lib.layoutModel.conf.q + '&' + lib.layoutModel.conf.globals,
+            $.ajax('get_cached_conc_sizes?' + self.layoutModel.getConf('q')
+                    + '&' + self.layoutModel.getConf('globals'),
+            {
                 type: 'POST',
                 periodic: this,
                 success: function (data) {
                     var num2Str;
 
                     num2Str = function (n) {
-                        return lib.layoutModel.formatNum(n, data.thousandsSeparator, data.decimalSeparator);
+                        return self.layoutModel.formatNum(n, data.thousandsSeparator, data.decimalSeparator);
                     };
 
                     if (data.end) {
@@ -761,7 +812,7 @@ define(function (require, exports, module) {
                     }
 
                     $('#result-info span.ipm').html(num2Str(data.relconcsize.toFixed(2)));
-                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / lib.layoutModel.conf.numLines)));
+                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / self.layoutModel.getConf<number>('numLines'))));
 
                     if (data.fullsize > 0) {
                         $('#fullsize').html(num2Str(data.fullsize));
@@ -791,36 +842,38 @@ define(function (require, exports, module) {
      * guaranteed implicitly - e.g. in case the form was submitted via POST
      * method).
      */
-    function makePageReusable(conf) {
+    private setStateUrl():void {
+        let stateParams = this.layoutModel.getConf('stateParams');
         if (Modernizr.history) {
-            window.history.replaceState({}, window.document.title, '/view?' + conf.stateParams);
+            window.history.replaceState({}, window.document.title, '/view?' + stateParams);
 
-        } else if (!conf.replicableQuery) {
-            window.location.href = '/view?' + conf.stateParams;
+        } else if (!this.layoutModel.getConf('replicableQuery')) {
+            window.location.href = '/view?' + stateParams;
         }
     }
 
-    function attachIpmCalcTrigger(layoutModel) {
+    private attachIpmCalcTrigger():void {
+        let self = this;
         $('#conc-top-bar').find('.calculate-ipm').on('click', function (event) {
-            var q = '[] ' + decodeURIComponent($(event.target).data('query')),
-                totalHits = parseInt($(event.target).data('total-hits')),
-                prom,
-                loaderBox = window.document.createElement('span'),
-                loaderImg = window.document.createElement('img'),
-                userConfirm;
+            let q = '[] ' + decodeURIComponent($(event.target).data('query'));
+            let totalHits = parseInt($(event.target).data('total-hits'));
+            let prom;
+            let loaderBox = window.document.createElement('span');
+            let loaderImg = window.document.createElement('img');
+            let userConfirm;
 
-            userConfirm = window.confirm(layoutModel.translate('global__ipm_calc_may_take_time'));
+            userConfirm = window.confirm(self.translate('global__ipm_calc_may_take_time'));
 
             if (userConfirm) {
                 $(loaderImg)
-                    .attr('src', layoutModel.createStaticUrl('img/ajax-loader.gif'));
+                    .attr('src', self.layoutModel.createStaticUrl('img/ajax-loader.gif'));
 
                 prom = $.ajax(
-                        layoutModel.createActionUrl('ajax_get_within_max_hits'),
+                        self.layoutModel.createActionUrl('ajax_get_within_max_hits'),
                         {
                             data: {
                                 query: q,
-                                corpname: layoutModel.getConf('corpname')
+                                corpname: self.layoutModel.getConf('corpname')
                             },
                             dataType: 'json'
                         }
@@ -829,7 +882,7 @@ define(function (require, exports, module) {
                     .attr('id', 'ipm-loader')
                     .css('position', 'inherit')
                     .append(loaderImg)
-                    .append(layoutModel.translate('global__calculating'));
+                    .append(self.translate('global__calculating'));
                 $(event.target).replaceWith(loaderBox);
 
                 prom.then(
@@ -839,55 +892,52 @@ define(function (require, exports, module) {
                     },
                     function (err) {
                         $(loaderBox).remove();
-                        layoutModel.showMessage('error', layoutModel.translate('global__failed_to_calc_ipm'));
+                        self.layoutModel.showMessage('error', self.translate('global__failed_to_calc_ipm'));
                     }
                 );
             }
         });
     }
 
-    /**
-     *
-     * @param conf
-     */
-    lib.init = function (conf) {
-        lib.layoutModel = new documentModule.PageModel(conf);
-        lib.layoutModel.init();
-        lib.touchHandler = new TouchHandler();
-        lib.lineSelectionStore = new concStores.LineSelectionStore(lib.layoutModel,
-                lib.layoutModel.dispatcher, conclines.openStorage(), 'simple');
-
-        lib.lineSelectionStore.addClearSelectionHandler(refreshSelection);
-
-        lib.views = concViews.init(lib.layoutModel.dispatcher, lib.layoutModel.exportMixins(),
-                lib.lineSelectionStore, lib.layoutModel.getStores().userInfoStore);
-
-        lib.hasLockedGroups = lib.layoutModel.getConf('numLinesInGroups') > 0;
-
-        if (lib.hasLockedGroups) {
-            setDefinedGroups();
+    init():void {
+        this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection);
+        if (this.hasLockedGroups) {
+            this.setDefinedGroups();
 
         } else {
-            bindSelectionModeSwitch();
-            refreshSelection();
+            this.bindSelectionModeSwitch();
+            this.refreshSelection();
         }
-        reinitSelectionMenuLink();
+        this.reinitSelectionMenuLink();
 
-        misc();
-        addWarnings();
-        initConcViewScrollbar();
-        if (conf.anonymousUser) {
-            anonymousUserWarning();
+        this.misc();
+        this.addWarnings();
+        this.initConcViewScrollbar();
+        if (this.layoutModel.getConf('anonymousUser')) {
+            this.anonymousUserWarning();
         }
 
-        onBeforeUnloadAsk();
-        onUnloadSerialize();
-        grantPaginationPageLeave();
-        soundManagerInit();
-        makePageReusable(conf);
-        attachIpmCalcTrigger(lib.layoutModel);
-    };
+        this.onBeforeUnloadAsk();
+        this.onUnloadSerialize();
+        this.grantPaginationPageLeave();
+        this.soundManagerInit();
+        this.setStateUrl();
+        this.attachIpmCalcTrigger();
+    }
+}
 
-    module.exports = lib;
 
-});
+export function init(conf) {
+    let layoutModel = new documentModule.PageModel(conf);
+    layoutModel.init();
+
+    let lineSelectionStore = new concStores.LineSelectionStore(layoutModel,
+            layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
+
+    let views = concViews.init(layoutModel.dispatcher, layoutModel.exportMixins(),
+            lineSelectionStore, layoutModel.getStores().userInfoStore);
+
+    let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;
+    let pageModel = new ViewPage(layoutModel, views, lineSelectionStore, hasLockedGroups);
+    pageModel.init();
+};
