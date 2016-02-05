@@ -104,6 +104,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 let self = this;
                 return (
                     <tr>
+                        <td><strong className="within-rel">{this.props.viewIdx > 0 ? '&' : ''}</strong></td>
                         <td>
                             <WithinSwitch changeHandler={this._changeHandler('negated', this.props.rowIdx,
                                                 (v)=>({'within': false, '!within': true})[v])}
@@ -167,9 +168,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 subcorpFormStore.removeChangeListener(this.changeHandler);
             },
 
-            _renderWithinLine : function (line) {
+            _renderWithinLine : function (line, viewIdx) {
                 if (line) {
-                    return <WithinLine key={line.rowIdx} rowIdx={line.rowIdx}
+                    return <WithinLine key={line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
                             lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
 
                 } else {
@@ -182,8 +183,9 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                     <table>
                         <tbody>
-                            {lines.map((line) => this._renderWithinLine(line))}
+                            {lines.map((line, i) => this._renderWithinLine(line, i))}
                             <tr key="button-row" className="last-line">
+                                <td></td>
                                 <td>
                                     <a className="add-within"
                                         onClick={this._addLineHandler}
