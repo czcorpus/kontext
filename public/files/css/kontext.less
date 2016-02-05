@@ -50,7 +50,7 @@ section.inner {
 
 header .navig-wrapper {
   display: inline-block;
-  padding: 1.4em 1em 1em 2em;
+  padding: 2em 1em 1em 2em;
 }
 
 section.corpus-and-query {
@@ -374,7 +374,6 @@ a#logo-wrapper {
   font-size: 1.2em;
   width: auto;
   height: 3em;
-  border-radius: @input-border-radius;
 }
 
 #menu-bar a:hover {
@@ -390,12 +389,14 @@ a#logo-wrapper {
 }
 
 #menu-level-1 {
-  margin: 0 0 0 1em;
-  padding: 0;
+  margin: 0 0 0 1.4em;
+  padding: 0 0.2em;
   display: inline-block;
   list-style-type: none;
   height: 100%;
   vertical-align: middle;
+  background-color: rgba(255, 255, 255, 1);
+  border-radius: @border-radius-default;
 }
 
 #menu-level-1 > li {
@@ -550,9 +551,6 @@ a#logo-wrapper {
   padding: 0;
   color: #000000;
   white-space: nowrap;
-  border-style: solid;
-  border-color: #e6e3df;
-  border-width: 1pt 0 1pt 0;
 }
 
 #topbar > * {

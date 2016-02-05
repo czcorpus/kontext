@@ -496,7 +496,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     #set $i = 0
     #for $item in $getVar('query_overview', [])
     <li>
-    <span class="transition">&\#9654;</span>
+    #if $i > 0#<span class="transition">&\#9654;</span>#else#|#end if
     <strong>$item.op:</strong>
     <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
     title="#filter $HtmlEscape#$item.arg#end filter#">
