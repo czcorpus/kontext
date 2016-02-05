@@ -113,6 +113,7 @@ class ViewPage {
 
     private touchHandler:TouchHandler;
 
+    private jscrollpaneApi:any;
 
     constructor(layoutModel:documentModule.PageModel, views:any, lineSelectionStore:concStores.LineSelectionStore,
             hasLockedGroups:boolean) {
@@ -499,6 +500,11 @@ class ViewPage {
                 this.lineSelectionStore.setMode(mode);
                 this.updateUISelectionMode();
                 this.reinitSelectionMenuLink();
+                let realHeight = $('#conclines').height();
+                // here follows a quite dirty workaround to keep jscrollpane
+                // without verical scrollbar after reinitialize() is called
+                $('#conclines-wrapper').css('height', (realHeight + 25).toFixed(0) + 'px');
+                this.jscrollpaneApi.reinitialise();
             }
         );
     }
@@ -621,38 +627,40 @@ class ViewPage {
      * This function is taken from jscrollpane demo page
      */
     private initConcViewScrollbar():void {
+        let self = this;
         let elm = $('#conclines-wrapper');
-        let api;
 
         elm.jScrollPane();
-        api = elm.data('jsp');
-        $(win).on('resize', function () {
-            api.reinitialise();
+        this.jscrollpaneApi = elm.data('jsp');
+        $(win).on('resize', () => {
+            this.jscrollpaneApi.reinitialise();
         });
-        $(win).on('keydown', function (event) {
+        $(win).on('keydown', (event) => {
             if ($('#conclines-wrapper:visible').length > 0 && [37, 39].indexOf(event.keyCode) > -1) {
                 event.preventDefault();
             }
             if ($('input:focus').length === 0) {
                 if (event.keyCode === 37) {
-                    api.scrollToPercentX(Math.max(api.getPercentScrolledX() - 0.2, 0));
+                    this.jscrollpaneApi.scrollToPercentX(
+                            Math.max(this.jscrollpaneApi.getPercentScrolledX() - 0.2, 0));
 
                 } else if (event.keyCode === 39) {
-                    api.scrollToPercentX(Math.min(api.getPercentScrolledX() + 0.2, 1));
+                    this.jscrollpaneApi.scrollToPercentX(
+                            Math.min(this.jscrollpaneApi.getPercentScrolledX() + 0.2, 1));
                 }
             }
         });
 
-        this.attachMouseWheelEvents(elm, function (evt) {
+        this.attachMouseWheelEvents(elm, (evt) => {
             if (evt.shiftKey) {
-                var delta = Math.max(-1, Math.min(1, (evt.wheelDelta || -evt.detail)));
-                api.scrollBy(delta * 40, 0, false);
+                let delta = Math.max(-1, Math.min(1, (evt.wheelDelta || -evt.detail)));
+                this.jscrollpaneApi.scrollBy(delta * 40, 0, false);
                 evt.preventDefault();
             }
         });
 
-        this.touchHandler.attachTouchEvents(elm, function (delta) {
-            api.scrollBy(-delta, 0, false);
+        this.touchHandler.attachTouchEvents(elm, (delta) => {
+            this.jscrollpaneApi.scrollBy(-delta, 0, false);
         });
     }
 
