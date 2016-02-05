@@ -21,7 +21,6 @@ import os.path
 import copy
 import re
 import collections
-import hashlib
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -49,6 +48,42 @@ def update_params(params, key, value):
 class ConcError(Exception):
     def __init__(self, msg):
         super(ConcError, self).__init__(msg)
+
+
+class LinesGroups(object):
+    """
+    Handles concordance lines groups manually defined by a user.
+    It is expected that the controller has always an instance of
+    this class available (i.e. no None value).
+    """
+    def __init__(self, data):
+        if type(data) is not list:
+            raise ValueError('LinesGroups data argument must be a list')
+        self.data = data
+        self.sorted = False
+
+    def __len__(self):
+        return len(self.data) if self.data else 0
+
+    def __iter__(self):
+        return iter(self.data) if self.data else iter([])
+
+    def serialize(self):
+        return {'data': self.data, 'sorted': self.sorted}
+
+    def as_list(self):
+        return self.data if self.data else []
+
+    def is_defined(self):
+        return len(self.data) > 0
+
+    @staticmethod
+    def deserialize(data):
+        if type(data) is list:
+            data = dict(data=data)
+        ans = LinesGroups(data.get('data', []))
+        ans.sorted = data.get('sorted', False)
+        return ans
 
 
 class LegacyForm(object):
@@ -120,7 +155,7 @@ class Kontext(Controller):
         self.disabled_menu_items = []
         self.save_menu = []
         self.subcpath = []
-        self._lines_groups = None
+        self._lines_groups = LinesGroups(data=[])
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
 
         # conc_persistence plugin related attributes
@@ -364,7 +399,8 @@ class Kontext(Controller):
             # will be rewritten by self.args.q !!!
             if self._prev_q_data is not None:
                 self.args.q = self._prev_q_data['q'][:] + url_q[1:]
-                self._lines_groups = self._prev_q_data.get('lines_groups', None)
+                self._lines_groups = LinesGroups.deserialize(
+                    self._prev_q_data.get('lines_groups', []))
             else:
                 # !!! we have to reset the invalid query, otherwise _store_conc_params
                 # generates a new key pointing to it
@@ -385,7 +421,7 @@ class Kontext(Controller):
                 'corpname': self.args.corpname,
                 'usesubcorp': self.args.usesubcorp,
                 'align': self.args.align,
-                'lines_groups': self._lines_groups
+                'lines_groups': self._lines_groups.serialize()
             }
             q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
                                                          curr_data=query,
@@ -424,7 +460,7 @@ class Kontext(Controller):
         else:
             tpl_data['q'] = self.urlencode([('q', q) for q in self.args.q])
             tpl_data['Q'] = [{'q': q} for q in self.args.q]
-        tpl_data['num_lines_in_groups'] = len(self._lines_groups) if self._lines_groups else 0
+        tpl_data['num_lines_in_groups'] = len(self._lines_groups)
 
     def _scheduled_actions(self, user_settings):
         actions = []

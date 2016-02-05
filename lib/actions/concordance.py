@@ -21,7 +21,7 @@ from collections import defaultdict
 
 from werkzeug.datastructures import MultiDict
 
-from kontext import Kontext, ConcError, MainMenu
+from kontext import Kontext, ConcError, MainMenu, LinesGroups
 from controller import UserActionException, exposed
 import settings
 import conclib
@@ -137,10 +137,10 @@ class Actions(Kontext):
         result['query_overview'] = self.concdesc_json().get('Desc', [])
 
     def apply_linegroups(self, conc):
-        if self._lines_groups:
+        if self._lines_groups.is_defined():
             for lg in self._lines_groups:
                 conc.set_linegroup_at_pos(lg[0], lg[2])
-            if self.args.sort_linegroups:
+            if self._lines_groups.sorted:
                 conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
 
     @exposed(vars=('orig_query', ), legacy=True)
@@ -1558,7 +1558,7 @@ class Actions(Kontext):
                             row_num = None
 
                         lang_rows = process_lang(line, left_key, kwic_key, right_key,
-                                                 add_linegroup=bool(self._lines_groups))
+                                                 add_linegroup=self._lines_groups.is_defined())
                         if 'Align' in line:
                             lang_rows += process_lang(line['Align'], left_key, kwic_key, right_key,
                                                       add_linegroup=False)
@@ -1633,16 +1633,16 @@ class Actions(Kontext):
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
 
-    @exposed(return_type='json', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_unset_lines_groups(self):
-        self._lines_groups = None
+        self._lines_groups = LinesGroups(data=[])
         q_id = self._store_conc_params()
         params = self._collect_conc_next_url_params(q_id)
         return {'id': q_id, 'next_url': self.create_url('view', params)}
 
-    @exposed(return_type='json', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_apply_lines_groups(self, rows=''):
-        self._lines_groups = json.loads(rows)
+        self._lines_groups = LinesGroups(data=json.loads(rows))
         q_id = self._store_conc_params()
         params = self._collect_conc_next_url_params(q_id)
         return {
@@ -1650,7 +1650,7 @@ class Actions(Kontext):
             'next_url': self.create_url('view', params)
         }
 
-    @exposed(return_type='json', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_non_group_lines(self):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
         q_id = self._store_conc_params()
@@ -1660,7 +1660,17 @@ class Actions(Kontext):
             'next_url': self.create_url('view', params)
         }
 
-    @exposed(return_type='json', legacy=True)
+    @exposed(return_type='json', http_method='POST', legacy=True)
+    def ajax_sort_group_lines(self):
+        self._lines_groups.sorted = True
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return {
+            'id': q_id,
+            'next_url': self.create_url('view', params)
+        }
+
+    @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         data = json.loads(rows)
         self.args.q.append(self._filter_lines(data, pnfilter))
@@ -1671,7 +1681,7 @@ class Actions(Kontext):
             'next_url': self.create_url('view', params)
         }
 
-    @exposed(return_type='json', legacy=False)
+    @exposed(return_type='json', http_method='POST', legacy=False)
     def ajax_send_group_selection_link_to_mail(self, request):
         import mailing
         ans = mailing.send_concordance_url(plugins.get('auth'), self._plugin_api,
@@ -1681,7 +1691,7 @@ class Actions(Kontext):
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_line_selection(self):
-        return self._lines_groups if self._lines_groups else []
+        return self._lines_groups.as_list()
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_line_groups_stats(self):

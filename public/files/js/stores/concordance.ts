@@ -106,6 +106,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                     break;
                 case 'LINE_SELECTION_SORT_LINES':
                     self.sortLines(); // this redirects ...
+                    break;
                 case 'LINE_SELECTION_SAVE_UNFINISHED':
                     self.saveUnfinishedStateToServer(payload.props['saveName']).then(
                         function (data) {
@@ -156,7 +157,7 @@ export class LineSelectionStore extends util.SimplePageStore {
         );
     }
 
-    private finishAjaxAction<T>(prom:RSVP.Promise<T>) {
+    private finishAjaxActionWithRedirect<T>(prom:RSVP.Promise<T>) {
         /*
          * please note that we do not have to update layout model
          * query code or any other state parameter here because client
@@ -191,7 +192,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                 contentType : 'application/x-www-form-urlencoded'
             }
         );
-        this.finishAjaxAction(prom);
+        this.finishAjaxActionWithRedirect(prom);
     }
 
     private markLines():void {
@@ -206,7 +207,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                 contentType : 'application/x-www-form-urlencoded'
             }
         );
-        this.finishAjaxAction(prom);
+        this.finishAjaxActionWithRedirect(prom);
     }
 
     private removeNonGroupLines():void {
@@ -219,7 +220,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                 contentType : 'application/x-www-form-urlencoded'
             }
         );
-        this.finishAjaxAction(prom);
+        this.finishAjaxActionWithRedirect(prom);
     }
 
     private removeLines(filter:string):void {
@@ -235,7 +236,7 @@ export class LineSelectionStore extends util.SimplePageStore {
                 contentType : 'application/x-www-form-urlencoded'
             }
         );
-        this.finishAjaxAction(prom);
+        this.finishAjaxActionWithRedirect(prom);
     }
 
     addClearSelectionHandler(fn:()=>void):void {
@@ -285,7 +286,15 @@ export class LineSelectionStore extends util.SimplePageStore {
     }
 
     sortLines():void {
-        window.location.href = 'view?' + this.layoutModel.getConf('stateParams') + '&sort_linegroups=1';
+        let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
+            'POST',
+            this.layoutModel.createActionUrl('ajax_sort_group_lines?' + this.layoutModel.getConf('stateParams')),
+            {},
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        );
+        this.finishAjaxActionWithRedirect(prom);
     }
 
     saveUnfinishedStateToServer(saveName:string):RSVP.Promise<any> {
