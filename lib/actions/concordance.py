@@ -220,6 +220,7 @@ class Actions(Kontext):
         # to be able to display extended context with all set structural attributes
         out['widectx_globals'] = self._get_attrs(self.get_args_mapping_keys(WidectxArgsMapping),
                                                  dict(structs=self._get_struct_opts()))
+        out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         return out
 
     @exposed(argmappings=(ConcArgsMapping, QueryInputs))

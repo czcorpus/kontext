@@ -28,9 +28,6 @@
         <deployment_id>20151031_v4</deployment_id>
         <manatee_path>/optional/path/to/a/non-default/manatee</manatee_path>
         <umask>002</umask>
-        <log_path>/var/log/bonito/application.log</log_path>
-        <log_file_size>1000000</log_file_size>
-        <log_num_files>5</log_num_files>
         <debug>false</debug>
         <maintenance>false</maintenance>
         <profile_log_path>/optional/path/used/for/profiling/output/if/debug/level/is/2</profile_log_path>
@@ -44,7 +41,19 @@
         <error_report_params>
           <param name="queryurl">@_get_current_url</param>
         </error_report_params>
-        <logged_values>
+        <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
+        <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
+        <conc_line_max_group_num>99</conc_line_max_group_num>
+    </global>
+    <mailing>
+        <smtp_server>acme.localdomain</smtp_server>
+        <sender>acme@localdomain</sender>
+    </mailing>
+    <logging>
+        <path>/var/log/bonito/application.log</path>
+        <file_size>1000000</file_size>
+        <num_files>5</num_files>
+        <values>
             <item>environ:REMOTE_ADDR</item>
             <item>environ:HTTP_USER_AGENT</item>
             <item>date</item>
@@ -55,14 +64,8 @@
             <item>settings</item>
             <item>proc_time</item>
             <item>pid</item>
-        </logged_values>
-        <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
-        <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
-    </global>
-    <mailing>
-        <smtp_server>acme.localdomain</smtp_server>
-        <sender>acme@localdomain</sender>
-    </mailing>
+        </values>
+    </logging>
     <plugins>
         <db>
             <module>default_db</module>

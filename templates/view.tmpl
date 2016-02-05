@@ -39,6 +39,7 @@ $_("Concordance")#slurp
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
+    conf.concLineMaxGroupNum = $conc_line_max_group_num;
     pageSelf.init(conf);
 
     #if not $finished and $async and $save and not $sampled_size
