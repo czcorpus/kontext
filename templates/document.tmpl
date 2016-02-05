@@ -243,7 +243,7 @@ define('conf', [], function () {
                             title="$_('Details about current query and related operations')"
                             href="${root_url}concdesc?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)"
                             data-json-href="${root_url}concdesc_json?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)">$_('Query overview')&#8230;</a></li>
-                        <li>
+                        <li class="separ">
                         #if len($undo_q) > 0
                         <a title="$_('Revert last operation on current concordance')" href="${root_url}view?$join_params($globals, $undo_q)">$_('Undo')</a>
                         #else
