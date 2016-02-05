@@ -264,6 +264,13 @@
                         are temporarily stored before being processed</a:documentation>
                         <text />
                     </element>
+                    <optional>
+                        <element name="conc_line_max_group_num">
+                            <a:documentation>defines possible numbers from 0 to the one defined here
+                            which can be used when manually grouping concordance lines</a:documentation>
+                            <data type="integer" />
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="plugins">

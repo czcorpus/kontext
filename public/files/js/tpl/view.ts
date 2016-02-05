@@ -509,6 +509,18 @@ class ViewPage {
         );
     }
 
+    private getMaxGroupId():number {
+        return this.layoutModel.getConf<number>('concLineMaxGroupNum');
+    }
+
+    private validateGroupNameInput(s):boolean {
+        let v = parseInt(s);
+        if (!isNaN(v) && v <= this.getMaxGroupId()) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Handle click on concordance line checkboxes or change in line group text input fields
      */
@@ -539,16 +551,23 @@ class ViewPage {
                 let inputValue = $(e.currentTarget).val();
 
                 if (inputValue !== '') {
-                    if (/\d+/.exec(inputValue)) {
-                        $(e.currentTarget).removeClass('error');
+                    if (self.validateGroupNameInput(inputValue)) {
+                        $(e.currentTarget)
+                            .removeClass('error')
+                            .attr('title', null);
                         self.lineSelectionStore.addLine(id, kwiclen, groupId);
 
                     } else {
-                        $(e.currentTarget).addClass('error');
+                        $(e.currentTarget)
+                            .addClass('error')
+                            .attr('title', self.translate('linesel__error_group_name_please_use{max_group}',
+                                    {max_group: self.getMaxGroupId()}));
                     }
 
                 } else {
-                    $(e.currentTarget).removeClass('error');
+                    $(e.currentTarget)
+                        .removeClass('error')
+                        .attr('title', null);
                     self.lineSelectionStore.removeLine(id);
                 }
                 jqLineSel.find('.value').text(String(self.getNumSelectedItems()));
