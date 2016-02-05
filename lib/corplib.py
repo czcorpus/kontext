@@ -23,6 +23,7 @@ from hashlib import md5
 from datetime import datetime
 import logging
 
+import l10n
 from l10n import import_string, export_string
 import manatee
 from functools import partial
@@ -286,13 +287,14 @@ def attr_vals(corpname, avattr, avpattern, avmaxitems=20):
            (avpattern, ','.join(["'" + item + "'" for item in items]))
 
 
-def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
+def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
     """
     arguments:
     corp -- manatee.Corpus
     subcorpattrs -- ??
     maxlistsize -- in case there is more that this number of items, empty list will be returned
     shrink_list -- list/tuple of attributes we want to return empty lists for
+    collator_locale -- a collator used to sort attribute values (en_US is the default)
 
     returns:
     a list containing following dictionaries
@@ -349,6 +351,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
                                     .split(multisep) for i in range(attr.id_range())]
                         vals = [{'v': x} for x in sorted(set([s for subl in raw_vals for s in subl]))]
                     else:
+
                         vals = [{'v': import_string(attr.id2str(i), from_encoding=corp.get_conf('ENCODING'))}
                                 for i in range(attr.id_range())]
 
@@ -356,9 +359,11 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False):
                     attrval['hierarchical'] = hsep
                     attrval['Values'] = get_attr_hierarchy(vals, hsep, multisep)
                 elif conf_bool(corp.get_conf(n + '.NUMERIC')):
-                    attrval['Values'] = sorted(vals, key=lambda x: x['v'])
+                    attrval['Values'] = sorted(vals, key=lambda item: item['v'])
+                elif collator_locale:
+                    attrval['Values'] = l10n.sort(vals, collator_locale, key=lambda item: item['v'])
                 else:
-                    attrval['Values'] = sorted(vals, cmp=lambda x, y: cmp(x['v'].lower(), y['v'].lower()))
+                    attrval['Values'] = sorted(vals, cmp=lambda x1, x2: cmp(x1['v'].lower(), x2['v'].lower()))
             attrvals.append(attrval)
         attrlines.append({'Line': attrvals})
     return attrlines

@@ -1194,12 +1194,12 @@ class Kontext(Controller):
             raise UserActionException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
+        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if live_attributes are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
         if plugins.has_plugin('live_attributes'):
-            ans['bib_attr'] = plugins.get('corparch').get_corpus_info(
-                self.args.corpname)['metadata']['label_attr']
+            ans['bib_attr'] = corpus_info['metadata']['label_attr']
             list_none = (ans['bib_attr'], )
             tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
 
@@ -1210,7 +1210,8 @@ class Kontext(Controller):
             ans['bib_attr'] = None
             list_none = ()
 
-        tt = corplib.texttype_values(corp, subcorpattrs, maxlistsize, list_none)
+        tt = corplib.texttype_values(corp=corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
+                                     shrink_list=list_none, collator_locale=corpus_info.collator_locale)
         self._add_tt_custom_metadata(tt)
 
         if ret_nums:
