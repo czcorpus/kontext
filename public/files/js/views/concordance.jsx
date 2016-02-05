@@ -155,6 +155,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                     <div id="selection-actions">
                         <h3>{heading}</h3>
+                        {this.translate('global__actions')}:{'\u00A0'}
                         <form action="delete_lines" method="POST">{switchComponent}</form>
                     </div>
                 );

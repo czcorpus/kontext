@@ -201,9 +201,7 @@ class ViewPage {
         } else if (storeMode === 'groups') {
             $('#conclines td.manual-selection input[type=\'text\']').each(applyOn(storeMode, (item) => {
                 let data = self.lineSelectionStore.getLine($(item).attr('data-position'));
-                if (data) {
-                    $(item).val(data[1]);
-                }
+                $(item).val(data ? data[1] : null);
             }));
         }
         self.reinitSelectionMenuLink();
@@ -308,24 +306,23 @@ class ViewPage {
         let self = this;
 
         this.layoutModel.ajax(
-            'GET',
-            this.layoutModel.createActionUrl('ajax_get_line_selection?')
+            'POST',
+            this.layoutModel.createActionUrl('ajax_reedit_line_selection?')
                 + this.layoutModel.getConf('stateParams'),
             {},
             {contentType : 'application/x-www-form-urlencoded'}
 
         ).then(
-            function (data:number[][]) {
+            (data:{id:string; selection:number[][]; next_url:string}) => {
                 $('#selection-mode-switch')
                     .attr('disabled', null);
-                self.hasLockedGroups = false;
-                self.lineSelectionStore.importData(data);
-                self.updateUISelectionMode();
-                self.bindSelectionModeSwitch();
-                self.reinitSelectionMenuLink();
+                this.hasLockedGroups = false;
+                this.lineSelectionStore.importData(data.selection);
+                $(win).off('beforeunload.alert_unsaved');
+                window.location.href = data.next_url;
             },
-            function (err) {
-                self.layoutModel.showMessage('error', err);
+            (err) => {
+                this.layoutModel.showMessage('error', err);
             }
         );
     }
@@ -927,7 +924,7 @@ class ViewPage {
     }
 
     init():void {
-        this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection);
+        this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this));
         if (this.hasLockedGroups) {
             this.setDefinedGroups();
 
