@@ -1,8 +1,8 @@
 @import "shared.less";
 
 #conc-wrapper {
-  border-radius: 9px;
   overflow: hidden;
+  border-radius: 9px;
   margin-bottom: 1em;
   margin-top: 1em;
   box-shadow: @portal-box-shadow;
@@ -38,8 +38,12 @@
 
 #conclines {
   background-color: white;
-  font-size: 10pt;
+  font-size: 1em;
   font-family: 'Roboto Condensed', 'Segoe UI', sans-serif;
+
+  .manual-selection input[type="text"] {
+      font-size: 0.85em;
+  }
 
   .manual-selection input.error {
       background-color: @color-logo-pink;

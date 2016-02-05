@@ -16,10 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+interface JScrollPaneSettings {
+    maintainPosition:boolean;
+}
+
 interface JQuery {
     ajax(args:any):void;
 
-    jScrollPane():void;
+    jScrollPane(settings?:JScrollPaneSettings):void;
 }
 
 interface jqueryPeriodic {
