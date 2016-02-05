@@ -1689,9 +1689,13 @@ class Actions(Kontext):
                                            request.form.get('url'))
         return {'ok': ans}
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_get_line_selection(self):
-        return self._lines_groups.as_list()
+    @exposed(return_type='json', http_method='POST', legacy=True)
+    def ajax_reedit_line_selection(self):
+        ans = self._lines_groups.as_list()
+        self._lines_groups = LinesGroups(data=[])
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return dict(id=q_id, selection=ans, next_url=self.create_url('view', params))
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_line_groups_stats(self):
