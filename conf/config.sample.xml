@@ -168,6 +168,7 @@
         <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>
         <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
         <use_db_whitelist>1</use_db_whitelist>
+        <text_types_cache_dir>/var/local/corpora/tt_cache</text_types_cache_dir>
     </corpora>
 </kontext>
 

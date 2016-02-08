@@ -111,6 +111,37 @@ class LegacyForm(object):
         return tmp if len(tmp) > 1 else tmp[0]
 
 
+class TextTypesCache(object):
+    """
+    Caches corpus text type information (= available structural attribute values).
+    This can be helpful in case of large corpora with rich metadata. In case
+    there is no caching directory set values are always loaded directly from
+    the corpus.
+    """
+    def __init__(self, cache_dir):
+        self._cache_dir = cache_dir
+
+    def _get_cache_path(self, corp):
+        tmp = plugins.get('auth').canonical_corpname(getattr(corp, 'corpname',
+                                                             corp.get_conf('NAME')))
+        return os.path.join(self._cache_dir, '%s.json' % tmp)
+
+    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list, collator_locale):
+        load_data = partial(corplib.texttype_values, corp=corp, subcorpattrs=subcorpattrs,
+                            maxlistsize=maxlistsize, shrink_list=shrink_list,
+                            collator_locale=collator_locale)
+        if self._cache_dir:
+            entry_path = self._get_cache_path(corp)
+            if os.path.isfile(entry_path):
+                tt = json.load(open(entry_path, 'rb'))
+            else:
+                tt = load_data()
+                json.dump(tt, open(entry_path, 'wb'))
+        else:
+            tt = load_data()
+        return tt
+
+
 TextTypeCollector.EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder')
 
 
@@ -157,6 +188,7 @@ class Kontext(Controller):
         self.subcpath = []
         self._lines_groups = LinesGroups(data=[])
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
+        self.tt_cache = TextTypesCache(settings.get('corpora', 'text_types_cache_dir', None))
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -233,7 +265,6 @@ class Kontext(Controller):
         proc_time -- float specifying how long the action took;
         default is None - in such case no information is stored
         """
-        import json
         import datetime
         
         logged_values = settings.get('logging', 'values', ())
@@ -1210,8 +1241,8 @@ class Kontext(Controller):
             ans['bib_attr'] = None
             list_none = ()
 
-        tt = corplib.texttype_values(corp=corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
-                                     shrink_list=list_none, collator_locale=corpus_info.collator_locale)
+        tt = self.tt_cache.get_values(corp=corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
+                                      shrink_list=list_none, collator_locale=corpus_info.collator_locale)
         self._add_tt_custom_metadata(tt)
 
         if ret_nums:
@@ -1324,7 +1355,7 @@ class PluginApi(object):
         subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')
         if not subcorpattrs:
             subcorpattrs = self.current_corpus.get_conf('FULLREF')
-        tt = corplib.texttype_values(self.current_corpus, subcorpattrs, maxlistsize)
+        tt = self._controller.tt_cache.get_values(self.current_corpus, subcorpattrs, maxlistsize)
         for item in tt:
             for tt2 in item['Line']:
                 ans[tt2['name']] = {'type': 'default', 'values': [x['v'] for x in tt2.get('Values', [])]}
