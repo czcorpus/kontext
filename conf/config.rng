@@ -498,13 +498,6 @@
                         <a:documentation>Multilevel frequency distribution - max. number of levels</a:documentation>
                         <data type="integer" />
                     </element>
-                    <optional>
-                        <element name="text_types_cache_dir">
-                            <a:documentation>An optional cache directory for text type listings. This is recommended
-                            for large corpora (billions of tokens and more) with rich metadata.</a:documentation>
-                            <text />
-                        </element>
-                    </optional>
                 </interleave>
             </element>
         </element>
