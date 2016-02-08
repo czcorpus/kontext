@@ -212,7 +212,6 @@ def _get_sync_conc(corp, q, save, subchash, samplesize):
     conc = GeneralWorker().compute_conc(corp, q, samplesize)
     conc.sync()  # wait for the computation to finish
     if save:
-        os.close(0)  # PID file will have fd 1
         cache_map = cache_factory.get_mapping(corp)
         cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:1], conc.size())
         conc.save(cachefile)
