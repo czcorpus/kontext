@@ -16,10 +16,71 @@ specified by attributes values).
 """
 
 from functools import partial
+import json
+import os
+import collections
+import re
 
 import l10n
 from argmapping import Args
 from werkzeug.wrappers import Request
+import corplib
+import settings
+import plugins
+from translation import ugettext as _
+
+
+class TextTypesCache(object):
+    """
+    Caches corpus text type information (= available structural attribute values).
+    This can be helpful in case of large corpora with rich metadata. In case
+    there is no caching directory set values are always loaded directly from
+    the corpus.
+    """
+    def __init__(self, cache_dir):
+        self._cache_dir = cache_dir
+
+    def _get_cache_path(self, corp):
+        tmp = plugins.get('auth').canonical_corpname(getattr(corp, 'corpname',
+                                                             corp.get_conf('NAME')))
+        return os.path.join(self._cache_dir, '%s.json' % tmp)
+
+    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list, collator_locale):
+        load_data = partial(corplib.texttype_values, corp=corp, subcorpattrs=subcorpattrs,
+                            maxlistsize=maxlistsize, shrink_list=shrink_list,
+                            collator_locale=collator_locale)
+        if self._cache_dir:
+            entry_path = self._get_cache_path(corp)
+            if os.path.isfile(entry_path):
+                tt = json.load(open(entry_path, 'rb'))
+            else:
+                tt = load_data()
+                json.dump(tt, open(entry_path, 'wb'))
+        else:
+            tt = load_data()
+        return tt
+
+
+class NormsCache(object):
+
+    def __init__(self, cache_dir):
+        self._cache_dir = cache_dir
+
+    def _get_cache_path(self, corp):
+        tmp = plugins.get('auth').canonical_corpname(getattr(corp, 'corpname',
+                                                             corp.get_conf('NAME')))
+        return os.path.join(self._cache_dir, '%s-norms.json' % tmp)
+
+    def contains(self, corp):
+        return os.path.isfile(self._get_cache_path(corp))
+
+    def get(self, corp):
+        with open(self._get_cache_path(corp), 'rb') as f:
+            return json.load(f)
+
+    def set(self, corp, data):
+        with open(self._get_cache_path(corp), 'wb') as f:
+            json.dump(data, f)
 
 
 class StructNormsCalc(object):
@@ -122,4 +183,94 @@ class TextTypeCollector(object):
             return [(sname, ' & '.join(subquery)) for sname, subquery in structs.items()]
 
 
+class TextTypesException(Exception):
+    pass
 
+
+class TextTypes(object):
+
+    def __init__(self, corp, corpname, ui_lang):
+        self._corp = corp
+        self._corpname = corpname
+        self._ui_lang = ui_lang
+        self._tt_cache = TextTypesCache(settings.get('corpora', 'text_types_cache_dir', None))
+
+    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list, collator_locale):
+        return self._tt_cache.get_values(corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
+
+    def texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True, subcnorm='tokens'):
+        ans = {}
+        if not subcorpattrs:
+            subcorpattrs = self._corp.get_conf('SUBCORPATTRS')
+            if not subcorpattrs:
+                subcorpattrs = self._corp.get_conf('FULLREF')
+        if not subcorpattrs or subcorpattrs == '#':
+            raise TextTypesException(
+                _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
+
+        corpus_info = plugins.get('corparch').get_corpus_info(self._corpname)
+        maxlistsize = settings.get_int('global', 'max_attr_list_size')
+        # if live_attributes are installed then always shrink bibliographical
+        # entries even if their count is < maxlistsize
+        subcorp_attr_list = re.split(r'\s*[,|]\s*', subcorpattrs)
+
+        if plugins.has_plugin('live_attributes'):
+            ans['bib_attr'] = corpus_info['metadata']['label_attr']
+            list_none = (ans['bib_attr'], )
+            tmp = [s for s in subcorp_attr_list]  # making copy here
+            if ans['bib_attr'] and ans['bib_attr'] not in tmp:  # if bib type is not in subcorpattrs
+                tmp.append(ans['bib_attr'])                     # we add it there
+                subcorpattrs = '|'.join(tmp)  # we ignore NoSkE '|' vs. ',' stuff deliberately here
+        else:
+            ans['bib_attr'] = None
+            list_none = ()
+
+        tt = self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
+                                       shrink_list=list_none, collator_locale=corpus_info.collator_locale)
+        self._add_tt_custom_metadata(tt)
+
+        if ret_nums:
+            from texttypes import StructNormsCalc
+            struct_calc = collections.OrderedDict()
+            for item in subcorp_attr_list:
+                k = item.split('.')[0]
+                struct_calc[k] = StructNormsCalc(self._corp, k, subcnorm)
+            # norms_cache = NormsCache(settings.get('corpora', 'text_types_cache_dir', None))
+            for col in reduce(lambda p, c: p + c['Line'], tt, []):
+                if 'textboxlength' not in col:
+                    structname, attrname = col['name'].split('.')
+                    for val in col['Values']:
+                        v = struct_calc[structname].compute_norm(attrname, val['v'])
+                        val['xcnt'] = l10n.format_number(v) if format_num else v
+            ans['Blocks'] = tt
+            ans['Normslist'] = self._get_normslist(struct_calc.keys()[0])
+        else:
+            ans['Blocks'] = tt
+            ans['Normslist'] = []
+        return ans
+
+    def _get_normslist(self, structname):
+        normsliststr = self._corp.get_conf('DOCNORMS')
+        normslist = [{'n': 'freq', 'label': _('Document counts')},
+                     {'n': 'tokens', 'label': _('Tokens')}]
+        if normsliststr:
+            normslist += [{'n': n, 'label': self._corp.get_conf(structname + '.' + n + '.LABEL') or n}
+                          for n in normsliststr.split(',')]
+        else:
+            try:
+                self._corp.get_attr(structname + '.wordcount')
+                normslist.append({'n': 'wordcount', 'label': _('Word counts')})
+            except:
+                pass
+        return normslist
+
+    def _add_tt_custom_metadata(self, tt):
+        metadata = plugins.get('corparch').get_corpus_info(
+                               self._corpname, language=self._ui_lang)['metadata']
+        for line in tt:
+            for item in line.get('Line', ()):
+                item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))
+
+
+def get_tt(corp, ui_lang):
+    return TextTypes(corp, corp.corpname, ui_lang)
