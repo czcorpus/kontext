@@ -1245,7 +1245,7 @@ class PluginApi(object):
         subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')
         if not subcorpattrs:
             subcorpattrs = self.current_corpus.get_conf('FULLREF')
-        tt = get_tt(self.current_corpus, self.user_lang).get_values(subcorpattrs, maxlistsize)
+        tt = get_tt(self.current_corpus, self.user_lang).export(subcorpattrs, maxlistsize)
         for item in tt:
             for tt2 in item['Line']:
                 ans[tt2['name']] = {'type': 'default', 'values': [x['v'] for x in tt2.get('Values', [])]}
