@@ -574,15 +574,6 @@ class ViewPage {
     }
 
     /**
-     * Ensures that concordance lines are serialized once user leaves the page.
-     */
-    private onUnloadSerialize():void {
-        $(win).on('unload', () => {
-            this.lineSelectionStore.serialize();
-        });
-    }
-
-    /**
      * User must be notified in case he wants to leave the page but at the same time he
      * has selected some concordance lines without using them in a filter.
      */
@@ -942,7 +933,6 @@ class ViewPage {
         }
 
         this.onBeforeUnloadAsk();
-        this.onUnloadSerialize();
         this.grantPaginationPageLeave();
         this.soundManagerInit();
         this.setStateUrl();
