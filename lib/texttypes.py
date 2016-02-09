@@ -37,50 +37,26 @@ class TextTypesCache(object):
     there is no caching directory set values are always loaded directly from
     the corpus.
     """
-    def __init__(self, cache_dir):
-        self._cache_dir = cache_dir
 
-    def _get_cache_path(self, corp):
-        tmp = plugins.get('auth').canonical_corpname(getattr(corp, 'corpname',
-                                                             corp.get_conf('NAME')))
-        return os.path.join(self._cache_dir, '%s.json' % tmp)
+    def __init__(self, db):
+        self._db = db
 
-    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list, collator_locale):
-        load_data = partial(corplib.texttype_values, corp=corp, subcorpattrs=subcorpattrs,
-                            maxlistsize=maxlistsize, shrink_list=shrink_list,
-                            collator_locale=collator_locale)
-        if self._cache_dir:
-            entry_path = self._get_cache_path(corp)
-            if os.path.isfile(entry_path):
-                tt = json.load(open(entry_path, 'rb'))
-            else:
-                tt = load_data()
-                json.dump(tt, open(entry_path, 'wb'))
+    @staticmethod
+    def _mk_cache_key(corpname):
+        return 'ttcache:%s' % (corpname, )
+
+    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
+        get_data = partial(corplib.texttype_values, corp=corp, subcorpattrs=subcorpattrs,
+                           maxlistsize=maxlistsize, shrink_list=shrink_list,
+                           collator_locale=collator_locale)
+        cached = self._db.get(self._mk_cache_key(corp.corpname), {})
+
+        if corp.corpname in cached:
+            tt = cached[corp.corpname]
         else:
-            tt = load_data()
+            tt = get_data()
+            self._db.set(self._mk_cache_key(corp.corpname), tt)
         return tt
-
-
-class NormsCache(object):
-
-    def __init__(self, cache_dir):
-        self._cache_dir = cache_dir
-
-    def _get_cache_path(self, corp):
-        tmp = plugins.get('auth').canonical_corpname(getattr(corp, 'corpname',
-                                                             corp.get_conf('NAME')))
-        return os.path.join(self._cache_dir, '%s-norms.json' % tmp)
-
-    def contains(self, corp):
-        return os.path.isfile(self._get_cache_path(corp))
-
-    def get(self, corp):
-        with open(self._get_cache_path(corp), 'rb') as f:
-            return json.load(f)
-
-    def set(self, corp, data):
-        with open(self._get_cache_path(corp), 'wb') as f:
-            json.dump(data, f)
 
 
 class StructNormsCalc(object):
@@ -93,7 +69,13 @@ class StructNormsCalc(object):
         self._struct = self._corp.get_struct(structname)
         self._subcnorm = subcnorm
         self._export_string = partial(l10n.export_string, to_encoding=self._corp.get_conf('ENCODING'))
-        self._normvals = self._calc_normvals()
+        self._normvals = None
+
+    @property
+    def normvals(self):
+        if self._normvals is None:
+            self._normvals = self._calc_normvals()
+        return self._normvals
 
     def _calc_normvals(self):
         if self._subcnorm == 'freq':
@@ -119,9 +101,30 @@ class StructNormsCalc(object):
         r = self._corp.filter_query(self._struct.attr_val(attrname, valid))
         cnt = 0
         while not r.end():
-            cnt += self._normvals[r.peek_beg()]
+            cnt += self.normvals[r.peek_beg()]
             r.next()
         return cnt
+
+
+class CachedStructNormsCalc(StructNormsCalc):
+
+    def __init__(self, corpus, structname, subcnorm, db):
+        super(CachedStructNormsCalc, self).__init__(corpus, structname, subcnorm)
+        self._db = db
+        mkdict = partial(collections.defaultdict, lambda: {})
+        try:
+            self._data = mkdict(self._db.get(self._mk_cache_key(), {}))
+        except IOError:
+            self._data = mkdict()
+
+    def _mk_cache_key(self):
+        return 'ttcache:%s-%s-%s' % (self._corp.corpname, self._structname, self._subcnorm)
+
+    def compute_norm(self, attrname, value):
+        if attrname not in self._data or value not in self._data[attrname]:
+            self._data[attrname][value] = super(CachedStructNormsCalc, self).compute_norm(attrname, value)
+            self._db.set(self._mk_cache_key(), self._data)
+        return self._data[attrname][value]
 
 
 class TextTypeCollector(object):
@@ -193,10 +196,10 @@ class TextTypes(object):
         self._corp = corp
         self._corpname = corpname
         self._ui_lang = ui_lang
-        self._tt_cache = TextTypesCache(settings.get('corpora', 'text_types_cache_dir', None))
+        self._tt_cache = TextTypesCache(plugins.get('db'))
 
-    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list, collator_locale):
-        return self._tt_cache.get_values(corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
+    def get_values(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
+        return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
 
     def texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True, subcnorm='tokens'):
         ans = {}
@@ -230,12 +233,10 @@ class TextTypes(object):
         self._add_tt_custom_metadata(tt)
 
         if ret_nums:
-            from texttypes import StructNormsCalc
             struct_calc = collections.OrderedDict()
             for item in subcorp_attr_list:
                 k = item.split('.')[0]
-                struct_calc[k] = StructNormsCalc(self._corp, k, subcnorm)
-            # norms_cache = NormsCache(settings.get('corpora', 'text_types_cache_dir', None))
+                struct_calc[k] = CachedStructNormsCalc(self._corp, k, subcnorm, db=plugins.get('db'))
             for col in reduce(lambda p, c: p + c['Line'], tt, []):
                 if 'textboxlength' not in col:
                     structname, attrname = col['name'].split('.')

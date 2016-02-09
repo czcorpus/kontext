@@ -107,12 +107,6 @@ export class LineSelectionStore extends util.SimplePageStore {
                 case 'LINE_SELECTION_SORT_LINES':
                     self.sortLines(); // this redirects ...
                     break;
-                case 'LINE_SELECTION_SAVE_UNFINISHED':
-                    self.saveUnfinishedStateToServer(payload.props['saveName']).then(
-                        function (data) {
-                            self.notifyChangeListeners('STATUS_UPDATED_LINES_SAVED');
-                        }
-                    );
             }
         });
     }
@@ -297,80 +291,53 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.finishAjaxActionWithRedirect(prom);
     }
 
-    saveUnfinishedStateToServer(saveName:string):RSVP.Promise<any> {
+    importData(data:Array<Array<number>>):void {
         let self = this;
-        let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
-            'POST',
-            this.layoutModel.createActionUrl('ajax_apply_lines_groups?' + self.layoutModel.getConf('stateParams')),
-            {
-                rows : JSON.stringify(self.clStorage.getAll()),
-                remove_rest: '0'
-            },
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
-        );
-        return prom.then(
-             function (data) {
-                if (!data.error) {
-                    self.lastCheckpoint = data.next_url;
-                    self.layoutModel.showMessage('info',
-                            self.layoutModel.translate('linesel__line_selection_saved'));
+        this.clear();
+        data.forEach((item) => {
+            self.addLine(String(item[0]), item[1], item[2]);
+        });
+        this.mode = this.clStorage.getMode();
+        this.clStorage.serialize();
+        this.notifyChangeListeners('STATUS_UPDATED');
+    }
 
-                } else {
-                    self.layoutModel.showMessage('error', data.error);
-                }
-            },
-            function (err) {
-                self.layoutModel.showMessage('error', err);
-            }
-         );
-     }
+    addLine(id:string, kwiclen:number, category:number):void {
+        this.clStorage.addLine(id, kwiclen, category);
+        this.clStorage.serialize();
+    }
 
-     importData(data:Array<Array<number>>):void {
-         let self = this;
-         this.clear();
-         data.forEach((item) => {
-             self.addLine(String(item[0]), item[1], item[2]);
-         });
-         this.mode = this.clStorage.getMode();
-         this.notifyChangeListeners('STATUS_UPDATED');
-     }
+    removeLine(id):void {
+        this.clStorage.removeLine(id);
+        this.clStorage.serialize();
+    }
 
-     addLine(id:string, kwiclen:number, category:number):void {
-         return this.clStorage.addLine(id, kwiclen, category);
-     }
+    containsLine(id:string):boolean {
+        return this.clStorage.containsLine(id);
+    }
 
-     removeLine(id):void {
-         return this.clStorage.removeLine(id);
-     }
+    getLine(id:string):any {
+        return this.clStorage.getLine(id);
+    }
 
-     containsLine(id:string):boolean {
-         return this.clStorage.containsLine(id);
-     }
+    getAll():any {
+        return this.clStorage.getAll();
+    }
 
-     getLine(id:string):any {
-         return this.clStorage.getLine(id);
-     }
+    clear():void {
+        return this.clStorage.clear();
+    }
 
-     getAll():any {
-         return this.clStorage.getAll();
-     }
+    size():number {
+        return this.clStorage.size();
+    }
 
-     clear():void {
-         return this.clStorage.clear();
-     }
+    supportsSessionStorage():boolean {
+        return this.clStorage.supportsSessionStorage();
+    }
 
-     size():number {
-         return this.clStorage.size();
-     }
-
-     supportsSessionStorage():boolean {
-         return this.clStorage.supportsSessionStorage();
-     }
-
-     serialize():void {
-         this.clStorage.serialize();
-     }
+    serialize():void {
+        this.clStorage.serialize();
+    }
 
 }
