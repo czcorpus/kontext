@@ -19,8 +19,6 @@ import inspect
 import urllib
 import os.path
 import copy
-import re
-import collections
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -38,7 +36,7 @@ import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, AttrMappingProxy, AttrMappingInfoProxy, GlobalArgs
 from main_menu import MainMenu, MainMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
-from texttypes import TextTypeCollector
+from texttypes import TextTypeCollector, get_tt
 
 
 def update_params(params, key, value):
@@ -111,37 +109,6 @@ class LegacyForm(object):
         return tmp if len(tmp) > 1 else tmp[0]
 
 
-class TextTypesCache(object):
-    """
-    Caches corpus text type information (= available structural attribute values).
-    This can be helpful in case of large corpora with rich metadata. In case
-    there is no caching directory set values are always loaded directly from
-    the corpus.
-    """
-    def __init__(self, cache_dir):
-        self._cache_dir = cache_dir
-
-    def _get_cache_path(self, corp):
-        tmp = plugins.get('auth').canonical_corpname(getattr(corp, 'corpname',
-                                                             corp.get_conf('NAME')))
-        return os.path.join(self._cache_dir, '%s.json' % tmp)
-
-    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list, collator_locale):
-        load_data = partial(corplib.texttype_values, corp=corp, subcorpattrs=subcorpattrs,
-                            maxlistsize=maxlistsize, shrink_list=shrink_list,
-                            collator_locale=collator_locale)
-        if self._cache_dir:
-            entry_path = self._get_cache_path(corp)
-            if os.path.isfile(entry_path):
-                tt = json.load(open(entry_path, 'rb'))
-            else:
-                tt = load_data()
-                json.dump(tt, open(entry_path, 'wb'))
-        else:
-            tt = load_data()
-        return tt
-
-
 TextTypeCollector.EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder')
 
 
@@ -188,7 +155,6 @@ class Kontext(Controller):
         self.subcpath = []
         self._lines_groups = LinesGroups(data=[])
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
-        self.tt_cache = TextTypesCache(settings.get('corpora', 'text_types_cache_dir', None))
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -1212,82 +1178,6 @@ class Kontext(Controller):
             revers = False
         return k, revers
 
-    def _texttypes_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True, subcnorm='tokens'):
-        corp = self._corp()
-        ans = {}
-
-        if not subcorpattrs:
-            subcorpattrs = corp.get_conf('SUBCORPATTRS')
-            if not subcorpattrs:
-                subcorpattrs = corp.get_conf('FULLREF')
-
-        if not subcorpattrs or subcorpattrs == '#':
-            raise UserActionException(
-                _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
-
-        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-        maxlistsize = settings.get_int('global', 'max_attr_list_size')
-        # if live_attributes are installed then always shrink bibliographical
-        # entries even if their count is < maxlistsize
-        if plugins.has_plugin('live_attributes'):
-            ans['bib_attr'] = corpus_info['metadata']['label_attr']
-            list_none = (ans['bib_attr'], )
-            tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
-
-            if ans['bib_attr'] and ans['bib_attr'] not in tmp:  # if bib type is not in subcorpattrs
-                tmp.append(ans['bib_attr'])                     # we add it there
-                subcorpattrs = '|'.join(tmp)  # we ignore NoSkE '|' vs. ',' stuff deliberately here
-        else:
-            ans['bib_attr'] = None
-            list_none = ()
-
-        tt = self.tt_cache.get_values(corp=corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
-                                      shrink_list=list_none, collator_locale=corpus_info.collator_locale)
-        self._add_tt_custom_metadata(tt)
-
-        if ret_nums:
-            from texttypes import StructNormsCalc
-            struct_calc = collections.OrderedDict()
-            for item in subcorpattrs.split(','):
-                k = item.split('.')[0]
-                struct_calc[k] = StructNormsCalc(self._corp(), k, subcnorm)
-
-            for col in reduce(lambda p, c: p + c['Line'], tt, []):
-                if 'textboxlength' not in col:
-                    structname, attrname = col['name'].split('.')
-                    for val in col['Values']:
-                        v = struct_calc[structname].compute_norm(attrname, val['v'])
-                        val['xcnt'] = format_number(v) if format_num else v
-            ans['Blocks'] = tt
-            ans['Normslist'] = self._get_normslist(struct_calc.keys()[0])
-        else:
-            ans['Blocks'] = tt
-            ans['Normslist'] = []
-        return ans
-
-    def _get_normslist(self, structname):
-        corp = self._corp()
-        normsliststr = corp.get_conf('DOCNORMS')
-        normslist = [{'n': 'freq', 'label': _('Document counts')},
-                     {'n': 'tokens', 'label': _('Tokens')}]
-        if normsliststr:
-            normslist += [{'n': n, 'label': corp.get_conf(structname + '.' + n + '.LABEL') or n}
-                          for n in normsliststr.split(',')]
-        else:
-            try:
-                corp.get_attr(structname + '.wordcount')
-                normslist.append({'n': 'wordcount', 'label': _('Word counts')})
-            except:
-                pass
-        return normslist
-
-    def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.get('corparch').get_corpus_info(
-                               self.args.corpname, language=self.ui_lang)['metadata']
-        for line in tt:
-            for item in line.get('Line', ()):
-                item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))
-
     @staticmethod
     def _store_checked_text_types(src_obj, out):
         """
@@ -1355,7 +1245,7 @@ class PluginApi(object):
         subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')
         if not subcorpattrs:
             subcorpattrs = self.current_corpus.get_conf('FULLREF')
-        tt = self._controller.tt_cache.get_values(self.current_corpus, subcorpattrs, maxlistsize)
+        tt = get_tt(self.current_corpus, self.user_lang).export(subcorpattrs, maxlistsize)
         for item in tt:
             for tt2 in item['Line']:
                 ans[tt2['name']] = {'type': 'default', 'values': [x['v'] for x in tt2.get('Values', [])]}

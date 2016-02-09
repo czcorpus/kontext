@@ -34,7 +34,7 @@ import l10n
 from l10n import import_string, export_string
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping, ConcArgsMapping, QueryInputs, Parameter
-from texttypes import TextTypeCollector
+from texttypes import TextTypeCollector, get_tt
 
 
 class Actions(Kontext):
@@ -252,7 +252,7 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         out['aligned_corpora'] = conc_args.getlist('sel_aligned')
-        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
+        out['TextTypeSel'] = get_tt(self._corp(), self.ui_lang).export_with_norms(ret_nums=False)
         self._export_subcorpora_list(conc_args.corpname, out)
         self._attach_query_metadata(out)
         return out
@@ -635,7 +635,7 @@ class Actions(Kontext):
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.q.append('f')
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
-            ans['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False)
+            ans['TextTypeSel'] = get_tt(self._corp(), self.ui_lang).export_with_norms(ret_nums=False)
             ans.update(self.view())
         except ConcError as e:
             raise UserActionException(e.message)
@@ -652,7 +652,8 @@ class Actions(Kontext):
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
-        out['TextTypeSel'] = self._texttypes_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
+        tt = get_tt(self._corp(), self.ui_lang)
+        out['TextTypeSel'] = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',

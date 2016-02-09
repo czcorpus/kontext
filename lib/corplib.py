@@ -291,9 +291,10 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
     """
     arguments:
     corp -- manatee.Corpus
-    subcorpattrs -- ??
+    subcorpattrs -- structures and attributes to be processed (see Manatee's SUBCORPATTRS)
     maxlistsize -- in case there is more that this number of items, empty list will be returned
-    shrink_list -- list/tuple of attributes we want to return empty lists for
+    shrink_list -- list/tuple of attributes we want to return empty lists for (False can be used
+                   to specify an empty value)
     collator_locale -- a collator used to sort attribute values (en_US is the default)
 
     returns:

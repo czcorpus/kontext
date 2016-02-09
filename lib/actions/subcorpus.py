@@ -25,7 +25,7 @@ from l10n import import_string, format_number
 import corplib
 import conclib
 from argmapping import ConcArgsMapping
-from texttypes import TextTypeCollector
+from texttypes import TextTypeCollector, get_tt
 
 
 class Subcorpus(Kontext):
@@ -135,7 +135,7 @@ class Subcorpus(Kontext):
         subcnorm = request.args.get('subcnorm', 'tokens')
 
         try:
-            tt_sel = self._texttypes_with_norms(subcnorm=subcnorm)
+            tt_sel = get_tt(self._corp(), self.ui_lang).export_with_norms(subcnorm=subcnorm)
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)
