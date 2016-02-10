@@ -198,6 +198,7 @@ declare module Kontext {
         PopupBox:React.ReactClass;
         Messages:React.ReactClass;
         QueryHints:React.ReactClass;
+        SubcorpusInfo:React.ReactClass;
     }
 
     export interface LayoutStores {

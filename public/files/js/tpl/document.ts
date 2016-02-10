@@ -741,6 +741,62 @@ export class PageModel implements Kontext.PluginProvider {
         );
     }
 
+    bindSubcorpusDescAction() {
+        let triggerLink = $('#active-corpus').find('a.subcorpus');
+        let self = this;
+
+        popupbox.bind(
+            triggerLink,
+            function (box, finalize) {
+                let prom:RSVP.Promise<any> = self.ajax<any>(
+                    'GET',
+                    self.createActionUrl('subcorpus/ajax_subcorp_info'),
+                    {
+                        'corpname': self.getConf('corpname'),
+                        'subcname': self.getConf('subcorpname')
+                    },
+                    {
+                        contentType : 'application/x-www-form-urlencoded'
+                    }
+                );
+                prom.then(
+                    function (data) {
+                        if (!data['contains_errors']) {
+                            self.renderReactComponent(
+                                self.layoutViews.SubcorpusInfo,
+                                box.getRootElement(),
+                                {
+                                    doneCallback: finalize.bind(self),
+                                    corpname: self.getConf('corpname'),
+                                    name: data['subCorpusName'],
+                                    size: data['subCorpusSize'],
+                                    structName: data['extended_info']['struct_name'],
+                                    condition: data['extended_info']['condition']
+                                }
+                            );
+
+                        } else {
+                            self.showMessage('error', data['error']);
+                        }
+                    },
+                    function (err) {
+                        self.showMessage('error', err);
+                    }
+                );
+            },
+            {
+                width: 'nice',
+                closeIcon: true,
+                type: 'plain',
+                timeout: 0,
+                domId: 'subcorpus-info-box',
+                onClose: function () {
+                    self.unmountReactComponent(this.getRootElement());
+                }
+            }
+        );
+    }
+
     /**
      *
      */
@@ -991,6 +1047,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.initActions.add({
             bindStaticElements: self.bindStaticElements(),
             bindCorpusDescAction: self.bindCorpusDescAction(),
+            bindSubcorpusDescAction: self.bindSubcorpusDescAction(),
             queryOverview: self.queryOverview(),
             mainMenuInit: self.mainMenu.init(),
             timeoutMessages: self.timeoutMessages(),

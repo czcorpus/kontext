@@ -100,6 +100,44 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        // ---------------------------------------------------------------
+
+        var SubcorpusInfo = React.createClass({
+            mixins: mixins,
+
+            componentDidMount : function () {
+                // we must inform non-react environment (here popupbox.js) we are ready here
+                if (typeof this.props.doneCallback === 'function') {
+                    this.props.doneCallback();
+                }
+            },
+
+            _getCql() {
+                return '<' + this.props.structName + ' ' + this.props.condition + ' />';
+            },
+
+            render: function () {
+                return (
+                    <div>
+                        <h2>{this.props.corpname}:{this.props.name}</h2>
+                        <div>
+                            {this.translate('global__size')}: <strong>{this.props.size}</strong>
+                            {'\u00A0'}({this.translate('global__in_tokens')})
+                        </div>
+                        <div className="subc-query">
+                            {this.translate('global__subc_query')}:
+                            <textarea readOnly="true"
+                                  value={this._getCql()}
+                                  style={{width: '100%'}}
+                                  />
+                        </div>
+                    </div>
+                );
+            }
+        });
+
+        // ---------------------------------------------------------------
+
         var CorpusReference = React.createClass({
 
             mixins: mixins,
@@ -381,6 +419,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        // -------------------------------------------------------------------
 
         var QueryHints = React.createClass({
 
@@ -429,7 +468,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
             CorpusInfoBox: CorpusInfoBox,
             PopupBox: PopupBox,
             Messages: Messages,
-            QueryHints: QueryHints
+            QueryHints: QueryHints,
+            SubcorpusInfo: SubcorpusInfo
         };
 
     };
