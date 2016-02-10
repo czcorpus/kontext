@@ -361,14 +361,14 @@ a#logo-wrapper {
 }
 #menu-level-1 {
     box-sizing: border-box;
-    margin: 0 0 0 1.7em;
+    margin: 0 0 0 1em;
     padding: 0 0.7em;
     display: inline-block;
     list-style-type: none;
     height: 100%;
     vertical-align: middle;
-    background-color: rgba(255, 255, 255, 1);
-    border: 2px solid @color-logo-blue;
+    background-color: transparent;
+    border: 2px solid transparent;
     border-radius: @border-radius-default;
 }
 #menu-level-1 > li {
@@ -404,14 +404,14 @@ a#logo-wrapper {
 }
 #menu-level-1 > li.active {
     position: relative;
-    background-color: #C9E9F8;
-    border: 1px solid #C9E9F8;
+    background-color: @color-default-green;
+    border: 1px solid @color-default-green;
 }
 #menu-level-1 > li.active ul.submenu {
     display: none;
     position: absolute;
     left: 0;
-    background-color: #C9E9F8;
+    background-color: @color-default-green;
     box-shadow: @portal-box-shadow;
     margin: 0.2em 0 0 0;
     z-index: 500;
@@ -432,7 +432,7 @@ a#logo-wrapper {
         margin: 0.2em 0 0.2em 0;
     }
     li:hover {
-        background-color: @color-bg-light-blue;
+        background-color: @color-light-green;
     }
     li.disabled a {
         color: @color-light-text;

@@ -119,7 +119,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             render: function () {
                 return (
                     <div>
-                        <h2>{this.props.corpname}:{this.props.name}</h2>
+                        <h2>{this.props.corpname}:<strong>{this.props.name}</strong></h2>
                         <div>
                             {this.translate('global__size')}: <strong>{this.props.size}</strong>
                             {'\u00A0'}({this.translate('global__in_tokens')})
