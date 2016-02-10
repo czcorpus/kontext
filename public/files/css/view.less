@@ -39,7 +39,7 @@
 #conclines {
   background-color: white;
   font-size: 1em;
-  font-family: 'Roboto Condensed', 'Segoe UI', sans-serif;
+  font-family: @condensed-font-family;
 
   .manual-selection input[type="text"] {
       font-size: 0.85em;
@@ -453,49 +453,51 @@ table#conclines .concordance-col-heading {
   display: inline-block;
 }
 
-#result-info #ipm-loader img,
-#result-info #conc-loader img {
-  background-color: white;
-  border-radius: 3px;
-  opacity: 0.7;
-  padding: 3px 20px;
-}
-
-#result-info #conc-loader img {
-  position: absolute;
-}
-
-#result-info #ipm-loader img {
-  position: absolute;
-  //display: inline-block;
-  //vertical-align: middle;
-}
-
-#result-info .ipm {
-  font-weight: bold;
-}
-
 #result-info {
-  margin: 0;
-  float: left;
-  width: 70%;
-}
+    margin: 0;
+    float: left;
+    width: 70%;
+    font-size: 1em;
+    font-family: @condensed-font-family;
 
-#result-info .lines-selection {
-  white-space: nowrap;
-  padding-right: 21px;
-}
+    #ipm-loader img,
+    #conc-loader img {
+        background-color: white;
+        border-radius: 3px;
+        opacity: 0.7;
+        padding: 3px 20px;
+    }
 
-#result-info .lines-selection.warn {
-  background-image: url(../img/warning-icon.png);
-  background-repeat: no-repeat;
-  background-position: 100% 0;
-}
+    #conc-loader img {
+        position: absolute;
+    }
 
-#result-info .lines-selection.info {
-  background-image: url(../img/info-icon.png);
-  background-repeat: no-repeat;
-  background-position: 100% 0;
+    #ipm-loader img {
+        position: absolute;
+        //display: inline-block;
+        //vertical-align: middle;
+    }
+
+    .ipm {
+        font-weight: bold;
+    }
+
+    .lines-selection {
+        white-space: nowrap;
+        padding-right: 2em;
+    }
+
+    .lines-selection.warn {
+        background-image: url(../img/warning-icon.png);
+        background-repeat: no-repeat;
+        background-position: 100% 0;
+    }
+
+    .lines-selection.info {
+        background-image: url(../img/info-icon.png);
+        background-repeat: no-repeat;
+        background-position: 100% 0;
+    }
 }
 
 #selection-actions {

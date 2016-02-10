@@ -4,7 +4,7 @@
 		"global__structures": "Structures",
 		"global__attributes": "Attributes",
 		"global__website": "website",
-		"global__positions": "Positions",
+		"global__positions": "positions",
 		"global__size": "size",
 		"global__there_are_unsaved_changes": "There are unsaved changes on the page. Do you want to continue without saving them?",
 		"global__query_type_mismatch": "Possible query type mismatch. Do you want to continue?",

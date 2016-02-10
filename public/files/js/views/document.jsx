@@ -149,16 +149,54 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 storeProvider.corpusInfoStore.removeChangeListener(this.changeHandler);
             },
 
-            render: function () {
-                var webLink;
-
-                if (this.state.web_url) {
-                    webLink = <a href={this.state.web_url} target="_blank">{this.state.web_url}</a>;
+            _renderCitation() {
+                if (this.state.citation_info['article_ref'] || this.state.citation_info['default_ref']
+                        || this.state.citation_info['other_bibliography']) {
+                    return (
+                        <div>
+                            <h3>{this.translate('global__how_to_cite_corpus')}</h3>
+                            <h4>
+                                {this.translate('global__corpus_as_resource_{corpus}', {corpus: this.state.corpname})}
+                            </h4>
+                            <div dangerouslySetInnerHTML={{__html: this.state.citation_info.default_ref}} />
+                            {
+                                this.state.citation_info.article_ref
+                                ?   <div>
+                                        <h4>{this.translate('global__references')}</h4>
+                                        <ul>
+                                        {this.state.citation_info.article_ref.map((item, i) => {
+                                            return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
+                                        })}
+                                        </ul>
+                                    </div>
+                                : null
+                            }
+                            {
+                                this.state.citation_info.other_bibliography
+                                ? <div>
+                                    <h4>{this.translate('global__general_references')}</h4>
+                                    <div dangerouslySetInnerHTML={{__html: this.state.citation_info.other_bibliography}} />
+                                    </div>
+                                : null
+                            }
+                        </div>
+                    );
 
                 } else {
-                    webLink = '-';
+                    return null;
                 }
+            },
 
+            _renderWebLink() {
+                if (this.state.web_url) {
+                    return <a href={this.state.web_url} target="_blank">{this.state.web_url}</a>;
+
+                } else {
+                    return '-';
+                }
+            },
+
+            render: function () {
                 if (!this.state.corpname) {
                     return (
                         <div id="corpus-details-box">
@@ -178,7 +216,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                     <span className="size">{this.state.size}</span> {this.translate('global__positions')}<br />
 
                                     <strong className="web_url">{this.translate('global__website')}: </strong>
-                                    {webLink}
+                                    {this._renderWebLink()}
                                 </p>
                             </div>
 
@@ -195,36 +233,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                 </tr>
                             </table>
                             <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
-
-                            <h3>{this.translate('global__how_to_cite_corpus')}</h3>
-
-                            <h4>
-                                {this.translate('global__corpus_as_resource_{corpus}', {corpus: this.state.corpname})}:
-                            </h4>
-
-                            <div dangerouslySetInnerHTML={{__html: this.state.citation_info.default_ref}} />
-
-                            {
-                                this.state.citation_info.article_ref
-                                ?   <div>
-                                        <h4>{this.translate('global__references')}:</h4>
-                                        <ul>
-                                        {this.state.citation_info.article_ref.map((item, i) => {
-                                            return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
-                                        })}
-                                        </ul>
-                                    </div>
-                                : null
-                            }
-
-                            {
-                                this.state.citation_info.other_bibliography
-                                ? <div>
-                                        <h4>{this.translate('global__general_references')}:</h4>
-                                        <div dangerouslySetInnerHTML={{__html: this.state.citation_info.other_bibliography}} />
-                                    </div>
-                                : null
-                            }
+                            {this._renderCitation()}
                         </div>
                     );
                 }
