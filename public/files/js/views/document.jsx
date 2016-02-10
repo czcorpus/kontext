@@ -100,6 +100,56 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        var CorpusReference = React.createClass({
+
+            mixins: mixins,
+
+            componentDidMount : function () {
+                // we must inform non-react environment (here popupbox.js) we are ready here
+                if (typeof this.props.doneCallback === 'function') {
+                    this.props.doneCallback();
+                }
+            },
+
+            render: function () {
+                if (this.props.citation_info['article_ref'] || this.props.citation_info['default_ref']
+                        || this.props.citation_info['other_bibliography']) {
+                    return (
+                        <div>
+                            <h3>{this.translate('global__how_to_cite_corpus')}</h3>
+                            <h4>
+                                {this.translate('global__corpus_as_resource_{corpus}', {corpus: this.props.corpname})}
+                            </h4>
+                            <div dangerouslySetInnerHTML={{__html: this.props.citation_info.default_ref}} />
+                            {
+                                this.props.citation_info.article_ref
+                                ?   <div>
+                                        <h4>{this.translate('global__references')}</h4>
+                                        <ul>
+                                        {this.props.citation_info.article_ref.map((item, i) => {
+                                            return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
+                                        })}
+                                        </ul>
+                                    </div>
+                                : null
+                            }
+                            {
+                                this.props.citation_info.other_bibliography
+                                ? <div>
+                                    <h4>{this.translate('global__general_references')}</h4>
+                                    <div dangerouslySetInnerHTML={{__html: this.props.citation_info.other_bibliography}} />
+                                    </div>
+                                : null
+                            }
+                        </div>
+                    );
+
+                } else {
+                    return <div>{this.translate('global__no_citation_info')}</div>
+                }
+            }
+        });
+
         /**
          * Corpus information box
          */
@@ -149,44 +199,6 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 storeProvider.corpusInfoStore.removeChangeListener(this.changeHandler);
             },
 
-            _renderCitation() {
-                if (this.state.citation_info['article_ref'] || this.state.citation_info['default_ref']
-                        || this.state.citation_info['other_bibliography']) {
-                    return (
-                        <div>
-                            <h3>{this.translate('global__how_to_cite_corpus')}</h3>
-                            <h4>
-                                {this.translate('global__corpus_as_resource_{corpus}', {corpus: this.state.corpname})}
-                            </h4>
-                            <div dangerouslySetInnerHTML={{__html: this.state.citation_info.default_ref}} />
-                            {
-                                this.state.citation_info.article_ref
-                                ?   <div>
-                                        <h4>{this.translate('global__references')}</h4>
-                                        <ul>
-                                        {this.state.citation_info.article_ref.map((item, i) => {
-                                            return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
-                                        })}
-                                        </ul>
-                                    </div>
-                                : null
-                            }
-                            {
-                                this.state.citation_info.other_bibliography
-                                ? <div>
-                                    <h4>{this.translate('global__general_references')}</h4>
-                                    <div dangerouslySetInnerHTML={{__html: this.state.citation_info.other_bibliography}} />
-                                    </div>
-                                : null
-                            }
-                        </div>
-                    );
-
-                } else {
-                    return null;
-                }
-            },
-
             _renderWebLink() {
                 if (this.state.web_url) {
                     return <a href={this.state.web_url} target="_blank">{this.state.web_url}</a>;
@@ -233,7 +245,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                 </tr>
                             </table>
                             <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
-                            {this._renderCitation()}
+                            <CorpusReference corpname={this.state.corpname} citation_info={this.state.citation_info} />
                         </div>
                     );
                 }
@@ -413,6 +425,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
         // ------------------------------------------------------------------------------------
 
         return {
+            CorpusReference: CorpusReference,
             CorpusInfoBox: CorpusInfoBox,
             PopupBox: PopupBox,
             Messages: Messages,

@@ -23,8 +23,8 @@ declare module "popupbox" {
     export interface Position {
         top: number;
         left: number;
-        width?: number;
-        height?: number;
+        width?: any;
+        height?: any;
     }
 
     export interface Options {

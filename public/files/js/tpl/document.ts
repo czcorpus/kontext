@@ -171,7 +171,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
         this.plugins = {};
         this.initCallbacks = [];
-        this.mainMenu = new MainMenu();
+        this.mainMenu = new MainMenu(this);
         this.initActions = new InitActions();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
             this.conf['uiStateTTL']);
@@ -1026,20 +1026,19 @@ export class MainMenu {
 
     private activeSubmenu:HTMLElement;
 
+    private layoutModel:PageModel;
 
-    constructor() {
+
+    constructor(layoutModel:PageModel) {
+        this.layoutModel = layoutModel;
         this.jqMenuBar = $('#menu-bar');
     }
 
-    /**
-     *
-     */
     getActiveSubmenu():HTMLElement {
         return this.activeSubmenu;
     }
 
     /**
-     *
      * @param {string} id
      */
     setActiveSubmenu(submenu:HTMLElement) {
@@ -1062,15 +1061,80 @@ export class MainMenu {
      * @param li
      * @returns {*}
      */
-    getHiddenSubmenu(li):JQuery {
+    private getHiddenSubmenu(li):JQuery {
         return $(li).find('ul');
+    }
+
+    private initCustomHelp():void {
+        let self = this;
+        let jqSubmenu = $('#menu-help').find('ul.submenu');
+        let liElm = window.document.createElement('li');
+        let aElm = window.document.createElement('a');
+
+        jqSubmenu.append(liElm);
+        $(aElm).text(this.layoutModel.translate('global__how_to_cite_corpus'));
+        $(liElm)
+            .addClass('separ')
+            .append(aElm);
+
+        function createContents(tooltipBox, finalize) {
+            tooltipBox.setCss('top', '25%');
+            tooltipBox.setCss('left', '20%');
+            tooltipBox.setCss('width', '60%');
+            tooltipBox.setCss('height', 'auto');
+
+            let prom:RSVP.Promise<any> = self.layoutModel.ajax<any>(
+                'GET',
+                self.layoutModel.createActionUrl('corpora/ajax_get_corp_details'),
+                {
+                    'corpname': self.layoutModel.getConf('corpname')
+                },
+                {
+                    contentType : 'application/x-www-form-urlencoded'
+                }
+            );
+
+            prom.then(
+                function (data) {
+                    self.layoutModel.renderReactComponent(
+                        self.layoutModel.layoutViews.CorpusReference,
+                        tooltipBox.getRootElement(),
+                        {
+                            citation_info: data['citation_info'] || {},
+                            doneCallback: finalize.bind(self)
+                        }
+                    );
+                },
+                function (err) {
+                    self.layoutModel.showMessage('error', err);
+                }
+            );
+        }
+
+        $(aElm).on('click', () => {
+                this.closeSubmenu();
+                popupbox.open(
+                    createContents,
+                    null,
+                    {
+                        type: 'plain',
+                        closeIcon: true,
+                        timeout: null,
+                        calculatePosition : false,
+                        onClose: function () {
+                            self.layoutModel.unmountReactComponent(this.getRootElement());
+                        }
+                    }
+                );
+            }
+        );
     }
 
     /**
      *
      * @param activeLi - active main menu item LI
      */
-    openSubmenu(activeLi:JQuery) {
+    private openSubmenu(activeLi:JQuery) {
         var menuLeftPos;
         var jqSubMenuUl;
         var jqActiveLi = $(activeLi);
@@ -1097,6 +1161,10 @@ export class MainMenu {
      */
     init():void {
         var self = this;
+
+        if (this.layoutModel.getConf('corpname')) {
+            this.initCustomHelp();
+        }
 
         $('#menu-level-1 li.disabled a').each(function () {
             $(this).attr('href', '#');
