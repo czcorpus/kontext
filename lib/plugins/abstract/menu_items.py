@@ -28,14 +28,15 @@ class MenuItem(object):
     def __init__(self, data, lang):
         """
         arguments:
-        data -- a dict {'url': ..., 'label': ...}
+        data -- a dict {'url': string, 'label': string, 'openInBlank': bool}
         lang -- a language+country code (should accept language code only too - e.g. "en")
         """
         self._data = data
         self.lang = lang
 
     def __repr__(self):
-        return 'MenuItem(label: %s, url: %s, lang: %s)' % (self.label, self.url, self.lang)
+        return 'MenuItem(label: %s, url: %s, lang: %s, blank: %s)' % (self.label, self.url,
+                                                                      self.lang, self.open_in_blank)
 
     @property
     def label(self):
@@ -50,6 +51,10 @@ class MenuItem(object):
         Returns a language dependent URL
         """
         return self._data['url']
+
+    @property
+    def open_in_blank(self):
+        return self._data.get('openInBlank', False)
 
 
 class AbstractMenuItems(object):

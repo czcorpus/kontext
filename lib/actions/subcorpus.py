@@ -262,11 +262,18 @@ class Subcorpus(Kontext):
     @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.args.corpname, subcname)
-        return {
+        ans = {
             'subCorpusName': subcname,
             'corpusSize': format_number(sc.size()),
-            'subCorpusSize': format_number(sc.search_size())
+            'subCorpusSize': format_number(sc.search_size()),
+            'extended_info': {}
         }
+        if plugins.has_plugin('subc_restore'):
+            tmp = plugins.get('subc_restore').get_info(self._session_get('user', 'id'),
+                                                       self.args.corpname, subcname)
+            if tmp:
+                ans['extended_info'].update(tmp)
+        return ans
 
     @exposed(access_level=1, return_type='json')
     def ajax_wipe_subcorpus(self, request):

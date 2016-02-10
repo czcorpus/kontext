@@ -3,21 +3,25 @@
         {
             "en_US": {
                 "url": "https://wiki.korpus.cz/doku.php/manualy:kontext:index",
-                "label": "User manual (in Czech)"
+                "label": "User manual (in Czech)",
+                "openInBlank": true
             } ,
             "cs_CZ": {
                 "url": "https://wiki.korpus.cz/doku.php/manualy:kontext:index",
-                "label": "Uživatelská příručka"
+                "label": "Uživatelská příručka",
+                "openInBlank": true
             }
         },
         {
             "en_US": {
                 "url": "https://wiki.korpus.cz/doku.php/pojmy:prehled_pojmu",
-                "label": "Linguistic terms (in Czech)"
+                "label": "Linguistic terms (in Czech)",
+                "openInBlank": true
             } ,
             "cs_CZ": {
                 "url": "https://wiki.korpus.cz/doku.php/pojmy:prehled_pojmu",
-                "label": "Lingvistické pojmy"
+                "label": "Lingvistické pojmy",
+                "openInBlank": true
             }
         }        
     ]

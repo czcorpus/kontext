@@ -472,7 +472,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 #def render_custom_menu_items($section_id)
     #if $section_id in $custom_menu_items
     #for $menu_item in $custom_menu_items[$section_id]
-    <li class="separ"><a href="$menu_item.url">$menu_item.label</a></li>
+    <li class="separ"><a #if $menu_item.open_in_blank#target="_blank"#end if# href="$menu_item.url">$menu_item.label</a></li>
     #end for
     #end if
 #end def
@@ -490,7 +490,7 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     <li id="active-corpus">
         <strong>$_('Corpus'):</strong>
         <a id="corpus-desc-link" class="corpus-desc" href="#"
-        title="$_('click for details')">$human_corpname</a>#if $usesubcorp#<span class="subcorpus" title="$_('subcorpus')">:$usesubcorp</span>#end if#
+        title="$_('click for details')">$human_corpname</a>#if $usesubcorp#<a class="subcorpus" title="$_('subcorpus')">:$usesubcorp</a>#end if#
     </li>
     #end if
     #set $i = 0

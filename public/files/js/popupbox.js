@@ -209,12 +209,13 @@ define(['win', 'jquery'], function (win, $) {
             boxWidth = fetchOption('width', 'auto'),
             boxHeight = fetchOption('height', 'auto'),
             boxIntWidth,
-            boxTop = 0;
+            boxTop;
 
         $(this.rootElm).css({
             width: boxWidth !== 'nice' ? boxWidth : pageWidth * (1 -  1 / 1.618),
             height: boxHeight
         });
+
         if (options.top === 'attached-bottom') {
             boxTop = (this.anchorPosition.top - $(this.rootElm).outerHeight(true) - 2) + 'px';
 

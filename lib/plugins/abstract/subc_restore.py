@@ -76,6 +76,12 @@ class AbstractSubcRestore(object):
         """
         raise NotImplementedError()
 
+    def get_info(self, user_id, corpname, subcname):
+        """
+        Returns an information about the most recent record matching provided arguments
+        """
+        raise NotImplementedError()
+
     def get_query(self, query_id):
         """
         Returns a query with ID == query_id

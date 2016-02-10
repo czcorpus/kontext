@@ -77,6 +77,15 @@ class UCNKSubcRestore(AbstractSubcRestore):
             result.append(dict(zip(self.COLS, item)))
         return result
 
+    def get_info(self, user_id, corpname, subcname):
+        ans = self._db.execute('SELECT %s ' % ', '.join(self.COLS) +
+                               'FROM subc_archive WHERE user_id = ? AND corpname = ? AND subcname = ? ' +
+                               'ORDER BY timestamp DESC LIMIT 1', (user_id, corpname, subcname, )).fetchone()
+        if ans:
+            return dict(zip(self.COLS, ans))
+        else:
+            return None
+
     def get_query(self, query_id):
         ans = self._db.execute('SELECT %s ' % ', '.join(self.COLS) +
                                'FROM subc_archive WHERE id = ?', (query_id, )).fetchone()

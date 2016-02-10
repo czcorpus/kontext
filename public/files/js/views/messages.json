@@ -4,7 +4,7 @@
 		"global__structures": "Structures",
 		"global__attributes": "Attributes",
 		"global__website": "website",
-		"global__positions": "Positions",
+		"global__positions": "positions",
 		"global__size": "size",
 		"global__there_are_unsaved_changes": "There are unsaved changes on the page. Do you want to continue without saving them?",
 		"global__query_type_mismatch": "Possible query type mismatch. Do you want to continue?",
@@ -91,7 +91,10 @@
         "global__corpus_info_metadata_heading": "Available metadata",
         "global__corpus_as_resource_{corpus}": "Corpus {corpus} as a language resource",
         "global__general_references": "General references",
-        "global__references": "References"
+        "global__references": "References",
+        "global__no_citation_info": "No citation information available",
+        "global__subc_query": "text types specification",
+        "global__in_tokens": "in tokens"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -186,6 +189,9 @@
         "global__corpus_info_metadata_heading": "Dostupná metadata",
         "global__corpus_as_resource_{corpus}": "Korpus {corpus} jako zdroj dat",
         "global__general_references": "Obecné odkazy",
-        "global__references": "Literatura"
+        "global__references": "Literatura",
+        "global__no_citation_info": "Citační informace nejsou k dispozici",
+        "global__subc_query": "specifikace typů textu",
+        "global__in_tokens": "v tokenech"
 	}
 }
