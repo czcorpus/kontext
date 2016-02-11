@@ -10,20 +10,6 @@
             <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
         </fonts>
     </theme>
-    <logging>
-        <path>/home/tomas/work/kontext.dev/log/development.log</path>
-        <file_size>8000000</file_size>
-        <num_files>100</num_files>
-        <values>
-            <item>environ:REMOTE_ADDR</item>
-            <item>environ:HTTP_USER_AGENT</item>
-            <item>date</item>
-            <item>user_id</item>
-            <item>action</item>
-            <item>params</item>
-            <item>proc_time</item>
-        </values>
-    </logging>
     <global>
         <deployment_id>20151031_v4</deployment_id>
         <manatee_path>/optional/path/to/a/non-default/manatee</manatee_path>
@@ -66,6 +52,23 @@
             <item>pid</item>
         </values>
     </logging>
+    <corpora>
+        <conc_calc_backend conf="/path/to/celeryconfig.py">celery</conc_calc_backend>
+        <calc_pid_dir>/path/to/tmp/calc/pid/dir</calc_pid_dir>
+        <manatee_registry>/var/local/corpora/registry</manatee_registry>
+        <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
+        <conc_dir>/var/local/corpora/conc</conc_dir>
+        <default_corpora>
+            <item>susanne</item>
+            <item>spec/susanne</item>
+            <item>anothercorpus</item>
+        </default_corpora>
+        <speech_files_path>/var/www/data</speech_files_path>
+        <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>
+        <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
+        <use_db_whitelist>1</use_db_whitelist>
+    </corpora>
     <plugins>
         <db>
             <module>default_db</module>
@@ -152,22 +155,5 @@
             <data_path extension-by="default">/home/tomas/work/kontext.dev/conf/main-menu.sample.json</data_path>
         </menu_items>
     </plugins>
-    <corpora>
-        <conc_calc_backend conf="/path/to/celeryconfig.py">celery</conc_calc_backend>
-        <calc_pid_dir>/path/to/tmp/calc/pid/dir</calc_pid_dir>
-        <manatee_registry>/var/local/corpora/registry</manatee_registry>
-        <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
-        <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
-        <conc_dir>/var/local/corpora/conc</conc_dir>
-        <default_corpora>
-            <item>susanne</item>
-            <item>spec/susanne</item>
-            <item>anothercorpus</item>
-        </default_corpora>
-        <speech_files_path>/var/www/data</speech_files_path>
-        <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>
-        <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
-        <use_db_whitelist>1</use_db_whitelist>
-    </corpora>
 </kontext>
 

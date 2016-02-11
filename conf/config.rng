@@ -108,16 +108,6 @@
                     </interleave>
                 </element>
             </optional>
-            <optional>
-                <element name="mailing">
-                    <element name="smtp_server">
-                        <text />
-                    </element>
-                    <element name="sender">
-                        <text />
-                    </element>
-                </element>
-            </optional>
             <element name="global">
                 <a:documentation>Main configuration section</a:documentation>
                 <interleave>
@@ -136,22 +126,6 @@
                             <a:documentation>An optional umask used when creating new files. Sometimes this is
                             configured externally (e.g. Apache + mod_wsgi).</a:documentation>
                             <text />
-                        </element>
-                    </optional>
-                    <element name="log_path">
-                        <a:documentation>Path to KonText application log</a:documentation>
-                        <text />
-                    </element>
-                    <optional>
-                        <element name="log_file_size">
-                            <a:documentation>Maximum size of a log file (log rotation)</a:documentation>
-                            <data type="integer" />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="log_num_files">
-                            <a:documentation>Maximum number of log files (log rotation</a:documentation>
-                            <data type="integer" />
                         </element>
                     </optional>
                     <element name="debug">
@@ -216,16 +190,6 @@
                             <data type="integer" />
                         </element>
                     </optional>
-                    <element name="logged_values">
-                        <a:documentation>Specifies values written to the application log
-                        (date, user_id, action, param, proc_time, pid, environ:*)
-                        </a:documentation>
-                        <zeroOrMore>
-                            <element name="item">
-                                <text />
-                            </element>
-                        </zeroOrMore>
-                    </element>
                     <element name="translations">
                         <a:documentation>Languages activated in user interface (use [language]_[region]
                             format, e.g. en_US)
@@ -238,16 +202,6 @@
                                 <text />
                             </element>
                         </oneOrMore>
-                    </element>
-                    <element name="conc_summary_session_ttl">
-                        <a:documentation>KonText stores current concordance summary to user session
-                        to be able to show it even if the user visits other views of the interface
-                        (e.g. filter, sorting etc.). It is even able to keep multiple results at
-                        once (user may use multiple browser tabs etc.). These results are flushed
-                        eventually to keep session size small. This value specifies number of seconds
-                        to keep such a result in session.
-                        </a:documentation>
-                        <data type="integer" />
                     </element>
                     <optional>
                         <element name="periodic_tasks">
@@ -271,6 +225,113 @@
                             <data type="integer" />
                         </element>
                     </optional>
+                </interleave>
+            </element>
+            <optional>
+                <element name="mailing">
+                    <element name="smtp_server">
+                        <text />
+                    </element>
+                    <element name="sender">
+                        <text />
+                    </element>
+                </element>
+            </optional>
+            <element name="logging">
+                <interleave>
+                    <element name="path">
+                        <a:documentation>Path to KonText application log</a:documentation>
+                        <text />
+                    </element>
+                    <element name="file_size">
+                        <a:documentation>Maximum size of a log file (log rotation)</a:documentation>
+                        <data type="integer" />
+                    </element>
+                    <element name="num_files">
+                        <a:documentation>Maximum number of log files (log rotation</a:documentation>
+                        <data type="integer" />
+                    </element>
+                    <element name="values">
+                        <a:documentation>Specifies values written to the application log
+                        (date, user_id, action, param, proc_time, pid, environ:*)
+                        </a:documentation>
+                        <zeroOrMore>
+                            <element name="item">
+                                <text />
+                            </element>
+                        </zeroOrMore>
+                    </element>
+                </interleave>
+            </element>
+            <element name="corpora">
+                <interleave>
+                    <element name="conc_calc_backend">
+                        <a:documentation>Selects a backend used to calculate concordances</a:documentation>
+                        <attribute name="conf">
+                            <text />
+                        </attribute>
+                        <choice>
+                            <value>multiprocessing</value>
+                            <value>celery</value>
+                        </choice>
+                    </element>
+                    <element name="calc_pid_dir">
+                        <a:documentation>Specifies a directory where concordance calculation
+                        auxiliary files are temporarily created.</a:documentation>
+                        <text />
+                    </element>
+                    <element name="manatee_registry">
+                        <a:documentation>A directory where Manatee registry files are located.
+                        This one is very important.</a:documentation>
+                        <text />
+                    </element>
+                    <element name="users_subcpath">
+                        <a:documentation>A directory where user subcorpora are stored</a:documentation>
+                        <text />
+                    </element>
+                    <element name="conc_dir">
+                        <!-- TODO -->
+                        <a:documentation>???</a:documentation>
+                        <text />
+                    </element>
+                    <element name="freqs_cache_dir">
+                        <a:documentation>A directory where precalculated data related to frequency
+                        information is stored</a:documentation>
+                        <text />
+                    </element>
+                    <element name="default_corpora">
+                        <a:documentation>Specifies a default corpous to be offered to a user
+                        in case she does not specify anything. A list can be used to define
+                        some fallback items (e.g. some users may not have the permissions to
+                        access 1st corpus but they can use 2nd etc.).</a:documentation>
+                        <oneOrMore>
+                            <element name="item">
+                                <text />
+                            </element>
+                        </oneOrMore>
+                    </element>
+                    <element name="speech_files_path">
+                        <a:documentation>A directory where sound files for individual corpora
+                        are stored.</a:documentation>
+                        <text />
+                    </element>
+                    <element name="use_db_whitelist">
+                        <choice>
+                            <value>0</value>
+                            <value>1</value>
+                            <value>false</value>
+                            <value>true</value>
+                        </choice>
+                    </element>
+                    <element name="empty_attr_value_placeholder">
+                        <a:documentation>A placeholder used to represent empty value in text type
+                        attribute values</a:documentation>
+                        <text />
+                    </element>
+                    <element name="multilevel_freq_dist_max_levels">
+                        <a:documentation>Multilevel frequency distribution - max. number of levels</a:documentation>
+                        <data type="integer" />
+                    </element>
                 </interleave>
             </element>
             <element name="plugins">
@@ -299,13 +360,15 @@
                         </interleave>
                         <ref name="customPluginConfiguration" />
                     </element>
-                    <element name="application_bar">
-                        <a:documentation>An optional plug-in proving 3rd party HTML code
-                            inserted into KonText pages (e.g. an application switch &amp;
-                            authentication module)</a:documentation>
-                        <ref name="plugin_common" />
-                        <ref name="customPluginConfiguration" />
-                    </element>
+                    <optional>
+                        <element name="application_bar">
+                            <a:documentation>An optional plug-in proving 3rd party HTML code
+                                inserted into KonText pages (e.g. an application switch &amp;
+                                authentication module)</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </element>
+                    </optional>
                     <element name="getlang">
                         <a:documentation>A plug-in to detect user language</a:documentation>
                         <ref name="plugin_common" />
@@ -427,77 +490,6 @@
                             <ref name="customPluginConfiguration" />
                         </element>
                     </optional>
-                </interleave>
-            </element>
-            <element name="corpora">
-                <interleave>
-                    <element name="conc_calc_backend">
-                        <a:documentation>Selects a backend used to calculate concordances</a:documentation>
-                        <attribute name="conf">
-                            <text />
-                        </attribute>
-                        <choice>
-                            <value>multiprocessing</value>
-                            <value>celery</value>
-                        </choice>
-                    </element>
-                    <element name="calc_pid_dir">
-                        <a:documentation>Specifies a directory where concordance calculation
-                        auxiliary files are temporarily created.</a:documentation>
-                        <text />
-                    </element>
-                    <element name="manatee_registry">
-                        <a:documentation>A directory where Manatee registry files are located.
-                        This one is very important.</a:documentation>
-                        <text />
-                    </element>
-                    <element name="users_subcpath">
-                        <a:documentation>A directory where user subcorpora are stored</a:documentation>
-                        <text />
-                    </element>
-                    <element name="conc_dir">
-                        <!-- TODO -->
-                        <a:documentation>???</a:documentation>
-                        <text />
-                    </element>
-                    <element name="freqs_cache_dir">
-                        <a:documentation>A directory where precalculated data related to frequency
-                        information is stored</a:documentation>
-                        <text />
-                    </element>
-                    <element name="default_corpora">
-                        <a:documentation>Specifies a default corpous to be offered to a user
-                        in case she does not specify anything. A list can be used to define
-                        some fallback items (e.g. some users may not have the permissions to
-                        access 1st corpus but they can use 2nd etc.).</a:documentation>
-                        <oneOrMore>
-                            <element name="item">
-                                <text />
-                            </element>
-                        </oneOrMore>
-                    </element>
-                    <element name="speech_files_path">
-                        <a:documentation>A directory where sound files for individual corpora
-                        are stored.</a:documentation>
-                        <text />
-                    </element>
-                    <element name="use_db_whitelist">
-                        <choice>
-                            <value>0</value>
-                            <value>1</value>
-                            <value>false</value>
-                            <value>true</value>
-                        </choice>
-                    </element>
-                    <element name="empty_attr_value_placeholder">
-                        <a:documentation>A placeholder used to represent empty value in text type
-                        attribute values</a:documentation>
-                        <text />
-                    </element>
-                    <element name="multilevel_freq_dist_max_levels">
-                        <a:documentation>Multilevel frequency distribution - max. number of levels</a:documentation>
-                        <data type="integer" />
-                    </element>
                 </interleave>
             </element>
         </element>

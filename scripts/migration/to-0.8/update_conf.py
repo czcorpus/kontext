@@ -74,7 +74,7 @@ def update_4(doc):
     """
     x = doc.find('/global/conc_persistence_time')
     if x is not None:
-        x.tag = 'conc_summary_session_ttl'
+        remove_element(x)
 
 
 def update_5(doc):
