@@ -397,6 +397,8 @@
                         <a:documentation>A plug-in to store and retrieve user settings</a:documentation>
                         <ref name="plugin_common" />
                         <element name="excluded_users">
+                            <a:documentation>A list of user IDs without persistent settings. Please
+                            note that anonymous user is always included automatically</a:documentation>
                             <zeroOrMore>
                                 <element name="item">
                                     <text />
