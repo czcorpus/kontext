@@ -190,7 +190,8 @@ class Actions(Kontext):
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-        out['cql_within_part'] = butils.CQLDetectWithin().get_within_part(' '.join(self.args.q))
+        base_query = filter(lambda x: x[0] not in ('f', 's'), self.args.q)
+        out['cql_within_part'] = butils.CQLDetectWithin().get_within_part(' '.join(base_query))
 
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
