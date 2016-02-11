@@ -767,11 +767,10 @@ export class PageModel implements Kontext.PluginProvider {
                                 box.getRootElement(),
                                 {
                                     doneCallback: finalize.bind(self),
-                                    corpname: self.getConf('corpname'),
+                                    corpname: data['corpusName'],
                                     name: data['subCorpusName'],
                                     size: data['subCorpusSize'],
-                                    structName: data['extended_info']['struct_name'],
-                                    condition: data['extended_info']['condition']
+                                    cql: data['extended_info']['cql']
                                 }
                             );
 

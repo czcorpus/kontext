@@ -50,7 +50,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
     };
 
     function hasDefinedSubcorpus(elm) {
-        return $(elm).attr('data-condition') && $(elm).attr('data-struct_name');
+        return $(elm).attr('data-cql');
     }
 
     function hasDeletedFlag(elm) {
@@ -80,17 +80,15 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
 
     /**
      * @param subcname
-     * @param structName a structural name to be used to define a subcorpus (e.g. 'div', 'p', 'opus',...)
-     * @param condition required values of respective structural attributes (e.g. 'name="foo" & year="1990"')
+     * @param cql
      * @return a promise
      */
-    SubcorpActions.prototype.createSubcorpus = function (subcname, structName, condition) {
+    SubcorpActions.prototype.createSubcorpus = function (subcname, cql) {
         var self = this,
             params = {
                 corpname: this.corpusId,
                 subcname: subcname,
-                within_struct: structName,
-                within_condition: decodeURIComponent(condition)
+                cql: decodeURIComponent(cql)
             };
         return $.ajax(self.layoutModel.conf['rootURL'] + 'subcorpus/ajax_create_subcorpus', {
             method: 'POST',
@@ -136,7 +134,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         fieldset1Submit.on('click', function () {
             var prom = self.createSubcorpus(
                     decodeURIComponent($(triggerElm).data('subcname')),
-                    $(triggerElm).data('struct_name'), $(triggerElm).data('condition'));
+                    $(triggerElm).data('cql'));
 
             prom.then(
                 function (ans) {
@@ -204,8 +202,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         var self = this,
             jqFieldset,
             subcnameInput = $('#new-subcname').get(0),
-            structInput = window.document.createElement('input'),
-            conditionInput = window.document.createElement('input'),
+            cqlInput = window.document.createElement('textarea'),
             submitArea = window.document.createElement('div'),
             submitButton = window.document.createElement('button'),
             withinBox = window.document.createElement('div');
@@ -214,20 +211,13 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         jqFieldset.addClass('subcorp-action-field');
         jqFieldset.append('<legend>' + self.layoutModel.translate('global__reuse_query') + '</legend>');
 
-        $(structInput)
-            .addClass('struct')
-            .val($(triggerElm).data('struct_name'));
-
-        $(conditionInput)
-            .addClass('condition')
-            .val(decodeURIComponent($(triggerElm).data('condition')));
+        $(cqlInput)
+            .addClass('cql')
+            .val(decodeURIComponent($(triggerElm).data('cql')));
 
         $(withinBox)
             .addClass('within-box')
-            .append('within <span class="big">&lt;</span>&nbsp;')
-            .append(structInput)
-            .append(conditionInput)
-            .append('<span class="big">/&gt;</span>');
+            .append(cqlInput);
 
         jqFieldset.append(withinBox);
 
@@ -247,8 +237,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
             .attr('type', 'button')
             .text(self.layoutModel.translate('global__create'))
                 .on('click', function (evt) {
-                    var prom = self.createSubcorpus($(subcnameInput).val(), $(structInput).val(),
-                                                    $(conditionInput).val());
+                    var prom = self.createSubcorpus($(subcnameInput).val(), $(cqlInput).val());
                     prom.then(
                         function (data) {
                             if (data.contains_errors) {

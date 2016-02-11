@@ -93,8 +93,9 @@
         "global__general_references": "General references",
         "global__references": "References",
         "global__no_citation_info": "No citation information available",
-        "global__subc_query": "text types specification",
-        "global__in_tokens": "in tokens"
+        "global__subc_query": "definition",
+        "global__size_in_tokens": "Size (in tokens)",
+        "global__subc_def_not_avail": "Not available"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -191,7 +192,8 @@
         "global__general_references": "Obecné odkazy",
         "global__references": "Literatura",
         "global__no_citation_info": "Citační informace nejsou k dispozici",
-        "global__subc_query": "specifikace typů textu",
-        "global__in_tokens": "v tokenech"
+        "global__subc_query": "definice",
+        "global__size_in_tokens": "Velikost (v tokenech)",
+        "global__subc_def_not_avail": "Není k dispozici"
 	}
 }

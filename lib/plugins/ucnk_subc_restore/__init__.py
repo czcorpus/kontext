@@ -52,7 +52,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
     For the documentation of individual methods, please see AbstractSubcRestore class
     """
 
-    COLS = ('id', 'user_id', 'corpname', 'subcname', 'struct_name', 'condition', 'timestamp')
+    COLS = ('id', 'user_id', 'corpname', 'subcname', 'cql', 'timestamp')
 
     def __init__(self, conf, corparch):
         self._conf = conf
@@ -137,18 +137,15 @@ class UCNKSubcRestore(AbstractSubcRestore):
                 'human_corpname': corpus_info.name,
                 'corpname': subc_queries_map[dk]['corpname'],
                 'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
-                'struct_name': subc_queries_map[dk]['struct_name'],
-                'condition': urllib.quote(subc_queries_map[dk]['condition'].encode('utf-8')),
+                'cql': urllib.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
                 'deleted': True
             })
 
         for subc in subc_list:
             if subc['internal_n'] in subc_queries_map:
-                subc['struct_name'] = subc_queries_map[subc['internal_n']]['struct_name']
-                subc['condition'] = urllib.quote(subc_queries_map[subc['internal_n']]['condition'].encode('utf-8'))
+                subc['cql'] = urllib.quote(subc_queries_map[subc['internal_n']]['cql'].encode('utf-8'))
             else:
-                subc['struct_name'] = None
-                subc['condition'] = None
+                subc['cql'] = None
             subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])
 
         return sorted(subc_list + deleted_items, key=lambda t: t['n'])

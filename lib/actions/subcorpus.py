@@ -60,14 +60,19 @@ class Subcorpus(Kontext):
         req. arguments:
         subcname -- name of new subcorpus
         create -- bool, sets whether to create new subcorpus
-        within_condition -- custom within condition; if non-empty then clickable form is omitted
-        within_struct -- a structure the within_condition will be applied to
+        cql -- custom within condition
         """
         subcname = request.form['subcname']
-        within_json = request.form['within_json']
+        within_json = request.form.get('within_json')
+        raw_cql = request.form.get('cql')
         corp_encoding = self._corp().get_conf('ENCODING')
 
-        if within_json:  # user entered a subcorpus query manually
+        if raw_cql:
+            tt_query = ()
+            within_cql = raw_cql
+            full_cql = 'aword,[] %s' % raw_cql
+            imp_cql = (full_cql,)
+        elif within_json:  # user entered a subcorpus query manually
             tt_query = ()
             within_cql = self._deserialize_custom_within(json.loads(within_json))
             full_cql = 'aword,[] %s' % within_cql
@@ -102,7 +107,7 @@ class Subcorpus(Kontext):
                     plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
                                                             corpname=self.args.corpname,
                                                             subcname=subcname,
-                                                            cql=full_cql)
+                                                            cql=full_cql.split('[]')[-1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
@@ -263,6 +268,7 @@ class Subcorpus(Kontext):
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.args.corpname, subcname)
         ans = {
+            'corpusName': self._canonical_corpname(self.args.corpname),
             'subCorpusName': subcname,
             'corpusSize': format_number(sc.size()),
             'subCorpusSize': format_number(sc.search_size()),
