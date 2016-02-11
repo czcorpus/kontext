@@ -770,8 +770,7 @@ export class PageModel implements Kontext.PluginProvider {
                                     corpname: self.getConf('corpname'),
                                     name: data['subCorpusName'],
                                     size: data['subCorpusSize'],
-                                    structName: data['extended_info']['struct_name'],
-                                    condition: data['extended_info']['condition']
+                                    condition: data['extended_info']['cql']
                                 }
                             );
 

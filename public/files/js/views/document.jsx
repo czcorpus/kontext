@@ -126,10 +126,11 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         </div>
                         <div className="subc-query">
                             {this.translate('global__subc_query')}:
-                            <textarea readOnly="true"
-                                  value={this._getCql()}
-                                  style={{width: '100%'}}
-                                  />
+                            {
+                               this.props.structName ?
+                               <textarea readOnly="true" value={this._getCql()} style={{width: '100%'}} />
+                               : <span>{this.translate('global__subc_def_not_avail')}</span>
+                            }
                         </div>
                     </div>
                 );
