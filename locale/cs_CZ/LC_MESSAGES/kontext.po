@@ -1945,6 +1945,15 @@ msgstr "negativní filtr"
 msgid "calculate"
 msgstr "spočítat"
 
+msgid "Line selection"
+msgstr "Výběr řádků"
+
+msgid "simple"
+msgstr "základní"
+
+msgid "groups"
+msgstr "skupiny"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

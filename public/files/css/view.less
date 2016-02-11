@@ -502,28 +502,48 @@ table#conclines .concordance-col-heading {
 
 #selection-actions {
 
-    .chart-label {
-        text-align: center;
-    }
-
-    .chart-label .label-text {
-        padding-right: 1em;
-        font-size: 0.8em;
-    }
-
-    .chart-label .color-code {
-        display: inline-block;
-        width: 1em;
-        margin-right: 0.2em;
-        border-color: @color-frame-fieldset;
-        border-width: 1px;
-        border-radius: @input-border-radius;
-    }
-
     .chart-area {
+        vertical-align: middle;
         margin-top: 1em;
         min-width: 200px;
         min-height: 200px;
+
+        .chart {
+                display: inline-block;
+                vertical-align: middle;
+        }
+
+        table.chart-label {
+            display: inline-block;
+            vertical-align: middle;
+            padding-left: 1em;
+        }
+
+        table.chart-label .color-code {
+            display: inline-block;
+            width: 1em;
+            border-color: @color-frame-fieldset;
+            border-width: 1px;
+            border-radius: @input-border-radius;
+        }
+
+        table td {
+            padding-left: 0.4em;
+        }
+
+        table td.additional {
+            color: @color-light-text;
+        }
+
+
+        table th {
+            font-weight: bold;
+            padding-left: 0.4em;
+        }
+
+        table .num {
+            text-align: right;
+        }
     }
 
     .generated-link {

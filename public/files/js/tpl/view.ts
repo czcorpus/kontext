@@ -225,13 +225,15 @@ class ViewPage {
                 .innerRadius(radius - 40);
 
             let pie = d3.layout.pie()
-                .value((d) => d['count']);
+                .value((d) => d['count'])
+                .sort(null);
 
             data = pie(data);
 
             let wrapper = d3.select(rootElm).append('svg')
                 .attr('width', width)
                 .attr('height', height)
+                .attr('class', 'chart')
                 .append('g')
                     .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')')
                     .attr('class', 'chart-wrapper');
@@ -244,36 +246,59 @@ class ViewPage {
             g.append('path')
                 .attr('d', arc)
                 .style('fill', (d, i:any) => color(i));
-            g.append('text')
-                .attr('transform', (d:any) => ('translate(' + labelArc.centroid(d) + ')'))
-                .text((d:any) => d.data['group']);
+
+            if (data.length <= 5) { // direct labels only for small num of portions
+                g.append('text')
+                    .attr('transform', (d:any) => ('translate(' + labelArc.centroid(d) + ')'))
+                    .text((d:any) => d.data['group']);
+            }
             return color;
         }
 
         function renderLabels(data, colors, rootElm):void {
-            let wrapper:HTMLElement = window.document.createElement('div');
-            let spanElm:HTMLElement;
+            let labelWrapper:HTMLElement = window.document.createElement('table');
+            let tbody:HTMLElement = window.document.createElement('tbody');
             let innerSpanElm:HTMLElement;
 
-            $(wrapper).addClass('chart-label');
+            function addElm(name:string, parent:HTMLElement):HTMLElement {
+                let elm = window.document.createElement(name);
+                $(parent).append(elm);
+                return elm;
+            }
+
+            let total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
+
+            function percentage(item) {
+                return (item['count'] / total * 100).toFixed(1) + '%';
+            }
+
+            $(labelWrapper)
+                .addClass('chart-label')
+                .append(tbody);
 
             data.forEach((item, i) => {
-                spanElm = window.document.createElement('span');
-                $(spanElm)
+                let trElm = addElm('tr', tbody);
+                let td1Elm = addElm('td', trElm);
+                let td2Elm = addElm('th', trElm);
+                let td3Elm = addElm('td', trElm);
+                let td4Elm = addElm('td', trElm);
+
+                $(td1Elm)
                     .addClass('label-text')
-                $(wrapper).append(spanElm);
-                innerSpanElm = window.document.createElement('span');
-                $(innerSpanElm)
-                    .css({
-                        'background-color': colors(i)
-                    })
+                    .css({'background-color': colors(i)})
                     .addClass('color-code')
                     .text('\u00A0');
-                $(spanElm).append(innerSpanElm);
-                $(spanElm)
-                    .append('<strong>' + item['group'] + '</strong> (' + item['count'] + 'x)');
+                $(td2Elm)
+                    .addClass('num')
+                    .append(item['group']);
+                $(td3Elm)
+                    .addClass('num')
+                    .append(percentage(item));
+                $(td4Elm)
+                    .addClass('num')
+                    .append('(' + item['count'] + 'x)');
             });
-            $(rootElm).append(wrapper);
+            $(rootElm).append(labelWrapper);
         }
 
         this.layoutModel.ajax(
