@@ -1091,47 +1091,6 @@ class Plugin implements common.LiveAttributesApi {
         );
     }
 
-    private autoButtonPosition(fieldset:HTMLElement) {
-        let self = this;
-        let autoUpdateHandler = {
-            timeout: null,
-            flip : function () {
-                if (!self.isElementInViewport(self.updateButton)) {
-                    let liveAttrsBox = $(fieldset).find('.live-attributes');
-                    let controlsBox = $(fieldset).find('.controls');
-
-                    if (!liveAttrsBox.data('position') || liveAttrsBox.data('position') === 'bottom') {
-                        $(fieldset).find('.text-type-top-bar').before(liveAttrsBox);
-                        $(fieldset).find('.steps').before(controlsBox);
-                        liveAttrsBox.data('position', 'top');
-
-                    } else {
-                        $(fieldset).append(liveAttrsBox);
-                        $(fieldset).find('.steps').after(controlsBox);
-                        liveAttrsBox.data('position', 'bottom');
-                    }
-                }
-            },
-            postponeFlip : function () {
-                if (autoUpdateHandler.timeout) {
-                    clearTimeout(autoUpdateHandler.timeout);
-                }
-                autoUpdateHandler.timeout = setTimeout(function() {
-                    autoUpdateHandler.flip();
-                    clearTimeout(autoUpdateHandler.timeout);
-                    autoUpdateHandler.timeout = null;
-                }, 100);
-            }
-        };
-
-        function onVisibilityChange () {
-            autoUpdateHandler.postponeFlip();
-        }
-
-        $(window).on('DOMContentLoaded load resize scroll', onVisibilityChange);
-    }
-
-
     /**
      * This function initializes the plug-in. It must be run after all the page dependencies
      * are ready.
@@ -1145,12 +1104,6 @@ class Plugin implements common.LiveAttributesApi {
 
             } else {
                 $(this).removeClass('user-selected');
-            }
-        });
-        this.pluginApi.bindFieldsetReadyEvent(function (fieldset) {
-            if ($(fieldset).attr('id') === 'specify-query-metainformation'
-                    && !$(fieldset).hasClass('inactive')) {
-                self.autoButtonPosition(fieldset);
             }
         });
         this.bindSelectionUpdateEvent(this.updateAttrTables);
