@@ -96,13 +96,12 @@ class CQLDetectWithin(object):
         else:
             struct = s
         last_p = None
-        for i in range(len(struct)):
-            item = struct[i]
+        for i, item in enumerate(struct):
             if item is None:
                 continue
             if item in (']', '['):
                 last_p = item
-            elif 'within' == item:
+            elif item in ('within', '!within', 'within!'):
                 if self.next_token_matches(struct, i, r'\w+:'):
                     pass  # aligned corpus search
                 elif self.next_token_matches(struct, i, r'<.+'):

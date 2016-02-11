@@ -190,8 +190,12 @@ class Actions(Kontext):
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-        base_query = filter(lambda x: x[0] not in ('f', 's'), self.args.q)
-        out['cql_within_part'] = butils.CQLDetectWithin().get_within_part(' '.join(base_query))
+
+        if self.args.q is not None and len(self.args.q) > 0:
+            within_part = butils.CQLDetectWithin().get_within_part(self.args.q[0])
+            out['query_contains_within'] = within_part is not None and len(within_part) > 0
+        else:
+            out['query_contains_within'] = False
 
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
@@ -1706,11 +1710,17 @@ class Actions(Kontext):
             ans[item[2]] += 1
         return ans
 
-    @exposed(return_type='json')
-    def ajax_get_within_max_hits(self, request):
-        import manatee
-        q = export_string(request.args.get('query', ''), to_encoding=self._corp().get_conf('ENCODING'))
-        conc = manatee.Concordance(self._corp(), q, 1, -1)
-        conc.sync()
-        return {'total': conc.fullsize() if conc else None}
+    @exposed(return_type='json', legacy=True)
+    def ajax_get_within_max_hits(self):
+        query = self.args.q[0]
+        m = re.match(r'([\w]+,)(.+)', query)
+        if m:
+            query_pref = m.groups()[0]
+            query_suff = m.groups()[1]
+            self.args.q[0] = u'%s[] %s' % (query_pref, butils.CQLDetectWithin().get_within_part(query_suff))
+            conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')))
+            conc.sync()
+            return {'total': conc.fullsize() if conc else None}
+        else:
+            return {'total': None}
 
