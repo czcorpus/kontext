@@ -40,7 +40,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
     conf.concLineMaxGroupNum = $conc_line_max_group_num;
-    pageSelf.init(conf);
+    var model = pageSelf.init(conf);
 
     #if not $finished and $async and $save and not $sampled_size
     conf.numLines = $len($Lines);
@@ -48,7 +48,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.q2 = '$q[2]';
     conf.q2toEnd = '$q[2:]';
     conf.globals = '$globals';
-    pageSelf.reloadHits(conf);
+    model.reloadHits(conf);
     #end if
 });
 #end def
@@ -209,15 +209,12 @@ $query_overview_bar()
             <span class="separ">|</span>
             <abbr title="$_('instances per million positions') $result_relative_freq_rel_to">i.p.m.</abbr>:
 
-            #if $getVar('cql_within_part', None) is None:
+            #if $getVar('query_contains_within', False) is False:
                 <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
                 $result_relative_freq_rel_to
             #else
-                <a class="calculate-ipm" data-total-hits="$fullsize"
-                        data-query="#filter $URLEncode#$cql_within_part#end filter#">$_('calculate')</a>
+                <a class="calculate-ipm" data-total-hits="$fullsize">$_('calculate')</a>
             #end if
-
-
 
             #if $result_arf
             <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:

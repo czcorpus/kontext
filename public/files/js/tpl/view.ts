@@ -101,7 +101,7 @@ class TouchHandler {
 }
 
 
-class ViewPage {
+export class ViewPage {
 
     private layoutModel:documentModule.PageModel;
 
@@ -909,12 +909,10 @@ class ViewPage {
                     .attr('src', self.layoutModel.createStaticUrl('img/ajax-loader.gif'));
 
                 prom = $.ajax(
-                        self.layoutModel.createActionUrl('ajax_get_within_max_hits'),
+                        self.layoutModel.createActionUrl('ajax_get_within_max_hits') +
+                                '?' + self.layoutModel.getConf('stateParams'),
                         {
-                            data: {
-                                query: q,
-                                corpname: self.layoutModel.getConf('corpname')
-                            },
+                            data: {},
                             dataType: 'json'
                         }
                 );
@@ -966,7 +964,7 @@ class ViewPage {
 }
 
 
-export function init(conf) {
+export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
     layoutModel.init();
 
@@ -979,4 +977,5 @@ export function init(conf) {
     let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;
     let pageModel = new ViewPage(layoutModel, views, lineSelectionStore, hasLockedGroups);
     pageModel.init();
+    return pageModel;
 };
