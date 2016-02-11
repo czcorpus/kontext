@@ -268,6 +268,7 @@ class Subcorpus(Kontext):
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.args.corpname, subcname)
         ans = {
+            'corpusName': self._canonical_corpname(self.args.corpname),
             'subCorpusName': subcname,
             'corpusSize': format_number(sc.size()),
             'subCorpusSize': format_number(sc.search_size()),

@@ -112,23 +112,18 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 }
             },
 
-            _getCql() {
-                return '<' + this.props.structName + ' ' + this.props.condition + ' />';
-            },
-
             render: function () {
                 return (
                     <div>
-                        <h2>{this.props.corpname}:<strong>{this.props.name}</strong></h2>
+                        <h2 className="subcorpus-name">{this.props.corpname}:<strong>{this.props.name}</strong></h2>
                         <div>
-                            {this.translate('global__size')}: <strong>{this.props.size}</strong>
-                            {'\u00A0'}({this.translate('global__in_tokens')})
+                            <strong>{this.translate('global__size_in_tokens')}:</strong>{'\u00A0'}{this.props.size}
                         </div>
                         <div className="subc-query">
-                            {this.translate('global__subc_query')}:
+                            <strong>{this.translate('global__subc_query')}:</strong>
                             {
-                               this.props.structName ?
-                               <textarea readOnly="true" value={this._getCql()} style={{width: '100%'}} />
+                               this.props.cql ?
+                               <textarea readOnly="true" value={this.props.cql} style={{width: '100%'}} />
                                : <span>{this.translate('global__subc_def_not_avail')}</span>
                             }
                         </div>
