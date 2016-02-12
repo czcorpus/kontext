@@ -185,7 +185,12 @@ class CentralAuth(AbstractRemoteAuth):
         remote_data = self._parse_user_data(ucnk_toolbar)
         toolbar_sess_key = self.get_toolbar_session_key()
 
-        if toolbar_sess_key not in plugin_api.session or curr_user_id != remote_data['id']:
+        # the following test seems to be little redundant as the last comparison
+        # can replace the first two but we try to avoid comparing two (quite) long
+        # strings to test some other possible triggers first
+        if (toolbar_sess_key not in plugin_api.session or
+                curr_user_id != remote_data['id'] or
+                ucnk_toolbar != plugin_api.session.get(toolbar_sess_key, '')):
             plugin_api.session[toolbar_sess_key] = ucnk_toolbar
 
         if curr_user_id != remote_data['id']:
