@@ -11,6 +11,7 @@
 # GNU General Public License for more details.
 
 import logging
+from functools import partial
 
 from controller import exposed
 from kontext import Kontext
@@ -53,20 +54,24 @@ class Corpora(Kontext):
         """
         corp_conf_info = plugins.get('corparch').get_corpus_info(request.args['corpname'])
         corpus = self.cm.get_Corpus(request.args['corpname'])
-        encoding = corpus.get_conf('ENCODING')
         citation_info = corp_conf_info.get('citation_info', None)
         citation_info = citation_info.to_dict() if citation_info else {}
 
+        import_str = partial(l10n.import_string, from_encoding=corpus.get_conf('ENCODING'))
+
+        if corpus.get_conf('NAME'):
+            corpus_name = corpus.get_conf('NAME')
+        else:
+            corpus_name = self._canonical_corpname(corpus.corpname)
+
         ans = {
-            'corpname': l10n.import_string(self._canonical_corpname(corpus.get_conf('NAME')),
-                                           from_encoding=encoding),
-            'description': l10n.import_string(corpus.get_info(), from_encoding=encoding),
+            'corpname': import_str(corpus_name),
+            'description': import_str(corpus.get_info()),
             'size': l10n.format_number(int(corpus.size())),
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info['web'] if corp_conf_info is not None else '',
             'citation_info': citation_info
-
         }
         try:
             ans['attrlist'] = [{'name': item, 'size': l10n.format_number(int(corpus.get_attr(item).id_range()))}

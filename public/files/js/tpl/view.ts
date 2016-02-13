@@ -327,31 +327,6 @@ export class ViewPage {
         );
     }
 
-    reEnableLineGroupEditing():void {
-        let self = this;
-
-        this.layoutModel.ajax(
-            'POST',
-            this.layoutModel.createActionUrl('ajax_reedit_line_selection?')
-                + this.layoutModel.getConf('stateParams'),
-            {},
-            {contentType : 'application/x-www-form-urlencoded'}
-
-        ).then(
-            (data:{id:string; selection:number[][]; next_url:string}) => {
-                $('#selection-mode-switch')
-                    .attr('disabled', null);
-                this.hasLockedGroups = false;
-                this.lineSelectionStore.importData(data.selection);
-                $(win).off('beforeunload.alert_unsaved');
-                window.location.href = data.next_url;
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        );
-    }
-
     getNumSelectedItems():number {
         if (this.hasLockedGroups) {
             return this.layoutModel.getConf<number>('numLinesInGroups');
@@ -409,10 +384,6 @@ export class ViewPage {
                         chartCallback: () => {
                             $(box.getRootElement()).find('.chart-area').empty();
                             self.showGroupsStats($(box.getRootElement()).find('.chart-area').get(0));
-                        },
-                        reEnableEditCallback : () => {
-                            box.close();
-                            self.reEnableLineGroupEditing();
                         },
                         checkpointUrl: window.location.href
                      }
@@ -939,6 +910,11 @@ export class ViewPage {
 
     init():void {
         this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this));
+        this.lineSelectionStore.addOnReenableEdit(() => {
+            $('#selection-mode-switch').attr('disabled', null);
+            this.hasLockedGroups = false;
+            $(win).off('beforeunload.alert_unsaved');
+        });
         if (this.hasLockedGroups) {
             this.setDefinedGroups();
 
@@ -970,7 +946,6 @@ export function init(conf):ViewPage {
 
     let lineSelectionStore = new concStores.LineSelectionStore(layoutModel,
             layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
-
     let views = concViews.init(layoutModel.dispatcher, layoutModel.exportMixins(),
             lineSelectionStore, layoutModel.getStores().userInfoStore);
 

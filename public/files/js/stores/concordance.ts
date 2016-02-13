@@ -55,6 +55,8 @@ export class LineSelectionStore extends util.SimplePageStore {
 
     private actionFinishHandlers:Array<()=>void>;
 
+    private onReenableEdit:Array<()=>void>;
+
     constructor(layoutModel:tplDocument.PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             clStorage:conclines.ConcLinesStorage, mode:string) {
         super(dispatcher);
@@ -64,6 +66,7 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.mode = this.clStorage.getMode();
         this.clearSelectionHandlers = [];
         this.actionFinishHandlers = [];
+        this.onReenableEdit = [];
         this.lastCheckpoint = null;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -92,6 +95,9 @@ export class LineSelectionStore extends util.SimplePageStore {
                     break;
                 case 'LINE_SELECTION_REMOVE_NON_GROUP_LINES':
                     self.removeNonGroupLines(); // this redirects ...
+                    break;
+                case 'LINE_SELECTION_REENABLE_EDIT':
+                    self.reenableEdit(); // this.redirects ...
                     break;
                 case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
                     let prom:RSVP.Promise<any> = self.sendSelectionUrlToEmail(payload.props['email']);
@@ -217,6 +223,28 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.finishAjaxActionWithRedirect(prom);
     }
 
+    private reenableEdit():void {
+        var self = this;
+
+        this.layoutModel.ajax(
+            'POST',
+            this.layoutModel.createActionUrl('ajax_reedit_line_selection?')
+                    + this.layoutModel.getConf('stateParams'),
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+
+        ).then(
+            (data:{id:string; selection:number[][]; next_url:string}) => {
+                self.importData(data.selection);
+                self.onReenableEdit.forEach((item)=>item());
+                window.location.href = data.next_url;
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
+    }
+
     private removeLines(filter:string):void {
         let self = this;
         let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
@@ -235,6 +263,10 @@ export class LineSelectionStore extends util.SimplePageStore {
 
     addClearSelectionHandler(fn:()=>void):void {
         this.clearSelectionHandlers.push(fn);
+    }
+
+    addOnReenableEdit(fn:()=>void):void {
+        this.onReenableEdit.push(fn);
     }
 
     addActionFinishHandler(fn:()=>void):void {
@@ -291,7 +323,7 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.finishAjaxActionWithRedirect(prom);
     }
 
-    importData(data:Array<Array<number>>):void {
+    private importData(data:Array<Array<number>>):void {
         let self = this;
         this.clear();
         data.forEach((item) => {
@@ -299,7 +331,6 @@ export class LineSelectionStore extends util.SimplePageStore {
         });
         this.mode = this.clStorage.getMode();
         this.clStorage.serialize();
-        this.notifyChangeListeners('STATUS_UPDATED');
     }
 
     addLine(id:string, kwiclen:number, category:number):void {

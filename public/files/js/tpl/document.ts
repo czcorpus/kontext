@@ -24,6 +24,7 @@
 /// <reference path="../../ts/declarations/rsvp-ajax.d.ts" />
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
+/// <reference path="../../ts/declarations/popupbox.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -32,6 +33,7 @@ import applicationBar = require('plugins/applicationBar/init');
 import flux = require('vendor/Dispatcher');
 import documentViews = require('views/document');
 import React = require('vendor/react');
+import ReactDOM = require('vendor/react-dom');
 import RSVP = require('vendor/rsvp');
 import rsvpAjax = require('vendor/rsvp-ajax');
 import util = require('util');
@@ -230,11 +232,11 @@ export class PageModel implements Kontext.PluginProvider {
      */
     renderReactComponent(reactClass:React.ReactClass,
             target:HTMLElement, props?:React.Props):void {
-        React.render(React.createElement(reactClass, props), target);
+        ReactDOM.render(React.createElement(reactClass, props), target);
     }
 
     unmountReactComponent(element:HTMLElement):boolean {
-        return React.unmountComponentAtNode(element);
+        return ReactDOM.unmountComponentAtNode(element);
     }
 
     /**

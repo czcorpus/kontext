@@ -269,14 +269,16 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             <h3>{this.translate('global__corpus_info_metadata_heading')}</h3>
 
                             <table className="structs-and-attrs" border="0">
-                                <tr>
-                                    <td>
-                                        <AttributeList rows={this.state.attrlist} />
-                                    </td>
-                                    <td style={{paddingLeft: '4em'}}>
-                                        <StructureList rows={this.state.structlist} />
-                                    </td>
-                                </tr>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <AttributeList rows={this.state.attrlist} />
+                                        </td>
+                                        <td style={{paddingLeft: '4em'}}>
+                                            <StructureList rows={this.state.structlist} />
+                                        </td>
+                                    </tr>
+                                </tbody>
                             </table>
                             <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
                             <CorpusReference corpname={this.state.corpname} citation_info={this.state.citation_info} />
@@ -403,7 +405,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 if (messages) {
                     return (
                         <div className="messages">
-                            <ReactCSSTransitionGroup transitionName="msganim">
+                            <ReactCSSTransitionGroup transitionName="msganim" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
                             {messages}
                             </ReactCSSTransitionGroup>
                         </div>
