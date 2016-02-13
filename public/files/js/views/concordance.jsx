@@ -214,13 +214,16 @@ define(['vendor/react', 'jquery'], function (React, $) {
             _actionSwitchHandler : function (evt) {
                 switch (evt.target.value) {
                     case 'edit-groups':
-                        this.props.reEnableEditCallback();
+                        dispatcher.dispatch({
+                            actionType: 'LINE_SELECTION_REENABLE_EDIT',
+                            props: {}
+                        });
                         break;
                     case 'sort-groups':
                         dispatcher.dispatch({
                             actionType: 'LINE_SELECTION_SORT_LINES',
                             props: {}
-                        })
+                        });
                         break;
                     case 'clear-groups':
                         dispatcher.dispatch({

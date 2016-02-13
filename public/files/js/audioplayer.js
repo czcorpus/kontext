@@ -24,7 +24,7 @@ define(['win', 'jquery', 'SoundManager'], function (win, $, SoundManager) {
     'use strict';
 
     var lib = {},
-        soundManager = SoundManager.soundManager;
+        soundManager = SoundManager.getInstance();
 
     /**
      * @param wrapper {string|Element} ID of wrapping HTML element or element itself

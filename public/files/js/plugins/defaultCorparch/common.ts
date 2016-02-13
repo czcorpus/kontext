@@ -64,7 +64,7 @@ export function createEmptyCorplistItem():CorplistItem {
     return {
         id: null, name: null, type: null, corpus_id: null, canonical_id: null,
         subcorpus_id: null, corpora: null, description: null, featured: null,
-        size: null, size_info: null, user_item: null, requestable: null
+        size: null, size_info: null, user_item: null
     }
 }
 

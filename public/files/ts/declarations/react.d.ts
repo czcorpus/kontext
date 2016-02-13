@@ -34,17 +34,21 @@ declare module React {
 
     export function createElement(elmType:ReactClass, props:Props,
                                   ...children:any[]):ReactElement;
+}
 
-    export function render(element:ReactElement, container:HTMLElement, callback?:()=>void);
+declare module ReactDOM {
+
+    export function render(element:React.ReactElement, container:HTMLElement, callback?:()=>void);
 
     export function unmountComponentAtNode(element:HTMLElement):boolean;
 
-    export function findDOMNode(component:ReactElement):HTMLElement;
+    export function findDOMNode(component:React.ReactElement):HTMLElement;
 }
 
-/**
- *
- */
 declare module "vendor/react" {
     export = React;
+}
+
+declare module "vendor/react-dom" {
+    export = ReactDOM;
 }

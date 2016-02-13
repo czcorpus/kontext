@@ -89,12 +89,14 @@
             DOMParser = require('xmldom').DOMParser,
             doc = new DOMParser().parseFromString(data),
             reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev',
+            reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev',
             pluginMap = {
                 'win' : 'empty:',
                 'conf' : 'empty:',
                 'jquery' : 'vendor/jquery.min',
                 'vendor/rsvp' : 'vendor/rsvp.min',
                 'vendor/react': reactModule,
+                'vendor/react-dom': reactDomModule,
                 'vendor/d3': 'vendor/d3.min',
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
@@ -127,6 +129,7 @@
                 'vendor/rsvp',
                 'vendor/rsvp-ajax',
                 'vendor/react',
+                'vendor/react-dom',
                 'vendor/Dispatcher',
                 'SoundManager',
                 'vendor/typeahead',

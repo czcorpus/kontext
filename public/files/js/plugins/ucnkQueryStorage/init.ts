@@ -17,6 +17,7 @@
  */
 
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../../ts/declarations/common.d.ts" />
 
 
 function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
@@ -307,7 +308,7 @@ export class QueryHistory {
     /**
      * @param {Closeable} dep
      */
-    registerDependency(dep:Kontext.Closeable): void {
+    registerDependency<T extends Kontext.Closeable>(dep:T): void {
         if (typeof dep.close !== 'function') {
             throw new Error('Registered dependency must implement close() method');
         }

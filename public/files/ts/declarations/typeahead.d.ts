@@ -127,6 +127,8 @@ declare module Twitter.Typeahead {
          * Note a precompiled template is a function that takes a JavaScript object as its first argument and returns a HTML string.
          */
             templates?: Templates;
+
+            limit?:number;
     }
 
 
@@ -161,6 +163,8 @@ declare module Twitter.Typeahead {
          */
             suggestion?: (datum: any) => string|JQuery|HTMLElement;
 
+            notFound?:()=>string;
+
     }
 
 
@@ -184,6 +188,8 @@ declare module Twitter.Typeahead {
          * The minimum character length needed before suggestions start getting rendered. Defaults to 1.
          */
             minLength?: number;
+
+            name?:string;
     }
 }
 
@@ -316,6 +322,10 @@ declare module Bloodhound
          * The ajax settings object passed to jQuery.ajax.
          */
             ajax?: JQueryAjaxSettings;
+
+            prepare?:(query, settings)=>string;
+
+            transform?:(response)=>string;
     }
 
     /**
