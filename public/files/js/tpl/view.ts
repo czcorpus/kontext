@@ -788,7 +788,7 @@ export class ViewPage {
     }
 
     private soundManagerInit():void {
-        SoundManager.soundManager.setup({
+        SoundManager.getInstance().setup({
             url: '../files/misc/soundmanager2/',
             flashVersion: 9,
             debugMode : false,

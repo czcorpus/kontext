@@ -179,7 +179,7 @@ export class CorplistTableStore extends util.SimplePageStore {
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'LIST_STAR_CLICKED':
-                        var prom;
+                        var prom:any;
                         var item:common.CorplistItem;
                         var message;
 
@@ -235,7 +235,7 @@ export class CorplistTableStore extends util.SimplePageStore {
 
     public loadData(query:string, filters:string, offset:number, limit?:number):void {
         var self = this;
-        var prom = $.ajax(
+        var prom:any = $.ajax(
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
             + '?query=' + encodeURIComponent(query)
             + (offset ? '&offset=' + offset : '')

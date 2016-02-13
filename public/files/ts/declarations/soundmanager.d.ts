@@ -148,8 +148,12 @@ declare module "SoundManager" {
 
 
     export interface SoundManager {
-        setup(conf:SoundManagerConfig);
+       setup(conf:SoundManagerConfig):void;
     }
 
-    export var soundManager:SoundManager;
+    export interface GetInstance {
+        ():SoundManager;
+    }
+
+    export var getInstance:GetInstance;
 }
