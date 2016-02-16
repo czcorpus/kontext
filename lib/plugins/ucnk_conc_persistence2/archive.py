@@ -83,7 +83,7 @@ class Archiver(object):
             key = key[len(prefix):]
         self._to_db.execute('INSERT INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
                             (key, data, int(time.time()), 0))
-        logger.debug('archived %s => %s' % (key, data))
+        logging.getLogger(__name__).debug('archived %s => %s' % (key, data))
 
     def time_based_prefix(self, interval):
         """

@@ -162,28 +162,27 @@ class CacheCleanup(CacheFiles):
                                     os.unlink(to_del[item_hash])
                                     del cache_map[k]
                                 else:
-                                    autoconf.logger.debug('deleted: %s (key: %s)' %
-                                                         (to_del[item_hash], k))
+                                    logging.getLogger().debug('deleted: %s (key: %s)' % (to_del[item_hash], k))
                                 del to_del[item_hash]
                                 num_deleted += 1
                             elif item_hash not in real_file_hashes:
                                 if not dry_run:
                                     del cache_map[k]
-                                autoconf.logger.warn('deleted stale cache map entry: %s '
-                                                     '(hash: %s)' % (map_path, item_hash))
+                                logging.getLogger().warn('deleted stale cache map entry: %s '
+                                                         '(hash: %s)' % (map_path, item_hash))
                         if not dry_run:
                             cPickle.dump(cache_map, open(map_path, 'wb'))
                     except Exception as ex:
-                        autoconf.logger.warn('Failed to process cache map file (will be deleted): %s' % (ex,))
+                        logging.getLogger().warn('Failed to process cache map file (will be deleted): %s' % (ex,))
                         os.unlink(map_path)
 
             else:
-                autoconf.logger.error('Cache map file %s not found' % map_path)
+                logging.getLogger().error('Cache map file %s not found' % map_path)
 
             for item_hash, unbound_file in to_del.items():
                 if not dry_run:
                     os.unlink(unbound_file)
-                autoconf.logger.warn('deleted unbound cache file: %s' % unbound_file)
+                logging.getLogger().warn('deleted unbound cache file: %s' % unbound_file)
         ans = {'type': 'summary', 'processed': num_processed, 'deleted': num_deleted}
         logging.getLogger(__name__).info(json.dumps(ans))
         return ans
