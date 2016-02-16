@@ -15,7 +15,7 @@ lib/plugins/devel_*
 node_modules/
 
 # default app installation
-conf/
+conf/*
 !conf/config.sample.xml
 !conf/main-menu.sample.json
 public/files/.vscode/
@@ -24,8 +24,8 @@ public/files/js/compiled/
 public/files/css/kontext.min.css
 cmpltmpl/*
 !cmpltmpl/__init__.py
-public/files/themes
-!public/files/themes/default/**
+public/files/themes/*
+!public/files/themes/default
 
 # other
 *.pyc
