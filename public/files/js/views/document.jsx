@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['vendor/react', 'jquery'], function (React, $) {
+define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM, $) {
     'use strict';
 
     var lib = {},
@@ -313,7 +313,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
             componentDidMount : function () {
                 if (this.props.onReady) {
-                    this.props.onReady(this.getDOMNode());
+                    this.props.onReady(ReactDOM.findDOMNode(this));
                 }
             },
 

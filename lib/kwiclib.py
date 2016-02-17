@@ -215,18 +215,15 @@ class Kwic(object):
         corps_with_colls = manatee.StrVector()
         self.conc.get_aligned(corps_with_colls)
         result.CollCorps = corps_with_colls
-        result.Par_conc_corpnames = [{'n': c.get_conffile(),
-                                         'label': c.get_conf('NAME')
-                                         or c.get_conffile()}
-                                        for c in [self.conc.orig_corp] + alignlist]
+        result.Par_conc_corpnames = [dict(n=c.get_conffile(),
+                                          label=c.get_conf('NAME') or c.get_conffile())
+                                     for c in [self.conc.orig_corp] + alignlist]
         for al_corp in alignlist:
             al_corpname = al_corp.get_conffile()
             if al_corpname in corps_with_colls:
                 self.conc.switch_aligned(al_corp.get_conffile())
-                al_lines.append(
-                    self.kwiclines(None, fromline, toline, leftctx,
-                              rightctx, attrs, ctxattrs, refs,
-                              structs, labelmap, righttoleft))
+                al_lines.append(self.kwiclines(None, fromline, toline, leftctx, rightctx, attrs, ctxattrs,
+                                               refs, structs, labelmap, righttoleft))
             else:
                 self.conc.switch_aligned(self.conc.orig_corp.get_conffile())
                 self.conc.add_aligned(al_corp.get_conffile())

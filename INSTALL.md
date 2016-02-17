@@ -1,6 +1,31 @@
 Installation instructions
 =========================
 
+Building the project
+--------------------
+
+To be able to build the project you must have:
+
+* a working [NodeJS](https://nodejs.org/en/download/) (v4.3 or newer) installation
+* properly configured plug-ins in *conf/config.xml* (because the building script uses the information
+  to pack all the necessary JavaScript code)
+
+In your KonText directory write:
+
+```
+npm install; grunt production
+```
+
+Deployment
+----------
+
+Once you have your copy of KonText built it is possible to deploy it on a server.
+Currently KonText does not support any deployment automation but the process is simple.
+
+```
+cp -r {cmpltmpl,conf,lib,locale,package.json,public,scripts,worker.py} destination_directory
+```
+
 Standalone server application
 -----------------------------
 
