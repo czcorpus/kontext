@@ -46,6 +46,29 @@ import time
 from lxml import etree
 
 from translation import ugettext as _
+from controller import exposed
+from controller import UserActionException
+import plugins
+from actions import corpora
+
+
+@exposed(return_type='json', legacy=True)
+def ajax_get_tag_variants(ctrl, pattern=''):
+    """
+    """
+    try:
+        tag_loader = plugins.get('taghelper').loader(
+            ctrl.args.corpname,
+            plugins.get('corparch').get_corpus_info(ctrl.args.corpname)['tagset'],
+            ctrl.ui_lang)
+    except IOError:
+        raise UserActionException(_('Corpus %s is not supported by this widget.') % ctrl.args.corpname)
+
+    if len(pattern) > 0:
+        ans = tag_loader.get_variant(pattern)
+    else:
+        ans = tag_loader.get_initial_values()
+    return ans
 
 
 class TagHelperException(Exception):
@@ -146,6 +169,9 @@ class Taghelper(object):
             values[item] = []
             labels[item] = None
         return dict(values=values, labels=labels, num_pos=num_tag_pos)
+
+    def export_actions(self):
+        return {corpora.Corpora: [ajax_get_tag_variants]}
 
 
 class TagVariantLoader(object):

@@ -15,7 +15,6 @@ from functools import partial
 
 from controller import exposed
 from kontext import Kontext
-from kontext import UserActionException
 import plugins
 import l10n
 from translation import ugettext as _
@@ -93,24 +92,6 @@ class Corpora(Kontext):
             if k not in ans:
                 ans[k] = []
             ans[k].append(v)
-        return ans
-
-    @exposed(return_type='json', legacy=True)
-    def ajax_get_tag_variants(self, pattern=''):
-        """
-        """
-        try:
-            tag_loader = plugins.get('taghelper').loader(
-                self.args.corpname,
-                plugins.get('corparch').get_corpus_info(self.args.corpname)['tagset'],
-                self.ui_lang)
-        except IOError:
-            raise UserActionException(_('Corpus %s is not supported by this widget.') % self.args.corpname)
-
-        if len(pattern) > 0:
-            ans = tag_loader.get_variant(pattern)
-        else:
-            ans = tag_loader.get_initial_values()
         return ans
 
     @exposed(return_type='json', legacy=True)

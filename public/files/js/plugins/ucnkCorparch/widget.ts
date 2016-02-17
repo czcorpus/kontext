@@ -185,7 +185,7 @@ class WidgetMenu {
 
     funcMap:{[name:string]: WidgetTab};
 
-    pageModel:Kontext.FirstFormPage;
+    pageModel:Kontext.QueryPagePluginApi;
 
     currentBoxId:string;
 
@@ -202,7 +202,7 @@ class WidgetMenu {
      *
      * @param widget
      */
-    constructor(widget:Corplist, pageModel:Kontext.FirstFormPage) {
+    constructor(widget:Corplist, pageModel:Kontext.QueryPagePluginApi) {
         this.widget = widget;
         this.pageModel = pageModel;
         this.menuWrapper = $('<div class="menu"></div>');
@@ -353,7 +353,7 @@ class SearchTab implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:Kontext.FirstFormPage, widgetWrapper:HTMLElement, itemClickCallback:CorplistSrchItemClick) {
+    constructor(pluginApi:Kontext.QueryPagePluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistSrchItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
@@ -761,7 +761,7 @@ class FavoritesTab implements WidgetTab {
      * @returns {string}
      */
     generateItemUrl(itemData):string {
-        var rootPath = this.pageModel.createActionUrl(this.pageModel.getConf('currentAction')),
+        var rootPath = this.pageModel.createActionUrl(this.pageModel.getConf<string>('currentAction')),
             params = ['corpname=' + itemData.corpus_id];
 
         if (itemData.type === commonDefault.CorplistItemType.SUBCORPUS) {
@@ -884,7 +884,7 @@ class FavoritesTab implements WidgetTab {
                 $(self.wrapperFeat).append('<tr class="data-item"><td>'
                     + '<a class="featured-item"'
                     + ' href="' + self.pageModel.createActionUrl(
-                            self.pageModel.getConf('currentAction'))
+                            self.pageModel.getConf<string>('currentAction'))
                     + '?corpname=' + item.id + '"'
                     + ' data-id="' + item.id + '"'
                     + ' title="' + item.description + '"'
@@ -989,7 +989,7 @@ class StarComponent {
 
     private favoriteItemsTab:FavoritesTab;
 
-    private pageModel:Kontext.FirstFormPage;
+    private pageModel:Kontext.QueryPagePluginApi;
 
     private starSwitch:StarSwitch;
 
@@ -1003,8 +1003,7 @@ class StarComponent {
      * in favorites or not.
      */
     onAlignedCorporaAdd = (corpname:string) => {
-        var newItem:common.CorplistItemUcnk;
-
+        let newItem:common.CorplistItemUcnk;
         newItem = this.extractItemFromPage();
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
     };
@@ -1050,7 +1049,7 @@ class StarComponent {
      * @param favoriteItemsTab
      * @param pageModel
      */
-    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.FirstFormPage, editable:boolean) {
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.QueryPagePluginApi, editable:boolean) {
         var currItem:common.CorplistItemUcnk;
 
         this.favoriteItemsTab = favoriteItemsTab;
@@ -1210,7 +1209,7 @@ class StarComponent {
             } else {
                 ans.type = commonDefault.CorplistItemType.CORPUS;
                 ans.id = ans.canonical_id;
-                ans.name = this.pageModel.getConf('humanCorpname');
+                ans.name = this.pageModel.getConf<string>('humanCorpname');
             }
             return ans;
 
@@ -1232,7 +1231,7 @@ class StarComponent {
         if (userItemFlag === undefined) {
             userItemFlag = commonDefault.Favorite.NOT_FAVORITE;
         }
-        corpName = this.pageModel.getConf('corpname');
+        corpName = this.pageModel.getConf<string>('corpname');
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
         }
@@ -1260,7 +1259,6 @@ class StarComponent {
                     self.setFavorite(commonDefault.Favorite.NOT_FAVORITE);
                 }
             });
-
             this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
             this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
             this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
@@ -1292,7 +1290,7 @@ export class Corplist implements CorpusArchive.Widget {
 
     private data:Array<common.CorplistItemUcnk>;
 
-    private pageModel:Kontext.FirstFormPage;
+    private pageModel:Kontext.QueryPagePluginApi;
 
     private visible:Visibility;
 
@@ -1330,14 +1328,14 @@ export class Corplist implements CorpusArchive.Widget {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<common.CorplistItemUcnk>, pageModel:Kontext.FirstFormPage,
-                parentForm:HTMLElement) {
+    constructor(options:Options, data:Array<common.CorplistItemUcnk>,
+            pageModel:Kontext.QueryPagePluginApi, parentForm:HTMLElement) {
         this.options = options;
         this.data = data;
         this.pageModel = pageModel;
         this.parentForm = parentForm;
-        this.currCorpIdent = pageModel.getConf('corpname');
-        this.currCorpname = pageModel.getConf('humanCorpname');
+        this.currCorpIdent = pageModel.getConf<string>('corpname');
+        this.currCorpname = pageModel.getConf<string>('humanCorpname');
         this.visible = Visibility.HIDDEN;
         this.widgetClass = this.options.widgetClass ? this.options.widgetClass : 'corplist-widget';
         this.onHide = this.options.onHide ? this.options.onHide : null;

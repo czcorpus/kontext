@@ -598,7 +598,7 @@ define(['jquery'], function($) {
    * Attach the keyboard to an element
    *
    */
-  window.VKI_attach = function(elem, triggerElem) {
+  this.VKI_attach = function(elem, triggerElem) {
     if (elem.getAttribute("VKI_attached")) return false;
     if (self.VKI_imageURI) {
       var keybut = document.createElement('img');
@@ -626,7 +626,7 @@ define(['jquery'], function($) {
                     self.VKI_show(elem);
                     $(window).on('keyup.closeVirtualKeyboard', function (event) {
                         if (event.keyCode === 27) {
-                            window.VKI_close(elem);
+                            self.VKI_close(elem);
                         }
                     });
 
@@ -674,7 +674,7 @@ define(['jquery'], function($) {
     for (var x = 0, elem; elem = inputElems[x++];)
       for (var y = 0, ex; ex = elem[y++];)
         if (ex.nodeName == "TEXTAREA" || ex.type == "text" || ex.type == "password")
-				  if (ex.className.indexOf("keyboardInput") > -1) window.VKI_attach(ex);
+				  if (ex.className.indexOf("keyboardInput") > -1) this.VKI_attach(ex);
 
     VKI_addListener(document.documentElement, 'click', function(e) { self.VKI_close(); }, false);
   }
@@ -1341,5 +1341,8 @@ define(['jquery'], function($) {
   // VKI_addListener(window, 'load', function() {
   //   setTimeout(VKI_buildKeyboardInputs, 5);
   // }, false);
-  return this.VKI_attach;
+  return {
+      VKI_attach: this.VKI_attach,
+      VKI_close: this.VKI_close
+  };
 });

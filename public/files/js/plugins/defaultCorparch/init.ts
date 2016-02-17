@@ -51,7 +51,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
  * @param pluginApi
  * @param options A configuration for the widget
  */
-export function create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage,
+export function create(selectElm:HTMLElement, pluginApi:Kontext.QueryPagePluginApi,
                        options:CorpusArchive.Options):CorpusArchive.Widget {
     var corplist:widget.Corplist,
         data:Array<common.CorplistItem>;

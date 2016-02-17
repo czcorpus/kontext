@@ -225,7 +225,8 @@ class LiveData {
 
         if ($.isArray(dataItem)) {
             attrTable.find('tr.metadata td').empty();
-            dataTable = this.createDataTable(dataItem, ident, this.pluginApi.getConf('bibConf'), checkedItems);
+            dataTable = this.createDataTable(dataItem, ident,
+                    this.pluginApi.getConf<common.BibConf>('bibConf'), checkedItems);
 
             $(inputElm).after(dataTable);
             $(dataTable).find('.bib-info').each(function () {

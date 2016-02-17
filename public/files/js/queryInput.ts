@@ -17,22 +17,91 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/**
- *
- */
-define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder', 'util',
-            'plugins/queryStorage/init', 'vendor/virtual-keyboard'], function ($, win, cookies, popupBox,
-                                                                               conf, tagbuilder, util,
-                                                                               queryStorage, virtKeyboard) {
-    'use strict';
 
-    var lib = {};
+/// <reference path="../ts/declarations/jquery.d.ts" />
+/// <reference path="../ts/declarations/popupbox.d.ts" />
+/// <reference path="../ts/declarations/tagbuilder.d.ts" />
+/// <reference path="../ts/declarations/virtual-keyboard.d.ts" />
+/// <reference path="../ts/declarations/cookies.d.ts" />
+/// <reference path="../ts/declarations/common.d.ts" />
+/// <reference path="../ts/declarations/rsvp.d.ts" />
 
-    function QueryFormTweaks(pluginApi, userSettings, formElm, pluginFactory) {
+import $ = require('jquery');
+import win = require('win');
+import cookies = require('vendor/cookies');
+import popupBox = require('popupbox');
+import tagbuilder = require('tagbuilder');
+import util = require('util');
+import virtKeyboard = require('vendor/virtual-keyboard');
+import RSVP = require('vendor/rsvp');
+import layoutModel = require('tpl/document');
+
+
+class CustomApi extends layoutModel.PluginApi implements Kontext.QueryPagePluginApi {
+
+    pluginApi:Kontext.PluginApi;
+
+    queryFieldsetToggleEvents:Array<(elm:HTMLElement)=>void>;
+
+    queryFieldsetReadyEvents:Array<(elm:HTMLElement)=>void>;
+
+    corpusSetupHandler:Kontext.CorpusSetupHandler;
+
+    constructor(model:layoutModel.PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler) {
+        super(model);
+        this.corpusSetupHandler = corpusSetupHandler;
+        this.queryFieldsetToggleEvents = [];
+        this.queryFieldsetReadyEvents = [];
+    }
+
+    bindFieldsetToggleEvent(fn:(elm:HTMLElement)=>void) {
+        this.queryFieldsetToggleEvents.push(fn);
+    }
+
+    bindFieldsetReadyEvent(fn:(elm:HTMLElement)=>void) {
+        this.queryFieldsetReadyEvents.push(fn);
+    }
+
+    registerOnSubcorpChangeAction(fn:(subcname:string)=>void) {
+        this.corpusSetupHandler.registerOnSubcorpChangeAction(fn);
+    }
+
+    registerOnAddParallelCorpAction(fn:(corpname:string)=>void) {
+        this.corpusSetupHandler.registerOnAddParallelCorpAction(fn);
+    }
+
+    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {
+        this.corpusSetupHandler.registerOnBeforeRemoveParallelCorpAction(fn);
+    }
+
+    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void) {
+        this.corpusSetupHandler.registerOnRemoveParallelCorpAction(fn);
+    }
+
+    applyOnQueryFieldsetToggleEvents(elm:HTMLElement) {
+        this.queryFieldsetReadyEvents.forEach((fn)=>fn(elm));
+    }
+
+    applyOnQueryFieldsetReadyEvents(elm:HTMLElement) {
+        this.queryFieldsetReadyEvents.forEach((fn)=>fn(elm));
+    }
+}
+
+
+export class QueryFormTweaks {
+
+    private pluginApi:Kontext.QueryPagePluginApi;
+
+    private userSettings:layoutModel.UserSettings;
+
+    private formElm:HTMLElement;
+
+    private maxEncodedParamsLength:number;
+
+    constructor(pluginApi:Kontext.QueryPagePluginApi, userSettings:layoutModel.UserSettings, formElm:HTMLElement) {
         this.pluginApi = pluginApi;
         this.userSettings = userSettings;
         this.formElm = formElm;
-        this.pluginFactory = pluginFactory;
         this.maxEncodedParamsLength = 1500;
     }
 
@@ -40,8 +109,8 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * @param {jQuery|HTMLElement|String} inputElm
      * @param {jQuery|HTMLElement|String} triggerElm
      */
-    QueryFormTweaks.prototype.bindTagHelper = function (inputElm, triggerElm) {
-        var self = this;
+    bindTagHelper(inputElm:HTMLElement, triggerElm:HTMLElement):void {
+        let self = this;
 
         tagbuilder.bindTextInputHelper(
             this.pluginApi,
@@ -59,34 +128,29 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 useNamedCheckboxes: false,
                 allowMultipleOpenedBoxes: false
             },
-            function (message) {
+            (message:string) => {
                 self.pluginApi.showMessage('error',
                     message || self.pluginApi.translate('global__failed_to_contact_server'));
             }
         );
-    };
+    }
 
     /**
      * @param {jQuery} jqLinkElement
      */
-    QueryFormTweaks.prototype.bindWithinHelper = function(jqLinkElement) {
-        var jqInputElement = $('#' + jqLinkElement.data('bound-input')),
-            clickAction,
-            buttonEnterAction,
-            self = this;
+    bindWithinHelper(jqLinkElement:HTMLElement) {
+        let jqInputElement = $('#' + $(jqLinkElement).data('bound-input'));
+        let clickAction;
+        let buttonEnterAction;
+        let self = this;
 
         clickAction = function (box) {
             return function () {
-                var structAttr,
-                    within,
-                    bef,
-                    aft,
-                    caretPos = util.getCaretPosition(jqInputElement);
-
-                structAttr = $('#within-structattr').val().split('.');
-                within = 'within <' + structAttr[0] + ' ' + structAttr[1] + '="' + $('#within-value').val() + '" />';
-                bef = jqInputElement.val().substring(0, caretPos);
-                aft = jqInputElement.val().substring(caretPos);
+                let caretPos = util.getCaretPosition(jqInputElement);
+                let structAttr = $('#within-structattr').val().split('.');
+                let within = 'within <' + structAttr[0] + ' ' + structAttr[1] + '="' + $('#within-value').val() + '" />';
+                let bef = jqInputElement.val().substring(0, caretPos);
+                let aft = jqInputElement.val().substring(caretPos);
 
                 jqInputElement.val(bef + within + aft);
                 jqInputElement.focus();
@@ -106,13 +170,13 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         };
 
         popupBox.bind(jqLinkElement,
-            function (box, finalize) {
-                var loaderGIF,
-                    jqWithinModal = $('#within-builder-modal');
+            function (box:popupBox.TooltipBox, finalize:()=>void) {
+                let loaderGIF;
+                let jqWithinModal:JQuery = $('#within-builder-modal');
 
                 if ($('#within-structattr').length > 0) {
                     jqWithinModal.css('display', 'block');
-                    box.importElement(jqWithinModal);
+                    box.importElement(jqWithinModal.get(0));
                     $('#within-insert-button').off('click')
                             .one('click', clickAction(box));
                     $(win.document).off('keypress.withinBoxEnter');
@@ -122,19 +186,20 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 } else {
                     loaderGIF = self.pluginApi.appendLoader(box.getRootElement());
 
-                    var prom = self.pluginApi.ajax('GET',
+                    let prom:RSVP.Promise<any> = self.pluginApi.ajax(
+                        'GET',
                         self.pluginApi.createActionUrl('corpora/ajax_get_structs_details'),
-                        {corpname: self.pluginApi.getConf('corpname')});
+                        {
+                            corpname: self.pluginApi.getConf('corpname')
+                        },
+                        {contentType : 'application/x-www-form-urlencoded'}
+                    );
                     prom.then(
                         function (data) {
-                            var prop,
-                                html,
-                                i;
-
-                            html = '<select id="within-structattr">';
-                            for (prop in data) {
+                            let html = '<select id="within-structattr">';
+                            for (let prop in data) {
                                 if (data.hasOwnProperty(prop)) {
-                                    for (i = 0; i < data[prop].length; i += 1) {
+                                    for (let i = 0; i < data[prop].length; i += 1) {
                                         html += '<option>' + prop + '.' + data[prop][i] + '</option>';
                                     }
                                 }
@@ -142,7 +207,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                             html += '</select>';
                             loaderGIF.remove();
 
-                            box.importElement(jqWithinModal);
+                            box.importElement(jqWithinModal.get(0));
                             jqWithinModal.find('.inputs').prepend(html);
                             jqWithinModal.css('display', 'block');
 
@@ -168,37 +233,37 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                     $(win.document).off('keypress.withinBoxEnter');
                 }
             });
-    };
+    }
 
     /**
      *
      */
-    QueryFormTweaks.prototype.bindQueryHelpers = function () {
-        var self = this;
+    bindQueryHelpers():void {
+        let self = this;
         $('.query-area .cql-input').each(function () {
-            var blockWrapper = $(this).closest('td');
+            let blockWrapper = $(this).closest('td');
 
-            self.bindTagHelper($(this), blockWrapper.find('.insert-tag a'));
-            self.bindWithinHelper(blockWrapper.find('li.within a'));
+            self.bindTagHelper(this, blockWrapper.find('.insert-tag a').get(0));
+            self.bindWithinHelper(blockWrapper.find('li.within a').get(0));
         });
         this.initVirtualKeyboard($(this.formElm).find('tr:visible .spec-chars'));
-    };
+    }
 
 
-    QueryFormTweaks.prototype.textareaSubmitOverride = function () {
-        var jqMainForm = $(this.formElm),
-            self = this;
+    textareaSubmitOverride():void {
+        let jqMainForm = $(this.formElm);
+        let self = this;
 
-        jqMainForm.find('.query-area textarea').each(function (i, area) {
+        jqMainForm.find('.query-area textarea').each((i, area) => {
             self.initCqlTextarea(area, jqMainForm);
         });
-    };
+    }
 
-    QueryFormTweaks.prototype.textareaHints = function () {
+    textareaHints():void {
         this.pluginApi.renderReactComponent(this.pluginApi.getViews().QueryHints,
             $(this.formElm).find('.query-area .query-hints').get(0),
                 {hintText: this.pluginApi.getStores().queryHintStore.getHint()});
-    };
+    }
 
 
     /**
@@ -210,31 +275,22 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * @param {HTMLElement, jQuery.Event} source
      * @param hints
      */
-    QueryFormTweaks.prototype.cmdSwitchQuery = function (source, hints) {
-        var jqQs,
-            newidCom,
-            newid,
-            jqFocusElem,
-            oldval,
-            elementId,
-            elementIdCom,
-            jqOldElem,
-            jqElem,
-            jqQueryTypeHint,
-            self = this;
+    cmdSwitchQuery(source:JQueryEventObject|HTMLElement, hints:{[key:string]:string}) {
+        let jqQs;
+        let self = this;
 
         if (source.hasOwnProperty('currentTarget')) {
-            jqQs = $(source.currentTarget);
+            jqQs = $(source['currentTarget']);
 
         } else { // called 'manually'
             jqQs = $(source);
         }
 
         hints = hints || {};
-        newidCom = jqQs.val();
-        newid = jqQs.val() + jqQs.data('parallel-corp');
-        jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
-        oldval = jqFocusElem.val();
+        let newidCom = jqQs.val();
+        let newid = jqQs.val() + jqQs.data('parallel-corp');
+        let jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
+        let oldval = jqFocusElem.val();
 
         $('#conc-form-clear-button').unbind('click')
                 .bind('click', function () {
@@ -242,9 +298,10 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         });
 
         jqQs.find('option').each(function () {
-            elementId = $(this).val() + jqQs.data('parallel-corp');
-            elementIdCom = $(this).val().substring(0, $(this).val().length - 3);
-            jqElem = $('#' + elementId);
+            let elementId = $(this).val() + jqQs.data('parallel-corp');
+            let elementIdCom = $(this).val().substring(0, $(this).val().length - 3);
+            let jqElem = $('#' + elementId);
+            let jqOldElem;
 
             if (elementId === newid) {
                 jqElem.removeClass('hidden').addClass('visible');
@@ -258,15 +315,15 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         });
         jqFocusElem.val(oldval);
         if (newid === 'iqueryrow') {
-            jqQueryTypeHint = $('<a href="#" class="context-help">'
+            let jqQueryTypeHint = $('<a href="#" class="context-help">'
                 + '<img class="over-img" src="../files/img/question-mark.png" '
                 + 'data-alt-img="../files/img/question-mark_s.png" /></a>');
             $('#queryselector').after(jqQueryTypeHint);
             popupBox.bind(jqQueryTypeHint,
                 hints['iqueryrow'],
                 {
-                    'top': 'attached-bottom',
-                    'fontSize': '10pt',
+                    top: 'attached-bottom',
+                    fontSize: '10pt',
                     width: '30%'
                 });
 
@@ -278,22 +335,22 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
         if (source.hasOwnProperty('currentTarget')) { // reset plug-in only if this is called as part of some event handler
             $('.query-area input.history, .query-area textarea.history').each(function () {
                 if (typeof $(this).data('plugin') === 'object') {
-                    self.pluginFactory('queryStorage').detach(this);
+                    self.pluginApi.getPlugin<Plugins.IQueryStorage>('queryStorage').detach(this);
                 }
             });
-            self.pluginFactory('queryStorage').reset();
+            self.pluginApi.getPlugin<Plugins.IQueryStorage>('queryStorage').reset();
         }
         this.initVirtualKeyboard(jqFocusElem);
-    };
+    }
 
     /**
      *
      * @param f
      */
-    QueryFormTweaks.prototype.clearForm = function (f) {
-        var jqQuerySel = $('#queryselector'),
-            prevRowType = jqQuerySel.val(),
-            jqErr = $('#error');
+    clearForm(f):void {
+        let jqQuerySel = $('#queryselector');
+        let prevRowType = jqQuerySel.val();
+        let jqErr = $('#error');
 
         if (jqErr.length === 0) {
             jqErr.css('display', 'none');
@@ -315,19 +372,20 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             }
         });
         jqQuerySel.val(prevRowType);
-    };
+    }
 
     /**
      * @param elm
      */
-    QueryFormTweaks.prototype.initVirtualKeyboard = function (elm) {
-        var jqElm = $(elm);
+    initVirtualKeyboard(elm):void {
+        let jqElm = $(elm);
 
         if (jqElm.length > 0) {
-            win.VKI_close(jqElm.get(0));
-            win.VKI_attach(jqElm.get(0), jqElm.closest('tr').find('.virtual-keyboard-trigger').get());
+            virtKeyboard.VKI_close(jqElm.get(0));
+            virtKeyboard.VKI_attach(jqElm.get(0),
+                                    jqElm.closest('tr').find('.virtual-keyboard-trigger').get(0));
         }
-    };
+    }
 
 
     /**
@@ -338,12 +396,12 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
      * @param formElm
      * @param state
      */
-    function setAlignedCorporaFieldsDisabledState(formElm, state) {
-        var stateStr = state.toString();
+    setAlignedCorporaFieldsDisabledState(formElm, state):void {
+        let stateStr = state.toString();
 
         $(formElm).find('input[name="sel_aligned"]').each(function () {
-            var corpn = $(this).data('corpus'), // beware - corp may contain special characters colliding with jQuery
-                queryType;
+            let corpn = $(this).data('corpus'); // beware - corp may contain special characters colliding with jQuery
+            let queryType;
 
             // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
             if (!$(this).val()) {
@@ -377,9 +435,9 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
     /**
      *
      */
-    QueryFormTweaks.prototype.initQuerySwitching = function () {
-        var queryTypeHints = this.pluginApi.getConf('queryTypesHints'),
-            self = this;
+    initQuerySwitching():void {
+        let queryTypeHints = this.pluginApi.getConf<{[k:string]:string}>('queryTypesHints');
+        let self = this;
 
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
@@ -391,28 +449,28 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 self.cmdSwitchQuery($(this).get(0), queryTypeHints);
             }
         });
-    };
+    }
 
     /**
      *
      */
-    QueryFormTweaks.prototype.fixFormSubmit = function () {
-        var self = this;
+    fixFormSubmit():void {
+        let self = this;
         // remove empty and unused parameters from URL before form submit
-        $(this.formElm).submit(function () { // run before submit
-            setAlignedCorporaFieldsDisabledState(self.formElm, true);
-            $(win).on('unload', function () {
-                setAlignedCorporaFieldsDisabledState(self.formElm, false);
+        $(this.formElm).submit(() => { // run before submit
+            this.setAlignedCorporaFieldsDisabledState(self.formElm, true);
+            $(win).on('unload', () => {
+                this.setAlignedCorporaFieldsDisabledState(self.formElm, false);
             });
         });
-    };
+    }
 
     /**
      *
      * @param area
      * @param parentForm
      */
-    QueryFormTweaks.prototype.initCqlTextarea = function (area, parentForm) {
+    initCqlTextarea(area, parentForm):void {
         $(area).on('keydown', function (evt) {
             if (!evt.shiftKey && evt.keyCode === 13) {
                 evt.preventDefault();
@@ -423,12 +481,12 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
 
     /**
      */
-    QueryFormTweaks.prototype.bindQueryFieldsetsEvents = function () {
-        var self = this;
+    bindQueryFieldsetsEvents():void {
+        let self = this;
 
         $('a.form-extension-switch').on('click', function (event) {
-            var jqTriggerLink = $(event.currentTarget),
-                jqFieldset = jqTriggerLink.closest('fieldset');
+            let jqTriggerLink = $(event.currentTarget);
+            let jqFieldset = jqTriggerLink.closest('fieldset');
 
             jqFieldset.toggleClass('inactive');
             if (jqFieldset.hasClass('inactive')) {
@@ -445,23 +503,23 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqFieldset.find('div.desc').hide();
                 self.userSettings.set(jqTriggerLink.data('box-id'), true);
             }
-            $.each(self.pluginApi.queryFieldsetToggleEvents, function (i, fn) {
-                fn(jqFieldset);
-            });
+            self.pluginApi.applyOnQueryFieldsetToggleEvents(jqFieldset.get(0));
         });
-    };
+    }
 
     /**
      *
      * @returns {*}
      */
-    QueryFormTweaks.prototype.updateToggleableFieldsets = function () {
-        var jqLink = $('a.form-extension-switch'),
-            jqFieldset,
-            jqSwitchLink,
-            elmStatus,
-            defer = $.Deferred(), // currently, this is synchronous
-            self = this;
+    updateToggleableFieldsets():RSVP.Promise<any> { // TODO
+        let jqLink = $('a.form-extension-switch');
+        let jqFieldset;
+        let jqSwitchLink;
+        let elmStatus;
+        let defer = new RSVP.Promise((resolve:(v:any)=>void, reject:(err:any)=>void) => {
+            resolve(null);
+        });
+        let self = this;
 
         jqLink.each(function () {
             jqFieldset = $(this).closest('fieldset');
@@ -482,35 +540,32 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 jqSwitchLink.removeClass('collapse').addClass('expand');
             }
 
-            self.pluginApi.queryFieldsetReadyEvents.forEach(function (item) {
-                item.call(self, $(jqFieldset).get(0));
-            });
+            self.pluginApi.applyOnQueryFieldsetReadyEvents($(jqFieldset).get(0));
 
         });
-        defer.resolve();
-        return defer.promise();
-    };
+        return defer;
+    }
 
-    function isPossibleQueryTypeMismatch(inputElm, queryTypeElm) {
-        var query = $(inputElm).val(),
-            queryType = $(queryTypeElm).find('option:selected').data('type');
+    isPossibleQueryTypeMismatch(inputElm, queryTypeElm):boolean {
+        let query = $(inputElm).val();
+        let queryType = $(queryTypeElm).find('option:selected').data('type');
 
-        return queryType !== 'cql' && (/^(\s*"[^\"]+")+$/.exec(query) || /\[[^\]]*\]/.exec(query))
-            || queryType === 'cql' && (!/^(\s*"[^\"]+")+$/.exec(query) && !/\[[^\]]*\]/.exec(query));
+        return Boolean(queryType !== 'cql' && (/^(\s*"[^\"]+")+$/.exec(query) || /\[[^\]]*\]/.exec(query))
+            || queryType === 'cql' && (!/^(\s*"[^\"]+")+$/.exec(query) && !/\[[^\]]*\]/.exec(query)));
     }
 
     /**
      * @param submitElm
      */
-    QueryFormTweaks.prototype.bindBeforeSubmitActions = function (submitElm) {
-        var self = this;
+    bindBeforeSubmitActions(submitElm):void {
+        let self = this;
 
         $(this.formElm).find(submitElm).on('click', function (event) { // TODO
-            var currQueryElm = $(self.formElm).find('.query-area .query:visible').get(0),
-                queryTypeElm = $(self.formElm).find('select.qselector').get(0),
-                data = $(self.formElm).serialize().split('&'),
-                cleanData = '',
-                unusedLangs = {};
+            let currQueryElm = $(self.formElm).find('.query-area .query:visible').get(0);
+            let queryTypeElm = $(self.formElm).find('select.qselector').get(0);
+            let data = $(self.formElm).serialize().split('&');
+            let cleanData = '';
+            let unusedLangs = {};
 
             $('.parallel-corp-lang').each(function () {
                 if ($(this).css('display') === 'none') {
@@ -519,9 +574,7 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             });
 
             function belongsToUnusedLanguage(paramName) {
-                var p;
-
-                for (p in unusedLangs) {
+                for (let p in unusedLangs) {
                     if (unusedLangs.hasOwnProperty(p)) {
                         if (paramName.indexOf(p) > -1) {
                             return true;
@@ -532,14 +585,14 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
             }
 
             $.each(data, function (i, val) {
-                var items = val.split('=', 2);
+                let items = val.split('=', 2);
                 if (items.length === 2 && items[1] && !belongsToUnusedLanguage(items[0])) {
                     cleanData += '&' + items[0] + '=' + items[1];
                 }
             });
 
-            if (isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
-                this.formElm.find('select.qselector').addClass('error-input');
+            if (self.isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
+                $(self.formElm).find('select.qselector').addClass('error-input');
                 $('.query-area input.query:visible, .query-area textarea.query:visible')
                         .addClass('error-input');
                 if (!win.confirm(self.pluginApi.translate('global__query_type_mismatch'))) {
@@ -552,34 +605,25 @@ define(['jquery', 'win', 'vendor/jquery.cookie', 'popupbox', 'conf', 'tagbuilder
                 $('#mainform').attr('method', 'POST');
             }
         });
-    };
+    }
+}
 
-    /**
-     * Generates PluginApi extended by bindFieldsetToggleEvent() method
-     * required in 'first_form' and 'filter_form' actions
-     *
-     * @param pluginApi
-     */
-    lib.extendedApi = function (pluginApi) {
-        var ExtendedApi = function () {
-            this.queryFieldsetToggleEvents = [];
-            this.queryFieldsetReadyEvents = [];
-        };
 
-        ExtendedApi.prototype = pluginApi;
+export function extendedApi(model:layoutModel.PageModel,
+        corpusSetupHandler:Kontext.CorpusSetupHandler):Kontext.QueryPagePluginApi {
+    return new CustomApi(model, corpusSetupHandler);
+}
 
-        ExtendedApi.prototype.bindFieldsetToggleEvent = function (fn) {
-            this.queryFieldsetToggleEvents.push(fn);
-        };
 
-        ExtendedApi.prototype.bindFieldsetReadyEvent = function (fn) {
-            this.queryFieldsetReadyEvents.push(fn);
-        };
+/**
+ * Generates PluginApi extended by bindFieldsetToggleEvent() method
+ * required in 'first_form' and 'filter_form' actions
+ *
+ * @param pluginApi
+ */
+export function init(model:layoutModel.PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler,
+        settings:layoutModel.UserSettings, formElm:HTMLElement):QueryFormTweaks {
+    let customApi = new CustomApi(model, corpusSetupHandler);
+    return new QueryFormTweaks(customApi, settings, formElm);
+}
 
-        return new ExtendedApi();
-    };
-
-    lib.QueryFormTweaks = QueryFormTweaks;
-
-    return lib;
-});

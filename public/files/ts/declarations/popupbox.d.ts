@@ -28,9 +28,10 @@ declare module "popupbox" {
     }
 
     export interface Options {
+        top?:string;
         width?: number|string;
         height?: number;
-        fontSize?: number;
+        fontSize?: string;
         timeout?: number;
         type?: string;
         closeIcon?: boolean;

@@ -35,6 +35,7 @@ import document = require('tpl/document');
 import popupBox = require('popupbox');
 import subcorpFormViews = require('views/subcorpForm');
 import subcorpFormStoreModule = require('stores/subcorpForm');
+import queryInput = require('../queryInput');
 
 // dynamic imports
 declare var subcmixer:Subcmixer.Module;
@@ -42,64 +43,10 @@ declare var corplistComponent:CorpusArchive.Module;
 declare var liveAttributes:LiveAttributes.Module;
 
 
-
-export class TmpExtendedApi implements Kontext.QueryPagePluginApi, Kontext.FirstFormPage {
-
-    private queryFieldsetToggleEvents:Array<(fieldset:HTMLElement) => void>;
-
-    private pluginApi:Kontext.PluginApi;
-
-    constructor(pluginApi:Kontext.PluginApi) {
-        this.pluginApi = pluginApi;
-        this.queryFieldsetToggleEvents = [];
-    }
-
-    bindFieldsetToggleEvent(callback:(fieldset:HTMLElement) => void) {
-        this.queryFieldsetToggleEvents.push(callback);
-    }
-
-    bindFieldsetReadyEvent(callback:(fieldset:HTMLElement) => void) {
-    }
-
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void) {}
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void) {}
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
-
-    getConf(key:string):any { return this.pluginApi.getConf(key); }
-    createStaticUrl(path:string):string { return this.pluginApi.createStaticUrl(path); }
-    createActionUrl(path:string):string { return this.pluginApi.createActionUrl(path); }
-    ajax<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):RSVP.Promise<T> {
-        return this.pluginApi.ajax(method, url, args, options);
-    }
-    ajaxAnim(): JQuery { return this.pluginApi.ajaxAnim(); }
-    ajaxAnimSmall() { return this.pluginApi.ajaxAnimSmall(); }
-    appendLoader() { return this.pluginApi.appendLoader(); }
-    showMessage(type:string, message:string) { return this.pluginApi.showMessage(type, message); }
-    translate(text:string, values?:any):string { return this.pluginApi.translate(text, values); }
-    formatNumber(v:number):string { return this.pluginApi.formatNumber(v); }
-    formatDate(d:Date):string { return this.pluginApi.formatDate(d); }
-    applySelectAll(elm:HTMLElement, context:HTMLElement) { return this.pluginApi.applySelectAll(elm, context); }
-    registerReset(fn:Function) { return this.pluginApi.registerReset(fn); }
-    registerInitCallback(fn:()=>void):void { return this.pluginApi.registerInitCallback(fn); }
-    userIsAnonymous():boolean { return this.pluginApi.userIsAnonymous(); }
-    contextHelp(triggerElm:HTMLElement, text:string) { return this.pluginApi.contextHelp(triggerElm, text); }
-    shortenText(s:string, length:number) { return this.pluginApi.shortenText(s, length); }
-    dispatcher():Dispatcher.Dispatcher<any> { return this.pluginApi.dispatcher(); }
-    exportMixins(...mixins:any[]):any[] { return this.pluginApi.exportMixins(mixins); }
-    renderReactComponent(reactObj:(mixins:Array<{}>)=>React.ReactClass,
-                         target:HTMLElement, props?:React.Props):void {
-        return this.pluginApi.renderReactComponent(reactObj, target, props);
-    }
-    unmountReactComponent(element:HTMLElement):boolean { return this.pluginApi.unmountReactComponent(element); }
-    getStores():Kontext.LayoutStores { return this.pluginApi.getStores(); }
-    getViews():Kontext.LayoutViews { return this.pluginApi.getViews(); }
-}
-
-
 /**
  * This model contains functionality related to the subcorp_form.tmpl template
  */
-export class SubcorpForm {
+export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     private pageModel:document.PageModel;
 
@@ -109,13 +56,27 @@ export class SubcorpForm {
 
     private subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore;
 
-    constructor(pageModel:document.PageModel, corplistComponent:CorpusArchive.Widget, viewComponents,
+    private extendedApi:Kontext.QueryPagePluginApi;
+
+    constructor(pageModel:document.PageModel, viewComponents,
             subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
         this.pageModel = pageModel;
+        this.extendedApi = queryInput.extendedApi(pageModel, this);
+        let subcForm = $('#subcorp-form');
+        let corplist = corplistComponent.create(subcForm.find('select[name="corpname"]').get(0),
+                this.extendedApi, {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false});
         this.corplistComponent = corplistComponent;
         this.viewComponents = viewComponents;
         this.subcorpFormStore = subcorpFormStore;
     }
+
+    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+
+    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+
+    registerOnSubcorpChangeAction(fn:(corpname:string)=>void):void {}
+
+    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
 
     formChangeCorpus(item:JQueryEventObject):void {
         let formAncestor;
@@ -233,38 +194,27 @@ export class SubcorpForm {
         );
     }
 
-    init():void {
-        this.initSubcCreationVariantSwitch();
-        this.sizeUnitsSafeSwitch();
-        this.initHints();
+    init(conf:Kontext.Conf):void {
+        this.pageModel.init().add({
+            initSubcCreationVariantSwitch: this.initSubcCreationVariantSwitch(),
+            sizeUnitsSafeSwitch: this.sizeUnitsSafeSwitch(),
+            initHints: this.initHints(),
+            liveAttributes: liveAttributes.init(this.extendedApi, conf, $('#live-attrs-update').get(0),
+            $('#live-attrs-reset').get(0), $('.text-type-params').get(0))
+        });
     }
 }
 
 
-export function init(conf:any) {
+export function init(conf:Kontext.Conf) {
     let layoutModel:document.PageModel = new document.PageModel(conf);
-    layoutModel.init();
-
-    let extendedApi = new TmpExtendedApi(layoutModel.pluginApi());
-
-    let subcForm = $('#subcorp-form');
-    let corplist = corplistComponent.create(
-        subcForm.find('select[name="corpname"]').get(0),
-        extendedApi,
-        {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false}
-    );
-
     let subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
         layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
         layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
     let subcorpFormComponents = subcorpFormViews.init(layoutModel.dispatcher,
             layoutModel.exportMixins(), subcorpFormStore);
 
-    let pageModel = new SubcorpForm(layoutModel, corplist, subcorpFormComponents,
+    let pageModel = new SubcorpForm(layoutModel, subcorpFormComponents,
             subcorpFormStore);
-    pageModel.init();
-
-    liveAttributes.init(extendedApi, conf, $('#live-attrs-update').get(0),
-            $('#live-attrs-reset').get(0), $('.text-type-params').get(0));
-
+    pageModel.init(conf);
 }

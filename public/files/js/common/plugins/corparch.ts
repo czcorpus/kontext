@@ -27,7 +27,7 @@ module CorpusArchive {
     }
 
     export interface Module {
-        create(selectElm:HTMLElement, pluginApi:Kontext.FirstFormPage,
+        create(selectElm:HTMLElement, pluginApi:Kontext.QueryPagePluginApi,
                        options:CorpusArchive.Options):CorpusArchive.Widget;
     }
 

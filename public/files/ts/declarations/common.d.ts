@@ -69,13 +69,13 @@ declare module Kontext {
      * An interface used by KonText plug-ins
      */
     export interface PluginApi {
-        getConf(key:string):any;
+        getConf<T>(key:string):T;
         createStaticUrl(path:string):string;
         createActionUrl(path:string):string;
         ajax<T>(method:string, url:string, args:any, options:AjaxOptions):RSVP.Promise<T>;
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
-        appendLoader();
+        appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}):void;
         showMessage(type:string, message:string); // TODO type: MsgType vs string
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
@@ -89,26 +89,29 @@ declare module Kontext {
         shortenText(s:string, length:number);
         dispatcher():Dispatcher.Dispatcher<any>; // TODO type
         exportMixins(...mixins:any[]):any[];
-        renderReactComponent(reactObj:(mixins:Array<{}>)=>React.ReactClass,
+        renderReactComponent(reactClass:React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
         getViews():Kontext.LayoutViews;
+        getPlugin<T extends Kontext.Plugin>(name:string):T;
     }
 
-    /**
-     *
-     */
-    export interface FirstFormPage extends PluginApi {
-        registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
-        registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
-        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void);
+    export interface CorpusSetupHandler {
+
+        registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void;
+
+        registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void;
+
+        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
+
+        registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
     }
 
     /**
      * This contains extensions required by pages which contain query input form
      */
-    export interface QueryPagePluginApi extends PluginApi {
+    export interface QueryPagePluginApi extends PluginApi, CorpusSetupHandler {
         /**
          * Adds a callback which is fired after user changes visibility
          * of advanced settings fieldsets on the query page (= "Specify context",
@@ -125,6 +128,17 @@ declare module Kontext {
          * meta-information") are initialized.
          */
         bindFieldsetReadyEvent(callback:(fieldset:HTMLElement) => void);
+
+        registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
+
+        registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
+
+        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void);
+
+        applyOnQueryFieldsetToggleEvents(elm:HTMLElement);
+
+        applyOnQueryFieldsetReadyEvents(elm:HTMLElement);
+
     }
 
     /**
@@ -163,15 +177,25 @@ declare module Kontext {
         notifyChangeListeners():void;
     }
 
+    /**
+     * A store managing access to a user information
+     */
     export interface UserInfoStore extends PageStore {
         getCredentials():UserCredentials;
     }
 
     /**
-     *
+     * A store managing system messages presented to a user
      */
     export interface MessagePageStore extends PageStore {
         addMessage(messageType:string, messageText:string, onClose:()=>void);
+    }
+
+    /**
+     * A store managing miscellaneous application usage hints
+     */
+    export interface IQueryHintStore extends PageStore {
+        getHint():string;
     }
 
     /**
@@ -204,7 +228,7 @@ declare module Kontext {
     export interface LayoutStores {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,
-        queryHintStore:PageStore,
+        queryHintStore:IQueryHintStore,
         userInfoStore:UserInfoStore
     }
 
@@ -237,10 +261,14 @@ declare module Customized {
 }
 
 /**
- *
+ * Required plug-in interfaces
  */
-declare module "plugins/applicationBar/init" {
-    export function createInstance(pluginApi:Kontext.PluginApi);
+declare module Plugins {
+
+    export interface IQueryStorage extends Kontext.Plugin {
+        detach(elm:HTMLElement):void;
+        reset():void;
+    }
 }
 
 /**

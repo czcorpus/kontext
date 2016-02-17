@@ -285,7 +285,7 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      * @param name
      */
-    getPlugin(name:string):Kontext.Plugin {
+    getPlugin<T extends Kontext.Plugin>(name:string):T {
         return this.plugins[name];
     }
 
@@ -1019,7 +1019,7 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     pluginApi():PluginApi {
-        return new PluginApi(this.conf, this);
+        return new PluginApi(this);
     }
 
 
@@ -1262,22 +1262,14 @@ export class MainMenu {
 
 export class PluginApi implements Kontext.PluginApi {
 
-    _conf:any; // TODO type
-
     pageModel:PageModel;
 
-    constructor(conf:any, pageModel:PageModel) {
-        this._conf = conf;
+    constructor(pageModel:PageModel) {
         this.pageModel = pageModel;
     }
 
-    getConf(key) {
-        if (this._conf.hasOwnProperty(key)) {
-            return this._conf[key];
-
-        } else {
-            throw new Error('Unknown configuration key requested: ' + key);
-        }
+    getConf<T>(key:string):T {
+        return this.pageModel.getConf<T>(key);
     }
 
     createStaticUrl(path) {
@@ -1300,15 +1292,15 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.createSmallAjaxLoader.apply(this.pageModel, arguments);
     }
 
-    appendLoader() {
-        return this.pageModel.appendLoader.apply(this.pageModel, arguments);
+    appendLoader(elm:HTMLElement) {
+        return this.pageModel.appendLoader(elm);
     }
 
-    showMessage() {
-        return this.pageModel.showMessage.apply(this.pageModel, arguments);
+    showMessage(type, message) {
+        return this.pageModel.showMessage(type, message);
     }
 
-    translate(msg, values) {
+    translate(msg, values?) {
         return this.pageModel.translate(msg, values);
     }
 
@@ -1334,8 +1326,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.registerInitCallback(fn);
     }
 
-    userIsAnonymous() {
-        return this.getConf('anonymousUser');
+    userIsAnonymous():boolean {
+        return this.getConf<boolean>('anonymousUser');
     }
 
     contextHelp(triggerElm, text) {
@@ -1373,6 +1365,10 @@ export class PluginApi implements Kontext.PluginApi {
 
     getViews():Kontext.LayoutViews {
         return this.pageModel.layoutViews;
+    }
+
+    getPlugin<T extends Kontext.Plugin>(name:string) {
+        return this.pageModel.getPlugin<T>(name);
     }
 }
 
@@ -1451,22 +1447,22 @@ export class InitActions {
      * @param fn - a function to be run after the action 'actionId' is finished
      */
     doAfter<T, U>(actionId:string, fn:(prev?:T)=>U):RSVP.Promise<U> {
-        var prom1:RSVP.Promise<T>;
+        let prom1:RSVP.Promise<T>;
+        let self = this;
 
         prom1 = this.get(actionId);
+        if (prom1 instanceof RSVP.Promise) {
+            return prom1.then<U>((v:T) => fn(v));
 
-        if (!prom1) {
+        } else {
             return new RSVP.Promise(function (fulfill, reject) {
                 try {
-                    fulfill(fn());
+                    fulfill(fn(self.prom[actionId]));
 
                 } catch (err) {
                     reject(err);
                 }
             });
-
-        } else {
-            return prom1.then<U>((v:T) => fn(v));
         }
     }
 }

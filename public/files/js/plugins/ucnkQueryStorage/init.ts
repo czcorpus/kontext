@@ -431,8 +431,8 @@ export class QueryHistory {
             listItem.attr('data-query-type', v.query_type);
 
             link = $(window.document.createElement('em'));
-            link.append(splitString(self.pluginApi.shortenText(v.query, self.pluginApi.getConf('historyMaxQuerySize')),
-                self.splitQueryIfSize));
+            link.append(splitString(self.pluginApi.shortenText(v.query,
+                    self.pluginApi.getConf<number>('historyMaxQuerySize')), self.splitQueryIfSize));
 
             listItem.on('click', function (event) {
                 self.highlightedRow = parseInt($(this).attr('data-rownum'), 10);
@@ -499,7 +499,7 @@ export class QueryHistory {
 }
 
 
-export class QueryStoragePlugin implements Kontext.Plugin {
+export class QueryStoragePlugin implements Plugins.IQueryStorage {
 
     pluginApi:Kontext.PluginApi;
 
@@ -597,7 +597,7 @@ export class QueryStoragePlugin implements Kontext.Plugin {
  *
  * @returns {QueryStoragePlugin}
  */
-export function createInstance(pluginApi:Kontext.PluginApi):QueryStoragePlugin {
+export function createInstance(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage {
     var plugin = new QueryStoragePlugin();
 
     plugin.init(pluginApi);
