@@ -1003,8 +1003,7 @@ class StarComponent {
      * in favorites or not.
      */
     onAlignedCorporaAdd = (corpname:string) => {
-        var newItem:common.CorplistItemUcnk;
-
+        let newItem:common.CorplistItemUcnk;
         newItem = this.extractItemFromPage();
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(newItem));
     };
@@ -1260,7 +1259,6 @@ class StarComponent {
                     self.setFavorite(commonDefault.Favorite.NOT_FAVORITE);
                 }
             });
-
             this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
             this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
             this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);

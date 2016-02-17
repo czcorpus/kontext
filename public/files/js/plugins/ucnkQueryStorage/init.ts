@@ -597,7 +597,7 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
  *
  * @returns {QueryStoragePlugin}
  */
-export function createInstance(pluginApi:Kontext.PluginApi):QueryStoragePlugin {
+export function createInstance(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage {
     var plugin = new QueryStoragePlugin();
 
     plugin.init(pluginApi);

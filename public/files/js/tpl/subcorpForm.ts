@@ -46,7 +46,7 @@ declare var liveAttributes:LiveAttributes.Module;
 /**
  * This model contains functionality related to the subcorp_form.tmpl template
  */
-export class SubcorpForm {
+export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     private pageModel:document.PageModel;
 
@@ -56,13 +56,27 @@ export class SubcorpForm {
 
     private subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore;
 
-    constructor(pageModel:document.PageModel, corplistComponent:CorpusArchive.Widget, viewComponents,
+    private extendedApi:Kontext.QueryPagePluginApi;
+
+    constructor(pageModel:document.PageModel, viewComponents,
             subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
         this.pageModel = pageModel;
+        this.extendedApi = queryInput.extendedApi(pageModel, this);
+        let subcForm = $('#subcorp-form');
+        let corplist = corplistComponent.create(subcForm.find('select[name="corpname"]').get(0),
+                this.extendedApi, {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false});
         this.corplistComponent = corplistComponent;
         this.viewComponents = viewComponents;
         this.subcorpFormStore = subcorpFormStore;
     }
+
+    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+
+    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+
+    registerOnSubcorpChangeAction(fn:(corpname:string)=>void):void {}
+
+    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
 
     formChangeCorpus(item:JQueryEventObject):void {
         let formAncestor;
@@ -180,38 +194,27 @@ export class SubcorpForm {
         );
     }
 
-    init():void {
-        this.initSubcCreationVariantSwitch();
-        this.sizeUnitsSafeSwitch();
-        this.initHints();
+    init(conf:Kontext.Conf):void {
+        this.pageModel.init().add({
+            initSubcCreationVariantSwitch: this.initSubcCreationVariantSwitch(),
+            sizeUnitsSafeSwitch: this.sizeUnitsSafeSwitch(),
+            initHints: this.initHints(),
+            liveAttributes: liveAttributes.init(this.extendedApi, conf, $('#live-attrs-update').get(0),
+            $('#live-attrs-reset').get(0), $('.text-type-params').get(0))
+        });
     }
 }
 
 
-export function init(conf:any) {
+export function init(conf:Kontext.Conf) {
     let layoutModel:document.PageModel = new document.PageModel(conf);
-    layoutModel.init();
-
-    let extendedApi = queryInput.extendedApi(layoutModel);
-
-    let subcForm = $('#subcorp-form');
-    let corplist = corplistComponent.create(
-        subcForm.find('select[name="corpname"]').get(0),
-        extendedApi,
-        {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false}
-    );
-
     let subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
         layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
         layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
     let subcorpFormComponents = subcorpFormViews.init(layoutModel.dispatcher,
             layoutModel.exportMixins(), subcorpFormStore);
 
-    let pageModel = new SubcorpForm(layoutModel, corplist, subcorpFormComponents,
+    let pageModel = new SubcorpForm(layoutModel, subcorpFormComponents,
             subcorpFormStore);
-    pageModel.init();
-
-    liveAttributes.init(extendedApi, conf, $('#live-attrs-update').get(0),
-            $('#live-attrs-reset').get(0), $('.text-type-params').get(0));
-
+    pageModel.init(conf);
 }

@@ -97,10 +97,21 @@ declare module Kontext {
         getPlugin<T extends Kontext.Plugin>(name:string):T;
     }
 
+    export interface CorpusSetupHandler {
+
+        registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void;
+
+        registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void;
+
+        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
+
+        registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
+    }
+
     /**
      * This contains extensions required by pages which contain query input form
      */
-    export interface QueryPagePluginApi extends PluginApi {
+    export interface QueryPagePluginApi extends PluginApi, CorpusSetupHandler {
         /**
          * Adds a callback which is fired after user changes visibility
          * of advanced settings fieldsets on the query page (= "Specify context",
@@ -258,13 +269,6 @@ declare module Plugins {
         detach(elm:HTMLElement):void;
         reset():void;
     }
-}
-
-/**
- *
- */
-declare module "plugins/applicationBar/init" {
-    export function createInstance(pluginApi:Kontext.PluginApi);
 }
 
 /**

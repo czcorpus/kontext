@@ -82,8 +82,6 @@ define(['../tpl/firstForm', 'testBootstrap', 'jquery'], function (page, QUnit, $
         QUnit.equal(switches.length, 2);
 
         lib.pagePromises.doAfter('updateToggleableFieldsets', function () {
-            console.log('promise then');
-            console.log('switches num', switches.length);
             switches.each(function () {
                 var parentFieldset = $(this).closest('fieldset');
 

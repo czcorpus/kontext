@@ -45,8 +45,11 @@ class CustomApi extends layoutModel.PluginApi implements Kontext.QueryPagePlugin
 
     queryFieldsetReadyEvents:Array<(elm:HTMLElement)=>void>;
 
-    constructor(model:layoutModel.PageModel) {
+    corpusSetupHandler:Kontext.CorpusSetupHandler;
+
+    constructor(model:layoutModel.PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler) {
         super(model);
+        this.corpusSetupHandler = corpusSetupHandler;
         this.queryFieldsetToggleEvents = [];
         this.queryFieldsetReadyEvents = [];
     }
@@ -59,11 +62,21 @@ class CustomApi extends layoutModel.PluginApi implements Kontext.QueryPagePlugin
         this.queryFieldsetReadyEvents.push(fn);
     }
 
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void) {}
+    registerOnSubcorpChangeAction(fn:(subcname:string)=>void) {
+        this.corpusSetupHandler.registerOnSubcorpChangeAction(fn);
+    }
 
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void) {}
+    registerOnAddParallelCorpAction(fn:(corpname:string)=>void) {
+        this.corpusSetupHandler.registerOnAddParallelCorpAction(fn);
+    }
 
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
+    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {
+        this.corpusSetupHandler.registerOnBeforeRemoveParallelCorpAction(fn);
+    }
+
+    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void) {
+        this.corpusSetupHandler.registerOnRemoveParallelCorpAction(fn);
+    }
 
     applyOnQueryFieldsetToggleEvents(elm:HTMLElement) {
         this.queryFieldsetReadyEvents.forEach((fn)=>fn(elm));
@@ -262,12 +275,12 @@ export class QueryFormTweaks {
      * @param {HTMLElement, jQuery.Event} source
      * @param hints
      */
-    cmdSwitchQuery(source, hints) {
+    cmdSwitchQuery(source:JQueryEventObject|HTMLElement, hints:{[key:string]:string}) {
         let jqQs;
         let self = this;
 
         if (source.hasOwnProperty('currentTarget')) {
-            jqQs = $(source.currentTarget);
+            jqQs = $(source['currentTarget']);
 
         } else { // called 'manually'
             jqQs = $(source);
@@ -423,7 +436,7 @@ export class QueryFormTweaks {
      *
      */
     initQuerySwitching():void {
-        let queryTypeHints = this.pluginApi.getConf('queryTypesHints');
+        let queryTypeHints = this.pluginApi.getConf<{[k:string]:string}>('queryTypesHints');
         let self = this;
 
         $('select.qselector').each(function () {
@@ -596,8 +609,9 @@ export class QueryFormTweaks {
 }
 
 
-export function extendedApi(model:layoutModel.PageModel):Kontext.QueryPagePluginApi {
-    return new CustomApi(model);
+export function extendedApi(model:layoutModel.PageModel,
+        corpusSetupHandler:Kontext.CorpusSetupHandler):Kontext.QueryPagePluginApi {
+    return new CustomApi(model, corpusSetupHandler);
 }
 
 
@@ -607,9 +621,9 @@ export function extendedApi(model:layoutModel.PageModel):Kontext.QueryPagePlugin
  *
  * @param pluginApi
  */
-export function init(model:layoutModel.PageModel, settings:layoutModel.UserSettings,
-        formElm:HTMLElement):QueryFormTweaks {
-    let customApi = new CustomApi(model);
+export function init(model:layoutModel.PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler,
+        settings:layoutModel.UserSettings, formElm:HTMLElement):QueryFormTweaks {
+    let customApi = new CustomApi(model, corpusSetupHandler);
     return new QueryFormTweaks(customApi, settings, formElm);
 }
 
