@@ -25,7 +25,7 @@ import util = require('util');
 /**
  *
  */
-export class QueryHintStore extends util.SimplePageStore {
+export class QueryHintStore extends util.SimplePageStore implements Kontext.IQueryHintStore {
 
     private hints:Array<string>;
 
@@ -81,10 +81,10 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
 
 
         if (messageType === 'warning') {
-            viewTime = self.pluginApi.getConf('messageAutoHideInterval') * 1.5;
+            viewTime = self.pluginApi.getConf<number>('messageAutoHideInterval') * 1.5;
 
         } else if (messageType !== 'error') {
-            viewTime = self.pluginApi.getConf('messageAutoHideInterval');
+            viewTime = self.pluginApi.getConf<number>('messageAutoHideInterval');
         }
 
         this.messages.push({
@@ -192,7 +192,7 @@ export class CorpusInfoStore extends util.SimplePageStore {
         var url = this.pluginApi.createActionUrl('corpora/ajax_get_corp_details');
 
         if (!corpusId) {
-            corpusId = this.pluginApi.getConf('corpname');
+            corpusId = this.pluginApi.getConf<string>('corpname');
         }
         return $.get(url + '?corpname=' + corpusId);
     }

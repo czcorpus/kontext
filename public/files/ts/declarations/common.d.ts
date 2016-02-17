@@ -69,13 +69,13 @@ declare module Kontext {
      * An interface used by KonText plug-ins
      */
     export interface PluginApi {
-        getConf(key:string):any;
+        getConf<T>(key:string):T;
         createStaticUrl(path:string):string;
         createActionUrl(path:string):string;
         ajax<T>(method:string, url:string, args:any, options:AjaxOptions):RSVP.Promise<T>;
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
-        appendLoader();
+        appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}):void;
         showMessage(type:string, message:string); // TODO type: MsgType vs string
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
@@ -89,20 +89,12 @@ declare module Kontext {
         shortenText(s:string, length:number);
         dispatcher():Dispatcher.Dispatcher<any>; // TODO type
         exportMixins(...mixins:any[]):any[];
-        renderReactComponent(reactObj:(mixins:Array<{}>)=>React.ReactClass,
+        renderReactComponent(reactClass:React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
         getViews():Kontext.LayoutViews;
-    }
-
-    /**
-     *
-     */
-    export interface FirstFormPage extends PluginApi {
-        registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
-        registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
-        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void);
+        getPlugin<T extends Kontext.Plugin>(name:string):T;
     }
 
     /**
@@ -125,6 +117,17 @@ declare module Kontext {
          * meta-information") are initialized.
          */
         bindFieldsetReadyEvent(callback:(fieldset:HTMLElement) => void);
+
+        registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
+
+        registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
+
+        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void);
+
+        applyOnQueryFieldsetToggleEvents(elm:HTMLElement);
+
+        applyOnQueryFieldsetReadyEvents(elm:HTMLElement);
+
     }
 
     /**
@@ -163,15 +166,25 @@ declare module Kontext {
         notifyChangeListeners():void;
     }
 
+    /**
+     * A store managing access to a user information
+     */
     export interface UserInfoStore extends PageStore {
         getCredentials():UserCredentials;
     }
 
     /**
-     *
+     * A store managing system messages presented to a user
      */
     export interface MessagePageStore extends PageStore {
         addMessage(messageType:string, messageText:string, onClose:()=>void);
+    }
+
+    /**
+     * A store managing miscellaneous application usage hints
+     */
+    export interface IQueryHintStore extends PageStore {
+        getHint():string;
     }
 
     /**
@@ -204,7 +217,7 @@ declare module Kontext {
     export interface LayoutStores {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,
-        queryHintStore:PageStore,
+        queryHintStore:IQueryHintStore,
         userInfoStore:UserInfoStore
     }
 
@@ -233,6 +246,17 @@ declare module Customized {
         createForm(targetElm:HTMLElement, properties:any):void;
 
         createList(targetElm:HTMLElement, properties:any):void;
+    }
+}
+
+/**
+ * Required plug-in interfaces
+ */
+declare module Plugins {
+
+    export interface IQueryStorage extends Kontext.Plugin {
+        detach(elm:HTMLElement):void;
+        reset():void;
     }
 }
 

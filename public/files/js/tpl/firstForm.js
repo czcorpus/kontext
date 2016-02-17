@@ -289,10 +289,10 @@ define(['win', 'jquery', 'plugins/corparch/init', 'tpl/document', 'queryInput', 
         clStorage.clear();
 
         lib.layoutModel = new layoutModule.PageModel(conf);
-        extendedApi = queryInput.extendedApi(lib.layoutModel.pluginApi());
+        extendedApi = queryInput.extendedApi(lib.layoutModel);
         lib.alignedCorpora = conf.alignedCorpora.slice();
-        queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi, lib.layoutModel.userSettings,
-                $('#mainform').get(0), lib.layoutModel.getPlugin.bind(lib.layoutModel));
+        queryFormTweaks = queryInput.init(lib.layoutModel, lib.layoutModel.userSettings,
+                $('#mainform').get(0));
         promises = lib.layoutModel.init(conf).add({
             misc : lib.misc(queryFormTweaks),
             bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button')),

@@ -35,65 +35,12 @@ import document = require('tpl/document');
 import popupBox = require('popupbox');
 import subcorpFormViews = require('views/subcorpForm');
 import subcorpFormStoreModule = require('stores/subcorpForm');
+import queryInput = require('../queryInput');
 
 // dynamic imports
 declare var subcmixer:Subcmixer.Module;
 declare var corplistComponent:CorpusArchive.Module;
 declare var liveAttributes:LiveAttributes.Module;
-
-
-
-export class TmpExtendedApi implements Kontext.QueryPagePluginApi, Kontext.FirstFormPage {
-
-    private queryFieldsetToggleEvents:Array<(fieldset:HTMLElement) => void>;
-
-    private pluginApi:Kontext.PluginApi;
-
-    constructor(pluginApi:Kontext.PluginApi) {
-        this.pluginApi = pluginApi;
-        this.queryFieldsetToggleEvents = [];
-    }
-
-    bindFieldsetToggleEvent(callback:(fieldset:HTMLElement) => void) {
-        this.queryFieldsetToggleEvents.push(callback);
-    }
-
-    bindFieldsetReadyEvent(callback:(fieldset:HTMLElement) => void) {
-    }
-
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void) {}
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void) {}
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
-
-    getConf(key:string):any { return this.pluginApi.getConf(key); }
-    createStaticUrl(path:string):string { return this.pluginApi.createStaticUrl(path); }
-    createActionUrl(path:string):string { return this.pluginApi.createActionUrl(path); }
-    ajax<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):RSVP.Promise<T> {
-        return this.pluginApi.ajax(method, url, args, options);
-    }
-    ajaxAnim(): JQuery { return this.pluginApi.ajaxAnim(); }
-    ajaxAnimSmall() { return this.pluginApi.ajaxAnimSmall(); }
-    appendLoader() { return this.pluginApi.appendLoader(); }
-    showMessage(type:string, message:string) { return this.pluginApi.showMessage(type, message); }
-    translate(text:string, values?:any):string { return this.pluginApi.translate(text, values); }
-    formatNumber(v:number):string { return this.pluginApi.formatNumber(v); }
-    formatDate(d:Date):string { return this.pluginApi.formatDate(d); }
-    applySelectAll(elm:HTMLElement, context:HTMLElement) { return this.pluginApi.applySelectAll(elm, context); }
-    registerReset(fn:Function) { return this.pluginApi.registerReset(fn); }
-    registerInitCallback(fn:()=>void):void { return this.pluginApi.registerInitCallback(fn); }
-    userIsAnonymous():boolean { return this.pluginApi.userIsAnonymous(); }
-    contextHelp(triggerElm:HTMLElement, text:string) { return this.pluginApi.contextHelp(triggerElm, text); }
-    shortenText(s:string, length:number) { return this.pluginApi.shortenText(s, length); }
-    dispatcher():Dispatcher.Dispatcher<any> { return this.pluginApi.dispatcher(); }
-    exportMixins(...mixins:any[]):any[] { return this.pluginApi.exportMixins(mixins); }
-    renderReactComponent(reactObj:(mixins:Array<{}>)=>React.ReactClass,
-                         target:HTMLElement, props?:React.Props):void {
-        return this.pluginApi.renderReactComponent(reactObj, target, props);
-    }
-    unmountReactComponent(element:HTMLElement):boolean { return this.pluginApi.unmountReactComponent(element); }
-    getStores():Kontext.LayoutStores { return this.pluginApi.getStores(); }
-    getViews():Kontext.LayoutViews { return this.pluginApi.getViews(); }
-}
 
 
 /**
@@ -245,7 +192,7 @@ export function init(conf:any) {
     let layoutModel:document.PageModel = new document.PageModel(conf);
     layoutModel.init();
 
-    let extendedApi = new TmpExtendedApi(layoutModel.pluginApi());
+    let extendedApi = queryInput.extendedApi(layoutModel);
 
     let subcForm = $('#subcorp-form');
     let corplist = corplistComponent.create(
