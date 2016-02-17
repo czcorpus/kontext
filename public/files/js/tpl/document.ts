@@ -1447,22 +1447,22 @@ export class InitActions {
      * @param fn - a function to be run after the action 'actionId' is finished
      */
     doAfter<T, U>(actionId:string, fn:(prev?:T)=>U):RSVP.Promise<U> {
-        var prom1:RSVP.Promise<T>;
+        let prom1:RSVP.Promise<T>;
+        let self = this;
 
         prom1 = this.get(actionId);
+        if (prom1 instanceof RSVP.Promise) {
+            return prom1.then<U>((v:T) => fn(v));
 
-        if (!prom1) {
+        } else {
             return new RSVP.Promise(function (fulfill, reject) {
                 try {
-                    fulfill(fn());
+                    fulfill(fn(self.prom[actionId]));
 
                 } catch (err) {
                     reject(err);
                 }
             });
-
-        } else {
-            return prom1.then<U>((v:T) => fn(v));
         }
     }
 }
