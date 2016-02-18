@@ -27,6 +27,8 @@ declare module "plugins/applicationBar/init" {
 declare module "plugins/corparch/init" {
     export function create(target:HTMLElement, pluginApi:Kontext.QueryPagePluginApi,
         conf:CorpusArchive.Options);
+
+    export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage;
 }
 
 declare module "plugins/liveAttributes/init" {
