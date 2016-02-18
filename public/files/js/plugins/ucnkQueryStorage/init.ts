@@ -75,6 +75,8 @@ export interface QueryHistoryRecord {
  */
 export class QueryHistory {
 
+    queryHistoryPlugin:QueryStoragePlugin;
+
     inputElm: JQuery;
 
     parentElm: JQuery;
@@ -98,10 +100,12 @@ export class QueryHistory {
      * @param inputElm
      * @param parentElm
      */
-    constructor(inputElm: HTMLElement, parentElm: HTMLElement, pluginApi: Kontext.PluginApi) {
+    constructor(queryHistoryPlugin:QueryStoragePlugin, pluginApi: Kontext.PluginApi, inputElm: HTMLElement,
+            parentElm: HTMLElement) {
+        this.queryHistoryPlugin = queryHistoryPlugin;
+        this.pluginApi = pluginApi;
         this.inputElm = $(inputElm);
         this.parentElm = $(parentElm);
-        this.pluginApi = pluginApi;
         this.boxElm = null;
         this.triggerButton = null;
         this.inputElm.attr('autocomplete', 'off');
@@ -162,7 +166,7 @@ export class QueryHistory {
     bindOnOffEvents(): void {
         var self = this;
 
-        $(window).on('keyup.queryStoragePlugin', function (event) {
+        $(window).on('keydown.queryStoragePlugin', function (event) {
             if (event.keyCode === 13 && self.isActive()) { // ENTER key
                 self.updateForm(self.getSelectedRow());
                 event.preventDefault();
@@ -187,7 +191,7 @@ export class QueryHistory {
     bindEvents(): void {
         let self = this;
 
-        this.inputElm.on('keyup.queryStoragePluginMoveSelection', function (event) {
+        this.inputElm.on('keydown.queryStoragePluginMoveSelection', function (event) {
             if (event.keyCode === 38) { // UP arrow
                 self.highlightPrevRow();
 
@@ -225,7 +229,7 @@ export class QueryHistory {
         $(window.document).on('click.closeHistoryWidget', windowClickHandler);
 
         // we have to block main form Enter key event to prevent submission
-        $('#make-concordance-button').attr('disabled', 'disabled');
+        this.queryHistoryPlugin.lockParentFormSubmit();
     }
 
     /**
@@ -456,14 +460,14 @@ export class QueryHistory {
      * Closes history widget.
      */
     close(): void {
-        this.inputElm.off('keyup.queryStoragePluginMoveSelection');
+        this.inputElm.off('keydown.queryStoragePluginMoveSelection');
         $(window.document).off('click.closeHistoryWidget');
         this.highlightedRow = 0;
         if (this.boxElm) {
             this.boxElm.remove();
             this.boxElm = null;
         }
-        $('#make-concordance-button').attr('disabled', null);
+        this.queryHistoryPlugin.unlockParentFormSubmit();
     }
 
     /**
@@ -545,6 +549,18 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
         }
     }
 
+    lockParentFormSubmit():void {
+        $('#make-concordance-button').prop('disabled', true);
+        $('#mainform').on('submit.tmp-disable', (evt:JQueryEventObject) => {
+            evt.preventDefault();
+        });
+    }
+
+    unlockParentFormSubmit():void {
+        $('#make-concordance-button').prop('disabled', false);
+        $('#mainform').off('submit.tmp-disable');
+    }
+
     /**
      * Binds the query history widget to a passed element (typically, this is an input elm)
      *
@@ -557,7 +573,7 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
         if (Object.prototype.toString.call(this.pluginApi) !== '[object Object]') {
             throw new Error('Plugin [ucnkQueryStorage] not initialized. Please call init() first.');
         }
-        queryStorage = new QueryHistory(elm, $(elm).parent().get(0), this.pluginApi);
+        queryStorage = new QueryHistory(this, this.pluginApi, elm, $(elm).parent().get(0));
         $(elm).data('plugin', queryStorage);
 
         return queryStorage;
@@ -576,7 +592,7 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
         if (jqElm.data('plugin') !== null && typeof jqElm.data('plugin') === 'object') {
             jqElm.data('plugin').close();
             jqElm.data('plugin').closeDependencies();
-            $(window).off('keyup.queryStoragePlugin');
+            $(window).off('keydown.queryStoragePlugin');
             jqElm.data('plugin', null);
         }
     }
