@@ -288,7 +288,7 @@ def conc_is_sorted(q):
     return ans
 
 
-def get_conc_desc(corpus, q=None, subchash=None, translate=True):
+def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=True):
     """
     arguments:
     corpus -- an extended version (corpname attribute must be present) of
@@ -298,12 +298,25 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True):
     translate -- if True then all the messages are translated according to the current
                  thread's locale information
     """
+    cache_map = cache_factory.get_mapping(corpus)
+    q = tuple(q)
+
+    def get_size(pos):
+        cache_val = cache_map[(subchash, q[:pos + 1])]
+        return cache_val[1] if cache_val else None
+
+    def detect_internal_op(qx, pos):
+        if pos > len(qx) - 3 or not skip_internals:
+            return False, get_size(pos)
+        if qx[pos].startswith('x-') and qx[pos + 1] == 'p0 0 1 []' and qx[pos + 2].startswith('x-'):
+            return True, get_size(pos + 2)
+        else:
+            return False, get_size(pos)
+
     if q is None:
         q = []
-    if translate:
-        _t = lambda s: _(s)
-    else:
-        _t = lambda s: s
+    _t = lambda s: _(s) if translate else lambda s: s
+
     desctext = {'q': _t('Query'),
                 'a': _t('Query'),
                 'r': _t('Random sample'),
@@ -316,15 +329,16 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True):
                 'x': _t('Switch KWIC'),
                 }
     desc = []
-    cache_map = cache_factory.get_mapping(corpus)
-    q = tuple(q)
-
-    for i in range(len(q)):
-        cache_val = cache_map[(subchash, q[:i + 1])]
-        if cache_val:
-            size = cache_val[1]
-        else:
-            size = None
+    i = 0
+    while i < len(q):
+        is_align_op, size = detect_internal_op(q, i)
+        # in case of aligned corpus (= 3 operations) we update previous
+        # user operation and ignore the rest (as it is just an internal operation
+        # a common user does not understand).
+        if is_align_op:
+            if i > 0:
+                desc[i - 1] = desc[i - 1][:-1] + (size,)  # update previous op. size
+            i += 3  # ignore aligned corpus operation
         opid = q[i][0]
         args = q[i][1:]
         url1 = [('q', qi) for qi in q[:i]]
@@ -346,6 +360,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True):
             args = _('enabled')
         if op:
             desc.append((op, args, url1, url2, size))
+        i += 1
     return desc
 
 
