@@ -1954,6 +1954,24 @@ msgstr "základní"
 msgid "groups"
 msgstr "skupiny"
 
+msgid "Sort"
+msgstr "Třídění"
+
+msgid "Positive filter"
+msgstr "Pozitivní filtr"
+
+msgid "Negative filter"
+msgstr "Negativní filtr"
+
+msgid "Negative filter (excluding KWIC)"
+msgstr "Negativní filtr (bez KWIC)"
+
+msgid "Positive filter (excluding KWIC)"
+msgstr "Pozitivní filter (bez KWIC)"
+
+msgid "Switch KWIC"
+msgstr "Přepnout KWIC"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
