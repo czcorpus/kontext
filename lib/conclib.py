@@ -313,9 +313,6 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True):
                 'N': _t('Negative filter (excluding KWIC)'),
                 'p': _t('Positive filter'),
                 'P': _t('Positive filter (excluding KWIC)'),
-                'w': _t('Word sketch item'),
-                't': _t('Word sketch texttype item'),
-                'e': _t('GDEX'),
                 'x': _t('Switch KWIC'),
                 }
     desc = []
