@@ -115,6 +115,11 @@ ul.multiselect {
     line-height: 2em;
     margin-top: 10pt;
 }
+.corplist-widget .tmp-hint img {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+}
 .corplist-widget .srch-field {
     color: inherit;
 }
@@ -225,6 +230,8 @@ ul.multiselect {
     display: inline-block;
     padding: 0;
     cursor: pointer;
+    width: @close-button-size;
+    height: @close-button-size;
 }
 .corplist-widget table.favorite-list img.remove {} .corplist-widget table.favorite-list img.remove.disabled {
     display: none;
@@ -325,8 +332,32 @@ table.corplist td img.starred {
     box-shadow: 5px 5px 7px #aaa;
     padding: 12px;
     color: #444444;
+
     h3 {
         margin-top: 0;
+    }
+    img.info-icon {
+        margin-right: 1em;
+        padding-bottom: 0.2em;
+        display: inline-block;
+    }
+    > div > p {
+        margin: 0.4em 0;
+    }
+    a.close-link {
+        display: block;
+        position: absolute;
+        padding: 0;
+        margin: 0;
+        width: @close-button-size;
+        height: @close-button-size;
+        top: 0.4em;
+        right: 0.4em;
+        background-image: url(../img/close-icon.svg);
+        background-size: @close-button-size @close-button-size;
+    }
+    a.close-link:hover {
+        background-image: url(../img/close-icon_s.svg);
     }
 }
 .tooltip-box.hidden {
@@ -334,25 +365,6 @@ table.corplist td img.starred {
 }
 .tooltip-box.framed {
     padding: 23px 23px 14px 23px;
-}
-.tooltip-box img.info-icon {
-    margin-right: 1em;
-    display: inline-block;
-}
-.tooltip-box > div > p {
-    margin: 0.4em 0;
-}
-.tooltip-box a.close-link {
-    display: block;
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    top: 4px;
-    right: 4px;
-    background-image: url(../img/close-icon.png);
-}
-.tooltip-box a.close-link:hover {
-    background-image: url(../img/close-icon_s.png);
 }
 a.abbr-like {
     text-decoration: none;

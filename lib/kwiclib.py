@@ -88,7 +88,6 @@ class KwicPageData(FixedDict):
     concsize = None
     result_arf = None
     result_relative_freq = None
-    result_relative_freq_rel_to = None
     CollCorps = ()
     Par_conc_corpnames = ()
 
@@ -149,8 +148,7 @@ class Kwic(object):
                                    refs, structs, labelmap, righttoleft, alignlist)
 
         self.add_aligns(out, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
-                   leftctx, rightctx, attrs, ctxattrs, refs, structs,
-                   labelmap, righttoleft, alignlist)
+                        leftctx, rightctx, attrs, ctxattrs, refs, structs, labelmap, righttoleft, alignlist)
 
         if labelmap:
             out['GroupNumbers'] = format_labelmap(labelmap)
@@ -179,12 +177,6 @@ class Kwic(object):
             corpsize = self.corpus.size()
         out.result_relative_freq = round(
             self.conc.size() / (float(corpsize) / 1e6), 2)
-
-        out.result_relative_freq_rel_to = _(u'related to the whole %s') % import_string(
-                self.corpus.get_conf('NAME'), from_encoding=self.corpus.get_conf('ENCODING'))
-        if hasattr(self.corpus, 'subcname'):
-            out.result_relative_freq_rel_to += ':%s' % getattr(self.corpus, 'subcname', '')
-        out.result_relative_freq_rel_to = '(%s)' % out.result_relative_freq_rel_to
         if hidenone:
             for line, part in itertools.product(out.Lines, ('Kwic', 'Left', 'Right')):
                 for item in line[part]:

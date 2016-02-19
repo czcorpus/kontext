@@ -186,8 +186,8 @@ export class RangeSelector {
         $(div).append(select);
 
         $(select).after('<a class="context-help">'
-                + '<img class="over-img" src="../files/img/question-mark.png" '
-                + 'data-alt-img="../files/img/question-mark_s.png" /></a>');
+                + '<img class="over-img" src="../files/img/question-mark.svg" '
+                + 'data-alt-img="../files/img/question-mark_s.svg" /></a>');
         this.attachHelp($(div).find('a.context-help').get(0));
 
         return div;

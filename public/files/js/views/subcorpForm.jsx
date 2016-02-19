@@ -47,15 +47,15 @@ define(['vendor/react', 'jquery'], function (React, $) {
             mixins: mixins,
 
             getInitialState : function () {
-                return {img: this.createStaticUrl('img/close-icon.png')};
+                return {img: this.createStaticUrl('img/close-icon.svg')};
             },
 
             _onMouseOver : function () {
-                this.setState({img: this.createStaticUrl('img/close-icon_s.png')});
+                this.setState({img: this.createStaticUrl('img/close-icon_s.svg')});
             },
 
             _onMouseOut : function () {
-                this.setState({img: this.createStaticUrl('img/close-icon.png')});
+                this.setState({img: this.createStaticUrl('img/close-icon.svg')});
             },
 
             render : function () {

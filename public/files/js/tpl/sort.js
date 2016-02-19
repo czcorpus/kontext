@@ -29,7 +29,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
 
         $(elm).show(100);
         closeLink = $('<a class="close-icon">'
-            + '<img class="over-img" src="../files/img/close-icon.png" data-alt-img="../files/img/close-icon_s.png" />'
+            + '<img class="over-img" src="../files/img/close-icon.svg" data-alt-img="../files/img/close-icon_s.svg" />'
             + '</a>');
         closeLink.on('click', function () {
             $(elm).closest('td').nextAll('td').find('table.sort-level th.level a.close-icon').addClass('sync').trigger('click');
@@ -113,7 +113,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
                 'height': 'auto'
             });
         });
-        
+
         $('a.backward-sort-help').each(function () {
             popupBox.bind($(this), lib.layoutModel.translate('global__sorting_backwards_explanation'), {
                 'top': 'attached-bottom',

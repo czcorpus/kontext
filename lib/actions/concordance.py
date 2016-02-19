@@ -136,12 +136,44 @@ class Actions(Kontext):
         result['Globals'] = result['Globals'].update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
 
-    def apply_linegroups(self, conc):
+    def _apply_linegroups(self, conc):
+        """
+        Applies user-defined line groups stored in conc_persistence
+        to the provided concordance instance.
+        """
         if self._lines_groups.is_defined():
             for lg in self._lines_groups:
                 conc.set_linegroup_at_pos(lg[0], lg[2])
             if self._lines_groups.sorted:
                 conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
+
+    def _query_contains_within(self):
+        """
+        Tests (by a super-simplified CQL parsing) whether there is a
+        'within' expression in the current query (self.args.q).
+        """
+        if self.args.q is not None and len(self.args.q) > 0:
+            within_part = butils.CQLDetectWithin().get_within_part(self.args.q[0])
+            return within_part is not None and len(within_part) > 0
+        return False
+
+    def _get_ipm_base_set_desc(self, contains_within):
+        """
+        Generates a proper description for i.p.m. depending on the
+        method used to select texts:
+        1 - whole corpus
+        2 - a named subcorpus
+        3 - an ad-hoc subcorpus
+        """
+        corpus_name = l10n.import_string(self._corp().get_conf('NAME'),
+                                         from_encoding=self._corp().get_conf('ENCODING'))
+        if contains_within:
+            return _('related to the subset defined by the selected text types')
+        elif hasattr(self._corp(), 'subcname'):
+            return (_(u'related to the whole %s') % (corpus_name,)) + \
+                    ':%s' % self._corp().subcname
+        else:
+            return _(u'related to the whole %s') % corpus_name
 
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
@@ -167,7 +199,6 @@ class Actions(Kontext):
             self.args.leftctx = self.args.senleftctx_tpl % sentence_struct
             self.args.rightctx = self.args.senrightctx_tpl % sentence_struct
 
-        # 'if GDEX disabled' in Bonito code; KonText has now GDEX functionality
         i = 0
         while i < len(self.args.q):
             if self.args.q[i].startswith('s*') or self.args.q[i][0] == 'e':
@@ -176,7 +207,7 @@ class Actions(Kontext):
 
         conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
                                   samplesize=corpus_info.sample_size)
-        self.apply_linegroups(conc)
+        self._apply_linegroups(conc)
         conc.switch_aligned(os.path.basename(self.args.corpname))
         kwic = Kwic(self._corp(), self.args.corpname, conc)
         labelmap = {}
@@ -191,11 +222,8 @@ class Actions(Kontext):
                                              enc=self.self_encoding())
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
 
-        if self.args.q is not None and len(self.args.q) > 0:
-            within_part = butils.CQLDetectWithin().get_within_part(self.args.q[0])
-            out['query_contains_within'] = within_part is not None and len(within_part) > 0
-        else:
-            out['query_contains_within'] = False
+        out['query_contains_within'] = self._query_contains_within()
+        out['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(out['query_contains_within'])
 
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
@@ -356,6 +384,8 @@ class Actions(Kontext):
             ctx = '0<0~0>0'
         elif skey == 'rc':
             ctx = '1>0~%i>0' % spos
+        else:
+            ctx = ''
         if '.' in sattr:
             ctx = ctx.split('~')[0]
 
@@ -1499,7 +1529,7 @@ class Actions(Kontext):
             corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
             conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user'),
                                                          corpus_info.sample_size))
-            self.apply_linegroups(conc)
+            self._apply_linegroups(conc)
             kwic = Kwic(self._corp(), self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)

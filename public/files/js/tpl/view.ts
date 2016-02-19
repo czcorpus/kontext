@@ -732,8 +732,6 @@ export class ViewPage {
             event.stopPropagation();
         });
 
-        $('#hideel').bind('click', detail.closeDetail);
-
         $('a.speech-link').each(function () {
             $(this).bind('click', function (event) {
                 detail.openSpeech(this);
