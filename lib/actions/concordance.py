@@ -149,8 +149,7 @@ class Actions(Kontext):
         KWIC view
         """
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-
-        if not self.args.refs:
+        if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
             self.args.refs = self._corp().get_conf('SHORTREF')
 
         self.args.righttoleft = False
