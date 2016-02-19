@@ -1026,14 +1026,6 @@ table#multilevel-freq-params .add-level td {
     padding-top: 10px;
     text-align: center;
 }
-table#multilevel-freq-params .add-level a {
-    color: @color-logo-blue;
-}
-table#multilevel-freq-params .add-level a img {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 3px;
-}
 table#multilevel-freq-params td,
 table#multilevel-freq-params th {
     padding: 4px 8px;
@@ -1227,7 +1219,8 @@ footer .debug-warning {
 #subc-within-row .code {
     font-family: @monospace-font-family;
 }
-#subc-within-row td.container tr.last-line .add-within {
+#subc-within-row td.container tr.last-line .add-within,
+#multilevel-freq-params #add-freq-level-button {
     background-color: @color-logo-blue;
     border-color: @color-logo-blue;
     color: #eeeeee;
@@ -1535,8 +1528,17 @@ section.corplist {
     #topbar {
         white-space: normal;
     }
+    #content {
+        padding: 0.5em 0 1em 0;
+    }
     #content > section {
         min-width: 0;
+        display: block;
+        padding-bottom: 1em;
+    }
+    section.inner {
+        margin: 0;
+        padding: 1em 0 1em 0;
     }
     #mainform input.cql-input,
     #mainform input.iquery-input,
