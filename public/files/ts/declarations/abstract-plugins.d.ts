@@ -19,6 +19,18 @@
 /// <reference path="./common.d.ts" />
 /// <reference path="../../js/common/plugins/liveAttributes.ts" />
 /// <reference path="../../js/common/plugins/corparch.ts" />
+/// <reference path="../../ts/declarations/popupbox.d.ts" />
+
+/*
+This module contains "fake" plugin modules representing
+general plug-ins implementations with proper module names.
+Each custom implementation is expected to use its own name
+(e.g. a general name is "liveAttributes" and a custom name
+is "MyCoolAttributes"). To be able to compile the project
+TypeScript compiler must be persuaded that general names
+actually exist. At runtime, RequireJS remaps these names
+to custom ones.
+*/
 
 declare module "plugins/applicationBar/init" {
     export function createInstance(pluginApi:Kontext.PluginApi);
@@ -40,4 +52,8 @@ declare module "plugins/liveAttributes/init" {
 
 declare module "plugins/queryStorage/init" {
     export function createInstance(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage;
+}
+
+declare module "plugins/taghelper/init" {
+    export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi):(box:PopupBox.TooltipBox, finalize:()=>void)=>void;
 }

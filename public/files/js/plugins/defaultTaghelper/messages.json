@@ -1,0 +1,10 @@
+{
+  "en-US": {
+      "tagbuilder__create_tag_heading": "Create a tag",
+      "tagbuilder__insert_btn": "Insert"
+  },
+  "cs-CZ": {
+      "tagbuilder__create_tag_heading": "Vytvořit tag",
+      "tagbuilder__insert_btn": "Vložit"
+  }
+}

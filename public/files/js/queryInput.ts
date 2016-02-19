@@ -25,12 +25,13 @@
 /// <reference path="../ts/declarations/cookies.d.ts" />
 /// <reference path="../ts/declarations/common.d.ts" />
 /// <reference path="../ts/declarations/rsvp.d.ts" />
+/// <reference path="../ts/declarations/abstract-plugins.d.ts" />
 
 import $ = require('jquery');
 import win = require('win');
 import cookies = require('vendor/cookies');
 import popupBox = require('popupbox');
-import tagbuilder = require('tagbuilder');
+import tagbuilder = require('plugins/taghelper/init');
 import util = require('util');
 import virtKeyboard = require('vendor/virtual-keyboard');
 import RSVP = require('vendor/rsvp');
@@ -111,7 +112,20 @@ export class QueryFormTweaks {
      */
     bindTagHelper(inputElm:HTMLElement, triggerElm:HTMLElement):void {
         let self = this;
+        popupBox.bind(
+            triggerElm,
+            tagbuilder.getPopupBoxRenderer(self.pluginApi),
+            {
+                type: 'plain',
+                closeIcon: true,
+                timeout: null,
+                onClose: function () {
+                    self.pluginApi.unmountReactComponent(this.getRootElement());
+                }
+            }
+        );
 
+        /*
         tagbuilder.bindTextInputHelper(
             this.pluginApi,
             triggerElm,
@@ -133,6 +147,7 @@ export class QueryFormTweaks {
                     message || self.pluginApi.translate('global__failed_to_contact_server'));
             }
         );
+        */
     }
 
     /**

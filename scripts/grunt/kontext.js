@@ -30,7 +30,8 @@
             'query_storage' : 'queryStorage',
             'live_attributes' : 'liveAttributes',
             'corparch' : 'corparch',
-            'subcmixer': 'subcmixer'
+            'subcmixer': 'subcmixer',
+            'taghelper': 'taghelper'
         },
         merge = require('merge');
 
@@ -109,6 +110,7 @@
             elms = doc.getElementsByTagName(p);
             if (elms[0]) {
                 jsElm = elms[0].getElementsByTagName('js_module');
+                console.log('jselm: ', jsElm[0].textContent);
                 pluginMap['plugins/' + jsModules[p]] = 'plugins/' + jsElm[0].textContent;
 
             } else {
