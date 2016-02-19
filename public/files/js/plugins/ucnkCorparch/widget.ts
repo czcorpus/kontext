@@ -838,8 +838,8 @@ class FavoritesTab implements WidgetTab {
                         + '<td class="tools"><img class="remove over-img disabled" '
                         + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
                         + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
-                        + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
-                        + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
+                        + 'src="' + self.pageModel.createStaticUrl('img/close-icon.svg') + '" '
+                        + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.svg') + '" />'
                         + '</td></tr>');
                 }
             });
@@ -1477,7 +1477,7 @@ export class Corplist implements CorpusArchive.Widget {
 
         let tmpHint = window.document.createElement('a');
         $(tmpHint).addClass('tmp-hint');
-        $(tmpHint).html('<img src="' + this.pageModel.createStaticUrl('img/question-mark.png')
+        $(tmpHint).html('<img src="' + this.pageModel.createStaticUrl('img/question-mark.svg')
             + '" alt="' + this.pageModel.translate('ucnkCorparch__tmp_hint_alt') + '" />');
         this.jqWrapper.append(tmpHint);
         popupBox.bind(tmpHint, this.pageModel.translate('ucnkCorparch__tmp_hint_contents'),

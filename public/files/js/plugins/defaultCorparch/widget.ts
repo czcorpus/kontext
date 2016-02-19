@@ -830,8 +830,8 @@ class FavoritesTab implements WidgetTab {
                         + '<td class="tools"><img class="remove over-img disabled" '
                         + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
                         + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
-                        + 'src="' + self.pageModel.createStaticUrl('img/close-icon.png') + '" '
-                        + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.png') + '" />'
+                        + 'src="' + self.pageModel.createStaticUrl('img/close-icon.svg') + '" '
+                        + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.svg') + '" />'
                         + '</td></tr>');
                 }
             });

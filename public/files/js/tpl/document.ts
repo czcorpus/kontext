@@ -506,8 +506,8 @@ export class PageModel implements Kontext.PluginProvider {
         var image = win.document.createElement('img');
 
         $(triggerElm).addClass('context-help');
-        $(image).attr('data-alt-img', '../files/img/question-mark_s.png')
-            .attr('src', '../files/img/question-mark.png')
+        $(image).attr('data-alt-img', '../files/img/question-mark_s.svg')
+            .attr('src', '../files/img/question-mark.svg')
             .addClass('over-img');
         $(triggerElm).append(image);
         popupbox.bind(triggerElm, text, {width: 'nice'});

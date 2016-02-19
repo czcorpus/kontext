@@ -200,33 +200,56 @@ input[type='submit'] {
     left: 50%;
     top: 7em;
     z-index: 10000;
-}
-.message {
-    background-color: #FEFEFE;
-    border: solid 1px #eeeeee;
-    border-radius: @border-radius-default;
-    box-shadow: 2px 2px 3px #aaa;
-    color: @color-default-text;
-    font-weight: 700;
-    margin: 5pt;
-    padding: 1em;
-    position: relative;
-    left: -50%;
-}
-.message.info {
-    color: @color-default-text;
-}
-.message .icon-box {
-    float: left;
-    padding-right: 1em;
-}
-.message .message-text {
-    display: inline-block;
-}
-.message .button-box {
-    float: right;
-    padding-left: 1em;
-    text-align: right;
+
+    .message {
+        background-color: #FEFEFE;
+        border: solid 1px #eeeeee;
+        border-radius: @border-radius-default;
+        box-shadow: 2px 2px 3px #aaa;
+        color: @color-default-text;
+        font-weight: 700;
+        margin: 5pt;
+        padding: 0.4em 0.4em 0.4em 1em;
+        position: relative;
+        left: -50%;
+    }
+    .message.info {
+        color: @color-default-text;
+    }
+
+    .icon-box {
+        position: absolute;
+        padding: 0;
+        top: 50%;
+        margin-top: -0.8em;
+    }
+    .icon-box .icon {
+        display: block;
+        width: 1.6em;
+        height: 1.6em;
+        margin: 0;
+        padding: 0;
+    }
+    .message-text {
+        margin-top: 1em;
+        margin-bottom: 1em;
+        margin-left: 3em;
+        margin-right: 3em;
+    }
+    .button-box {
+        position: absolute;
+        right: @close-button-size / 2;
+        top: 50%;
+        margin-top: -1 * @close-button-size / 2;
+
+        .close-icon {
+            display: block;
+            img {
+                width: @close-button-size;
+                height: @close-button-size;
+            }
+        }
+    }
 }
 footer {
     margin-top: 2em;
@@ -552,20 +575,8 @@ ul.query-toolbox li {
 .bonito-pagination a > img {
     display: inline-block;
     vertical-align: middle;
-}
-.copy-button {
-    background: url(../img/edit-copy.png) 0 0 no-repeat;
-    display: block;
-    height: 16px;
-    width: 16px;
-}
-.copy-button.selected {
-    background-position: -16px 0;
-}
-.copy_div {
-    /* view page */
-
-    position: relative;
+    width: @close-button-size;
+    height: @close-button-size;
 }
 #mainform input.cql-input,
 #mainform input.iquery-input,
@@ -1026,14 +1037,6 @@ table#multilevel-freq-params .add-level td {
     padding-top: 10px;
     text-align: center;
 }
-table#multilevel-freq-params .add-level a {
-    color: @color-logo-blue;
-}
-table#multilevel-freq-params .add-level a img {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 3px;
-}
 table#multilevel-freq-params td,
 table#multilevel-freq-params th {
     padding: 4px 8px;
@@ -1160,16 +1163,12 @@ fieldset.options input[type='text'] {
 a.context-help {
     text-decoration: none;
     padding: 0;
-}
-a.context-help:hover {
-    // text-decoration: underline;
-}
-a.context-help img {
-    display: inline-block;
-    vertical-align: top;
-}
-#conc-top-bar {
-    line-height: 21pt;
+
+    img {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+    }
 }
 #show-help-format-link img {
     padding-right: 5px;
@@ -1227,7 +1226,8 @@ footer .debug-warning {
 #subc-within-row .code {
     font-family: @monospace-font-family;
 }
-#subc-within-row td.container tr.last-line .add-within {
+#subc-within-row td.container tr.last-line .add-within,
+#multilevel-freq-params #add-freq-level-button {
     background-color: @color-logo-blue;
     border-color: @color-logo-blue;
     color: #eeeeee;
@@ -1245,6 +1245,8 @@ footer .debug-warning {
     background-color: @color-logo-blue-shining;
 }
 .remove-level img {
+    width: @close-button-size;
+    height: @close-button-size;
     display: inline-block;
     vertical-align: middle;
 }
@@ -1535,8 +1537,17 @@ section.corplist {
     #topbar {
         white-space: normal;
     }
+    #content {
+        padding: 0.5em 0 1em 0;
+    }
     #content > section {
         min-width: 0;
+        display: block;
+        padding-bottom: 1em;
+    }
+    section.inner {
+        margin: 0;
+        padding: 1em 0 1em 0;
     }
     #mainform input.cql-input,
     #mainform input.iquery-input,

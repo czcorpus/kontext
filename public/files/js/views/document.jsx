@@ -352,9 +352,9 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
 
             render : function () {
                 var typeIconMap = {
-                    info: '../files/img/info-icon.png',
+                    info: '../files/img/info-icon.svg',
                     warning: '../files/img/warning-icon.png',
-                    error: '../files/img/error-icon.png'
+                    error: '../files/img/error-icon.svg'
                 },
                 classes = 'message ' + this.props.messageType;
 
@@ -362,7 +362,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
                     <div className={classes}>
                         <div className="button-box">
                             <a className="close-icon">
-                                <img src="../files/img/close-icon.png"
+                                <img src="../files/img/close-icon.svg"
                                     onClick={this._handleCloseClick } />
                             </a>
                         </div>

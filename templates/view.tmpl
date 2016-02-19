@@ -207,7 +207,7 @@ $query_overview_bar()
             </span>
 
             <span class="separ">|</span>
-            <abbr title="$_('instances per million positions') $result_relative_freq_rel_to">i.p.m.</abbr>:
+            <abbr title="$_('instances per million positions') ($result_relative_freq_rel_to)">i.p.m.</abbr>:
 
             #if $getVar('query_contains_within', False) is False:
                 <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
@@ -243,8 +243,8 @@ $query_overview_bar()
             <form action="view" id="$navid">
             #if $prevlink
                 <div class="bonito-pagination-left">
-                <a href="view?$join_params($q, $firstlink, $globals)"><img class="over-img" src="../files/img/first-page.png" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                <a href="view?$join_params($q, $prevlink, $globals)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.png" /></a>
+                <a href="view?$join_params($q, $firstlink, $globals)"><img class="over-img" src="../files/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.svg" /></a>
+                <a href="view?$join_params($q, $prevlink, $globals)"><img class="over-img" src="../files/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.svg" /></a>
                 </div>
             #end if
 
@@ -258,8 +258,8 @@ $query_overview_bar()
 
             #if $nextlink
                 <div class="bonito-pagination-right">
-                <a href="view?$join_params($q, $nextlink, $globals)" id="$nextid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.png" /></a>
-                <a id="lastpage" href="view?$join_params($q, $lastlink, $globals)"><img class="over-img" src="../files/img/last-page.png" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.png" /></a>
+                <a href="view?$join_params($q, $nextlink, $globals)" id="$nextid"><img class="over-img" src="../files/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.svg" /></a>
+                <a id="lastpage" href="view?$join_params($q, $lastlink, $globals)"><img class="over-img" src="../files/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.svg" /></a>
                 </div>
             #else
                 <a id="$nextid"></a>

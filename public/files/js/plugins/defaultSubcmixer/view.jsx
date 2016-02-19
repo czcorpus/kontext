@@ -143,7 +143,7 @@ define(['vendor/react', 'jquery', 'vendor/multi-slider/index'], function (React,
                                 onClick={this._handleRatioFocus}>{this.state.ratio.toFixed()}</button> <strong>%</strong>
                             <img
                                 className="close-icon"
-                                src={this.createStaticUrl('img/close-icon.png')}
+                                src={this.createStaticUrl('img/close-icon.svg')}
                                 title={this.translate('remove subset')}
                                 onClick={this._handleCloseIconClick} />
                         </div>
@@ -267,7 +267,7 @@ define(['vendor/react', 'jquery', 'vendor/multi-slider/index'], function (React,
                     <div className="slider-box">
                         <img
                                 className="close-icon"
-                                src={this.createStaticUrl('img/close-icon.png')}
+                                src={this.createStaticUrl('img/close-icon.svg')}
                                 title={this.translate('close slider')}
                                 onClick={this.props.closeSlider} />
                         <h3>{this.translate('defaultSubcmixer__current_ratios_heading')}</h3>

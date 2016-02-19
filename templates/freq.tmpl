@@ -50,7 +50,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
                 <th>$_('Attribute')</th>
                 <th>$_('Ignore case')</th>
                 <th>$_('Position')</th>
-                <th>$_("(Node) start at") <a class="kwic-alignment-help context-help" href="#"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a></th>
+                <th>$_("(Node) start at") <a class="kwic-alignment-help context-help" href="#"><img class="over-img" src="../files/img/question-mark.svg" data-alt-img="../files/img/question-mark_s.svg" /></a></th>
                 <th></th>
             </tr>
             <tr id="multilevel-freq-first-level" class="level-line">
@@ -88,11 +88,10 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf)
                 </td>
             </tr>
             <tr class="add-level">
-                <td colspan="6">
-                    <a id="add-freq-level-button">
-                        $_('Add level')
-                        <img class="over-img" src="$files_path/img/arrow_down.png" data-alt-img="$files_path/img/arrow_down_s.png" />
-                    </a>
+                <td>
+                    <a id="add-freq-level-button" title="$_('Add level')">+</a>
+                </td>
+                <td colspan="5">
                 </td>
             </tr>
         </table>

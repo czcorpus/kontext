@@ -186,10 +186,10 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.mapTypeToIcon = function (type) {
         var ans = {
-            info : "../files/img/info-icon.png",
+            info : "../files/img/info-icon.svg",
             message : "../files/img/message-icon.png",
             warning : "../files/img/warning-icon.png",
-            error : "../files/img/error-icon.png",
+            error : "../files/img/error-icon.svg",
             plain : null
         }[type];
 

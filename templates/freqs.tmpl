@@ -50,8 +50,8 @@ $_("Frequency list")#slurp
         <form action="freqs">
             #if $fpage > 1
             <div class="bonito-pagination-left">
-                <a href="$allhref"><img class="over-img" src="../files/img/first-page.png" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.png" /></a>
-                <a href="$allhref&amp;fpage=$(int($fpage) - 1)"><img class="over-img" src="../files/img/prev-page.png" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.png" /></a>
+                <a href="$allhref"><img class="over-img" src="../files/img/first-page.svg" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.svg" /></a>
+                <a href="$allhref&amp;fpage=$(int($fpage) - 1)"><img class="over-img" src="../files/img/prev-page.svg" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="../files/img/prev-page.svg" /></a>
             </div>
             #end if
 
@@ -72,7 +72,7 @@ $_("Frequency list")#slurp
 
             #if not $lastpage
             <div class="bonito-pagination-right">
-                <a href="$allhref&amp;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.png" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.png" /></a>
+                <a href="$allhref&amp;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="../files/img/next-page.svg" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.svg" /></a>
             </div>
             #else
             <a id="$navid"></a>

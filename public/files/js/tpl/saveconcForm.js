@@ -79,9 +79,6 @@ define(['jquery', 'tpl/document'], function ($, documentModule) {
         lib.layoutModel.init();
 
         $('input[type="submit"]').focus();
-        if (lib.layoutModel.userSettings.get('concdesc_view') === 'show') {
-            $('#concdescplusminus').attr('src', lib.layoutModel.conf.files_path + '/img/minus.png');
-        }
 
         (function () {
             var jqForm = $('form[action="saveconc"]'),
