@@ -27,18 +27,19 @@ ul.multiselect {
     a.switch-link:hover {
         background-color: #fff9ed;
     }
+    a.active,
     a.used {
         background-color: @color-widget-orange;
         color: #ffffff;
+    }
+    a.used {
+        opacity: 0.4;
     }
     a.used span.status-text {
         color: #ffffff;
     }
     a.used:hover {
         color: #888888;
-    }
-    a.active {
-        background-color: #fff9ed;
     }
     li table {
         border-collapse: collapse;

@@ -98,6 +98,7 @@
                 'vendor/rsvp' : 'vendor/rsvp.min',
                 'vendor/react': reactModule,
                 'vendor/react-dom': reactDomModule,
+                'vendor/immutable': 'vendor/immutable.min',
                 'vendor/d3': 'vendor/d3.min',
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
@@ -132,6 +133,7 @@
                 'vendor/rsvp-ajax',
                 'vendor/react',
                 'vendor/react-dom',
+                'vendor/immutable',
                 'vendor/Dispatcher',
                 'SoundManager',
                 'vendor/typeahead',

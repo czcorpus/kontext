@@ -22,6 +22,8 @@
 
     lib.init = function (dispatcher, mixins, tagHelperStore) {
 
+        // ------------------------------ <TagDisplay /> ----------------------------
+
         let TagDisplay = React.createClass({
 
             mixins: mixins,
@@ -31,6 +33,8 @@
             }
         });
 
+        // ------------------------------ <TagButtons /> ----------------------------
+
         let TagButtons = React.createClass({
 
             mixins: mixins,
@@ -39,75 +43,141 @@
                 return
                     <div>
                         <button id="insert-tag-button" type="button">
-                        {this.translate('tagbuilder__insert_btn')}
+                        {this.translate('taghelper__insert_btn')}
                         </button>
                         <button id="reset-tag-button" type="button">Reset</button>
                     </div>
             }
         });
 
-        let PositionList = React.createClass({
+        // ------------------------------ <ValueLine /> ----------------------------
+
+        let ValueLine = React.createClass({
 
             mixins: mixins,
 
+            _checkboxHandler : function (evt) {
+                dispatcher.dispatch({
+                    actionType: 'TAGHELPER_CHECKBOX_CHANGED',
+                    props: {
+                        position: this.props.lineIdx,
+                        value: this.props.data['id'],
+                        checked: evt.target.checked
+                    }
+                });
+            },
+
+            componentWillUnmount : function () {
+                tagHelperStore.removeChangeListener(this._changeListener);
+            },
+
             render : function () {
-                return
-                    <ul>
-                        <PositionLine />
-                    </ul>;
+                let inputId = 'c_position_' + this.props.lineIdx + '_' + this.props.sublineIdx;
+                return (
+                <tr>
+                    <td className="checkbox-cell">
+                        <input type="checkbox" id={inputId}
+                               value={this.props.data['id']} checked={this.props.data['selected']}
+                               onChange={this._checkboxHandler} disabled={this.props.isLocked ? true : false } />
+                    </td>
+                    <td>
+                        <label htmlFor={inputId}>{this.props.data['title']}</label>
+                    </td>
+                </tr>
+                );
             }
         });
 
-        let PositionLine = React.createClass({
-
-            mixins: mixins,
-
-            render : function () {
-                return
-                    <li>
-                        <a className="switch-link">1 - Part of speech<span className="status-text">[ 12 ]</span></a>
-                    </li>;
-            }
-        });
+        // ------------------------------ <ValueList /> ----------------------------
 
         let ValueList = React.createClass({
 
             mixins: mixins,
 
             render : function () {
-                return
+                return (
                     <table className="checkbox-list">
                         <tbody>
-                            <ValueLine />
+                            {this.props.positionValues.map((item, i) => item.available
+                                    ? <ValueLine key={i} data={item} lineIdx={this.props.lineIdx}
+                                                 sublineIdx={i} isLocked={this.props.isLocked} /> : null)}
                         </tbody>
-                    </table>;
+                    </table>
+                );
             }
         });
 
-        let ValueLine = React.createClass({
+        // ------------------------------ <PositionLine /> ----------------------------
+
+        let PositionLine = React.createClass({
 
             mixins: mixins,
 
+            _clickHandler : function () {
+                this.props.clickHandler(this.props.lineIdx, this.props.isActive);
+            },
+
             render : function () {
-                return
-                <tr>
-                    <td className="checkbox-cell">
-                        <input type="checkbox" id="c_position_0_0" value="N" />
-                    </td>
-                    <td>
-                        <label for="c_position_0_0">N - noun</label>
-                    </td>
-                </tr>;
+                let linkClass = 'switch-link';
+                if (this.props.isActive) {
+                    linkClass += ' active';
+
+                } else if (this.props.position['locked']) {
+                    linkClass += ' used';
+                }
+                return (
+                    <li style={{margin: '0px', overflow: 'hidden', clear: 'both'}}>
+                        <a className={linkClass} onClick={this._clickHandler}>
+                            {this.props.position['label']}
+                            <span className="status-text">{this.props.position['values'].filter(x=>x.available).size}</span>
+                        </a>
+                        {this.props.isActive ?
+                        <ValueList positionValues={this.props.position['values']}
+                                   isLocked={this.props.position['locked']}
+                                   lineIdx={this.props.lineIdx} /> : null }
+                    </li>
+                );
             }
         });
 
+        // ------------------------------ <PositionList /> ----------------------------
+
+        let PositionList = React.createClass({
+
+            mixins: mixins,
+
+            _lineClickHandler : function (clickedRow, isActive) {
+                this.setState({activeRow: isActive ? null : clickedRow});
+            },
+
+            getInitialState : function () {
+                return {activeRow: null};
+            },
+
+            render : function () {
+                return (
+                    <ul className="multiselect">
+                        {this.props.positions.map(
+                            (item, i) => <PositionLine key={i} position={item}
+                                                        lineIdx={i} clickHandler={this._lineClickHandler}
+                                                        isActive={i === this.state.activeRow} />)}
+                    </ul>
+                );
+            }
+        });
+
+        // ------------------------------ <TagBuilder /> ----------------------------
 
         let TagBuilder = React.createClass({
 
             mixins: mixins,
 
-            _changeListener : function (store) {
-                console.log('change detected in TagBuilder component. Src: ', store);
+            _changeListener : function (store, foo) {
+                this.setState(React.addons.update(this.state, {positions: {$set: store.getPositions()}}));
+            },
+
+            getInitialState: function () {
+                return {positions: []};
             },
 
             componentDidMount : function () {
@@ -131,9 +201,9 @@
             },
 
             render : function () {
-                console.log('render');
                 return <div>
                     <h3>{this.translate('taghelper__create_tag_heading')}</h3>
+                    <PositionList positions={this.state.positions} />
                 </div>;
             }
         });
