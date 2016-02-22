@@ -340,6 +340,7 @@ table.corplist td img.starred {
         margin-right: 1em;
         padding-bottom: 0.2em;
         display: inline-block;
+        width: 1.4em;
     }
     > div > p {
         margin: 0.4em 0;
@@ -347,7 +348,7 @@ table.corplist td img.starred {
     a.close-link {
         display: block;
         position: absolute;
-        padding: 0;
+        padding: 0.1em;
         margin: 0;
         width: @close-button-size;
         height: @close-button-size;
@@ -355,6 +356,8 @@ table.corplist td img.starred {
         right: 0.4em;
         background-image: url(../img/close-icon.svg);
         background-size: @close-button-size @close-button-size;
+        background-repeat: no-repeat;
+        background-position: 0.1em 0.1em;
     }
     a.close-link:hover {
         background-image: url(../img/close-icon_s.svg);
