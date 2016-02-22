@@ -28,8 +28,8 @@ import corparch = require('plugins/corparch/init');
  */
 export function init(conf:Kontext.Conf, corplistParams, corplistData):void {
     let layoutModel = new documentModule.PageModel(conf);
+    layoutModel.init();
     let page = corparch.initCorplistPageComponents(layoutModel.pluginApi());
-
     page.createForm($('#content form.filter').get(0), corplistParams);
     page.createList($('#corplist').get(0), corplistData);
 }
