@@ -169,7 +169,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #if $c_size == $f_size:
 <span id="conc-loader"></span> <strong id="fullsize" title="$f_size">$format_number($f_size, mask='%d')</strong>
 #else
-<a class="size-warning" data-size-limit="$format_number($c_size, mask='%d')"><img src="../files/img/warning-icon.png" /></a>
+<a class="size-warning" data-size-limit="$format_number($c_size, mask='%d')"><img src="../files/img/warning-icon.svg" /></a>
 <span id="loader"></span>
 <strong>$format_number($c_size, mask='%d')</strong> ($_('out of total') <span id="fullsize" title="$f_size">$format_number($f_size, mask='%d'))</span>
 #end if
