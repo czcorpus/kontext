@@ -164,7 +164,7 @@
         }
 
         fs.readdirSync(tplDir).forEach(function (item) {
-            var srch = /^(.+)\.js$/.exec(item);
+            var srch = /^(.+)\.[jt]s$/.exec(item);
             if (srch && !isExcluded(item)) {
                 ans.push({
                     name: 'tpl/' + srch[1],
