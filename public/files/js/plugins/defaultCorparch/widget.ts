@@ -954,14 +954,14 @@ class StarSwitch {
     setStarState(state:boolean):void {
         if (state === true) {
             $(this.triggerElm)
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred.svg'))
                 .addClass('starred')
                 .attr('title', this.pageModel.translate('defaultCorparch__in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__in_fav'));
 
         } else {
             $(this.triggerElm)
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred_grey.svg'))
                 .removeClass('starred')
                 .attr('title', this.pageModel.translate('defaultCorparch__not_in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__not_in_fav'));
@@ -1053,14 +1053,14 @@ class StarComponent {
         if (favoriteItemsTab.containsItem(currItem)) {
             $(this.starImg)
                 .addClass('starred')
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred.svg'))
                 .attr('title', this.pageModel.translate('defaultCorparch__in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__in_fav'));
 
         } else {
             $(this.starImg)
                 .addClass('starred')
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred_grey.svg'))
                 .attr('title', this.pageModel.translate('defaultCorparch__not_in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__not_in_fav'));
         }
