@@ -188,7 +188,7 @@ define(['win', 'jquery'], function (win, $) {
         var ans = {
             info : "../files/img/info-icon.svg",
             message : "../files/img/message-icon.png",
-            warning : "../files/img/warning-icon.png",
+            warning : "../files/img/warning-icon.svg",
             error : "../files/img/error-icon.svg",
             plain : null
         }[type];

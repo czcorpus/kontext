@@ -353,7 +353,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
             render : function () {
                 var typeIconMap = {
                     info: '../files/img/info-icon.svg',
-                    warning: '../files/img/warning-icon.png',
+                    warning: '../files/img/warning-icon.svg',
                     error: '../files/img/error-icon.svg'
                 },
                 classes = 'message ' + this.props.messageType;
