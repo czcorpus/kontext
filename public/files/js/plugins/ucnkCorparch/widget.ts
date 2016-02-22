@@ -691,15 +691,16 @@ class FavoritesTab implements WidgetTab {
 
         this.wrapperFav = window.document.createElement('table');
         $(this.wrapperFav).addClass('favorite-list')
-            .append('<tr><th colspan="2">'
-            + '<img class="config over-img" '
-            + 'title="' + this.pageModel.translate('defaultCorparch_click_to_unlock_removal') + '" '
-            + 'alt="' + this.pageModel.translate('defaultCorparch_click_to_unlock_removal') + '" '
+            .append('<tr>'
+            + '<th>' + this.pageModel.translate('defaultCorparch__fav_items') + '</th>'
+            + '<th></th>'
+            + '<th class="conf"><img class="config over-img" '
+            + 'title="' + this.pageModel.translate('defaultCorparch__click_to_unlock_removal') + '" '
+            + 'alt="' + this.pageModel.translate('defaultCorparch__click_to_unlock_removal') + '" '
             + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') + '" '
             + 'data-alt-img="' + this.pageModel.createStaticUrl('img/config-icon_16x16_s.png') + '" '
             + ' />'
-            + this.pageModel.translate('defaultCorparch__fav_items') + '</th>'
-            + '<th></th></tr>');
+            + '</th></tr>');
         $(this.tablesWrapper).append(this.wrapperFav);
 
         $(this.tablesWrapper).find('img.config').on('click', function () {

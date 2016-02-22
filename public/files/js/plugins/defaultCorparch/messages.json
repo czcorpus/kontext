@@ -2,9 +2,8 @@
   "en-US": {
     "defaultCorparch__unknown_size": "unknown size",
     "defaultCorparch__click_to_remove_item_from_fav": "click to remove the corpus from favourites",
-    "defaultCorparch_click_to_unlock_removal": "click to (un)lock corpora for removal",
+    "defaultCorparch__click_to_unlock_removal": "click to (un)lock corpora for removal",
     "defaultCorparch__hold_ctrl_for_multiple": "Hold CTRL/Command to select multiple labels",
-    "defaultCorparch__click_to_unlock_for_removal": "click to (un)lock corpora for removal",
     "defaultCorparch__you_can_use_suffixes_size": "You can use suffixes to specify a rough size - e.g. 100M, 1G, 1T",
     "defaultCorparch__size_from": "size from",
     "defaultCorparch__size_to": "size to",
@@ -42,9 +41,8 @@
   "cs-CZ": {
     "defaultCorparch__unknown_size": "neznámá velikost",
     "defaultCorparch__click_to_remove_item_from_fav": "klikněte pro vyřazení korpusu z oblíbených",
-    "defaultCorparch_click_to_unlock_removal": "klikněte pro odemčení/uzamčení režimu odebírání korpusů ze seznamu",
+    "defaultCorparch__click_to_unlock_removal": "klikněte pro odemčení/uzamčení režimu odebírání korpusů ze seznamu",
     "defaultCorparch__hold_ctrl_for_multiple": "Přidržte klávesu CTRL/Command, chcete-li vybrat více štítků",
-    "defaultCorparch__click_to_unlock_for_removal": "klikněte pro odemčení/uzamčení režimu odebírání korpusů ze seznamu",
     "defaultCorparch__you_can_use_suffixes_size": "Pro zápis přibližné velikosti lze použít přípony - např. 50k, 100M, 7G, 1T",
     "defaultCorparch__size_from": "velikost od",
     "defaultCorparch__size_to": "velikost do",
