@@ -691,15 +691,16 @@ class FavoritesTab implements WidgetTab {
 
         this.wrapperFav = window.document.createElement('table');
         $(this.wrapperFav).addClass('favorite-list')
-            .append('<tr><th colspan="2">'
-            + '<img class="config over-img" '
-            + 'title="' + this.pageModel.translate('defaultCorparch_click_to_unlock_removal') + '" '
-            + 'alt="' + this.pageModel.translate('defaultCorparch_click_to_unlock_removal') + '" '
+            .append('<tr>'
+            + '<th>' + this.pageModel.translate('defaultCorparch__fav_items') + '</th>'
+            + '<th></th>'
+            + '<th class="conf"><img class="config over-img" '
+            + 'title="' + this.pageModel.translate('defaultCorparch__click_to_unlock_removal') + '" '
+            + 'alt="' + this.pageModel.translate('defaultCorparch__click_to_unlock_removal') + '" '
             + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') + '" '
             + 'data-alt-img="' + this.pageModel.createStaticUrl('img/config-icon_16x16_s.png') + '" '
             + ' />'
-            + this.pageModel.translate('defaultCorparch__fav_items') + '</th>'
-            + '<th></th></tr>');
+            + '</th></tr>');
         $(this.tablesWrapper).append(this.wrapperFav);
 
         $(this.tablesWrapper).find('img.config').on('click', function () {
@@ -962,14 +963,14 @@ class StarSwitch {
     setStarState(state:boolean):void {
         if (state === true) {
             $(this.triggerElm)
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred.svg'))
                 .addClass('starred')
                 .attr('title', this.pageModel.translate('defaultCorparch__in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__in_fav'));
 
         } else {
             $(this.triggerElm)
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred_grey.svg'))
                 .removeClass('starred')
                 .attr('title', this.pageModel.translate('defaultCorparch__not_in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__not_in_fav'));
@@ -1060,14 +1061,14 @@ class StarComponent {
         if (favoriteItemsTab.containsItem(currItem)) {
             $(this.starImg)
                 .addClass('starred')
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred.svg'))
                 .attr('title', this.pageModel.translate('defaultCorparch__in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__in_fav'));
 
         } else {
             $(this.starImg)
                 .addClass('starred')
-                .attr('src', this.pageModel.createStaticUrl('img/starred_24x24_grey.png'))
+                .attr('src', this.pageModel.createStaticUrl('img/starred_grey.svg'))
                 .attr('title', this.pageModel.translate('defaultCorparch__not_in_fav'))
                 .attr('alt', this.pageModel.translate('defaultCorparch__not_in_fav'));
         }

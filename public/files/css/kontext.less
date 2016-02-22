@@ -312,22 +312,23 @@ a#logo-wrapper {
 }
 #mainform .parallel-corp-lang .close-button {
     float: right;
-    width: 16px;
     padding: 0;
     margin-right: 0;
 
-    .close-button img {
-        margin-top: -4px;
+    img {
+        margin-top: -0.4em;
         display: inline-block;
         vertical-align: middle;
+        width: 1em;
     }
 }
 #mainform fieldset .desc p {
     margin: 0 20pt;
     font-size: 80%;
     color: @color-light-text;
-    background-image: url(../img/warning-icon.png);
+    background-image: url(../img/warning-icon.svg);
     background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
     line-height: 1.5;
 }
 #mainform fieldset .desc p:first-letter {
@@ -561,8 +562,8 @@ ul.query-toolbox li {
 .bonito-pagination-core input[type='text'] {
     width: 40px;
 }
-.bonito-pagination-core > * {
-    vertical-align: baseline;
+.bonito-pagination-core {
+    vertical-align: middle;
 }
 .bonito-pagination-left {
     display: inline-block;
@@ -572,11 +573,16 @@ ul.query-toolbox li {
     display: inline-block;
     padding-left: 6px;
 }
+.bonito-pagination a {
+    vertical-align: middle;
+}
 .bonito-pagination a > img {
     display: inline-block;
     vertical-align: middle;
-    width: @close-button-size;
-    height: @close-button-size;
+    height: @navig-icon-size;
+}
+.bonito-pagination a:last-of-type img {
+    padding-left: 0.3em;
 }
 #mainform input.cql-input,
 #mainform input.iquery-input,
@@ -668,6 +674,7 @@ div.starred {
 div.starred > img {
     vertical-align: middle;
     cursor: pointer;
+    width: 1.9em;
 }
 fieldset.inactive {
     border-color: #DEDEDE;
@@ -817,9 +824,20 @@ table.envelope {
 table.envelope table {
     border-spacing: 0;
 }
-table.envelope tr.attrib-name th.focused {
-    color: @color-logo-pink;
+
+table.envelope tr.attrib-name {
+
+    th.focused {
+        color: @color-logo-pink;
+    }
+
+    a.external-help img {
+        width: 0.6em;
+        vertical-align: top;
+    }
+
 }
+
 table.envelope table td,
 table.envelope table th {
     padding: 5px 8px 5px 12px;
@@ -1166,8 +1184,7 @@ a.context-help {
 
     img {
         display: inline-block;
-        width: 1em;
-        height: 1em;
+        width: 0.7em;
     }
 }
 #show-help-format-link img {

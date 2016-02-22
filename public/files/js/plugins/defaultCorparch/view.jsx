@@ -92,10 +92,10 @@ define(['vendor/react'], function (React) {
                 let imgUrl;
 
                 if (this.state.isFav) {
-                    imgUrl = this.createStaticUrl('img/starred_24x24.png');
+                    imgUrl = this.createStaticUrl('img/starred.svg');
 
                 } else {
-                    imgUrl = this.createStaticUrl('img/starred_24x24_grey.png');
+                    imgUrl = this.createStaticUrl('img/starred_grey.svg');
                 }
                 return <img className="starred" src={imgUrl} onClick={this._handleClick} />;
             }

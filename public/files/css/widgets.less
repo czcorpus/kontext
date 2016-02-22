@@ -127,12 +127,11 @@ ul.multiselect {
     color: #ababab;
 }
 .corplist-widget table td {
-    padding: 3pt 8pt;
+    padding: 0.2em 1em;
 }
 .corplist-widget table td.tools {
-    padding: 3pt 0;
-}
-.corplist-widget table td > img {
+    padding: 0.2em 0 0 0;
+    text-align: left;
     vertical-align: middle;
 }
 .corplist-widget tr td a {
@@ -146,10 +145,6 @@ ul.multiselect {
 .corplist-widget tr td a:hover {
     color: @color-logo-pink;
     text-decoration: underline;
-}
-.corplist-widget img.config {
-    float: left;
-    cursor: pointer;
 }
 .corplist-widget .menu {
     margin: 0 0 10pt 0;
@@ -226,22 +221,35 @@ ul.multiselect {
     box-sizing: border-box;
     border-spacing: 0;
 }
+.corplist-widget table.favorite-list th.conf {
+    text-align: right;
+    padding-right: 8pt;
+    padding-left: 0;
+
+    img.config {
+        cursor: pointer;
+    }
+}
 .corplist-widget table.favorite-list img.remove {
     display: inline-block;
     padding: 0;
     cursor: pointer;
-    width: @close-button-size;
-    height: @close-button-size;
+    width: @navig-icon-size;
 }
-.corplist-widget table.favorite-list img.remove {} .corplist-widget table.favorite-list img.remove.disabled {
+.corplist-widget table.favorite-list img.remove.disabled {
     display: none;
 }
 .corplist-widget table.featured-list {
     margin-left: @corplist-widget-table-spacing;
 }
+.corplist-widget div.tables > table tr {
+    line-height: 1.2em;
+}
 .corplist-widget div.tables > table th {
-    text-align: center;
+    text-align: left;
     color: @color-logo-pink;
+    padding-left: 1em;
+    height: 1.5em;
 }
 .corplist-widget .labels-hint {
     padding: 0.5em 0 0 0;
@@ -261,6 +269,7 @@ table.corplist tr.load-more td {
 table.corplist td img.starred {
     display: inline-block;
     vertical-align: middle;
+    width: 1.9em;
 }
 #corplist .dataset-loading {
     background: linear-gradient(270deg, #d2edc0, #f3fbed);
@@ -340,6 +349,7 @@ table.corplist td img.starred {
         margin-right: 1em;
         padding-bottom: 0.2em;
         display: inline-block;
+        width: 1.4em;
     }
     > div > p {
         margin: 0.4em 0;
@@ -347,7 +357,7 @@ table.corplist td img.starred {
     a.close-link {
         display: block;
         position: absolute;
-        padding: 0;
+        padding: 0.1em;
         margin: 0;
         width: @close-button-size;
         height: @close-button-size;
@@ -355,6 +365,8 @@ table.corplist td img.starred {
         right: 0.4em;
         background-image: url(../img/close-icon.svg);
         background-size: @close-button-size @close-button-size;
+        background-repeat: no-repeat;
+        background-position: 0.1em 0.1em;
     }
     a.close-link:hover {
         background-image: url(../img/close-icon_s.svg);
