@@ -531,7 +531,7 @@ define(['win', 'jquery'], function (win, $) {
                 $(this).css('border', 'none');
                 supElm = $(win.document.createElement('sup'));
                 $(this).after(supElm);
-                linkElm = $('<a class="context-help"><img class="over-img" src="../files/img/question-mark.png" data-alt-img="../files/img/question-mark_s.png" /></a>');
+                linkElm = $('<a class="context-help"><img class="over-img" src="../files/img/question-mark.svg" data-alt-img="../files/img/question-mark_s.svg" /></a>');
                 lib.bind(linkElm, $(this).attr('title'), {calculatePosition : true});
                 $(this).attr('title', null);
                 supElm.append(linkElm);

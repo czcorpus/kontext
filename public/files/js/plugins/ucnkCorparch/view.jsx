@@ -109,10 +109,10 @@ define(['vendor/react', 'jquery', '../defaultCorparch/view'], function (React, $
 
                 if (this.state.isUnlockable) {
                     if (this.state.hasFocus) {
-                        img = <img src={this.createStaticUrl('img/24px-Unlocked.png')} />;
+                        img = <img src={this.createStaticUrl('img/unlocked.svg')} />;
 
                     } else {
-                        img = <img src={this.createStaticUrl('img/24px-Locked.png')} />;
+                        img = <img src={this.createStaticUrl('img/locked.svg')} />;
                     }
 
                     if (this.state.hasDialog) {
