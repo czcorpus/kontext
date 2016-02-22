@@ -15,7 +15,7 @@
 #conc-top-bar,
 #conc-bottom-bar {
   overflow: hidden;
-  padding: 5px 20px;
+  padding: 0.4em 1em;
 }
 
 #conc-top-bar,
@@ -45,8 +45,19 @@
   font-size: 1em;
   font-family: @condensed-font-family;
 
-  .manual-selection input[type="text"] {
-      font-size: 0.85em;
+  .manual-selection {
+      padding-right: 0;
+      width: 3em;
+  }
+
+  .manual-selection input {
+      font-size: 0.80em;
+      margin: 0;
+  }
+
+  .manual-selection input[type="checkbox"] {
+      margin-right: 0.5em;
+      vertical-align: middle;
   }
 
   .manual-selection input.error {
@@ -65,7 +76,13 @@ table#conclines {
 }
 
 table#conclines tr td {
-  padding: 2px;
+  line-height: 1.6em;
+  padding-right: 0.4em;
+  padding-left: 0.4em;
+}
+
+table#conclines tr td:first-child {
+    padding-left: 1em;
 }
 
 table#conclines .group-id {
@@ -461,13 +478,14 @@ table#conclines .concordance-col-heading {
     .lines-selection {
         white-space: nowrap;
         padding-right: 1.4em;
+        padding-left: 0.3em;
     }
 
     .lines-selection.warn {
         background-image: url(../img/warning-icon.png);
         background-size: 1em 1em;
         background-repeat: no-repeat;
-        background-position: 100% 0;
+        background-position: 100% 0.1em;
     }
 
     .lines-selection.info {

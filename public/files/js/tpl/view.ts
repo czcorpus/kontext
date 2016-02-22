@@ -474,7 +474,7 @@ export class ViewPage {
             if (mode === 'groups') {
                 $(inputElm)
                     .attr('inputmode', 'numeric')
-                    .css('width', '2em');
+                    .css('width', '1.4em');
             }
             $(this).replaceWith(inputElm);
             applyStoredValue($(inputElm));

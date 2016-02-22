@@ -703,16 +703,16 @@ a.form-extension-switch:hover {
     text-decoration: underline;
 }
 a.form-extension-switch.expand {
-    background-image: url(../img/expand.png);
+    background-image: url(../img/expand.svg);
 }
 a.form-extension-switch.expand:hover {
-    background-image: url(../img/expand_s.png);
+    background-image: url(../img/expand_s.svg);
 }
 a.form-extension-switch.collapse {
-    background-image: url(../img/collapse.png);
+    background-image: url(../img/collapse.svg);
 }
 a.form-extension-switch.collapse:hover {
-    background-image: url(../img/collapse_s.png);
+    background-image: url(../img/collapse_s.svg);
 }
 .form-extension-switch .status {
     vertical-align: middle;
@@ -1475,10 +1475,12 @@ section.corplist {
         border-width: 1pt;
     }
     .data tr .lock-status {
-        width: 24px;
-        height: 24px;
         display: inline-block;
         cursor: pointer;
+
+        img {
+            width: 1.9em;
+        }
     }
     .data .corpus-access-req {
         position: fixed;
@@ -1499,24 +1501,24 @@ section.corplist {
     fieldset.advanced-filter {
         legend {
             cursor: pointer;
-            background-image: url(../img/collapse.png);
+            background-image: url(../img/collapse.svg);
             background-repeat: no-repeat;
             background-position: 0 2pt;
             padding-left: 15px;
         }
         legend:hover {
             text-decoration: underline;
-            background-image: url(../img/collapse_s.png);
+            background-image: url(../img/collapse_s.svg);
         }
     }
     fieldset.advanced-filter.closed {
         border: none;
         legend {
             text-decoration: underline;
-            background-image: url(../img/expand.png);
+            background-image: url(../img/expand.svg);
         }
         legend:hover {
-            background-image: url(../img/expand_s.png);
+            background-image: url(../img/expand_s.svg);
         }
     }
 } // -- section.corplist
