@@ -1,10 +1,12 @@
 {
   "en-US": {
       "taghelper__create_tag_heading": "Create a tag",
-      "taghelper__insert_btn": "Insert"
+      "taghelper__insert_btn": "Insert",
+      "taghelper__unfulfilled": "Unfulfilled"
   },
   "cs-CZ": {
       "taghelper__create_tag_heading": "Vytvořit tag",
-      "taghelper__insert_btn": "Vložit"
+      "taghelper__insert_btn": "Vložit",
+      "taghelper__unfulfilled": "Nevyplněno"
   }
 }

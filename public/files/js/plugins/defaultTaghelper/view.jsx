@@ -73,6 +73,7 @@
 
             render : function () {
                 let inputId = 'c_position_' + this.props.lineIdx + '_' + this.props.sublineIdx;
+                let label = this.props.data['title'] ? this.props.data['title'] : this.translate('taghelper__unfulfilled');
                 return (
                 <tr>
                     <td className="checkbox-cell">
@@ -81,7 +82,7 @@
                                onChange={this._checkboxHandler} disabled={this.props.isLocked ? true : false } />
                     </td>
                     <td>
-                        <label htmlFor={inputId}>{this.props.data['title']}</label>
+                        <label htmlFor={inputId}>{label}</label>
                     </td>
                 </tr>
                 );
@@ -150,6 +151,10 @@
                 this.setState({activeRow: isActive ? null : clickedRow});
             },
 
+            _mkid : function (i) {
+                return this.props.stateId + String(i);
+            },
+
             getInitialState : function () {
                 return {activeRow: null};
             },
@@ -158,7 +163,7 @@
                 return (
                     <ul className="multiselect">
                         {this.props.positions.map(
-                            (item, i) => <PositionLine key={i} position={item}
+                            (item, i) => <PositionLine key={this._mkid(i)} position={item}
                                                         lineIdx={i} clickHandler={this._lineClickHandler}
                                                         isActive={i === this.state.activeRow} />)}
                     </ul>
@@ -173,11 +178,14 @@
             mixins: mixins,
 
             _changeListener : function (store, foo) {
-                this.setState(React.addons.update(this.state, {positions: {$set: store.getPositions()}}));
+                this.setState(React.addons.update(this.state, {
+                    positions: {$set: store.getPositions()},
+                    stateId: {$set: store.getStateId()}
+                }));
             },
 
             getInitialState: function () {
-                return {positions: []};
+                return {positions: [], stateId: ''}; // state id is used to generate proper React item keys
             },
 
             componentDidMount : function () {
@@ -203,7 +211,7 @@
             render : function () {
                 return <div>
                     <h3>{this.translate('taghelper__create_tag_heading')}</h3>
-                    <PositionList positions={this.state.positions} />
+                    <PositionList positions={this.state.positions} stateId={this.state.stateId} />
                 </div>;
             }
         });

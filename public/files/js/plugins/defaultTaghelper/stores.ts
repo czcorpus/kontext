@@ -118,7 +118,7 @@ export class TagHelperStore extends util.SimplePageStore {
 
             } else if (i !== triggerRow && !item.locked) {
                 let tmp = Immutable.Map(data[i]);
-                item.values.filter(v => v.id !== '-').forEach((item:PositionValue) => {
+                item.values.forEach((item:PositionValue) => {
                     if (tmp.get(item.id) === undefined) {
                         item.available = false;
 
@@ -199,5 +199,13 @@ export class TagHelperStore extends util.SimplePageStore {
 
     getPositions():Immutable.List<PositionOptions> {
         return this.data;
+    }
+
+    getStateId():string {
+        return this.data.map<string>((item:PositionOptions) => {
+            let ans = item.values.filter((s:PositionValue) => s.selected)
+                    .map<string>((s:PositionValue) => s.id);
+            return ans.size > 0 ? '[' + ans.join('') + ']' : ''
+        }).join('');
     }
 }
