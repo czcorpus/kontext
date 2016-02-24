@@ -29,7 +29,7 @@
             mixins: mixins,
 
             render : function () {
-                return <div id="tag-display" className="tag-display-box" />;
+                return <div id="tag-display" className="tag-display-box">{this.props.tagValue}</div>;
             }
         });
 
@@ -39,14 +39,32 @@
 
             mixins: mixins,
 
+            _buttonClick : function (evt) {
+                if (evt.target.value === 'reset') {
+                    dispatcher.dispatch({
+                        actionType: 'TAGHELPER_RESET',
+                        props: {widgetId:this.props.widgetId}
+                    });
+
+                } else if (evt.target.value === 'insert') {
+                    dispatcher.dispatch({
+                        actionType: 'TAGHELPER_INSERT_TAG',
+                        props: {widgetId:this.props.widgetId}
+                    });
+                }
+            },
+
             render : function () {
-                return
-                    <div>
-                        <button id="insert-tag-button" type="button">
+                return (
+                    <div className="buttons">
+                        <button id="insert-tag-button" type="button"
+                                value="insert" onClick={this._buttonClick}>
                         {this.translate('taghelper__insert_btn')}
                         </button>
-                        <button id="reset-tag-button" type="button">Reset</button>
+                        <button id="reset-tag-button" type="button"
+                                value="reset"  onClick={this._buttonClick}>Reset</button>
                     </div>
+                );
             }
         });
 
@@ -60,6 +78,7 @@
                 dispatcher.dispatch({
                     actionType: 'TAGHELPER_CHECKBOX_CHANGED',
                     props: {
+                        widgetId: this.props.widgetId,
                         position: this.props.lineIdx,
                         value: this.props.data['id'],
                         checked: evt.target.checked
@@ -73,13 +92,16 @@
 
             render : function () {
                 let inputId = 'c_position_' + this.props.lineIdx + '_' + this.props.sublineIdx;
-                let label = this.props.data['title'] ? this.props.data['title'] : this.translate('taghelper__unfulfilled');
+                let label = this.props.data['title'] ?
+                            this.props.data['title'] : this.translate('taghelper__unfulfilled');
                 return (
                 <tr>
                     <td className="checkbox-cell">
-                        <input type="checkbox" id={inputId}
-                               value={this.props.data['id']} checked={this.props.data['selected']}
-                               onChange={this._checkboxHandler} disabled={this.props.isLocked ? true : false } />
+                        <input type="checkbox"
+                               id={inputId}
+                               checked={this.props.data['selected']}
+                               onChange={this._checkboxHandler}
+                               disabled={this.props.isLocked ? true : false } />
                     </td>
                     <td>
                         <label htmlFor={inputId}>{label}</label>
@@ -95,15 +117,40 @@
 
             mixins: mixins,
 
+            _renderChildren : function () {
+                return this.props.positionValues.map((item, i) => item.available
+                    ? <ValueLine key={i} data={item} lineIdx={this.props.lineIdx} sublineIdx={i}
+                                 isLocked={this.props.isLocked} widgetId={this.props.widgetId} />
+                    : null);
+            },
+
+            _hasOnlyUnfulfilledChild : function () {
+                return this.props.positionValues.size === 1 && this.props.positionValues.get(0).id === '-';
+            },
+
+            _renderUnfulfilledCheckbox : function () {
+                return (
+                    <tr>
+                        <td className="checkbox-cell"><input type="checkbox" checked="checked" disabled={true} /></td>
+                        <td>{this.translate('taghelper__unfulfilled')}</td>
+                    </tr>
+                );
+            },
+
             render : function () {
                 return (
-                    <table className="checkbox-list">
+                    this.props.positionValues.filter(item => item.available).size > 0 ?
+                    (
+                     <table className="checkbox-list">
                         <tbody>
-                            {this.props.positionValues.map((item, i) => item.available
-                                    ? <ValueLine key={i} data={item} lineIdx={this.props.lineIdx}
-                                                 sublineIdx={i} isLocked={this.props.isLocked} /> : null)}
+                            {
+                            this._hasOnlyUnfulfilledChild() ?
+                            this._renderUnfulfilledCheckbox() : this._renderChildren()
+                            }
                         </tbody>
-                    </table>
+                     </table>
+                    )
+                    : null
                 );
             }
         });
@@ -118,6 +165,10 @@
                 this.props.clickHandler(this.props.lineIdx, this.props.isActive);
             },
 
+            _getAvailableChildren : function () {
+                return this.props.position['values'].filter(x=>x.available);
+            },
+
             render : function () {
                 let linkClass = 'switch-link';
                 if (this.props.isActive) {
@@ -129,13 +180,14 @@
                 return (
                     <li style={{margin: '0px', overflow: 'hidden', clear: 'both'}}>
                         <a className={linkClass} onClick={this._clickHandler}>
-                            {this.props.position['label']}
-                            <span className="status-text">{this.props.position['values'].filter(x=>x.available).size}</span>
+                            <span className="pos-num">{this.props.lineIdx + 1})</span> {this.props.position['label']}
+                            <span className="status-text">[ {this._getAvailableChildren().size} ]</span>
                         </a>
                         {this.props.isActive ?
-                        <ValueList positionValues={this.props.position['values']}
+                        <ValueList positionValues={this._getAvailableChildren()}
                                    isLocked={this.props.position['locked']}
-                                   lineIdx={this.props.lineIdx} /> : null }
+                                   lineIdx={this.props.lineIdx}
+                                   widgetId={this.props.widgetId} /> : null }
                     </li>
                 );
             }
@@ -165,7 +217,8 @@
                         {this.props.positions.map(
                             (item, i) => <PositionLine key={this._mkid(i)} position={item}
                                                         lineIdx={i} clickHandler={this._lineClickHandler}
-                                                        isActive={i === this.state.activeRow} />)}
+                                                        isActive={i === this.state.activeRow}
+                                                        widgetId={this.props.widgetId} />)}
                     </ul>
                 );
             }
@@ -177,15 +230,24 @@
 
             mixins: mixins,
 
-            _changeListener : function (store, foo) {
+            _changeListener : function (store, action) {
                 this.setState(React.addons.update(this.state, {
                     positions: {$set: store.getPositions()},
-                    stateId: {$set: store.getStateId()}
+                    stateId: {$set: store.getStateId()},
+                    tagValue: {$set: store.exportCurrentPattern()}
                 }));
+                if (action === 'TAGHELPER_INSERT_TAG_ACKOWLEDGED' &&
+                        typeof this.props.insertCallback === 'function') {
+                    this.props.insertCallback(store.exportCurrentPattern());
+                }
             },
 
             getInitialState: function () {
-                return {positions: [], stateId: ''}; // state id is used to generate proper React item keys
+                return {
+                    positions: [],
+                    stateId: '',
+                    tagValue: this.props.initialTagValue
+                }; // state id is used to generate proper React item keys
             },
 
             componentDidMount : function () {
@@ -196,7 +258,7 @@
                 }
                 dispatcher.dispatch({
                     actionType: 'TAGHELPER_GET_INITIAL_DATA',
-                    props: {}
+                    props: {widgetId: this.props.widgetId}
                 });
             },
 
@@ -211,7 +273,13 @@
             render : function () {
                 return <div>
                     <h3>{this.translate('taghelper__create_tag_heading')}</h3>
-                    <PositionList positions={this.state.positions} stateId={this.state.stateId} />
+                    <div className="tag-header">
+                        <TagDisplay tagValue={this.state.tagValue} />
+                        <TagButtons widgetId={this.props.widgetId} />
+                    </div>
+                    <PositionList positions={this.state.positions}
+                                  stateId={this.state.stateId}
+                                  widgetId={this.props.widgetId} />
                 </div>;
             }
         });

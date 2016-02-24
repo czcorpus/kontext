@@ -20,7 +20,6 @@
 
 /// <reference path="../ts/declarations/jquery.d.ts" />
 /// <reference path="../ts/declarations/popupbox.d.ts" />
-/// <reference path="../ts/declarations/tagbuilder.d.ts" />
 /// <reference path="../ts/declarations/virtual-keyboard.d.ts" />
 /// <reference path="../ts/declarations/cookies.d.ts" />
 /// <reference path="../ts/declarations/common.d.ts" />
@@ -110,13 +109,25 @@ export class QueryFormTweaks {
      * @param {jQuery|HTMLElement|String} inputElm
      * @param {jQuery|HTMLElement|String} triggerElm
      */
-    bindTagHelper(inputElm:HTMLElement, triggerElm:HTMLElement):void {
+    bindTagHelper(inputElm:HTMLElement, triggerElm:HTMLElement, widgetId:number):void {
         let self = this;
+        let queryField:HTMLElement = $(triggerElm).closest('.query-area').find('.cql-input').get(0);
+        let insertCallback = (v:string) => {
+            let oldVal = $(queryField).val();
+            let tagVal = '[tag="' + v + '"]';
+            if (oldVal) {
+                $(queryField).val(oldVal + ' ' + tagVal);
+
+            } else {
+                $(queryField).val(tagVal);
+            }
+        };
         popupBox.bind(
             triggerElm,
-            tagbuilder.getPopupBoxRenderer(self.pluginApi),
+            tagbuilder.getPopupBoxRenderer(self.pluginApi, insertCallback, widgetId),
             {
                 type: 'plain',
+                htmlClass: 'tag-builder-widget',
                 closeIcon: true,
                 timeout: null,
                 onClose: function () {
@@ -124,30 +135,6 @@ export class QueryFormTweaks {
                 }
             }
         );
-
-        /*
-        tagbuilder.bindTextInputHelper(
-            this.pluginApi,
-            triggerElm,
-            {
-                inputElement: $(inputElm),
-                widgetElement: 'tag-widget',
-                modalWindowElement: 'tag-builder-modal',
-                insertTagButtonElement: 'insert-tag-button',
-                tagDisplayElement: 'tag-display',
-                resetButtonElement: 'reset-tag-button'
-            },
-            {
-                width: '556px',
-                useNamedCheckboxes: false,
-                allowMultipleOpenedBoxes: false
-            },
-            (message:string) => {
-                self.pluginApi.showMessage('error',
-                    message || self.pluginApi.translate('global__failed_to_contact_server'));
-            }
-        );
-        */
     }
 
     /**
@@ -255,10 +242,10 @@ export class QueryFormTweaks {
      */
     bindQueryHelpers():void {
         let self = this;
-        $('.query-area .cql-input').each(function () {
+        $('.query-area .cql-input').each(function (i) {
             let blockWrapper = $(this).closest('td');
 
-            self.bindTagHelper(this, blockWrapper.find('.insert-tag a').get(0));
+            self.bindTagHelper(this, blockWrapper.find('.insert-tag a').get(0), i);
             self.bindWithinHelper(blockWrapper.find('li.within a').get(0));
         });
         this.initVirtualKeyboard($(this.formElm).find('tr:visible .spec-chars'));

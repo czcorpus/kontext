@@ -55,5 +55,6 @@ declare module "plugins/queryStorage/init" {
 }
 
 declare module "plugins/taghelper/init" {
-    export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi):(box:PopupBox.TooltipBox, finalize:()=>void)=>void;
+    export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi,
+            insertCallback:(value:string)=>void, widgetId:number):(box:PopupBox.TooltipBox, finalize:()=>void)=>void;
 }

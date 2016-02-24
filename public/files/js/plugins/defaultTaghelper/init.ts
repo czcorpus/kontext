@@ -24,18 +24,25 @@ import stores = require('./stores');
 declare var view:any;
 
 
-export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi):(box:PopupBox.TooltipBox, finalize:()=>void)=>void {
+export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi,
+        insertCallback:(value:string)=>void, widgetId:number):(box:PopupBox.TooltipBox, finalize:()=>void)=>void {
 
-    let tagHelperStore = new stores.TagHelperStore(pluginApi);
+    let tagHelperStore = new stores.TagHelperStore(pluginApi, widgetId);
 
     return function (box:PopupBox.TooltipBox, finalize:()=>void) {
         pluginApi.renderReactComponent(
             view.init(pluginApi.dispatcher(), pluginApi.exportMixins(), tagHelperStore).TagBuilder,
             box.getRootElement(),
             {
+                widgetId: widgetId,
                 doneCallback: () => {
                     finalize();
-                }
+                },
+                insertCallback: (v:string) => {
+                    insertCallback(v);
+                    box.close()
+                },
+                initialTagValue: '.*'
             }
         );
     };

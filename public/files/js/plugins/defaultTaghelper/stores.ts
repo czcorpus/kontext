@@ -29,6 +29,9 @@ type RawTagValues = Array<Array<Array<string>>>;
 
 type UpdateTagValues = {[idx:number]:Array<Array<string>>};
 
+/**
+ * Defines a JSON format used by server
+ */
 interface TagDataResponse {
     containsErrors:boolean;
     messages:Array<string>;
@@ -36,6 +39,10 @@ interface TagDataResponse {
     tags:RawTagValues;
 }
 
+/**
+ * Defines a single value available in a specific position
+ * (e.g. 2nd position, 1st item = 'masculine inanimate')
+ */
 export interface PositionValue {
     id:string;
     title:string;
@@ -43,6 +50,9 @@ export interface PositionValue {
     available:boolean;
 }
 
+/**
+ * Defines options for a single PoS tag position (e.g.: 2nd position = Gender)
+ */
 export interface PositionOptions {
     label:string;
     values:Immutable.List<PositionValue>;
@@ -50,7 +60,7 @@ export interface PositionOptions {
 }
 
 /**
- * This store handles corplist 'filter' form
+ * This store handles a single tag-builder instance.
  */
 export class TagHelperStore extends util.SimplePageStore {
 
@@ -60,34 +70,72 @@ export class TagHelperStore extends util.SimplePageStore {
 
     private data:Immutable.List<PositionOptions>;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    private widgetId:number;
+
+    constructor(pluginApi:Kontext.PluginApi, widgetId:number) {
         super(pluginApi.dispatcher());
         var self = this;
         this.pluginApi = pluginApi;
+        this.widgetId = widgetId;
         this.data = Immutable.List<PositionOptions>();
 
         TagHelperStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
-                switch (payload.actionType) {
-                    case 'TAGHELPER_GET_INITIAL_DATA':
-                        self.loadInitialData();
-                        break;
-                    case 'TAGHELPER_CHECKBOX_CHANGED':
-                        self.updateSelectedItem(payload.props['position'], payload.props['value'], payload.props['checked']);
-                        self.updateData(payload.props['position']).then(
-                            (data) => {
-                                self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_RECEIVED');
-                            },
-                            (err) => {
-                                console.log('err ', err); // TODO
-                            }
-                        );
-                        break;
+                if (self.widgetId === payload.props['widgetId']) {
+                    switch (payload.actionType) {
+                        case 'TAGHELPER_GET_INITIAL_DATA':
+                            self.loadInitialData();
+                            break;
+                        case 'TAGHELPER_CHECKBOX_CHANGED':
+                            self.updateSelectedItem(payload.props['position'], payload.props['value'],
+                                    payload.props['checked']);
+                            self.updateData(payload.props['position']).then(
+                                (data) => {
+                                    if (!data['containsErrors']) {
+                                        self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_RECEIVED');
+
+                                    } else {
+                                        self.pluginApi.showMessage('error', data['messages'].join(', '));
+                                    }
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                            break;
+                        case 'TAGHELPER_RESET':
+                            self.resetSelections();
+                            break;
+                        case 'TAGHELPER_INSERT_TAG':
+                            self.notifyChangeListeners('TAGHELPER_INSERT_TAG_ACKOWLEDGED');
+                            break;
+                    }
                 }
             }
         );
     }
 
+    private resetSelections():void {
+        this.data = this.data.map((item:PositionOptions) => {
+            return {
+                label: item.label,
+                locked: false,
+                values: item.values.map((v:PositionValue) => {
+                    return {
+                        id: v.id,
+                        title: v.title,
+                        selected: false,
+                        available: true
+                    };
+                }).toList()
+            };
+        }).toList();
+        this.notifyChangeListeners('TAGHELPER_UPDATED_DATA_RECEIVED');
+    }
+
+    /**
+     * Performs an initial import (i.e. any previous data is lost)
+     */
     private importData(labels:Array<string>, data:RawTagValues):void {
         this.data = Immutable.List<PositionOptions>(data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
             let posOpts:PositionOptions = {
@@ -111,23 +159,44 @@ export class TagHelperStore extends util.SimplePageStore {
         return opt.values.some((item:PositionValue) => item.selected === true);
     }
 
+    /**
+     * Merges data from server (generated by the current tag pattern) with
+     * the current data. This actually means several things:
+     * 1) any unlocked block with selected items and different than the
+     *    current one is locked
+     * 2) any position option value not found in server response is made unavalilable
+     */
     private mergeData(data:UpdateTagValues, triggerRow:number):void {
-        this.data.forEach((item:PositionOptions, i:number) => {
+        this.data = this.data.map((item:PositionOptions, i:number) => {
+            let newItem:PositionOptions;
+
             if (!item.locked && this.hasSelectedItems(item) && i !== triggerRow) {
-                item.locked = true;
+                newItem = {
+                    label: item.label,
+                    values: item.values,
+                    locked: true
+                };
 
             } else if (i !== triggerRow && !item.locked) {
                 let tmp = Immutable.Map(data[i]);
-                item.values.forEach((item:PositionValue) => {
-                    if (tmp.get(item.id) === undefined) {
-                        item.available = false;
+                newItem = {
+                    label: item.label,
+                    values: item.values.map((v:PositionValue) => {
+                        return {
+                            id: v.id,
+                            title: v.title,
+                            selected: v.selected,
+                            available: tmp.get(v.id) === undefined ? false : true
+                        }
 
-                    } else if (item.available === false) {
-                        item.available = true;
-                    }
-                });
+                    }).toList(),
+                    locked: item.locked
+                };
+            } else {
+                newItem = item;
             }
-        });
+            return newItem;
+        }).toList();
     }
 
 
@@ -145,24 +214,42 @@ export class TagHelperStore extends util.SimplePageStore {
                     this.notifyChangeListeners('TAGHELPER_INITIAL_DATA_RECEIVED');
 
                 } else {
-                    console.log('err: ', data.messages.join(', ')); // TODO
+                    this.pluginApi.showMessage('error', data.messages.join(', '));
                 }
             },
             (err) => {
-                console.log('err: ', err);
-                // TODO
+                this.pluginApi.showMessage('error', err);
             }
         );
     }
 
+    /**
+     * Changes the 'checked' status of an item specified by a position and a value
+     * (.e.g. 2nd position (gender), F value (feminine))
+     */
     private updateSelectedItem(position:number, value:string, checked:boolean):void {
-        this.data.get(position).values
-                .filter((item:PositionValue) => item.id === value)
-                    .forEach((item:PositionValue) => item.selected = checked);
+        let oldPos = this.data.get(position);
+        let newPos:PositionOptions = {
+            label: oldPos.label,
+            values: oldPos.values.map((item:PositionValue) => {
+                return {
+                    id: item.id,
+                    title: item.title,
+                    selected: item.id === value ? true : item.selected,
+                    available: item.available
+                }
+            }).toList(),
+            locked: oldPos.locked
+        };
+        this.data = this.data.set(position, newPos);
     }
 
+    /**
+     * Update existing data from server based on the current
+     * tag pattern.
+     */
     private updateData(triggerRow:number):RSVP.Promise<any> {
-        let pattern:string = this.exportRegexp();
+        let pattern:string = this.getCurrentPattern();
         let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
@@ -175,24 +262,42 @@ export class TagHelperStore extends util.SimplePageStore {
                     this.mergeData(data.tags, triggerRow);
 
                 } else {
-                    console.log('err: ', data.messages.join(', ')); // TODO
+                    this.pluginApi.showMessage('error', data.messages.join(', '));
                 }
+                return data;
             },
             (err) => {
-                console.log('err: ', err);
-                // TODO
+                this.pluginApi.showMessage('error', err);
             }
         );
     }
 
-    private exportRegexp():string {
+    getCurrentPattern():string {
+        function exportPosition(v) {
+            if (v.size > 1) {
+                return '[' + v.join('') + ']';
+
+            } else if (v.size === 1) {
+                return v.join('');
+
+            } else {
+                return '.';
+            }
+        }
         return this.data.map<string>((item:PositionOptions) => {
-            let ans = item.values.filter((s:PositionValue) => s.selected)
-                    .map<string>((s:PositionValue) => s.id);
-            return ans.size > 0 ? '[' + ans.join('') + ']' : '-'
+            return exportPosition(item.values
+                    .filter((s:PositionValue) => s.selected)
+                        .map<string>((s:PositionValue) => s.id));
         }).join('');
     }
 
+    exportCurrentPattern():string {
+        return this.getCurrentPattern().replace(/\.\.+$/,  '.*');
+    }
+
+    /**
+     * Return options for a selected position (e.g. position 2: M, I, F, N, X)
+     */
     getOptions(position:number):PositionOptions {
         return this.data.get(position);
     }
@@ -201,6 +306,9 @@ export class TagHelperStore extends util.SimplePageStore {
         return this.data;
     }
 
+    /**
+     * Return an unique state identifier
+     */
     getStateId():string {
         return this.data.map<string>((item:PositionOptions) => {
             let ans = item.values.filter((s:PositionValue) => s.selected)
