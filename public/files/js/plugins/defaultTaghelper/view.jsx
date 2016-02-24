@@ -75,6 +75,7 @@
             mixins: mixins,
 
             _checkboxHandler : function (evt) {
+                this.setState({isChecked: !this.state.isChecked});
                 dispatcher.dispatch({
                     actionType: 'TAGHELPER_CHECKBOX_CHANGED',
                     props: {
@@ -90,6 +91,10 @@
                 tagHelperStore.removeChangeListener(this._changeListener);
             },
 
+            getInitialState : function () {
+                return {isChecked: this.props.data['selected']};
+            },
+
             render : function () {
                 let inputId = 'c_position_' + this.props.lineIdx + '_' + this.props.sublineIdx;
                 let label = this.props.data['title'] ?
@@ -99,7 +104,7 @@
                     <td className="checkbox-cell">
                         <input type="checkbox"
                                id={inputId}
-                               checked={this.props.data['selected']}
+                               checked={this.state.isChecked}
                                onChange={this._checkboxHandler}
                                disabled={this.props.isLocked ? true : false } />
                     </td>
