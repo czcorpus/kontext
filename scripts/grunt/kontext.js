@@ -30,7 +30,8 @@
             'query_storage' : 'queryStorage',
             'live_attributes' : 'liveAttributes',
             'corparch' : 'corparch',
-            'subcmixer': 'subcmixer'
+            'subcmixer': 'subcmixer',
+            'taghelper': 'taghelper'
         },
         merge = require('merge');
 
@@ -97,6 +98,7 @@
                 'vendor/rsvp' : 'vendor/rsvp.min',
                 'vendor/react': reactModule,
                 'vendor/react-dom': reactDomModule,
+                'vendor/immutable': 'vendor/immutable.min',
                 'vendor/d3': 'vendor/d3.min',
                 'SoundManager' : 'vendor/soundmanager2.min',
                 'vendor/jscrollpane' : 'vendor/jscrollpane.min'
@@ -109,6 +111,7 @@
             elms = doc.getElementsByTagName(p);
             if (elms[0]) {
                 jsElm = elms[0].getElementsByTagName('js_module');
+                console.log('jselm: ', jsElm[0].textContent);
                 pluginMap['plugins/' + jsModules[p]] = 'plugins/' + jsElm[0].textContent;
 
             } else {
@@ -130,6 +133,7 @@
                 'vendor/rsvp-ajax',
                 'vendor/react',
                 'vendor/react-dom',
+                'vendor/immutable',
                 'vendor/Dispatcher',
                 'SoundManager',
                 'vendor/typeahead',

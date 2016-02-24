@@ -20,17 +20,17 @@
 
 /// <reference path="../ts/declarations/jquery.d.ts" />
 /// <reference path="../ts/declarations/popupbox.d.ts" />
-/// <reference path="../ts/declarations/tagbuilder.d.ts" />
 /// <reference path="../ts/declarations/virtual-keyboard.d.ts" />
 /// <reference path="../ts/declarations/cookies.d.ts" />
 /// <reference path="../ts/declarations/common.d.ts" />
 /// <reference path="../ts/declarations/rsvp.d.ts" />
+/// <reference path="../ts/declarations/abstract-plugins.d.ts" />
 
 import $ = require('jquery');
 import win = require('win');
 import cookies = require('vendor/cookies');
 import popupBox = require('popupbox');
-import tagbuilder = require('tagbuilder');
+import tagbuilder = require('plugins/taghelper/init');
 import util = require('util');
 import virtKeyboard = require('vendor/virtual-keyboard');
 import RSVP = require('vendor/rsvp');
@@ -109,28 +109,30 @@ export class QueryFormTweaks {
      * @param {jQuery|HTMLElement|String} inputElm
      * @param {jQuery|HTMLElement|String} triggerElm
      */
-    bindTagHelper(inputElm:HTMLElement, triggerElm:HTMLElement):void {
+    bindTagHelper(inputElm:HTMLElement, triggerElm:HTMLElement, widgetId:number):void {
         let self = this;
+        let queryField:HTMLElement = $(triggerElm).closest('.query-area').find('.cql-input').get(0);
+        let insertCallback = (v:string) => {
+            let oldVal = $(queryField).val();
+            let tagVal = '[tag="' + v + '"]';
+            if (oldVal) {
+                $(queryField).val(oldVal + ' ' + tagVal);
 
-        tagbuilder.bindTextInputHelper(
-            this.pluginApi,
+            } else {
+                $(queryField).val(tagVal);
+            }
+        };
+        popupBox.bind(
             triggerElm,
+            tagbuilder.getPopupBoxRenderer(self.pluginApi, insertCallback, widgetId),
             {
-                inputElement: $(inputElm),
-                widgetElement: 'tag-widget',
-                modalWindowElement: 'tag-builder-modal',
-                insertTagButtonElement: 'insert-tag-button',
-                tagDisplayElement: 'tag-display',
-                resetButtonElement: 'reset-tag-button'
-            },
-            {
-                width: '556px',
-                useNamedCheckboxes: false,
-                allowMultipleOpenedBoxes: false
-            },
-            (message:string) => {
-                self.pluginApi.showMessage('error',
-                    message || self.pluginApi.translate('global__failed_to_contact_server'));
+                type: 'plain',
+                htmlClass: 'tag-builder-widget',
+                closeIcon: true,
+                timeout: null,
+                onClose: function () {
+                    self.pluginApi.unmountReactComponent(this.getRootElement());
+                }
             }
         );
     }
@@ -240,10 +242,10 @@ export class QueryFormTweaks {
      */
     bindQueryHelpers():void {
         let self = this;
-        $('.query-area .cql-input').each(function () {
+        $('.query-area .cql-input').each(function (i) {
             let blockWrapper = $(this).closest('td');
 
-            self.bindTagHelper(this, blockWrapper.find('.insert-tag a').get(0));
+            self.bindTagHelper(this, blockWrapper.find('.insert-tag a').get(0), i);
             self.bindWithinHelper(blockWrapper.find('li.within a').get(0));
         });
         this.initVirtualKeyboard($(this.formElm).find('tr:visible .spec-chars'));
