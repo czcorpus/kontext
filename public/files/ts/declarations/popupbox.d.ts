@@ -18,7 +18,7 @@
 
  /// <reference path="./jquery.d.ts" />
 
-declare module "popupbox" {
+declare module PopupBox {
 
     export interface Position {
         top: number;
@@ -88,4 +88,8 @@ declare module "popupbox" {
 
     export function close(elm: any); // TODO type
 
+}
+
+declare module "popupbox" {
+    export = PopupBox;
 }
