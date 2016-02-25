@@ -237,7 +237,7 @@ export class TagHelperStore extends util.SimplePageStore {
                 return {
                     id: item.id,
                     title: item.title,
-                    selected: item.id === value ? true : item.selected,
+                    selected: item.id === value ? checked : item.selected,
                     available: item.available
                 }
             }).toList(),
