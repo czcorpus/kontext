@@ -28,8 +28,26 @@
 
             mixins: mixins,
 
+            _changeListener : function (store, evt) {
+                if (evt === 'TAGHELPER_PATTERN_CHANGED') {
+                    this.setState({pattern: tagHelperStore.exportCurrentPattern()});
+                }
+            },
+
+            componentDidMount : function () {
+                tagHelperStore.addChangeListener(this._changeListener);
+            },
+
+            componentWillUnmount : function () {
+                tagHelperStore.removeChangeListener(this._changeListener);
+            },
+
+            getInitialState : function () {
+                return {pattern: this.props.tagValue};
+            },
+
             render : function () {
-                return <div id="tag-display" className="tag-display-box">{this.props.tagValue}</div>;
+                return <div id="tag-display" className="tag-display-box">{this.state.pattern}</div>;
             }
         });
 
