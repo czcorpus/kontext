@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #encoding UTF-8
 #from translation import ugettext as _
+#from templating.filters import *
 #from cmpltmpl.util.tt import tt
 #extends tt
 
@@ -76,7 +77,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
                 </ul>
                 <input type="text" id="iquery$suff" class="query spec-chars iquery-input #unless $suff#history #end unless#"
-                       name="iquery$suff" value="$getVar('iquery' + $suff, '')" />
+                       name="iquery$suff" value="#filter $HtmlEscape#$getVar('iquery' + $suff, '')#end filter#" />
             </div>
         </td>
     </tr>
@@ -90,12 +91,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <ul class="query-toolbox">
                     <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
                 </ul>
-                #if $q
-                <input type="text" name="lemma$suff" size="60" id="lemma$suff" class="query search lemma-input" />
-                #else
-                <input type="text" name="lemma$suff" value="$getVar('lemma' + $suff, '')" id="lemma$suff"
-                       class="query spec-chars lemma-input #unless $suff#history #end unless#" />
-                #end if
+                <input type="text" name="lemma$suff" size="60" id="lemma$suff"
+                       class="query search lemma-input" value="#filter $HtmlEscape#$getVar('lemma' + $suff, '')#end filter#" />
             </div>
 
             #if $Lposlist
@@ -121,7 +118,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <ul class="query-toolbox">
                     <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
                 </ul>
-                <input type="text" name="phrase$suff" value="$getVar('phrase' + $suff, '')" id="phrase$suff"
+                <input type="text" name="phrase$suff" value="#filter $HtmlEscape#$getVar('phrase' + $suff, '')#end filter#" id="phrase$suff"
                        class="query spec-chars phrase-input #unless $suff#history #end unless#" />
             </div>
             <div class="query-options">
@@ -140,7 +137,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <ul class="query-toolbox">
                     <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
                 </ul>
-                <input type="text" name="word$suff" value="$getVar('word' + $suff, '')" id="word$suff"
+                <input type="text" name="word$suff" value="#filter $HtmlEscape#$getVar('word' + $suff, '')#end filter#" id="word$suff"
                        class="query spec-chars word-input #unless $suff#history #end unless#" />
             </div>
             <div class="query-options">
@@ -169,7 +166,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <ul class="query-toolbox">
                     <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
                 </ul>
-                <input type="text" name="char$suff" value="$getVar('char' + $suff, '')" id="char$suff"
+                <input type="text" name="char$suff" value="#filter $HtmlEscape#$getVar('char' + $suff, '')#end filter#" id="char$suff"
                        class="query spec-chars char-input" />
             </div>
         </td>
@@ -205,7 +202,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     <li><a class="virtual-keyboard-trigger">$_('keyboard')</a></li>
                 </ul>
                 <textarea id="cql$suff" class="query #unless $suff#history #end unless#spec-chars cql-input"
-                          rows="2" cols="60" name="cql$suff">$getVar('cql' + $suff, '')</textarea>
+                          rows="2" cols="60" name="cql$suff">#filter $HtmlEscape#$getVar('cql' + $suff, '')#end filter#</textarea>
                 <div class="query-hints">
                 </div>
             </div>

@@ -828,7 +828,7 @@ class Controller(object):
         logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
-    def create_error_response(self, ex, action_name, request, pos_args, named_args):
+    def process_error(self, ex, action_name, request, pos_args, named_args):
         """
         arguments:
         ex -- a risen exception
@@ -898,7 +898,7 @@ class Controller(object):
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
         except Exception as ex:
-            return self.create_error_response(ex, methodname, request, pos_args, named_args)
+            return self.process_error(ex, methodname, request, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
         """
