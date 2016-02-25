@@ -838,13 +838,11 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     initNotifications() {
-        var self = this;
-
         this.renderReactComponent(
             this.layoutViews.Messages, $('#content .messages-mount').get(0));
 
-        $.each(this.conf['notifications'], function (i, msg) {
-            self.messageStore.addMessage(msg[0], msg[1], null);
+        (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
+            this.messageStore.addMessage(msg[0], msg[1], null);
         });
     }
 
