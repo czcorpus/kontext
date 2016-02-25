@@ -97,8 +97,8 @@ class AttrMappingProxy(AttrMappingInfoProxy):
         self._params = dict(self.get_params())
 
     def _is_semipersist_loadable(self, item):
-        return (self._params[item].meets_persistence(Parameter.SEMI_PERSISTENT)
-                and item in self._semi_persistent_data)
+        return (self._params[item].meets_persistence(Parameter.SEMI_PERSISTENT) and
+                item in self._semi_persistent_data)
 
     def __getattr__(self, item):
         if item not in self._params:
