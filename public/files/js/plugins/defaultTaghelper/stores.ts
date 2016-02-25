@@ -89,10 +89,11 @@ export class TagHelperStore extends util.SimplePageStore {
                         case 'TAGHELPER_CHECKBOX_CHANGED':
                             self.updateSelectedItem(payload.props['position'], payload.props['value'],
                                     payload.props['checked']);
+                            self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
                             self.updateData(payload.props['position']).then(
                                 (data) => {
                                     if (!data['containsErrors']) {
-                                        self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_RECEIVED');
+                                        self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
 
                                     } else {
                                         self.pluginApi.showMessage('error', data['messages'].join(', '));
@@ -105,6 +106,8 @@ export class TagHelperStore extends util.SimplePageStore {
                             break;
                         case 'TAGHELPER_RESET':
                             self.resetSelections();
+                            self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
+                            self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
                             break;
                         case 'TAGHELPER_INSERT_TAG':
                             self.notifyChangeListeners('TAGHELPER_INSERT_TAG_ACKOWLEDGED');
@@ -130,7 +133,6 @@ export class TagHelperStore extends util.SimplePageStore {
                 }).toList()
             };
         }).toList();
-        this.notifyChangeListeners('TAGHELPER_UPDATED_DATA_RECEIVED');
     }
 
     /**
