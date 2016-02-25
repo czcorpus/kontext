@@ -24,6 +24,8 @@
 
 /// <reference path="../../ts/declarations/common.d.ts" />
 /// <reference path="../../ts/declarations/abstract-plugins.d.ts" />
+/// <reference path="../../ts/declarations/modernizr.d.ts" />
+/// <reference path="../../ts/declarations/immutable.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -33,6 +35,8 @@ import queryInput = require('../queryInput');
 import queryStorage = require('plugins/queryStorage/init');
 import liveAttributes = require('plugins/liveAttributes/init');
 import conclines = require('conclines');
+import Immutable = require('vendor/immutable');
+declare var Modernizr:Modernizr.ModernizrStatic;
 
 
 export class FirstFormPage implements Kontext.CorpusSetupHandler {
@@ -283,7 +287,32 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                 fn.call(self, $(e.currentTarget).val());
             });
         });
-    };
+    }
+
+    private updateStateOnError():void {
+        let notifications:Array<any> = this.layoutModel.getConf<Array<any>>('notifications') || [];
+        if (Modernizr.history && notifications.length > 0) {
+            let args:string = Immutable.Map({
+                corpname: this.layoutModel.getConf<string>('corpname'),
+                usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
+                sel_aligned: this.layoutModel.getConf<Array<string>>('alignedCorpora'),
+            })
+            .filter((v:any, k) => typeof v === 'string'
+                    || v !== null && ('length' in v) && v.length > 0)
+            .map((v, k) => {
+                if (typeof v === 'object') {
+                    return Immutable.List(v).map(v2 => k + '=' + v2).join('&');
+
+                } else {
+                    return k + '=' + v;
+                }
+            }).join('&');
+            window.history.replaceState({}, window.document.title, '/first_form?' + args);
+            window.onunload = () => {
+                $('#mainform').find('input[type="text"], textarea').val('');
+            };
+        }
+    }
 
     init(conf:Kontext.Conf):layoutModule.InitActions {
         let queryFormTweaks = queryInput.init(this.layoutModel, this, this.layoutModel.userSettings,
@@ -304,7 +333,8 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             textareaHints : queryFormTweaks.textareaHints(),
             initQuerySwitching : queryFormTweaks.initQuerySwitching(),
             fixFormSubmit : queryFormTweaks.fixFormSubmit(),
-            bindQueryHelpers: queryFormTweaks.bindQueryHelpers()
+            bindQueryHelpers: queryFormTweaks.bindQueryHelpers(),
+            updateStateOnError: this.updateStateOnError()
         });
         promises.doAfter('liveAttributesInit', () => {
             queryFormTweaks.updateToggleableFieldsets();
