@@ -90,6 +90,7 @@ export class TagHelperStore extends util.SimplePageStore {
                             self.updateSelectedItem(payload.props['position'], payload.props['value'],
                                     payload.props['checked']);
                             self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
+                            self.notifyChangeListeners('TAGHELPER_WAITING_FOR_SERVER');
                             self.updateData(payload.props['position']).then(
                                 (data) => {
                                     if (!data['containsErrors']) {
