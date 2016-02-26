@@ -673,13 +673,6 @@ class Kontext(Controller):
             params['saveformat'] = save_format
         self.save_menu.append({'label': label, 'action': action, 'params': params})
 
-    def _reset_session_conc(self):
-        """
-        Resets information about current concordance user works with
-        """
-        if 'conc' in self._session:
-            del(self._session['conc'])
-
     def _export_subcorpora_list(self, corpname, out):
         """
         Updates passed dictionary by information about available sub-corpora.

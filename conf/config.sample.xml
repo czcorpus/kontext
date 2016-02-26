@@ -89,9 +89,9 @@
             <module>default_query_storage</module>
             <js_module>ucnkQueryStorage</js_module>
             <history_max_query_size>250</history_max_query_size>
-            <page_num_records extension-by="ucnk">10</page_num_records>
-            <page_append_records extension-by="ucnk">5</page_append_records>
-            <num_kept_records extension-by="default">10</num_kept_records>
+            <page_num_records extension-by="default">10</page_num_records>
+            <page_append_records>5</page_append_records>
+            <num_kept_records>10</num_kept_records>
         </query_storage>
         <conc_persistence>
             <module>default_conc_persistence</module>
