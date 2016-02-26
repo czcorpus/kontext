@@ -906,8 +906,7 @@ export class ViewPage {
         });
     }
 
-    init():void {
-        this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this));
+    private initLineSelection():void {
         this.lineSelectionStore.addOnReenableEdit(() => {
             $('#selection-mode-switch').attr('disabled', null);
             this.hasLockedGroups = false;
@@ -921,27 +920,38 @@ export class ViewPage {
             this.refreshSelection();
         }
         this.reinitSelectionMenuLink();
+    }
 
-        this.misc();
-        this.addWarnings();
-        this.initConcViewScrollbar();
-        if (this.layoutModel.getConf('anonymousUser')) {
-            this.anonymousUserWarning();
-        }
+    private updateLocalAlignedCorpora():void {
+        let serverSideAlignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
+        this.layoutModel.userSettings.set(documentModule.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
+    }
 
-        this.onBeforeUnloadAsk();
-        this.grantPaginationPageLeave();
-        this.soundManagerInit();
-        this.setStateUrl();
-        this.attachIpmCalcTrigger();
+    init():documentModule.InitActions {
+        return this.layoutModel.init().add({
+            addClearSelectionHandler : this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this)),
+            initLineSelection: this.initLineSelection(),
+            misc: this.misc(),
+            addWarnings: this.addWarnings(),
+            initConcViewScrollbar: this.initConcViewScrollbar(),
+            anonUserWarning: (() => {
+                if (this.layoutModel.getConf('anonymousUser')) {
+                    this.anonymousUserWarning();
+                }
+            })(),
+            onBeforeUnloadAsk: this.onBeforeUnloadAsk(),
+            grantPaginationPageLeave: this.grantPaginationPageLeave(),
+            soundManagerInit: this.soundManagerInit(),
+            setStateUrl: this.setStateUrl(),
+            attachIpmCalcTrigger: this.attachIpmCalcTrigger(),
+            updateLocalAlignedCorpora: this.updateLocalAlignedCorpora()
+        });
     }
 }
 
 
 export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
-    layoutModel.init();
-
     let lineSelectionStore = new concStores.LineSelectionStore(layoutModel,
             layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
     let views = concViews.init(layoutModel.dispatcher, layoutModel.exportMixins(),

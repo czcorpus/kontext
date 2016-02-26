@@ -41,8 +41,6 @@ declare var Modernizr:Modernizr.ModernizrStatic;
 
 export class FirstFormPage implements Kontext.CorpusSetupHandler {
 
-    static activeParallelCorporaSettingKey = 'active_parallel_corpora';
-
     private clStorage:conclines.ConcLinesStorage;
 
     private corplistComponent:CorpusArchive.Widget;
@@ -67,7 +65,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         this.onRemoveParallelCorpActions = [];
         this.onBeforeRemoveParallelCorpActions = [];
         this.onSubcorpChangeActions = [];
-        this.alignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
+        this.alignedCorpora = [];
         this.extendedApi = queryInput.extendedApi(this.layoutModel, this);
     }
 
@@ -177,7 +175,8 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
      * in case you want to call the handler manually.
      * @return {function} handler function
      */
-    createAddLanguageClickHandler(queryFormTweaks, forcedCorpusId?:string):()=>void {
+    createAddLanguageClickHandler(queryFormTweaks:queryInput.QueryFormTweaks,
+            forcedCorpusId?:string):()=>void {
         let self = this;
 
         return function () {
@@ -218,28 +217,23 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         };
     }
 
-    /**
-     * @todo rename/refactor this stuff
-     */
-    misc(queryFormTweaks):void {
+    private initCorplistComponent():void {
         this.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]').get(0),
             this.extendedApi,
             {formTarget: 'first_form', submitMethod: 'GET'}
         );
+    }
+
+    private initQuerySelector(queryFormTweaks):void {
         // initial query selector setting (just like when user changes it manually)
         queryFormTweaks.cmdSwitchQuery($('#queryselector').get(0), this.layoutModel.getConf('queryTypesHints'));
-
-        // open currently used languages for parallel corpora
-        this.getActiveParallelCorpora().forEach((item) => {
-            this.createAddLanguageClickHandler(queryFormTweaks, item)();
-        });
-    };
+    }
 
     /**
      *
      */
-    bindParallelCorporaCheckBoxes(queryFormTweaks):void {
+    private bindParallelCorporaCheckBoxes(queryFormTweaks):void {
         $('#add-searched-lang-widget').find('select')
             .prepend('<option value="" disabled="disabled">-- ' +
                 this.layoutModel.translate('global__add_aligned_corpus') +
@@ -254,7 +248,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         });
     }
 
-    makePrimaryButtons():void {
+    private makePrimaryButtons():void {
         let self = this;
         let queryForm = $('#mainform');
 
@@ -269,8 +263,14 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
 
             urlArgs = self.layoutModel.getConf('currentArgs'); // TODO possible mutability issues
             urlArgs['corpname'] = newPrimary;
-            urlArgs['sel_aligned'] = self.alignedCorpora;
 
+            let currAligned = self.layoutModel.userSettings.get<Array<string>>(layoutModule.UserSettings.ALIGNED_CORPORA_KEY) || [];
+            let idxActive = currAligned.indexOf(newPrimary);
+            if (idxActive > -1) {
+                currAligned[idxActive] = self.layoutModel.getConf<string>('corpname');
+                self.layoutModel.userSettings.set(
+                        layoutModule.UserSettings.ALIGNED_CORPORA_KEY, currAligned);
+            }
             window.location.href = self.layoutModel.createActionUrl(
                     'first_form?' + self.layoutModel.encodeURLParameters(urlArgs));
         });
@@ -279,13 +279,32 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
     /**
      *
      */
-    registerSubcorpChange():void {
+    private registerSubcorpChange():void {
         let self = this;
         $('#subcorp-selector').on('change', function (e) {
             // following code must be always the last action performed on the event
             self.onSubcorpChangeActions.forEach((fn) => {
                 fn.call(self, $(e.currentTarget).val());
             });
+        });
+    }
+
+    private registerAlignedCorpChange():void {
+        function findActiveAlignedCorpora() {
+            let ans = [];
+            $('#mainform').find('fieldset.parallel .parallel-corp-lang:visible').each((i, elm) => {
+                ans.push($(elm).attr('data-corpus-id'));
+            });
+            return ans;
+        }
+        let key = layoutModule.UserSettings.ALIGNED_CORPORA_KEY;
+
+        this.registerOnAddParallelCorpAction((corpname:string) => {
+            this.layoutModel.userSettings.set(key, findActiveAlignedCorpora());
+        });
+
+        this.registerOnRemoveParallelCorpAction((corpname:string) => {
+            this.layoutModel.userSettings.set(key, findActiveAlignedCorpora());
         });
     }
 
@@ -314,14 +333,32 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         }
     }
 
+    private restoreAlignedCorpora(queryFormTweaks:queryInput.QueryFormTweaks):void {
+        let localAlignedCorpora = this.layoutModel.userSettings.get<Array<string>>(
+                layoutModule.UserSettings.ALIGNED_CORPORA_KEY);
+
+        if (localAlignedCorpora !== undefined) {
+            this.alignedCorpora = localAlignedCorpora;
+
+        } else {
+            this.alignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
+            this.layoutModel.userSettings.set(layoutModule.UserSettings.ALIGNED_CORPORA_KEY, this.alignedCorpora);
+        }
+        this.alignedCorpora.forEach((item) => {
+            this.createAddLanguageClickHandler(queryFormTweaks, item)();
+        });
+    }
+
     init(conf:Kontext.Conf):layoutModule.InitActions {
         let queryFormTweaks = queryInput.init(this.layoutModel, this, this.layoutModel.userSettings,
                 $('#mainform').get(0));
         let promises = this.layoutModel.init().add({
-            misc : this.misc(queryFormTweaks),
+            initQuerySelector : this.initQuerySelector(queryFormTweaks),
             bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button')),
             bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
             bindParallelCorporaCheckBoxes : this.bindParallelCorporaCheckBoxes(queryFormTweaks),
+            restoreAlignedCorpora: this.restoreAlignedCorpora(queryFormTweaks),
+            initCorplistComponent: this.initCorplistComponent(),
             makePrimaryButtons : this.makePrimaryButtons(),
             queryStorageInit : queryStorage.createInstance(this.layoutModel.pluginApi()),
             liveAttributesInit : liveAttributes.init(this.extendedApi, conf,
@@ -329,6 +366,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                     window.document.getElementById('live-attrs-reset'),
                     $('.text-type-params').get(0)),
             registerSubcorpChange : this.registerSubcorpChange(),
+            registerAlignedCorpChange: this.registerAlignedCorpChange(),
             textareaSubmitOverride : queryFormTweaks.textareaSubmitOverride(),
             textareaHints : queryFormTweaks.textareaHints(),
             initQuerySwitching : queryFormTweaks.initQuerySwitching(),
