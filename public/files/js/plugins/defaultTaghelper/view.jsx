@@ -254,19 +254,29 @@
             mixins: mixins,
 
             _changeListener : function (store, action) {
-                this.setState(React.addons.update(this.state, {
-                    positions: {$set: store.getPositions()},
-                    stateId: {$set: store.getStateId()},
-                    tagValue: {$set: store.exportCurrentPattern()}
-                }));
                 if (action === 'TAGHELPER_INSERT_TAG_ACKOWLEDGED' &&
                         typeof this.props.insertCallback === 'function') {
                     this.props.insertCallback(store.exportCurrentPattern());
+
+                } else if (action === 'TAGHELPER_WAITING_FOR_SERVER') {
+                    this.setState(React.addons.update(this.state, {
+                        isWaiting: {$set: true}
+                    }));
+
+                } else if (action === 'TAGHELPER_UPDATED_DATA_CHANGED' ||
+                        action === 'TAGHELPER_INITIAL_DATA_RECEIVED') {
+                    this.setState(React.addons.update(this.state, {
+                        isWaiting: {$set: false},
+                        positions: {$set: store.getPositions()},
+                        stateId: {$set: store.getStateId()},
+                        tagValue: {$set: store.exportCurrentPattern()}
+                    }));
                 }
             },
 
             getInitialState: function () {
                 return {
+                    isWaiting: true,
                     positions: [],
                     stateId: '',
                     tagValue: this.props.initialTagValue
@@ -296,6 +306,11 @@
             render : function () {
                 return <div>
                     <h3>{this.translate('taghelper__create_tag_heading')}</h3>
+                    {
+                        this.state.isWaiting ?
+                        <img className="loader" src={this.createStaticUrl('img/ajax-loader.gif')} /> :
+                        null
+                    }
                     <div className="tag-header">
                         <TagDisplay tagValue={this.state.tagValue} />
                         <TagButtons widgetId={this.props.widgetId} />
