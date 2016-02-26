@@ -45,6 +45,12 @@ declare module Kontext {
         recovery_until:any; // TODO
     }
 
+    export interface IUserSettings {
+        get<T>(key:string):T;
+        set(key:string, value):void;
+        init():void;
+    }
+
     /**
      * Specifies a configuration object generated at runtime
      */
@@ -95,6 +101,7 @@ declare module Kontext {
         getStores():Kontext.LayoutStores;
         getViews():Kontext.LayoutViews;
         getPlugin<T extends Kontext.Plugin>(name:string):T;
+        getUserSettings():Kontext.IUserSettings;
     }
 
     export interface CorpusSetupHandler {
