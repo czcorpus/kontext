@@ -264,7 +264,6 @@ class Actions(Kontext):
             self._store_checked_text_types(request.args, out)
         else:
             self._store_checked_text_types(request.form, out)
-        self._reset_session_conc()
         self._restore_aligned_forms()
 
         if self._corp().get_conf('ALIGNED'):
@@ -1183,7 +1182,6 @@ class Actions(Kontext):
         """
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
-        self._reset_session_conc()
         out = {}
         if not ref_corpname:
             ref_corpname = self.args.corpname
