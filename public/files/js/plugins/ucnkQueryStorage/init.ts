@@ -179,7 +179,7 @@ export class QueryHistory {
                 self.close();
 
             } else if (event.keyCode === 40 && self.inputVisible()
-                && !self.isActive() && self.inputHasFocus()) {
+                && !self.isActive() && self.inputHasFocus()) { // DOWN arrow
                 self.popup();
             }
         });
