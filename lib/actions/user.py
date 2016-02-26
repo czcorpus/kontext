@@ -125,8 +125,7 @@ class User(Kontext):
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.SAVE,
                                     MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS)
-        self._reset_session_conc()  # TODO in case user returns using back button, this may produce UX problems
-        num_records = int(settings.get('plugins', 'query_storage').get('ucnk:page_num_records', 0))
+        num_records = int(settings.get('plugins', 'query_storage').get('page_num_records', 0))
 
         if not offset:
             offset = 0
@@ -141,7 +140,7 @@ class User(Kontext):
             'offset': offset,
             'limit': limit,
             'page_num_records': num_records,
-            'page_append_records': settings.get('plugins', 'query_storage').get('ucnk:page_append_records', 0)
+            'page_append_records': settings.get('plugins', 'query_storage').get('page_append_records', 0)
         }
 
     @exposed(access_level=1, return_type='json', legacy=True)

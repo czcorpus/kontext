@@ -133,7 +133,6 @@ class Subcorpus(Kontext):
         Displays a form to create a new subcorpus
         """
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
-        self._reset_session_conc()
         method = request.form.get('method', 'gui')
         within_json = request.form.get('within_json', 'null')
         subcname = request.form.get('subcname', None)

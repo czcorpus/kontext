@@ -50,7 +50,7 @@ class QueryStorage(AbstractQueryStorage):
         conf -- the 'settings' module (or some compatible object)
         db -- default_db storage backend
         """
-        tmp = conf.get('plugins', 'query_storage').get('defalt:num_kept_records', None)
+        tmp = conf.get('plugins', 'query_storage').get('default:num_kept_records', None)
         self.num_kept_records = int(tmp) if tmp else 10
         self.db = db
 
