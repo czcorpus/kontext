@@ -383,23 +383,20 @@ export class QueryHistory {
      *
      */
     render(): void {
-        var frame = this.calcSizeAndPosition(this.inputElm.get(0)),
-            html;
-
-        html = '<ol class="rows"></ol>'
+        let frame = this.calcSizeAndPosition(this.inputElm.get(0));
+        let html = '<ol class="rows"></ol>'
             + '<div class="footer">'
             + '<label class="filter-current">'
             + this.pluginApi.translate('ucnkQS__only_current_corpus')
             + '<input class="filter-checkbox" type="checkbox" /></label>'
             + '</div>';
 
-        this.boxElm = $('<div>');
+        this.boxElm = $(window.document.createElement('div'));
         this.boxElm.addClass('history-widget');
         $(this.parentElm).append(this.boxElm);
         this.boxElm.css({
             position : 'absolute',
             left : frame.left,
-            top : frame.top + frame.height,
             width : frame.width
         });
         this.boxElm.html(html);

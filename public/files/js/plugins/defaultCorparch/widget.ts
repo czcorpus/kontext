@@ -20,11 +20,11 @@
 /// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
+/// <reference path="../../common/plugins/corparch.ts" />
 
 import $ = require('jquery');
 import common = require('./common');
 import popupBox = require('popupbox');
-
 
 /**
  *
@@ -1361,6 +1361,7 @@ export class Corplist implements CorpusArchive.Widget {
                 this.options.itemClickAction.call(this, itemId, itemName, href);
 
             } else {
+                this.pageModel.getUserSettings().set('active_parallel_corpora', undefined);
                 window.location.href = href;
             }
         };

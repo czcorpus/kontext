@@ -1368,6 +1368,10 @@ export class PluginApi implements Kontext.PluginApi {
     getPlugin<T extends Kontext.Plugin>(name:string) {
         return this.pageModel.getPlugin<T>(name);
     }
+
+    getUserSettings():Kontext.IUserSettings {
+        return this.pageModel.userSettings;
+    }
 }
 
 /**
@@ -1468,8 +1472,9 @@ export class InitActions {
 /**
  * Local user settings
  */
-export class UserSettings {
+export class UserSettings implements Kontext.IUserSettings {
 
+    static ALIGNED_CORPORA_KEY = 'active_parallel_corpora';
 
     storage:Storage;
 
@@ -1490,33 +1495,32 @@ export class UserSettings {
     }
 
 
-    getTimstamp():number {
+    private getTimstamp():number {
         return new Date().getTime() / 1000;
     }
 
-    dataIsRecent(data) {
+    private dataIsRecent(data) {
         return !data[this.timestampKey] || data[this.timestampKey]
             && ( (new Date().getTime() / 1000 - data[this.timestampKey]) < this.uiStateTTL);
     }
 
-    dumpToStorage() {
+    private dumpToStorage() {
         this.data[this.timestampKey] = this.getTimstamp();
         this.storage.setItem(this.storageKey, JSON.stringify(this.data));
     }
 
-    get(key) {
+    get<T>(key:string):T {
         return this.data[key];
     }
 
-    set(key, value) {
+    set(key:string, value):void {
         this.data[key] = value;
         this.dumpToStorage();
     }
 
-    init() {
-        var tmp;
-        if (this.storage.getItem(this.storageKey)) {
-            tmp = JSON.parse(this.storage.getItem(this.storageKey));
+    init():void {
+        if (this.storageKey in this.storage) {
+            let tmp = JSON.parse(this.storage.getItem(this.storageKey));
             if (this.dataIsRecent(tmp)) {
                 this.data = tmp;
             }

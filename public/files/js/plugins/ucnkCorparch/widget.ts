@@ -1367,6 +1367,7 @@ export class Corplist implements CorpusArchive.Widget {
                 this.options.itemClickAction.call(this, itemId, itemName, href);
 
             } else {
+                this.pageModel.getUserSettings().set('active_parallel_corpora', undefined);
                 window.location.href = href;
             }
         };
