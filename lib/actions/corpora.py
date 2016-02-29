@@ -12,6 +12,7 @@
 
 import logging
 from functools import partial
+from collections import defaultdict
 
 from controller import exposed
 from kontext import Kontext
@@ -85,14 +86,16 @@ class Corpora(Kontext):
     @exposed(return_type='json', legacy=True)
     def ajax_get_structs_details(self):
         """
+        Provides a map (struct_name=>[list of attributes]). This is used
+        by 'insert within' widget.
         """
-        ans = {}
+        speech_segment = plugins.get('corparch').get_corpus_info(self.args.corpname).speech_segment
+        ans = defaultdict(lambda: [])
         for item in self._corp().get_conf('STRUCTATTRLIST').split(','):
-            k, v = item.split('.')
-            if k not in ans:
-                ans[k] = []
-            ans[k].append(v)
-        return ans
+            if item != speech_segment:
+                k, v = item.split('.')
+                ans[k].append(v)
+        return dict((k, v) for k, v in ans.items() if len(v) > 0)
 
     @exposed(return_type='json', legacy=True)
     def bibliography(self, id=''):
