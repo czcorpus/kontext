@@ -288,7 +288,6 @@ class GlobalArgs(GeneralArgs):
     Keywords = Parameter([])
     ref_corpname = Parameter(u'')
     Items = Parameter([])  # TODO check and remove
-    format = Parameter(u'')
     selected = Parameter(u'')
     pages = Parameter(0)
     leftctx = Parameter(u'')
