@@ -699,6 +699,8 @@ class Controller(object):
         if type(result) is dict:
             result['messages'] = self._system_messages
             result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
+        if self._request.args.get('format') == 'json':
+            action_metadata['return_type'] = 'json'
 
     @staticmethod
     def _method_is_exposed(metadata):
@@ -759,12 +761,11 @@ class Controller(object):
                 return True
         return False
 
-    def run(self, request, path=None, selectorname=None):
+    def run(self, path=None, selectorname=None):
         """
         This method wraps all the processing of an HTTP request.
 
         arguments:
-        request -- Werkzeug request object
         path -- path part of URL
         selectorname -- ???
 
@@ -783,20 +784,20 @@ class Controller(object):
                 path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args,
                                                                     action_metadata)
                 self._pre_action_validate()
-                methodname, tmpl, result = self.process_method(path[0], request, path, named_args)
+                methodname, tmpl, result = self.process_method(path[0], path, named_args)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
 
         except AuthException as ex:
             self._status = 401
             self.add_system_message('error', u'%s' % fetch_exception_msg(ex))
-            methodname, tmpl, result = self.process_method('message', request, path, named_args)
+            methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except (UserActionException, RuntimeError) as ex:
             if hasattr(ex, 'code'):
                 self._status = ex.code
             self.add_system_message('error', fetch_exception_msg(ex))
-            methodname, tmpl, result = self.process_method('message', request, path, named_args)
+            methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except Exception as ex:  # we assume that this means some kind of a fatal error
             self._status = 500
@@ -807,7 +808,7 @@ class Controller(object):
                 self.add_system_message('error',
                                         _('Failed to process your request. '
                                           'Please try again later or contact system support.'))
-            methodname, tmpl, result = self.process_method('message', request, path, named_args)
+            methodname, tmpl, result = self.process_method('message', path, named_args)
         # Let's test whether process_method actually invoked requested method.
         # If not (e.g. there was an error and a fallback has been used) then reload action metadata
         if methodname != path[0]:
@@ -828,12 +829,11 @@ class Controller(object):
         logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
-    def process_error(self, ex, action_name, request, pos_args, named_args):
+    def process_error(self, ex, action_name, pos_args, named_args):
         """
         arguments:
         ex -- a risen exception
         action_name -- a name of the original processed method
-        request -- a request object
         pos_args -- positional arguments of the action method
         named_args -- key=>value arguments of the action method
         """
@@ -862,9 +862,9 @@ class Controller(object):
             self._pre_dispatch(self._exceptmethod, None, named_args,
                                self._get_method_metadata(self._exceptmethod))
             em, self._exceptmethod = self._exceptmethod, None
-            return self.process_method(em, request, pos_args, named_args)
+            return self.process_method(em, pos_args, named_args)
 
-    def process_method(self, methodname, request, pos_args, named_args):
+    def process_method(self, methodname, pos_args, named_args):
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
@@ -886,19 +886,19 @@ class Controller(object):
             if methodname != 'subcorp':
                 reload_template = methodname + '_form'
                 if self.is_template(reload_template):
-                    return self.process_method(reload_template, request, pos_args, named_args)
+                    return self.process_method(reload_template, pos_args, named_args)
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
             if not action_metadata.get('legacy', False):
                 # new-style actions use werkzeug.wrappers.Request
-                args = [request] + self._args_mappings.values()
+                args = [self._request] + self._args_mappings.values()
                 method_ans = method(*args)
             else:
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
         except Exception as ex:
-            return self.process_error(ex, methodname, request, pos_args, named_args)
+            return self.process_error(ex, methodname, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
         """

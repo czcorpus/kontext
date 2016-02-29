@@ -147,7 +147,7 @@ class MaintenanceApp(object):
         l10n.activate(ui_lang)
         request = Request(environ)
         app = MaintenanceController(request=request, ui_lang=ui_lang)
-        status, headers, sid_is_valid, body = app.run(request)
+        status, headers, sid_is_valid, body = app.run()
         response = Response(response=body, status=status, headers=headers)
         return response(environ, start_response)
 
@@ -200,7 +200,7 @@ class App(object):
         else:
             controller_class = load_controller_class(environ['PATH_INFO'])
             app = controller_class(request=request, ui_lang=ui_lang)
-            status, headers, sid_is_valid, body = app.run(request)
+            status, headers, sid_is_valid, body = app.run()
         response = Response(response=body, status=status, headers=headers)
         if not sid_is_valid:
             curr_data = dict(request.session)
