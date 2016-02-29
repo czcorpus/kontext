@@ -195,7 +195,7 @@ class Kwic(object):
         """
         def create_empty_cell():
             return {'rightsize': 0, 'hitlen': ';hitlen=9', 'Right': [], 'Kwic': [], 'linegroup': '_', 'leftsize': 0,
-                    'ref': '', 'rightspace': '', 'leftspace': '', 'Tbl_refs': [], 'kwiclen': 0, 'toknum': None,
+                    'ref': '', 'rightspace': '', 'leftspace': '', 'kwiclen': 0, 'toknum': None,
                     'Left': []}
 
         def fix_length(arr, length):
@@ -463,7 +463,6 @@ class Kwic(object):
                              hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
                              kwiclen=kl.get_kwiclen(),
                              ref=self.import_string(kl.get_refs()),
-                             Tbl_refs=list(kl.get_ref_list()),
                              Kwic=kwicwords,
                              linegroup=linegroup,
                              leftsize=leftsize,
