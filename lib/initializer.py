@@ -87,4 +87,6 @@ def setup_plugins():
     init_plugin('live_attributes', optional=True)
     init_plugin('subc_restore', optional=True)
     init_plugin('taghelper', optional=True)
+    init_plugin('syntax_viewer', optional=True)
     init_plugin('subcmixer', optional=True)
+
