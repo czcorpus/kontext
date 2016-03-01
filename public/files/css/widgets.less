@@ -374,7 +374,9 @@ table.corplist td img.starred {
     box-shadow: 5px 5px 7px #aaa;
     padding: 12px;
     color: #444444;
-
+    .header {
+        padding-bottom: 0.4em;
+    }
     h3 {
         margin-top: 0;
     }
@@ -403,6 +405,18 @@ table.corplist td img.starred {
     }
     a.close-link:hover {
         background-image: url(../img/close-icon_s.svg);
+    }
+    div.movable {
+        position: absolute;
+        left: 0.4em;
+        top: 0.4em;
+        padding: 0.1em;
+        width: 1em;
+        height: 1em;
+        background-image: url(../img/movable.svg);
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        cursor: move;
     }
 }
 .tooltip-box.hidden {
