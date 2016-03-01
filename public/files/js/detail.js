@@ -140,6 +140,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     calculatePosition : false,
                     closeIcon : true,
                     timeout : null,
+                    movable: true,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');
                         lib.currentDetail = null;
@@ -214,13 +215,13 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 } else {
                     $('#conclines tr.prev-active').removeClass('prev-active').addClass('active');
                 }
-
-                lib.currentDetail = popupBox.open(data, null, {
+                lib.currentDetail = popupBox.extended(layoutModel.pluginApi()).open(data, null, {
                     type : 'plain',
                     domId : 'detail-frame',
                     calculatePosition : false,
                     closeIcon : true,
                     timeout : null,
+                    movable: true,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active').addClass('prev-active');
                         lib.currentDetail = null;

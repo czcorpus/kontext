@@ -1,0 +1,98 @@
+/*
+ * Copyright (c) 2016 Institute of the Czech National Corpus
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+/// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../../ts/declarations/common.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../../ts/declarations/popupbox.d.ts" />
+/// <reference path="./js-treex-view.d.ts" />
+/// <amd-dependency path="./js-treex-view" />
+
+import $ = require('jquery');
+import RSVP = require('vendor/rsvp');
+import popupbox = require('popupbox');
+declare var treexView:JQuery;
+
+
+class SyntaxTreeViewer {
+
+    private pluginApi:Kontext.PluginApi;
+
+    constructor(pluginApi:Kontext.PluginApi) {
+        this.pluginApi = pluginApi;
+    }
+
+    private createRenderFunction(tokenId):(box:popupbox.TooltipBox, finalize:()=>void)=>void {
+        return (box:popupbox.TooltipBox, finalize:()=>void) => {
+            this.pluginApi.ajax(
+                'GET',
+                this.pluginApi.createActionUrl('get_syntax_data'),
+                {
+                    corpname: this.pluginApi.getConf('corpname'),
+                    kwic_id: tokenId
+                },
+                {contentType : 'application/x-www-form-urlencoded'}
+
+            ).then(
+                (data) => {
+                    let treexFrame = window.document.createElement('div');
+                    $(box.getContentElement()).append(treexFrame);
+                    finalize();
+                    $(treexFrame).treexView(data); // this must be run after finalize
+                },
+                (error) => {
+                    finalize();
+                    box.close();
+                    this.pluginApi.showMessage('error', error);
+                }
+            );
+        };
+    }
+
+    private createActionButton(tokenId:string):HTMLElement {
+        let button = window.document.createElement('img');
+        $(button)
+            .attr('src', this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/lindat.pmltq.logo.png'))
+            .attr('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'));
+        popupbox.bind(
+            button,
+            this.createRenderFunction(tokenId),
+            {
+                type: 'plain',
+                closeIcon: true,
+                movable: true,
+                timeout: null
+            }
+        );
+        return button;
+    }
+
+    init():void {
+        $('#conclines').find('td.syntax-tree').each((i, elm:HTMLElement) => {
+            let trElm = $(elm).closest('tr');
+            if (trElm.attr('data-toknum')) {
+                $(elm).append(this.createActionButton(trElm.attr('data-toknum'))).show();
+            }
+        });
+    }
+}
+
+export function init(pluginApi:Kontext.PluginApi):void {
+    let viewer = new SyntaxTreeViewer(pluginApi);
+    viewer.init();
+}

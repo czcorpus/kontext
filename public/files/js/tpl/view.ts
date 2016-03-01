@@ -43,6 +43,7 @@ import concViews = require('views/concordance');
 import concStores = require('stores/concordance');
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
+import syntaxViewer = require('plugins/syntaxViewer/init');
 declare var Modernizr:Modernizr.ModernizrStatic;
 declare var jqueryPeriodic:any;
 
@@ -944,7 +945,8 @@ export class ViewPage {
             soundManagerInit: this.soundManagerInit(),
             setStateUrl: this.setStateUrl(),
             attachIpmCalcTrigger: this.attachIpmCalcTrigger(),
-            updateLocalAlignedCorpora: this.updateLocalAlignedCorpora()
+            updateLocalAlignedCorpora: this.updateLocalAlignedCorpora(),
+            syntaxViewer: syntaxViewer.init(this.layoutModel.pluginApi())
         });
     }
 }
