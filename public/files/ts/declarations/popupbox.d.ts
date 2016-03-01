@@ -17,6 +17,7 @@
  */
 
  /// <reference path="./jquery.d.ts" />
+ /// <reference path="./common.d.ts" />
 
 declare module PopupBox {
 
@@ -42,10 +43,8 @@ declare module PopupBox {
         domId?: string;
         htmlClass?: string;
         calculatePosition?: boolean;
-        messages?: {[key:string]: string};
-        translator?:(s:string)=>string;
+        movable?: boolean;
     }
-
 
     /**
      *
@@ -73,7 +72,15 @@ declare module PopupBox {
         toString(): string;
     }
 
-    // type ContentProvider: function | string;
+    export interface Api {
+        open(contents: any, position: Position, options: Options);
+        bind(elm: HTMLElement, contents: any, options: Options);
+        bind(query: string, contents: any, options: Options);
+        bind(query: JQuery, contents: any, options: Options);
+        abbr(context?: any); // TODO type
+        hasAttachedPopupBox(elm: any); // TODO type
+        close(elm: any); // TODO type
+    }
 
 
     export function open(contents: any, position: Position, options: Options);
@@ -81,6 +88,14 @@ declare module PopupBox {
     export function bind(elm: HTMLElement, contents: any, options: Options);
     export function bind(query: string, contents: any, options: Options);
     export function bind(query: JQuery, contents: any, options: Options);
+
+    /**
+     * Gives the library an access to some useful functions like
+     * URL generator and message translations. The function returns
+     * an object providing the same functions as the original lib
+     * (bind, open,...).
+     */
+    export function extended(mixins:Kontext.PluginApi):Api;
 
     export function abbr(context?: any); // TODO type
 

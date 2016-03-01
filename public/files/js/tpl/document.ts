@@ -623,7 +623,7 @@ export class PageModel implements Kontext.PluginProvider {
                         leftPos;
 
                     if (data.Desc) {
-                        box = popupbox.open(
+                        box = popupbox.extended(self.pluginApi()).open(
                             function (box2, finalize) {
                                 self.renderOverview(data, box2);
                                 finalize();
@@ -635,8 +635,7 @@ export class PageModel implements Kontext.PluginProvider {
                                 htmlClass: 'query-overview',
                                 closeIcon: true,
                                 calculatePosition: false,
-                                timeout: null,
-                                translator: self.translate.bind(self)
+                                timeout: null
                             }
                         );
                         leftPos = $(window).width() / 2 - box.getPosition().width / 2;
@@ -716,7 +715,7 @@ export class PageModel implements Kontext.PluginProvider {
         var self = this,
             jqDescLink = $('#corpus-desc-link');
 
-        popupbox.bind(jqDescLink,
+        popupbox.extended(self.pluginApi()).bind(jqDescLink,
             function (box, finalize) {
                 var actionRegId;
 
@@ -733,7 +732,6 @@ export class PageModel implements Kontext.PluginProvider {
             {
                 width: 'nice',
                 closeIcon: true,
-                translator: self.translate.bind(self),
                 type: 'plain',
                 timeout: 0,
                 onClose: function () {
@@ -805,8 +803,11 @@ export class PageModel implements Kontext.PluginProvider {
         var self = this,
             citationHtml = $('#corpus-citation-box').html();
 
-        popupbox.bind($('#positions-help-link'), self.translate('global__what_are_positions'),
-            {translator: self.translate.bind(self), width: '30%'});
+        popupbox.extended(this.pluginApi()).bind(
+            $('#positions-help-link'),
+            self.translate('global__what_are_positions'),
+            {width: '30%'}
+        );
 
         // 'Select all' buttons for structural attribute lists
         $('table.envelope input[class="select-all"]').each(function () {

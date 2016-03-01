@@ -19,15 +19,18 @@
 define(['win', 'jquery'], function (win, $) {
     'use strict';
 
-    var lib = {},
-        fetchOptionFunc;
+    var lib = {};
+    var mixins = {
+        createStaticUrl : function (s) { return '../files'; },
+        translate: function (s, values) { return s; }
+    };
 
     /**
      *
      * @param opts
      * @returns {Function}
      */
-    fetchOptionFunc = function (opts) {
+    function fetchOptionFunc(opts) {
         opts = opts || {};
         /**
          * @param {String} name
@@ -44,7 +47,7 @@ define(['win', 'jquery'], function (win, $) {
             }
             return ans;
         };
-    };
+    }
 
     /**
      * @constructor
@@ -186,10 +189,10 @@ define(['win', 'jquery'], function (win, $) {
      */
     TooltipBox.prototype.mapTypeToIcon = function (type) {
         var ans = {
-            info : "../files/img/info-icon.svg",
-            message : "../files/img/message-icon.png",
-            warning : "../files/img/warning-icon.svg",
-            error : "../files/img/error-icon.svg",
+            info : mixins.createStaticUrl('img/info-icon.svg'),
+            message : mixins.createStaticUrl('img/message-icon.png'),
+            warning : mixins.createStaticUrl('img/warning-icon.svg'),
+            error : mixins.createStaticUrl('img/error-icon.svg'),
             plain : null
         }[type];
 
@@ -249,24 +252,36 @@ define(['win', 'jquery'], function (win, $) {
         }
     };
 
-    /**
-     * @typedef {object} PopupBoxOptions
-     * @property {number} options.width
-     * @property {number} options.height
-     * @property {number} options.fontSize
-     * @property {number} options.timeout
-     * @property {string} options.type (info, warning, error, plain)
-     * @property {boolean} options.closeIcon if true then the box can be closed only by the ESC key and special closing icon
-     * @property {function} options.onClose
-     * @property {function} options.beforeOpen
-     * @property {function} options.onShow
-     * @property {function} options.onError
-     * @property {function} options.domId
-     * @property {string} options.htmlClass
-     * @property {boolean} options.calculatePosition
-     * @property {boolean} options.expandLeft
-     * @property {{}} options.translator a function fn(message, vals?) able to translate messages
-     */
+    TooltipBox.prototype._makeBoxMovable = function () {
+        var self = this;
+        function mkMouseMoveHandler(deltaX, deltaY) {
+            return function mouseMove(evt) {
+                $(self.rootElm).css({
+                    position: 'absolute',
+                    top: (evt.pageY + deltaY) + 'px',
+                    left: (evt.pageX + deltaX) + 'px'
+                });
+            };
+        }
+        var moveArea = window.document.createElement('div');
+        $(moveArea)
+            .addClass('movable')
+            .attr('title', mixins.translate('global__click_and_hold_to_move'));
+        $(this.headerElm).append(moveArea);
+        $(moveArea)
+            .on('mousedown', function (e) {
+                var pos = $(self.rootElm).offset();
+                var deltaX = pos.left - e.pageX;
+                var deltaY = pos.top - e.pageY;
+                var moveHandler = mkMouseMoveHandler(deltaX, deltaY);
+                $(self.rootElm).css('height', $(self.rootElm).height() + 'px');
+                $(window).on('mousemove', moveHandler);
+                $(window).on('mouseup.popupbox', function () {
+                    $(window).off('mousemove', moveHandler);
+                    $(window).off('mouseup.popupbox');
+                });
+            });
+    };
 
     /**
      *
@@ -303,19 +318,23 @@ define(['win', 'jquery'], function (win, $) {
             }
         };
 
-        this.translator = fetchOption('translator', function (s) { return s; });
-
         this.rootElm = win.document.createElement('div');
         $(this.rootElm).addClass('tooltip-box').hide();
 
         this.headerElm = win.document.createElement('div');
+        $(this.headerElm).addClass('header');
         $(this.rootElm).append(this.headerElm);
+
+        if (fetchOption('movable', false)) {
+            this._makeBoxMovable();
+        }
 
         this.contentElm = win.document.createElement('div');
         $(this.rootElm).append(this.contentElm);
 
         if (fetchOption('closeIcon', false)) {
-            this.jqCloseIcon = $('<a class="close-link" title="' + this.translator('close') + '"></a>');
+            this.jqCloseIcon = $('<a class="close-link" title="' +
+                    mixins.translate('close') + '"></a>');
             $(this.rootElm).addClass('framed');
         }
         if (boxId) {
@@ -531,7 +550,9 @@ define(['win', 'jquery'], function (win, $) {
                 $(this).css('border', 'none');
                 supElm = $(win.document.createElement('sup'));
                 $(this).after(supElm);
-                linkElm = $('<a class="context-help"><img class="over-img" src="../files/img/question-mark.svg" data-alt-img="../files/img/question-mark_s.svg" /></a>');
+                linkElm = $('<a class="context-help"><img class="over-img" ' +
+                    'src="' + mixins.createStaticUrl('img/question-mark.svg') + '" ' +
+                    'data-alt-img="' + mixins.createStaticUrl('img/question-mark_s.svg') + '" /></a>');
                 lib.bind(linkElm, $(this).attr('title'), {calculatePosition : true});
                 $(this).attr('title', null);
                 supElm.append(linkElm);
@@ -562,6 +583,14 @@ define(['win', 'jquery'], function (win, $) {
         if (data && data.toString() === '[object TooltipBox]') {
             data.close();
         }
+    };
+
+    /**
+     */
+    lib.extended = function (layoutModel) {
+        mixins.createStaticUrl = layoutModel.createStaticUrl.bind(layoutModel);
+        mixins.translate = layoutModel.translate.bind(layoutModel);
+        return lib;
     };
 
     return lib;
