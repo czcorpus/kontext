@@ -23,38 +23,57 @@
 (function (module) {
     'use strict';
 
-    var fs = require('fs'),
-        // a mapping between configuration plug-in names and JavaScript module names
-        jsModules = { // TODO this should be dynamic
-            'application_bar' : 'applicationBar',
-            'query_storage' : 'queryStorage',
-            'live_attributes' : 'liveAttributes',
-            'corparch' : 'corparch',
-            'subcmixer': 'subcmixer',
-            'taghelper': 'taghelper'
-        },
-        merge = require('merge');
+    let fs = require('fs');
+    let merge = require('merge');
 
-    /**
-     *
-     */
-    module.exports.getThemeStyles = function (confPath) {
-        var xmldom = require('xmldom');
-        var data = fs.readFileSync(confPath, {encoding: 'utf8'});
-        var kontextNode = new xmldom.DOMParser().parseFromString(data).getElementsByTagName('kontext')[0];
-        var themeNode = null;
-        var cssNode = null;
-        var styles = [];
+    function camelizeName(s) {
+        return s.split('_')
+                .map((x, i) => i > 0 ? x.substr(0, 1).toUpperCase() + x.substr(1) : x)
+                .join('');
+    }
 
-        var themeName = (function (root) {
-            var srch = root.getElementsByTagName('name')[0];
-            if (srch) {
-                return srch.textContent.trim();
+    function findPluginTags(doc) {
+        let plugins = doc.getElementsByTagName('plugins');
+        let ans = [];
+        function findJsModule(root) {
+            let jsm = root.getElementsByTagName('js_module');
+            if (jsm.length > 0) {
+                return jsm[0].textContent;
             }
             return null;
-        }(kontextNode));
+        }
 
-        for (var i = 0; i < kontextNode.childNodes.length; i += 1) {
+        if (plugins) {
+            for (let i = 0; i < plugins[0].childNodes.length; i += 1) {
+                let node = plugins[0].childNodes[i];
+                if (node.nodeType === 1) {
+                    let jsm = findJsModule(node);
+                    ans.push({canonicalName: camelizeName(node.nodeName), jsModule: jsm ? jsm : null});
+                }
+            }
+        }
+        return ans;
+    }
+
+    /**
+     * Finds CSS paths defined in a custom KonText theme. This is merged during the
+     * build process with the rest of CSS.
+     */
+    module.exports.getThemeStyles = function (confPath) {
+        let xmldom = require('xmldom');
+        let data = fs.readFileSync(confPath, {encoding: 'utf8'});
+        let kontextNode = new xmldom.DOMParser().parseFromString(data).getElementsByTagName('kontext')[0];
+        let themeNode = null;
+        let cssNode = null;
+        let styles = [];
+
+        let themeName = null;
+        let srch = kontextNode.getElementsByTagName('name')[0];
+        if (srch) {
+            themeName = srch.textContent.trim();
+        }
+
+        for (let i = 0; i < kontextNode.childNodes.length; i += 1) {
             if (kontextNode.childNodes[i].nodeName === 'theme') {
                 themeNode = kontextNode.childNodes[i];
                  break;
@@ -63,7 +82,7 @@
         if (themeNode) {
             cssNode = themeNode.getElementsByTagName('css')[0];
             if (cssNode) {
-                for (var i = 0; i < cssNode.childNodes.length; i += 1) {
+                for (let i = 0; i < cssNode.childNodes.length; i += 1) {
                     if (cssNode.childNodes[i].nodeType === 1 || cssNode.childNodes[i].nodeType === 3) {
                         styles.push('public/files/themes/' + themeName + '/'
                             + cssNode.childNodes[i].textContent.trim());
@@ -75,49 +94,35 @@
     }
 
     /**
-     * Produces mapping for specific modules:
-     * 1) modules which should be excluded from optimization
-     *    - JQuery and similar (vendor) stuff
-     *    - runtime-generated modules
-     * 2) modules implemented by custom installation (e.g. the 
-     *    'applicationBar' is in fact 'acmeApplicationBar')
+     * Produces mapping for modules with 'fake' (= non filesystem) paths.
+     * E.g. 'jquery' maps to 'vendor/jquery.min', 'plugins/queryStorage'
+     * maps to 'plugins/myCoolQueryStorage'.
      *
-     * @param {string} path to the main app configuration XML
-     * @return {{}}
+     * @param {string} path to KonText XML configuration file (config.xml)
+     * @param {boolean} sets whether a production setup should be exported
+     * @return {[fakePath:string]:string}
      */
-    module.exports.loadPluginMap = function (confPath, isProduction) {
-        var data = fs.readFileSync(confPath, {encoding: 'utf8'}),
-            DOMParser = require('xmldom').DOMParser,
-            doc = new DOMParser().parseFromString(data),
-            reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev',
-            reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev',
-            pluginMap = {
-                'win' : 'empty:',
-                'conf' : 'empty:',
-                'jquery' : 'vendor/jquery.min',
-                'vendor/rsvp' : 'vendor/rsvp.min',
-                'vendor/react': reactModule,
-                'vendor/react-dom': reactDomModule,
-                'vendor/immutable': 'vendor/immutable.min',
-                'vendor/d3': 'vendor/d3.min',
-                'SoundManager' : 'vendor/soundmanager2.min',
-                'vendor/jscrollpane' : 'vendor/jscrollpane.min'
-            },
-            p,
-            elms,
-            jsElm;
-
-        for (p in jsModules) {
-            elms = doc.getElementsByTagName(p);
-            if (elms[0]) {
-                jsElm = elms[0].getElementsByTagName('js_module');
-                console.log('jselm: ', jsElm[0].textContent);
-                pluginMap['plugins/' + jsModules[p]] = 'plugins/' + jsElm[0].textContent;
-
-            } else {
-                pluginMap['plugins/' + jsModules[p]] = 'empty:';
-            }
-        }
+    module.exports.loadModulePathMap = function (confPath, isProduction) {
+        let data = fs.readFileSync(confPath, {encoding: 'utf8'});
+        let DOMParser = require('xmldom').DOMParser;
+        let doc = new DOMParser().parseFromString(data);
+        let reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev';
+        let reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev';
+        let pluginMap = {
+            'win' : 'empty:',
+            'conf' : 'empty:',
+            'jquery' : 'vendor/jquery.min',
+            'vendor/rsvp' : 'vendor/rsvp.min',
+            'vendor/react': reactModule,
+            'vendor/react-dom': reactDomModule,
+            'vendor/immutable': 'vendor/immutable.min',
+            'vendor/d3': 'vendor/d3.min',
+            'SoundManager' : 'vendor/soundmanager2.min',
+            'vendor/jscrollpane' : 'vendor/jscrollpane.min'
+        };
+        findPluginTags(doc).forEach((item) => {
+            pluginMap['plugins/' + item.canonicalName] = item.jsModule ? 'plugins/' + item.jsModule : 'empty:';
+        });
         return pluginMap;
     };
 
@@ -126,22 +131,22 @@
      * party libs merged into a single file
      */
     module.exports.listPackedModules = function (isProduction) {
-        var modules = [
-                'jquery',
-                'popupbox',
-                'vendor/rsvp',
-                'vendor/rsvp-ajax',
-                'vendor/react',
-                'vendor/react-dom',
-                'vendor/immutable',
-                'vendor/Dispatcher',
-                'SoundManager',
-                'vendor/typeahead',
-                'vendor/bloodhound',
-                'vendor/jscrollpane',
-                'vendor/intl-messageformat',
-                'vendor/virtual-keyboard',
-                'vendor/d3'
+        let modules = [
+            'jquery',
+            'popupbox',
+            'vendor/rsvp',
+            'vendor/rsvp-ajax',
+            'vendor/react',
+            'vendor/react-dom',
+            'vendor/immutable',
+            'vendor/Dispatcher',
+            'SoundManager',
+            'vendor/typeahead',
+            'vendor/bloodhound',
+            'vendor/jscrollpane',
+            'vendor/intl-messageformat',
+            'vendor/virtual-keyboard',
+            'vendor/d3'
         ];
         if (isProduction) {
             modules.push('translations');
@@ -161,14 +166,14 @@
      * @return Array<string>
      */
     module.exports.listAppModules = function (tplDir) {
-        var ans = [];
+        let ans = [];
 
         function isExcluded(p) {
             return ['document.js'].indexOf(p) > -1;
         }
 
         fs.readdirSync(tplDir).forEach(function (item) {
-            var srch = /^(.+)\.[jt]s$/.exec(item);
+            let srch = /^(.+)\.[jt]s$/.exec(item);
             if (srch && !isExcluded(item)) {
                 ans.push({
                     name: 'tpl/' + srch[1],
@@ -181,9 +186,9 @@
 
 
     function findAllMessageFiles(startDir) {
-        var ans = [];
-        fs.readdirSync(startDir).forEach(function (item) {
-            var fullPath = startDir + '/' + item;
+        let ans = [];
+        fs.readdirSync(startDir).forEach((item) => {
+            let fullPath = startDir + '/' + item;
             if (fs.lstatSync(fullPath).isDirectory() && ['min'].indexOf(item) === -1) {
                 ans = ans.concat(findAllMessageFiles(fullPath));
 
@@ -195,9 +200,9 @@
     }
 
     module.exports.mergeTranslations = function (startDir, destFile) {
-        var files = findAllMessageFiles(startDir);
-        var translations = {};
-        files.forEach(function (item) {
+        let files = findAllMessageFiles(startDir);
+        let translations = {};
+        files.forEach((item) => {
            translations = merge.recursive(translations, JSON.parse(fs.readFileSync(item)));
         });
         if (!destFile || destFile.length === 0) {
@@ -206,7 +211,7 @@
         } else if (Object.prototype.toString.call(destFile) !== '[object Array]') {
             destFile = [destFile];
         }
-        destFile.forEach(function (destItem) {
+        destFile.forEach((destItem) => {
             fs.writeFileSync(destItem, "define([], function () { return "
                 + JSON.stringify(translations) + "; });");
         });

@@ -3,8 +3,7 @@
 
     module.exports = function (grunt) {
 
-        var kontext = require('./scripts/grunt/kontext');
-
+        let kontext = require('./scripts/grunt/kontext');
         grunt.loadNpmTasks('grunt-exec');
         grunt.loadNpmTasks('assemble-less');
         grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -38,26 +37,61 @@
                         './public/files/js/optimized/*'
                     ]
                 },
+                jsKeepVendor: {
+                    src: [
+                        './public/files/js/min/*',
+                        '!./public/files/js/min/vendor',
+                        './public/files/js/compiled/*',
+                        './public/files/js/optimized/*'
+                    ]
+                },
                 cleanup: {
                     src: [
                         './public/files/js/optimized/*',
                         './public/files/js/compiled/*'
+                    ]
+                },
+                production: {
+                    src: [
+                        'public/files/js/optimized/*',
+                        'public/files/js/compiled/*',
+                        'public/files/js/min/*',
+                        '!public/files/js/min/vendor',
+                        'public/files/js/min/vendor/bloodhound.js',
+                        'public/files/js/min/vendor/immutable.min.js',
+                        'public/files/js/min/vendor/jquery.periodic.js',
+                        'public/files/js/min/vendor/qunit.js',
+                        'public/files/js/min/vendor/virtual-keyboard.js',
+                        'public/files/js/min/vendor/jscrollpane.min.js',
+                        'public/files/js/min/vendor/react.dev.js',
+                        'public/files/js/min/vendor/rsvp-ajax.js',
+                        'public/files/js/min/vendor/cookies.js',
+                        'public/files/js/min/vendor/less.js',
+                        'public/files/js/min/vendor/react-dom.dev.js',
+                        'public/files/js/min/vendor/rsvp.min.js',
+                        'public/files/js/min/vendor/d3.min.js',
+                        'public/files/js/min/vendor/invariant.js',
+                        'public/files/js/min/vendor/react-dom.min.js',
+                        'public/files/js/min/vendor/soundmanager2.min.js',
+                        'public/files/js/min/vendor/Dispatcher.js',
+                        'public/files/js/min/vendor/jquery.min.js',
+                        'public/files/js/min/vendor/multi-slider',
+                        'public/files/js/min/vendor/react.min.js',
+                        'public/files/js/min/vendor/typeahead.js',
+                        '!public/files/js/min/tpl',
                     ]
                 }
             },
             exec: {
                 compile_html_templates: {
                     cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'T=$(echo {}); T=${T#./templates/}; cheetah compile --odir cmpltmpl --idir templates "$T"\' \\;'
-                },
-                update_app: {
-                    cmd: 'touch public/app.py'
                 }
             },
             "less": {
                 production: {
                     files: {
                         "public/files/css/kontext.min.css": (function () {
-                            var ans = [
+                            let ans = [
                                 "public/files/css/kontext.less",
                                 "public/files/css/view.less",
                                 "public/files/css/widgets.less",
@@ -73,13 +107,13 @@
                 }
             },
             "uglify": {
-                optimized: {
+                compiled: {
                     files: [
                         {
                             expand: true,
-                            cwd: 'public/files/js/optimized',
+                            cwd: 'public/files/js/compiled',
                             src: ['**/*.js'],
-                            dest: 'public/files/js/min/'
+                            dest: 'public/files/js/optimized'
                         }
                     ]
                 }
@@ -90,40 +124,50 @@
                         {
                             expand: true,
                             cwd: 'public/files/js',
-                            src: ['**/*.js', '!compiled/**', '!vendor/**', '!min/**'],
-                            dest: 'public/files/js/min'
+                            src: ['**/*.js', '!min/**', '!compiled/**', '!optimized/**'],
+                            dest: 'public/files/js/optimized'
                         },
                         {
                             expand: true,
-                            cwd: 'public/files/js/compiled', // typescript is always compiled
-                            src: ['**/*.js'],
-                            dest: 'public/files/js/min'
+                            cwd: 'public/files/js/compiled',
+                            src: ['**/*.js', '!min/**', '!compiled/**', '!optimized/**'],
+                            dest: 'public/files/js/optimized'
                         }
                     ]
                 },
-                prepare: {
+                dummyCompile: {
                     files: [
                         {
                             expand: true,
                             cwd: 'public/files/js',
-                            src: ['**/*.js', '!min/**', '!compiled/**', '!optimized/**', '!*.ts'],
+                            src: ['**/*.js', '!**/*.min.js', '!min/**', '!compiled/**', '!optimized/**'],
                             dest: 'public/files/js/compiled'
                         }
                     ]
                 },
-                finishOptimized: {
+                preMinified: {
                     files: [
                         {
                             expand: true,
-                            cwd: 'public/files/js/optimized',
-                            src: ['**/*.js'],
+                            cwd: 'public/files/js',
+                            src: ['**/*.min.js', '!min/**', '!compiled/**', '!optimized/**'],
+                            dest: 'public/files/js/optimized'
+                        }
+                    ]
+                },
+                dummyOptimize: {
+                    files: [
+                        {
+                            expand: true,
+                            cwd: 'public/files/js/compiled',
+                            src: ['**/*.js', '!vendor/*'],
                             dest: 'public/files/js/min'
                         }
                     ]
                 }
             },
             "ts": {
-                all: {
+                devel: {
                     files: [
                         {
                             src: ["public/files/js/**/*.ts"],
@@ -174,9 +218,9 @@
             requirejs: {
                 production: {
                     options: {
-                        appDir: "public/files/js/compiled",
+                        appDir: "public/files/js/optimized",
                         baseUrl: ".",
-                        dir: "public/files/js/optimized",
+                        dir: "public/files/js/min",
                         shim: {
                             'vendor/jscrollpane': {
                                 deps: ['jquery']
@@ -187,14 +231,14 @@
                         },
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadPluginMap('./conf/config.xml', true),
+                        paths: kontext.loadModulePathMap('./conf/config.xml', true),
                         modules: kontext.listAppModules('./public/files/js/tpl')
                             .concat(kontext.listPackedModules(true))
                     }
                 },
                 vendor: {
                     options: {
-                        appDir: "public/files/js",
+                        appDir: "public/files/js/optimized",
                         baseUrl: ".",
                         dir: "public/files/js/min",
                         shim: {
@@ -204,7 +248,7 @@
                         },
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadPluginMap('./conf/config.xml', false),
+                        paths: kontext.loadModulePathMap('./conf/config.xml', false),
                         modules: kontext.listPackedModules(false)
                     }
                 }
@@ -214,7 +258,7 @@
                     targetFile: './public/files/js/min/translations.js'
                 },
                 production: {
-                    targetFile: './public/files/js/compiled/translations.js'
+                    targetFile: './public/files/js/optimized/translations.js'
                 }
             }
         });
@@ -225,19 +269,23 @@
         });
 
         // generates development-ready project (i.e. no minimizations/optimizations)
-        grunt.registerTask('devel', ['clean:all', 'ts', 'babel',
-                'requirejs:vendor', 'translations:devel', 'copy:devel', 'clean:cleanup', 'exec']);
+        grunt.registerTask('devel', ['clean:all',
+                'ts:devel', 'babel', 'copy:dummyCompile', 'copy:devel',
+                'requirejs:vendor', 'translations:devel', 'clean:cleanup', 'exec']);
 
         // regenerates JavaScript files for development-ready project (i.e. no min./optimizations
         // and no Cheetah templates compiled)
-        grunt.registerTask('develjs', ['clean:javascript', 'ts',
-                'babel', 'requirejs:vendor', 'translations:devel', 'copy:devel', 'clean:cleanup']);
+        grunt.registerTask('develjs', ['clean:jsKeepVendor',
+                'ts:devel', 'babel', 'copy:dummyCompile',
+                'copy:dummyOptimize', 'translations:devel', 'clean:cleanup']);
 
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
-        grunt.registerTask('production', ['clean:all', 'less', 'ts:production', 'babel',
-                'copy:prepare', 'translations:production', 'requirejs:production',
-                'copy:finishOptimized', 'uglify:optimized', 'clean:cleanup', 'exec']);
+        grunt.registerTask('production', ['clean:all', 'less',
+                'ts:production', 'babel', 'copy:dummyCompile',
+                'uglify:compiled', 'copy:preMinified',
+                'translations:production', 'requirejs:production',
+                'clean:production', 'exec']);
 
         // just compiles Cheetah templates
         grunt.registerTask('templates', ['clean:templates', 'exec:compile_html_templates']);
