@@ -17,11 +17,11 @@
 
 class SyntaxViewerPlugin(object):
 
-    def search_by_kwic_id(self, kwic_id):
+    def search_by_token_id(self, corp, token_id):
         raise NotImplementedError()
 
 
 class SearchBackend(object):
 
-    def get_data(self, object_id):
+    def get_data(self, corpus_id, object_id):
         raise NotImplementedError()
