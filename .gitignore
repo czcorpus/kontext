@@ -19,8 +19,9 @@ conf/*
 !conf/config.sample.xml
 !conf/main-menu.sample.json
 public/files/.vscode/
-public/files/js/min/
-public/files/js/compiled/
+public/files/js/min
+public/files/js/compiled
+public/files/js/optimized
 public/files/css/kontext.min.css
 cmpltmpl/*
 !cmpltmpl/__init__.py
@@ -29,3 +30,6 @@ public/files/themes/*
 
 # other
 *.pyc
+.tscache
+**/.baseDir.ts
+tscommand*.txt
