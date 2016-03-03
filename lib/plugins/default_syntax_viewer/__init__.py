@@ -28,17 +28,21 @@ Configuration JSON:
 """
 
 import json
+import os
 
 import plugins
 from plugins.abstract.syntax_viewer import SyntaxViewerPlugin
 from actions import concordance
 from controller import exposed
-from backend import Sqlite3SearchBackend
+from backend import ManateeBackend
 
 
 @exposed(return_type='json')
 def get_syntax_data(ctrl, request):
-    data = plugins.get('syntax_viewer').search_by_token_id(ctrl._corp(), int(request.args.get('kwic_id')))
+    corp = getattr(ctrl, '_corp')()
+    canonical_corpname = getattr(ctrl, '_canonical_corpname')(corp.corpname)
+    data = plugins.get('syntax_viewer').search_by_token_id(corp, canonical_corpname, 
+                                                           int(request.args.get('kwic_id')))
     return data
 
 
@@ -52,23 +56,9 @@ class SyntaxDataProvider(SyntaxViewerPlugin):
         self._conf = corpora_conf
         self._backend = backend
 
-    def get_corpus_sent_keys(self, corpname):
-        try:
-            return self._conf[corpname]['sentenceUniqueAttributes']
-        except KeyError:
-            raise SyntaxDataProviderError('Corpus %s not found in the configuration' % (corpname,))
-
-    def get_sent_keys_values(self, corp, token_id):
-        keys = self.get_corpus_sent_keys(corp.corpname)
-        ans = []
-        for k in keys:
-            attr = corp.get_attr(k)
-            ans.append(attr.pos2str(token_id))
-        return tuple(ans)
-
-    def search_by_token_id(self, corp, token_id):
-        id_keys = self.get_sent_keys_values(corp, token_id)
-        return self._backend.get_data(corp.corpname, ':'.join(id_keys))
+    def search_by_token_id(self, corp, canonical_corpname, token_id):
+        data, encoder = self._backend.get_data(corp, canonical_corpname, token_id)
+        return lambda: json.dumps(data, cls=encoder)
 
     def export_actions(self):
         return {concordance.Actions: [get_syntax_data]}
@@ -79,7 +69,10 @@ def create_instance(conf):
     """
     """
     conf_path = conf.get('plugins', 'syntax_viewer', {}).get('default:config_path')
+    if not conf_path or not os.path.isfile(conf_path):
+        raise SyntaxDataProviderError('Plug-in configuration file [%s] not found. Please check default:config_path.' %
+                                      (conf_path,))
     with open(conf_path, 'rb') as f:
         conf_data = json.load(f)
         corpora_conf = conf_data.get('corpora', {})
-    return SyntaxDataProvider(corpora_conf, Sqlite3SearchBackend(corpora_conf))
+    return SyntaxDataProvider(corpora_conf, ManateeBackend(corpora_conf))
