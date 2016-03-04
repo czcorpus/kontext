@@ -21,6 +21,10 @@ class SyntaxViewerPlugin(object):
         raise NotImplementedError()
 
 
+class SyntaxDataBackendError(Exception):
+    pass
+
+
 class SearchBackend(object):
 
     def get_data(self, corpus, canonical_corpus_id, token_id):

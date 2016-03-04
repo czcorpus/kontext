@@ -16,13 +16,16 @@
 # 02110-1301, USA.
 
 """
+A plug-in providing syntax tree display. Its client-side part
+is based on the 'js-treex-view' library (https://github.com/ufal/js-treex-view).
+The tree data are extracted from Manatee where it is expected from
+a token to contain an attribute with a relative reference to its parent.
+All the properties are configured via an external JSON file.
+
 Configuration JSON:
 {
   "corpora": {
-    "syn2010": {
-      "path": "/var/local/corpora/syntax-tree/syn2010.syntax.db",
-      "sentenceUniqueAttributes": ["opus.id", "doc.id", "s.id"]
-    }
+    ... this is backend dependent, see backend modules for details ...
   }
 }
 """
@@ -34,11 +37,17 @@ import plugins
 from plugins.abstract.syntax_viewer import SyntaxViewerPlugin
 from actions import concordance
 from controller import exposed
-from backend import ManateeBackend
+from manatee_backend import ManateeBackend
 
 
 @exposed(return_type='json')
 def get_syntax_data(ctrl, request):
+    """
+    This is the actual controller method exported by the plug-in.
+    To be able to export a JSON with custom encoder this method
+    returns a callable which ensures that controller.Controller
+    skips its simple JSON serialization.
+    """
     corp = getattr(ctrl, '_corp')()
     canonical_corpname = getattr(ctrl, '_canonical_corpname')(corp.corpname)
     data = plugins.get('syntax_viewer').search_by_token_id(corp, canonical_corpname, 
@@ -58,6 +67,7 @@ class SyntaxDataProvider(SyntaxViewerPlugin):
 
     def search_by_token_id(self, corp, canonical_corpname, token_id):
         data, encoder = self._backend.get_data(corp, canonical_corpname, token_id)
+        # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
     def export_actions(self):
@@ -66,8 +76,6 @@ class SyntaxDataProvider(SyntaxViewerPlugin):
 
 @plugins.inject()
 def create_instance(conf):
-    """
-    """
     conf_path = conf.get('plugins', 'syntax_viewer', {}).get('default:config_path')
     if not conf_path or not os.path.isfile(conf_path):
         raise SyntaxDataProviderError('Plug-in configuration file [%s] not found. Please check default:config_path.' %
