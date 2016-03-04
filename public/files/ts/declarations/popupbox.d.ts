@@ -53,6 +53,8 @@ declare module PopupBox {
 
         getRootElement(): HTMLElement;
 
+        getContentElement():HTMLElement;
+
         getPosition(): Position;
 
         importElement(elm: HTMLElement): void;
