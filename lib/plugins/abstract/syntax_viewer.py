@@ -14,14 +14,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from plugins.abstract import CorpusDependentPlugin
 
-class SyntaxViewerPlugin(object):
+
+class SyntaxViewerPlugin(CorpusDependentPlugin):
 
     def search_by_token_id(self, corp, canonical_corpname, token_id):
         raise NotImplementedError()
 
+    def is_enabled_for(self, corpname):
+        raise NotImplementedError()
+
 
 class SyntaxDataBackendError(Exception):
+    pass
+
+
+class MaximumContextExceeded(Exception):
+    """
+    This should be thrown by SearchBackend.get_data() in case
+    a processed sentence reaches out of available Manatee context
+    for a searched phrase (MAXCONTEXT, see
+    https://www.sketchengine.co.uk/xdocumentation/wiki/SkE/Config/FullDoc#MAXCONTEXT
+    for more details).
+    """
     pass
 
 

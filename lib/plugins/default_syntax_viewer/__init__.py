@@ -34,10 +34,11 @@ import json
 import os
 
 import plugins
-from plugins.abstract.syntax_viewer import SyntaxViewerPlugin
+from plugins.abstract.syntax_viewer import SyntaxViewerPlugin, MaximumContextExceeded
 from actions import concordance
 from controller import exposed
 from manatee_backend import ManateeBackend
+from translation import ugettext as _
 
 
 @exposed(return_type='json')
@@ -48,10 +49,15 @@ def get_syntax_data(ctrl, request):
     returns a callable which ensures that controller.Controller
     skips its simple JSON serialization.
     """
-    corp = getattr(ctrl, '_corp')()
-    canonical_corpname = getattr(ctrl, '_canonical_corpname')(corp.corpname)
-    data = plugins.get('syntax_viewer').search_by_token_id(corp, canonical_corpname, 
-                                                           int(request.args.get('kwic_id')))
+    try:
+        corp = getattr(ctrl, '_corp')()
+        canonical_corpname = getattr(ctrl, '_canonical_corpname')(corp.corpname)
+        data = plugins.get('syntax_viewer').search_by_token_id(corp, canonical_corpname,
+                                                               int(request.args.get('kwic_id')))
+    except MaximumContextExceeded:
+        data = dict(contains_errors=True,
+                    error=_('Failed to get the syntax tree due to limited permissions'
+                            ' to the corpus (too long sentence).'))
     return data
 
 
@@ -61,21 +67,25 @@ class SyntaxDataProviderError(Exception):
 
 class SyntaxDataProvider(SyntaxViewerPlugin):
 
-    def __init__(self, corpora_conf, backend):
+    def __init__(self, corpora_conf, backend, auth):
         self._conf = corpora_conf
         self._backend = backend
+        self._auth = auth
 
     def search_by_token_id(self, corp, canonical_corpname, token_id):
         data, encoder = self._backend.get_data(corp, canonical_corpname, token_id)
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
+    def is_enabled_for(self, corpname):
+        return self._auth.canonical_corpname(corpname) in self._conf
+
     def export_actions(self):
         return {concordance.Actions: [get_syntax_data]}
 
 
-@plugins.inject()
-def create_instance(conf):
+@plugins.inject('auth')
+def create_instance(conf, auth):
     conf_path = conf.get('plugins', 'syntax_viewer', {}).get('default:config_path')
     if not conf_path or not os.path.isfile(conf_path):
         raise SyntaxDataProviderError('Plug-in configuration file [%s] not found. Please check default:config_path.' %
@@ -83,4 +93,4 @@ def create_instance(conf):
     with open(conf_path, 'rb') as f:
         conf_data = json.load(f)
         corpora_conf = conf_data.get('corpora', {})
-    return SyntaxDataProvider(corpora_conf, ManateeBackend(corpora_conf))
+    return SyntaxDataProvider(corpora_conf, ManateeBackend(corpora_conf), auth)

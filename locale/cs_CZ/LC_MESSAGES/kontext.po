@@ -1975,6 +1975,9 @@ msgstr "Pozitivní filter (bez KWIC)"
 msgid "Switch KWIC"
 msgstr "Přepnout KWIC"
 
+msgid "Failed to get the syntax tree due to limited permissions to the corpus (too long sentence)."
+msgstr "Nepodařilo se získat syntaktický strom kvůli omezeným právům přístupu ke korpusu (příliš dlouhá věta)."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
