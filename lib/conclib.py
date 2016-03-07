@@ -313,8 +313,8 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
         if pos > len(qx) - 3 or not skip_internals:
             return False, get_size(pos)
         offset = 0
-        for j in range(pos, len(qx) - 3, 3):
-            if is_aligned_op(qx, pos):
+        for j in range(pos, len(qx) - 2, 3):
+            if is_aligned_op(qx, j):
                 offset = j + 2
         return offset > 0, get_size(pos + offset)
 
@@ -344,7 +344,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
             if i > 0:
                 desc[i - 1] = desc[i - 1][:-1] + (size,)  # update previous op. size
             i += 3  # ignore aligned corpus operation, i is now the next valid operation
-            if i > len(q) - 1:
+            if i > len(q) - 1:        logging.getLogger(__name__).debug('i = %s, is_align_op: %s' % (i, is_align_op))
                 break
             size = get_size(i)
         opid = q[i][0]
