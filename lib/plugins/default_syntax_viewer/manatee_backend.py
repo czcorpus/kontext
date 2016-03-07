@@ -19,24 +19,25 @@ An expected configuration:
 
 {
     "syn2015": {
-          "sentenceStruct": "s",
-          "trees": [
-            {
-              "id": "default",
-              "name": "Default",
-              "wordAttr": "word",
-              "parentAttr": "parent",
-              "labelTemplates": ["#{#009EE0}%s", "#{#F0680B}[%s]", "#{#010101}%s", "#{#E2007A}%s"],
-              "detailAttrs": ["lc", "lemma", "lemma_lc", "tag", "pos", "case", "proc", "afun", "prep"],
-              "nodeAttrs": ["word", "afun"],
-              "rootNode": {
-                "id": "root",
-                "word": "",
-                "node_labels": ["root", "-"],
-                "parent": null
-              }
-            }
-          ]
+      "sentenceStruct": "s",
+      "trees": [
+        {
+          "id": "default",
+          "name": "Default",
+          "wordAttr": "word",
+          "parentAttr": "parent",
+          "labelTemplates": ["#{#009EE0}%s", "#{#F0680B}[%s]", "#{#010101}%s", "#{#E2007A}%s"],
+          "layerType": "t",
+          "detailAttrs": ["lc", "lemma", "lemma_lc", "tag", "pos", "case", "proc", "afun", "prep", "eparent"],
+          "nodeAttrs": ["word", "afun"],
+          "rootNode": {
+            "id": "root",
+            "word": "",
+            "node_labels": ["root", "-"],
+            "parent": null
+          }
+        }
+      ]
     },
     "another_corpus": {
       ...
@@ -48,7 +49,7 @@ import json
 import manatee
 
 from l10n import import_string
-from plugins.abstract.syntax_viewer import SearchBackend
+from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded
 
 
 class TreeConf(object):
@@ -113,6 +114,10 @@ class TreeConf(object):
         return self._data.get('labelTemplates', TreeConf.DEFAULT_LABEL_TEMPLATES)
 
     @property
+    def layer_type(self):
+        return self._data.get('layerType', 'a')
+
+    @property
     def all_attrs(self):
         """
         Returns all the attributes. This is used to fetch all the required values
@@ -136,6 +141,9 @@ class ManateeBackendConf(object):
     def get_trees(self, canonical_corpus_id):
         return dict((tc['id'], TreeConf(tc))
                     for tc in self._data[canonical_corpus_id]['trees'])
+
+    def get_tree_display_list(self, canonical_corpus_id):
+        return [tc['id'] for tc in self._data[canonical_corpus_id]['trees']]
 
     def get_sentence_struct(self, canonical_corpus_id):
         return self._data[canonical_corpus_id]['sentenceStruct']
@@ -196,6 +204,40 @@ class TreeNode(object):
         return 'Node[%d] (parent: %s, children: %s)' % (self.idx, self.parent, [c.idx for c in self.children])
 
 
+class TreexTemplate(object):
+
+    def __init__(self, id_list, tree_list, conf):
+        self._id_list = id_list
+        self._tree_list = tree_list
+        self._conf = conf
+
+    def _generate_desc(self):
+        ans = []
+        for item in self._tree_list[0]:  # TODO
+            ans.append([item.word, item.id])
+        return ans
+
+    def export(self):
+        sentence = ' '.join(n.word for n in self._tree_list[0])
+        graph_list = []
+        for i in range(len(self._id_list)):
+            graph_list.append({
+                'zones': {
+                    'cs': {  # TODO
+                        'trees': {
+                            'default': {
+                                'layer': self._conf[self._id_list[i]].layer_type,
+                                'nodes': self._tree_list[0]
+                            }
+                        },
+                        'sentence': sentence
+                    }
+                },
+                'desc': self._generate_desc()
+            })
+        return graph_list
+
+
 class TreeBuilder(object):
     """
     Builds a node tree (i.e. a list of mutually connected TreeNode instances)
@@ -219,35 +261,15 @@ class TreeBuilder(object):
     def _dict_portion(data, attrs):
         return [(k, data.get(k, None)) for k in attrs]
 
-    @staticmethod
-    def create_tree(nodes):
-        sentence = ' '.join(n.word for n in nodes)
-        return [
-            {
-                'zones': {
-                    'en': {  # TODO
-                        'trees': {
-                            'en-a': {  # TODO
-                                'layer': 'a',  # TODO
-                                'nodes': nodes
-                            }
-                        },
-                        'sentence': sentence
-                    }
-                },
-                'desc': []  # TODO
-            }
-        ]
-
-    def process(self, data, tree_conf):
+    def process(self, tree_conf, data):
         """
         Runs the build process
 
         arguments:
-        data -- a list of dicts containg data fetched from Manatee with parent
+        tree_conf -- a configuration for the tree
+        tree_data -- a list of dicts containg data fetched from Manatee with parent
                 references converted from relative ones to absolute ones plus
                 some other updates (see ManateeBackend class)
-        tree_conf -- a configuration for the tree
 
         returns:
         a 2-tuple (list_of_nodes, TreeNodeEncoder)
@@ -267,8 +289,7 @@ class TreeBuilder(object):
                 nodes[n.parent].children.append(n)
                 n.parent = nodes[n.parent]
         self.walk_through(nodes[0])
-        full_nodes = self.create_tree(nodes)
-        return full_nodes, TreeNodeEncoder
+        return nodes
 
 
 class ManateeBackend(SearchBackend):
@@ -313,10 +334,11 @@ class ManateeBackend(SearchBackend):
     def _decode_tree_data(data, parent_attr):
         for i in range(1, len(data)):
             rel_parent = int(data[i][parent_attr])
-            if rel_parent != 0:
-                data[i][parent_attr] = i + int(data[i][parent_attr])
-            else:
-                data[i][parent_attr] = 0
+            abs_parent = i + rel_parent if rel_parent != 0 else 0
+            if abs_parent < 0 or abs_parent >= len(data):
+                raise MaximumContextExceeded(
+                    'Absolute parent position %d out of range 0..%d' % (abs_parent, len(data) - 1))
+            data[i][parent_attr] = abs_parent
 
     def get_data(self, corpus, canonical_corpus_id, token_id):
         """
@@ -330,12 +352,17 @@ class ManateeBackend(SearchBackend):
         a 2-tuple (list_of_nodes, TreeNodeEncoder)
         """
         tree_configs = self._conf.get_trees(canonical_corpus_id)
-        conf = tree_configs['default']  # TODO (currently we provide a single tree)
-        raw_data = self._load_raw_sent(corpus, canonical_corpus_id, token_id, conf.all_attrs)
-        parsed_data = self._parse_raw_sent(raw_data, conf.all_attrs)
-        if conf.root_node:
-            parsed_data = [conf.root_node] + parsed_data
-        self._decode_tree_data(parsed_data, conf.parent_attr)
-        tb = TreeBuilder()
-        return tb.process(parsed_data, conf)
+        tree_list = []
+        tree_id_list = self._conf.get_tree_display_list(canonical_corpus_id)
+        for tree in tree_id_list:
+            conf = tree_configs[tree]
+            raw_data = self._load_raw_sent(corpus, canonical_corpus_id, token_id, conf.all_attrs)
+            parsed_data = self._parse_raw_sent(raw_data, conf.all_attrs)
+            if conf.root_node:
+                parsed_data = [conf.root_node] + parsed_data
+            self._decode_tree_data(parsed_data, conf.parent_attr)
+            tb = TreeBuilder()
+            tree_list.append(tb.process(conf, parsed_data))
+        template = TreexTemplate(tree_id_list, tree_list, tree_configs)
+        return template.export(), TreeNodeEncoder
 

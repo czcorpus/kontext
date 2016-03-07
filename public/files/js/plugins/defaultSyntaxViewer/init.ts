@@ -50,10 +50,17 @@ class SyntaxTreeViewer {
 
             ).then(
                 (data) => {
-                    let treexFrame = window.document.createElement('div');
-                    $(box.getContentElement()).append(treexFrame);
-                    finalize();
-                    $(treexFrame).treexView(data); // this must be run after finalize
+                    if (!data['contains_errors']) {
+                        let treexFrame = window.document.createElement('div');
+                        $(box.getContentElement()).append(treexFrame);
+                        finalize();
+                        $(treexFrame).treexView(data); // this must be run after finalize
+
+                    } else {
+                        finalize();
+                        box.close();
+                        this.pluginApi.showMessage('error', data['error']);
+                    }
                 },
                 (error) => {
                     finalize();
