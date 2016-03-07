@@ -344,7 +344,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
             if i > 0:
                 desc[i - 1] = desc[i - 1][:-1] + (size,)  # update previous op. size
             i += 3  # ignore aligned corpus operation, i is now the next valid operation
-            if i > len(q) - 1:        logging.getLogger(__name__).debug('i = %s, is_align_op: %s' % (i, is_align_op))
+            if i > len(q) - 1:
                 break
             size = get_size(i)
         opid = q[i][0]
