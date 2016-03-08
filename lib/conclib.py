@@ -305,13 +305,18 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
         cache_val = cache_map[(subchash, q[:pos + 1])]
         return cache_val[1] if cache_val else None
 
+    def is_aligned_op(query_items, pos):
+        return (query_items[pos].startswith('x-') and query_items[pos + 1] == 'p0 0 1 []' and
+                query_items[pos + 2].startswith('x-'))
+
     def detect_internal_op(qx, pos):
         if pos > len(qx) - 3 or not skip_internals:
             return False, get_size(pos)
-        if qx[pos].startswith('x-') and qx[pos + 1] == 'p0 0 1 []' and qx[pos + 2].startswith('x-'):
-            return True, get_size(pos + 2)
-        else:
-            return False, get_size(pos)
+        offset = 0
+        for j in range(pos, len(qx) - 2, 3):
+            if is_aligned_op(qx, j):
+                offset = j + 2
+        return offset > 0, get_size(pos + offset)
 
     if q is None:
         q = []
@@ -338,9 +343,10 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
         if is_align_op:
             if i > 0:
                 desc[i - 1] = desc[i - 1][:-1] + (size,)  # update previous op. size
-            i += 3  # ignore aligned corpus operation
+            i += 3  # ignore aligned corpus operation, i is now the next valid operation
             if i > len(q) - 1:
                 break
+            size = get_size(i)
         opid = q[i][0]
         args = q[i][1:]
         url1 = [('q', qi) for qi in q[:i]]
