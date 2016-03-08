@@ -312,11 +312,11 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
     def detect_internal_op(qx, pos):
         if pos > len(qx) - 3 or not skip_internals:
             return False, get_size(pos)
-        offset = 0
+        align_end = 0
         for j in range(pos, len(qx) - 2, 3):
             if is_aligned_op(qx, j):
-                offset = j + 2
-        return offset > 0, get_size(pos + offset)
+                align_end = j + 2
+        return align_end > 0, get_size(align_end)
 
     if q is None:
         q = []
