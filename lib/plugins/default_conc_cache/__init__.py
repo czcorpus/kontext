@@ -22,10 +22,23 @@ and filename containing respective saved concordances.
 Please note that the current version uses a 2-tuple as a cache keys
 which prevents Celery worker backend to use JSON as a message format
 (i.e. pickle must be used).
+
+
+configuration XML:
+
+element conc_cache {
+  element module { "default_conc_cache" }
+  element cache_dir {
+    attribute extension-by { "default" }
+    { text }
+  }
+}
+
 """
 import os
 import logging
 import hashlib
+import cPickle
 
 from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory
 from plugins import inject
@@ -48,6 +61,13 @@ def _uniqname(subchash, query):
 
 
 class CacheMapping(AbstractConcCache):
+    """
+    Mapping looks like this:
+    (subchash, q) => [conc_cache_file_hash, stored_conc_size, pidfile]
+
+    Please note that in this case only pickle serialization can be used
+    as the key is a tuple of a string and a list.
+    """
 
     CACHE_FILENAME = '00CONCS.map'
 
@@ -57,36 +77,39 @@ class CacheMapping(AbstractConcCache):
         self._lock_factory = lock_factory
         self._data = None
 
-    def __getitem__(self, item):
-        return self.data.get(item, None)
-
-    def __delitem__(self, key):
-        self._del_from_map(key)
-        self._data = None  # forces auto-load on next __getitem__
-
-    def refresh_map(self):
-        cache_dir = self._cache_dir_path()
-        if not os.path.isdir(cache_dir):
-            os.makedirs(cache_dir)
-
     @property
     def data(self):
         if self._data is None:
             self._data = self._load_map()
         return self._data
 
+    def _get_entry(self, subchash, q):
+        return self.data.get((subchash, q), None)
+
+    def get_stored_pidfile(self, subchash, q):
+        val = self._get_entry(subchash, q)
+        return val[2] if val else None
+
+    def get_stored_size(self, subchash, q):
+        val = self._get_entry(subchash, q)
+        return val[1] if val else None
+
+    def refresh_map(self):
+        cache_dir = self._cache_dir_path()
+        if not os.path.isdir(cache_dir):
+            os.makedirs(cache_dir)
+
     def _clear_cache(self):
         if os.path.exists(self._cache_map_path()):
             os.unlink(self._cache_map_path())
 
     def _load_map(self):
-        import cPickle
         ans = {}
         try:
             with self._lock_factory.create(self._cache_map_path()):
                 with open(self._cache_map_path(), 'rb') as f:
                     ans = cPickle.load(f)
-        except (ValueError, IOError, EOFError,    cPickle.UnpicklingError) as ex:
+        except (ValueError, IOError, EOFError, cPickle.UnpicklingError) as ex:
             logging.getLogger(__name__).warning('Failed to load/unpickle cache mapping file: %s' % ex)
             self._clear_cache()
         return ans if ans is not None else {}
@@ -95,7 +118,7 @@ class CacheMapping(AbstractConcCache):
         return os.path.normpath('%s/%s' % (self._cache_root_dir, self._corpus.corpname))
 
     def cache_file_path(self, subchash, q):
-        val = self.__getitem__((subchash, q))
+        val = self._get_entry(subchash, q)
         if val:
             return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), val[0]))
         return None
@@ -139,11 +162,15 @@ class CacheMapping(AbstractConcCache):
                 except KeyError:
                     pass
 
-    def del_full_entry(self, entry_key):
+    def del_entry(self, subchash, q):
+        self._del_from_map((subchash, q))
+        self._data = None  # forces auto-load on next _get_etry
+
+    def del_full_entry(self, subchash, q):
         for k in self.data.keys():
-            if entry_key[0] == k[0] and entry_key[1][0] == k[1][0]:
+            if subchash == k[0] and q[0] == k[1][0]:
                 # original record's key must be used (k ~ entry_key match can be partial)
-                self.__delitem__(k)
+                self.del_entry(subchash, k)
 
 
 class CacheMappingFactory(AbstractCacheMappingFactory):
