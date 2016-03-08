@@ -90,11 +90,6 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
      * @return {jQuery} ajax notification box
      */
     function enableAjaxLoadingNotification(jqAjaxLoader) {
-        jqAjaxLoader.css({
-            'bottom' : '50px',
-            'position' : 'fixed',
-            'left' : ($(win).width() / 2 - 50) + 'px'
-        });
         $('body').append(jqAjaxLoader);
     }
 
@@ -140,7 +135,6 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     calculatePosition : false,
                     closeIcon : true,
                     timeout : null,
-                    movable: true,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active');
                         lib.currentDetail = null;
@@ -221,7 +215,6 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     calculatePosition : false,
                     closeIcon : true,
                     timeout : null,
-                    movable: true,
                     onClose : function () {
                         $('#conclines tr.active').removeClass('active').addClass('prev-active');
                         lib.currentDetail = null;

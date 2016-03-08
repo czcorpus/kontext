@@ -920,7 +920,16 @@ export class PageModel implements Kontext.PluginProvider {
      * @returns {jQuery}
      */
     createAjaxLoader():JQuery {
-        return $('<div class="ajax-loading-msg"><span>' + this.translate('global__loading') + '</span></div>');
+        let loader = $(window.document.createElement('div'));
+        loader
+            .addClass('ajax-loading-msg')
+            .css({
+                'bottom' : '50px',
+                'position' : 'fixed',
+                'left' : ($(win).width() / 2 - 50) + 'px'
+            })
+            .append('<span>' + this.translate('global__loading') + '</span>');
+        return loader;
     }
 
     /**

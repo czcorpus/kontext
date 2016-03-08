@@ -39,6 +39,9 @@ class SyntaxTreeViewer {
 
     private createRenderFunction(tokenId):(box:popupbox.TooltipBox, finalize:()=>void)=>void {
         return (box:popupbox.TooltipBox, finalize:()=>void) => {
+            let ajaxAnim = this.pluginApi.ajaxAnim();
+            $('body').append(ajaxAnim);
+
             this.pluginApi.ajax(
                 'GET',
                 this.pluginApi.createActionUrl('get_syntax_data'),
@@ -50,6 +53,7 @@ class SyntaxTreeViewer {
 
             ).then(
                 (data) => {
+                    $(ajaxAnim).remove();
                     if (!data['contains_errors']) {
                         let treexFrame = window.document.createElement('div');
                         $(box.getContentElement()).append(treexFrame);
@@ -63,6 +67,7 @@ class SyntaxTreeViewer {
                     }
                 },
                 (error) => {
+                    $(ajaxAnim).remove();
                     finalize();
                     box.close();
                     this.pluginApi.showMessage('error', error);
