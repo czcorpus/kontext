@@ -75,7 +75,7 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
             logging.getLogger(__name__).warning(
                 'Hardcoded limit %01.2f sec. for intermediate concordance exceeded.' %
                 (hard_limit / 10.))
-        cache_map.del_full_entry((subchash, q))
+        cache_map.del_full_entry(subchash, q)
         raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
 
 
@@ -135,11 +135,11 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     for i in range(srch_from, 0, -1):
         cachefile = cache_map.cache_file_path(subchash, q[:i])
         if cachefile:
-            pidfile = cache_map[(subchash, q[:i])][2]
+            pidfile = cache_map.get_stored_pidfile(subchash, q[:i])
             _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
                            cache_map=cache_map, pidfile=pidfile, minsize=minsize)
             if not os.path.exists(cachefile):  # broken cache
-                del cache_map[(subchash, q)]
+                cache_map.del_entry(subchash, q)
                 try:
                     os.remove(pidfile)
                 except OSError:
@@ -153,7 +153,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
             conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
             if not _is_conc_alive(pidfile, minsize) and not conc.finished():
                 # unfinished and dead concordance
-                del cache_map[(subchash, q)]
+                cache_map.del_entry(subchash, q)
                 try:
                     os.remove(cachefile)
                 except OSError:
@@ -302,8 +302,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
     q = tuple(q)
 
     def get_size(pos):
-        cache_val = cache_map[(subchash, q[:pos + 1])]
-        return cache_val[1] if cache_val else None
+        return cache_map.get_stored_size(subchash, q[:pos + 1])
 
     def is_aligned_op(query_items, pos):
         return (query_items[pos].startswith('x-') and query_items[pos + 1] == 'p0 0 1 []' and

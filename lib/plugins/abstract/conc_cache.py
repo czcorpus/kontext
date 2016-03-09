@@ -18,11 +18,36 @@
 """
 Interfaces for concordance cache and its factory. Please note
 that the plug-in factory 'create_instance' must return an instance
-of AbstractCacheMappingFactory (i.e. not AbstractConcCache).
+of AbstractCacheMappingFactory (i.e. not AbstractConcCache) because
+the instance of AbstractConcCache is request-dependent.
 """
 
 
 class AbstractConcCache(object):
+
+    def get_stored_pidfile(self, subchash, q):
+        """
+        Return stored pidfile.
+        The method should return None if no record is found.
+
+        Arguments:
+        subchash -- a md5 hash generated from subcorpus identifier by
+                    CorpusManager.get_Corpus()
+        q -- a list of query elements
+        """
+        raise NotImplementedError()
+
+    def get_stored_size(self, subchash, q):
+        """
+        Return stored concordance size.
+        The method should return None if no record is found at all.
+
+        Arguments:
+        subchash -- a md5 hash generated from subcorpus identifier by
+                    CorpusManager.get_Corpus()
+        q -- a list of query elements
+        """
+        raise NotImplementedError()
 
     def refresh_map(self):
         """
@@ -41,7 +66,8 @@ class AbstractConcCache(object):
     def cache_file_path(self, subchash, q):
         """
         Returns a path to a cache file matching provided subcorpus hash and query
-        elements
+        elements. If there is no entry matching (subchash, q) then None must be
+        returned.
 
         arguments:
         subchash -- hashed subcorpus identifier (corplib.CorpusManager does this)
@@ -69,13 +95,24 @@ class AbstractConcCache(object):
         """
         raise NotImplementedError()
 
-    def del_full_entry(self, entry_key):
+    def del_entry(self, subchash, q):
+        """
+        Removes a specific entry with concrete subchash and query.
+
+        subchash -- a md5 hash generated from subcorpus identifier by
+                    CorpusManager.get_Corpus()
+        q -- a list of query elements
+        """
+        raise NotImplementedError()
+
+    def del_full_entry(self, subchash, q):
         """
         Removes all the entries with the same base query no matter
-        what other parameters (e.g. shuffle) of the query are.
+        what other operations the query (e.g. shuffle, filter) contains.
 
-        arguments:
-        entry_key -- a 2-tuple (subchash, query) where query is a tuple of min length 1
+        subchash -- a md5 hash generated from subcorpus identifier by
+                    CorpusManager.get_Corpus()
+        q -- a list of query elements
         """
         raise NotImplementedError()
 
