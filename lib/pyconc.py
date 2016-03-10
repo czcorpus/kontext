@@ -21,6 +21,7 @@ from functools import partial
 from sys import stderr
 import re
 import math
+import logging
 
 import manatee
 import l10n
@@ -57,6 +58,10 @@ def lngrp_sortstr(lab, separator='.'):
     # TODO: purpose not analyzed (command_g?)
     f = {'n': 'n%03g', 'c': 'c%s', 'x': '%s'}
     return '|'.join([f[c] % s for c, s in lngrp_sortcrit(lab, separator)])
+
+
+class EmptyParallelCorporaIntersection(Exception):
+    pass
 
 
 class PyConc(manatee.Concordance):
@@ -130,7 +135,11 @@ class PyConc(manatee.Concordance):
     def command_x(self, options):
         if options[0] == '-':
             self.switch_aligned(self.orig_corp.get_conffile())
-            self.add_aligned(options[1:])
+            try:
+                self.add_aligned(options[1:])
+            except RuntimeError as e:
+                logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
+                raise EmptyParallelCorporaIntersection(_('No alignment available for the selected languages'))
             self.switch_aligned(options[1:])
             self.corpname = options[1:]
         else:
@@ -221,7 +230,6 @@ class PyConc(manatee.Concordance):
                 sumf = float(reduce(add, freqs))
                 corr = min(sumf / max(freqs), sumn / max(norms))
                 return normwidth_rel / sumf * corr, normwidth_rel / sumn * corr
-
         words = manatee.StrVector()
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
