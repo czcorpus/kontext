@@ -1556,20 +1556,20 @@ msgid "Collocation form"
 msgstr "Formulář kolokací"
 
 #: cmpltmpl/coll.py:197
-msgid "In the range from"
-msgstr "V rozsahu od"
+msgid "Collocation window span"
+msgstr "V kontextu"
 
 #: cmpltmpl/coll.py:218
-msgid "Minimum frequency in corpus"
-msgstr "Minimální frekvence v korpusu"
+msgid "Minimum collocate frequency in the corpus"
+msgstr "Minimální frekvence kolokátu v korpusu"
 
 #: cmpltmpl/coll.py:230
-msgid "Minimum frequency in given range"
-msgstr "Minimální frekvence v daném rozsahu"
+msgid "Minimum collocate frequency in the span"
+msgstr "Minimální frekvence kolokátu v kontextu"
 
 #: cmpltmpl/coll.py:247
-msgid "Show functions"
-msgstr "Zobrazit funkce"
+msgid "Show measures"
+msgstr "Zobrazit míry"
 
 #: cmpltmpl/coll.py:255 cmpltmpl/coll.py:393
 msgid "T-score"

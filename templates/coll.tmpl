@@ -36,23 +36,28 @@ $_("Collocation form")#slurp
         <input type="hidden" name="collpage" value="1" />
         <table class="form">
         <tr>
-          <th>$_("Attribute"):
+          <th>$_("Attribute"):</th>
+          <td>
           <select name="cattr">
           #for $a in $Coll_attrlist
             <option value="$a.n" #if $cattr == $a.n then 'selected="selected"' else ''# >$a.label</option>
           #end for
           </select>
-
-          $_("In the range from"):</th>
-          <td><input type="text" name="cfromw" size="3" value="$cfromw" /> $_("to"): <input type="text" name="ctow" size="3" value="$ctow" />
           </td>
         </tr>
         <tr>
-          <th>$_("Minimum frequency in corpus"):</th>
+          <th>$_("Collocation window span"):</th>
+          <td>
+            <input type="text" name="cfromw" size="3" value="$cfromw" />
+            $_("to") <input type="text" name="ctow" size="3" value="$ctow" />
+          </td>
+        </tr>
+        <tr>
+          <th>$_("Minimum collocate frequency in the corpus"):</th>
           <td><input type="text" name="cminfreq" value="$cminfreq" size="4" /></td>
         </tr>
         <tr>
-          <th>$_("Minimum frequency in given range"):</th>
+          <th>$_("Minimum collocate frequency in the span"):</th>
           <td>
               <input type="text" name="cminbgr" value="$cminbgr" size="4"/>
             </td>
@@ -61,7 +66,7 @@ $_("Collocation form")#slurp
             <td colspan="2">
               <table class="colloc-metrics">
                   <tr>
-                      <th colspan="2">$_("Show functions"):</th>
+                      <th colspan="2">$_("Show measures"):</th>
                   </tr>
                   <tr>
                     <td><label for="cbgrfns_t">$_("T-score")</label></td>
