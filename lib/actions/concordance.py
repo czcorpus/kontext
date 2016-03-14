@@ -790,15 +790,32 @@ class Actions(Kontext):
             rel_mode = 0
         corp_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
-        conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')))
+        # all the arguments required by freqs calculation backend
+        kwargs = dict(corpname=self._corp().corpname, subcname=getattr(self._corp(), 'subcname', None),
+                      user_id=self._session_get('user', 'user'), minsize=None,
+                      q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize, save=self.args.save,
+                      samplesize=0, flimit=flimit, fcrit=fcrit, freq_sort=freq_sort, ml=ml,
+                      ftt_include_empty=self.args.ftt_include_empty,
+                      rel_mode=rel_mode, collator_locale=corp_info.collator_locale,
+                      fmaxitems=self.args.fmaxitems, fpage=self.args.fpage,
+                      line_offset=line_offset)
+
+        backend, conf = settings.get_full('corpora', 'freqs_backend')
+        if backend == 'celery':
+            import task
+            app = task.get_celery_app(conf['conf'])
+            res = app.send_task('worker.calculate_freqs', args=None, kwargs=kwargs)
+            # worker task caches the value AFTER the result is returned (see worker.py)
+            calc_result = res.get()
+        if backend == 'multiprocessing':
+            calc_result = freq_calc.calculate_freqs_mp(**kwargs)
+
         result = {
             'fcrit': [('fcrit', cr) for cr in fcrit],
             'FCrit': [{'fcrit': cr} for cr in fcrit],
-            'Blocks': [conc.xfreq_dist(cr, flimit, freq_sort, ml,
-                                       self.args.ftt_include_empty, rel_mode,
-                                       collator_locale=corp_info.collator_locale) for cr in fcrit],
+            'Blocks': calc_result['data'],
             'paging': 0,
-            'concsize': conc.size(),
+            'concsize': calc_result['conc_size'],
             'fmaxitems': self.args.fmaxitems,
             'quick_from_line': 1,
             'quick_to_line': None
@@ -810,18 +827,8 @@ class Actions(Kontext):
                     'quick_from_line': None, 'quick_to_line': None, 'FCrit': [], 'fcrit': []}
 
         if len(result['Blocks']) == 1:  # paging
-            items_per_page = self.args.fmaxitems
-            fstart = (self.args.fpage - 1) * self.args.fmaxitems + line_offset
-            self.args.fmaxitems = self.args.fmaxitems * self.args.fpage + 1 + line_offset
             result['paging'] = 1
-            if len(result['Blocks'][0]['Items']) < self.args.fmaxitems:
-                result['lastpage'] = 1
-            else:
-                result['lastpage'] = 0
-            result['Blocks'][0]['Total'] = len(result['Blocks'][0]['Items'])
-            result['Blocks'][0]['TotalPages'] = int(math.ceil(result['Blocks'][0]['Total'] /
-                                                              float(items_per_page)))
-            result['Blocks'][0]['Items'] = result['Blocks'][0]['Items'][fstart:self.args.fmaxitems - 1]
+            result['lastpage'] = calc_result['lastpage']
 
         for b in result['Blocks']:
             for item in b['Items']:
@@ -865,7 +872,7 @@ class Actions(Kontext):
                     if not item['freq']:
                         continue
                     item['pfilter'].append(('q', 'p%s' % fquery))
-                    if len(attrs) == 1 and item['freq'] <= conc.size():
+                    if len(attrs) == 1 and item['freq'] <= calc_result['conc_size']:
                         item['nfilter'].append(('q', 'n%s' % fquery))
                         # adding no error, no correction (originally for CUP)
         errs, corrs, err_block, corr_block = 0, 0, -1, -1
@@ -879,14 +886,14 @@ class Actions(Kontext):
                 corr_block = b_index
                 for item in block['Items']:
                     corrs += item['freq']
-        freq = conc.size() - errs - corrs
+        freq = calc_result['conc_size'] - errs - corrs
         if freq > 0 and err_block > -1 and corr_block > -1:
             pfilter = [('q',  'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
             cc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
                                     q=self.args.q + [pfilter[0][1]])
             freq = cc.size()
             err_nfilter, corr_nfilter = '', ''
-            if freq != conc.size():
+            if freq != calc_result['conc_size']:
                 err_nfilter = ';q=p0 0 1 ([] within <err/>) within ! <corr/>'
                 corr_nfilter = ';q=p0 0 1 ([] within ! <err/>) within <corr/>'
             result['Blocks'][err_block]['Items'].append(

@@ -20,13 +20,13 @@ import os
 import imp
 import sys
 import time
+import cPickle
 
 CURR_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '%s/lib' % CURR_PATH)
 import settings
 import initializer
 import plugins
-import freq_calc
 import translation
 from stderr2f import stderr_redirector
 
@@ -49,6 +49,7 @@ translation.activate('en_US')  # background jobs do not need localization
 
 from concworker import wcelery
 import task
+import freq_calc
 
 _, conf = settings.get_full('corpora', 'conc_calc_backend')
 app = task.get_celery_app(conf['conf'])
@@ -151,6 +152,31 @@ def calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, sa
     task = wcelery.CeleryCalculation()
     subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
     return task(initial_args, subc_path, corpus_name, subc_name, subchash, query, samplesize)
+
+
+class FreqsTask(app.Task):
+
+    cache_data = None
+
+    def after_return(self, *args, **kw):
+        if self.cache_data:
+            with open(self.cache_data['cache_path'], 'wb') as f:
+                cPickle.dump(self.cache_data['data'], f)
+
+
+@app.task(base=FreqsTask)
+def calculate_freqs(**kw):
+    fc = freq_calc.FreqCalc(corpname=kw['corpname'], subcname=kw['subcname'], user_id=kw['user_id'],
+                            minsize=kw['minsize'], q=kw['q'], fromp=kw['fromp'], pagesize=kw['pagesize'],
+                            save=kw['save'], samplesize=kw['samplesize'])
+    ans, cache_ans = fc.calc_freqs(flimit=kw['flimit'], freq_sort=kw['freq_sort'], ml=kw['ml'],
+                                   rel_mode=kw['rel_mode'], fcrit=kw['fcrit'],
+                                   ftt_include_empty=kw['ftt_include_empty'],
+                                   collator_locale=kw['collator_locale'],
+                                   fmaxitems=kw['fmaxitems'], fpage=kw['fpage'],
+                                   line_offset=kw['line_offset'])
+    calculate_freqs.cache_data = cache_ans
+    return ans
 
 
 @app.task

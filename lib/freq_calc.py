@@ -15,13 +15,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-import logging
 import re
 from datetime import datetime
 import time
+import math
+import hashlib
+import cPickle
 
+import corplib
+import conclib
 import settings
-
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
@@ -44,7 +47,7 @@ def corp_freqs_cache_path(corp, attrname):
     if hasattr(corp, 'spath'):
         ans = corp.spath.decode('utf-8')[:-4] + attrname
     else:
-        cache_dir = os.path.abspath(settings.get('corpora', 'freqs_cache_dir'))
+        cache_dir = os.path.abspath(settings.get('corpora', 'freqs_precalc_dir'))
         subdirs = (corp.corpname,)
         for d in subdirs:
             cache_dir = '%s/%s' % (cache_dir, d)
@@ -166,3 +169,110 @@ def build_arf_db(corp, attrname):
 
 def build_arf_db_status(corp, attrname):
     return _get_total_calc_status(corp_freqs_cache_path(corp, attrname))
+
+
+class FreqCalc(object):
+    """
+    Calculates a frequency distribution based on a defined concordance and frequency-related arguments.
+    The class is able to cache the data in a background process/task. This prevents KonText to calculate
+    (via Manatee) full frequency list.
+    """
+
+    NUM_LINES_CACHE_LIMIT = 200
+
+    def __init__(self, corpname, subcname, user_id, minsize=None, q=None, fromp=0, pagesize=0, save=0, samplesize=0):
+        """
+        Creates a new freq calculator with fixed concordance parameters.
+        """
+        self._corpname = corpname
+        self._subcname = subcname
+        self._user_id = user_id
+        self._minsize = minsize
+        self._q = q
+        self._fromp = fromp
+        self._pagesize = pagesize
+        self._save = save
+        self._samplesize = samplesize
+
+    def _cache_file_path(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
+        v = str(self._corpname) + str(self._subcname) + str(self._user_id) + ''.join(self._q) + \
+            str(fcrit) + str(flimit) + str(freq_sort) + str(ml) + str(ftt_include_empty) + str(rel_mode) + \
+            str(collator_locale)
+        filename = '%s.pkl' % hashlib.sha1(v).hexdigest()
+        return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
+
+    def calc_freqs(self, flimit, freq_sort, ml, rel_mode, fcrit, ftt_include_empty, collator_locale, fmaxitems, fpage,
+                   line_offset):
+        """
+        Calculate actual frequency data.
+
+        Returns:
+        a 2-tuple (freq_data, caching_data) where:
+            freq_data = dict(lastpage=..., data=..., fstart=..., fmaxitems=..., conc_size=...)
+            caching_data = dict(data=..., cache_path=...); can be also None which means 'do not cache'
+        """
+        cache_path = self._cache_file_path(fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale)
+        cache_ans = None
+
+        if os.path.isfile(cache_path):
+            with open(cache_path, 'rb') as f:
+                data, conc_size = cPickle.load(f)
+        else:
+            cm = corplib.CorpusManager()
+            corp = cm.get_Corpus(self._corpname, self._subcname)
+            conc = conclib.get_conc(corp=corp, user_id=self._user_id, minsize=self._minsize, q=self._q,
+                                    fromp=self._fromp, pagesize=self._pagesize, async=0, save=self._save,
+                                    samplesize=self._samplesize)
+            conc_size = conc.size()
+            data = [conc.xfreq_dist(cr, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale)
+                    for cr in fcrit]
+
+        lastpage = None
+        if len(data) == 1:  # a single block => pagination
+            total_length = len(data[0]['Items'])
+            if total_length >= FreqCalc.NUM_LINES_CACHE_LIMIT:
+                cache_ans = dict(data=(data, conc_size), cache_path=cache_path)
+            items_per_page = fmaxitems
+            fstart = (fpage - 1) * fmaxitems + line_offset
+            fmaxitems = fmaxitems * fpage + 1 + line_offset
+            if total_length < fmaxitems:
+                lastpage = 1
+            else:
+                lastpage = 0
+            ans = [dict(Total=total_length,
+                        TotalPages=int(math.ceil(total_length / float(items_per_page))),
+                        Items=data[0]['Items'][fstart:fmaxitems - 1],
+                        Head=data[0]['Head'])]
+        else:
+            ans = data
+            fstart = None
+        return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=fmaxitems,
+                    conc_size=conc_size), cache_ans
+
+
+def calculate_freqs_mp(**kw):
+    """
+    Calculate frequencies via multiprocessing package. Please note
+    that this is not suitable for Gunicorn-based installations as forking
+    new processes may confuse its process pool in a quite bad way. In such case
+    it is highly recommended to use 'celery' based calculation which is
+    fully decoupled from the webserver process.
+    """
+    import multiprocessing
+
+    def cache_results(data):
+        with open(data['cache_path'], 'wb') as f:
+            cPickle.dump(data['data'], f)
+
+    fc = FreqCalc(corpname=kw['corpname'], subcname=kw['subcname'], user_id=kw['user_id'],
+                  minsize=kw['minsize'], q=kw['q'], fromp=kw['fromp'], pagesize=kw['pagesize'],
+                  save=kw['save'], samplesize=kw['samplesize'])
+    ans, cache_ans = fc.calc_freqs(flimit=kw['flimit'], freq_sort=kw['freq_sort'], ml=kw['ml'],
+                                   rel_mode=kw['rel_mode'], fcrit=kw['fcrit'],
+                                   ftt_include_empty=kw['ftt_include_empty'],
+                                   collator_locale=kw['collator_locale'],
+                                   fmaxitems=kw['fmaxitems'], fpage=kw['fpage'],
+                                   line_offset=kw['line_offset'])
+    if cache_ans:
+        multiprocessing.Process(target=cache_results, args=(cache_ans,)).start()
+    return ans

@@ -57,6 +57,8 @@
         <calc_pid_dir>/path/to/tmp/calc/pid/dir</calc_pid_dir>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <freqs_backend conf="/path/to/celeryconfig.py">celery</freqs_backend>
+        <freqs_precalc_dir>/var/local/corpora/freqs-precalc</freqs_precalc_dir> <!-- this is optional -->
         <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <default_corpora>

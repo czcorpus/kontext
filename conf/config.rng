@@ -275,6 +275,16 @@
                             <value>celery</value>
                         </choice>
                     </element>
+                    <element name="freqs_backend">
+                        <a:documentation>Selects a backend used to calculate frequencies</a:documentation>
+                        <attribute name="conf">
+                            <text />
+                        </attribute>
+                        <choice>
+                            <value>multiprocessing</value>
+                            <value>celery</value>
+                        </choice>
+                    </element>
                     <element name="calc_pid_dir">
                         <a:documentation>Specifies a directory where concordance calculation
                         auxiliary files are temporarily created.</a:documentation>
@@ -294,9 +304,14 @@
                         <a:documentation>???</a:documentation>
                         <text />
                     </element>
-                    <element name="freqs_cache_dir">
+                    <element name="freqs_precalc_dir">
                         <a:documentation>A directory where precalculated data related to frequency
                         information is stored</a:documentation>
+                        <text />
+                    </element>
+                    <element name="freqs_cache_dir">
+                        <a:documentation>A directory where temporary user frequency results are stored
+                        to optimize pagination</a:documentation>
                         <text />
                     </element>
                     <element name="default_corpora">
