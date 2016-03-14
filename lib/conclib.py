@@ -19,7 +19,7 @@ import os
 import sys
 import time
 import logging
-from multiprocessing import Process, Pipe
+from multiprocessing import Process
 import cPickle
 import math
 
