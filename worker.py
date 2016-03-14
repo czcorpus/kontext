@@ -26,7 +26,7 @@ sys.path.insert(0, '%s/lib' % CURR_PATH)
 import settings
 import initializer
 import plugins
-import freq_precalc
+import freq_calc
 import translation
 from stderr2f import stderr_redirector
 
@@ -94,7 +94,7 @@ def _compile_frq(corp, attr, logfile):
         return {'message': 'freq already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_frq(attr)
-    return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
+    return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
 class CustomTasks(object):
@@ -157,7 +157,7 @@ def calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, sa
 def compile_frq(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
-    (see freq_precalc.build_arf_db)worker.py
+    (see freq_calc.build_arf_db)worker.py
     """
     corp = _load_corp(corp_id, subcorp_path)
     return _compile_frq(corp, attr, logfile)
@@ -167,14 +167,14 @@ def compile_frq(corp_id, subcorp_path, attr, logfile):
 def compile_arf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
-    (see freq_precalc.build_arf_db)
+    (see freq_calc.build_arf_db)
     """
     corp = _load_corp(corp_id, subcorp_path)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
-        base_path = freq_precalc.corp_freqs_cache_path(corp, attr)
+        base_path = freq_calc.corp_freqs_cache_path(corp, attr)
         frq_data_file = '%s.frq' % base_path
-        while num_wait > 0 and freq_precalc.calc_is_running(base_path, 'frq'):
+        while num_wait > 0 and freq_calc.calc_is_running(base_path, 'frq'):
             if os.path.isfile(frq_data_file):
                 break
             time.sleep(1)
@@ -188,14 +188,14 @@ def compile_arf(corp_id, subcorp_path, attr, logfile):
         return {'message': 'arf already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_arf(attr)
-    return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
+    return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
 @app.task
 def compile_docf(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
-    (see freq_precalc.build_arf_db)
+    (see freq_calc.build_arf_db)
     """
     corp = _load_corp(corp_id, subcorp_path)
     if is_compiled(corp, attr, 'docf'):
@@ -207,7 +207,7 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
         doc = corp.get_struct(doc_struct)
         with stderr_redirector(open(logfile, 'a')):
             corp.compile_docf(attr, doc.name)
-        return {'message': 'OK', 'last_log_record': freq_precalc.get_log_last_line(logfile)}
+        return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
         raise WorkerTaskException('Failed to compile docf: attribute %s.%s not found in %s' % (
                                   doc_struct, attr, corp_id))

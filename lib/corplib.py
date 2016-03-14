@@ -28,7 +28,7 @@ from l10n import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
-import freq_precalc
+import freq_calc
 
 
 def manatee_version():
@@ -459,7 +459,7 @@ class MissingSubCorpFreqFile(Exception):
 def frq_db(corp, attrname, nums='frq', id_range=0):
     import array
     import exceptions
-    filename = (freq_precalc.subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
+    filename = (freq_calc.subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':

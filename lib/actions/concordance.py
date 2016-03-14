@@ -26,7 +26,7 @@ from controller import UserActionException, exposed
 import settings
 import conclib
 import corplib
-import freq_precalc
+import freq_calc
 import plugins
 import butils
 from kwiclib import Kwic
@@ -1066,7 +1066,7 @@ class Actions(Kontext):
 
         except corplib.MissingSubCorpFreqFile as e:
             ans = {'attrname': self.args.cattr, 'tasks': []}
-            out = freq_precalc.build_arf_db(e.args[0], self.args.cattr)
+            out = freq_calc.build_arf_db(e.args[0], self.args.cattr)
             if type(out) is list:
                 processing = 0
                 ans['tasks'].extend(out)
@@ -1335,7 +1335,7 @@ class Actions(Kontext):
 
         except corplib.MissingSubCorpFreqFile as e:
             result.update({'attrname': self.args.cattr, 'tasks': []})
-            out = freq_precalc.build_arf_db(e.args[0], self.args.wlattr)
+            out = freq_calc.build_arf_db(e.args[0], self.args.wlattr)
             if type(out) is list:
                 processing = 0
                 result['tasks'].extend(out)
@@ -1471,7 +1471,7 @@ class Actions(Kontext):
                 tr = app.AsyncResult(t)
                 if tr.status == 'FAILURE':
                     raise task.ExternalTaskError('Task %s failed' % (t,))
-        return {'status': freq_precalc.build_arf_db_status(self._corp(), attrname)}
+        return {'status': freq_calc.build_arf_db_status(self._corp(), attrname)}
 
     @exposed(legacy=True)
     def attr_vals(self, avattr='', avpat=''):
