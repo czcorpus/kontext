@@ -452,6 +452,13 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
     return candidates
 
 
+def subcorp_base_file(corp, attrname):
+    if hasattr(corp, 'spath'):
+        return corp.spath[:-4].decode('utf-8') + attrname
+    else:
+        return corp.get_conf('PATH').decode('utf-8') + attrname
+
+
 class MissingSubCorpFreqFile(Exception):
     pass
 
@@ -459,7 +466,7 @@ class MissingSubCorpFreqFile(Exception):
 def frq_db(corp, attrname, nums='frq', id_range=0):
     import array
     import exceptions
-    filename = (freq_calc.subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
+    filename = (subcorp_base_file(corp, attrname) + '.' + nums).encode('utf-8')
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':

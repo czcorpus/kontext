@@ -57,13 +57,6 @@ def corp_freqs_cache_path(corp, attrname):
     return ans.encode('utf-8')
 
 
-def subcorp_base_file(corp, attrname):
-    if hasattr(corp, 'spath'):
-        return corp.spath[:-4].decode('utf-8') + attrname
-    else:
-        return corp.get_conf('PATH').decode('utf-8') + attrname
-
-
 def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     """
     Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
@@ -74,7 +67,7 @@ def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     attrname -- name of a positional or structure's attribute
     logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
     """
-    outfilename = subcorp_base_file(corp, attrname).encode('utf-8')
+    outfilename = corplib.subcorp_base_file(corp, attrname).encode('utf-8')
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return None
     elif hasattr(corp, 'spath'):
