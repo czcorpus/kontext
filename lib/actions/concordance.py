@@ -791,13 +791,14 @@ class Actions(Kontext):
         corp_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
         # all the arguments required by freqs calculation backend
-        kwargs = dict(corpname=self._corp().corpname, subcname=getattr(self._corp(), 'subcname', None),
-                      user_id=self._session_get('user', 'user'), minsize=None,
-                      q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize, save=self.args.save,
-                      samplesize=0, flimit=flimit, fcrit=fcrit, freq_sort=freq_sort, ml=ml,
-                      ftt_include_empty=self.args.ftt_include_empty,
-                      rel_mode=rel_mode, collator_locale=corp_info.collator_locale,
-                      fmaxitems=self.args.fmaxitems, fpage=self.args.fpage,
+        kwargs = dict(corpname=self._corp().corpname,
+                      subcname=getattr(self._corp(), 'subcname', None),
+                      subcpath=self.subcpath,
+                      user_id=self._session_get('user', 'user'),
+                      minsize=None, q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
+                      save=self.args.save, samplesize=0, flimit=flimit, fcrit=fcrit, freq_sort=freq_sort, ml=ml,
+                      ftt_include_empty=self.args.ftt_include_empty, rel_mode=rel_mode,
+                      collator_locale=corp_info.collator_locale, fmaxitems=self.args.fmaxitems, fpage=self.args.fpage,
                       line_offset=line_offset)
 
         backend, conf = settings.get_full('corpora', 'freqs_backend')

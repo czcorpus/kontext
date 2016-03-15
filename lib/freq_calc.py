@@ -173,7 +173,8 @@ class FreqCalc(object):
 
     NUM_LINES_CACHE_LIMIT = 200
 
-    def __init__(self, corpname, subcname, user_id, minsize=None, q=None, fromp=0, pagesize=0, save=0, samplesize=0):
+    def __init__(self, corpname, subcname, user_id, subcpath, minsize=None, q=None, fromp=0, pagesize=0,
+                 save=0, samplesize=0):
         """
         Creates a new freq calculator with fixed concordance parameters.
         """
@@ -186,6 +187,7 @@ class FreqCalc(object):
         self._pagesize = pagesize
         self._save = save
         self._samplesize = samplesize
+        self._subcpath = subcpath
 
     def _cache_file_path(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
         v = str(self._corpname) + str(self._subcname) + str(self._user_id) + ''.join(self._q) + \
@@ -211,7 +213,7 @@ class FreqCalc(object):
             with open(cache_path, 'rb') as f:
                 data, conc_size = cPickle.load(f)
         else:
-            cm = corplib.CorpusManager()
+            cm = corplib.CorpusManager(subcpath=self._subcpath)
             corp = cm.get_Corpus(self._corpname, self._subcname)
             conc = conclib.get_conc(corp=corp, user_id=self._user_id, minsize=self._minsize, q=self._q,
                                     fromp=self._fromp, pagesize=self._pagesize, async=0, save=self._save,
