@@ -17,14 +17,9 @@ from werkzeug.datastructures import MultiDict
 
 class Parameter(object):
     """
-    Setting an object of this type as a static property
-    of Controller causes Controller to create an object
-    property with wrapped value. This solves the attribute
-    mess in the original Bonito code.
-
-    arguments:
-    value -- a default value of the parameter (defines both value and type)
-    persistent -- bool value specifying whether we should save the value to user's settings
+    Defines an optional property of an argmapping object.
+    The standard way of setting such a property is to define
+    the Parameter instance as a static one.
     """
 
     NON_PERSISTENT = 0b0000  # not stored at all
@@ -34,7 +29,9 @@ class Parameter(object):
     def __init__(self, value, persistent=NON_PERSISTENT):
         """
         arguments:
-        value -- wrapped value (primitive types, empty dict, empty list, tuple)
+        value -- wrapped value (default value and type of the value;
+                 accepts primitive types, empty dict, empty list, tuple)
+        persistent -- an integer value composed of binary flags defining the persistence level of the property
         """
         self.value = value
         self.persistent = persistent
