@@ -180,6 +180,11 @@ def calculate_freqs(**kw):
 
 
 @app.task
+def clean_freqs_cache():
+    return freq_calc.clean_freqs_cache()
+
+
+@app.task
 def compile_frq(corp_id, subcorp_path, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.

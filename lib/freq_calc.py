@@ -171,7 +171,9 @@ class FreqCalc(object):
     (via Manatee) full frequency list.
     """
 
-    NUM_LINES_CACHE_LIMIT = 200
+    # a minimum data size for cache to be applied (configured
+    # via 'kontext/corpora/freqs_cache_min_lines')
+    DEFAULT_MIN_CACHED_FILE_ITEMS = 200
 
     def __init__(self, corpname, subcname, user_id, subcpath, minsize=None, q=None, fromp=0, pagesize=0,
                  save=0, samplesize=0):
@@ -195,6 +197,10 @@ class FreqCalc(object):
             str(collator_locale)
         filename = '%s.pkl' % hashlib.sha1(v).hexdigest()
         return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
+
+    @property
+    def min_cached_data_size(self):
+        return settings.get_int('corpora', 'freqs_cache_min_lines', FreqCalc.DEFAULT_MIN_CACHED_FILE_ITEMS)
 
     def calc_freqs(self, flimit, freq_sort, ml, rel_mode, fcrit, ftt_include_empty, collator_locale, fmaxitems, fpage,
                    line_offset):
@@ -225,7 +231,7 @@ class FreqCalc(object):
         lastpage = None
         if len(data) == 1:  # a single block => pagination
             total_length = len(data[0]['Items'])
-            if total_length >= FreqCalc.NUM_LINES_CACHE_LIMIT:
+            if total_length >= self.min_cached_data_size:
                 cache_ans = dict(data=(data, conc_size), cache_path=cache_path)
             items_per_page = fmaxitems
             fstart = (fpage - 1) * fmaxitems + line_offset
@@ -243,6 +249,24 @@ class FreqCalc(object):
             fstart = None
         return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=fmaxitems,
                     conc_size=conc_size), cache_ans
+
+
+def clean_freqs_cache():
+    root_dir = settings.get('corpora', 'freqs_cache_dir')
+    cache_ttl = settings.get_int('corpora', 'freqs_cache_ttl', 3600)
+    test_time = time.time()
+    all_files = os.listdir(root_dir)
+    num_removed = 0
+    num_error = 0
+    for item in all_files:
+        file_path = os.path.join(root_dir, item)
+        if test_time - os.path.getmtime(file_path) >= cache_ttl:
+            try:
+                os.unlink(file_path)
+                num_removed += 1
+            except OSError:
+                num_error += 1
+    return dict(total_files=len(all_files), num_removed=num_removed, num_error=num_error)
 
 
 def calculate_freqs_mp(**kw):
