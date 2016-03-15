@@ -31,9 +31,6 @@ from kwiclib import tokens2strclass
 from l10n import import_string
 import plugins
 
-cache_factory = plugins.get('conc_cache')
-lock_factory = plugins.get('locking')
-
 
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     ctxs = [{'n': _('%iL') % -c, 'ctx': '%i<0' % c} for c in range(-
@@ -124,7 +121,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     if not os.path.isdir(pid_dir):
         os.makedirs(pid_dir, mode=0o775)
 
-    cache_map = cache_factory.get_mapping(corp)
+    cache_map = plugins.get('conc_cache').get_mapping(corp)
     cache_map.refresh_map()
     if _contains_shuffle_seq(q):
         srch_from = 1
@@ -196,7 +193,7 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
     cachefile, pidfile = receiver.receive()
     try:
         _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
-                       cache_map=cache_factory.get_mapping(corp), pidfile=pidfile, minsize=minsize)
+                       cache_map=plugins.get('conc_cache').get_mapping(corp), pidfile=pidfile, minsize=minsize)
         if not os.path.exists(cachefile):
             raise RuntimeError('Concordance cache file [%s] not created. PID file: %s' %
                                (cachefile, pidfile))
@@ -212,7 +209,7 @@ def _get_sync_conc(corp, q, save, subchash, samplesize):
     conc = GeneralWorker().compute_conc(corp, q, samplesize)
     conc.sync()  # wait for the computation to finish
     if save:
-        cache_map = cache_factory.get_mapping(corp)
+        cache_map = plugins.get('conc_cache').get_mapping(corp)
         cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:1], conc.size())
         conc.save(cachefile)
         # update size in map file
@@ -268,7 +265,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
         if command in 'gae':  # user specific/volatile actions, cannot save
             save = 0
         if save:
-            cache_map = cache_factory.get_mapping(corp)
+            cache_map = plugins.get('conc_cache').get_mapping(corp)
             cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:act + 1], conc.size())
             if stored_pidfile:
                 _wait_for_conc(corp=corp, q=q[:act + 1], subchash=subchash, cachefile=cachefile,
@@ -298,7 +295,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
     translate -- if True then all the messages are translated according to the current
                  thread's locale information
     """
-    cache_map = cache_factory.get_mapping(corpus)
+    cache_map = plugins.get('conc_cache').get_mapping(corpus)
     q = tuple(q)
 
     def get_size(pos):

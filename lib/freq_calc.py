@@ -57,13 +57,6 @@ def corp_freqs_cache_path(corp, attrname):
     return ans.encode('utf-8')
 
 
-def subcorp_base_file(corp, attrname):
-    if hasattr(corp, 'spath'):
-        return corp.spath[:-4].decode('utf-8') + attrname
-    else:
-        return corp.get_conf('PATH').decode('utf-8') + attrname
-
-
 def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     """
     Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
@@ -74,7 +67,7 @@ def prepare_arf_calc_paths(corp, attrname, logstep=0.02):
     attrname -- name of a positional or structure's attribute
     logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
     """
-    outfilename = subcorp_base_file(corp, attrname).encode('utf-8')
+    outfilename = corplib.subcorp_base_file(corp, attrname).encode('utf-8')
     if os.path.isfile(outfilename + '.arf') and os.path.isfile(outfilename + '.docf'):
         return None
     elif hasattr(corp, 'spath'):
@@ -178,9 +171,12 @@ class FreqCalc(object):
     (via Manatee) full frequency list.
     """
 
-    NUM_LINES_CACHE_LIMIT = 200
+    # a minimum data size for cache to be applied (configured
+    # via 'kontext/corpora/freqs_cache_min_lines')
+    DEFAULT_MIN_CACHED_FILE_ITEMS = 200
 
-    def __init__(self, corpname, subcname, user_id, minsize=None, q=None, fromp=0, pagesize=0, save=0, samplesize=0):
+    def __init__(self, corpname, subcname, user_id, subcpath, minsize=None, q=None, fromp=0, pagesize=0,
+                 save=0, samplesize=0):
         """
         Creates a new freq calculator with fixed concordance parameters.
         """
@@ -193,6 +189,7 @@ class FreqCalc(object):
         self._pagesize = pagesize
         self._save = save
         self._samplesize = samplesize
+        self._subcpath = subcpath
 
     def _cache_file_path(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
         v = str(self._corpname) + str(self._subcname) + str(self._user_id) + ''.join(self._q) + \
@@ -200,6 +197,10 @@ class FreqCalc(object):
             str(collator_locale)
         filename = '%s.pkl' % hashlib.sha1(v).hexdigest()
         return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
+
+    @property
+    def min_cached_data_size(self):
+        return settings.get_int('corpora', 'freqs_cache_min_lines', FreqCalc.DEFAULT_MIN_CACHED_FILE_ITEMS)
 
     def calc_freqs(self, flimit, freq_sort, ml, rel_mode, fcrit, ftt_include_empty, collator_locale, fmaxitems, fpage,
                    line_offset):
@@ -218,7 +219,7 @@ class FreqCalc(object):
             with open(cache_path, 'rb') as f:
                 data, conc_size = cPickle.load(f)
         else:
-            cm = corplib.CorpusManager()
+            cm = corplib.CorpusManager(subcpath=self._subcpath)
             corp = cm.get_Corpus(self._corpname, self._subcname)
             conc = conclib.get_conc(corp=corp, user_id=self._user_id, minsize=self._minsize, q=self._q,
                                     fromp=self._fromp, pagesize=self._pagesize, async=0, save=self._save,
@@ -230,7 +231,7 @@ class FreqCalc(object):
         lastpage = None
         if len(data) == 1:  # a single block => pagination
             total_length = len(data[0]['Items'])
-            if total_length >= FreqCalc.NUM_LINES_CACHE_LIMIT:
+            if total_length >= self.min_cached_data_size:
                 cache_ans = dict(data=(data, conc_size), cache_path=cache_path)
             items_per_page = fmaxitems
             fstart = (fpage - 1) * fmaxitems + line_offset
@@ -248,6 +249,24 @@ class FreqCalc(object):
             fstart = None
         return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=fmaxitems,
                     conc_size=conc_size), cache_ans
+
+
+def clean_freqs_cache():
+    root_dir = settings.get('corpora', 'freqs_cache_dir')
+    cache_ttl = settings.get_int('corpora', 'freqs_cache_ttl', 3600)
+    test_time = time.time()
+    all_files = os.listdir(root_dir)
+    num_removed = 0
+    num_error = 0
+    for item in all_files:
+        file_path = os.path.join(root_dir, item)
+        if test_time - os.path.getmtime(file_path) >= cache_ttl:
+            try:
+                os.unlink(file_path)
+                num_removed += 1
+            except OSError:
+                num_error += 1
+    return dict(total_files=len(all_files), num_removed=num_removed, num_error=num_error)
 
 
 def calculate_freqs_mp(**kw):

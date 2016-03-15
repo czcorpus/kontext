@@ -75,7 +75,7 @@
                             <a:documentation>Logo link activated on click</a:documentation>
                             <text />
                         </element>
-                        <element name="logo_style">
+                        <element name="logo_inline_css">
                             <a:documentation>custom inline logo CSS (e.g. width &amp; height)</a:documentation>
                             <text />
                         </element>
@@ -314,6 +314,17 @@
                         to optimize pagination</a:documentation>
                         <text />
                     </element>
+                    <element name="freqs_cache_ttl">
+                        <a:documentation>Number of seconds cached files for the freq. distribution page
+                        remain available. This also depends on how often a respective clean-up procesure runs.
+                        </a:documentation>
+                        <data type="integer" />
+                    </element>
+                    <element name="freqs_cache_min_lines">
+                        <a:documentation>Specifies a minimum number of items frequency data must containt to
+                        be cacheable.</a:documentation>
+                        <data type="integer" />
+                    </element>
                     <element name="default_corpora">
                         <a:documentation>Specifies a default corpous to be offered to a user
                         in case she does not specify anything. A list can be used to define
@@ -503,6 +514,12 @@
                     <optional>
                         <element name="subcmixer">
                             <a:documentation>Generates subcorpora with defined text type ratios (experimental)</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="syntax_viewer">
                             <ref name="plugin_common" />
                             <ref name="customPluginConfiguration" />
                         </element>
