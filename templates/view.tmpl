@@ -303,6 +303,7 @@ $query_overview_bar()
 
             #for $i, $l in $enumerate($Lines)
             <tr data-toknum="$l.toknum" data-linegroup="$l.linegroup">
+                <td class="line-num">#if $line_numbers#$($int($l.linenum) + 1)#end if#</td>
                 <td class="manual-selection">
                     <input type="checkbox" value="1" data-linenum="$l.linenum" data-position="$l.toknum"
                            data-kwiclen="$l.kwiclen" />

@@ -26,7 +26,7 @@ class Options(Kontext):
     def get_mapping_url_prefix(self):
         return '/options/'
 
-    def _set_new_viewopts(self, newctxsize='', refs_up='', ctxunit=''):
+    def _set_new_viewopts(self, newctxsize='', refs_up='', ctxunit='', line_numbers=0):
         if ctxunit == '@pos':
             ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
@@ -36,6 +36,7 @@ class Options(Kontext):
                     _('Value [%s] cannot be used as a context width. Please use numbers 0,1,2,...') % newctxsize)
             self.args.kwicleftctx = '-%s%s' % (newctxsize, ctxunit)
             self.args.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
+        self.args.line_numbers = line_numbers
 
     def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
         self.args.attrs = ','.join(setattrs)
@@ -130,9 +131,8 @@ class Options(Kontext):
         return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
-    def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', shuffle=0):
-        # TODO pagesize?
-        self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit)
+    def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', line_numbers=0):
+        self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit, line_numbers=line_numbers)
         self._save_options(self.GENERAL_OPTIONS)
 
         if self.args.q:

@@ -54,8 +54,16 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewOpts, conf)
                 </tr>
                 <tr>
                     <th>$_("KWIC Context size (positions)"):</th>
-                    <td><input type="text" name="newctxsize" value="$newctxsize" size="2" />
+                    <td>
+                        <input type="text" name="newctxsize" value="$newctxsize" size="2" />
                         <input type="hidden" name="ctxunit" value="@pos" />
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="show-line-numbers-input">$_("Show line numbers"):</label></th>
+                    <td>
+                        <input id="show-line-numbers-input" type="checkbox" name="line_numbers" value="1"
+                           #if $line_numbers == 1#checked="true"#end if# />
                     </td>
                 </tr>
             </tbody>

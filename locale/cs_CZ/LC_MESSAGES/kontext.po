@@ -1981,6 +1981,9 @@ msgstr "Pro vybrané korpusy nejsou k dispozici žádná zarovnání"
 msgid "Failed to get the syntax tree due to limited permissions to the corpus (too long sentence)."
 msgstr "Nepodařilo se získat syntaktický strom kvůli omezeným právům přístupu ke korpusu (příliš dlouhá věta)."
 
+msgid "Show line numbers"
+msgstr "Zobrazovat čísla řádků"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

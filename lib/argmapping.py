@@ -292,6 +292,7 @@ class GlobalArgs(GeneralArgs):
     numbering = Parameter(0)
     align_kwic = Parameter(0)
     stored = Parameter(u'')
+    line_numbers = Parameter(0, persistent=Parameter.PERSISTENT)
     # end
 
     corpname = Parameter('')  # must be an empty string and not None
