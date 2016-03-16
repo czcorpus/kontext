@@ -1039,26 +1039,23 @@ table.form th {
 #stats-filter dl dd {
     margin: 0 0 10px 0;
 }
-table.colloc-metrics {
+fieldset.colloc-metrics {
     display: inline-block;
     margin-top: 1em;
     margin-right: 1em;
+    border: 1px solid #DADADA;
+    border-radius: @border-radius-default;
 
-    tbody {
-        display: block;
-        border: 1px solid #DADADA;
-        border-radius: @border-radius-default;
+    table.colloc-metrics td,
+    table.colloc-metrics th {
+        padding: 3px 5px;
     }
-}
-table.colloc-metrics td,
-table.colloc-metrics th {
-    padding: 3px 5px;
-}
-table.colloc-metrics th {
-    color: @color-default-text;
-}
-table.colloc-metrics label {
-    display: block;
+    table.colloc-metrics th {
+        color: @color-default-text;
+    }
+    table.colloc-metrics label {
+        display: block;
+    }
 }
 table#multilevel-freq-params {
     border-spacing: 0;

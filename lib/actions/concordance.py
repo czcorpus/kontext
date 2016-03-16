@@ -328,41 +328,6 @@ class Actions(Kontext):
                     relconcsize=1000000.0 * fullsize / self._corp().search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
-    @exposed(return_type='json', legacy=True)
-    def concdesc_json(self):
-        self.disabled_menu_items = (MainMenu.SAVE,)
-        out = {'Desc': []}
-        conc_desc = conclib.get_conc_desc(corpus=self._corp(), q=self.args.q,
-                                          subchash=getattr(self._corp(), "subchash", None))
-
-        def nicearg(arg):
-            args = arg.split('"')
-            niceargs = []
-            niceargsset = set()
-            for i in range(len(args)):
-                if i % 2:
-                    tmparg = args[i].strip('\\').replace('(?i)', '')
-                    if tmparg not in niceargsset:
-                        niceargs.append(tmparg)
-                        niceargsset.add(tmparg)
-                else:
-                    if args[i].startswith('within'):
-                        niceargs.append('within')
-            return ', '.join(niceargs)
-
-        for o, a, u1, u2, s in conc_desc:
-            u2.append(('corpname', self.args.corpname))
-            if self.args.usesubcorp:
-                u2.append(('usesubcorp', self.args.usesubcorp))
-            out['Desc'].append({
-                'op': o,
-                'arg': a,
-                'nicearg': nicearg(a),
-                'churl': self.urlencode(u1),
-                'tourl': self.urlencode(u2),
-                'size': s})
-        return out
-
     @exposed(access_level=1, vars=('concsize', ), legacy=True)
     def sort(self):
         """

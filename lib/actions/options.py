@@ -56,8 +56,10 @@ class Options(Kontext):
         """
         from collections import defaultdict
 
-        self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
+        if len(self.args.q) == 0:
+            self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.VIEW,
+                                        MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
+
         out = {}
         if self.args.maincorp:
             corp = corplib.manatee.Corpus(self.args.maincorp)
@@ -105,6 +107,7 @@ class Options(Kontext):
         out['newctxsize'] = self.args.kwicleftctx[1:]
         out['structattrs'] = structattrs
         out['curr_structattrs'] = self.args.structattrs
+        out['query_overview'] = self.concdesc_json().get('Desc', [])
         return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
