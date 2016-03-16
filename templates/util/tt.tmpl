@@ -26,6 +26,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ## Text Types
 #set $showhiddenlist = $getVar("showhidden", '').split(".")
 <div class="text-type-params" data-bib-attr="$TextTypeSel['bib_attr']">
+    #if $plugin_js.get('live_attributes')
+    <div class="live-attributes">
+        <div class="controls">
+            <a id="live-attrs-update" class="util-button">$_('refine selection')</a>
+            <a id="live-attrs-reset" class="util-button">$_('reset selection')</a>
+        </div>
+        <div class="steps"></div>
+    </div>
+    #end if
+
     <div class="text-type-top-bar">
         #for $i, $nn in $enumerate($TextTypeSel['Normslist'])
         #if $i > 0#|#end if#
@@ -35,134 +45,123 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         #end for
     </div>
 
-    #for $t in $TextTypeSel['Blocks']  ## f1
-    #for $l in $t['Line'] ## f2
+    <div class="text-types-selection">
+        #for $t in $TextTypeSel['Blocks']  ## f1
+        #for $l in $t['Line'] ## f2
 
-    <table class="envelope" data-attr="$_($l['label'])" data-is-numeric="$int($l['numeric'])"
-        data-is-range="$l['is_interval']" border="0">
-        <tr class="attrib-name">
-            <th>
-                $_($l['label'])
-                #if $l.attr_doc
-                <a class="external-help" title="$l.attr_doc_label" href="${l.attr_doc}" target="_blank"><img class="over-img" src="../files/img/question-mark.svg" data-alt-img="../files/img/question-mark_s.svg" /></a>
-                #end if
-            </th>
-        </tr>
-        <tr class="data-rows">
-            <td>
-                <div class="scrollable">
-                    <table>
-                        <tbody>
-                        #if $l.has_key('Values') ## 1
-                        #if $l.has_key('hierarchical') ## 2
-                        <tr>
-                            <td>
-                                <ul>
-                                    #set $hsep = $l['hierarchical']
-                                    #for $v in $l['Values'] ## f3
-                                    #if $v['startdiv'] ## 3
-                                    #set $hidden = ("div_"+$v['key'] in $showhiddenlist) and 'class="visible"' or 'class="hidden"'
-                                    <ul id="div_$v['key']" $hidden>
-                                    #end if ## -3
-                                    <li>
-                                        #if $v['display_plus'] ## 3
-                                        #set $icon = ("div_"+$v['key']+$hsep+$v['label'] in $showhiddenlist) and 'minus' or 'plus'
-                                        <img class="plus-minus" src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")"
-                                        data-elementid="div_$v['key']$hsep$v['label']" data-storeval="1" data-path="${files_path}" />
-                                        #else
-                                        <img src="$files_path/img/grey.png" alt="$_("leaf")" width="13" height="0" class="opaque" />
+        <table class="envelope" data-attr="$_($l['label'])" data-is-numeric="$int($l['numeric'])"
+            data-is-range="$l['is_interval']" border="0">
+            <tr class="attrib-name">
+                <th>
+                    $_($l['label'])
+                    #if $l.attr_doc
+                    <a class="external-help" title="$l.attr_doc_label" href="${l.attr_doc}" target="_blank"><img class="over-img" src="../files/img/question-mark.svg" data-alt-img="../files/img/question-mark_s.svg" /></a>
+                    #end if
+                </th>
+            </tr>
+            <tr class="data-rows">
+                <td>
+                    <div class="scrollable">
+                        <table>
+                            <tbody>
+                            #if $l.has_key('Values') ## 1
+                            #if $l.has_key('hierarchical') ## 2
+                            <tr>
+                                <td>
+                                    <ul>
+                                        #set $hsep = $l['hierarchical']
+                                        #for $v in $l['Values'] ## f3
+                                        #if $v['startdiv'] ## 3
+                                        #set $hidden = ("div_"+$v['key'] in $showhiddenlist) and 'class="visible"' or 'class="hidden"'
+                                        <ul id="div_$v['key']" $hidden>
                                         #end if ## -3
-                                        #if $v['v'] ## 3
-                                        <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
-                                        <label for="sca_$l['name']">$_($v['label'])</label>
-                                        #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') ## 4
-                                        ($v.get('xcnt', ''))
-                                        #end if ## -4
+                                        <li>
+                                            #if $v['display_plus'] ## 3
+                                            #set $icon = ("div_"+$v['key']+$hsep+$v['label'] in $showhiddenlist) and 'minus' or 'plus'
+                                            <img class="plus-minus" src="$files_path/img/${icon}.png" id="div_$v['key']$hsep${v['label']}img" alt="$_("hide/show")"
+                                            data-elementid="div_$v['key']$hsep$v['label']" data-storeval="1" data-path="${files_path}" />
+                                            #else
+                                            <img src="$files_path/img/grey.png" alt="$_("leaf")" width="13" height="0" class="opaque" />
+                                            #end if ## -3
+                                            #if $v['v'] ## 3
+                                            <input type="checkbox" name="sca_$l['name']" value="$v['v']" />
+                                            <label for="sca_$l['name']">$_($v['label'])</label>
+                                            #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') ## 4
+                                            ($v.get('xcnt', ''))
+                                            #end if ## -4
+                                            #end if ## -3
+                                            #if not $v['display_plus'] ## 3
+                                        </li>
                                         #end if ## -3
-                                        #if not $v['display_plus'] ## 3
+                                        #for $i in $range($v['enddiv']) ## f4
+                                    </ul>
                                     </li>
-                                    #end if ## -3
-                                    #for $i in $range($v['enddiv']) ## f4
-                                </ul>
-                                </li>
-                                #end for ## -f4
-                                #end for ## -f3
-                                </ul>
-                            </td>
-                        </tr>
-                        #else  ## non-hierarchical
-                        #set $i = 0
-                        #for $v in $l['Values'] ## f3
-                        #if 'v' in $v ## 3
-                        <tr>
-                            <td>
-                                #set $checked = ''
-                                #if $varExists('checked_sca') ## 4
-                                #set $item_value = $v['v']
-                                #if $item_value in $checked_sca.get($l['name'], {}) ## 5
-                                #set $checked = 'checked="checked"'
-                                #end if ## -5
+                                    #end for ## -f4
+                                    #end for ## -f3
+                                    </ul>
+                                </td>
+                            </tr>
+                            #else  ## non-hierarchical
+                            #set $i = 0
+                            #for $v in $l['Values'] ## f3
+                            #if 'v' in $v ## 3
+                            <tr>
+                                <td>
+                                    #set $checked = ''
+                                    #if $varExists('checked_sca') ## 4
+                                    #set $item_value = $v['v']
+                                    #if $item_value in $checked_sca.get($l['name'], {}) ## 5
+                                    #set $checked = 'checked="checked"'
+                                    #end if ## -5
+                                    #end if ## -4
+                                    <label><input id="sca.$i.$l['name']" class="attr-selector" type="checkbox"
+                                                  name="sca_$l['name']"
+                                                  value="#if $v['v']#$v['v']#else#$empty_attr_value_placeholder#end if#"
+                                                  $checked />
+                                        #if $v['v']#$v['v']#else#$empty_attr_value_placeholder#end if#</label>
+                                </td>
+                                #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical') ## 4
+                                <td class="num">$v.get('xcnt', '')</td>
+                                #else
+                                <td></td>
                                 #end if ## -4
-                                <label><input id="sca.$i.$l['name']" class="attr-selector" type="checkbox"
-                                              name="sca_$l['name']"
-                                              value="#if $v['v']#$v['v']#else#$empty_attr_value_placeholder#end if#"
-                                              $checked />
-                                    #if $v['v']#$v['v']#else#$empty_attr_value_placeholder#end if#</label>
-                            </td>
-                            #if $TextTypeSel['Normslist'] and not $l.has_key('textboxlength') and not $l.has_key('hierarchical') ## 4
-                            <td class="num">$v.get('xcnt', '')</td>
-                            #else
-                            <td></td>
-                            #end if ## -4
-                            <td>
-                                #if $l['label'] == $bib_conf.label_attr
-                                <a class="bib-info" data-bib-id="$v.get('v', '')">i</a>
-                                #end if
-                            </td>
-                        </tr>
-                        #end if ## -3
-                        #set $i = $i + 1
-                        #end for ## -f3
-                        #end if ## -2
+                                <td>
+                                    #if $l['label'] == $bib_conf.label_attr
+                                    <a class="bib-info" data-bib-id="$v.get('v', '')">i</a>
+                                    #end if
+                                </td>
+                            </tr>
+                            #end if ## -3
+                            #set $i = $i + 1
+                            #end for ## -f3
+                            #end if ## -2
 
-                        #else ## ~1 (no values => just place a text input field)
-                        <tr>
-                            <td>
-                                <input id="scaid_$l['name']" class="raw-selection" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
-                            </td>
-                        </tr>
-                        #end if  ## -1 (Values)
-                        </tbody>
-                    </table>
-                </div>
-            </td>
-        </tr>
-        <tr class="metadata">
-            <td></td>
-        </tr>
-        <tr class="last-line">
-            <td>
-                #if $len($l.pop('Values', ())) > 0
-                <label class="select-all"><input class="select-all" type="checkbox" data-status="1" />$_('Select all')</label>
-                #end if
-            </td>
-        </tr>
-    </table>
-
+                            #else ## ~1 (no values => just place a text input field)
+                            <tr>
+                                <td>
+                                    <input id="scaid_$l['name']" class="raw-selection" name="sca_$l['name']" type="text" size="$l['textboxlength']" />
+                                </td>
+                            </tr>
+                            #end if  ## -1 (Values)
+                            </tbody>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+            <tr class="metadata">
+                <td></td>
+            </tr>
+            <tr class="last-line">
+                <td>
+                    #if $len($l.pop('Values', ())) > 0
+                    <label class="select-all"><input class="select-all" type="checkbox" data-status="1" />$_('Select all')</label>
+                    #end if
+                </td>
+            </tr>
+        </table>
     #end for ## -f2
     #end for ## -f1
-
-    #if $plugin_js.get('live_attributes')
-    <div class="live-attributes">
-        <div class="steps">
-
-        </div>
-        <div class="controls">
-            <a id="live-attrs-update" class="util-button">$_('refine selection')</a>
-            <a id="live-attrs-reset" class="util-button">$_('reset selection')</a>
-        </div>
     </div>
-    #end if
 
 </div>
 #end def
