@@ -445,35 +445,38 @@ button#reset-tag-button {
     color: @color-logo-pink;
 }
 // --------------------- live attributes ----------
-.live-attributes div.steps > * {
-    vertical-align: middle;
-}
-.live-attributes div.steps {
-    margin: 10px 0 10px 0;
-    text-align: left;
-}
-.live-attributes div.steps span.arrow {
-    color: @color-widget-orange;
-}
-.live-attributes div.steps .step {
-    border-spacing: 0;
-    border: 1px solid @color-widget-orange;
-    border-radius: @border-radius-default;
-    box-shadow: @portal-box-shadow;
-    display: inline-block;
-    background-color: #FFFFFF;
-    margin-top: 10px;
-}
-.live-attributes div.steps table.step .num {
-    background-color: @color-widget-orange;
-    color: #FFFFFF;
-    padding: 8px;
-}
-.live-attributes div.steps table.step .data {
-    padding: 4px 8px;
-}
-.live-attributes .util-button {
-    margin-top: 12px;
+.live-attributes {
+    >* {
+        vertical-align: middle;
+    }
+    div.steps {
+        margin: 10px 0 10px 0;
+        text-align: left;
+
+        span.arrow {
+            color: @color-widget-orange;
+        }
+        .step {
+            border-spacing: 0;
+            border: 1px solid @color-widget-orange;
+            border-radius: @border-radius-default;
+            box-shadow: @portal-box-shadow;
+            display: inline-block;
+            background-color: #FFFFFF;
+            margin-top: 10px;
+        }
+        table.step .num {
+            background-color: @color-widget-orange;
+            color: #FFFFFF;
+            padding: 8px;
+        }
+        table.step .data {
+            padding: 4px 8px;
+        }
+    }
+    .util-button {
+        margin-top: 12px;
+    }
 }
 table.envelope .range-selector {
     padding: 5px 8px 5px 12px;

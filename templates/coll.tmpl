@@ -64,80 +64,84 @@ $_("Collocation form")#slurp
         </tr>
         <tr>
             <td colspan="2">
-              <table class="colloc-metrics">
-                  <tr>
-                      <th colspan="2">$_("Show measures"):</th>
-                  </tr>
-                  <tr>
-                    <td><label for="cbgrfns_t">$_("T-score")</label></td>
-                    <td><input id="cbgrfns_t" type="checkbox" name="cbgrfns" value="t" #if 't' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-                  <tr>
-                    <td><label for="cbgrfns_m">$_("MI")</label></td>
-                    <td><input id="cbgrfns_m" type="checkbox" name="cbgrfns" value="m" #if 'm' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-                  <tr>
-                    <td><label for="cbgrfns_3">$_("MI3")</label></td>
-                    <td><input id="cbgrfns_3" type="checkbox" name="cbgrfns" value="3" #if '3' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-                  <tr>
-                    <td><label for="cbgrfns_l">$_("log likelihood")</label></td>
-                    <td><input id="cbgrfns_l" type="checkbox" name="cbgrfns" value="l" #if 'l' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-                  <tr>
-                    <td><label for="cbgrfns_s">$_("min. sensitivity")</label></td>
-                    <td><input id="cbgrfns_s" type="checkbox" name="cbgrfns" value="s" #if 's' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-                  <tr>
-                      <td><label for="cbgrfns_d">$_("logDice")</label></td>
-                      <td><input id="cbgrfns_d" type="checkbox" name="cbgrfns" value="d" #if 'd' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-                  <tr>
-                    <td><label for="cbgrfns_p">$_("MI.log_f")</label></td>
-                    <td><input id="cbgrfns_p" type="checkbox" name="cbgrfns" value="p" #if 'p' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-                  <tr>
-                    <td><label for="cbgrfns_r">$_("relative freq.")<label></td>
-                    <td><input id="cbgrfns_r" type="checkbox" name="cbgrfns" value="r" #if 'r' in $cbgrfns then 'checked="checked"' else ''# /></td>
-                  </tr>
-          </table>
-          <table class="colloc-metrics">
-              <tr>
-                  <th colspan="2">$_("Sort by"):</th>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_t">$_("T-score")</label></td>
-                  <td><input id="csortfn_t" name="csortfn" type="radio" value="t" #if $csortfn == 't' then 'checked="checked"' else ''# /></td>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_m">$_("MI")</label></td>
-                  <td><input id="csortfn_m" name="csortfn" type="radio" value="m" #if $csortfn == 'm' then 'checked="checked"' else ''# /></td>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_3">$_("MI3")</label></td>
-                  <td><input id="csortfn_3" name="csortfn" type="radio" value="3" #if $csortfn == '3' then 'checked="checked"' else ''# /></td>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_l">$_("log likelihood")</label></td>
-                  <td><input id="csortfn_l" name="csortfn" type="radio" value="l" #if $csortfn == 'l' then 'checked="checked"' else ''# /></td>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_s">$_("min. sensitivity")</label></td>
-                  <td><input id="csortfn_s" name="csortfn" type="radio" value="s" #if $csortfn == 's' then 'checked="checked"' else ''# /></td>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_d">$_("logDice")</label></td>
-                  <td><input id="csortfn_d" name="csortfn" type="radio" value="d" #if $csortfn == 'd' then 'checked="checked"' else ''# /></td>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_p">$_("MI.log_f")</label></td>
-                  <td><input id="csortfn_p" name="csortfn" type="radio" value="p" #if $csortfn == 'p' then 'checked="checked"' else ''# /></td>
-              </tr>
-              <tr>
-                  <td><label for="csortfn_r">$_("relative freq.")</label></td>
-                  <td><input id="csortfn_r" name="csortfn" type="radio" value="r" #if $csortfn == 'r' then 'checked="checked"' else ''# /></td>
-              </tr>
-          </table>
+              <fieldset class="colloc-metrics">
+                <legend>$_("Show measures")</legend>
+                    <table>
+                      <tbody>
+                          <tr>
+                            <td><label for="cbgrfns_t">$_("T-score")</label></td>
+                            <td><input id="cbgrfns_t" type="checkbox" name="cbgrfns" value="t" #if 't' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                            <td><label for="cbgrfns_m">$_("MI")</label></td>
+                            <td><input id="cbgrfns_m" type="checkbox" name="cbgrfns" value="m" #if 'm' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                            <td><label for="cbgrfns_3">$_("MI3")</label></td>
+                            <td><input id="cbgrfns_3" type="checkbox" name="cbgrfns" value="3" #if '3' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                            <td><label for="cbgrfns_l">$_("log likelihood")</label></td>
+                            <td><input id="cbgrfns_l" type="checkbox" name="cbgrfns" value="l" #if 'l' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                            <td><label for="cbgrfns_s">$_("min. sensitivity")</label></td>
+                            <td><input id="cbgrfns_s" type="checkbox" name="cbgrfns" value="s" #if 's' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="cbgrfns_d">$_("logDice")</label></td>
+                              <td><input id="cbgrfns_d" type="checkbox" name="cbgrfns" value="d" #if 'd' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                            <td><label for="cbgrfns_p">$_("MI.log_f")</label></td>
+                            <td><input id="cbgrfns_p" type="checkbox" name="cbgrfns" value="p" #if 'p' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                            <td><label for="cbgrfns_r">$_("relative freq.")<label></td>
+                            <td><input id="cbgrfns_r" type="checkbox" name="cbgrfns" value="r" #if 'r' in $cbgrfns then 'checked="checked"' else ''# /></td>
+                          </tr>
+                      </tbody>
+                    </table>
+              </fieldset>
+              <fieldset class="colloc-metrics">
+                <legend>$_("Sort by")</legend>
+                    <table>
+                      <tbody>
+                          <tr>
+                              <td><label for="csortfn_t">$_("T-score")</label></td>
+                              <td><input id="csortfn_t" name="csortfn" type="radio" value="t" #if $csortfn == 't' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="csortfn_m">$_("MI")</label></td>
+                              <td><input id="csortfn_m" name="csortfn" type="radio" value="m" #if $csortfn == 'm' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="csortfn_3">$_("MI3")</label></td>
+                              <td><input id="csortfn_3" name="csortfn" type="radio" value="3" #if $csortfn == '3' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="csortfn_l">$_("log likelihood")</label></td>
+                              <td><input id="csortfn_l" name="csortfn" type="radio" value="l" #if $csortfn == 'l' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="csortfn_s">$_("min. sensitivity")</label></td>
+                              <td><input id="csortfn_s" name="csortfn" type="radio" value="s" #if $csortfn == 's' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="csortfn_d">$_("logDice")</label></td>
+                              <td><input id="csortfn_d" name="csortfn" type="radio" value="d" #if $csortfn == 'd' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="csortfn_p">$_("MI.log_f")</label></td>
+                              <td><input id="csortfn_p" name="csortfn" type="radio" value="p" #if $csortfn == 'p' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                          <tr>
+                              <td><label for="csortfn_r">$_("relative freq.")</label></td>
+                              <td><input id="csortfn_r" name="csortfn" type="radio" value="r" #if $csortfn == 'r' then 'checked="checked"' else ''# /></td>
+                          </tr>
+                      </tbody>
+                    </table>
+                </fieldset>
           </td>
         </tr>
         </table>
