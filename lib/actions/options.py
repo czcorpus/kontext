@@ -65,6 +65,7 @@ class Options(Kontext):
                                if n]
         else:
             corp = self._corp()
+        out['fixed_attr'] = 'word'
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = self.args.structs.split(',')
         out['Availstructs'] = [{'n': n,

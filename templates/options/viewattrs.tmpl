@@ -48,8 +48,14 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
 
         #set $navid = 'id="firstattr"'
         #for $a in $AttrList
-        #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
-        <label><input type='checkbox' name='setattrs' value='$a.n' $checked $navid/> $a.label</label><br/>
+        #if $a.n != $fixed_attr
+            #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
+            <label><input type="checkbox" name="setattrs" value="$a.n" $checked $navid/> $a.label</label>
+        #else
+            <input type="hidden" name='setattrs' value="$a.n" />
+            <label><input type="checkbox" checked="true" disabled="true" /> $a.label</label>
+        #end if
+        <br />
         #set $navid = ''
         #end for
         <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
