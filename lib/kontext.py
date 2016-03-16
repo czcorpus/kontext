@@ -129,7 +129,7 @@ class Kontext(Controller):
                            MainMenu.CORPORA('new-subcorpus'))
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
-                       'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize')
+                       'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'collpage', 'cbgrfns',
                           'csortfn')

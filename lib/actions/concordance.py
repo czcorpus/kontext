@@ -254,6 +254,7 @@ class Actions(Kontext):
                                                  dict(structs=self._get_struct_opts()))
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         out['aligned_corpora'] = self.args.sel_aligned
+        out['line_numbers'] = self.args.line_numbers
         return out
 
     @exposed(argmappings=(ConcArgsMapping, QueryInputs))

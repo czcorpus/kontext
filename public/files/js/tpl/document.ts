@@ -669,7 +669,7 @@ export class PageModel implements Kontext.PluginProvider {
             updateButtonStatus;
 
         if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
-            jqCheckboxes = jqContext.find('input[type="checkbox"]:not(.select-all)');
+            jqCheckboxes = jqContext.find('input[type="checkbox"]:not(.select-all):not(:disabled)');
 
         } else {
             jqCheckboxes = jqContext;
