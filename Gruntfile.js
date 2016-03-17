@@ -98,8 +98,17 @@
                                 "public/files/css/keyboard.css",
                                 "public/files/css/jscrollpane.css"
                             ];
-                            return ans.concat(kontext.getThemeStyles('./conf/config.xml'));
+                            return ans.concat(kontext.getCustomStyles('./conf/config.xml', './public/files/js/plugins'));
                         }())
+                    },
+                    options: {
+                        compress: true
+                    }
+                },
+                devel: {
+                    files: {
+                        "public/files/css/custom.min.css": kontext.getCustomStyles('./conf/config.xml',
+                                './public/files/js/plugins')
                     },
                     options: {
                         compress: true
@@ -269,13 +278,13 @@
         });
 
         // generates development-ready project (i.e. no minimizations/optimizations)
-        grunt.registerTask('devel', ['clean:all',
+        grunt.registerTask('devel', ['clean:all', 'less:devel',
                 'ts:devel', 'babel', 'copy:dummyCompile', 'copy:devel',
                 'requirejs:vendor', 'translations:devel', 'clean:cleanup', 'exec']);
 
         // regenerates JavaScript files for development-ready project (i.e. no min./optimizations
         // and no Cheetah templates compiled)
-        grunt.registerTask('develjs', ['clean:jsKeepVendor',
+        grunt.registerTask('develjs', ['clean:jsKeepVendor', 'less:devel',
                 'ts:devel', 'babel', 'copy:dummyCompile',
                 'copy:dummyOptimize', 'translations:devel', 'clean:cleanup']);
 

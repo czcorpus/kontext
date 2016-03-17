@@ -55,14 +55,27 @@
         return ans;
     }
 
-    /**
-     * Finds CSS paths defined in a custom KonText theme. This is merged during the
-     * build process with the rest of CSS.
-     */
-    module.exports.getThemeStyles = function (confPath) {
-        let xmldom = require('xmldom');
-        let data = fs.readFileSync(confPath, {encoding: 'utf8'});
-        let kontextNode = new xmldom.DOMParser().parseFromString(data).getElementsByTagName('kontext')[0];
+    function findAllPluginCss(pluginDir, doc) {
+        function endsWith(s, subs) {
+            return s.indexOf(subs) === s.length - subs.length;
+        }
+        let ans = [];
+        findPluginTags(doc).forEach((item) => {
+            let dirPath;
+            if (item['jsModule']) {
+                dirPath = pluginDir + '/' + item['jsModule'];
+                fs.readdirSync(dirPath).forEach(function (filename) {
+                    if (endsWith(filename, '.css') || endsWith(filename, '.less')) {
+                        ans.push(dirPath + '/' + filename);
+                    }
+                });
+            }
+        });
+        return ans;
+    }
+
+    function findAllThemeCss(doc) {
+        let kontextNode = doc.getElementsByTagName('kontext')[0];
         let themeNode = null;
         let cssNode = null;
         let styles = [];
@@ -92,6 +105,17 @@
         }
         return styles;
     }
+
+    /**
+     * Finds CSS paths defined in a custom KonText theme. This is merged during the
+     * build process with the rest of CSS.
+     */
+    module.exports.getCustomStyles = function (confPath, pluginsPath) {
+        let xmldom = require('xmldom');
+        let data = fs.readFileSync(confPath, {encoding: 'utf8'});
+        let doc = new xmldom.DOMParser().parseFromString(data);
+        return findAllThemeCss(doc).concat(findAllPluginCss(pluginsPath, doc));
+    };
 
     /**
      * Produces mapping for modules with 'fake' (= non filesystem) paths.
@@ -183,7 +207,6 @@
         });
         return ans;
     };
-
 
     function findAllMessageFiles(startDir) {
         let ans = [];

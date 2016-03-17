@@ -964,8 +964,6 @@ class Kontext(Controller):
 
         data['theme'] = {
             'name': settings.get('theme', 'name'),
-            'css': [os.path.normpath('../files/themes/%s/%s' % (theme_name, p))
-                    for p in theme_css],
             'logo_path': os.path.normpath('../files/themes/%s/%s' % (theme_name, logo_img)),
             'logo_mouseover_path': os.path.normpath('../files/themes/%s/%s' % (theme_name,
                                                                                logo_alt_img)),
@@ -974,6 +972,12 @@ class Kontext(Controller):
             'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
             'fonts': fonts
         }
+        if settings.is_debug_mode() and os.path.isfile(os.path.normpath('../files/css/custom.min.css')):
+            # custom.min.css contains both theme and plug-in custom stylesheets
+            data['theme']['css'] = os.path.normpath('../files/css/custom.min.css')
+        else:
+            # in production mode, all the styles are packed into a single file
+            data['theme']['css'] = None
 
     def _add_globals(self, result, methodname, action_metadata):
         """

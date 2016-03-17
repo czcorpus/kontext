@@ -41,9 +41,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/widgets.less" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/keyboard.css" />
 <link rel="stylesheet" type="text/css" href="$files_path/css/jscrollpane.css" />
-#for $theme_css in $theme.css
-<link rel="stylesheet" type="text/css" href="$theme_css" />
-#end for
+#if $theme.css
+<link rel="stylesheet" type="text/css" href="$theme.css" />
+#end if
 #else
 <link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css#if $deployment_id#?v=$deployment_id#end if#" />
 #end if
