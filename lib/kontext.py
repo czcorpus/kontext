@@ -972,7 +972,8 @@ class Kontext(Controller):
             'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
             'fonts': fonts
         }
-        if settings.is_debug_mode() and os.path.isfile(os.path.normpath('../files/css/custom.min.css')):
+        if settings.is_debug_mode() and os.path.isfile(os.path.join(os.path.dirname(__file__),
+                                                                    '../public/files/css/custom.min.css')):
             # custom.min.css contains both theme and plug-in custom stylesheets
             data['theme']['css'] = os.path.normpath('../files/css/custom.min.css')
         else:
