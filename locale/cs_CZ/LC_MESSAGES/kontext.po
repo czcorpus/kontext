@@ -1048,10 +1048,6 @@ msgstr "Počet řádků ke třídění"
 msgid "GDEX configuration for current corpus"
 msgstr "GDEX configuration for current corpus"
 
-#: cmpltmpl/viewopts.py:285
-msgid "Other options"
-msgstr "Další možnosti"
-
 #: cmpltmpl/viewopts.py:297
 msgid "Shuffle concordance lines by default"
 msgstr "Automaticky promíchat konkordanční řádky"
