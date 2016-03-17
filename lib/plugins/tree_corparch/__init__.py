@@ -13,3 +13,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
+
+
+class TreeCorparch(AbstractCorporaArchive):
+
+    def setup(self, controller_obj):
+        pass
+
+    def get_corpus_info(self, corp_id, language=None):
+        return BrokenCorpusInfo()
+
+    def get_list(self, user_allowed_corpora):
+        return []  # TODO
+
+
+def create_instance(conf):
+    return TreeCorparch()
