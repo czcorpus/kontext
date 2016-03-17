@@ -125,11 +125,11 @@ def register(user_id, corpus_id, subc_name, subchash, query, samplesize):
     samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
 
     returns:
-    InitialArgs instance (contains information about calculation and cache)
+    a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
-    c = wcelery.TaskRegistration()
-    initial_args = c(corpus_id, subc_name, subchash, query, samplesize)
-    if not initial_args.stored_pidfile:   # we are first trying to calc this
+    reg_fn = wcelery.TaskRegistration()
+    initial_args = reg_fn(corpus_id, subc_name, subchash, query, samplesize)
+    if not initial_args.get('stored_pidfile'):   # we are first trying to calc this
         calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
     return initial_args
 
@@ -141,7 +141,7 @@ def calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, sa
     This is called automatically by the 'register()' function above.
 
     arguments:
-    initial_args -- an instance of InitialArgs as obtained from register()
+    initial_args -- a dict(cachefile=..., pidfile=..., stored_pidfile=...) as obtained from register()
     user_id -- an identifier of the user who entered the query (used to specify subc. directory if needed)
     corpus_id -- a corpus identifier
     subc_name -- a sub-corpus identifier (None if not used)

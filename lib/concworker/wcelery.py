@@ -41,7 +41,7 @@ class Receiver(concworker.Receiver):
 
     def receive(self):
         ans = self._async_result.get()
-        return ans.cachefile, ans.pidfile
+        return ans.get('cachefile'), ans.get('pidfile')
 
 
 class NotifierFactory(concworker.InitialNotifierFactory):
@@ -50,18 +50,6 @@ class NotifierFactory(concworker.InitialNotifierFactory):
 
     def __call__(self):
         return Receiver(self._async_result), Sender()
-
-
-class InitialArgs(object):
-    def __init__(self, **kwargs):
-        self.cachefile = kwargs.get('cachefile')
-        self.pidfile = kwargs.get('pidfile')
-        self.stored_pidfile = kwargs.get('stored_pidfile')
-
-    def __repr__(self):
-        return 'InitialArgs{cachefile: %s, pidfile: %s, stored_pidfile: %s}' % (self.cachefile,
-                                                                                self.pidfile,
-                                                                                self.stored_pidfile)
 
 
 class TaskRegistration(concworker.GeneralWorker):
@@ -74,7 +62,7 @@ class TaskRegistration(concworker.GeneralWorker):
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         pidfile = self._create_pid_file()
         cachefile, stored_pidfile = cache_map.add_to_map(subchash, query, 0, pidfile)
-        return InitialArgs(cachefile=cachefile, pidfile=pidfile, stored_pidfile=stored_pidfile)
+        return dict(cachefile=cachefile, pidfile=pidfile, stored_pidfile=stored_pidfile)
 
 
 class CeleryCalculation(concworker.GeneralWorker):
@@ -86,7 +74,7 @@ class CeleryCalculation(concworker.GeneralWorker):
 
     def __call__(self, initial_args, subc_dir, corpus_name, subc_name, subchash, query, samplesize):
         """
-        initial_args -- InitialArgs instance
+        initial_args -- a dict(cachefile=..., pidfile=..., stored_pidfile=...)
         subc_dir -- a directory where user's subcorpora are stored
         corpus -- a corpus identifier
         subc_name -- subcorpus name (should be None if not present)
@@ -100,31 +88,31 @@ class CeleryCalculation(concworker.GeneralWorker):
             corpus_obj = corpus_manager.get_Corpus(corpus_name, subc_name)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
 
-            if not initial_args.stored_pidfile:
+            if not initial_args.get('stored_pidfile'):
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
                 # not be ready yet (this is checked by the 'finished()' method).
                 conc = self.compute_conc(corpus_obj, query, samplesize)
                 sleeptime = 0.1
                 time.sleep(sleeptime)
-                conc.save(initial_args.cachefile, False, True, False)  # partial
+                conc.save(initial_args['cachefile'], False, True, False)  # partial
                 while not conc.finished():
                     # TODO it looks like append=True does not work with Manatee 2.121.1 properly
-                    tmp_cachefile = initial_args.cachefile + '.tmp'
+                    tmp_cachefile = initial_args['cachefile'] + '.tmp'
                     conc.save(tmp_cachefile, False, True, False)
-                    os.rename(tmp_cachefile, initial_args.cachefile)
+                    os.rename(tmp_cachefile, initial_args['cachefile'])
                     time.sleep(sleeptime)
                     sleeptime += 0.1
-                    sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args.cachefile)
-                    self._update_pidfile(initial_args.pidfile, last_check=int(time.time()),
+                    sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
+                    self._update_pidfile(initial_args['pidfile'], last_check=int(time.time()),
                                          curr_wait=sleeptime, finished=sizes['finished'],
                                          concsize=sizes['concsize'], fullsize=sizes['fullsize'],
                                          relconcsize=sizes['relconcsize'])
-                tmp_cachefile = initial_args.cachefile + '.tmp'
+                tmp_cachefile = initial_args['cachefile'] + '.tmp'
                 conc.save(tmp_cachefile)  # whole
-                os.rename(tmp_cachefile, initial_args.cachefile)
+                os.rename(tmp_cachefile, initial_args['cachefile'])
                 # update size in map file
                 cache_map.add_to_map(subchash, query, conc.size())
-                os.remove(initial_args.pidfile)
+                os.remove(initial_args['pidfile'])
         except Exception as e:
             # Please note that there is no need to clean any mess (pidfile of failed calculation,
             # unfinished cached concordance etc.) here as this is performed by _get_cached_conc()
@@ -132,7 +120,7 @@ class CeleryCalculation(concworker.GeneralWorker):
             import traceback
             logging.getLogger(__name__).error('Background calculation error: %s' % e)
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
-            self._update_pidfile(initial_args.pidfile, last_check=int(time.time()), curr_wait=sleeptime, error=str(e))
+            self._update_pidfile(initial_args['pidfile'], last_check=int(time.time()), curr_wait=sleeptime, error=str(e))
 
 
 
