@@ -66,6 +66,16 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewOpts, conf)
                            #if $line_numbers == 1#checked="true"#end if# />
                     </td>
                 </tr>
+                <tr>
+                    <th>
+                        <label for="always-shuffle">$_("Shuffle concordance lines by default"):</label>
+                        <br /><span class="note">($_('no effect to current concordance'))</span>
+                    </th>
+                    <td>
+                        <input type="hidden" name="shuffle" value="0" />
+                        <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
+                    </td>
+                </tr>
             </tbody>
         </table>
     </fieldset>
@@ -104,17 +114,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewOpts, conf)
                 </tr>
             </tbody>
         </table>
-    </fieldset>
-
-    <a name="other-options"></a>
-    <fieldset class="options">
-        <legend>$_('Other options')</legend>
-
-        <input type="hidden" name="shuffle" value="0" />
-        <input id="always-shuffle" type="checkbox" name="shuffle" value="1" #if $shuffle#checked="checked"#end if# />
-        <label for="always-shuffle">$_("Shuffle concordance lines by default")</label>
-        <br />
-        ($_('no effect to current concordance')) <br />
     </fieldset>
 
     <div class="buttons">

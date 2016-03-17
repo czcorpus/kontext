@@ -612,7 +612,9 @@ ul.query-toolbox li {
     white-space: nowrap;
 }
 .note {
-    color: #555;
+    color: @color-light-text;
+}
+#conclines .note {
     padding: 0 0 0 1em;
 }
 .text-type-top-bar {
@@ -1172,13 +1174,18 @@ table.results-range-and-paging td {
 }
 fieldset.options {
     padding: 10pt 10pt;
+
+    legend:first-letter {
+        text-transform: capitalize;
+    }
+    input[type='text'] {
+        margin-left: 5pt;
+    }
 }
-fieldset.options legend:first-letter {
-    text-transform: capitalize;
+fieldset.options:not(:first-of-type) {
+    margin-top: 0.7em;
 }
-fieldset.options input[type='text'] {
-    margin-left: 5pt;
-}
+
 #corpus-citation-box {
     display: none;
 }
