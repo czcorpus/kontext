@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox) {
+define(['jquery', 'audioplayer', 'popupbox', 'jqueryui'], function ($, audioPlayer, popupBox) {
     'use strict';
 
     var lib = {},
@@ -174,20 +174,32 @@ define(['jquery', 'audioplayer', 'popupbox'], function ($, audioPlayer, popupBox
 
 
     lib.openTreex = function (linkElem) {
-        var treexURL = $(linkElem).attr('data-href');
+        var treexURL = $(linkElem).attr('href');
         var data_params = $(linkElem).attr('data-params');
         var render = renderDetailFunc(data_params);
         $.ajax(treexURL).done(function (data) {
              var html = "<div class='treex-gui'>...<i class=\"fa fa-spinner fa-spin\"></i></div>";
+             if (lib.currentDetail) {
+                 lib.currentDetail.close();
+             }
+
              lib.currentDetail = popupBox.open(html, null, {
                     type : 'plain',
-                 htmlClass: 'treex-view',
+                    htmlClass: 'treex-view',
                     domId : 'detail-frame',
                     calculatePosition : false,
                     closeIcon : true,
-                    timeout : null
+                    timeout : null,
+                    onClose : function () {
+                        $('#treex-gui').removeClass('treex-gui');
+                        lib.currentDetail = null;
+                    },
+
              });
-            $(".treex-gui").treexView(data);
+
+             $(".treex-gui").treexView(data);
+             //$( ".treex-view" ).draggable({scroll: true});// draggable({handle: ".detail-frame.tooltip-box.framed.treex-view"} ) ???
+             $( ".treex-view" ).draggable()
         });
 
     };

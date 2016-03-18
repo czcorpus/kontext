@@ -995,7 +995,7 @@ class Actions(ConcCGI):
                 err_block = b_index
                 for item in block['Items']:
                     errs += item['freq']
-            elif curr_fcrit.split()[0] == 'corr.type':
+            elif curr_fcrit.split()[0] == 'corr.typfe':
                 corr_block = b_index
                 for item in block['Items']: corrs += item['freq']
         freq = conc.size() - errs - corrs

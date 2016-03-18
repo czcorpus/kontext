@@ -104,7 +104,7 @@ def kwicpage(
     corpus, conc, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
     ctxattrs='word', refs='#', structs='p', pagesize=40,
     labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
-        tbl_template='none', hidenone=0):
+        tbl_template='none', hidenone=1):
     """
     Generates template data for page displaying provided concordance
 
@@ -457,7 +457,7 @@ def kwiclines(corpus_fullname, conc, speech_segment, fromline, toline, leftctx='
             leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
         else:
             leftmost_speech_id = None
-        if corpus_fullname == 'syntaxtest_cs_a': #change to corpus_fullname.contains('cs_a') - for all syntactically annotated corpora
+        if corpus_fullname == 'syntaxtest_cs_a' or corpus_fullname.startswith('ud_') or corpus_fullname == 'legaltext_cs_a': #change to corpus_fullname.contains('cs_a') - for all syntactically annotated corpora
             sent_id = get_sent_id(corpus, kl.get_pos())
             treex_id = sent_id +'.json'
         else:
@@ -1509,7 +1509,6 @@ def get_sent_id(corp, pos):
                              or corp.get_conf(n + '.LABEL') or n,
                      'val': v}
                     for n, v in refs]
-
     for n, v in refs:
         if n == 's.id':
             sent_id = v
