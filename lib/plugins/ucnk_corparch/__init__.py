@@ -118,7 +118,7 @@ class UcnkCorplistProvider(DeafultCorplistProvider):
 
     def should_fetch_next(self, ans, offset, limit):
         # we have to fetch +1 item to know if there is another page/offset, that's why we use '>'
-        return len(ans['rows']) > offset + limit
+        return len(ans['rows']) <= offset + limit
 
 
 class UcnkCorpArch(CorpusArchive):
