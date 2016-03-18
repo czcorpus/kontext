@@ -15,6 +15,35 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
+from controller import exposed
+from actions import corpora
+
+TESTING_DATA = {
+    "name": "All the corpora",
+    "corplist": [
+        {"name": "SYN2010", "ident": "syn2010"},
+        {"name": "SYN2015", "ident": "syn2015"},
+        {
+            "name" : "Foreign Section",
+            "corplist": [
+                {"name": "Corpus Foreign 1", "ident": "corpus_foreign_1"},
+                {"name": "Corpus Foreign 2", "ident": "corpus_foreign_2"},
+                {
+                    "name": "Backup",
+                    "corplist": [
+                        {"name": "Corpus Foreign 3 (Backup)", "ident": "corpus_foreign_3"},
+                    ]
+                }
+            ]
+        },
+        {"name" : "Corpus 3", "ident": "corpus_3"},
+    ]
+}
+
+
+@exposed(return_type='json')
+def ajax_get_corptree_data(ctrl, request):
+    return TESTING_DATA
 
 
 class TreeCorparch(AbstractCorporaArchive):
@@ -26,7 +55,10 @@ class TreeCorparch(AbstractCorporaArchive):
         return BrokenCorpusInfo()
 
     def get_list(self, user_allowed_corpora):
-        return []  # TODO
+        return TESTING_DATA
+
+    def export_actions(self):
+        return {corpora.Corpora: [ajax_get_corptree_data]}
 
 
 def create_instance(conf):

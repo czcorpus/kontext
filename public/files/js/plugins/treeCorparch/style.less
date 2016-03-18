@@ -20,11 +20,35 @@
 
         ul {
             list-style-type: none;
+            margin: 0;
+            padding: 0;
         }
 
         li {
-            padding: 0;
+            padding: 0 0 0 2em;
             margin: 0;
+        }
+
+        li.node a {
+            text-decoration: none;
+            color: @color-logo-blue;
+        }
+
+        li.node a:hover {
+            text-decoration: underline;
+        }
+
+        li.leaf a {
+            color: @color-default-text;
+            text-decoration: none;
+        }
+
+        li.leaf a:hover {
+            text-decoration: underline;
+        }
+
+        img.state-flag {
+            padding-right: 0.4em;
         }
     }
 }
