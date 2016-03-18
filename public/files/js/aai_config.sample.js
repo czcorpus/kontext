@@ -1,9 +1,12 @@
 requirejs.config({
     paths: {
-        'discojuice'  : '//engine.discojuice.org/discojuice-stable.min',
+        'discojuice'  : '//lindat.mff.cuni.cz/aai/discojuice/discojuice-2.1.en.min',        	
         'aai'         : '//lindat.mff.cuni.cz/aai/aai',
     },
     shim : {
+        'discojuice' : {
+            deps: ['jquery']
+        },
         'aai' : {
             deps: ['jquery','discojuice']
         }
