@@ -22,37 +22,93 @@ import $ = require('jquery');
 import util = require('../../util');
 import common = require('./common');
 
+
 /**
- * This store handles corplist 'filter' form
+ * A general store for processing corpus listing queries
  */
-export class CorplistFormStore extends util.SimplePageStore {
-
-    protected pluginApi:Kontext.PluginApi;
-
-    protected corplistTableStore:CorplistTableStore;
-
-    protected selectedKeywords:{[key:string]:boolean};
-
-    protected searchedCorpName:string;
-
-    protected offset:number;
+export class QueryProcessingStore extends util.SimplePageStore {
 
     protected tagPrefix:string;
 
     protected data:any;
 
-    static DispatchToken:string;
+    protected selectedKeywords:{[key:string]:boolean};
 
-    constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
+    protected searchedCorpName:string;
+
+    protected pluginApi:Kontext.PluginApi;
+
+    constructor(pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
-        var self = this;
-        this.corplistTableStore = corplistTableStore;
         this.pluginApi = pluginApi;
         this.data = {};
         this.selectedKeywords = {};
         this.searchedCorpName = null;
-        this.offset = 0;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
+    }
+
+    public exportFilter() {
+        var ans = [];
+
+        if (this.data['filters']) {
+            for (var p in this.data['filters']) {
+                if (this.data['filters'].hasOwnProperty(p)) {
+                    ans.push(p + '=' + encodeURIComponent(this.data['filters'][p]));
+                }
+            }
+        }
+        return ans.join('&');
+    }
+
+    protected updateFilter(filter:{[key:string]:string}) {
+        if (!this.data['filters']) {
+            this.data['filters'] = {};
+        }
+        for (var p in filter) {
+            if (filter.hasOwnProperty(p)) {
+                this.data['filters'][p] = filter[p];
+            }
+        }
+    }
+
+    exportQuery():string {
+        var q = [];
+        for (var p in this.selectedKeywords) {
+            if (this.selectedKeywords[p] === true) {
+                q.push(this.tagPrefix + p);
+            }
+        }
+        if (this.searchedCorpName) {
+            q.push(this.searchedCorpName);
+        }
+        return q.join(' ');
+    }
+
+    getKeywordState(keyword:string):boolean {
+        return this.selectedKeywords[keyword];
+    }
+
+    setData(data:any):void {
+        this.data = data;
+    }
+}
+
+/**
+ * This store handles corplist 'filter' form
+ */
+export class CorplistFormStore extends QueryProcessingStore {
+
+    protected corplistTableStore:CorplistTableStore;
+
+    protected offset:number;
+
+    static DispatchToken:string;
+
+    constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
+        super(pluginApi);
+        var self = this;
+        this.corplistTableStore = corplistTableStore;
+        this.offset = 0;
 
         CorplistFormStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
@@ -97,51 +153,6 @@ export class CorplistFormStore extends util.SimplePageStore {
                 }
                 return true;
             });
-    }
-
-    protected updateFilter(filter:{[key:string]:string}) {
-        if (!this.data['filters']) {
-            this.data['filters'] = {};
-        }
-        for (var p in filter) {
-            if (filter.hasOwnProperty(p)) {
-                this.data['filters'][p] = filter[p];
-            }
-        }
-    }
-
-    public exportFilter() {
-        var ans = [];
-
-        if (this.data['filters']) {
-            for (var p in this.data['filters']) {
-                if (this.data['filters'].hasOwnProperty(p)) {
-                    ans.push(p + '=' + encodeURIComponent(this.data['filters'][p]));
-                }
-            }
-        }
-        return ans.join('&');
-    }
-
-    setData(data:any):void {
-        this.data = data;
-    }
-
-    exportQuery():string {
-        var q = [];
-        for (var p in this.selectedKeywords) {
-            if (this.selectedKeywords[p] === true) {
-                q.push(this.tagPrefix + p);
-            }
-        }
-        if (this.searchedCorpName) {
-            q.push(this.searchedCorpName);
-        }
-        return q.join(' ');
-    }
-
-    getKeywordState(keyword:string):boolean {
-        return this.selectedKeywords[keyword];
     }
 }
 

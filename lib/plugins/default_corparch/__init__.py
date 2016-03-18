@@ -180,6 +180,15 @@ class DeafultCorplistProvider(CorplistProvider):
             return c.get('name') if c.get('name') is not None else ''
         return l10n.sort(data, loc=self._corparch.lang, key=corp_cmp_key)
 
+    def should_fetch_next(self, ans, offset, limit):
+        """
+        This quite artificial function can be used to optimize loading of a long list.
+        It is expected to depend on how the sort() function is implemented.
+        In case there is no sorting involved it is probably OK to skip loading
+        whole list once all the 'to be displayed' data is ready.
+        """
+        return True
+
     def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
         if query is False:  # False means 'use default values'
             query = ''
@@ -247,10 +256,8 @@ class DeafultCorplistProvider(CorplistProvider):
                                                                 full_data)
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
-                    # we have to fetch +1 item to know if there is another page/offset, that's why we use '>'
-                    if len(ans['rows']) > offset + limit:
+                    if not self.should_fetch_next(ans, offset, limit):
                         break
-
         ans['rows'], ans['nextOffset'] = self.cut_result(self.sort(ans['rows']), offset, limit)
         ans['keywords'] = l10n.sort(used_keywords, loc=self._corparch.lang)
         ans['query'] = query

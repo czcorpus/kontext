@@ -27,18 +27,26 @@ declare var views:any;
 /**
  * This store handles corplist 'filter' form
  */
-export class CorplistFormStore extends corplistDefault.CorplistFormStore {
+export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
+
+    protected corplistTableStore:CorplistTableStore;
+
+    protected offset:number;
+
+    static DispatchToken:string;
 
     private initialKeywords:Array<string>;
 
 
     constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
-        super(pluginApi, corplistTableStore);
+        super(pluginApi);
         let self = this;
+        this.corplistTableStore = corplistTableStore;
+        this.offset = 0;
+        this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
         (this.pluginApi.getConf('pluginData')['corparch']['initial_keywords'] || []).forEach(function (item) {
             self.selectedKeywords[item] = true;
         });
-
         CorplistFormStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
@@ -158,7 +166,7 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
 /**
  * Corplist page 'model'.
  */
-export class CorplistPage extends corplistDefault.CorplistPage {
+export class CorplistPage implements Customized.CorplistPage {
 
     components:any;
 
@@ -166,9 +174,17 @@ export class CorplistPage extends corplistDefault.CorplistPage {
 
     protected corpusAccessRequestStore:CorpusAccessRequestStore;
 
+    protected corplistFormStore:CorplistFormStore;
+
+    protected corplistTableStore:CorplistTableStore;
+
     constructor(pluginApi:Kontext.PluginApi, views:any) {
-        super(pluginApi, views);
+        this.pluginApi = pluginApi;
         this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
+        this.corplistTableStore = new CorplistTableStore(pluginApi);
+        this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
+        this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+                pluginApi.getViews(), this.corplistFormStore, this.corplistTableStore);
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {
