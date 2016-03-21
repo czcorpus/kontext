@@ -19,6 +19,7 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
+/// <reference path="../../common/plugins/liveAttributes.d.ts" />
 
 import popupBox = require('popupbox');
 import $ = require('jquery');
@@ -469,18 +470,32 @@ class SelectionSteps {
      * @param alignedCorpora
      */
     update(data, selectedAttrs, alignedCorpora) {
-        var table,
-            alignedCorpnames = alignedCorpora.findSelected(),
-            innerHTML;
+        let alignedCorpnames = alignedCorpora.findSelected();
+
+        let hasNewSelectedAttributes:()=>boolean = () => {
+            let usedAttrs = this.usedAttributes();
+            for (let p in selectedAttrs) {
+                if (selectedAttrs.hasOwnProperty(p) && $.inArray(p, usedAttrs) < 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         if (this.numSteps() === 0 && alignedCorpnames.length > 0) {
-            innerHTML = '<strong>' + this.pluginApi.getConf('corpname') + '</strong> <br />&amp; '
-            + alignedCorpnames.join('<br />&amp;');
+            let innerHTML = '<strong>' + this.pluginApi.getConf('corpname') +
+                    '</strong> <br />&amp; ' +
+                    alignedCorpnames.join('<br />&amp;');
+
+            if (data.poscount !== undefined && !hasNewSelectedAttributes()) {
+                innerHTML += '<br />' + this.pluginApi.translate('ucnkLA__num_positions',
+                        {num_pos: data.poscount.toString()});
+            }
             this.jqSteps.append(this.rawCreateStepTable(0, innerHTML));
             this.numSteps(this.numSteps() + 1);
         }
 
-        table = this.createStepTable(data, selectedAttrs);
+        let table = this.createStepTable(data, selectedAttrs);
         if (table) {
             this.numSteps(this.numSteps() + 1);
 
@@ -519,11 +534,11 @@ class SelectionSteps {
      * @returns {Array}
      */
     private expandAttributes(selectedAttrs, usedAttrs:Array<string>):Array<string> {
-        var ans:Array<string> = [],
-            values:Array<string>,
-            html:string;
+        let ans:Array<string> = [];
+        let values:Array<string>;
+        let html:string;
 
-        for (var p in selectedAttrs) {
+        for (let p in selectedAttrs) {
             if (selectedAttrs.hasOwnProperty(p) && $.inArray(p, usedAttrs) < 0) {
                 usedAttrs.push(p);
                 values = selectedAttrs[p];
@@ -554,12 +569,11 @@ class SelectionSteps {
      * @returns {string}
      */
     private createStepTable(data:common.AttributesMap, selectedAttrs:common.AttributesMap) {
-        var ansHtml: string = null,
-            usedAttrs = this.usedAttributes(),
-            positionInfo = '',
-            newAttrs: Array<string>;
+        let ansHtml: string = null;
+        let usedAttrs = this.usedAttributes();
+        let positionInfo = '';
+        let newAttrs:Array<string> = this.expandAttributes(selectedAttrs, usedAttrs);
 
-        newAttrs = this.expandAttributes(selectedAttrs, usedAttrs);
         if (newAttrs.length > 0) {
             if (data.poscount !== undefined) {
                 positionInfo = this.pluginApi.translate('ucnkLA__num_positions', {num_pos: data.poscount.toString()});
@@ -755,7 +769,7 @@ class StructTables implements common.CheckboxLists {
  * This class handles aligned corpora as a part of attribute value
  * selection process.
  */
-class AlignedCorpora {
+class AlignedCorpora implements LiveAttributes.IAlignedCorpora {
 
     pluginApi:Kontext.PluginApi;
 
@@ -772,8 +786,8 @@ class AlignedCorpora {
      *
      * @param data
      */
-    update(data) {
-        var corpList = data.aligned || [];
+    update(data):void {
+        let corpList = data.aligned || [];
 
         $('#add-searched-lang-widget select option').each(function () {
             if ($.inArray($(this).val(), corpList) >= 0) {
@@ -800,10 +814,10 @@ class AlignedCorpora {
      *
      */
     findSelected():Array<string> {
-        var ans = [];
+        let ans = [];
 
         $('.parallel-corp-lang:visible input[name="sel_aligned"]').each(function () {
-            var val = $(this).val();
+            let val = $(this).val();
 
             if (val) {
                 ans.push(val);
@@ -813,10 +827,87 @@ class AlignedCorpora {
     }
 }
 
+
+/**
+ * This is an alternative implementation of the default handler which
+ * controlls a state of aligned corpora on the query page. The sub-corpus
+ * page contains a different solution as there is no need to have a complete
+ * input query box for each aligned corpora. Here, we just want to test
+ * whether user requires a subcorpus with respect to some aligned corpora.
+ */
+class SubcorpAlignedCorpora implements LiveAttributes.IAlignedCorpora {
+
+    private pluginApi:Kontext.PluginApi;
+
+    private isLocked:boolean;
+
+    constructor(pluginApi:Kontext.PluginApi) {
+        this.pluginApi = pluginApi;
+        this.isLocked = false;
+    }
+
+    private setLockStatus(status:boolean):void {
+        let wrapper = this.getWrapperElm();
+        this.isLocked = status;
+        $(wrapper).find('input.aligned-lang').each((i, item) => {
+            $(item).prop('disabled', this.isLocked);
+        });
+        if (this.isLocked) {
+            $(wrapper).addClass('locked');
+
+        } else {
+            $(wrapper).removeClass('locked');
+        }
+    }
+
+    private getWrapperElm():HTMLElement {
+        return $('#subcorp-form').find('.text-types-selection table.aligned').get(0);
+    }
+
+    private getSelectedItems():Array<HTMLElement> {
+        return $(this.getWrapperElm())
+            .find('input.aligned-lang:checked')
+            .toArray();
+    }
+
+    private getCorplist():Array<string> {
+        return this.getSelectedItems().map((item) => $(item).attr('data-corpus-id'));
+    }
+
+    update(data):void {
+        if (!this.isLocked && this.getSelectedItems().length > 0) {
+            this.setLockStatus(true);
+            $(this.getWrapperElm()).find('td.hidden-values')
+                .empty()
+                .append(
+                    this.getCorplist().map((item) => {
+                        let hidden = window.document.createElement('input');
+                        $(hidden)
+                            .attr('type', 'hidden')
+                            .attr('name', 'aligned_corpora')
+                            .val(item);
+                        return hidden;
+                    })
+                );
+        }
+    }
+
+    reset():void {
+        this.setLockStatus(false);
+        $(this.getWrapperElm()).find('td.hidden-values').empty();
+    }
+
+    findSelected():Array<string> {
+        return this.getSelectedItems().map(item => $(item).attr('data-corpus-id'));
+    }
+}
+
+
+
 /**
  * Plugin's main class
  */
-class Plugin implements common.LiveAttributesApi {
+abstract class Plugin implements common.LiveAttributesApi {
 
     pluginApi:Kontext.QueryPagePluginApi;
 
@@ -828,8 +919,6 @@ class Plugin implements common.LiveAttributesApi {
 
     rawInputs:LiveData;
 
-    alignedCorpora:AlignedCorpora;
-
     checkboxes:Checkboxes;
 
     selectionSteps:SelectionSteps;
@@ -837,6 +926,8 @@ class Plugin implements common.LiveAttributesApi {
     structTables:StructTables;
 
     private intervalChars:Array<string>;
+
+    private alignedCorpora:LiveAttributes.IAlignedCorpora;
 
     /**
      *
@@ -846,18 +937,20 @@ class Plugin implements common.LiveAttributesApi {
      * @param resetButton
      */
     constructor(pluginApi:Kontext.QueryPagePluginApi, pluginConf:{[key:string]:any},
-                attrFieldsetWrapper:HTMLElement, updateButton:HTMLElement, resetButton:HTMLElement) {
+                attrFieldsetWrapper:HTMLElement, updateButton:HTMLElement,
+                resetButton:HTMLElement,
+                alignedCorpora:LiveAttributes.IAlignedCorpora) {
         this.pluginApi = pluginApi;
         this.attrFieldsetWrapper = $(attrFieldsetWrapper);
         this.updateButton = $(updateButton);
         this.resetButton = $(resetButton);
         this.rawInputs = new LiveData(pluginApi, attrFieldsetWrapper);
-        this.alignedCorpora = new AlignedCorpora(pluginApi);
         this.checkboxes = new Checkboxes(pluginApi, this.attrFieldsetWrapper);
         this.selectionSteps = new SelectionSteps(pluginApi);
         this.intervalChars = pluginConf['interval_chars'];
         this.structTables = new StructTables(this.pluginApi, this.attrFieldsetWrapper,
             this.selectionSteps, this.checkboxes, this, this.intervalChars);
+        this.alignedCorpora = alignedCorpora;
     }
 
     resetAll = () => { // using lexical scope here
@@ -894,6 +987,10 @@ class Plugin implements common.LiveAttributesApi {
     initAttrTables = (data, selectedAttrs) => {  // using lexical scope here
         this.rawInputs.update(data);
     };
+
+    getAlignedCorpora():LiveAttributes.IAlignedCorpora {
+        return this.alignedCorpora;
+    }
 
     /**
      * @param attribArgs Custom attributes overwriting the implicit ones plug-in collects itself
@@ -1092,6 +1189,10 @@ class Plugin implements common.LiveAttributesApi {
         );
     }
 
+    getBeforeSubmitActions():Array<(evt:JQueryEventObject)=>void> {
+        return [];
+    }
+
     /**
      * This function initializes the plug-in. It must be run after all the page dependencies
      * are ready.
@@ -1119,25 +1220,126 @@ class Plugin implements common.LiveAttributesApi {
             }
         });
         this.structTables.init();
+        $('#subcorp-form').on('submit', (evt:JQueryEventObject) => {
+            let ans = [];
+            this.getBeforeSubmitActions().forEach((action) => {
+                ans.push(action(evt));
+            });
+            return ans.every(item => item);
+        });
+    }
+}
+
+
+class QueryFormPlugin extends Plugin {
+    constructor(pluginApi:Kontext.QueryPagePluginApi, pluginConf:{[key:string]:any},
+                attrFieldsetWrapper:HTMLElement, updateButton:HTMLElement,
+                resetButton:HTMLElement) {
+        let alignedCorpora = new AlignedCorpora(pluginApi);
+        super(pluginApi, pluginConf, attrFieldsetWrapper, updateButton, resetButton,
+              alignedCorpora);
     }
 }
 
 /**
  *
- * @param pluginApi
- * @param updateButton
- * @param resetButton
- * @param attrFieldsetWrapper
  */
+class SubcorpFormPlugin extends Plugin {
+
+    private getStoredAlignedCorporaFn:()=>Array<string>;
+
+    private beforeSubmitActions:Array<(evt:JQueryEventObject)=>void>;
+
+    constructor(pluginApi:Kontext.QueryPagePluginApi, pluginConf:{[key:string]:any},
+            attrFieldsetWrapper:HTMLElement, updateButton:HTMLElement,
+            resetButton:HTMLElement, getStoredAlignedCorporaFn:()=>Array<string>) {
+        super(pluginApi, pluginConf, attrFieldsetWrapper, updateButton, resetButton,
+              new SubcorpAlignedCorpora(pluginApi));
+        this.getStoredAlignedCorporaFn = getStoredAlignedCorporaFn;
+        this.beforeSubmitActions = [
+            (evt) => {
+                let ans = window.confirm(
+                    this.pluginApi.translate('ucnkLA__subcorp_cosider_aligned_may_take_long_time'));
+                if (!ans) {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    return false;
+                }
+                return true;
+            }
+        ];
+    }
+
+    private addAlignedCorporaSelector():void {
+        type AlignedCorpInfo = {n:string; label:string};
+
+        let self = this;
+        let jqWrapper = $('#subcorp-form').find('.text-types-selection');
+        let alignedCorpora:Array<AlignedCorpInfo> = this.pluginApi.getConf<Array<AlignedCorpInfo>>('availableAlignedCorpora');
+        let currentAlignedCorpora = this.getStoredAlignedCorporaFn();
+
+        function renderCheckbox(item:AlignedCorpInfo):string {
+            let checked;
+
+            if (currentAlignedCorpora.indexOf(item.n) > -1) {
+                checked = 'checked="true"';
+
+            } else {
+                checked = '';
+            }
+            return '<input class="aligned-lang" name="aligned_corpora" type="checkbox" ' +
+                    ' value="' + item.n + '" ' + checked + ' data-corpus-id="' + item.n + '" />';
+        }
+
+        jqWrapper.prepend(
+            '<table class="envelope aligned"><tbody>' +
+            '<tr class="attrib-name"><th>' + this.pluginApi.translate('ucnkLA__aligned_corpora') +
+            '</th></tr>' +
+            '<tr><td class="note">(' + this.pluginApi.translate('ucnkLA__subcorp_consider_aligned_corpora') +
+            ')</td></tr>' +
+            alignedCorpora.map((item) => {
+                return '<tr><td>' +
+                    '<label>' + renderCheckbox(item) + ' ' +
+                        item.label + '</label>' +
+                    '</td></tr>';
+            }) +
+            '<tr><td class="hidden-values"></td></tr>' +
+            '<tr class="last-line"><td>&nbsp;</td></tr>' +
+            '</tbody></table>'
+        );
+    }
+
+    getBeforeSubmitActions():Array<(evt:JQueryEventObject)=>void> {
+        return this.beforeSubmitActions;
+    }
+
+    init():void {
+        super.init();
+        this.addAlignedCorporaSelector();
+    }
+}
+
+
 export function init(pluginApi:Kontext.QueryPagePluginApi,
                      conf:{[key:string]:string},
                      updateButton:HTMLElement, resetButton:HTMLElement,
-                     attrFieldsetWrapper:HTMLElement):rsvp.Promise<LiveAttributes.Widget> {
+                     attrFieldsetWrapper:HTMLElement,
+                     getStoredAlignedCorporaFn?:()=>Array<string>):rsvp.Promise<LiveAttributes.Widget> {
     let pluginConf:{[key:string]:any} = conf['pluginData']['live_attributes'];
     if (!pluginConf) {
         throw new Error('Missing configuration for live_attributes');
     }
-    let plugin = new Plugin(pluginApi, pluginConf, attrFieldsetWrapper, updateButton, resetButton);
+
+    let plugin;
+    if (pluginApi.getConf<string>('currentAction') === 'subcorpus/subcorp_form') {
+        plugin = new SubcorpFormPlugin(pluginApi, conf, attrFieldsetWrapper,
+                updateButton, resetButton, getStoredAlignedCorporaFn);
+
+    } else {
+        plugin = new QueryFormPlugin(pluginApi, conf, attrFieldsetWrapper,
+                updateButton, resetButton);
+    }
+
     return new rsvp.Promise(function (resolve, reject) {
         try {
             plugin.init();

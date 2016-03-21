@@ -22,12 +22,11 @@
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../common/plugins/corparch.ts" />
 /// <reference path="../common/plugins/subcmixer.ts" />
-/// <reference path="../common/plugins/liveAttributes.ts" />
+/// <reference path="../common/plugins/liveAttributes.d.ts" />
 /// <reference path="../views/subcorpForm.d.ts" />
 
 // -- dynamic loading of custom plug-in implementation
 /// <amd-dependency path="plugins/corparch/init" name="corplistComponent" />
-/// <amd-dependency path="plugins/liveAttributes/init" name="liveAttributes" />
 /// <amd-dependency path="plugins/subcmixer/init" name="subcmixer" />
 
 import $ = require('jquery');
@@ -36,11 +35,11 @@ import popupBox = require('popupbox');
 import subcorpFormViews = require('views/subcorpForm');
 import subcorpFormStoreModule = require('stores/subcorpForm');
 import queryInput = require('../queryInput');
+import liveAttributes = require('plugins/liveAttributes/init');
 
 // dynamic imports
 declare var subcmixer:Subcmixer.Module;
 declare var corplistComponent:CorpusArchive.Module;
-declare var liveAttributes:LiveAttributes.Module;
 
 
 /**
@@ -195,12 +194,21 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
     }
 
     init(conf:Kontext.Conf):void {
+        let getStoredAlignedCorp = () => {
+            return this.pageModel.userSettings.get<Array<string>>(document.UserSettings.ALIGNED_CORPORA_KEY) || [];
+        }
         this.pageModel.init().add({
             initSubcCreationVariantSwitch: this.initSubcCreationVariantSwitch(),
             sizeUnitsSafeSwitch: this.sizeUnitsSafeSwitch(),
             initHints: this.initHints(),
-            liveAttributes: liveAttributes.init(this.extendedApi, conf, $('#live-attrs-update').get(0),
-            $('#live-attrs-reset').get(0), $('.text-type-params').get(0))
+            liveAttributes: liveAttributes.init(
+                this.extendedApi,
+                conf,
+                $('#live-attrs-update').get(0),
+                $('#live-attrs-reset').get(0),
+                $('.text-type-params').get(0),
+                getStoredAlignedCorp
+            )
         });
     }
 }
@@ -213,7 +221,6 @@ export function init(conf:Kontext.Conf) {
         layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
     let subcorpFormComponents = subcorpFormViews.init(layoutModel.dispatcher,
             layoutModel.exportMixins(), subcorpFormStore);
-
     let pageModel = new SubcorpForm(layoutModel, subcorpFormComponents,
             subcorpFormStore);
     pageModel.init(conf);

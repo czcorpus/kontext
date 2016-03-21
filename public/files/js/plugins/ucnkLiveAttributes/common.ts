@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../common/plugins/liveAttributes.ts" />
+/// <reference path="../../common/plugins/liveAttributes.d.ts" />
 
 import rsvp = require('vendor/rsvp');
 
@@ -73,6 +73,13 @@ export interface AjaxAnimation {
 }
 
 export interface LiveAttributesApi extends LiveAttributes.Widget {
+
     createAnimation():AjaxAnimation;
+
     replaceRawInput(inputElm:HTMLElement, queryArgs:{[key:string]:any}):rsvp.Promise<any>;
+
+    /**
+     * Returns a handler for aligned corpora UI component
+     */
+    getAlignedCorpora():LiveAttributes.IAlignedCorpora;
 }

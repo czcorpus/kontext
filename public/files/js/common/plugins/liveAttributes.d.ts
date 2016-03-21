@@ -18,16 +18,33 @@
 
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-module LiveAttributes {
 
-    export interface Module {
-        init(pluginApi:Kontext.QueryPagePluginApi, conf:{[key:string]:string},
-                updateButton:HTMLElement, resetButton:HTMLElement,
-                attrFieldsetWrapper:HTMLElement):RSVP.Promise<Widget>;
-    }
+declare module LiveAttributesInit {
+    export function init(pluginApi:Kontext.QueryPagePluginApi,
+                     conf:{[key:string]:string},
+                     updateButton:HTMLElement, resetButton:HTMLElement,
+                     attrFieldsetWrapper:HTMLElement,
+                     getStoredAlignedCorporaFn?:()=>Array<string>):RSVP.Promise<LiveAttributes.Widget>;
+}
+
+
+declare module LiveAttributes {
 
 
     export interface Widget {
+    }
+
+   /**
+    * An object handling currently selected aligned corpora
+    */
+    export interface IAlignedCorpora {
+
+        update(data):void;
+
+        reset():void;
+
+        findSelected():Array<string>;
+
     }
 
 }

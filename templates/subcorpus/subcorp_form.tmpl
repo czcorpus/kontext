@@ -30,7 +30,7 @@ $_("Create Subcorpus")#slurp
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.subcmixerFormData = #filter $Jsonize#$subcmixer_form_data#end filter#;
     conf.structsAndAttrs = #filter $Jsonize#$structs_and_attrs#end filter#;
-    conf.currentWithinJson = $within_json;
+    conf.currentWithinJson = #if $within_json#$within_json#else#''#end if#;
     pageSelf.init(conf);
 });
 
