@@ -41,7 +41,7 @@ TESTING_DATA = {
 }
 
 
-@exposed(return_type='json')
+@exposed(return_type='json', skip_corpus_init=True)
 def ajax_get_corptree_data(ctrl, request):
     return TESTING_DATA
 
