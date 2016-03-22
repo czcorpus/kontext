@@ -846,12 +846,31 @@ table.envelope tr.attrib-name {
         width: 0.6em;
         vertical-align: top;
     }
+}
 
+table.envelope.aligned {
+    max-width: 17em;
+}
+
+table.envelope.aligned th,
+table.envelope.aligned td {
+    padding-left: 1em;
+    padding-right: 0.4em;
+
+    input[type="checkbox"] {
+        padding-left: 1em;
+    }
+}
+
+table.envelope.aligned td.note {
+    color: @color-light-text;
+    white-space: normal;
+    font-size: 0.8em;
 }
 
 table.envelope table td,
 table.envelope table th {
-    padding: 5px 8px 5px 12px;
+    padding: 0.4em 1em;
 }
 table.envelope td > div.scrollable {
     display: block;

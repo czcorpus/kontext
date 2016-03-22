@@ -78,10 +78,14 @@ class Subcorpus(Kontext):
             full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
         else:
+            within_cql = None
             tt_query = TextTypeCollector(self._corp(), request).get_query()
             full_cql = ' within '.join(['<%s %s />' % item for item in tt_query])
             full_cql = 'aword,[] within %s' % full_cql
             full_cql = import_string(full_cql, from_encoding=corp_encoding)
+            aligned_corpora = request.form.getlist('aligned_corpora')
+            if len(aligned_corpora) > 0:
+                full_cql += ' ' + ' '.join(map(lambda cn: 'within %s: []' % cn, aligned_corpora))
             imp_cql = (full_cql,)
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
@@ -91,9 +95,9 @@ class Subcorpus(Kontext):
         if type(path) == unicode:
             path = path.encode('utf-8')
 
-        if len(tt_query) == 1:
+        if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self._corp(), tt_query[0][0], tt_query[0][1])
-        elif len(tt_query) > 1 or within_cql:
+        elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
             conc = conclib.get_conc(self._corp(), self._session_get('user', 'user'), q=imp_cql)
             conc.sync()
             struct = self._corp().get_struct(tt_query[0][0]) if len(tt_query) == 1 else None
@@ -157,6 +161,7 @@ class Subcorpus(Kontext):
             out['subcmixer_form_data'] = plugins.get('subcmixer').form_data(self._plugin_api)
         else:
             out['subcmixer_form_data'] = {}
+        self._attach_aligned_corpora_info(out)
         out.update({
             'TextTypeSel': tt_sel,
             'structs_and_attrs': structs_and_attrs,

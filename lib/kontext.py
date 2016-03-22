@@ -761,6 +761,29 @@ class Kontext(Controller):
             fallback = '%scorpora/corplist' % self.get_root_url()  # TODO hardcoded '/corpora/'
         return cn, fallback
 
+    def _attach_aligned_corpora_info(self, exp_data):
+        """
+        Adds template data required to generate components for adding/overviewing
+        aligned corpora.
+
+        arguments:
+        exp_data -- a dict where exported data is stored
+        """
+        if self._corp().get_conf('ALIGNED'):
+            exp_data['Aligned'] = []
+            for al in self._corp().get_conf('ALIGNED').split(','):
+                alcorp = corplib.open_corpus(al)
+                exp_data['Aligned'].append({'label': alcorp.get_conf('NAME') or al,
+                                       'n': al})
+                attrlist = alcorp.get_conf('ATTRLIST').split(',')
+                poslist = self.cm.corpconf_pairs(alcorp, 'WPOSLIST')
+                exp_data['Wposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
+                if 'lempos' in attrlist:
+                    poslist = self.cm.corpconf_pairs(alcorp, 'LPOSLIST')
+                exp_data['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
+                exp_data['has_lemmaattr_' + al] = 'lempos' in attrlist \
+                    or 'lemma' in attrlist
+
     def self_encoding(self):
         enc = corpus_get_conf(self._corp(), 'ENCODING')
         return enc if enc else 'iso-8859-1'

@@ -268,20 +268,7 @@ class Actions(Kontext):
             self._store_checked_text_types(request.form, out)
         self._restore_aligned_forms()
 
-        if self._corp().get_conf('ALIGNED'):
-            out['Aligned'] = []
-            for al in self._corp().get_conf('ALIGNED').split(','):
-                alcorp = corplib.open_corpus(al)
-                out['Aligned'].append({'label': alcorp.get_conf('NAME') or al,
-                                       'n': al})
-                attrlist = alcorp.get_conf('ATTRLIST').split(',')
-                poslist = self.cm.corpconf_pairs(alcorp, 'WPOSLIST')
-                out['Wposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                if 'lempos' in attrlist:
-                    poslist = self.cm.corpconf_pairs(alcorp, 'LPOSLIST')
-                out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                out['has_lemmaattr_' + al] = 'lempos' in attrlist \
-                    or 'lemma' in attrlist
+        self._attach_aligned_corpora_info(out)
         self._attach_tag_builder(out)
         out['user_menu'] = True
         out['aligned_corpora'] = conc_args.getlist('sel_aligned')

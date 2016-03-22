@@ -17,7 +17,7 @@
  */
 
 /// <reference path="./common.d.ts" />
-/// <reference path="../../js/common/plugins/liveAttributes.ts" />
+/// <reference path="../../js/common/plugins/liveAttributes.d.ts" />
 /// <reference path="../../js/common/plugins/corparch.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 
@@ -44,10 +44,7 @@ declare module "plugins/corparch/init" {
 }
 
 declare module "plugins/liveAttributes/init" {
-    export function init(pluginApi:Kontext.QueryPagePluginApi,
-                     conf:{[key:string]:string},
-                     updateButton:HTMLElement, resetButton:HTMLElement,
-                     attrFieldsetWrapper:HTMLElement):RSVP.Promise<LiveAttributes.Widget>
+    export = LiveAttributesInit;
 }
 
 declare module "plugins/queryStorage/init" {
