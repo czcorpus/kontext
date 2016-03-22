@@ -1297,13 +1297,14 @@ class SubcorpFormPlugin extends Plugin {
             '</th></tr>' +
             '<tr><td class="note">(' + this.pluginApi.translate('ucnkLA__subcorp_consider_aligned_corpora') +
             ')</td></tr>' +
+            '<tr><td class="data-rows"><div class="scrollable"><table><tbody>' +
             alignedCorpora.map((item) => {
                 return '<tr><td>' +
                     '<label>' + renderCheckbox(item) + ' ' +
                         item.label + '</label>' +
                     '</td></tr>';
-            }) +
-            '<tr><td class="hidden-values"></td></tr>' +
+            }).join('') +
+            '</tbody></table></div></td><tr><td class="hidden-values"></td></tr>' +
             '<tr class="last-line"><td>&nbsp;</td></tr>' +
             '</tbody></table>'
         );
