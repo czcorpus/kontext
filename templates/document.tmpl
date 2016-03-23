@@ -164,6 +164,8 @@ define('conf', [], function () {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
     };
 
+    conf.asyncTasks = #filter $Jsonize#$async_tasks#end filter#;
+
     return conf;
 });
 </script>

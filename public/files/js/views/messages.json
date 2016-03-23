@@ -96,7 +96,8 @@
         "global__subc_query": "definition",
         "global__size_in_tokens": "Size (in tokens)",
         "global__subc_def_not_avail": "Not available",
-        "global__click_and_hold_to_move": "Click and hold the button to move the object."
+        "global__click_and_hold_to_move": "Click and hold the button to move the object.",
+        "global__these_task_are_finished": "The following tasks have been finished"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -196,6 +197,7 @@
         "global__subc_query": "definice",
         "global__size_in_tokens": "Velikost (v tokenech)",
         "global__subc_def_not_avail": "Není k dispozici",
-        "global__click_and_hold_to_move": "Klikněte a držte tlačítko pro přesun objektu."
+        "global__click_and_hold_to_move": "Klikněte a držte tlačítko pro přesun objektu.",
+        "global__these_task_are_finished": "Byly dokončeny následující úlohy"
 	}
 }

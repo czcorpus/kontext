@@ -25,6 +25,7 @@
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
+/// <reference path="../../ts/declarations/immutable.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -41,7 +42,7 @@ import docStores = require('./documentStores');
 import userStores = require('stores/userStores');
 import translations = require('translations');
 import IntlMessageFormat = require('vendor/intl-messageformat');
-
+import Immutable = require('vendor/immutable');
 
 /**
  *
@@ -98,6 +99,125 @@ export interface ComponentCoreMixins {
     createStaticUrl(path:string):string;
 }
 
+
+export interface AsyncTaskInfo {
+    ident:string;
+    label:string;
+    category:string;
+    status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
+    last_check:number;
+    created:number;
+}
+
+
+interface AsyncTaskResponse extends Kontext.AjaxResponse {
+    numRemaining?: number;
+    data?:Array<AsyncTaskInfo>;
+    contains_errors: boolean;
+}
+
+/**
+ * This class handles checking for the state
+ * of currently active bacground tasks triggered
+ * by user.
+ */
+export class AsyncTaskChecker {
+
+    private pageModel:PageModel;
+
+    private asyncTasks:Immutable.List<AsyncTaskInfo>;
+
+    private asyncTaskCheckerInterval:number;
+
+    static CHECK_INTERVAL = 10000;
+
+
+    constructor(pageModel:PageModel, conf:any) {
+        this.pageModel = pageModel;
+        this.asyncTasks = Immutable.List<AsyncTaskInfo>(conf.map((item) => {
+            return {
+                status: conf['status'],
+                ident: conf['ident'],
+                created: conf['created'],
+                last_check: conf['last_check'],
+                label: conf['label'],
+                category: conf['category']
+            }
+        }));
+        this.asyncTaskCheckerInterval = null;
+    }
+
+    private checkForStatus():RSVP.Promise<AsyncTaskResponse> {
+         return this.pageModel.ajax(
+            'GET',
+            this.pageModel.createActionUrl('check_tasks_status'),
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+        );
+    }
+
+    private deleteTaskInfo(taskIds:Array<string>):RSVP.Promise<AsyncTaskResponse> {
+        return this.pageModel.ajax(
+            'DELETE',
+            this.pageModel.createActionUrl('remove_task_info'),
+            {'tasks': taskIds},
+            {contentType : 'application/x-www-form-urlencoded'}
+        );
+    }
+
+    private getFinishedTasks():Immutable.List<AsyncTaskInfo> {
+        return this.asyncTasks.filter((item)=>(item.status === 'SUCCESS' || item.status === 'FAILURE')).toList();
+    }
+
+    private createTaskDesc(taskInfo:AsyncTaskInfo) {
+        let label = taskInfo.label ? taskInfo.label : taskInfo.ident.substr(0, 8) + '...';
+        return label + ' (' + taskInfo.status + ')';
+    }
+
+    init():void {
+        if (this.asyncTasks.size > 0) {
+            this.asyncTaskCheckerInterval = window.setInterval(() => {
+                this.checkForStatus().then(
+                    (data) => {
+
+                        if (!data.contains_errors) {
+                            this.asyncTasks = Immutable.List<AsyncTaskInfo>(data.data);
+                            let finished = this.getFinishedTasks();
+
+                            if (finished.size > 0) {
+                                let info = finished.map((item) => this.createTaskDesc(item))
+                                        .join(', ');
+                                window.clearInterval(this.asyncTaskCheckerInterval);
+                                this.pageModel.showMessage(
+                                    'mail',
+                                    this.pageModel.translate('global__these_task_are_finished') + ': ' + info,
+                                    () => {
+                                        this.deleteTaskInfo(finished.map(item => item.ident).toArray()).then(
+                                            (data) => {
+                                                if (data.numRemaining > 0) {
+                                                    this.init();
+                                                }
+                                            },
+                                            (err) => {
+                                                this.pageModel.showMessage('error', err);
+                                            }
+                                        )
+                                    }
+                                );
+                            }
+
+                        } else {
+                            this.pageModel.showMessage('error', data.messages.join(', '));
+                        }
+                    },
+                    (err) => {
+                        this.pageModel.showMessage('error', err);
+                    }
+                )
+            }, AsyncTaskChecker.CHECK_INTERVAL);
+        }
+    }
+}
 
 
 /**
@@ -164,6 +284,8 @@ export class PageModel implements Kontext.PluginProvider {
      */
     private translations:{[key:string]:string};
 
+    private asyncTaskChecker:AsyncTaskChecker;
+
     /**
      *
      * @param conf
@@ -182,6 +304,7 @@ export class PageModel implements Kontext.PluginProvider {
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
         this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
+        this.asyncTaskChecker = new AsyncTaskChecker(this, this.getConf<any>('asyncTasks') || []);
     }
 
     /**
@@ -1063,7 +1186,8 @@ export class PageModel implements Kontext.PluginProvider {
             mouseOverImages: self.mouseOverImages(),
             enhanceMessages: self.enhanceMessages(),
             externalHelpLinks: self.externalHelpLinks(),
-            showNotification: self.initNotifications()
+            showNotification: self.initNotifications(),
+            initAsyncTaskChecking: self.asyncTaskChecker.init()
         });
 
         // init plug-ins

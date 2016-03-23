@@ -50,6 +50,7 @@ translation.activate('en_US')  # background jobs do not need localization
 from concworker import wcelery
 import task
 import freq_calc
+import subc_calc
 
 _, conf = settings.get_full('corpora', 'conc_calc_backend')
 app = task.get_celery_app(conf['conf'])
@@ -242,6 +243,13 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
     except manatee.AttrNotFound:
         raise WorkerTaskException('Failed to compile docf: attribute %s.%s not found in %s' % (
                                   doc_struct, attr, corp_id))
+
+
+@app.task
+def create_subcorpus(user_id, corp_id, path, tt_query, cql):
+    worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
+    worker.run(tt_query, cql, path)
+
 
 
 custom_tasks = CustomTasks(plugins.get_plugins())
