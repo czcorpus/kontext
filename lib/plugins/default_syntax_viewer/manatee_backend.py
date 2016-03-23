@@ -334,11 +334,15 @@ class ManateeBackend(SearchBackend):
     def _decode_tree_data(data, parent_attr):
         for i in range(1, len(data)):
             rel_parent = int(data[i][parent_attr])
-            abs_parent = i + rel_parent if rel_parent != 0 else 0
-            if abs_parent < 0 or abs_parent >= len(data):
+            abs_parent = i + rel_parent if rel_parent != 0 else None
+            # Please note that referring to the 0-th node
+            # means 'out of range' error too because our 0-th node
+            # here is just an auxiliary root element which is referred
+            # by an empty/zero value in vertical file.
+            if abs_parent is not None and (abs_parent <= 0 or abs_parent >= len(data)):
                 raise MaximumContextExceeded(
                     'Absolute parent position %d out of range 0..%d' % (abs_parent, len(data) - 1))
-            data[i][parent_attr] = abs_parent
+            data[i][parent_attr] = abs_parent if abs_parent is not None else 0
 
     def get_data(self, corpus, canonical_corpus_id, token_id):
         """

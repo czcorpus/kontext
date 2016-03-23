@@ -56,8 +56,7 @@ def get_syntax_data(ctrl, request):
                                                                int(request.args.get('kwic_id')))
     except MaximumContextExceeded:
         data = dict(contains_errors=True,
-                    error=_('Failed to get the syntax tree due to limited permissions'
-                            ' to the corpus (too long sentence).'))
+                    error=_('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
     return data
 
 
