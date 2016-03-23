@@ -29,6 +29,9 @@ An expected configuration:
           "labelTemplates": ["#{#009EE0}%s", "#{#F0680B}[%s]", "#{#010101}%s", "#{#E2007A}%s"],
           "layerType": "t",
           "detailAttrs": ["lc", "lemma", "lemma_lc", "tag", "pos", "case", "proc", "afun", "prep", "eparent"],
+          "attrRefs": {
+            "eparent": ["word"]
+          },
           "nodeAttrs": ["word", "afun"],
           "rootNode": {
             "id": "root",
@@ -116,6 +119,10 @@ class TreeConf(object):
     @property
     def layer_type(self):
         return self._data.get('layerType', 'a')
+
+    @property
+    def attr_refs(self):
+        return self._data.get('attrRefs', {})
 
     @property
     def all_attrs(self):
@@ -331,10 +338,28 @@ class ManateeBackend(SearchBackend):
         return data
 
     @staticmethod
-    def _decode_tree_data(data, parent_attr):
+    def _get_abs_reference(curr_idx, item, ref_attr):
+        if item[ref_attr]:
+            rel_parent = int(item[ref_attr])
+            return curr_idx + rel_parent if rel_parent != 0 else None
+        else:
+            return None
+
+    @staticmethod
+    def _process_attr_refs(data, curr_idx, attr_refs):
+        for ident, items in attr_refs.items():
+            abs_ref = ManateeBackend._get_abs_reference(curr_idx, data[curr_idx], ident)
+            if abs_ref is None:
+                data[curr_idx][ident] = '-'
+            else:
+                ref_item = data[abs_ref]
+                data[curr_idx][ident] = '%s (%s)' % (data[curr_idx][ident],
+                                                     ', '.join(map(lambda ar: ref_item[ar], items)))
+
+    @staticmethod
+    def _decode_tree_data(data, parent_attr, attr_refs):
         for i in range(1, len(data)):
-            rel_parent = int(data[i][parent_attr])
-            abs_parent = i + rel_parent if rel_parent != 0 else None
+            abs_parent = ManateeBackend._get_abs_reference(i, data[i], parent_attr)
             # Please note that referring to the 0-th node
             # means 'out of range' error too because our 0-th node
             # here is just an auxiliary root element which is referred
@@ -343,6 +368,7 @@ class ManateeBackend(SearchBackend):
                 raise MaximumContextExceeded(
                     'Absolute parent position %d out of range 0..%d' % (abs_parent, len(data) - 1))
             data[i][parent_attr] = abs_parent if abs_parent is not None else 0
+            ManateeBackend._process_attr_refs(data, i, attr_refs)
 
     def get_data(self, corpus, canonical_corpus_id, token_id):
         """
@@ -364,7 +390,7 @@ class ManateeBackend(SearchBackend):
             parsed_data = self._parse_raw_sent(raw_data, conf.all_attrs)
             if conf.root_node:
                 parsed_data = [conf.root_node] + parsed_data
-            self._decode_tree_data(parsed_data, conf.parent_attr)
+            self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs)
             tb = TreeBuilder()
             tree_list.append(tb.process(conf, parsed_data))
         template = TreexTemplate(tree_id_list, tree_list, tree_configs)
