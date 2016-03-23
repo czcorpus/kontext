@@ -80,13 +80,15 @@ class Subcorpus(Kontext):
         else:
             within_cql = None
             tt_query = TextTypeCollector(self._corp(), request).get_query()
-            full_cql = ' within '.join(['<%s %s />' % item for item in tt_query])
-            full_cql = 'aword,[] within %s' % full_cql
-            full_cql = import_string(full_cql, from_encoding=corp_encoding)
+            tmp = ['<%s %s />' % item for item in tt_query]
             aligned_corpora = request.form.getlist('aligned_corpora')
             if len(aligned_corpora) > 0:
-                full_cql += ' ' + ' '.join(map(lambda cn: 'within %s: []' % cn, aligned_corpora))
+                tmp.extend(map(lambda cn: '%s: []' % cn, aligned_corpora))
+            full_cql = ' within '.join(tmp)
+            full_cql = 'aword,[] within %s' % full_cql
+            full_cql = import_string(full_cql, from_encoding=corp_encoding)
             imp_cql = (full_cql,)
+
         basecorpname = self.args.corpname.split(':')[0]
         if not subcname:
             raise UserActionException(_('No subcorpus name specified!'))

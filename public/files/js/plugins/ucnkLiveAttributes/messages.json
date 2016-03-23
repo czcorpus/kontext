@@ -20,7 +20,7 @@
         "ucnkLA__failed_to_calc_range": "Failed to calculate the range. Please try again later or contact system administrator.",
         "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Please note that the subcorpora created with respect to language alignment takes more time to process (typically units to tens of seconds).",
         "ucnkLA__aligned_corpora": "Aligned corpora",
-        "ucnkLA__subcorp_consider_aligned_corpora": "Include only texts found in the corpora selected here."
+        "ucnkLA__subcorp_consider_aligned_corpora": "Include only texts found also in the corpora selected here."
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -43,6 +43,6 @@
         "ucnkLA__failed_to_calc_range": "Nepodařilo se spočítat rozsah. Zkuste prosím opakovat akci později nebo kontaktujte správce aplikace.",
         "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Berte prosím na vědomí, že vytváření subkorpusů s ohledem na zarovnání jazyků může trvat déle (typicky jednotky až desítky sekund).",
         "ucnkLA__aligned_corpora": "Zarovnané korpusy",
-        "ucnkLA__subcorp_consider_aligned_corpora": "Zahrnout pouze texty, které se vyskytují ve všech zde označených korpusech"
+        "ucnkLA__subcorp_consider_aligned_corpora": "Zahrnout pouze texty, které se vyskytují také ve všech zde označených korpusech"
 	}
 }
