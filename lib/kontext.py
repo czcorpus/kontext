@@ -1323,7 +1323,7 @@ class Kontext(Controller):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def check_tasks_status(self, request):
-        backend, conf = settings.get_full('corpora', 'subc_calc_backend')
+        backend, conf = settings.get_full('global', 'calc_backend')
         if backend == 'celery':
             import task
             app = task.get_celery_app(conf['conf'])

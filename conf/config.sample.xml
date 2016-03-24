@@ -30,6 +30,7 @@
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
+        <calc_backend conf="/path/to/celeryconfig.py">celery</calc_backend>
     </global>
     <mailing>
         <smtp_server>acme.localdomain</smtp_server>
@@ -53,12 +54,10 @@
         </values>
     </logging>
     <corpora>
-        <conc_calc_backend conf="/path/to/celeryconfig.py">celery</conc_calc_backend>
         <calc_pid_dir>/path/to/tmp/calc/pid/dir</calc_pid_dir>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
         <freqs_precalc_dir>/var/local/corpora/freqs-precalc</freqs_precalc_dir> <!-- this is optional -->
-        <freqs_backend conf="/path/to/celeryconfig.py">celery</freqs_backend>
         <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <freqs_cache_ttl>3600</freqs_cache_ttl>
         <freqs_cache_min_lines>100</freqs_cache_min_lines>

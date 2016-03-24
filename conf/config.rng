@@ -225,6 +225,16 @@
                             <data type="integer" />
                         </element>
                     </optional>
+                    <element name="calc_backend">
+                        <a:documentation>Selects a backend used to calculate miscellaneous task in the background</a:documentation>
+                        <attribute name="conf">
+                            <text />
+                        </attribute>
+                        <choice>
+                            <value>multiprocessing</value>
+                            <value>celery</value>
+                        </choice>
+                    </element>
                 </interleave>
             </element>
             <optional>
@@ -265,26 +275,6 @@
             </element>
             <element name="corpora">
                 <interleave>
-                    <element name="conc_calc_backend">
-                        <a:documentation>Selects a backend used to calculate concordances</a:documentation>
-                        <attribute name="conf">
-                            <text />
-                        </attribute>
-                        <choice>
-                            <value>multiprocessing</value>
-                            <value>celery</value>
-                        </choice>
-                    </element>
-                    <element name="freqs_backend">
-                        <a:documentation>Selects a backend used to calculate frequencies</a:documentation>
-                        <attribute name="conf">
-                            <text />
-                        </attribute>
-                        <choice>
-                            <value>multiprocessing</value>
-                            <value>celery</value>
-                        </choice>
-                    </element>
                     <element name="calc_pid_dir">
                         <a:documentation>Specifies a directory where concordance calculation
                         auxiliary files are temporarily created.</a:documentation>
