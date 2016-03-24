@@ -86,7 +86,13 @@ class Actions(ConcCGI):
         user = plugins.auth.validate_user(username, password)
         if user.get('id', None) is not None:
             self._session['user'] = user
-            self._redirect('%sfirst_form' % (settings.get_root_url(), ))
+            parts = self.environ.data['REQUEST_URI'].split("redirectTo=")
+            if len(parts) == 2:
+                redirect = parts[1]
+            else:
+                redirect = '%sfirst_form' % (settings.get_root_url(), )
+
+            self._redirect(redirect)
         else:
             self.disabled_menu_items = ('menu-new-query', 'menu-word-list', 'menu-view', 'menu-sort', 'menu-sample',
                                         'menu-save', 'menu-subcorpus', 'menu-concordance', 'menu-filter',

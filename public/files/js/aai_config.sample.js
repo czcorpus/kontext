@@ -31,7 +31,7 @@ define(['conf', 'aai'], function (conf) {
             if (instance.repoPath.charAt(instance.repoPath.length - 1) !== '/') {
                 instance.repoPath = instance.repoPath + '/';
             }
-            instance.target = instance.host + instance.port + '/services/kontext-dev/run.cgi/loginx';
+            instance.target = instance.host + instance.port + '/services/kontext-dev/run.cgi/loginx?redirectTo=' + encodeURIComponent(window.location.href);
             //In order to use the discojuice store (improve score of used IDPs)
             //Works only with "verified" SPs - ie. ufal-point, displays error on ufal-point-dev
             instance.responseUrl =
