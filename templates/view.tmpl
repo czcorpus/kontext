@@ -192,6 +192,15 @@ require(['tpl/view', 'conf', 'domReady!'], function(pageSelf, conf) {
     #end if
   #end for
   </td>
+
+  #if $corpname == 'syntaxtest_cs_a' or $corpname.startswith('ud_') or $corpname == 'legaltext_cs_a'
+    <td>
+    #if $k.treex_view.path
+        <a href="${root_url}view_tree?$k.treex_view.path" class="treex-view"><img src="../files/img/lindat.pmltq.logo.png" style="width:24px;height:24px;border:0;" title="Tree view">
+            <div id="treex-view" draggable="true"></div></a>
+    #end if
+    </td>
+  #end if
 #end def
 
 #def oneclick_line($l, $i, $longcorpname)

@@ -21,7 +21,7 @@
  * This module contains functionality related directly to the first_form.tmpl template
  */
 define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpane',
-        'popupbox'], function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, popupBox) {
+        'popupbox', 'js-treex-view', 'jqueryui'], function (win, $, jqueryPeriodic, layoutModel, detail, jscrollpane, popupBox, treexView) {
     'use strict';
 
     var lib = {};
@@ -113,7 +113,29 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         popupBox.bind($('.calc-warning'), layoutModel.conf.messages.calc_warning, {type: 'warning'});
     };
 
-    /**
+        $('a.treex-view').each(function () {
+            var self = $(this);
+            $(this).bind('click', function (event) {
+                detail.openTreex(this);
+                //event.stopPropagation();
+                event.preventDefault();
+
+                return false;
+            });
+        });
+
+
+/**
+    $('div.treex-view').bind('click', function () {
+        var self = $(this);
+         $.ajax('../files/js/tpl/test.json').done(function (data) {
+             $("#treex-view").treexView(data);
+         });
+
+    });
+*/
+
+     /**
      * Fills in thousands separator ',' (comma) character into a number string
      *
      * @param {string|number} nStr number string (/\d+(.\d*)?)

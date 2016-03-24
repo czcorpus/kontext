@@ -104,7 +104,7 @@ def kwicpage(
     corpus, conc, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5', attrs='word',
     ctxattrs='word', refs='#', structs='p', pagesize=40,
     labelmap={}, righttoleft=False, alignlist=[], copy_icon=0,
-        tbl_template='none', hidenone=0):
+        tbl_template='none', hidenone=1):
     """
     Generates template data for page displaying provided concordance
 
@@ -317,7 +317,7 @@ def line_parts_contain_speech(line_left, line_right):
     return False
 
 
-def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_speech_tag, prev_speech_id=None):
+def postproc_kwicline_part(corpus_name, speech_segment, treex_id, line, column, filter_speech_tag, prev_speech_id=None):
     """
     Parameters
     ----------
@@ -325,6 +325,8 @@ def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_spe
       name of the corpus
     speech_attr: 2-tupe
       (struct_name, attr_name)
+    treex_id: str
+      name of the json file
     line : list of dicts
       contains keys 'str', 'class'
     column : str
@@ -353,6 +355,7 @@ def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_spe
     last_fragment = None
     last_speech_id = prev_speech_id
     create_speech_path = lambda sp_id: urllib.urlencode({'corpname': corpus_name, 'chunk': sp_id})
+    create_treex_path = lambda treex_id: urllib.urlencode({'corpname': corpus_name, 'id': treex_id})
 
     for item in line:
         fragments = [x for x in re.split('(<%s[^>]*>|</%s>)' % (speech_struct_str, speech_struct_str), item['str']) if x != '']
@@ -370,6 +373,7 @@ def postproc_kwicline_part(corpus_name, speech_segment, line, column, filter_spe
                 newline_item['open_link'] = {'speech_path': create_speech_path(speech_id)}
             elif frag_ext.endswith('</%s>' % speech_struct_str):
                 newline_item['close_link'] = {'speech_path': create_speech_path(speech_id)}
+            newline_item['treex_view'] = {'path': create_treex_path(treex_id)}
             newline.append(newline_item)
             last_fragment = newline_item
     # we have to treat specific situations related to the end of the
@@ -453,13 +457,18 @@ def kwiclines(corpus_fullname, conc, speech_segment, fromline, toline, leftctx='
             leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
         else:
             leftmost_speech_id = None
-        leftwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment,
+        if corpus_fullname == 'syntaxtest_cs_a' or corpus_fullname.startswith('ud_') or corpus_fullname == 'legaltext_cs_a': #change to corpus_fullname.contains('cs_a') - for all syntactically annotated corpora
+            sent_id = get_sent_id(corpus, kl.get_pos())
+            treex_id = sent_id +'.json'
+        else:
+            treex_id = ''
+        leftwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment,treex_id,
                                                                 tokens2strclass(kl.get_left()),
                                                                 'left', filter_out_speech_tag, leftmost_speech_id)
-        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment,
+        kwicwords, last_left_speech_id = postproc_kwicline_part(corpus_fullname, speech_segment, treex_id,
                                                                 tokens2strclass(kl.get_kwic()),
                                                                 'kwic', filter_out_speech_tag, last_left_speech_id)
-        rightwords = postproc_kwicline_part(corpus_fullname, speech_segment,
+        rightwords = postproc_kwicline_part(corpus_fullname, speech_segment,treex_id,
                                             tokens2strclass(kl.get_right()), 'right',
                                             filter_out_speech_tag, last_left_speech_id)[0]
 
@@ -1490,6 +1499,20 @@ def get_full_ref(corp, pos):
         data[n.replace('.', '_')] = v
     return data
 
+
+def get_sent_id(corp, pos):
+    data = {}
+    refs = [(n == '#' and ('#', str(pos)) or
+             (n, corp.get_attr(n).pos2str(pos)))
+            for n in corp.get_conf('FULLREF').split(',') if n != settings.get('corpora', 'view_treex_files_path')]
+    data['Refs'] = [{'name': n == '#' and _('Token number')
+                             or corp.get_conf(n + '.LABEL') or n,
+                     'val': v}
+                    for n, v in refs]
+    for n, v in refs:
+        if n == 's.id':
+            sent_id = v
+    return sent_id
 
 def get_detail_context(corp, pos, hitlen=1,
                         detail_left_ctx=40, detail_right_ctx=40,
