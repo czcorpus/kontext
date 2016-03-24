@@ -1290,7 +1290,6 @@ class SubcorpFormPlugin extends Plugin {
             return '<input class="aligned-lang" name="aligned_corpora" type="checkbox" ' +
                     ' value="' + item.n + '" ' + checked + ' data-corpus-id="' + item.n + '" />';
         }
-
         jqWrapper.prepend(
             '<table class="envelope aligned"><tbody>' +
             '<tr class="attrib-name"><th>' + this.pluginApi.translate('ucnkLA__aligned_corpora') +
@@ -1316,7 +1315,9 @@ class SubcorpFormPlugin extends Plugin {
 
     init():void {
         super.init();
-        this.addAlignedCorporaSelector();
+        if (this.pluginApi.getConf<Array<any>>('availableAlignedCorpora').length > 0) {
+            this.addAlignedCorporaSelector();
+        }
     }
 }
 
