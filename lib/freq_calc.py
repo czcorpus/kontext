@@ -131,7 +131,7 @@ def build_arf_db(corp, attrname):
             return curr_status
 
     subc_path = prepare_arf_calc_paths(corp, attrname)
-    backend, conf = settings.get_full('corpora', 'conc_calc_backend')
+    backend, conf = settings.get_full('global', 'calc_backend')
     if backend == 'celery':
         import task
         app = task.get_celery_app(conf['conf'])

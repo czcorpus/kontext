@@ -754,7 +754,7 @@ class Actions(Kontext):
                       collator_locale=corp_info.collator_locale, fmaxitems=self.args.fmaxitems, fpage=self.args.fpage,
                       line_offset=line_offset)
 
-        backend, conf = settings.get_full('corpora', 'freqs_backend')
+        backend, conf = settings.get_full('global', 'calc_backend')
         if backend == 'celery':
             import task
             app = task.get_celery_app(conf['conf'])
@@ -1424,7 +1424,7 @@ class Actions(Kontext):
 
     @exposed(legacy=True, return_type='json')
     def wordlist_process(self, attrname='', worker_tasks=None):
-        backend, conf = settings.get_full('corpora', 'conc_calc_backend')
+        backend, conf = settings.get_full('global', 'calc_backend')
         if worker_tasks and backend == 'celery':
             import task
             app = task.get_celery_app(conf['conf'])
