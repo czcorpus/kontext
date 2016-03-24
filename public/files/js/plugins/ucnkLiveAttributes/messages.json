@@ -18,7 +18,7 @@
         "ucnkLA__range_help_text": "Ambiguously dated documents may meet the selected time range only partially, e.g. the time range 1800-1850 can be specified to include or exclude a document dated 1795±10 (1785-1805).",
         "ucnkLA__no_matching_data": "No matching data found.",
         "ucnkLA__failed_to_calc_range": "Failed to calculate the range. Please try again later or contact system administrator.",
-        "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Please note that the subcorpora created with respect to language alignment takes more time to process (typically units to tens of seconds).",
+        "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Please note that subcorpora created with respect to language alignment take more time to process (up to several minutes). The task will run in the background and once it is finished, you will be notified. In between, you can use KonText in a normal way.",
         "ucnkLA__aligned_corpora": "Aligned corpora",
         "ucnkLA__subcorp_consider_aligned_corpora": "Include only texts found also in the corpora selected here."
     },
@@ -41,7 +41,7 @@
         "ucnkLA__range_help_text": "Texty s přibližnou datací mohou zvolenému časovému rozsahu vyhovovat jen částečně: např. do rozmezí let 1800-1850 tak může, nebo nemusí být zahrnut i text datovaný 1795±10 (1785-1805).",
         "ucnkLA__no_matching_data": "Nebyla nalezena žádná vyhovující data.",
         "ucnkLA__failed_to_calc_range": "Nepodařilo se spočítat rozsah. Zkuste prosím opakovat akci později nebo kontaktujte správce aplikace.",
-        "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Berte prosím na vědomí, že vytváření subkorpusů s ohledem na zarovnání jazyků může trvat déle (typicky jednotky až desítky sekund).",
+        "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Berte prosím na vědomí, že vytváření subkorpusů s ohledem na zarovnání jazyků může trvat déle (až několik minut). Jakmile bude zpracování hotovo, zobrazí se vám zpráva. Mezitím můžete KonText normálně používat.",
         "ucnkLA__aligned_corpora": "Zarovnané korpusy",
         "ucnkLA__subcorp_consider_aligned_corpora": "Zahrnout pouze texty, které se vyskytují také ve všech zde označených korpusech"
 	}

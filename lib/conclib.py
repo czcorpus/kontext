@@ -19,7 +19,6 @@ import os
 import sys
 import time
 import logging
-from multiprocessing import Process
 import cPickle
 import math
 
@@ -175,6 +174,7 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
     """
     backend, conf = settings.get_full('corpora', 'conc_calc_backend')
     if backend == 'multiprocessing':
+        from multiprocessing import Process
         from concworker.default import BackgroundCalc, NotifierFactory
         receiver, sender = NotifierFactory()()
         calc = BackgroundCalc(notification_sender=sender)

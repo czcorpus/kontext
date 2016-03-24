@@ -17,15 +17,15 @@ import json
 import werkzeug.urls
 
 from controller import exposed
-from kontext import Kontext, ConcError, MainMenu, UserActionException
+from kontext import Kontext, ConcError, MainMenu, UserActionException, AsyncTaskStatus
 from translation import ugettext as _
 import plugins
 import l10n
-from l10n import import_string, format_number
+from l10n import import_string, export_string, format_number
 import corplib
-import conclib
 from argmapping import ConcArgsMapping
 from texttypes import TextTypeCollector, get_tt
+import settings
 
 
 class Subcorpus(Kontext):
@@ -68,11 +68,13 @@ class Subcorpus(Kontext):
         corp_encoding = self._corp().get_conf('ENCODING')
 
         if raw_cql:
+            aligned_corpora = []
             tt_query = ()
             within_cql = raw_cql
             full_cql = 'aword,[] %s' % raw_cql
             imp_cql = (full_cql,)
         elif within_json:  # user entered a subcorpus query manually
+            aligned_corpora = []
             tt_query = ()
             within_cql = self._deserialize_custom_within(json.loads(within_json))
             full_cql = 'aword,[] %s' % within_cql
@@ -83,7 +85,7 @@ class Subcorpus(Kontext):
             tmp = ['<%s %s />' % item for item in tt_query]
             aligned_corpora = request.form.getlist('aligned_corpora')
             if len(aligned_corpora) > 0:
-                tmp.extend(map(lambda cn: '%s: []' % cn, aligned_corpora))
+                tmp.extend(map(lambda cn: '%s: []' % export_string(cn, to_encoding=corp_encoding), aligned_corpora))
             full_cql = ' within '.join(tmp)
             full_cql = 'aword,[] within %s' % full_cql
             full_cql = import_string(full_cql, from_encoding=corp_encoding)
@@ -100,14 +102,25 @@ class Subcorpus(Kontext):
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self._corp(), tt_query[0][0], tt_query[0][1])
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
-            conc = conclib.get_conc(self._corp(), self._session_get('user', 'user'), q=imp_cql)
-            conc.sync()
-            struct = self._corp().get_struct(tt_query[0][0]) if len(tt_query) == 1 else None
-            result = corplib.subcorpus_from_conc(path, conc, struct)
+            # TEST BEGIN
+            backend, conf = settings.get_full('corpora', 'subc_calc_backend')
+            if backend == 'celery':
+                import task
+                from kontext import AsyncTaskStatus
+                app = task.get_celery_app(conf['conf'])
+                res = app.send_task('worker.create_subcorpus',
+                                    (self._session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
+                self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
+                                                       category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
+                                                       label=u'%s:%s' % (basecorpname, subcname)))
+                result = {}
+            else:
+                # TODO
+                pass
+            # TEST END
         else:
             raise UserActionException(_('Nothing specified!'))
-
-        if result:
+        if result is not False:
             if plugins.has_plugin('subc_restore'):
                 try:
                     plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
@@ -266,7 +279,9 @@ class Subcorpus(Kontext):
             'subcorp_list': full_list,
             'sort_keys': sort_keys,
             'show_deleted': show_deleted,
-            'rev': rev
+            'rev': rev,
+            'unfinished_subc': filter(lambda at: at.category == AsyncTaskStatus.CATEGORY_SUBCORPUS and not at.is_finished(),
+                                      self.get_async_tasks())
         }
         return ans
 

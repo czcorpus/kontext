@@ -43,6 +43,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
         $corp_sel_node
         </div>
         #end filter
+
         <table class="data" border="0">
             <thead>
                 <tr>
@@ -55,6 +56,15 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 </tr>
             </thead>
             <tbody>
+            #for $item in $unfinished_subc
+            <tr>
+                <td>$item.label</td>
+                <td>-</td>
+                <td>-</td>
+                <td>$_('unfinished')</td>
+                <td colspan="3"></td>
+            </tr>
+            #end for#
             #for $item in $subcorp_list
             <tr>
                 <td>

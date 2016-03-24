@@ -72,6 +72,9 @@ def get_meta(section, key):
 def get_full(section, key):
     """
     Returns both value and metadata of a respective configuration element
+
+    returns:
+    2-tuple (primary_value, metadata_dict)
     """
     m = get_meta(section, key)
     d = get(section, key)

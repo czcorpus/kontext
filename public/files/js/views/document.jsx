@@ -354,7 +354,8 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
                 var typeIconMap = {
                     info: '../files/img/info-icon.svg',
                     warning: '../files/img/warning-icon.svg',
-                    error: '../files/img/error-icon.svg'
+                    error: '../files/img/error-icon.svg',
+                    mail: '../files/img/message-icon.png'
                 },
                 classes = 'message ' + this.props.messageType;
 

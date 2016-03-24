@@ -243,6 +243,11 @@ declare module Kontext {
         contentType?:string;
         accept?:string;
     }
+
+    export interface AjaxResponse {
+        contains_errors:boolean;
+        messages:Array<string>;
+    }
 }
 
 

@@ -75,16 +75,17 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
 
     addMessage(messageType:string, messageText:string, onClose:()=>void) {
         let msgId = String(Math.random());
-        let timeout;
-        let viewTime = -1;
         let self = this;
 
-
+        let viewTime;
         if (messageType === 'warning') {
             viewTime = self.pluginApi.getConf<number>('messageAutoHideInterval') * 1.5;
 
-        } else if (messageType !== 'error') {
+        } else if (messageType !== 'error' && messageType !== 'mail') {
             viewTime = self.pluginApi.getConf<number>('messageAutoHideInterval');
+
+        } else {
+            viewTime = -1;
         }
 
         this.messages.push({
@@ -98,7 +99,7 @@ export class MessageStore extends util.SimplePageStore implements Kontext.Messag
         }
 
         if (viewTime > 0) {
-            timeout = win.setTimeout(function () {
+            let timeout = win.setTimeout(function () {
                 self.removeMessage(msgId);
                 win.clearTimeout(timeout);
                 self.notifyChangeListeners();

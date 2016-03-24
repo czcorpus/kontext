@@ -19,6 +19,7 @@ import inspect
 import urllib
 import os.path
 import copy
+import time
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -111,6 +112,40 @@ class LegacyForm(object):
 
 
 TextTypeCollector.EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder')
+
+
+class AsyncTaskStatus(object):
+    """
+    Keeps information about background tasks which are visible to a user
+    (i.e. user is informed that some calculation/task takes a long time
+    and that it is going to run in background and that the user will
+    be notified once it is done).
+
+    Status string is taken from Celery and should always equal
+    one of the following: PENDING, STARTED, RETRY, FAILURE, SUCCESS
+    """
+
+    CATEGORY_SUBCORPUS = 'subcorpus'
+
+    def __init__(self, ident, label, status, category, created=None, last_check=None):
+        self.ident = ident
+        self.label = label
+        self.status = status
+        self.category = category
+        self.created = created if created else time.time()
+        self.last_check = last_check
+
+    def is_finished(self):
+        return self.status in ('FAILED', 'SUCCESS')
+
+    @staticmethod
+    def from_dict(data):
+        return AsyncTaskStatus(status=data['status'], ident=data['ident'], label=data['label'],
+                               category=data['category'], created=data.get('created'),
+                               last_check=data.get('last_check'))
+
+    def to_dict(self):
+        return self.__dict__
 
 
 class Kontext(Controller):
@@ -1122,6 +1157,8 @@ class Kontext(Controller):
                 result['plugin_data'][plg_name] = plg.export(self._plugin_api,
                                                              self._session_get('user', 'id'),
                                                              self.ui_lang)
+        # asynchronous tasks
+        result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
         return result
 
     @staticmethod
@@ -1234,6 +1271,22 @@ class Kontext(Controller):
     def _uses_internal_user_pages(self):
         return isinstance(plugins.get('auth'), AbstractInternalAuth)
 
+    def get_async_tasks(self):
+        """
+        Returns a list of tasks user is explicitly and continuously informed about.
+        """
+        if 'async_tasks' in self._session:
+            return [AsyncTaskStatus.from_dict(d) for d in self._session['async_tasks']]
+        return []
+
+    def _set_async_tasks(self, task_list):
+        self._session['async_tasks'] = [at.to_dict() for at in task_list]
+
+    def _store_async_task(self, async_task_status):
+        at_list = self.get_async_tasks()
+        at_list.append(async_task_status)
+        self._set_async_tasks(at_list)
+
     @exposed(return_type='json', legacy=True)
     def concdesc_json(self):
         out = {'Desc': []}
@@ -1267,6 +1320,28 @@ class Kontext(Controller):
                 'tourl': self.urlencode(u2),
                 'size': s})
         return out
+
+    @exposed(return_type='json', skip_corpus_init=True)
+    def check_tasks_status(self, request):
+        backend, conf = settings.get_full('corpora', 'subc_calc_backend')
+        if backend == 'celery':
+            import task
+            app = task.get_celery_app(conf['conf'])
+            at_list = self.get_async_tasks()
+            for at in at_list:
+                r = app.AsyncResult(at.ident)
+                at.status = r.status
+                at.last_check = time.time()
+            self._set_async_tasks(at_list)
+            return {'data': [d.to_dict() for d in at_list]}
+        else:
+            return {'data': []}  # other backends are not supported
+
+    @exposed(return_type='json', skip_corpus_init=True)
+    def remove_task_info(self, request):
+        task_ids = request.form.getlist('tasks')
+        self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))
+        return {'num_remaining': len(self.get_async_tasks())}
 
 
 class PluginApi(object):
