@@ -22,7 +22,7 @@ module.exports = function (grunt) {
                 cmd: 'mkdir -p themes'
             },
             update_lindat_theme: {
-                cmd: 'dir="themes/lindat"; if [ -d $dir/.git ]; then git -C $dir pull; else git clone -b bootstrap3 https://redmine.ms.mff.cuni.cz/lindat/lindat-common.git $dir ; fi'
+                cmd: 'dir="themes/lindat"; if [ -d $dir/.git ]; then git -C $dir pull; else git clone -b releases https://github.com/ufal/lindat-common.git $dir ; fi'
             }
         },
         "less": {
