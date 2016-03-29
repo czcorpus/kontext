@@ -279,7 +279,7 @@ define(['win', 'jquery', 'jquery.periodic', 'tpl/document', 'detail', 'jscrollpa
         lib.initConcViewScrollbar();
         if (conf.anonymousUser) {
         	// temporarily disabled - too obtrusive
-            //lib.anonymousUserWarning();
+            lib.anonymousUserWarning();
         }
     };
 

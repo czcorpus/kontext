@@ -117,7 +117,7 @@ define('conf', ['locale'], function () {
 
     conf.messages = {};
     #if $_anonymous
-    conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please <a href=\\"%s\\" class=\\"signon\\" onclick=\\"return false;\\">sign-in</a> to unlock all the functions.') % $login_url)";
+    conf.messages.anonymous_user_warning = "$($_('KonText is running in anonymous mode. Please login or signup to unlock all the functions.'))";
     #end if
     conf.messages.failed_to_contact_server = "$_('Failed to contact server. Please try again later.')";
     conf.messages.error_loading_application_bar = "$_('Error loading application bar.')";
@@ -214,7 +214,7 @@ $_ca_topbar
 </div>
 
 <header id="topbar">
-    <a id="logo-wrapper" href="first_form"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 208px;height: 68px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
+    <a id="logo-wrapper" href="corplist"><img id="logo-image" class="over-img" src="../files/img/kontext-logo.png" alt="Kontext logo" title="$_('Click to enter a new query')" style="width: 208px;height: 68px" data-alt-img="../files/img/kontext-logo_s.png" /></a>
     <div id="menu-bar">
         <ul id="menu-level-1">
             <li id="menu-new-query" class="$menu_status('menu-new-query')"><a class="trigger" title="$_("Query")">$_("Query")</a>
@@ -309,11 +309,19 @@ $_ca_topbar
 
             <li id="menu-help" class="$menu_status('menu-help')"><a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
                 <ul class="submenu">
-                    <li class="separ"><a href="http://wiki.korpus.cz/doku.php/manualy:kontext:index" target="_blank">$_('User manual (by ICNC)')&#8230;</a></li>
+                    <li class="separ"><a href="http://wiki.korpus.cz/doku.php/manualy:kontext:index" target="_blank">$_('User manual in Czech (by ICNC)')&#8230;</a></li>
                     <li class="separ"><a href="https://trnka.ff.cuni.cz/dokuwiki/doku.php/pojmy:prehled_pojmu" target="_blank">$_('Linguistic terms (by ICNC)')&#8230;</a></li>
-                    <li><a href="corplist" target="_blank">$_('Available corpora')&#8230;</a></li>
+		    <li><a href="https://ufal.mff.cuni.cz/lindat-kontext" target="_blank">$_('User manual in English')&#8230;</a></li>
                 </ul>
             </li>
+	<li class="separator">&nbsp;</li>
+	 <li id="menu-coprlist" class="$menu_status('menu-corplist')"><a class="trigger" title="$_("Available corpora")" href="#">$_("List of corpora")</a>
+                <ul class="submenu">
+		    <li><a href="http://hdl.handle.net/11346/LINDAT-CORPORA-CKGE" target="_blank">$_('All Lindat corpora')&#8230;</a></li>
+                    <li class=separ><a href="corplist" target="_blank">$_('Corpora available in KonText')&#8230;</a></li>
+                </ul>
+            </li>
+
         </ul>
         <div id="menu-level-2-wrapper">
             <div id="menu-level-2" data-current-menu=""></div>
