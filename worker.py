@@ -52,7 +52,7 @@ import task
 import freq_calc
 import subc_calc
 
-_, conf = settings.get_full('corpora', 'conc_calc_backend')
+_, conf = settings.get_full('global', 'calc_backend')
 app = task.get_celery_app(conf['conf'])
 
 

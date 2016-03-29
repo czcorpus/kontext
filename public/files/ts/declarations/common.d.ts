@@ -19,6 +19,7 @@
 /// <reference path="./react.d.ts" />
 /// <reference path="./flux.d.ts" />
 /// <reference path="./rsvp.d.ts" />
+/// <reference path="./immutable.d.ts" />
 
 /**
  *
@@ -247,6 +248,19 @@ declare module Kontext {
     export interface AjaxResponse {
         contains_errors:boolean;
         messages:Array<string>;
+    }
+
+    export interface AsyncTaskInfo {
+        ident:string;
+        label:string;
+        category:string;
+        status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
+        created:number;
+        args:{[key:string]:any};
+    }
+
+    export interface AsyncTaskOnUpdate {
+        (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
     }
 }
 

@@ -127,24 +127,31 @@ class AsyncTaskStatus(object):
 
     CATEGORY_SUBCORPUS = 'subcorpus'
 
-    def __init__(self, ident, label, status, category, created=None, last_check=None):
+    def __init__(self, ident, label, status, category, args, created=None):
         self.ident = ident
         self.label = label
         self.status = status
         self.category = category
         self.created = created if created else time.time()
-        self.last_check = last_check
+        self.args = args
 
     def is_finished(self):
         return self.status in ('FAILED', 'SUCCESS')
 
     @staticmethod
     def from_dict(data):
+        """
+        Creates an instance from the 'dict' type. This is used
+        to unserialize instances from session.
+        """
         return AsyncTaskStatus(status=data['status'], ident=data['ident'], label=data['label'],
-                               category=data['category'], created=data.get('created'),
-                               last_check=data.get('last_check'))
+                               category=data['category'], created=data.get('created'), args=data.get('args', {}))
 
     def to_dict(self):
+        """
+        Transforms an instance to the 'dict' type. This is used
+        to serialize instances to session.
+        """
         return self.__dict__
 
 
@@ -1273,7 +1280,7 @@ class Kontext(Controller):
 
     def get_async_tasks(self):
         """
-        Returns a list of tasks user is explicitly and continuously informed about.
+        Returns a list of tasks user is explicitly informed about.
         """
         if 'async_tasks' in self._session:
             return [AsyncTaskStatus.from_dict(d) for d in self._session['async_tasks']]
@@ -1331,7 +1338,6 @@ class Kontext(Controller):
             for at in at_list:
                 r = app.AsyncResult(at.ident)
                 at.status = r.status
-                at.last_check = time.time()
             self._set_async_tasks(at_list)
             return {'data': [d.to_dict() for d in at_list]}
         else:
