@@ -100,18 +100,9 @@ export interface ComponentCoreMixins {
 }
 
 
-export interface AsyncTaskInfo {
-    ident:string;
-    label:string;
-    category:string;
-    status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
-    created:number;
-}
-
-
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
-    numRemaining?: number;
-    data?:Array<AsyncTaskInfo>;
+    num_remaining?: number;
+    data?:Array<Kontext.AsyncTaskInfo>;
     contains_errors: boolean;
 }
 
@@ -124,7 +115,9 @@ export class AsyncTaskChecker {
 
     private pageModel:PageModel;
 
-    private asyncTasks:Immutable.List<AsyncTaskInfo>;
+    private asyncTasks:Immutable.List<Kontext.AsyncTaskInfo>;
+
+    private onUpdate:Immutable.List<Kontext.AsyncTaskOnUpdate>;
 
     private asyncTaskCheckerInterval:number;
 
@@ -133,16 +126,18 @@ export class AsyncTaskChecker {
 
     constructor(pageModel:PageModel, conf:any) {
         this.pageModel = pageModel;
-        this.asyncTasks = Immutable.List<AsyncTaskInfo>(conf.map((item) => {
+        this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(conf.map((item) => {
             return {
                 status: conf['status'],
                 ident: conf['ident'],
                 created: conf['created'],
                 label: conf['label'],
-                category: conf['category']
+                category: conf['category'],
+                args: conf['args']
             }
         }));
         this.asyncTaskCheckerInterval = null;
+        this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
     }
 
     private checkForStatus():RSVP.Promise<AsyncTaskResponse> {
@@ -163,45 +158,59 @@ export class AsyncTaskChecker {
         );
     }
 
-    private getFinishedTasks():Immutable.List<AsyncTaskInfo> {
+    private getFinishedTasks():Immutable.List<Kontext.AsyncTaskInfo> {
         return this.asyncTasks.filter((item)=>(item.status === 'SUCCESS' || item.status === 'FAILURE')).toList();
     }
 
-    private createTaskDesc(taskInfo:AsyncTaskInfo) {
+    private createTaskDesc(taskInfo:Kontext.AsyncTaskInfo) {
         let label = taskInfo.label ? taskInfo.label : taskInfo.ident.substr(0, 8) + '...';
         return label + ' (' + taskInfo.status + ')';
     }
 
+    /**
+     * Adds a handler triggered when task information is
+     * received from server.
+     */
+    addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
+        this.onUpdate = this.onUpdate.push(fn);
+    }
+
     init():void {
-        if (this.asyncTasks.size > 0) {
+        if (this.asyncTasks.size > 0 && !this.asyncTaskCheckerInterval) {
             this.asyncTaskCheckerInterval = window.setInterval(() => {
                 this.checkForStatus().then(
                     (data) => {
-
                         if (!data.contains_errors) {
-                            this.asyncTasks = Immutable.List<AsyncTaskInfo>(data.data);
-                            let finished = this.getFinishedTasks();
-
-                            if (finished.size > 0) {
-                                let info = finished.map((item) => this.createTaskDesc(item))
-                                        .join(', ');
+                            this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(data.data);
+                            if (this.asyncTasks.size === 0) {
                                 window.clearInterval(this.asyncTaskCheckerInterval);
-                                this.pageModel.showMessage(
-                                    'mail',
-                                    this.pageModel.translate('global__these_task_are_finished') + ': ' + info,
-                                    () => {
-                                        this.deleteTaskInfo(finished.map(item => item.ident).toArray()).then(
-                                            (data) => {
-                                                if (data.numRemaining > 0) {
-                                                    this.init();
+
+                            } else {
+                                let finished = this.getFinishedTasks();
+                                if (finished.size > 0) {
+                                    window.clearInterval(this.asyncTaskCheckerInterval);
+                                    this.onUpdate.forEach(item => {
+                                        item(finished);
+                                    });
+                                    let info = finished.map((item) => this.createTaskDesc(item))
+                                            .join(', ');
+                                    this.pageModel.showMessage(
+                                        'mail',
+                                        this.pageModel.translate('global__these_task_are_finished') + ': ' + info,
+                                        () => {
+                                            this.deleteTaskInfo(finished.map(item => item.ident).toArray()).then(
+                                                (data) => {
+                                                    if (data.num_remaining > 0) {
+                                                        this.init();
+                                                    }
+                                                },
+                                                (err) => {
+                                                    this.pageModel.showMessage('error', err);
                                                 }
-                                            },
-                                            (err) => {
-                                                this.pageModel.showMessage('error', err);
-                                            }
-                                        )
-                                    }
-                                );
+                                            )
+                                        }
+                                    );
+                                }
                             }
 
                         } else {
@@ -453,6 +462,10 @@ export class PageModel implements Kontext.PluginProvider {
         }
     }
 
+    addOnAsyncTaskUpdate(fn:Kontext.AsyncTaskOnUpdate) {
+        this.asyncTaskChecker.addOnUpdate(fn);
+    }
+
     /**
      * Escapes general string containing HTML elements and entities
      *
@@ -550,9 +563,16 @@ export class PageModel implements Kontext.PluginProvider {
 
         function encodeArgs(obj) {
             let ans = [];
-            for (let p in obj) {
+            let p;
+            for (p in obj) {
                 if (obj.hasOwnProperty(p)) {
-                    ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
+                    let val = obj[p];
+                    if (Object.prototype.toString.apply(val) === '[object Array]') {
+                        ans = ans.concat(val.map((item) => encodeURIComponent(p) + '=' + encodeURIComponent(item)));
+
+                    } else {
+                        ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(val));
+                    }
                 }
             }
             return ans.join('&');

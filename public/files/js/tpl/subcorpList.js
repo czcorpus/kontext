@@ -265,6 +265,63 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         wrappingElm.append(jqFieldset);
     };
 
+    function bindSubcorpusActions(elm, widget, corpusSelectorWrapper) {
+        if (hasDeletedFlag(elm) || hasDefinedSubcorpus(elm)) {
+            popupBox.bind(
+                $(elm),
+                function (tooltipBox, finalize) {
+                    var divElm = $(window.document.createElement('div')),
+                        triggerElm = tooltipBox.getTriggerElm(),
+                        component = new SubcorpActions(
+                            lib.layoutModel,
+                            widget,
+                            tooltipBox,
+                            $(triggerElm).closest('tr').get(0),
+                            $(triggerElm).data('corpname'),
+                            decodeURIComponent($(triggerElm).data('subcname')),
+                            corpusSelectorWrapper
+                        );
+                        $(component.corpusSelector).val($(triggerElm).data('corpname'));
+
+                    if (hasDeletedFlag(elm)) {
+                        component.createUndeleteForm(divElm, triggerElm);
+                        component.createWipeForm(divElm);
+                    }
+                    if (hasDefinedSubcorpus(elm)) {
+                        component.createReuseForm(divElm, triggerElm, selection);
+                    }
+
+                    tooltipBox.importElement(divElm);
+
+                    // close all the other action boxes
+                    $('.subc-actions').each(function () {
+                        if (!$(this).is($(elm))) {
+                            popupBox.close(this);
+                        }
+                    });
+
+                    finalize();
+                },
+                {
+                    type: 'plain',
+                    width: 'nice',
+                    timeout: null,
+                    closeIcon: true,
+                    expandLeft: true,
+                    onClose: function () {
+                        $('#mainform').append(corpusSelectorWrapper);
+                        corpusSelectorWrapper.hide();
+                    }
+                }
+            );
+
+        } else {
+            popupBox.bind($(elm), lib.layoutModel.translate('global__no_backup_data'), {
+                expandLeft: true
+            });
+        }
+    }
+
     /**
      * Creates a pop-up box containing miscellaneous functions related to a general subcorpus record
      * (undelete, wipe, re-use query).
@@ -280,62 +337,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         $('#subcorp-selector-wrapper').remove();
 
         $('table.data td .subc-actions').each(function () {
-            var self = this;
-
-            if (hasDeletedFlag(self) || hasDefinedSubcorpus(self)) {
-                popupBox.bind(
-                    $(self),
-                    function (tooltipBox, finalize) {
-                        var divElm = $(window.document.createElement('div')),
-                            triggerElm = tooltipBox.getTriggerElm(),
-                            component = new SubcorpActions(
-                                lib.layoutModel,
-                                widget,
-                                tooltipBox,
-                                $(triggerElm).closest('tr').get(0),
-                                $(triggerElm).data('corpname'),
-                                decodeURIComponent($(triggerElm).data('subcname')),
-                                corpusSelectorWrapper
-                            );
-                            $(component.corpusSelector).val($(triggerElm).data('corpname'));
-
-                        if (hasDeletedFlag(self)) {
-                            component.createUndeleteForm(divElm, triggerElm);
-                            component.createWipeForm(divElm);
-                        }
-                        if (hasDefinedSubcorpus(self)) {
-                            component.createReuseForm(divElm, triggerElm, selection);
-                        }
-
-                        tooltipBox.importElement(divElm);
-
-                        // close all the other action boxes
-                        $('.subc-actions').each(function () {
-                            if (!$(this).is($(self))) {
-                                popupBox.close(this);
-                            }
-                        });
-
-                        finalize();
-                    },
-                    {
-                        type: 'plain',
-                        width: 'nice',
-                        timeout: null,
-                        closeIcon: true,
-                        expandLeft: true,
-                        onClose: function () {
-                            $('#mainform').append(corpusSelectorWrapper);
-                            corpusSelectorWrapper.hide();
-                        }
-                    }
-                );
-
-            } else {
-                popupBox.bind($(self), lib.layoutModel.translate('global__no_backup_data'), {
-                    expandLeft: true
-                });
-            }
+            bindSubcorpusActions(this, widget, corpusSelectorWrapper);
         });
     }
 
@@ -387,6 +389,70 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         });
     }
 
+    function getSubcorpInfo(layoutModel, corpName, subcName) {
+        return layoutModel.ajax(
+            'GET',
+            layoutModel.createActionUrl('subcorpus/ajax_subcorp_info'),
+            {corpname: corpName, subcname: subcName},
+            {contentType : 'application/x-www-form-urlencoded'}
+        );
+    }
+
+    function updateLiveRow(layoutModel, targetRow, subcInfo, widget) {
+        $(targetRow).find('td.status').text(layoutModel.translate('global__subc_active'));
+        $(targetRow).find('td.size').text(subcInfo['subCorpusSize']);
+        $(targetRow).find('td.created').text(subcInfo['created']);
+
+        var name = window.document.createElement('a');
+        var oldCell = $(targetRow).find('td.name');
+        $(name)
+            .text(oldCell.text())
+            .attr('title', layoutModel.translate('global__subc_search_in_subc'))
+            .attr('href', layoutModel.createActionUrl('first_form?corpname=' +
+                    subcInfo['corpusName'] + '&usesubcorp=' + subcInfo['subCorpusName']));
+        oldCell.empty().append(name);
+
+        var actions = window.document.createElement('a');
+        $(actions).text(layoutModel.translate('global__subc_actions'));
+        bindSubcorpusActions(actions, widget, $('#corpus-selection'));
+        $(targetRow).find('td.actions').append(actions);
+
+        var checkbox = window.document.createElement('input');
+        $(checkbox)
+            .addClass('selected-subc')
+            .attr('type', 'checkbox')
+            .attr('name', 'selected_subc')
+            .attr('value', subcInfo['corpusName'] + ':' + subcInfo['subCorpusName'])
+            .on('change', function  () {
+                updateSelectionButtons();
+            });
+        $(targetRow).find('td.selection').append(checkbox);
+
+    }
+
+    function initAsyncTaskChecking(widget, layoutModel) {
+        layoutModel.addOnAsyncTaskUpdate(function (itemList) {
+            var taskRowMap = {};
+            $('#mainform').find('table.data tr.unfinished').each(function (i, item) {
+                taskRowMap[$(item).attr('data-task-ident')] = item;
+            });
+            itemList.forEach(function (item) {
+                var targetRow = taskRowMap[item.ident];
+                if (targetRow) {
+                    var ans = getSubcorpInfo(layoutModel, item.args['corpname'], item.args['subcname']);
+                    ans.then(
+                        function (data) {
+                            updateLiveRow(layoutModel, targetRow, data, widget);
+                        },
+                        function (err) {
+                            layoutModel.showMessage('error', err);
+                        }
+                    );
+                }
+            });
+        });
+    }
+
     /**
      *
      * @param conf
@@ -404,6 +470,7 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
         subcInfo(widget, lib.corpusSelection);
         initList();
         updateSelectionButtons();
+        initAsyncTaskChecking(widget, lib.layoutModel);
     };
 
 

@@ -127,12 +127,13 @@ class AsyncTaskStatus(object):
 
     CATEGORY_SUBCORPUS = 'subcorpus'
 
-    def __init__(self, ident, label, status, category, created=None):
+    def __init__(self, ident, label, status, category, args, created=None):
         self.ident = ident
         self.label = label
         self.status = status
         self.category = category
         self.created = created if created else time.time()
+        self.args = args
 
     def is_finished(self):
         return self.status in ('FAILED', 'SUCCESS')
@@ -144,7 +145,7 @@ class AsyncTaskStatus(object):
         to unserialize instances from session.
         """
         return AsyncTaskStatus(status=data['status'], ident=data['ident'], label=data['label'],
-                               category=data['category'], created=data.get('created'))
+                               category=data['category'], created=data.get('created'), args=data.get('args', {}))
 
     def to_dict(self):
         """

@@ -13,6 +13,7 @@
 import os
 import logging
 import json
+import time
 
 import werkzeug.urls
 
@@ -112,7 +113,8 @@ class Subcorpus(Kontext):
                                     (self._session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                       label=u'%s:%s' % (basecorpname, subcname)))
+                                                       label=u'%s:%s' % (basecorpname, subcname),
+                                                       args={'subcname': subcname, 'corpname': basecorpname}))
                 result = {}
             else:
                 # TODO
@@ -293,6 +295,7 @@ class Subcorpus(Kontext):
             'subCorpusName': subcname,
             'corpusSize': format_number(sc.size()),
             'subCorpusSize': format_number(sc.search_size()),
+            'created': time.strftime(l10n.datetime_formatting(), sc.created.timetuple()),
             'extended_info': {}
         }
         if plugins.has_plugin('subc_restore'):
