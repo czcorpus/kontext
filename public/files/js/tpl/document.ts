@@ -105,7 +105,6 @@ export interface AsyncTaskInfo {
     label:string;
     category:string;
     status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
-    last_check:number;
     created:number;
 }
 
@@ -139,7 +138,6 @@ export class AsyncTaskChecker {
                 status: conf['status'],
                 ident: conf['ident'],
                 created: conf['created'],
-                last_check: conf['last_check'],
                 label: conf['label'],
                 category: conf['category']
             }
