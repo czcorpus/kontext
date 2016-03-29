@@ -61,7 +61,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 <td>$item.label</td>
                 <td>-</td>
                 <td>-</td>
-                <td>$_('unfinished')</td>
+                <td>$_('calculating ...')</td>
                 <td colspan="3"></td>
             </tr>
             #end for#
@@ -105,11 +105,13 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             #end for
             </tbody>
         </table>
+        <div class="mass-op">
         <label class="show-deleted">$_('Show also deleted items') <input type="checkbox" class="show-deleted" #if $show_deleted#checked="checked"#end if# /></label>
-        <p>
+        </div>
+        <div class="mass-op">
             <button type="submit" class="default-button delete-selected"
                     name="action" value="delete" style="display:none">$_('Delete selected')</button>
-        </p>
+        </div>
     </form>
 </section>
 
