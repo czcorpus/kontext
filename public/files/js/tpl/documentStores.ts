@@ -19,7 +19,7 @@
 /// <reference path="../../ts/declarations/common.d.ts" />
 
 import win = require('win');
-import util = require('util');
+import util = require('../util');
 
 
 /**

@@ -154,6 +154,7 @@ define('conf', [], function () {
     #end if
     conf.availableAlignedCorpora = #filter $Jsonize#$getVar('Aligned', [])#end filter#;
     conf.numLinesInGroups = $num_lines_in_groups;
+    conf.linesGroupsNumbers = #filter $Jsonize#$lines_groups_numbers#end filter#;
     conf.pluginData = #filter $Jsonize#$plugin_data#end filter#;
     conf.notifications = #filter $Jsonize#$messages#end filter#;
     conf.queryHints = [

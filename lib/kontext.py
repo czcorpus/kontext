@@ -508,6 +508,7 @@ class Kontext(Controller):
             tpl_data['q'] = self.urlencode([('q', q) for q in self.args.q])
             tpl_data['Q'] = [{'q': q} for q in self.args.q]
         tpl_data['num_lines_in_groups'] = len(self._lines_groups)
+        tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
 
     def _scheduled_actions(self, user_settings):
         actions = []

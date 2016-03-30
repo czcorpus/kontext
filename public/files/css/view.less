@@ -521,6 +521,24 @@ table#conclines .concordance-col-heading {
 
 #selection-actions {
 
+    fieldset {
+        legend {
+            font-weight: bold;
+            padding-right: 0.6em;
+        }
+        button.ok {
+            margin-right: 0.4em;
+        }
+        input.email {
+            margin-right: 0.6em;
+        }
+        span.arrow {
+            font-size: 130%;
+            font-weight: bold;
+            color: @color-logo-pink;
+        }
+    }
+
     .chart-area {
         vertical-align: middle;
         margin-top: 1em;
@@ -568,7 +586,6 @@ table#conclines .concordance-col-heading {
     .generated-link {
         margin-top: 2em;
         display: block;
-        width: 100%;
 
         .conc-link {
             display: block;
@@ -576,7 +593,6 @@ table#conclines .concordance-col-heading {
             border: 1px solid @color-light-text;
             padding: 0.2em 0.5em;
             margin-bottom: 1em;
-            width: 90%;
             min-width: 30em;
         }
     }

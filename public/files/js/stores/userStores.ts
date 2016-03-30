@@ -20,8 +20,8 @@
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import util = require('util');
-import tplDocument = require('tpl/document');
+import util = require('../util');
+import tplDocument = require('../tpl/document');
 import RSVP = require('vendor/rsvp');
 
 
