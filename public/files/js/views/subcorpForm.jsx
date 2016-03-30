@@ -23,6 +23,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
     lib.init = function (dispatcher, mixins, subcorpFormStore) {
 
+        // ------------------------------------------- <WithinSwitch /> ----------------------------
+
         let WithinSwitch = React.createClass({
 
             _changeHandler : function () {
@@ -41,6 +43,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 );
             }
         });
+
+        // ------------------------------------------- <CloseImg /> ----------------------------
 
         let CloseImg = React.createClass({
 
@@ -68,26 +72,60 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        // ---------------------------------------------------------------------------------------
+
+        function createLineChangeHandler(attrName, rowId, transform) {
+            let self = this;
+            return function (evt) {
+                let props = {
+                    row: rowId,
+                    negated: self.props.lineData.negated,
+                    structureName: self.props.lineData.structureName,
+                    attributeCql: self.props.lineData.attributeCql
+                };
+                props[attrName] = typeof transform === 'function' ? transform(evt.target.value) : evt.target.value;
+
+                dispatcher.dispatch({
+                    actionType: 'LINE_UPDATED',
+                    props: props
+                });
+            };
+        }
+
+        // ------------------------------------------- <WithinLine /> ----------------------------
+
         let WithinLine = React.createClass({
             mixins : mixins,
 
-            _changeHandler : function (attrName, rowId, transform) {
-                let self = this;
-                return function (evt) {
-                    let props = {
-                        row: rowId,
-                        negated: self.props.lineData.negated,
-                        structureName: self.props.lineData.structureName,
-                        attributeCql: self.props.lineData.attributeCql
-                    };
-                    props[attrName] = typeof transform === 'function' ? transform(evt.target.value) : evt.target.value;
+            _createPrevLinkRef : function (i) {
+                if (this.props.viewIdx > 0) {
+                    return this.translate('global__subc_all_the_matching_tokens_{prev}', {prev: i});
 
-                    dispatcher.dispatch({
-                        actionType: 'LINE_UPDATED',
-                        props: props
-                    });
-                };
+                } else {
+                    return this.translate('global__subc_all_the_tokens');
+                }
             },
+
+            render : function () {
+                return (
+                    <tr className="within-rel">
+                        <td className="line-id" rowSpan="2">{this.props.viewIdx + 1})</td>
+                         <td colSpan="3">
+                            <span className="set-desc">{this._createPrevLinkRef(this.props.viewIdx)}</span>
+                            <WithinSwitch changeHandler={createLineChangeHandler.call(this, 'negated', this.props.rowIdx,
+                                                (v)=>({'within': false, '!within': true})[v])}
+                                          withinType={this.props.lineData.negated ? '!within' : 'within'} />
+                            <strong>:</strong>
+                        </td>
+                    </tr>
+                );
+            }
+        });
+
+        // ------------------------------------------- <StructLine /> ----------------------------
+
+        let StructLine = React.createClass({
+            mixins : mixins,
 
             _removeHandler : function () {
                 dispatcher.dispatch({
@@ -104,14 +142,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 let self = this;
                 return (
                     <tr>
-                        <td><strong className="within-rel">{this.props.viewIdx > 0 ? '&' : ''}</strong></td>
                         <td>
-                            <WithinSwitch changeHandler={this._changeHandler('negated', this.props.rowIdx,
-                                                (v)=>({'within': false, '!within': true})[v])}
-                                            withinType={this.props.lineData.negated ? '!within' : 'within'} />
-                        </td>
-                        <td>
-                            <select onChange={this._changeHandler('structureName', this.props.rowIdx)}
+                            <select onChange={createLineChangeHandler.call(self, 'structureName', this.props.rowIdx)}
                                 defaultValue={this.props.lineData.structureName}>
                             {
                                 Object.keys(this.props.structsAndAttrs).map(
@@ -124,7 +156,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         </td>
                         <td>
                             <input type="text" defaultValue={this.props.lineData.attributeCql}
-                                    onChange={this._changeHandler('attributeCql', this.props.rowIdx)}
+                                    onChange={createLineChangeHandler.call(self, 'attributeCql', this.props.rowIdx)}
                                     style={{width: '30em'}} />
                         </td>
                         <td>
@@ -136,6 +168,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 );
             }
         });
+
+        // ------------------------------------------- <WithinBuilder /> ----------------------------
 
         let WithinBuilder = React.createClass({
 
@@ -168,14 +202,13 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 subcorpFormStore.removeChangeListener(this.changeHandler);
             },
 
-            _renderWithinLine : function (line, viewIdx) {
-                if (line) {
-                    return <WithinLine key={line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
-                            lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
-
-                } else {
-                    return null;
-                }
+            _renderStructLine : function (line, viewIdx) {
+                return [
+                    <WithinLine key ={'wl' + line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
+                        lineData={line} structsAndAttrs={this.props.structsAndAttrs} />,
+                    <StructLine key={'sl' + line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
+                        lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
+                ];
             },
 
             render : function () {
@@ -183,15 +216,15 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 return (
                     <table>
                         <tbody>
-                            {lines.map((line, i) => this._renderWithinLine(line, i))}
+                            {lines.filter(line=>!!line).map((line, i) => this._renderStructLine(line, i))}
                             <tr key="button-row" className="last-line">
-                                <td></td>
                                 <td>
                                     <a className="add-within"
                                         onClick={this._addLineHandler}
                                         title={this.translate('global__add_within')}>+</a>
                                 </td>
-                                <td colSpan="3"></td>
+                                <td></td>
+                                <td></td>
                             </tr>
                         </tbody>
                     </table>

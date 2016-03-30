@@ -1258,10 +1258,30 @@ footer .debug-warning {
     border-radius: 3px;
     padding: 3px 6px;
 }
-#subc-within-row strong.within-rel {
-    font-size: 1.3em;
+#subc-within-row tr.within-rel {
+    font-size: 1em;
     font-weight: normal;
-    padding-right: 0.3em;
+    color: @color-light-text;
+    white-space: nowrap;
+
+    td {
+        padding-top: 1em;
+    }
+
+    .set-desc {
+        background-color: #FFFFFF;
+        border-radius: @input-border-radius;
+        color: @color-light-text;
+        padding-right: 0.6em;
+    }
+
+    .line-id {
+        text-align: right;
+        font-weight: bold;
+        font-size: 120%;
+        color: @color-logo-pink;
+        padding-right: 0.4em;
+    }
 }
 #subc-within-row td {
     padding: 0;
@@ -1283,6 +1303,9 @@ footer .debug-warning {
 }
 #subc-within-row .code {
     font-family: @monospace-font-family;
+}
+#subc-within-row td.container tr.last-line td {
+    padding-top: 0.4em;
 }
 #subc-within-row td.container tr.last-line .add-within,
 #multilevel-freq-params #add-freq-level-button {

@@ -19,7 +19,7 @@
 /// <reference path="../../ts/declarations/common.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 
-import util = require('util');
+import util = require('../util');
 
 
 export class WithinLine {

@@ -1258,12 +1258,14 @@ class SubcorpFormPlugin extends Plugin {
         this.getStoredAlignedCorporaFn = getStoredAlignedCorporaFn;
         this.beforeSubmitActions = [
             (evt) => {
-                let ans = window.confirm(
-                    this.pluginApi.translate('ucnkLA__subcorp_cosider_aligned_may_take_long_time'));
-                if (!ans) {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    return false;
+                if (this.getAlignedCorpora().findSelected().length > 0) {
+                    let ans = window.confirm(
+                        this.pluginApi.translate('ucnkLA__subcorp_cosider_aligned_may_take_long_time'));
+                    if (!ans) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -1333,7 +1335,7 @@ export function init(pluginApi:Kontext.QueryPagePluginApi,
     }
 
     let plugin;
-    if (pluginApi.getConf<string>('currentAction') === 'subcorpus/subcorp_form') {
+    if (['subcorpus/subcorp_form', 'subcorpus/subcorp'].indexOf(pluginApi.getConf<string>('currentAction')) > -1) {
         plugin = new SubcorpFormPlugin(pluginApi, conf, attrFieldsetWrapper,
                 updateButton, resetButton, getStoredAlignedCorporaFn);
 
