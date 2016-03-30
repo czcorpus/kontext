@@ -83,7 +83,7 @@ declare module Kontext {
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
         appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}):void;
-        showMessage(type:string, message:string); // TODO type: MsgType vs string
+        showMessage(type:string, message:string, onClose?:()=>void); // TODO type: MsgType vs string
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date):string;
