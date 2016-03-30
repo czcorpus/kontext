@@ -568,7 +568,7 @@ export class PageModel implements Kontext.PluginProvider {
             let p;
             for (p in obj) {
                 if (obj.hasOwnProperty(p)) {
-                    let val = obj[p];
+                    let val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
                     if (Object.prototype.toString.apply(val) === '[object Array]') {
                         ans = ans.concat(val.map((item) => encodeURIComponent(p) + '=' + encodeURIComponent(item)));
 
