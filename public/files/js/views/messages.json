@@ -100,7 +100,9 @@
         "global__these_task_are_finished": "The following tasks have been finished",
         "global__subc_active": "active",
         "global__subc_actions": "actions",
-        "global__subc_search_in_subc": "Search in the corpus"
+        "global__subc_search_in_subc": "Search in the corpus",
+        "global__subc_all_the_tokens": "Select all the positions",
+        "global__subc_all_the_matching_tokens_{prev}": "Then take the positions matching ({prev}) and select the ones"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -204,6 +206,8 @@
         "global__these_task_are_finished": "Byly dokončeny následující úlohy",
         "global__subc_active": "aktivní",
         "global__subc_actions": "akce",
-        "global__subc_search_in_subc": "Hledat v korpusu"
+        "global__subc_search_in_subc": "Hledat v korpusu",
+        "global__subc_all_the_tokens": "Vyber všechny pozice",
+        "global__subc_all_the_matching_tokens_{prev}": "Poté vezmi pozice vyhovující ({prev}) a vyber ty, které splňují"
 	}
 }
