@@ -442,9 +442,15 @@ define(['jquery', 'tpl/document', 'plugins/corparch/init', 'popupbox'], function
                     var ans = getSubcorpInfo(layoutModel, item.args['corpname'], item.args['subcname']);
                     ans.then(
                         function (data) {
-                            updateLiveRow(layoutModel, targetRow, data, widget);
+                            if (!data['contains_errors']) {
+                                updateLiveRow(layoutModel, targetRow, data, widget);
+
+                            } else {
+                                $(targetRow).remove();
+                            }
                         },
                         function (err) {
+                            $(targetRow).remove();
                             layoutModel.showMessage('error', err);
                         }
                     );

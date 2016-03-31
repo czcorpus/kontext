@@ -127,13 +127,14 @@ class AsyncTaskStatus(object):
 
     CATEGORY_SUBCORPUS = 'subcorpus'
 
-    def __init__(self, ident, label, status, category, args, created=None):
+    def __init__(self, ident, label, status, category, args, created=None, error=None):
         self.ident = ident
         self.label = label
         self.status = status
         self.category = category
         self.created = created if created else time.time()
         self.args = args
+        self.error = error
 
     def is_finished(self):
         return self.status in ('FAILED', 'SUCCESS')
@@ -145,7 +146,8 @@ class AsyncTaskStatus(object):
         to unserialize instances from session.
         """
         return AsyncTaskStatus(status=data['status'], ident=data['ident'], label=data['label'],
-                               category=data['category'], created=data.get('created'), args=data.get('args', {}))
+                               category=data['category'], created=data.get('created'), args=data.get('args', {}),
+                               error=data.get('error'))
 
     def to_dict(self):
         """
@@ -1338,6 +1340,8 @@ class Kontext(Controller):
             for at in at_list:
                 r = app.AsyncResult(at.ident)
                 at.status = r.status
+                if at.status == 'FAILURE':
+                    at.error = unicode(r.result)
             self._set_async_tasks(at_list)
             return {'data': [d.to_dict() for d in at_list]}
         else:
