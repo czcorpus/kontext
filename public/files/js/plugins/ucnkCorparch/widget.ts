@@ -559,10 +559,12 @@ class SearchTab implements WidgetTab {
                 },
                 footer: function (info) {
                     if (info.suggestions.length === self.maxNumHints) {
-                        return $('<p class="hint">'
-                            + self.pluginApi.translate('defaultCorparch__please_note_results_cut_{maxNum}{link}',
-                                    {maxNum: self.maxNumHints, link: self.pluginApi.createActionUrl('/corpora/corplist')})
-                            + '</p>');
+                        let url = self.pluginApi.createActionUrl('/corpora/corplist?query='
+                                + encodeURIComponent(self.getTagQuery() + ' ' + $(self.srchField).val()));
+                        return $('<p class="hint">' +
+                                self.pluginApi.translate('defaultCorparch__please_note_results_cut_{maxNum}{link}',
+                                        { maxNum: self.maxNumHints, link: url }) +
+                                '</p>');
                     }
                 }
             }
