@@ -20,9 +20,9 @@
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import util = require('util');
-import conclines = require('conclines');
-import tplDocument = require('tpl/document');
+import util = require('../util');
+import conclines = require('../conclines');
+import tplDocument = require('../tpl/document');
 
 
 export interface RedirectingResponse {
@@ -99,6 +99,9 @@ export class LineSelectionStore extends util.SimplePageStore {
                 case 'LINE_SELECTION_REENABLE_EDIT':
                     self.reenableEdit(); // this.redirects ...
                     break;
+                case 'LINE_SELECTION_GROUP_RENAME':
+                    self.renameLineGroup(payload.props['srcGroupNum'], payload.props['dstGroupNum']) // this redirects...
+                    break;
                 case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
                     let prom:RSVP.Promise<any> = self.sendSelectionUrlToEmail(payload.props['email']);
                     prom.then(
@@ -122,6 +125,35 @@ export class LineSelectionStore extends util.SimplePageStore {
         this.clearSelectionHandlers.forEach(function (item:()=>void) {
             item();
         });
+    }
+
+    private renameLineGroup(srcGroupNum:number, dstGroupNum:number):void {
+        let stateArgs = this.layoutModel.getConf<string>('stateParams');
+        let prom:RSVP.Promise<any> = this.layoutModel.ajax<any>(
+            'POST',
+            this.layoutModel.createActionUrl('ajax_rename_line_group?' + stateArgs),
+            {
+                'from_num': srcGroupNum,
+                'to_num': dstGroupNum
+            },
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        );
+        prom.then(
+            (data) => {
+                if (!data['contains_errors']) {
+                    window.location.href = data['next_url'];
+
+                } else {
+                    this.layoutModel.showMessage('error', data['error']);
+                }
+
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        )
     }
 
     private sendSelectionUrlToEmail(email:string):RSVP.Promise<any> {
