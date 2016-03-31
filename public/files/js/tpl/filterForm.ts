@@ -19,10 +19,11 @@
 /// <reference path="../../ts/declarations/common.d.ts" />
 /// <reference path="../../ts/declarations/abstract-plugins.d.ts" />
 
-import documentModule = require('tpl/document');
+import documentModule = require('./document');
 import queryInput = require('../queryInput');
 import queryStorage = require('plugins/queryStorage/init');
 import liveAttributes = require('plugins/liveAttributes/init');
+import initActions = require('../initActions');
 
 
 /**
@@ -47,7 +48,7 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
 export function init(conf:Kontext.Conf) {
 
     let layoutModel = new documentModule.PageModel(conf);
-    let promises:documentModule.InitActions = layoutModel.init();
+    let promises:initActions.InitActions = layoutModel.init();
     let corpusSetupHandler = new CorpusSetupHandler();
     let extendedApi = queryInput.extendedApi(layoutModel, corpusSetupHandler);
 

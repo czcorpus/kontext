@@ -233,6 +233,16 @@ declare module Kontext {
         SubcorpusInfo:React.ReactClass;
     }
 
+    /**
+     * Convenient functions used by KonText's React components
+     */
+    export interface ComponentCoreMixins {
+        translate(s:string, values?:any):string;
+        getConf(k:string):any;
+        createActionLink(path:string):string;
+        createStaticUrl(path:string):string;
+    }
+
     export interface LayoutStores {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,

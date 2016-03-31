@@ -35,15 +35,17 @@
 import win = require('win');
 import $ = require('jquery');
 import jqueryPeriodic = require('vendor/jquery.periodic');
-import documentModule = require('tpl/document');
+import documentModule = require('./document');
 import detail = require('detail');
 import popupBox = require('popupbox');
-import conclines = require('conclines');
+import conclines = require('../conclines');
 import concViews = require('views/concordance');
-import concStores = require('stores/concordance');
+import concStores = require('../stores/concordance');
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
+import userSettings = require('../userSettings');
+import initActions = require('../initActions');
 declare var Modernizr:Modernizr.ModernizrStatic;
 declare var jqueryPeriodic:any;
 
@@ -925,10 +927,10 @@ export class ViewPage {
 
     private updateLocalAlignedCorpora():void {
         let serverSideAlignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
-        this.layoutModel.userSettings.set(documentModule.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
+        this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
-    init():documentModule.InitActions {
+    init():initActions.InitActions {
         return this.layoutModel.init().add({
             addClearSelectionHandler : this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this)),
             initLineSelection: this.initLineSelection(),

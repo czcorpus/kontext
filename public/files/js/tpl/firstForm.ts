@@ -30,12 +30,15 @@
 import win = require('win');
 import $ = require('jquery');
 import corplistComponent = require('plugins/corparch/init');
-import layoutModule = require('tpl/document');
+import layoutModule = require('./document');
 import queryInput = require('../queryInput');
 import queryStorage = require('plugins/queryStorage/init');
 import liveAttributes = require('plugins/liveAttributes/init');
-import conclines = require('conclines');
+import conclines = require('../conclines');
 import Immutable = require('vendor/immutable');
+import userSettings = require('../userSettings');
+import initActions = require('../initActions');
+
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 
@@ -264,12 +267,12 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             urlArgs = self.layoutModel.getConf('currentArgs'); // TODO possible mutability issues
             urlArgs['corpname'] = newPrimary;
 
-            let currAligned = self.layoutModel.userSettings.get<Array<string>>(layoutModule.UserSettings.ALIGNED_CORPORA_KEY) || [];
+            let currAligned = self.layoutModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
             let idxActive = currAligned.indexOf(newPrimary);
             if (idxActive > -1) {
                 currAligned[idxActive] = self.layoutModel.getConf<string>('corpname');
                 self.layoutModel.userSettings.set(
-                        layoutModule.UserSettings.ALIGNED_CORPORA_KEY, currAligned);
+                        userSettings.UserSettings.ALIGNED_CORPORA_KEY, currAligned);
             }
             window.location.href = self.layoutModel.createActionUrl(
                     'first_form?' + self.layoutModel.encodeURLParameters(urlArgs));
@@ -297,7 +300,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             });
             return ans;
         }
-        let key = layoutModule.UserSettings.ALIGNED_CORPORA_KEY;
+        let key = userSettings.UserSettings.ALIGNED_CORPORA_KEY;
 
         this.registerOnAddParallelCorpAction((corpname:string) => {
             this.layoutModel.userSettings.set(key, findActiveAlignedCorpora());
@@ -335,21 +338,21 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
 
     private restoreAlignedCorpora(queryFormTweaks:queryInput.QueryFormTweaks):void {
         let localAlignedCorpora = this.layoutModel.userSettings.get<Array<string>>(
-                layoutModule.UserSettings.ALIGNED_CORPORA_KEY);
+                userSettings.UserSettings.ALIGNED_CORPORA_KEY);
 
         if (localAlignedCorpora !== undefined) {
             this.alignedCorpora = localAlignedCorpora;
 
         } else {
             this.alignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
-            this.layoutModel.userSettings.set(layoutModule.UserSettings.ALIGNED_CORPORA_KEY, this.alignedCorpora);
+            this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, this.alignedCorpora);
         }
         this.alignedCorpora.forEach((item) => {
             this.createAddLanguageClickHandler(queryFormTweaks, item)();
         });
     }
 
-    init(conf:Kontext.Conf):layoutModule.InitActions {
+    init(conf:Kontext.Conf):initActions.InitActions {
         let queryFormTweaks = queryInput.init(this.layoutModel, this, this.layoutModel.userSettings,
                 $('#mainform').get(0));
         let promises = this.layoutModel.init().add({
@@ -389,7 +392,7 @@ export function init(conf:Kontext.Conf):FirstFormPage {
     });
     clStorage.clear();
     let pageModel = new FirstFormPage(layoutModel, clStorage);
-    let promises:layoutModule.InitActions = pageModel.init(conf);
+    let promises:initActions.InitActions = pageModel.init(conf);
 
     promises.doAfter('queryStorageInit', (data:Kontext.Plugin) => {
         layoutModel.registerPlugin('queryStorage', data);
