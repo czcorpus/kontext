@@ -642,7 +642,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             'keywords': exp_keywords,
             'filters': {
                 'maxSize': filter_dict.getlist('maxSize'),
-                'minSize': filter_dict.getlist('minSize')
+                'minSize': filter_dict.getlist('minSize'),
+                'name': query_substrs
             }
         }
 

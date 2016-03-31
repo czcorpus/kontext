@@ -23,7 +23,11 @@ define(['vendor/react'], function (React) {
 
     lib.init = function (dispatcher, mixins, layoutViews, formStore, listStore) {
 
+        // ---------------------------------------------------------------------
         // -------------------------- dataset components -----------------------
+        // ---------------------------------------------------------------------
+
+        // -------------------------------- <CorplistHeader /> -----------------
 
         let CorplistHeader = React.createClass({
             mixins: mixins,
@@ -50,6 +54,7 @@ define(['vendor/react'], function (React) {
             }
         });
 
+        // -------------------------------- <FavStar /> -----------------
 
         let FavStar = React.createClass({
 
@@ -100,6 +105,8 @@ define(['vendor/react'], function (React) {
                 return <img className="starred" src={imgUrl} onClick={this._handleClick} />;
             }
         });
+
+        // -------------------------------- <CorplistRow /> -----------------
 
         /**
          * A single dataset row
@@ -177,6 +184,8 @@ define(['vendor/react'], function (React) {
             }
         });
 
+        // -------------------------------- <ListExpansion /> -----------------
+
         /**
          * Provides a link allowing to load more items with current
          * query and filter settings.
@@ -201,6 +210,8 @@ define(['vendor/react'], function (React) {
                 );
             }
         });
+
+        // -------------------------------- <CorplistTable /> -----------------
 
         /**
          * dataset table
@@ -254,6 +265,8 @@ define(['vendor/react'], function (React) {
             }
         });
 
+        // -------------------------------- <CorpKeywordLink /> -----------------
+
         /**
          * a single keyword link shown within a dataset table row
          */
@@ -288,6 +301,8 @@ define(['vendor/react'], function (React) {
         // ------------------------------------------------------------------
         // -------------------------- form components -----------------------
         // ------------------------------------------------------------------
+
+        // -------------------------------- <KeywordLink /> -----------------
 
         /**
          * A keyword link from the filter form
@@ -355,6 +370,8 @@ define(['vendor/react'], function (React) {
             }
         });
 
+        // -------------------------------- <ResetLink /> -----------------
+
         /**
          * A keyword-like link to reset currently set keywords
          */
@@ -372,6 +389,8 @@ define(['vendor/react'], function (React) {
                           onClick={this._handleClick}><span className="overlay">{this.translate('defaultCorparch__no_keyword')}</span></a>;
             }
         });
+
+        // -------------------------------- <KeywordsField /> -----------------
 
         /**
          * A form fieldset containing all the available keywords
@@ -398,6 +417,8 @@ define(['vendor/react'], function (React) {
             }
         });
 
+        // -------------------------------- <MinSizeInput /> -----------------
+
         /**
          * An input to specify minimum corpus size
          */
@@ -414,6 +435,8 @@ define(['vendor/react'], function (React) {
                               onChange={this.changeHandler} />;
             }
         });
+
+        // -------------------------------- <MaxSizeInput /> -----------------
 
         /**
          * An input to specify maximum corpus size
@@ -432,6 +455,8 @@ define(['vendor/react'], function (React) {
             }
         });
 
+        // -------------------------------- <NameSearchInput /> -----------------
+
         let NameSearchInput = React.createClass({
             _timer : null,
             _changeHandler : function (e) {
@@ -449,9 +474,11 @@ define(['vendor/react'], function (React) {
                 })(e.target.value), 300);
             },
             render : function () {
-                return <input type="text" defaultValue={''} onChange={this._changeHandler} />;
+                return <input type="text" defaultValue={this.props.initialValue} onChange={this._changeHandler} />;
             }
         });
+
+        // -------------------------------- <FilterInputFieldset /> -----------------
 
         /**
          * A fieldset containing non-keyword filter inputs.
@@ -460,7 +487,7 @@ define(['vendor/react'], function (React) {
             mixins: mixins,
 
             getInitialState : function () {
-                return {expanded: false};
+                return {expanded: this.props.filters.name[0] ? true : false};
             },
 
             _handleLegendClick : function () {
@@ -484,7 +511,7 @@ define(['vendor/react'], function (React) {
                             <p>
                                 <span>
                                 {this.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                                <NameSearchInput />
+                                <NameSearchInput initialValue={this.props.filters.name[0]} />
                             </p>
                         </div>
                     );
@@ -502,6 +529,8 @@ define(['vendor/react'], function (React) {
                 );
             }
         });
+
+        // -------------------------------- <FilterForm /> -----------------
 
         /**
          * Filter form root component
