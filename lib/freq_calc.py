@@ -285,7 +285,7 @@ def calculate_freqs_mp(**kw):
 
     fc = FreqCalc(corpname=kw['corpname'], subcname=kw['subcname'], user_id=kw['user_id'],
                   minsize=kw['minsize'], q=kw['q'], fromp=kw['fromp'], pagesize=kw['pagesize'],
-                  save=kw['save'], samplesize=kw['samplesize'])
+                  save=kw['save'], samplesize=kw['samplesize'], subcpath=kw['subcpath'])
     ans, cache_ans = fc.calc_freqs(flimit=kw['flimit'], freq_sort=kw['freq_sort'], ml=kw['ml'],
                                    rel_mode=kw['rel_mode'], fcrit=kw['fcrit'],
                                    ftt_include_empty=kw['ftt_include_empty'],
