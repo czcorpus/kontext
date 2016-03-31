@@ -21,12 +21,11 @@
 
 
 function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
-    var ans:Array<HTMLElement> = [],
-        line:string,
-        items:Array<string> = s.split(/([\s,\."':\-\(\)\|])/),
-        newItem:HTMLElement;
+    let ans:Array<HTMLElement> = [];
+    let items:Array<string> = s.split(/([\s,\."':\-\(\)\|])/);
+    let newItem:HTMLElement;
+    let line = '';
 
-    line = '';
     while (items.length > 0) {
         if (line.length + items[0].length <= maxChunkSize) {
             line += items.shift();
@@ -77,23 +76,25 @@ export class QueryHistory {
 
     queryHistoryPlugin:QueryStoragePlugin;
 
-    inputElm: JQuery;
+    inputElm:JQuery;
 
-    parentElm: JQuery;
+    parentElm:JQuery;
 
-    boxElm: JQuery;
+    boxElm:JQuery;
 
-    triggerButton: JQuery;
+    triggerButton:JQuery;
 
-    highlightedRow: number;
+    highlightedRow:number;
 
-    data: Array<any>;
+    data:Array<any>;
 
-    dependencies: Array<Kontext.Closeable>;
+    dependencies:Array<Kontext.Closeable>;
 
-    pluginApi: Kontext.PluginApi;
+    pluginApi:Kontext.PluginApi;
 
-    splitQueryIfSize: number = 60;
+    splitQueryIfSize:number = 60;
+
+    alignedCorpSuffix:string;
 
     /**
      *
@@ -101,7 +102,7 @@ export class QueryHistory {
      * @param parentElm
      */
     constructor(queryHistoryPlugin:QueryStoragePlugin, pluginApi: Kontext.PluginApi, inputElm: HTMLElement,
-            parentElm: HTMLElement) {
+            parentElm: HTMLElement, alignedCorpSuffix:string='') {
         this.queryHistoryPlugin = queryHistoryPlugin;
         this.pluginApi = pluginApi;
         this.inputElm = $(inputElm);
@@ -112,6 +113,7 @@ export class QueryHistory {
         this.highlightedRow = 0;
         this.data = []; // currently appended data
         this.dependencies = []; // list of registered external dependencies (see function registerDependency())
+        this.alignedCorpSuffix = alignedCorpSuffix;
         this.bindOnOffEvents();
     }
 
@@ -119,7 +121,7 @@ export class QueryHistory {
      * @param refElm
      */
     calcSizeAndPosition(refElm: HTMLElement):{width:number; height: number; top: number; left: number} {
-        var jqRef:JQuery = $(refElm);
+        let jqRef:JQuery = $(refElm);
 
         return {
             width : jqRef.width(),
@@ -164,7 +166,7 @@ export class QueryHistory {
      *
      */
     bindOnOffEvents(): void {
-        var self = this;
+        let self = this;
 
         $(window).on('keydown.queryStoragePlugin', function (event) {
             if (event.keyCode === 13 && self.isActive()) { // ENTER key
@@ -237,7 +239,8 @@ export class QueryHistory {
      * @param triggerElm
      */
     updateForm(triggerElm: HTMLElement): void {
-        var jqTriggerElm:JQuery = $(triggerElm);
+        let jqTriggerElm:JQuery = $(triggerElm);
+        let self = this;
 
         this.setInputVal(this.data[this.highlightedRow].query);
         if (jqTriggerElm.attr('data-subcorpname')) {
@@ -248,11 +251,12 @@ export class QueryHistory {
         }
         if (jqTriggerElm.attr('data-query-type')) {
             (function (queryType) {
-                var newType = queryType + 'row',
-                    selectElm = $('#queryselector');
+                let newType = queryType + 'row';
+                let selectElm = $('#queryselector' + self.alignedCorpSuffix);
 
-                // it's important to set the select-box's value only if the new value is different
-                // from current one; otherwise, the form is messed-up
+                // it's important to set the select-box's value only
+                // if the new value is different than the current one;
+                // otherwise, the form is messed-up
                 if (selectElm.val() !== newType) {
                     selectElm.val(newType);
                     $('#queryselector').change(); // to trigger proper event
@@ -280,10 +284,8 @@ export class QueryHistory {
      *
      */
     highlightCurrentRow(): void {
-        var rowElm:JQuery;
-
         this.cleanRowSelection();
-        rowElm = $(this.getSelectedRow());
+        let rowElm = $(this.getSelectedRow());
         if (this.data.length > 0) {
             rowElm.addClass('selected');
         }
@@ -323,7 +325,7 @@ export class QueryHistory {
      *
      */
     closeDependencies(): void {
-        for (var i:number = 0; i < this.dependencies.length; i += 1) {
+        for (let i:number = 0; i < this.dependencies.length; i += 1) {
             try {
                 this.dependencies[i].close();
             } catch (e) {
@@ -336,8 +338,7 @@ export class QueryHistory {
      *
      */
     init():void {
-        var self = this,
-            prom;
+        let self = this;
 
         if (this.data.length === 0) {
             if (this.inputElm.val()) {
@@ -352,7 +353,7 @@ export class QueryHistory {
             this.inputElm.blur();  // These two lines prevent Firefox from deleting
             this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-            prom = $.ajax(self.pluginApi.getConf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.getConf('corpname'), {
+            let prom = $.ajax(self.pluginApi.getConf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.getConf('corpname'), {
                 dataType : 'json'
             });
 
@@ -415,23 +416,21 @@ export class QueryHistory {
      * @param {string} data.corpname
      */
     showData(data?: Array<QueryHistoryRecord>): void {
-        var tbl = this.boxElm.find('ol.rows'),
-            listItem,
-            link,
-            self = this;
+        let tbl = this.boxElm.find('ol.rows');
+        let self = this;
 
         if (typeof data !== 'undefined') {
             this.data = data;
         }
         tbl.empty();
         $.each(this.data, function (i, v:QueryHistoryRecord) {
-            listItem = $(window.document.createElement('li'));
+            let listItem = $(window.document.createElement('li'));
             listItem.attr('data-rownum', i);
             listItem.attr('data-corpname', v.corpname);
             listItem.attr('data-subcorpname', v.subcorpname);
             listItem.attr('data-query-type', v.query_type);
 
-            link = $(window.document.createElement('em'));
+            let link = $(window.document.createElement('em'));
             link.append(splitString(self.pluginApi.shortenText(v.query,
                     self.pluginApi.getConf<number>('historyMaxQuerySize')), self.splitQueryIfSize));
 
@@ -516,20 +515,17 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
     /**
      * @param {Plugin} plugin
      */
-    addTriggerButton(plugin:QueryHistory): void {
-        var liElm,
-            aElm;
-
+    addTriggerButton(plugin:QueryHistory):void {
         if (plugin) {
-            liElm = $('<li></li>');
-            aElm = $('<a class="history"></a>');
+            let liElm = $('<li></li>');
+            let aElm = $('<a class="history"></a>');
             aElm.css('text-transform', 'lowercase');
-
             plugin.getWrappingElement().find('.query-toolbox').append(liElm);
             plugin.triggerButton = aElm;
             liElm.append(aElm);
             aElm.append(this.pluginApi.translate('ucnkQS__recent_queries'));
-            aElm.on('click', function () {
+
+            aElm.on('click', () => {
                 if (plugin.isActive()) {
                     plugin.close();
 
@@ -539,9 +535,7 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
             });
             plugin.registerDependency({
                 element : liElm,
-                close : function () {
-                    $(liElm).remove();
-                }
+                close : () => $(liElm).remove()
             });
         }
     }
@@ -564,13 +558,11 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
      * @param elm
      * @returns {Plugin}
      */
-    bind(elm: HTMLElement): QueryHistory {
-        var queryStorage;
-
+    bind(elm:HTMLElement, alignedCorpSuffix:string): QueryHistory {
         if (Object.prototype.toString.call(this.pluginApi) !== '[object Object]') {
             throw new Error('Plugin [ucnkQueryStorage] not initialized. Please call init() first.');
         }
-        queryStorage = new QueryHistory(this, this.pluginApi, elm, $(elm).parent().get(0));
+        let queryStorage = new QueryHistory(this, this.pluginApi, elm, $(elm).parent().get(0), alignedCorpSuffix);
         $(elm).data('plugin', queryStorage);
 
         return queryStorage;
@@ -584,7 +576,7 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
      * @param {jQuery|HTMLElement} elm
      */
     detach(elm): void {
-        var jqElm:JQuery = $(elm);
+        let jqElm:JQuery = $(elm);
 
         if (jqElm.data('plugin') !== null && typeof jqElm.data('plugin') === 'object') {
             jqElm.data('plugin').close();
@@ -595,11 +587,18 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
     }
 
     reset(): void {
-        var self = this;
         if (!this.pluginApi.userIsAnonymous()) {
-            $('.query-area .history:visible').each(function () {
-                var plugin = self.bind(this);
-                self.addTriggerButton(plugin);
+            let inputSrch = 'input.history:visible,textarea.history:visible';
+            $('#mainform').find('table.primary-language .query-area').find(inputSrch)
+                .each((_, elm:HTMLElement) => {
+                    this.addTriggerButton(this.bind(elm, ''));
+                });
+            $('#mainform').find('.parallel-corp-lang').each((_, item) => {
+                let corpSuffix = '_' + $(item).attr('data-corpus-id');
+                $(item).find('.query-area').find(inputSrch)
+                    .each((_, elm:HTMLElement) => {
+                        this.addTriggerButton(this.bind(elm, corpSuffix));
+                    });
             });
         }
     }
@@ -611,8 +610,7 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
  * @returns {QueryStoragePlugin}
  */
 export function createInstance(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage {
-    var plugin = new QueryStoragePlugin();
-
+    let plugin = new QueryStoragePlugin();
     plugin.init(pluginApi);
     return plugin;
 }
