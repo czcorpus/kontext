@@ -72,10 +72,12 @@ def subcorpus_from_conc(path, conc, struct=None):
     the provided structure are included.
 
     arguments:
-
     path -- path to the subcorpus we want to create
     conc -- a manatee.Concordance instance
     struct -- an optional structure to restrict the result to
+
+    returns:
+    True in case of success else False (= empty subcorpus)
     """
     return manatee.create_subcorpus(path, conc.RS(), struct)
 

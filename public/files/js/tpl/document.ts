@@ -133,6 +133,7 @@ export class AsyncTaskChecker {
                 created: conf['created'],
                 label: conf['label'],
                 category: conf['category'],
+                error: conf['error'],
                 args: conf['args']
             }
         }));
@@ -164,7 +165,8 @@ export class AsyncTaskChecker {
 
     private createTaskDesc(taskInfo:Kontext.AsyncTaskInfo) {
         let label = taskInfo.label ? taskInfo.label : taskInfo.ident.substr(0, 8) + '...';
-        return label + ' (' + taskInfo.status + ')';
+        let desc = taskInfo.error ? taskInfo.status + ': ' + taskInfo.error : taskInfo.status;
+        return label + ' (' + desc + ')';
     }
 
     /**

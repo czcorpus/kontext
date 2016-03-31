@@ -103,7 +103,6 @@ class Subcorpus(Kontext):
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
             result = corplib.create_subcorpus(path, self._corp(), tt_query[0][0], tt_query[0][1])
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
-            # TEST BEGIN
             backend, conf = settings.get_full('global', 'calc_backend')
             if backend == 'celery':
                 import task
@@ -113,13 +112,18 @@ class Subcorpus(Kontext):
                                     (self._session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                       label=u'%s:%s' % (basecorpname, subcname),
-                                                       args={'subcname': subcname, 'corpname': basecorpname}))
+                                                       label=u'%s:%s' % (self._canonical_corpname(basecorpname),
+                                                                         subcname),
+                                                       args=dict(subcname=subcname, corpname=basecorpname)))
                 result = {}
-            else:
-                # TODO
-                pass
-            # TEST END
+            elif backend == 'multiprocessing':
+                import subc_calc
+                import functools
+                import multiprocessing
+                worker = subc_calc.CreateSubcorpusTask(user_id=self._session_get('user', 'id'),
+                                                       corpus_id=self.args.corpname)
+                multiprocessing.Process(target=functools.partial(worker.run, tt_query, imp_cql, path)).start()
+                result = {}
         else:
             raise UserActionException(_('Nothing specified!'))
         if result is not False:

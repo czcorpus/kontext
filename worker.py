@@ -248,7 +248,7 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
 @app.task
 def create_subcorpus(user_id, corp_id, path, tt_query, cql):
     worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
-    worker.run(tt_query, cql, path)
+    return worker.run(tt_query, cql, path)
 
 
 

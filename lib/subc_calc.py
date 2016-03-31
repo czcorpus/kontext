@@ -14,6 +14,10 @@ import corplib
 import conclib
 
 
+class EmptySubcorpusException(Exception):
+    pass
+
+
 class CreateSubcorpusTask(object):
 
     def __init__(self, user_id, corpus_id):
@@ -22,8 +26,15 @@ class CreateSubcorpusTask(object):
         self._corp = self._cm.get_Corpus(corpus_id)
 
     def run(self, tt_query, cql, path):
+        """
+        returns:
+        True in case of success
+        In case of an empty subcorus, EmptySubcorpusException is thrown
+        """
         conc = conclib.get_conc(self._corp, self._user_id, q=cql)
         conc.sync()
         struct = self._corp.get_struct(tt_query[0][0]) if len(tt_query) == 1 else None
-        corplib.subcorpus_from_conc(path, conc, struct)
-        return True
+        ans = corplib.subcorpus_from_conc(path, conc, struct)
+        if ans is False:
+            raise EmptySubcorpusException('Empty subcorpus')
+        return ans

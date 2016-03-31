@@ -256,6 +256,7 @@ declare module Kontext {
         category:string;
         status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
         created:number;
+        error:string; // = Celery's "result" property in case status == 'FAILURE'
         args:{[key:string]:any};
     }
 
