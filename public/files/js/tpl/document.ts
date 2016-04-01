@@ -37,12 +37,16 @@ import React = require('vendor/react');
 import ReactDOM = require('vendor/react-dom');
 import RSVP = require('vendor/rsvp');
 import rsvpAjax = require('vendor/rsvp-ajax');
-import util = require('util');
-import docStores = require('./documentStores');
-import userStores = require('stores/userStores');
+import util = require('../util');
+import docStores = require('../stores/documentStores');
+import userStores = require('../stores/userStores');
 import translations = require('translations');
 import IntlMessageFormat = require('vendor/intl-messageformat');
 import Immutable = require('vendor/immutable');
+import asyncTask = require('../asyncTask');
+import userSettings = require('../userSettings');
+import initActions = require('../initActions');
+import menu = require('../menu');
 
 /**
  *
@@ -84,151 +88,6 @@ function getLocalStorage():Storage {
     }
 }
 
-
-/**
- * Functions required by KonText's React components
- */
-export interface ComponentCoreMixins {
-
-    translate(s:string, values?:any):string;
-
-    getConf(k:string):any;
-
-    createActionLink(path:string):string;
-
-    createStaticUrl(path:string):string;
-}
-
-
-interface AsyncTaskResponse extends Kontext.AjaxResponse {
-    num_remaining?: number;
-    data?:Array<Kontext.AsyncTaskInfo>;
-    contains_errors: boolean;
-}
-
-/**
- * This class handles checking for the state
- * of currently active bacground tasks triggered
- * by user.
- */
-export class AsyncTaskChecker {
-
-    private pageModel:PageModel;
-
-    private asyncTasks:Immutable.List<Kontext.AsyncTaskInfo>;
-
-    private onUpdate:Immutable.List<Kontext.AsyncTaskOnUpdate>;
-
-    private asyncTaskCheckerInterval:number;
-
-    static CHECK_INTERVAL = 10000;
-
-
-    constructor(pageModel:PageModel, conf:any) {
-        this.pageModel = pageModel;
-        this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(conf.map((item) => {
-            return {
-                status: conf['status'],
-                ident: conf['ident'],
-                created: conf['created'],
-                label: conf['label'],
-                category: conf['category'],
-                error: conf['error'],
-                args: conf['args']
-            }
-        }));
-        this.asyncTaskCheckerInterval = null;
-        this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
-    }
-
-    private checkForStatus():RSVP.Promise<AsyncTaskResponse> {
-         return this.pageModel.ajax(
-            'GET',
-            this.pageModel.createActionUrl('check_tasks_status'),
-            {},
-            {contentType : 'application/x-www-form-urlencoded'}
-        );
-    }
-
-    private deleteTaskInfo(taskIds:Array<string>):RSVP.Promise<AsyncTaskResponse> {
-        return this.pageModel.ajax(
-            'DELETE',
-            this.pageModel.createActionUrl('remove_task_info'),
-            {'tasks': taskIds},
-            {contentType : 'application/x-www-form-urlencoded'}
-        );
-    }
-
-    private getFinishedTasks():Immutable.List<Kontext.AsyncTaskInfo> {
-        return this.asyncTasks.filter((item)=>(item.status === 'SUCCESS' || item.status === 'FAILURE')).toList();
-    }
-
-    private createTaskDesc(taskInfo:Kontext.AsyncTaskInfo) {
-        let label = taskInfo.label ? taskInfo.label : taskInfo.ident.substr(0, 8) + '...';
-        let desc = taskInfo.error ? taskInfo.status + ': ' + taskInfo.error : taskInfo.status;
-        return label + ' (' + desc + ')';
-    }
-
-    /**
-     * Adds a handler triggered when task information is
-     * received from server.
-     */
-    addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
-        this.onUpdate = this.onUpdate.push(fn);
-    }
-
-    init():void {
-        if (this.asyncTasks.size > 0 && !this.asyncTaskCheckerInterval) {
-            this.asyncTaskCheckerInterval = window.setInterval(() => {
-                this.checkForStatus().then(
-                    (data) => {
-                        if (!data.contains_errors) {
-                            this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(data.data);
-                            if (this.asyncTasks.size === 0) {
-                                window.clearInterval(this.asyncTaskCheckerInterval);
-
-                            } else {
-                                let finished = this.getFinishedTasks();
-                                if (finished.size > 0) {
-                                    window.clearInterval(this.asyncTaskCheckerInterval);
-                                    this.onUpdate.forEach(item => {
-                                        item(finished);
-                                    });
-                                    let info = finished.map((item) => this.createTaskDesc(item))
-                                            .join(', ');
-                                    this.pageModel.showMessage(
-                                        'mail',
-                                        this.pageModel.translate('global__these_task_are_finished') + ': ' + info,
-                                        () => {
-                                            this.deleteTaskInfo(finished.map(item => item.ident).toArray()).then(
-                                                (data) => {
-                                                    if (data.num_remaining > 0) {
-                                                        this.init();
-                                                    }
-                                                },
-                                                (err) => {
-                                                    this.pageModel.showMessage('error', err);
-                                                }
-                                            )
-                                        }
-                                    );
-                                }
-                            }
-
-                        } else {
-                            this.pageModel.showMessage('error', data.messages.join(', '));
-                        }
-                    },
-                    (err) => {
-                        this.pageModel.showMessage('error', err);
-                    }
-                )
-            }, AsyncTaskChecker.CHECK_INTERVAL);
-        }
-    }
-}
-
-
 /**
  *
  */
@@ -263,17 +122,17 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      *
      */
-    mainMenu:MainMenu;
+    mainMenu:menu.MainMenu;
 
     /**
      * Results of partial page initializations.
      */
-    initActions:InitActions;
+    initActions:initActions.InitActions;
 
     /**
      * Local user settings
      */
-    userSettings:UserSettings;
+    userSettings:userSettings.UserSettings;
 
     /**
      * React component classes
@@ -293,7 +152,7 @@ export class PageModel implements Kontext.PluginProvider {
      */
     private translations:{[key:string]:string};
 
-    private asyncTaskChecker:AsyncTaskChecker;
+    private asyncTaskChecker:asyncTask.AsyncTaskChecker;
 
     /**
      *
@@ -304,16 +163,17 @@ export class PageModel implements Kontext.PluginProvider {
         this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
         this.plugins = {};
         this.initCallbacks = [];
-        this.mainMenu = new MainMenu(this);
-        this.initActions = new InitActions();
-        this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui', '__timestamp__',
-            this.conf['uiStateTTL']);
+        this.mainMenu = new menu.MainMenu(this.pluginApi());
+        this.initActions = new initActions.InitActions();
+        this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
+                '__timestamp__', this.conf['uiStateTTL']);
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
         this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
-        this.asyncTaskChecker = new AsyncTaskChecker(this, this.getConf<any>('asyncTasks') || []);
+        this.asyncTaskChecker = new asyncTask.AsyncTaskChecker(this.pluginApi(),
+                this.getConf<any>('asyncTasks') || []);
     }
 
     /**
@@ -337,8 +197,8 @@ export class PageModel implements Kontext.PluginProvider {
      * @returns a list of mixins
      */
     exportMixins(...mixins:any[]):any[] {
-        var self = this;
-        var componentTools:ComponentCoreMixins = {
+        let self = this;
+        let componentTools:Kontext.ComponentCoreMixins = {
             translate(s:string, values?:any):string {
                 return self.translate(s, values);
             },
@@ -376,13 +236,11 @@ export class PageModel implements Kontext.PluginProvider {
      * @param forceStatus
      */
     private toggleSelectAllTrigger(selectAllElm:HTMLInputElement, forceStatus?:string) {
-        var currValue:string,
-            newValue:string;
-
         if (!$(selectAllElm).attr('data-status')) {
             $(selectAllElm).attr('data-status', '1');
         }
-        currValue = $(selectAllElm).attr('data-status');
+        let currValue = $(selectAllElm).attr('data-status');
+        let newValue;
         if (forceStatus) {
             newValue = forceStatus;
 
@@ -449,7 +307,7 @@ export class PageModel implements Kontext.PluginProvider {
     registerInitCallback(fn:Kontext.InitCallback):void;
     registerInitCallback(fn:()=>void):void;
     registerInitCallback(fn):void {
-        var self = this;
+        let self = this;
 
         if (typeof fn === 'function') {
             this.initCallbacks.push(fn);
@@ -474,7 +332,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @param html
      */
     escapeHTML(html:string):string {
-        var elm = document.createElement('div');
+        let elm = document.createElement('div');
         elm.appendChild(document.createTextNode(html));
         return elm.innerHTML;
     }
@@ -488,8 +346,8 @@ export class PageModel implements Kontext.PluginProvider {
      * @param length
      */
     shortenText(s:string, length:number):string {
-        var ans = s.substr(0, length),
-            items;
+        let ans = s.substr(0, length);
+        let items;
 
         if (ans.length > length && !/\s.|.\s/.exec(s.substr(length - 1, 2))) {
             items = ans.split(/\s+/);
@@ -509,7 +367,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @param obj
      */
     unpackError(obj):{message:string; error:Error; reset:boolean} {
-        var ans:{message:string; error:Error; reset:boolean} = {message:null, error:null, reset:null};
+        let ans:{message:string; error:Error; reset:boolean} = {message:null, error:null, reset:null};
 
         if (typeof obj === 'object') {
             ans.message = obj.message;
@@ -530,7 +388,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @return
      */
     appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}) {
-        var jImage = $('<img />');
+        let jImage = $('<img />');
 
         options = options || {domId:null, htmlClass:null};
         jImage.attr('src', '../files/img/ajax-loader.gif');
@@ -630,8 +488,8 @@ export class PageModel implements Kontext.PluginProvider {
      * @param message - text of the message
      */
     showMessage = (msgType:string, message:string, onClose?:()=>void) => {
-        var timeout,
-            self = this;
+        let timeout;
+        let self = this;
 
         if (typeof message === 'object' && msgType === 'error') {
             message = message['message'];
@@ -646,7 +504,7 @@ export class PageModel implements Kontext.PluginProvider {
      * @param text - a text of the help message
      */
     contextHelp(triggerElm:HTMLElement, text:string):void {
-        var image = win.document.createElement('img');
+        let image = win.document.createElement('img');
 
         $(triggerElm).addClass('context-help');
         $(image).attr('data-alt-img', '../files/img/question-mark_s.svg')
@@ -665,8 +523,8 @@ export class PageModel implements Kontext.PluginProvider {
      * @param event
      */
     formChangeCorpus(event:JQueryEventObject):void {
-        var jqFormElm = $(event.target).closest('form'),
-            subcorpSelect = $('#subcorp-selector');
+        let jqFormElm = $(event.target).closest('form');
+        let subcorpSelect = $('#subcorp-selector');
 
         jqFormElm.attr('action', 'first_form');
         jqFormElm.attr('method', 'GET');
@@ -683,24 +541,19 @@ export class PageModel implements Kontext.PluginProvider {
      * @param radixSepar - separator character for integer and fractional parts
      */
     formatNum(value:number|string, groupSepar:string, radixSepar:string):string {
-        var i,
-            offset = 0,
-            len,
-            numParts,
-            s;
-
-        numParts = value.toString().split('.');
-        s = numParts[0].split('').reverse();
-        len = s.length;
-        for (i = 3; i < len; i += 3) {
+        let offset = 0;
+        let numParts = value.toString().split('.');
+        let s:Array<string> = numParts[0].split('').reverse();
+        let len = s.length;
+        for (let i = 3; i < len; i += 3) {
             s.splice(i + offset, 0, groupSepar);
             offset += 1;
         }
-        s = s.reverse().join('');
+        let ans = s.reverse().join('');
         if (numParts[1] !== undefined) {
-            s += radixSepar + numParts[1];
+            ans += radixSepar + numParts[1];
         }
-        return s;
+        return ans;
     }
 
     /**
@@ -711,10 +564,10 @@ export class PageModel implements Kontext.PluginProvider {
      * @param {TooltipBox} tooltipBox
      */
     renderOverview = function (data, tooltipBox):void {
-        var self = this,
-            url,
-            html = '<h3>' + this.translate('global__query_overview') + '</h3><table border="1">',
-            parentElm = tooltipBox.getRootElement();
+        let self = this;
+        let url;
+        let html = '<h3>' + this.translate('global__query_overview') + '</h3><table border="1">';
+        let parentElm = tooltipBox.getRootElement();
 
         html += '<tr><th>' + self.translate('global__operation') + '</th>';
         html += '<th>' + self.translate('global__parameters') + '</th>';
@@ -740,8 +593,8 @@ export class PageModel implements Kontext.PluginProvider {
      *
      */
     queryOverview() {
-        var escKeyEventHandlerFunc,
-            self = this;
+        let escKeyEventHandlerFunc;
+        let self = this;
 
         escKeyEventHandlerFunc = function (boxInstance) {
             return function (event) {
@@ -757,13 +610,13 @@ export class PageModel implements Kontext.PluginProvider {
 
         // query overview
         $('#query-overview-trigger').on('click', function (event) {
-            var reqUrl = $(event.target).data('json-href');
+            let reqUrl = $(event.target).data('json-href');
 
             $.ajax(reqUrl, {
                 dataType: 'json',
                 success: function (data) {
-                    var box,
-                        leftPos;
+                    let box;
+                    let leftPos;
 
                     if (data.Desc) {
                         box = popupbox.extended(self.pluginApi()).open(
@@ -805,11 +658,11 @@ export class PageModel implements Kontext.PluginProvider {
      * @param {String|jQuery} context checkbox context selector (parent element or list of checkboxes)
      */
     applySelectAll = function (elm, context) {
-        var self = this,
-            jqElm = $(elm),
-            jqContext = $(context),
-            jqCheckboxes,
-            updateButtonStatus;
+        let self = this;
+        let jqElm = $(elm);
+        let jqContext = $(context);
+        let jqCheckboxes;
+        let updateButtonStatus;
 
         if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
             jqCheckboxes = jqContext.find('input[type="checkbox"]:not(.select-all):not(:disabled)');
@@ -819,7 +672,7 @@ export class PageModel implements Kontext.PluginProvider {
         }
 
         updateButtonStatus = function () {
-            var numChecked = jqCheckboxes.filter(':checked').length;
+            let numChecked = jqCheckboxes.filter(':checked').length;
 
             if (jqCheckboxes.length > numChecked) {
                 self.toggleSelectAllTrigger(elm, '1');
@@ -834,7 +687,7 @@ export class PageModel implements Kontext.PluginProvider {
 
         jqElm.off('click');
         jqElm.on('click', function (event) {
-            var evtTarget = event.target;
+            let evtTarget = event.target;
 
             if ($(evtTarget).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
@@ -855,12 +708,12 @@ export class PageModel implements Kontext.PluginProvider {
      * @returns {$.Deferred.Promise}
      */
     bindCorpusDescAction() {
-        var self = this,
-            jqDescLink = $('#corpus-desc-link');
+        let self = this;
+        let jqDescLink = $('#corpus-desc-link');
 
         popupbox.extended(self.pluginApi()).bind(jqDescLink,
             function (box, finalize) {
-                var actionRegId;
+                let actionRegId;
 
                 // TODO - please note this is not Flux pattern at all; it will be fixed
                 actionRegId = self.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -943,8 +796,8 @@ export class PageModel implements Kontext.PluginProvider {
      *
      */
     bindStaticElements() {
-        var self = this,
-            citationHtml = $('#corpus-citation-box').html();
+        let self = this;
+        let citationHtml = $('#corpus-citation-box').html();
 
         popupbox.extended(this.pluginApi()).bind(
             $('#positions-help-link'),
@@ -967,8 +820,8 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     timeoutMessages() {
-        var timeout,
-            jqMessage = $('.message');
+        let timeout;
+        let jqMessage = $('.message');
 
         if (jqMessage.length > 0 && this.conf['messageAutoHideInterval']) {
             timeout = win.setTimeout(function () {
@@ -994,12 +847,10 @@ export class PageModel implements Kontext.PluginProvider {
         context = context || win.document;
 
         $(context).find('.over-img').each(function () {
-            var tmp,
-                wrappingLink,
-                activeElm,
-                img = this;
-
-            wrappingLink = $(img).closest('a');
+            let tmp;
+            let activeElm;
+            let img = this;
+            let wrappingLink = $(img).closest('a');
             if (wrappingLink.length > 0) {
                 activeElm = wrappingLink.get(0);
 
@@ -1025,8 +876,8 @@ export class PageModel implements Kontext.PluginProvider {
      */
     enhanceMessages() {
         $('.message .sign-in').each(function () {
-            var text = $(this).text(),
-                findSignInUrl;
+            let text = $(this).text();
+            let findSignInUrl;
 
             findSignInUrl = function () {
                 return $('#cnc-toolbar-user a:nth-child(1)').attr('href');
@@ -1040,11 +891,11 @@ export class PageModel implements Kontext.PluginProvider {
      *
      */
     externalHelpLinks() {
-        var self = this;
+        let self = this;
 
         $('a.external-help').each(function () {
-            var href = $(this).attr('href'),
-                message = self.translate('global__more_info_at')
+            let href = $(this).attr('href');
+            let message = self.translate('global__more_info_at')
                     + ' <a href="' + href + '" target="_blank">' + href + '</a>';
             popupbox.bind(this, message, {});
         });
@@ -1081,13 +932,10 @@ export class PageModel implements Kontext.PluginProvider {
      * @returns {*}
      */
     translate(msg:string, values?:any):string {
-        var tmp;
-        var format;
-
         if (msg) {
-            tmp = this.translations[msg];
+            let tmp = this.translations[msg];
             if (tmp) {
-                format = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
+                let format = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
                 return format.format(values);
             }
             return msg;
@@ -1096,12 +944,12 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     formatNumber(v:number):string {
-        var format:any = new Intl.NumberFormat(this.conf['uiLang']);
+        let format:any = new Intl.NumberFormat(this.conf['uiLang']);
         return format.format(v);
     }
 
     formatDate(d:Date):string {
-        var format:any = new Intl.DateTimeFormat(this.conf['uiLang']);
+        let format:any = new Intl.DateTimeFormat(this.conf['uiLang']);
         return format.format(d);
     }
 
@@ -1119,13 +967,13 @@ export class PageModel implements Kontext.PluginProvider {
      *
      */
     resetPlugins():void {
-        for (var i = 0; i < this.pluginResets.length; i += 1) {
+        for (let i = 0; i < this.pluginResets.length; i += 1) {
             this.pluginResets[i]();
         }
     }
 
     createStaticUrl(path) {
-        var staticPath = this.conf['staticUrl'];
+        let staticPath = this.conf['staticUrl'];
 
         if (path.indexOf('/') === 0) {
             path = path.substr(1);
@@ -1134,7 +982,7 @@ export class PageModel implements Kontext.PluginProvider {
     }
 
     createActionUrl(path) {
-        var staticPath = this.conf['rootPath'];
+        let staticPath = this.conf['rootPath'];
 
         if (path.indexOf('/') === 0) {
             path = path.substr(1);
@@ -1148,16 +996,14 @@ export class PageModel implements Kontext.PluginProvider {
      * @returns {string}
      */
     encodeURLParameters(params:{[key:string]:any}):string {
-        var ans = [],
-            v;
-
-        for (var p in params) {
+        let ans = [];
+        for (let p in params) {
             if (params.hasOwnProperty(p)) {
-                v = params[p];
+                let v = params[p];
                 if (Object.prototype.toString.call(v) !== '[object Array]') {
                     v = [v];
                 }
-                for (var i = 0; i < v.length; i += 1) {
+                for (let i = 0; i < v.length; i += 1) {
                     ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(v[i]));
                 }
             }
@@ -1176,7 +1022,7 @@ export class PageModel implements Kontext.PluginProvider {
 
     // TODO dispatcher misuse (this should conform Flux pattern)
     private registerCoreEvents():void {
-        var self = this;
+        let self = this;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             if (payload.props['message']) {
@@ -1188,8 +1034,8 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      *
      */
-    init():InitActions {
-        var self = this;
+    init():initActions.InitActions {
+        let self = this;
 
         this.layoutViews = documentViews.init(this.dispatcher, this.exportMixins(),
                 this.getStores());
@@ -1223,193 +1069,6 @@ export class PageModel implements Kontext.PluginProvider {
     }
 }
 
-
-/**
- * KonText main menu
- */
-export class MainMenu {
-
-    /**
-     * Wrapping element for whole main-menu
-     */
-    jqMenuBar:JQuery;
-
-    private activeSubmenu:HTMLElement;
-
-    private layoutModel:PageModel;
-
-
-    constructor(layoutModel:PageModel) {
-        this.layoutModel = layoutModel;
-        this.jqMenuBar = $('#menu-bar');
-    }
-
-    getActiveSubmenu():HTMLElement {
-        return this.activeSubmenu;
-    }
-
-    /**
-     * @param {string} id
-     */
-    setActiveSubmenu(submenu:HTMLElement) {
-        this.activeSubmenu = submenu;
-    }
-
-    /**
-     * @param {string} [menuId]
-     */
-    closeSubmenu(menuId?) {
-        if (this.activeSubmenu) {
-            $(this.activeSubmenu).css('display', 'none');
-            $(this.activeSubmenu).closest('li').removeClass('active');
-            this.activeSubmenu = null;
-        }
-    }
-
-    /**
-     *
-     * @param li
-     * @returns {*}
-     */
-    private getHiddenSubmenu(li):JQuery {
-        return $(li).find('ul');
-    }
-
-    private initCustomHelp():void {
-        let self = this;
-        let jqSubmenu = $('#menu-help').find('ul.submenu');
-        let liElm = window.document.createElement('li');
-        let aElm = window.document.createElement('a');
-
-        jqSubmenu.append(liElm);
-        $(aElm).text(this.layoutModel.translate('global__how_to_cite_corpus'));
-        $(liElm)
-            .addClass('separ')
-            .append(aElm);
-
-        function createContents(tooltipBox, finalize) {
-            tooltipBox.setCss('top', '25%');
-            tooltipBox.setCss('left', '20%');
-            tooltipBox.setCss('width', '60%');
-            tooltipBox.setCss('height', 'auto');
-
-            let prom:RSVP.Promise<any> = self.layoutModel.ajax<any>(
-                'GET',
-                self.layoutModel.createActionUrl('corpora/ajax_get_corp_details'),
-                {
-                    'corpname': self.layoutModel.getConf('corpname')
-                },
-                {
-                    contentType : 'application/x-www-form-urlencoded'
-                }
-            );
-
-            prom.then(
-                function (data) {
-                    self.layoutModel.renderReactComponent(
-                        self.layoutModel.layoutViews.CorpusReference,
-                        tooltipBox.getRootElement(),
-                        {
-                            citation_info: data['citation_info'] || {},
-                            doneCallback: finalize.bind(self)
-                        }
-                    );
-                },
-                function (err) {
-                    self.layoutModel.showMessage('error', err);
-                }
-            );
-        }
-
-        $(aElm).on('click', () => {
-                this.closeSubmenu();
-                popupbox.open(
-                    createContents,
-                    null,
-                    {
-                        type: 'plain',
-                        closeIcon: true,
-                        timeout: null,
-                        calculatePosition : false,
-                        onClose: function () {
-                            self.layoutModel.unmountReactComponent(this.getRootElement());
-                        }
-                    }
-                );
-            }
-        );
-    }
-
-    /**
-     *
-     * @param activeLi - active main menu item LI
-     */
-    private openSubmenu(activeLi:JQuery) {
-        var menuLeftPos;
-        var jqSubMenuUl;
-        var jqActiveLi = $(activeLi);
-        var rightmostPos;
-
-        jqSubMenuUl = this.getHiddenSubmenu(jqActiveLi);
-        if (jqSubMenuUl.length > 0) {
-            jqActiveLi.addClass('active');
-            jqSubMenuUl.css('display', 'block');
-            rightmostPos = jqSubMenuUl.offset().left + jqSubMenuUl.width();
-            if (rightmostPos > $(window).width()) {
-                menuLeftPos = - (rightmostPos - $(window).width());
-
-            } else {
-                menuLeftPos = 0;
-            }
-            jqSubMenuUl.css('left', menuLeftPos);
-            this.activeSubmenu = jqSubMenuUl.get(0);
-        }
-    }
-
-    /**
-     * Initializes main menu logic
-     */
-    init():void {
-        var self = this;
-
-        if (this.layoutModel.getConf('corpname')) {
-            this.initCustomHelp();
-        }
-
-        $('#menu-level-1 li.disabled a').each(function () {
-            $(this).attr('href', '#');
-        });
-
-        $('#menu-level-1 a.trigger').each(function () {
-            $(this).on('mouseover', function (event) {
-                var jqMenuLi = $(event.target).closest('li'),
-                    prevMenu:HTMLElement,
-                    newMenu = jqMenuLi.get(0);
-
-                prevMenu = self.getActiveSubmenu();
-                if (prevMenu !== newMenu) {
-                    self.closeSubmenu(prevMenu);
-
-                    if (!jqMenuLi.hasClass('disabled')) {
-                        self.setActiveSubmenu(jqMenuLi.get(0));
-                        self.openSubmenu(jqMenuLi);
-                    }
-                }
-            });
-        });
-
-        self.jqMenuBar.on('mouseleave', function (event) {
-            self.closeSubmenu(self.getActiveSubmenu());
-        });
-
-        $(win).on('resize', function () {
-            self.closeSubmenu();
-        });
-
-        popupbox.abbr();
-    }
-
-}
 
 
 export class PluginApi implements Kontext.PluginApi {
@@ -1448,8 +1107,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.appendLoader(elm);
     }
 
-    showMessage(type, message) {
-        return this.pageModel.showMessage(type, message);
+    showMessage(type, message, onClose) {
+        return this.pageModel.showMessage(type, message, onClose);
     }
 
     translate(msg, values?) {
@@ -1525,162 +1184,5 @@ export class PluginApi implements Kontext.PluginApi {
 
     getUserSettings():Kontext.IUserSettings {
         return this.pageModel.userSettings;
-    }
-}
-
-/**
- * This object stores all the initialization actions performed on page when
- * it loads. These actions may be asynchronous in general which is why a Promise
- * objects are required here. If an action si synchronous then it may return null/undefined
- * @todo this should be either finished (and respected by action pages) or rewritten in some way
- */
-export class InitActions {
-
-    prom:{[k:string]:any};
-
-    constructor() {
-        this.prom = {};
-    }
-
-    /**
-     * Adds one (.add(key, promise)) or multiple (.add({...})) promises to the collection.
-     * Returns self.
-     *
-     * Please note that actions added simultaneously are considered
-     * as independent. To chain actions together use doAfter() method.
-     */
-    add<T>(arg0:string, arg1:RSVP.Promise<T>):InitActions;
-    add(arg0:{[name:string]:any}, arg1?):InitActions;
-    add(arg0, arg1):InitActions {
-        var prop;
-
-        if (typeof arg0 === 'object' && arg1 === undefined) {
-            for (prop in arg0) {
-                if (arg0.hasOwnProperty(prop)) {
-                    this.prom[prop] = arg0[prop];
-                }
-            }
-
-        } else if (typeof arg0 === 'string' && arg1 !== undefined) {
-            this.prom[arg0] = arg1;
-        }
-        return this;
-    }
-
-    /**
-     * Tests whether there is a promise with the 'key'
-     *
-     */
-    contains(key):boolean {
-        return this.prom.hasOwnProperty(key);
-    }
-
-    /**
-     * Gets a promise of the specified name. In case
-     * no such init action exists, error is thrown.
-     */
-    get<T>(key):RSVP.Promise<T> {
-        if (this.contains(key)) {
-            return this.prom[key];
-
-        } else {
-            throw new Error('No such init action: ' + key);
-        }
-    }
-
-    /**
-     * Binds a function to be run after a promise
-     * identified by 'actionId' is fulfilled. In case
-     * there is no promise under the 'actionId' key (please
-     * note that the key must be still present) then
-     * ad-hoc one is created and immediately resolved.
-     *
-     * type T specifies a value returned by actionId action
-     * type U specifies a value function fn is producing
-     *
-     * @param actionId - an identifier of an action (= any function initializing
-     * a part of a page and registered via the add() method)
-     * @param fn - a function to be run after the action 'actionId' is finished
-     */
-    doAfter<T, U>(actionId:string, fn:(prev?:T)=>U):RSVP.Promise<U> {
-        let prom1:RSVP.Promise<T>;
-        let self = this;
-
-        prom1 = this.get(actionId);
-        if (prom1 instanceof RSVP.Promise) {
-            return prom1.then<U>((v:T) => fn(v));
-
-        } else {
-            return new RSVP.Promise(function (fulfill, reject) {
-                try {
-                    fulfill(fn(self.prom[actionId]));
-
-                } catch (err) {
-                    reject(err);
-                }
-            });
-        }
-    }
-}
-
-/**
- * Local user settings
- */
-export class UserSettings implements Kontext.IUserSettings {
-
-    static ALIGNED_CORPORA_KEY = 'active_parallel_corpora';
-
-    storage:Storage;
-
-    storageKey:string;
-
-    timestampKey:string;
-
-    uiStateTTL:number;
-
-    data:{[k:string]:any};
-
-    constructor(storage:Storage, storageKey:string, timestampKey:string, uiStateTTL:number) {
-        this.storage = storage;
-        this.storageKey = storageKey;
-        this.timestampKey = timestampKey;
-        this.uiStateTTL = uiStateTTL;
-        this.data = {};
-    }
-
-
-    private getTimstamp():number {
-        return new Date().getTime() / 1000;
-    }
-
-    private dataIsRecent(data) {
-        return !data[this.timestampKey] || data[this.timestampKey]
-            && ( (new Date().getTime() / 1000 - data[this.timestampKey]) < this.uiStateTTL);
-    }
-
-    private dumpToStorage() {
-        this.data[this.timestampKey] = this.getTimstamp();
-        this.storage.setItem(this.storageKey, JSON.stringify(this.data));
-    }
-
-    get<T>(key:string):T {
-        return this.data[key];
-    }
-
-    set(key:string, value):void {
-        this.data[key] = value;
-        this.dumpToStorage();
-    }
-
-    init():void {
-        if (this.storageKey in this.storage) {
-            let tmp = JSON.parse(this.storage.getItem(this.storageKey));
-            if (this.dataIsRecent(tmp)) {
-                this.data = tmp;
-            }
-
-        } else {
-            this.data[this.timestampKey] = this.getTimstamp();
-        }
     }
 }

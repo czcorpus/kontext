@@ -31,10 +31,11 @@ import win = require('win');
 import cookies = require('vendor/cookies');
 import popupBox = require('popupbox');
 import tagbuilder = require('plugins/taghelper/init');
-import util = require('util');
+import util = require('./util');
 import virtKeyboard = require('vendor/virtual-keyboard');
 import RSVP = require('vendor/rsvp');
-import layoutModel = require('tpl/document');
+import layoutModel = require('./tpl/document');
+import userSettings = require('./userSettings');
 
 
 class CustomApi extends layoutModel.PluginApi implements Kontext.QueryPagePluginApi {
@@ -92,13 +93,14 @@ export class QueryFormTweaks {
 
     private pluginApi:Kontext.QueryPagePluginApi;
 
-    private userSettings:layoutModel.UserSettings;
+    private userSettings:userSettings.UserSettings;
 
     private formElm:HTMLElement;
 
     private maxEncodedParamsLength:number;
 
-    constructor(pluginApi:Kontext.QueryPagePluginApi, userSettings:layoutModel.UserSettings, formElm:HTMLElement) {
+    constructor(pluginApi:Kontext.QueryPagePluginApi, userSettings:userSettings.UserSettings,
+            formElm:HTMLElement) {
         this.pluginApi = pluginApi;
         this.userSettings = userSettings;
         this.formElm = formElm;
@@ -624,7 +626,7 @@ export function extendedApi(model:layoutModel.PageModel,
  * @param pluginApi
  */
 export function init(model:layoutModel.PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler,
-        settings:layoutModel.UserSettings, formElm:HTMLElement):QueryFormTweaks {
+        settings:userSettings.UserSettings, formElm:HTMLElement):QueryFormTweaks {
     let customApi = new CustomApi(model, corpusSetupHandler);
     return new QueryFormTweaks(customApi, settings, formElm);
 }

@@ -30,12 +30,13 @@
 /// <amd-dependency path="plugins/subcmixer/init" name="subcmixer" />
 
 import $ = require('jquery');
-import document = require('tpl/document');
+import document = require('./document');
 import popupBox = require('popupbox');
 import subcorpFormViews = require('views/subcorpForm');
-import subcorpFormStoreModule = require('stores/subcorpForm');
+import subcorpFormStoreModule = require('../stores/subcorpForm');
 import queryInput = require('../queryInput');
 import liveAttributes = require('plugins/liveAttributes/init');
+import userSettings = require('../userSettings');
 
 // dynamic imports
 declare var subcmixer:Subcmixer.Module;
@@ -195,7 +196,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     init(conf:Kontext.Conf):void {
         let getStoredAlignedCorp = () => {
-            return this.pageModel.userSettings.get<Array<string>>(document.UserSettings.ALIGNED_CORPORA_KEY) || [];
+            return this.pageModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
         }
         this.pageModel.init().add({
             initSubcCreationVariantSwitch: this.initSubcCreationVariantSwitch(),

@@ -83,7 +83,7 @@ declare module Kontext {
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
         appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}):void;
-        showMessage(type:string, message:string); // TODO type: MsgType vs string
+        showMessage(type:string, message:string, onClose?:()=>void); // TODO type: MsgType vs string
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date):string;
@@ -231,6 +231,16 @@ declare module Kontext {
         Messages:React.ReactClass;
         QueryHints:React.ReactClass;
         SubcorpusInfo:React.ReactClass;
+    }
+
+    /**
+     * Convenient functions used by KonText's React components
+     */
+    export interface ComponentCoreMixins {
+        translate(s:string, values?:any):string;
+        getConf(k:string):any;
+        createActionLink(path:string):string;
+        createStaticUrl(path:string):string;
     }
 
     export interface LayoutStores {
