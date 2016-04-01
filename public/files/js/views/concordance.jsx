@@ -23,6 +23,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
     lib.init = function (dispatcher, mixins, lineSelectionStore, userInfoStore) {
 
+        // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
+
         let SimpleSelectionModeSwitch = React.createClass({
             mixins: mixins,
 
@@ -48,6 +50,8 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+        // ----------------------------- <GroupsSelectionModelSwitch /> --------------------------
+
         let GroupsSelectionModelSwitch = React.createClass({
             mixins : mixins,
 
@@ -72,7 +76,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
-        // ----------------------------- Line selection menu --------------------------
+        // ----------------------------- <LineSelectionMenu /> --------------------------
 
         let LineSelectionMenu = React.createClass({
 
@@ -162,7 +166,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
-        // --------------------------- Locked line groups ----------------------------
+        // --------------------------- <EmailDialog /> ----------------------------
 
         let EmailDialog = React.createClass({
 
@@ -171,10 +175,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
             render: function () {
                 return (
                     <div>
-                        <input type="text" style={{width: '20em'}}
+                        <input className="email" type="text" style={{width: '20em'}}
                                defaultValue={this.props.defaultEmail}
                                onChange={this.props.emailChangeHandler} />
-                        <button type="button" value="send" onClick={this.props.handleEmailDialogButton}>{this.translate('global__send')}</button>
+                        <button className="ok" type="button" value="send" onClick={this.props.handleEmailDialogButton}>{this.translate('global__send')}</button>
                         <button type="button" value="cancel" onClick={this.props.handleEmailDialogButton}>{this.translate('global__cancel')}</button>
                     </div>
                 );
@@ -219,14 +223,14 @@ define(['vendor/react', 'jquery'], function (React, $) {
                         <legend>{this.translate('linesel__rename_drop_heading')}</legend>
                         <label>{this.translate('linesel__old_label_name')}:</label>
                         {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleSrcInputChange} />
-                        {'\u00A0\u21e8\u00A0'}
+                        <span className="arrow">{'\u00A0\u21E8\u00A0'}</span>
                         <label>{this.translate('linesel__new_label_name')}:</label>
                         {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleDstInputChange} />
                         <ul clasName="note">
                             <li>{this.translate('linesel__if_empty_lab_then_remove')}</li>
                             <li>{this.translate('linesel__if_existing_lab_then_merge')}</li>
                         </ul>
-                        <button type="button" onClick={this._handleConfirmClick}>{this.translate('global__ok')}</button>
+                        <button className="ok" type="button" onClick={this._handleConfirmClick}>{this.translate('global__ok')}</button>
                         <button type="button" onClick={this.props.handleCancel}>{this.translate('global__cancel')}</button>
                     </fieldset>
                 );
@@ -387,10 +391,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
 
                         {this._renderActionArea()}
 
-                        <div className="chart-area"></div>
+                        <fieldset className="chart-area"></fieldset>
 
-                        <div className="generated-link">
-                            <strong>{this.translate('linesel__line_selection_link_heading')}:</strong><br />
+                        <fieldset className="generated-link">
+                            <legend>{this.translate('linesel__line_selection_link_heading')}</legend>
                             <input className="conc-link" type="text" readOnly="true"
                                     onClick={(e)=> e.target.select()}
                                    value={this.props.checkpointUrl} />
@@ -402,7 +406,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                         emailChangeHandler={this._emailChangeHandler} />
                                 : <button type="button" onClick={this._openEmailDialogButtonHandler}>{this.translate('linesel__send_the_link_to_mail')}</button>
                             }
-                        </div>
+                        </fieldset>
                     </div>
                 )
             }

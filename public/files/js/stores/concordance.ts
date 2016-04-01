@@ -129,31 +129,44 @@ export class LineSelectionStore extends util.SimplePageStore {
 
     private renameLineGroup(srcGroupNum:number, dstGroupNum:number):void {
         let stateArgs = this.layoutModel.getConf<string>('stateParams');
-        let prom:RSVP.Promise<any> = this.layoutModel.ajax<any>(
-            'POST',
-            this.layoutModel.createActionUrl('ajax_rename_line_group?' + stateArgs),
-            {
-                'from_num': srcGroupNum,
-                'to_num': dstGroupNum
-            },
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
-        );
-        prom.then(
-            (data) => {
-                if (!data['contains_errors']) {
-                    window.location.href = data['next_url'];
+        let currentGroups = this.layoutModel.getConf<Array<number>>('linesGroupsNumbers');
 
-                } else {
-                    this.layoutModel.showMessage('error', data['error']);
+        if (!srcGroupNum) {
+            this.layoutModel.showMessage('error',
+                    this.layoutModel.translate('linesel__group_missing'));
+
+        } else if (currentGroups.indexOf(srcGroupNum) < 0) {
+            this.layoutModel.showMessage('error',
+                    this.layoutModel.translate('linesel__group_does_not_exist_{group}',
+                            {group: srcGroupNum}));
+
+        } else {
+            let prom:RSVP.Promise<any> = this.layoutModel.ajax<any>(
+                'POST',
+                this.layoutModel.createActionUrl('ajax_rename_line_group?' + stateArgs),
+                {
+                    'from_num': srcGroupNum,
+                    'to_num': dstGroupNum
+                },
+                {
+                    contentType : 'application/x-www-form-urlencoded'
                 }
+            );
+            prom.then(
+                (data) => {
+                    if (!data['contains_errors']) {
+                        window.location.href = data['next_url'];
 
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        )
+                    } else {
+                        this.layoutModel.showMessage('error', data['error']);
+                    }
+
+                },
+                (err) => {
+                    this.layoutModel.showMessage('error', err);
+                }
+            );
+        }
     }
 
     private sendSelectionUrlToEmail(email:string):RSVP.Promise<any> {

@@ -317,7 +317,7 @@ export class ViewPage {
                     chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
                 }
                 $(rootElm).append(
-                    '<h4>' + self.translate('linesel__groups_stats_heading') + '</h4>'
+                    '<legend>' + self.translate('linesel__groups_stats_heading') + '</legend>'
                 );
                 colors = renderChart(chartData);
                 renderLabels(chartData, colors, rootElm);
@@ -950,7 +950,6 @@ export class ViewPage {
         });
     }
 }
-
 
 export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
