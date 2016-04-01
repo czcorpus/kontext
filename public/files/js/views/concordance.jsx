@@ -181,6 +181,60 @@ define(['vendor/react', 'jquery'], function (React, $) {
             }
         });
 
+
+        // ----------------------------- <RenameLabelPanel /> ------------------------------
+
+
+        let RenameLabelPanel = React.createClass({
+
+            mixins : mixins,
+
+            _handleConfirmClick : function () {
+                dispatcher.dispatch({
+                    actionType: 'LINE_SELECTION_GROUP_RENAME',
+                    props: {
+                        srcGroupNum: this.state.srcGroupNum,
+                        dstGroupNum: this.state.dstGroupNum
+                    }
+                });
+            },
+
+            getInitialState : function () {
+                return {srcGroupNum: null, dstGroupNum: null};
+            },
+
+            _handleSrcInputChange : function (evt) {
+                let val = evt.target.value ? Number(evt.target.value) : null;
+                this.setState(React.addons.update(this.state, {srcGroupNum: {$set: val}}));
+            },
+
+            _handleDstInputChange : function (evt) {
+                let val = evt.target.value ? Number(evt.target.value) : null;
+                this.setState(React.addons.update(this.state, {dstGroupNum: {$set: val}}));
+            },
+
+            render : function () {
+                return (
+                    <fieldset>
+                        <legend>{this.translate('linesel__rename_drop_heading')}</legend>
+                        <label>{this.translate('linesel__old_label_name')}:</label>
+                        {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleSrcInputChange} />
+                        {'\u00A0\u21e8\u00A0'}
+                        <label>{this.translate('linesel__new_label_name')}:</label>
+                        {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleDstInputChange} />
+                        <ul clasName="note">
+                            <li>{this.translate('linesel__if_empty_lab_then_remove')}</li>
+                            <li>{this.translate('linesel__if_existing_lab_then_merge')}</li>
+                        </ul>
+                        <button type="button" onClick={this._handleConfirmClick}>{this.translate('global__ok')}</button>
+                        <button type="button" onClick={this.props.handleCancel}>{this.translate('global__cancel')}</button>
+                    </fieldset>
+                );
+            }
+        });
+
+        // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
+
         let LockedLineGroupsMenu = React.createClass({
 
             mixins: mixins,
@@ -237,6 +291,10 @@ define(['vendor/react', 'jquery'], function (React, $) {
                             props: {}
                         });
                         break;
+                    case 'rename-group-label':
+                        this.setState(React.addons.update(this.state, {renameLabelDialog: {$set: true}}));
+                        break;
+
                 }
             },
 
@@ -289,7 +347,37 @@ define(['vendor/react', 'jquery'], function (React, $) {
             },
 
             getInitialState : function () {
-                return {hasData: false, emailDialog: false, email: null};
+                return {
+                    hasData: false,
+                    emailDialog: false,
+                    renameLabelDialog: false,
+                    email: null
+                };
+            },
+
+            _handleRenameCancel : function () {
+                this.setState(React.addons.update(this.state, {renameLabelDialog: {$set: false}}));
+            },
+
+            _renderActionArea : function () {
+                if (this.state.renameLabelDialog) {
+                    return <RenameLabelPanel handleCancel={this._handleRenameCancel} />;
+
+                } else {
+                    return (
+                        <div className="actions">
+                            {this.translate('global__actions')}:{'\u00A0'}
+                            <select onChange={this._actionSwitchHandler}>
+                                <option value="">--</option>
+                                <option value="edit-groups">{this.translate('linesel__continue_editing_groups')}</option>
+                                <option value="sort-groups">{this.translate('linesel__view_sorted_groups')}</option>
+                                <option value="rename-group-label">{this.translate('linesel__rename_label')}...</option>
+                                <option value="remove-other-lines">{this.translate('linesel__remove_non_group_lines')}</option>
+                                <option value="clear-groups">{this.translate('linesel__clear_line_groups')}</option>
+                            </select>
+                        </div>
+                    );
+                }
             },
 
             render: function () {
@@ -297,16 +385,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                     <div id="selection-actions">
                         <h3>{this.translate('linesel__saved_line_groups_heading')}</h3>
 
-                        <div className="actions">
-                            {this.translate('global__actions')}:{'\u00A0'}
-                            <select onChange={this._actionSwitchHandler}>
-                                <option value="">--</option>
-                                <option value="edit-groups">{this.translate('linesel__continue_editing_groups')}</option>
-                                <option value="sort-groups">{this.translate('linesel__view_sorted_groups')}</option>
-                                <option value="remove-other-lines">{this.translate('linesel__remove_non_group_lines')}</option>
-                                <option value="clear-groups">{this.translate('linesel__clear_line_groups')}</option>
-                            </select>
-                        </div>
+                        {this._renderActionArea()}
 
                         <div className="chart-area"></div>
 

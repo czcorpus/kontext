@@ -12,7 +12,6 @@
 # GNU General Public License for more details.
 
 import logging
-import math
 import os
 import sys
 import re
@@ -20,6 +19,7 @@ import json
 from collections import defaultdict
 
 from werkzeug.datastructures import MultiDict
+import manatee
 
 from kontext import Kontext, ConcError, MainMenu, LinesGroups
 from controller import UserActionException, exposed
@@ -31,7 +31,7 @@ import plugins
 import butils
 from kwiclib import Kwic
 import l10n
-from l10n import import_string, export_string
+from l10n import import_string
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping, ConcArgsMapping, QueryInputs, Parameter
 from texttypes import TextTypeCollector, get_tt
@@ -1700,6 +1700,16 @@ class Actions(Kontext):
         return ans
 
     @exposed(return_type='json', legacy=True)
+    def ajax_rename_line_group(self, from_num=0, to_num=0):
+        new_groups = filter(lambda v: v[2] != from_num or to_num != 0, self._lines_groups)
+        if to_num > 0:
+            new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
+        self._lines_groups = LinesGroups(data=new_groups)
+        q_id = self._store_conc_params()
+        params = self._collect_conc_next_url_params(q_id)
+        return dict(id=q_id, next_url=self.create_url('view', params))
+
+    @exposed(return_type='json', legacy=True)
     def ajax_get_within_max_hits(self):
         query = self.args.q[0]
         m = re.match(r'([\w]+,)(.+)', query)
@@ -1712,4 +1722,5 @@ class Actions(Kontext):
             return {'total': conc.fullsize() if conc else None}
         else:
             return {'total': None}
+
 
