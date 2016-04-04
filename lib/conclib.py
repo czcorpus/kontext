@@ -341,12 +341,15 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
         # user operation and ignore the rest (as it is just an internal operation
         # a common user does not understand).
         if is_align_op:
-            if i > 0:
-                desc[i - 1] = desc[i - 1][:-1] + (size,)  # update previous op. size
-            i += 3  # ignore aligned corpus operation, i is now the next valid operation
+            last_user_op_idx = i - 1
+            while is_align_op:
+                if last_user_op_idx >= 0:
+                    desc[last_user_op_idx] = desc[last_user_op_idx][:-1] + (size,)  # update previous op. size
+                i += 3  # ignore aligned corpus operation, i is now the next valid operation
+                is_align_op, size = detect_internal_op(q, i)
             if i > len(q) - 1:
                 break
-            size = get_size(i)
+        size = get_size(i)
         opid = q[i][0]
         args = q[i][1:]
         url1 = [('q', qi) for qi in q[:i]]
