@@ -140,8 +140,8 @@ class UcnkCorpArch(CorpusArchive):
         self.access_req_recipients = access_req_recipients
         self.default_label = default_label
 
-    def export(self, plugin_api, user_id, *args):
-        ans = super(UcnkCorpArch, self).export(plugin_api, user_id, *args)
+    def export(self, plugin_api):
+        ans = super(UcnkCorpArch, self).export(plugin_api)
         ans['initial_keywords'] = plugin_api.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
         return ans
 

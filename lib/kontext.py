@@ -1164,9 +1164,7 @@ class Kontext(Controller):
         result['plugin_data'] = {}
         for plg_name, plg in plugins.get_plugins().items():
             if hasattr(plg, 'export'):
-                result['plugin_data'][plg_name] = plg.export(self._plugin_api,
-                                                             self._session_get('user', 'id'),
-                                                             self.ui_lang)
+                result['plugin_data'][plg_name] = plg.export(self._plugin_api)
         # asynchronous tasks
         result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
         return result
@@ -1376,6 +1374,10 @@ class PluginApi(object):
     @property
     def user_lang(self):
         return self._controller.ui_lang
+
+    @property
+    def user_id(self):
+        return self._session.get('user', {'id': None}).get('id')
 
     @property
     def user_is_anonymous(self):

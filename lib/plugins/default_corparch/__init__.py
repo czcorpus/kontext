@@ -623,9 +623,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 })
         return featured
 
-    def export(self, plugin_api, user_id, *args):
+    def export(self, plugin_api):
         return {
-            'featured': self._export_featured(user_id),
+            'featured': self._export_featured(plugin_api.user_id),
             'corpora_labels': [(k, lab, self.get_label_color(k)) for k, lab in self.all_keywords],
             'tag_prefix': self._tag_prefix,
             'max_num_hints': self._max_num_hints
