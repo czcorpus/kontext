@@ -186,7 +186,7 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         return self.db(corpname) is not None
 
-    def export(self, plugin_api, user_id, lang):
+    def export(self, plugin_api):
         return {'interval_chars': self._interval_chars}
 
     def calc_max_attr_val_visible_chars(self, corpus_info):
