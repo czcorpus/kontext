@@ -538,6 +538,7 @@ define(['vendor/react'], function (React) {
         let FilterForm = React.createClass({
             mixins: mixins,
             render: function () {
+                console.log('hit: ', this.props);
                 return (
                     <section className="inner">
                         <h3>{this.translate('defaultCorparch__filters')}</h3>

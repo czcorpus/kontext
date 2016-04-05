@@ -51,8 +51,10 @@ define(['vendor/react'], function (React) {
             render : function () {
                 return (
                     <li className="node">
-                        <img className="state-flag" src={this._getStateImagePath()} />
-                        <a onClick={this._clickHandler}>{this.props.name}</a>
+                        <a onClick={this._clickHandler}>
+                            <img className="state-flag" src={this._getStateImagePath()} />
+                            {this.props.name}
+                        </a>
                         { this.props.active ?
                             <ItemList name={this.props.name} corplist={this.props.corplist} />
                             : null }
@@ -152,9 +154,47 @@ define(['vendor/react'], function (React) {
             }
         });
 
+        // ----------------------- <CorptreePageComponent /> -----------------
+
+        let CorptreePageComponent = React.createClass({
+
+            _changeListener : function (store, action) {
+                if (action === 'TREE_CORPARCH_DATA_CHANGED') {
+                    this.setState({
+                        data: store.getData()
+                    });
+                }
+            },
+
+            getInitialState : function () {
+                return {data: null};
+            },
+
+            componentDidMount : function () {
+                treeStore.addChangeListener(this._changeListener);
+                dispatcher.dispatch({
+                    actionType: 'TREE_CORPARCH_GET_DATA',
+                    props: {}
+                });
+            },
+
+            componentWillUnmount : function () {
+                treeStore.removeChangeListener(this._changeListener);
+            },
+
+            render : function () {
+                return (
+                    <div className="corp-tree-component">
+                        <ItemList htmlClass="corp-tree"
+                                corplist={this.state.data ? this.state.data['corplist'] : []} />
+                    </div>
+                );
+            }
+        });
 
         return {
-            CorptreeWidget: CorptreeWidget
+            CorptreeWidget: CorptreeWidget,
+            CorptreePageComponent: CorptreePageComponent
         };
 
     };

@@ -358,7 +358,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                                'size': corp_info.size,
                                'path': path
                                })
-                except Exception, e:
+                except Exception as e:
                     import logging
                     logging.getLogger(__name__).warn(
                         u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,

@@ -32,31 +32,6 @@ import Immutable = require('vendor/immutable');
 import $ = require('jquery');
 
 
-// -----------------------------------------------------------
-// TODO - testing data
-let TESTING_DATA = {
-    "name": "All the corpora",
-    "corplist" : [
-        {"name" : "Corpus 1", "ident": "corpus_1"},
-        {"name" : "Corpus 2", "ident": "corpus_2"},
-        {
-            "name" : "Foreign Section",
-            "corplist": [
-                {"name": "Corpus Foreign 1", "ident": "corpus_foreign_1"},
-                {"name": "Corpus Foreign 2", "ident": "corpus_foreign_2"},
-                {
-                    "name": "Backup",
-                    "corplist": [
-                        {"name": "Corpus Foreign 3 (Backup)", "ident": "corpus_foreign_3"},
-                    ]
-                }
-            ]
-        },
-        {"name" : "Corpus 3", "ident": "corpus_3"},
-    ]
-};
-// -----------------------------------------------------------
-
 export interface Node {
     active: boolean;
     name: string;
@@ -181,4 +156,43 @@ export function create(selectElm:HTMLElement, pluginApi:Kontext.QueryPagePluginA
         widgetWrapper,
         {currentCorpus: pluginApi.getConf<string>('humanCorpname')}
     );
+}
+
+
+export class CorplistPage implements Customized.CorplistPage {
+
+    private pluginApi:Kontext.PluginApi;
+
+    private treeStore:TreeWidgetStore;
+
+    private viewsLib:any;
+
+    constructor(pluginApi:Kontext.PluginApi) {
+        this.pluginApi = pluginApi;
+        this.treeStore = new TreeWidgetStore(pluginApi, (corpusIdent:string) => {
+            window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpusIdent);
+        });
+        this.viewsLib = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+                this.treeStore);
+    }
+
+    createForm(targetElm:HTMLElement, properties:any):void {}
+
+    createList(targetElm:HTMLElement, properties:any):void {
+        let wrapper = window.document.createElement('div');
+        $('section.corplist').append(wrapper);
+
+        this.pluginApi.renderReactComponent(
+            this.viewsLib.CorptreePageComponent,
+            wrapper,
+            {
+                currentCorpus: this.pluginApi.getConf<string>('humanCorpname')
+            }
+        );
+    }
+}
+
+
+export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
+    return new CorplistPage(pluginApi);
 }

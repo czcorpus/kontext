@@ -4,11 +4,8 @@
     display: inline-block;
 }
 
+
 .corp-tree-widget {
-
-    button.switch {
-
-    }
 
     ul.corp-tree {
         margin: 0;
@@ -41,6 +38,58 @@
         li.leaf a {
             color: @color-default-text;
             text-decoration: none;
+        }
+
+        li.leaf a:hover {
+            text-decoration: underline;
+        }
+
+        img.state-flag {
+            padding-right: 0.4em;
+        }
+    }
+}
+
+.corp-tree-component {
+    ul.corp-tree {
+        font-size: 120%;
+        margin: 0;
+        padding: 1em;
+        background-color: transparent;
+        position: static;
+        list-style-type: none;
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        li {
+            padding: 0 0 0 1em;
+            margin: 0;            
+        }
+
+        li.node a {
+            display: block;
+            text-decoration: none;
+            color: @color-logo-blue;            
+        }
+        
+        li.node > a {
+            border: 1px solid @color-light-text;
+            padding: 0.4em 0.6em;
+            margin-bottom: 0.3em;
+        }
+
+        li.node a:hover {
+            text-decoration: underline;
+        }       
+
+        li.leaf > a {
+            color: @color-default-text;
+            text-decoration: none;
+            padding: 0.4em 0.6em;
         }
 
         li.leaf a:hover {
