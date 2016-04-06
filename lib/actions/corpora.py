@@ -17,6 +17,7 @@ from collections import defaultdict
 from controller import exposed
 from kontext import Kontext
 import plugins
+from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 import l10n
 from translation import ugettext as _
 
@@ -29,15 +30,18 @@ class Corpora(Kontext):
     @exposed(skip_corpus_init=True)
     def corplist(self, request):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
-        return dict(
-            corplist_params=plugins.get('corparch').initial_search_params(request.args.get('query'),
-                                                                          request.args),
-            corplist_data=plugins.get('corparch').search(plugin_api=self._plugin_api,
-                                                         user_id=self._session_get('user', 'id'),
-                                                         query=False,
-                                                         offset=0,
-                                                         filter_dict=request.args)
-        )
+        corparch_plugin = plugins.get('corparch')
+        if isinstance(corparch_plugin, AbstractSearchableCorporaArchive):
+            params = corparch_plugin.initial_search_params(request.args.get('query'), request.args)
+            data = corparch_plugin.search(plugin_api=self._plugin_api,
+                                          user_id=self._session_get('user', 'id'),
+                                          query=False,
+                                          offset=0,
+                                          filter_dict=request.args)
+        else:
+            params = {}
+            data = corparch_plugin.get_all(self._session_get('user', 'id'))
+        return dict(corplist_params=params, corplist_data=data)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_list_corpora(self, request):

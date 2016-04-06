@@ -143,6 +143,14 @@ class AbstractCorporaArchive(ThreadLocalData):
         raise NotImplementedError()
 
 
+class SimpleCorporaArchive(AbstractCorporaArchive):
+    """
+    An archive without server-side searching/filtering abilities
+    """
+    def get_all(self, user_id):
+        raise NotImplementedError()
+
+
 class CorplistProvider(object):
     """
     An object providing actual corpus list based on passed arguments.
