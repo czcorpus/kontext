@@ -104,7 +104,10 @@ class SyntaxTreeViewer {
     }
 }
 
-export function init(pluginApi:Kontext.PluginApi):void {
-    let viewer = new SyntaxTreeViewer(pluginApi);
-    viewer.init();
+export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
+    return new RSVP.Promise<Kontext.Plugin>((resolve:(val:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
+        let viewer = new SyntaxTreeViewer(pluginApi);
+        viewer.init();
+        resolve(viewer);
+    });
 }

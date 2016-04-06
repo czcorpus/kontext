@@ -84,6 +84,7 @@ def setup_plugins():
     init_plugin('corparch', optional=True)
     init_plugin('query_storage', optional=True)
     init_plugin('application_bar', optional=True)
+    init_plugin('footer_bar', optional=True)
     init_plugin('live_attributes', optional=True)
     init_plugin('subc_restore', optional=True)
     init_plugin('taghelper', optional=True)

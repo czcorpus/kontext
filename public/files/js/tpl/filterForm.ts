@@ -60,7 +60,7 @@ export function init(conf:Kontext.Conf) {
         bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
         bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
         updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),
-        queryStorage : queryStorage.createInstance(extendedApi),
+        queryStorage : queryStorage.create(extendedApi),
         liveAttributesInit : liveAttributes.init(extendedApi, conf,
                 window.document.getElementById('live-attrs-update'),
                 window.document.getElementById('live-attrs-reset'),
@@ -72,7 +72,5 @@ export function init(conf:Kontext.Conf) {
         bindQueryHelpers: queryFormTweaks.bindQueryHelpers()
     });
 
-    promises.doAfter<Kontext.Plugin, any>('queryStorage', (v:Kontext.Plugin) => {
-        layoutModel.registerPlugin('queryStorage', v);
-    });
+    layoutModel.registerPlugin('queryStorage', promises.get<Kontext.Plugin>('queryStorage'));
 }

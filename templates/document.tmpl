@@ -53,6 +53,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #if $app_bar_css
 <link rel="stylesheet" type="text/css" href="$app_bar_css" />
 #end if
+#if $footer_bar_css
+<link rel="stylesheet" type="text/css" href="$footer_bar_css" />
+#end if
 #if $qunit_test
 <link rel="stylesheet" type="text/css" href="$files_path/css/qunit.css" />
 #end if
@@ -109,14 +112,15 @@ requirejs.config({
     for (i = 0; i < names.length; i += 1) {
         define(names[i], [], function () {
             return {
-                init : function () {}, // deprecated
-                reset : function () {}, // deprecated
-                detach : function () {}, // deprecated
-                createInstance : function () {
+                create : function () {
                     return {
-                        init : function () {},
-                        reset : function () {},
-                        detach : function () {}
+                        then: function (thenFn) {
+                            thenFn({
+                                init : function () {},
+                                reset : function () {},
+                                detach : function () {}
+                            });
+                        }
                     };
                 }
             };
@@ -350,34 +354,41 @@ define('conf', [], function () {
 </div>
 
 <footer>
-    #if $len($avail_languages) > 0
-    <div id="switch-language-box">$_("user interface languages"):
-        #set $i = 0
-        #for $lang in $avail_languages
-        <a data-lang="$lang[0]">$lang[1].get('label', $lang[0])</a>#if $i < $len($avail_languages) - 1# | #end if#
-        #set $i = $i + 1
-        #end for
+    #if $debug
+    <div class="debug-warning">
+    $_('debugging mode')
     </div>
     #end if
-    <div>                              
-        <div id="copyright-info">
-            &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>,
-            &copy; <a href="http://www.sketchengine.co.uk/">Lexical Computing Ltd.</a>,
-            &copy; <a href="http://nlp.fi.muni.cz/">NLP Centre FI MU</a>
-        </div>
-        <div id="app-version">
-            $_('version') <strong>$_version[1]</strong>, $_('uses') manatee-<span>$_version[0]</span>
-        </div>
-        #if $debug
-        <div class="debug-warning">
-        $_('debugging mode')
-        </div>
-        #end if
 
-        #if $error_report_url:
-        <div id="error-reporting"><a href="$error_report_url" target="_blank">$_('Report an error')</a></div>
+    #if $footer_bar
+        #filter None
+        $footer_bar
+        #end filter
+    #else
+        #if $len($avail_languages) > 0
+        <div id="switch-language-box">$_("user interface languages"):
+            #set $i = 0
+            #for $lang in $avail_languages
+            <a data-lang="$lang[0]">$lang[1].get('label', $lang[0])</a>#if $i < $len($avail_languages) - 1# | #end if#
+            #set $i = $i + 1
+            #end for
+        </div>
         #end if
-    </div>
+        <div>
+            <div id="copyright-info">
+                &copy; <a href="http://www.korpus.cz/">Institute of the Czech National Corpus</a>,
+                &copy; <a href="http://www.sketchengine.co.uk/">Lexical Computing Ltd.</a>,
+                &copy; <a href="http://nlp.fi.muni.cz/">NLP Centre FI MU</a>
+            </div>
+            <div id="app-version">
+                $_('version') <strong>$_version[1]</strong>, $_('uses') manatee-<span>$_version[0]</span>
+            </div>
+
+            #if $error_report_url:
+            <div id="error-reporting"><a href="$error_report_url" target="_blank">$_('Report an error')</a></div>
+            #end if
+        </div>
+    #end if
 </footer>
 #end filter
 

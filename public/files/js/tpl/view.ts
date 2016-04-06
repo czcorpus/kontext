@@ -948,7 +948,7 @@ export class ViewPage {
             setStateUrl: this.setStateUrl(),
             attachIpmCalcTrigger: this.attachIpmCalcTrigger(),
             updateLocalAlignedCorpora: this.updateLocalAlignedCorpora(),
-            syntaxViewer: syntaxViewer.init(this.layoutModel.pluginApi())
+            syntaxViewer: syntaxViewer.create(this.layoutModel.pluginApi())
         });
     }
 }

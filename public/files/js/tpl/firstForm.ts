@@ -363,7 +363,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             restoreAlignedCorpora: this.restoreAlignedCorpora(queryFormTweaks),
             initCorplistComponent: this.initCorplistComponent(),
             makePrimaryButtons : this.makePrimaryButtons(),
-            queryStorageInit : queryStorage.createInstance(this.layoutModel.pluginApi()),
+            queryStorageInit : queryStorage.create(this.layoutModel.pluginApi()),
             liveAttributesInit : liveAttributes.init(this.extendedApi, conf,
                     window.document.getElementById('live-attrs-update'),
                     window.document.getElementById('live-attrs-reset'),
@@ -394,9 +394,7 @@ export function init(conf:Kontext.Conf):FirstFormPage {
     let pageModel = new FirstFormPage(layoutModel, clStorage);
     let promises:initActions.InitActions = pageModel.init(conf);
 
-    promises.doAfter('queryStorageInit', (data:Kontext.Plugin) => {
-        layoutModel.registerPlugin('queryStorage', data);
-    });
+    layoutModel.registerPlugin('queryStorage', promises.get('queryStorageInit'));
     layoutModel.mouseOverImages();
     return pageModel;
 }

@@ -26,11 +26,13 @@
 /// <reference path="../../ts/declarations/translations.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../ts/declarations/abstract-plugins.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
 import popupbox = require('popupbox');
 import applicationBar = require('plugins/applicationBar/init');
+import footerBar = require('plugins/footerBar/init');
 import flux = require('vendor/Dispatcher');
 import documentViews = require('views/document');
 import React = require('vendor/react');
@@ -268,8 +270,10 @@ export class PageModel implements Kontext.PluginProvider {
      * @param name
      * @param plugin
      */
-    registerPlugin(name:string, plugin:Kontext.Plugin) {
-        this.plugins[name] = plugin;
+    registerPlugin(name:string, pluginPromise:RSVP.Promise<Kontext.Plugin>) {
+        pluginPromise.then((plugin:Kontext.Plugin) => {
+            this.plugins[name] = plugin;
+        });
     }
 
     /**
@@ -1057,7 +1061,8 @@ export class PageModel implements Kontext.PluginProvider {
         });
 
         // init plug-ins
-        this.registerPlugin('applicationBar', applicationBar.createInstance(self.pluginApi()));
+        this.registerPlugin('applicationBar', applicationBar.create(self.pluginApi()));
+        this.registerPlugin('footerBar', footerBar.create(self.pluginApi()));
 
         $.each(this.initCallbacks, function (i, fn:()=>void) {
             fn();

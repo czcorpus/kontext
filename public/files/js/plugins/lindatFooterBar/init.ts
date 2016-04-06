@@ -16,35 +16,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../../ts/declarations/abstract-plugins.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
 
-declare module LiveAttributesInit {
-    export function init(pluginApi:Kontext.QueryPagePluginApi,
-                     conf:{[key:string]:string},
-                     updateButton:HTMLElement, resetButton:HTMLElement,
-                     attrFieldsetWrapper:HTMLElement,
-                     getStoredAlignedCorporaFn?:()=>Array<string>):RSVP.Promise<LiveAttributes.Widget>;
+import RSVP = require('vendor/rsvp');
+
+class FooterPlugin implements Kontext.Plugin {
+    
+    constructor() {        
+    }
+    
+    init():void {
+        // do the custom initialization (tracking/analytics script)
+        console.log('FooterPlugin.init() finished');
+    }
 }
 
-
-declare module LiveAttributes {
-
-
-    export interface Widget {
-    }
-
-   /**
-    * An object handling currently selected aligned corpora
-    */
-    export interface IAlignedCorpora {
-
-        update(data):void;
-
-        reset():void;
-
-        findSelected():Array<string>;
-
-    }
-
+export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
+    return new RSVP.Promise<Kontext.Plugin>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
+        let plugin = new FooterPlugin();  
+        plugin.init();      
+        resolve(plugin);    
+    });
 }
