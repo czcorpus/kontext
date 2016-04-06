@@ -32,8 +32,12 @@ actually exist. At runtime, RequireJS remaps these names
 to custom ones.
 */
 
-declare module "plugins/applicationBar/init" {
-    export function createInstance(pluginApi:Kontext.PluginApi);
+declare module 'plugins/applicationBar/init' {
+    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin>;
+}
+
+declare module 'plugins/footerBar/init' {
+    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin>;
 }
 
 declare module "plugins/corparch/init" {
@@ -48,7 +52,7 @@ declare module "plugins/liveAttributes/init" {
 }
 
 declare module "plugins/queryStorage/init" {
-    export function createInstance(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage;
+    export function create(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage;
 }
 
 declare module "plugins/taghelper/init" {
@@ -57,5 +61,5 @@ declare module "plugins/taghelper/init" {
 }
 
 declare module "plugins/syntaxViewer/init" {
-    export function init(pluginApi:Kontext.PluginApi):void;
+    export function create(pluginApi:Kontext.PluginApi):void;
 }

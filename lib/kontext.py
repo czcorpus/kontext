@@ -1108,6 +1108,13 @@ class Kontext(Controller):
             result['app_bar'] = None
             result['app_bar_css'] = None
 
+        if plugins.has_plugin('footer_bar'):
+            result['footer_bar'] = plugins.get('footer_bar').get_contents(self._plugin_api, self.return_url)
+            result['footer_bar_css'] = plugins.get('footer_bar').get_css_url()
+        else:
+            result['footer_bar'] = None
+            result['footer_bar_css'] = None
+
         self._apply_theme(result)
         self._init_custom_menu_items(result)
 

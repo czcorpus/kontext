@@ -59,15 +59,17 @@ export class AppBar implements Kontext.Plugin {
     }
 }
 
-export function createInstance(pluginApi:Kontext.PluginApi) {
-    var appBar = new AppBar(pluginApi);
-    if ($('.appbar-loading-msg').data('reload-toolbar') == 1) {
-        pluginApi.registerInitCallback({plugin: 'applicationBar', method: 'toolbarReloader'});
+export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
+    return new RSVP.Promise((resolve:(ans:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
+       var appBar = new AppBar(pluginApi);
+        if ($('.appbar-loading-msg').data('reload-toolbar') == 1) {
+            pluginApi.registerInitCallback({plugin: 'applicationBar', method: 'toolbarReloader'});
 
-    } else {
-        appBar.init();
-    }
-    return appBar;
+        } else {
+            appBar.init();
+        }
+        resolve(appBar);
+    });
 }
 
 

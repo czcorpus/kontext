@@ -18,6 +18,9 @@
 
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+
+import RSVP = require('vendor/rsvp');
 
 
 function splitString(s: string, maxChunkSize: number): Array<HTMLElement> {
@@ -609,8 +612,11 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
  *
  * @returns {QueryStoragePlugin}
  */
-export function createInstance(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage {
-    let plugin = new QueryStoragePlugin();
-    plugin.init(pluginApi);
-    return plugin;
+export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Plugins.IQueryStorage> {
+    return new RSVP.Promise((resolve:(ans:Plugins.IQueryStorage)=>void, reject:(e:any)=>void)=> {
+        let plugin = new QueryStoragePlugin();
+        plugin.init(pluginApi);
+        resolve(plugin);
+    });
 }
+
