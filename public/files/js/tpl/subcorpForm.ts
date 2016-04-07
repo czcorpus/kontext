@@ -202,7 +202,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
             initSubcCreationVariantSwitch: this.initSubcCreationVariantSwitch(),
             sizeUnitsSafeSwitch: this.sizeUnitsSafeSwitch(),
             initHints: this.initHints(),
-            liveAttributes: liveAttributes.init(
+            liveAttributes: liveAttributes.create(
                 this.extendedApi,
                 conf,
                 $('#live-attrs-update').get(0),

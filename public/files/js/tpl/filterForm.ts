@@ -60,8 +60,7 @@ export function init(conf:Kontext.Conf) {
         bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
         bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
         updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),
-        queryStorage : queryStorage.create(extendedApi),
-        liveAttributesInit : liveAttributes.init(extendedApi, conf,
+        liveAttributesInit : liveAttributes.create(extendedApi, conf,
                 window.document.getElementById('live-attrs-update'),
                 window.document.getElementById('live-attrs-reset'),
                 $('.text-type-params').get(0)),
@@ -69,7 +68,8 @@ export function init(conf:Kontext.Conf) {
         textareaHints : queryFormTweaks.textareaHints(),
         initQuerySwitching : queryFormTweaks.initQuerySwitching(),
         fixFormSubmit : queryFormTweaks.fixFormSubmit(),
-        bindQueryHelpers: queryFormTweaks.bindQueryHelpers()
+        bindQueryHelpers: queryFormTweaks.bindQueryHelpers(),
+        queryStorage : queryStorage.create(extendedApi)
     });
 
     layoutModel.registerPlugin('queryStorage', promises.get<Kontext.Plugin>('queryStorage'));

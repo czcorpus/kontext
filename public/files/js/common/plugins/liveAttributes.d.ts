@@ -20,7 +20,7 @@
 /// <reference path="../../../ts/declarations/common.d.ts" />
 
 declare module LiveAttributesInit {
-    export function init(pluginApi:Kontext.QueryPagePluginApi,
+    export function create(pluginApi:Kontext.QueryPagePluginApi,
                      conf:{[key:string]:string},
                      updateButton:HTMLElement, resetButton:HTMLElement,
                      attrFieldsetWrapper:HTMLElement,
