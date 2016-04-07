@@ -1324,7 +1324,7 @@ class SubcorpFormPlugin extends Plugin {
 }
 
 
-export function init(pluginApi:Kontext.QueryPagePluginApi,
+export function create(pluginApi:Kontext.QueryPagePluginApi,
                      conf:{[key:string]:string},
                      updateButton:HTMLElement, resetButton:HTMLElement,
                      attrFieldsetWrapper:HTMLElement,
