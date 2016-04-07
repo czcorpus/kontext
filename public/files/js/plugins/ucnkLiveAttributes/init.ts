@@ -1336,11 +1336,11 @@ export function create(pluginApi:Kontext.QueryPagePluginApi,
 
     let plugin;
     if (['subcorpus/subcorp_form', 'subcorpus/subcorp'].indexOf(pluginApi.getConf<string>('currentAction')) > -1) {
-        plugin = new SubcorpFormPlugin(pluginApi, conf, attrFieldsetWrapper,
+        plugin = new SubcorpFormPlugin(pluginApi, pluginConf, attrFieldsetWrapper,
                 updateButton, resetButton, getStoredAlignedCorporaFn);
 
     } else {
-        plugin = new QueryFormPlugin(pluginApi, conf, attrFieldsetWrapper,
+        plugin = new QueryFormPlugin(pluginApi, pluginConf, attrFieldsetWrapper,
                 updateButton, resetButton);
     }
 
