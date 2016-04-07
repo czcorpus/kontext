@@ -360,7 +360,6 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             restoreAlignedCorpora: this.restoreAlignedCorpora(queryFormTweaks),
             initCorplistComponent: this.initCorplistComponent(),
             makePrimaryButtons : this.makePrimaryButtons(),
-            queryStorageInit : queryStorage.createInstance(this.layoutModel.pluginApi()),
             liveAttributesInit : liveAttributes.init(this.extendedApi, conf,
                     window.document.getElementById('live-attrs-update'),
                     window.document.getElementById('live-attrs-reset'),
@@ -372,6 +371,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             initQuerySwitching : queryFormTweaks.initQuerySwitching(),
             fixFormSubmit : queryFormTweaks.fixFormSubmit(),
             bindQueryHelpers: queryFormTweaks.bindQueryHelpers(),
+            queryStorageInit : queryStorage.createInstance(this.layoutModel.pluginApi()),
             updateStateOnError: this.updateStateOnError()
         });
         promises.doAfter('liveAttributesInit', () => {
