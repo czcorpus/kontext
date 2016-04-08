@@ -388,7 +388,9 @@ class Controller(object):
         """
         Returns an URL representing current application state
         """
-        return self.environ.get('REQUEST_URI')
+        action_str = '/'.join(filter(lambda x: x, self.get_current_action()))
+        query = '?' + self.environ.get('QUERY_STRING') if self.environ.get('QUERY_STRING') else ''
+        return self.get_root_url() + action_str + query
 
     def _updated_current_url(self, params):
         """
