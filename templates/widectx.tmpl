@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #unless $getVar('no_display_links', '') or not $allow_left_expand
   <a class="expand-link" href="\#end" data-url="widectx" data-params="$join_params($leftlink, 'corpname='+$corpname,
             $widectx_globals)">
-      <img class="over-img" src="../files/img/prev-page.svg" alt="$_("expand left")" title="$_("expand left")" data-alt-img="../files/img/prev-page_s.svg" /></a>
+      <img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("expand left")" title="$_("expand left")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
 #end unless
 #if $righttoleft
   <span dir="rtl">
@@ -66,7 +66,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #unless $getVar('no_display_links', '') or not $allow_right_expand
   <a class="expand-link" name="end" href="\#end" data-url="widectx" data-params="$join_params($rightlink,
         'corpname='+$corpname, $widectx_globals)">
-<img class="over-img" src="../files/img/next-page.svg" alt="$_("expand right")" title="$_("expand right")" data-alt-img="../files/img/next-page_s.svg" /></a>
+<img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("expand right")" title="$_("expand right")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
 
   #if $getVar('struct_ctx', '')
     <div class="footer">

@@ -96,4 +96,4 @@ def join_params(*args):
             raise TypeError(
                 'Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (
                     type(a)))
-    return '&'.join(tmp)
+    return '&'.join(filter(lambda x: x != '' and x is not None, tmp))

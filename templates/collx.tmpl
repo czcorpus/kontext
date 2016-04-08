@@ -63,7 +63,7 @@ $_("Collocations")#slurp
         <div id="progress_message">
            <div class="progress-info">
                 <div>$_('calculating ...')
-                    <a class="context-help" href="#"><img data-alt-img="../files/img/question-mark_s.svg" src="../files/img/question-mark.svg" class="over-img"></a>
+                    <a class="context-help" href="#"><img data-alt-img="${files_path}/img/question-mark_s.svg" src="${files_path}/img/question-mark.svg" class="over-img"></a>
                 </div>
                 <div id="progress_scale"><div id="processbar" style="width:$processing%;"></div></div>
             </div>
@@ -79,8 +79,8 @@ $_("Collocations")#slurp
                     <fieldset class="float">
                         #if $collpage > 1
                         <div class="bonito-pagination-left">
-                            <a href="$join_params($allhref, $dict(collpage=1))"><img class="alt-img" src="../files/img/first-page.svg" alt="$_("<< First")" title="$_("<< First")" data-alt-img="../files/img/first-page_s.svg" /></a>
-                            <a href="$join_params($allhref, $dict(collpage=int($collpage) - 1))"><img class="over-img" src="../files/img/prev-page.svg" alt="$_("< Previous")" title="$_("< Previous")" data-alt-img="../files/img/prev-page_s.svg" /></a>
+                            <a href="$join_params($allhref, $dict(collpage=1))"><img class="alt-img" src="${files_path}/img/first-page.svg" alt="$_("<< First")" title="$_("<< First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
+                            <a href="$join_params($allhref, $dict(collpage=int($collpage) - 1))"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("< Previous")" title="$_("< Previous")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
                         </div>
                         #end if
 
@@ -102,7 +102,7 @@ $_("Collocations")#slurp
 
                         #if not $lastpage
                         <div class="bonito-pagination-right">
-                            <a href="$join_params($allhref, [('collpage', $int($collpage) + 1)])" id="$navid"><img class="over-img" src="../files/img/next-page.svg" alt="$_("Next >")" title="$_("Next >")" data-alt-img="../files/img/next-page_s.svg" /></a>
+                            <a href="$join_params($allhref, [('collpage', $int($collpage) + 1)])" id="$navid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next >")" title="$_("Next >")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
                         </div>
                         #else
                         <a id="$navid"></a>

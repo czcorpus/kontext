@@ -454,11 +454,10 @@ class Controller(object):
             protocol = self.environ['HTTP_X_FORWARDED_PROTO']
         else:
             protocol = self.environ['wsgi.url_scheme']
-        return '%(protocol)s://%(server)s/%(script)s' % {
-            'protocol': protocol,
-            'server': self.environ.get('HTTP_HOST'),
-            'script': action_module_path
-        }
+        url_items = ('%s://%s' % (protocol, self.environ.get('HTTP_HOST')),
+                     settings.get('global', 'action_path_prefix', ''),
+                     action_module_path)
+        return '/'.join(filter(lambda x: bool(x), map(lambda x: x.strip('/'), url_items))) + '/'
 
     def create_url(self, action, params):
         """

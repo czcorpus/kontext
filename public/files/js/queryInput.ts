@@ -320,8 +320,8 @@ export class QueryFormTweaks {
         jqFocusElem.val(oldval);
         if (newid === 'iqueryrow') {
             let jqQueryTypeHint = $('<a href="#" class="context-help">'
-                + '<img class="over-img" src="../files/img/question-mark.svg" '
-                + 'data-alt-img="../files/img/question-mark_s.svg" /></a>');
+                + '<img class="over-img" src="' + this.pluginApi.createStaticUrl('img/question-mark.svg') + '" '
+                + 'data-alt-img="' + this.pluginApi.createStaticUrl('img/question-mark_s.svg') + '" /></a>');
             $('#queryselector').after(jqQueryTypeHint);
             popupBox.bind(jqQueryTypeHint,
                 hints['iqueryrow'],

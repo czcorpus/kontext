@@ -235,6 +235,15 @@
                             <value>celery</value>
                         </choice>
                     </element>
+                    <element name="action_path_prefix">
+                        <a:documentation>A prefix for action URLs (e.g. /apps/kontext). This can be used
+                        to solve issues regarding apps installed in URL sub-directories</a:documentation>
+                        <text />
+                    </element>
+                    <element name="static_files_prefix">
+                        <a:documentation>A prefix for static files (typically: /files when installed at the root)</a:documentation>
+                        <text />
+                    </element>
                 </interleave>
             </element>
             <optional>

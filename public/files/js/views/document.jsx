@@ -339,6 +339,8 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
         // ----------------------------- info/error/warning message box ----------------------
 
         var Message = React.createClass({
+            mixins: mixins,
+
             _handleCloseClick : function (e) {
                 e.preventDefault();
                 dispatcher.dispatch({
@@ -352,10 +354,10 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
 
             render : function () {
                 var typeIconMap = {
-                    info: '../files/img/info-icon.svg',
-                    warning: '../files/img/warning-icon.svg',
-                    error: '../files/img/error-icon.svg',
-                    mail: '../files/img/message-icon.png'
+                    info: this.createStaticUrl('img/info-icon.svg'),
+                    warning: this.createStaticUrl('img/warning-icon.svg'),
+                    error: this.createStaticUrl('img/error-icon.svg'),
+                    mail: this.createStaticUrl('img/message-icon.png')
                 },
                 classes = 'message ' + this.props.messageType;
 
@@ -363,7 +365,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
                     <div className={classes}>
                         <div className="button-box">
                             <a className="close-icon">
-                                <img src="../files/img/close-icon.svg"
+                                <img src={this.createStaticUrl('img/close-icon.svg')}
                                     onClick={this._handleCloseClick } />
                             </a>
                         </div>

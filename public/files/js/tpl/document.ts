@@ -395,7 +395,7 @@ export class PageModel implements Kontext.PluginProvider {
         let jImage = $('<img />');
 
         options = options || {domId:null, htmlClass:null};
-        jImage.attr('src', '../files/img/ajax-loader.gif');
+        jImage.attr('src', this.createStaticUrl('img/ajax-loader.gif'));
         if (options.domId) {
             jImage.addClass(options.domId);
         }
@@ -511,8 +511,8 @@ export class PageModel implements Kontext.PluginProvider {
         let image = win.document.createElement('img');
 
         $(triggerElm).addClass('context-help');
-        $(image).attr('data-alt-img', '../files/img/question-mark_s.svg')
-            .attr('src', '../files/img/question-mark.svg')
+        $(image).attr('data-alt-img', this.createStaticUrl('img/question-mark_s.svg'))
+            .attr('src', this.createStaticUrl('img/question-mark.svg'))
             .addClass('over-img');
         $(triggerElm).append(image);
         popupbox.bind(triggerElm, text, {width: 'nice'});
@@ -961,7 +961,7 @@ export class PageModel implements Kontext.PluginProvider {
      * note: must preserve 'this'
      */
     createSmallAjaxLoader:()=>JQuery = () => {
-        return $('<img src="../files/img/ajax-loader.gif" '
+        return $('<img src="' + this.createStaticUrl('img/ajax-loader.gif') + '" '
             + 'alt="' + this.translate('global__loading') + '" '
             + 'title="' + this.translate('global__loading') + '" '
             + 'style="width: 24px; height: 24px" />');

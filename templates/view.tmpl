@@ -169,7 +169,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #if $c_size == $f_size:
 <span id="conc-loader"></span> <strong id="fullsize" title="$f_size">$format_number($f_size, mask='%d')</strong>
 #else
-<a class="size-warning" data-size-limit="$format_number($c_size, mask='%d')"><img src="../files/img/warning-icon.svg" /></a>
+<a class="size-warning" data-size-limit="$format_number($c_size, mask='%d')"><img src="${files_path}/img/warning-icon.svg" /></a>
 <span id="loader"></span>
 <strong>$format_number($c_size, mask='%d')</strong> ($_('out of total') <span id="fullsize" title="$f_size">$format_number($f_size, mask='%d'))</span>
 #end if
@@ -243,8 +243,8 @@ $query_overview_bar()
             <form action="view" id="$navid">
             #if $prevlink
                 <div class="bonito-pagination-left">
-                <a href="view?$join_params($q, $firstlink, $globals)"><img class="over-img" src="../files/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="../files/img/first-page_s.svg" /></a>
-                <a href="view?$join_params($q, $prevlink, $globals)"><img class="over-img" src="../files/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="../files/img/prev-page_s.svg" /></a>
+                <a href="view?$join_params($q, $firstlink, $globals)"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
+                <a href="view?$join_params($q, $prevlink, $globals)"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
                 </div>
             #end if
 
@@ -258,8 +258,8 @@ $query_overview_bar()
 
             #if $nextlink
                 <div class="bonito-pagination-right">
-                <a href="view?$join_params($q, $nextlink, $globals)" id="$nextid"><img class="over-img" src="../files/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="../files/img/next-page_s.svg" /></a>
-                <a id="lastpage" href="view?$join_params($q, $lastlink, $globals)"><img class="over-img" src="../files/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="../files/img/last-page_s.svg" /></a>
+                <a href="view?$join_params($q, $nextlink, $globals)" id="$nextid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
+                <a id="lastpage" href="view?$join_params($q, $lastlink, $globals)"><img class="over-img" src="${files_path}/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="${files_path}/img/last-page_s.svg" /></a>
                 </div>
             #else
                 <a id="$nextid"></a>
