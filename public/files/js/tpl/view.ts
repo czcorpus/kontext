@@ -761,7 +761,7 @@ export class ViewPage {
 
     private soundManagerInit():void {
         SoundManager.getInstance().setup({
-            url: '../files/misc/soundmanager2/',
+            url: this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             flashVersion: 9,
             debugMode : false,
             preferFlash : false
@@ -798,7 +798,7 @@ export class ViewPage {
         let self = this;
         let freq = 500;
 
-        $('#conc-loader').empty().append('<img src="../files/img/ajax-loader.gif" alt="'
+        $('#conc-loader').empty().append('<img src="' + this.layoutModel.createStaticUrl('img/ajax-loader.gif') + '" alt="'
             + this.translate('global__calculating')
             + '" title="' + this.translate('global__calculating')
             + '" style="width: 24px; height: 24px" />');

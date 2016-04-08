@@ -31,6 +31,8 @@
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
         <calc_backend conf="/path/to/celeryconfig.py">celery</calc_backend>
+        <action_path_prefix>/apps/kontext</action_path_prefix>
+        <static_files_prefix>/files</static_files_prefix>
     </global>
     <mailing>
         <smtp_server>acme.localdomain</smtp_server>

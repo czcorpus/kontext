@@ -29,7 +29,8 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
 
         $(elm).show(100);
         closeLink = $('<a class="close-icon">'
-            + '<img class="over-img" src="../files/img/close-icon.svg" data-alt-img="../files/img/close-icon_s.svg" />'
+            + '<img class="over-img" src="' + lib.layoutModel.createStaticUrl('img/close-icon.svg')
+            + '" data-alt-img="' + lib.layoutModel.createStaticUrl('img/close-icon_s.svg') + '" />'
             + '</a>');
         closeLink.on('click', function () {
             $(elm).closest('td').nextAll('td').find('table.sort-level th.level a.close-icon').addClass('sync').trigger('click');

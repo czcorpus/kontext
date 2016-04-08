@@ -188,7 +188,7 @@ class Kontext(Controller):
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
     _conc_dir = u''
-    _files_path = u'../files'
+    _files_path = settings.get('global', 'static_files_prefix', u'../files')
 
     def __init__(self, request, ui_lang):
         super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
@@ -1002,12 +1002,6 @@ class Kontext(Controller):
 
     def _apply_theme(self, data):
         theme_name = settings.get('theme', 'name')
-        theme_css = settings.get('theme', 'css', None)
-        if theme_css is None:
-            theme_css = []
-        elif not hasattr(theme_css, '__iter__'):
-            theme_css = [theme_css]
-
         logo_img = settings.get('theme', 'logo')
         if settings.contains('theme', 'logo_mouseover'):
             logo_alt_img = settings.get('theme', 'logo_mouseover')
@@ -1032,9 +1026,8 @@ class Kontext(Controller):
 
         data['theme'] = {
             'name': settings.get('theme', 'name'),
-            'logo_path': os.path.normpath('../files/themes/%s/%s' % (theme_name, logo_img)),
-            'logo_mouseover_path': os.path.normpath('../files/themes/%s/%s' % (theme_name,
-                                                                               logo_alt_img)),
+            'logo_path': os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_img)),
+            'logo_mouseover_path': os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_alt_img)),
             'logo_href': logo_href,
             'logo_title': logo_title,
             'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
@@ -1043,7 +1036,7 @@ class Kontext(Controller):
         if settings.is_debug_mode() and os.path.isfile(os.path.join(os.path.dirname(__file__),
                                                                     '../public/files/css/custom.min.css')):
             # custom.min.css contains both theme and plug-in custom stylesheets
-            data['theme']['css'] = os.path.normpath('../files/css/custom.min.css')
+            data['theme']['css'] = os.path.normpath(os.path.join(self._files_path, 'css/custom.min.css'))
         else:
             # in production mode, all the styles are packed into a single file
             data['theme']['css'] = None

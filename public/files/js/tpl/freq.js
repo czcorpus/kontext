@@ -81,8 +81,9 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
         // close icon
         newLine.find('td:last').empty().append('<a class="remove-level" title="'
                 + lib.layoutModel.translate('global__remove_item') + '">' +
-            '<img class="over-img" src="../files/img/close-icon.svg" alt="'
-                + lib.layoutModel.translate('global__remove_item') + '" data-alt-img="../files/img/close-icon_s.svg" /></a>');
+            '<img class="over-img" src="' + this.layoutModel.createStaticUrl('img/close-icon.svg') + '" alt="'
+                + lib.layoutModel.translate('global__remove_item')
+                + '" data-alt-img=' + this.layoutModel.createStaticUrl('img/close-icon_s.svg') + '" /></a>');
         lib.layoutModel.mouseOverImages(newLine);
 
         newLine.find('td:last a.remove-level').on('click', function (event) {
