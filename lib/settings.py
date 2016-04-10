@@ -114,7 +114,7 @@ def get_int(section, key, default=-1):
 def get_list(section, key):
     """
     Returns a list of values stored within a (section, key) pair. In case
-    a concrete value is scalar, a list of size 1 is returned. Empty
+    a concrete value is a scalar, a list of size 1 is returned. Empty
     value is represented by an empty list.
     """
     tmp = get(section, key)

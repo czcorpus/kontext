@@ -1018,12 +1018,6 @@ class Kontext(Controller):
         else:
             logo_title = unicode(logo_href)
 
-        fonts = settings.get('theme', 'fonts', None)
-        if fonts is None:
-            fonts = []
-        elif not hasattr(fonts, '__iter__'):
-            fonts = [fonts]
-
         data['theme'] = {
             'name': settings.get('theme', 'name'),
             'logo_path': os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_img)),
@@ -1031,7 +1025,8 @@ class Kontext(Controller):
             'logo_href': logo_href,
             'logo_title': logo_title,
             'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
-            'fonts': fonts
+            'online_fonts': settings.get_list('theme', 'online_fonts'),
+            'online_css': settings.get_list('theme', 'online_css')
         }
         if settings.is_debug_mode() and os.path.isfile(os.path.join(os.path.dirname(__file__),
                                                                     '../public/files/css/custom.min.css')):
