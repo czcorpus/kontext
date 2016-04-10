@@ -80,7 +80,7 @@
                             <text />
                         </element>
                         <optional>
-                            <element name="fonts">
+                            <element name="online_fonts">
                                 <a:documentation>Custom theme fonts URLs</a:documentation>
                                 <choice>
                                     <oneOrMore>
@@ -93,8 +93,10 @@
                             </element>
                         </optional>
                         <optional>
-                            <element name="css">
-                                <a:documentation>Theme stylesheet(s) URL(s)</a:documentation>
+                            <element name="online_css">
+                                <a:documentation>Theme stylesheet(s) URL(s). Please note that local CSSs do not
+                                have to be specified here as Grunt compiles them automatically along with KonText
+                                core styles.</a:documentation>
                                 <choice>
                                     <oneOrMore>
                                         <element name="item">

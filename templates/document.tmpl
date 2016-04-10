@@ -30,10 +30,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/x-icon" href="$files_path/img/favicon.ico" />
-#for $font in $theme.fonts
+#for $font in $theme.online_fonts
 <link href='$font' rel='stylesheet' type='text/css'>
 #end for
 #end filter
+
+#if $app_bar_css
+<link rel="stylesheet" type="text/css" href="$app_bar_css" />
+#end if
+#if $footer_bar_css
+<link rel="stylesheet" type="text/css" href="$footer_bar_css" />
+#end if
+#for $online_css_item in $theme.online_css
+<link rel="stylesheet" type="text/css" href="$online_css_item" />
+#end for
 
 #if $debug
 <link rel="stylesheet/less" type="text/css" href="$files_path/css/kontext.less" />
@@ -50,12 +60,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
-#if $app_bar_css
-<link rel="stylesheet" type="text/css" href="$app_bar_css" />
-#end if
-#if $footer_bar_css
-<link rel="stylesheet" type="text/css" href="$footer_bar_css" />
-#end if
 #if $qunit_test
 <link rel="stylesheet" type="text/css" href="$files_path/css/qunit.css" />
 #end if
