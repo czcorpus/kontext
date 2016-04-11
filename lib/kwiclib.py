@@ -19,11 +19,9 @@
 from functools import partial
 import re
 import itertools
-import logging
 
 import manatee
 from l10n import import_string, export_string
-from translation import ugettext as _
 from structures import FixedDict
 
 
