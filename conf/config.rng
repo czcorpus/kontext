@@ -80,7 +80,7 @@
                             <text />
                         </element>
                         <optional>
-                            <element name="online_fonts">
+                            <element name="fonts">
                                 <a:documentation>Custom theme fonts URLs</a:documentation>
                                 <choice>
                                     <oneOrMore>
@@ -94,9 +94,11 @@
                         </optional>
                         <optional>
                             <element name="online_css">
-                                <a:documentation>Theme stylesheet(s) URL(s). Please note that local CSSs do not
-                                have to be specified here as Grunt compiles them automatically along with KonText
-                                core styles.</a:documentation>
+                                <a:documentation>Theme stylesheet(s) URL(s). Links can be either
+                                local (i.e. file system paths) or remote (i.e. URL addresses).
+                                In the former case Grunt will compile them along with other styles
+                                into a single minified CSS file. In the latter case KonText will just
+                                generate appropriate HTML 'link' elements to let browser deal with it.</a:documentation>
                                 <choice>
                                     <oneOrMore>
                                         <element name="item">

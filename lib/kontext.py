@@ -1018,6 +1018,9 @@ class Kontext(Controller):
         else:
             logo_title = unicode(logo_href)
 
+        def is_remote_resource(path):
+            return path.find('//') == 0 or path.find('http') == 0
+
         data['theme'] = {
             'name': settings.get('theme', 'name'),
             'logo_path': os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_img)),
@@ -1025,8 +1028,8 @@ class Kontext(Controller):
             'logo_href': logo_href,
             'logo_title': logo_title,
             'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
-            'online_fonts': settings.get_list('theme', 'online_fonts'),
-            'online_css': settings.get_list('theme', 'online_css')
+            'online_fonts': settings.get_list('theme', 'fonts'),
+            'online_css': filter(lambda x: is_remote_resource(x), settings.get_list('theme', 'css'))
         }
         if settings.is_debug_mode() and os.path.isfile(os.path.join(os.path.dirname(__file__),
                                                                     '../public/files/css/custom.min.css')):
