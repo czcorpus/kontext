@@ -74,6 +74,10 @@
         return ans;
     }
 
+    function resourceIsLocal(path) {
+        return !(path.indexOf('//') === 0 || path.indexOf('http') === 0);
+    }
+
     function findAllThemeCss(doc) {
         let kontextNode = doc.getElementsByTagName('kontext')[0];
         let themeNode = null;
@@ -97,8 +101,11 @@
             if (cssNode) {
                 for (let i = 0; i < cssNode.childNodes.length; i += 1) {
                     if (cssNode.childNodes[i].nodeType === 1 || cssNode.childNodes[i].nodeType === 3) {
-                        styles.push('public/files/themes/' + themeName + '/'
-                            + cssNode.childNodes[i].textContent.trim());
+                        let cssPath = cssNode.childNodes[i].textContent.trim();
+                        if (cssPath && resourceIsLocal(cssPath)) {
+                            styles.push('public/files/themes/' + themeName + '/'
+                                + cssNode.childNodes[i].textContent.trim());
+                        }
                     }
                 }
             }
