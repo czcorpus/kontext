@@ -24,7 +24,7 @@ element application_bar {
 }
 """
 from plugins import inject
-from ..abstract.appbar import AbstractApplicationBar
+from plugins.abstract.appbar import AbstractApplicationBar
 
 
 class ApplicationBar(AbstractApplicationBar):
