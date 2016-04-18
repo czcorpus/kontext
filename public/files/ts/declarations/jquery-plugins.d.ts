@@ -18,14 +18,6 @@
 
 /// <reference path="./jquery.d.ts" />
 
-interface JScrollPaneSettings {
-    maintainPosition:boolean;
-}
-
-interface JQuery {
-    jScrollPane(settings?:JScrollPaneSettings):void;
-}
-
 interface JQueryAjaxSettings {
     periodic?:any;
 }
