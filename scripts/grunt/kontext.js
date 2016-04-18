@@ -149,7 +149,6 @@
             'vendor/immutable': 'vendor/immutable.min',
             'vendor/d3': 'vendor/d3.min',
             'SoundManager' : 'vendor/soundmanager2.min',
-            'vendor/jscrollpane' : 'vendor/jscrollpane.min'
         };
         findPluginTags(doc).forEach((item) => {
             pluginMap['plugins/' + item.canonicalName] = item.jsModule ? 'plugins/' + item.jsModule : 'empty:';
@@ -174,7 +173,6 @@
             'SoundManager',
             'vendor/typeahead',
             'vendor/bloodhound',
-            'vendor/jscrollpane',
             'vendor/intl-messageformat',
             'vendor/virtual-keyboard',
             'vendor/d3'
