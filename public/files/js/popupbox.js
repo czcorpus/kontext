@@ -97,7 +97,7 @@ define(['win', 'jquery'], function (win, $) {
      * @deprecated use getContentElement instead
      */
     TooltipBox.prototype.getRootElement = function () {
-        return this.headerElm;
+        return this.rootElm;
     };
 
     /**
