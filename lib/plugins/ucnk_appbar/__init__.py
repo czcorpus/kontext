@@ -33,6 +33,9 @@ class ApplicationBar(AbstractApplicationBar):
         self._auth = auth
         self.css_url = css_url
 
+    def get_styles(self, plugin_api):
+        return [dict(url=self.css_url)]
+
     def get_contents(self, plugin_api, return_url):
         return plugin_api.session.get(self._auth.get_toolbar_session_key(), self.get_fallback_content())
 

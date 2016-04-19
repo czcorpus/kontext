@@ -1094,10 +1094,12 @@ class Kontext(Controller):
             application_bar = plugins.get('application_bar')
             result['app_bar'] = application_bar.get_contents(plugin_api=self._plugin_api,
                                                              return_url=self.return_url)
-            result['app_bar_css'] = application_bar.css_url
+            result['app_bar_css'] = application_bar.get_styles(plugin_api=self._plugin_api)
+            result['app_bar_js'] = application_bar.get_scripts(plugin_api=self._plugin_api)
         else:
             result['app_bar'] = None
-            result['app_bar_css'] = None
+            result['app_bar_css'] = []
+            result['app_bar_js'] = None
 
         if plugins.has_plugin('footer_bar'):
             result['footer_bar'] = plugins.get('footer_bar').get_contents(self._plugin_api, self.return_url)
@@ -1357,6 +1359,13 @@ class PluginApi(object):
         self._controller = controller
         self._cookies = cookies
         self._session = session
+        self._shared_data = {}
+
+    def set_shared(self, key, value):
+        self._shared_data[key] = value
+
+    def get_shared(self, key, default=None):
+        return self._shared_data.get(key, default)
 
     @property
     def cookies(self):

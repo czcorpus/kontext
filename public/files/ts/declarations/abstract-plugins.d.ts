@@ -33,7 +33,18 @@ to custom ones.
 */
 
 declare module 'plugins/applicationBar/init' {
-    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin>;
+
+    export interface Toolbar extends Kontext.Plugin {
+        openLoginDialog():void;
+    }
+
+    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Toolbar>;
+
+    export function openLoginDialog():void;
+}
+
+declare module "plugins/applicationBar/toolbar" {
+    export function openLoginDialog():void;
 }
 
 declare module 'plugins/footerBar/init' {
