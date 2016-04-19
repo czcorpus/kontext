@@ -142,6 +142,7 @@
         let pluginMap = {
             'win' : 'empty:',
             'conf' : 'empty:',
+            'plugins/applicationBar/init': 'empty:',
             'jquery' : 'vendor/jquery.min',
             'vendor/rsvp' : 'vendor/rsvp.min',
             'vendor/react': reactModule,
