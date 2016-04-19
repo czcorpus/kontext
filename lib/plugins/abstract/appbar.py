@@ -23,12 +23,37 @@ class AbstractApplicationBar(object):
         """
         raise NotImplementedError()
 
+    def get_styles(self, plugin_api):
+        """
+        Returns a list of dicts {'url': ...} defining external CSS requirements KonText
+        must load.
+
+        Returns an empty list if not overridden.
+
+        arguments:
+        plugin_api -- a controller.PluginApi instance
+        """
+        return []
+
+    def get_scripts(self, plugin_api):
+        """
+        Returns a dict:
+            'main': ... url of the main script ...,
+            'deps': [ {'module': ... module name..., 'url': ... module url},...]
+
+        Returns none if not overridden.
+
+        arguments:
+        plugin_api -- a controller.PluginApi instance
+        """
+        return None
+
     def get_contents(self, plugin_api, return_url):
         """
         Returns standard HTML content based on set language and user identification/settings stored in cookies.
 
         arguments:
-        cookies -- a controller.PluginApi instance
+        plugin_api -- a controller.PluginApi instance
         return_url -- a URL user returns to in case she uses some of he appbar's links/services
         """
         raise NotImplementedError()

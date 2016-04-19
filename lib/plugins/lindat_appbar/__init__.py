@@ -27,6 +27,9 @@ class LindatTopBar(AbstractApplicationBar):
         else:
             return self._templates['en_US']
 
+    def get_styles(self, plugin_api):
+        return [dict(url=self.css_url)]
+
     def get_contents(self, plugin_api, return_url):
         tpl_path = self.get_template(plugin_api.user_lang)
         with open(tpl_path, mode='rb') as fin:

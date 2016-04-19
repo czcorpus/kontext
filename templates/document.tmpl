@@ -35,9 +35,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #end for
 #end filter
 
-#if $app_bar_css
-<link rel="stylesheet" type="text/css" href="$app_bar_css" />
-#end if
+#for $item in $app_bar_css
+<link rel="stylesheet" type="text/css" href="$item.url" />
+#end for
 #if $footer_bar_css
 <link rel="stylesheet" type="text/css" href="$footer_bar_css" />
 #end if
@@ -87,7 +87,14 @@ missingPlugins.push('plugins/$camelize(plugin_id)/init');
 #end for
 
 #if $qunit_test
-paths['vendor/QUnit'] = './vendor/qunit'
+paths['vendor/QUnit'] = './vendor/qunit';
+#end if
+
+#if $app_bar_js
+paths['plugins/applicationBar/toolbar'] = '$app_bar_js.main';
+#for $item in $app_bar_js.deps
+paths['$item.module'] = '$item.url';
+#end for
 #end if
 
 requirejs.config({

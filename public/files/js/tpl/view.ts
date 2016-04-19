@@ -29,6 +29,7 @@
 /// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
 /// <reference path="../../ts/declarations/detail.d.ts" />
 /// <reference path="../../ts/declarations/views/concordance.d.ts" />
+/// <reference path="../../ts/declarations/abstract-plugins.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -44,6 +45,7 @@ import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
 import userSettings = require('../userSettings');
 import initActions = require('../initActions');
+import applicationBar = require('plugins/applicationBar/init');
 declare var Modernizr:Modernizr.ModernizrStatic;
 declare var jqueryPeriodic:any;
 
@@ -600,11 +602,22 @@ export class ViewPage {
         let left:number;
         let top:number;
         let box:popupBox.TooltipBox;
+        let self = this;
 
         box = popupBox.open(
             this.translate('global__anonymous_user_warning',
             {login_url: this.layoutModel.getConf('loginUrl')}),
-            {top: 0, left: 0}, {type: 'warning'}
+            {top: 0, left: 0},
+            {
+                type: 'warning',
+                onShow: function () {
+                    $(this.getRootElement()).find('a.fast-login').on('click', (evt:JQueryEventObject) => {
+                        $(evt.target).attr('href', null);
+                        self.layoutModel.getPlugin<applicationBar.Toolbar>('applicationBar').openLoginDialog();
+                        evt.preventDefault();
+                    });
+                }
+            }
         );
         left = $(win).width() / 2 - box.getPosition().width / 2;
         top = $('#conc-wrapper').offset().top + 40;
