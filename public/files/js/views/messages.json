@@ -150,7 +150,7 @@
 		"global__available_attributes": "dostupné atributy",
 		"global__this_action_resets_current_selection": "Tato akce zruší váš aktuální neuložený subkorpus",
 		"global__wl_calc_info": "Některé operace vyžadují rozsáhlejší přípravu. Prosím, vyčkejte, chvíli to potrvá. Jakmile bude seznam spočítán, bude uložen, aby byl při dalším přihlášení okamžitě dostupný. Můžete toto okno zavřít. Opakováním dotazu na seznam slov nebo klíčová slova na stejném subkorpusu lze zobrazit průběh výpočtu.",
-		"global__wl_white_lists": "Soubory obsahující seznamy slov, pro něž jsou požadovány frekvence, musí býtprosté textové soubory (.txt) s jednou položkou na každém řádku. Položky musíodpovídat vybranému atributu. Pokud je tedy např. v menu atributu vybráno 'lemma',musí být seznam seznamem lemmat. Pro vstupní soubor se používá přesné porovnávání,nikoliv porovnávání pomocí regulárních výrazů.",
+		"global__wl_white_lists": "Soubory obsahující seznamy slov, pro něž jsou požadovány frekvence, musí být prosté textové soubory (.txt) s jednou položkou na každém řádku. Položky musí odpovídat vybranému atributu. Pokud je tedy např. v menu atributu vybráno 'lemma', musí být seznam seznamem lemmat. Pro vstupní soubor se používá přesné porovnávání, nikoliv porovnávání pomocí regulárních výrazů.",
 		"global__use_query": "použít dotaz",
 		"global__none": "Žádný",
 	  	"global__advanced_filter": "Pokročilý filtr",
