@@ -139,7 +139,7 @@ class CentralAuth(AbstractRemoteAuth):
             ticket_id = None
         return ticket_id
 
-    def _fetch_toolbar_api_response(self, cookies, curr_lang):
+    def _fetch_toolbar_api_response(self, cookies, curr_lang, args):
         if not curr_lang:
             curr_lang = 'en'
         curr_lang = curr_lang.split('_')[0]
@@ -147,11 +147,9 @@ class CentralAuth(AbstractRemoteAuth):
         connection = httplib.HTTPConnection(self._toolbar_conf.server,
                                             port=self._toolbar_conf.port,
                                             timeout=self._auth_conf.toolbar_server_timeout)
-        connection.request('GET', self._toolbar_conf.path % {
-            'id': ticket_id,
-            'lang': curr_lang,
-            'continue': ''   # this is filled-in on client-side (this the value is not known yet here)
-        })
+        req_args = dict(current='kontext', id=ticket_id, lang=curr_lang)
+        req_args.update(args)
+        connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(req_args))
         response = connection.getresponse()
         if response and response.status == 200:
             return response.read().decode('utf-8')
@@ -170,9 +168,14 @@ class CentralAuth(AbstractRemoteAuth):
         is given by CNC toolbar app design).
         """
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
-        api_response = self._fetch_toolbar_api_response(plugin_api.cookies, plugin_api.user_lang)
+        api_cookies = self._conf.get('plugins', 'auth', {}).get('api_cookies', [])
+        api_args = map(lambda x: (x[0], x[1].value), filter(lambda x: x[0] in api_cookies, plugin_api.cookies.items()))
+        api_response = self._fetch_toolbar_api_response(plugin_api.cookies, plugin_api.user_lang, api_args)
         response_obj = json.loads(api_response)
         plugin_api.set_shared('toolbar', response_obj)  # to make the response available for other plug-ins (toolbar)
+
+        if 'redirect' in response_obj:
+            plugin_api.redirect(response_obj['redirect'])
 
         if 'user' not in response_obj:
             response_obj['user'] = {}

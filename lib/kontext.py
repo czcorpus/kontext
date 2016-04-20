@@ -1394,6 +1394,9 @@ class PluginApi(object):
     def current_corpus(self):
         return getattr(self._controller, '_corp')()
 
+    def redirect(self, url, code=303):
+        return getattr(self._controller, '_redirect')(url, code=code)
+
     @property
     def text_types(self):
         ans = {}
