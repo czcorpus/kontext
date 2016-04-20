@@ -189,8 +189,14 @@ def add_block_items(items, attr='class', val='even', block_size=3):
 
 def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
              wlsort='', blacklist=None, wlnums='frq', include_nonwords=0):
-    blacklist = set(blacklist) if blacklist else set()
-    words = set(words) if words else set()
+    """
+    Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
+    """
+    dec_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
+    enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
+
+    blacklist = set(enc_string(w) for w in blacklist) if blacklist else set()
+    words = set(enc_string(w) for w in words) if words else set()
     attr = corp.get_attr(wlattr)
     if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
@@ -218,16 +224,12 @@ def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                 frq = 0
             else:
                 frq = attrfreq[id]
-            if word and frq >= wlminfreq and (not blacklist
-                                              or word not in blacklist):
+            if word and frq >= wlminfreq and (not blacklist or word not in blacklist):
                 if wlnums == 'arf':
-                    items.append((round(frq, 1), word))
+                    items.append((round(frq, 1), dec_string(word)))
                 else:
-                    items.append((frq, word))
+                    items.append((frq, dec_string(word)))
     else:  # word list according to pattern
-        dec_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
-        enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
-
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
@@ -250,7 +252,7 @@ def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
             if not frq:
                 continue
 
-            id_value = dec_string(attr.id2str(id))
+            id_value = attr.id2str(id)
             if frq >= wlminfreq and (not words or id_value in words) \
                     and (not blacklist or id_value not in blacklist):
                 if wlnums == 'arf':
