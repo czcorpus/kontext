@@ -821,7 +821,11 @@ export class ViewPage {
     private setStateUrl():void {
         let stateParams = this.layoutModel.getConf('stateParams');
         if (Modernizr.history) {
-            window.history.replaceState({}, window.document.title, '/view?' + stateParams);
+            window.history.replaceState(
+                {},
+                window.document.title,
+                this.layoutModel.createActionUrl('view') + '?' + stateParams
+            );
 
         } else if (!this.layoutModel.getConf('replicableQuery')) {
             window.location.href = '/view?' + stateParams;

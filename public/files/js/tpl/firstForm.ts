@@ -329,7 +329,11 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                     return k + '=' + v;
                 }
             }).join('&');
-            window.history.replaceState({}, window.document.title, '/first_form?' + args);
+            window.history.replaceState(
+                {},
+                window.document.title,
+                this.layoutModel.createActionUrl('first_form') + '?' + args
+            );
             window.onunload = () => {
                 $('#mainform').find('input[type="text"], textarea').val('');
             };
