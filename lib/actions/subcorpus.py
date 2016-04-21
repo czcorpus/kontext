@@ -149,11 +149,11 @@ class Subcorpus(Kontext):
             self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
         except (ConcError, UserActionException, RuntimeError) as e:
             self.add_system_message('error', getattr(e, 'message', e.__repr__()))
-            ans = self.subcorp_form(request, None)
+            ans = self.subcorp_form(request)
         return ans
 
-    @exposed(access_level=1, argmappings=(ConcArgsMapping,))
-    def subcorp_form(self, request, conc_args):
+    @exposed(access_level=1)
+    def subcorp_form(self, request):
         """
         Displays a form to create a new subcorpus
         """

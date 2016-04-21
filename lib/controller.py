@@ -226,7 +226,6 @@ class Controller(object):
         self._system_messages = []
         self._proc_time = None
         self._validators = []  # a list of functions which must pass (= return None) before any action is performed
-        self._args_mappings = OrderedDict()
         self._exceptmethod = None
         self._template_dir = u'../cmpltmpl/'
         self.args = Args()
@@ -893,8 +892,7 @@ class Controller(object):
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
             if not action_metadata.get('legacy', False):
                 # new-style actions use werkzeug.wrappers.Request
-                args = [self._request] + self._args_mappings.values()
-                method_ans = method(*args)
+                method_ans = method(self._request)
             else:
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
@@ -986,7 +984,7 @@ class Controller(object):
         """
         return None
 
-    @exposed(accept_kwargs=True, legacy=True, skip_corpus_init=True)
+    @exposed(accept_kwargs=True, skip_corpus_init=True)
     def message(self, *args, **kwargs):
         return kwargs
 

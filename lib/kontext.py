@@ -35,7 +35,7 @@ from translation import ugettext as _
 import scheduled
 from templating import StateGlobals, join_params
 import fallback_corpus
-from argmapping import ConcArgsMapping, Parameter, AttrMappingProxy, AttrMappingInfoProxy, GlobalArgs
+from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MainMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
 from texttypes import TextTypeCollector, get_tt
@@ -174,7 +174,7 @@ class Kontext(Controller):
                            MainMenu.CORPORA('new-subcorpus'))
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
-                       'refs_up', 'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers')
+                       'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'collpage', 'cbgrfns',
                           'csortfn')
@@ -204,67 +204,6 @@ class Kontext(Controller):
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
         self._prev_q_data = None  # data of the previous operation are stored here
-
-    def has_args_mapping(self, clazz):
-        return clazz in self._args_mappings
-
-    def get_args_mapping(self, clazz):
-        """
-        If currently processed action function/method registers 'clazz' argument
-        mapper then this function returns an instance of that mapper along with initialized
-        values (as obtained from request). In case the current action has not the clazz
-        registered, None is returned.
-
-        This method (and objects it returns) serves as a replacement for legacy
-        action method's approach where all the arguments were mapped to self.
-
-        returns:
-        an implementation of argsmapping.GeneralAttrMapping or freshly initialized
-        object with empty values if clazz is not registered
-        """
-        if clazz in self._args_mappings:
-            return self._args_mappings[clazz]
-        else:
-            return AttrMappingInfoProxy(clazz())
-
-    def get_args_mapping_keys(self, clazz):
-        """
-        Returns a list of parameter names defined by 'clazz' argument mapping.
-        Please note that it is independent on whether the current action registers
-        'clazz' or not (i.e. a list of keys is returned for any existing argument mapping
-        during any action dispatching).
-        """
-        ans = self.get_args_mapping(clazz)
-        if ans is not None:
-            return ans.get_names()
-        else:
-            return AttrMappingInfoProxy(clazz()).get_names()
-
-    def _export_mapped_args(self):
-        """
-        This method exports currently registered argument mappings (see get_args_mapping())
-        into a dictionary. Please note that internal dictionary is always MultiDict. A list vs.
-        scalar decision is done based on Parameter definition (type [] produces lists here,
-        other types (str, int) produces scalars).
-
-        The automatic mapping is exported in _pre_dispatch (i.e. before an action method is invoked).
-        """
-        ans = {}
-        for v in self._args_mappings.values():
-            ans.update(v.to_dict(none_replac=''))
-        return ans
-
-    def _store_mapped_args(self):
-        tmp = MultiDict(self._session.get('semi_persistent_attrs', {}))
-        for am in self._args_mappings.values():
-            args = am.get_names(persistence=Parameter.SEMI_PERSISTENT)
-            for arg in args:
-                v = getattr(am, arg)
-                if type(v) in (list, tuple):
-                    tmp.setlist(arg, v)
-                else:
-                    tmp[arg] = v
-        self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
     def _log_request(self, user_settings, action_name, proc_time=None):
         """
@@ -481,7 +420,7 @@ class Kontext(Controller):
         """
         Redirects to the current concordance
         """
-        args = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
+        args = self._get_attrs(ConcArgsMapping)
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
@@ -585,11 +524,6 @@ class Kontext(Controller):
         allowed_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id'))
         if not action_metadata.get('skip_corpus_init', False):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
-            if not action_metadata.get('legacy', False):
-                mapping = self.get_args_mapping(ConcArgsMapping)
-                if mapping is not None and hasattr(mapping, 'corpname') and not mapping.corpname:
-                    path = [Controller.NO_OPERATION]
-                    self._redirect(self._updated_current_url({'corpname': self.args.corpname}))
             if fallback_url:
                 path = [Controller.NO_OPERATION]
                 if action_metadata.get('return_type', None) != 'json':
@@ -629,14 +563,8 @@ class Kontext(Controller):
 
         if not action_metadata:
             action_metadata = {}
-        is_legacy_method = action_metadata.get('legacy', False)
 
         form = LegacyForm(self._request.form, self._request.args)
-        if not is_legacy_method:
-            for arg_mapping in action_metadata.get('argmappings', []):
-                self._args_mappings[arg_mapping] = AttrMappingProxy(
-                        arg_mapping(), self._request.args, MultiDict(self._session.get('semi_persistent_attrs')))
-                # TODO what about forms?
 
         options, corp_options = self._load_user_settings()
         self._scheduled_actions(options)
@@ -650,10 +578,7 @@ class Kontext(Controller):
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
         self._apply_corpus_user_settings(corp_options, self.args.corpname)
-
-        # TODO Fix the class so "if is_legacy_method:" here is possible to apply here
-        if is_legacy_method:
-            self._map_args_to_attrs(form, selectorname, named_args)
+        self._map_args_to_attrs(form, selectorname, named_args)
 
         self.cm = corplib.CorpusManager(self.subcpath)
 
@@ -783,8 +708,6 @@ class Kontext(Controller):
         # if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured
         # in settings.xml
-        if not cn and self.has_args_mapping(ConcArgsMapping):
-            cn = self.get_args_mapping(ConcArgsMapping).corpname
         if not cn:
             cn = settings.get_default_corpus(corp_list)
 
@@ -1058,7 +981,7 @@ class Kontext(Controller):
         self._update_output_with_conc_params(new_query_key, result)
 
         result['corpname_url'] = 'corpname=' + self.args.corpname if self.args.corpname else ''
-        global_var_val = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
+        global_var_val = self._get_attrs(ConcArgsMapping)
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
         result['human_corpname'] = None
@@ -1116,11 +1039,6 @@ class Kontext(Controller):
 
         result['CorplistFn'] = self._load_fav_items
         user_items = plugins.get('user_items')
-
-        # automatically result using registered mapped args
-        if not action_metadata.get('legacy', False):
-            result.update(self._export_mapped_args())
-            self._store_mapped_args()
         result['bib_conf'] = plugins.get('corparch').get_corpus_info(self.args.corpname).metadata
 
         # avalilable languages
