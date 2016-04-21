@@ -141,4 +141,4 @@ class Options(Kontext):
         if self.args.q:
             return self._redirect_to_conc()
         else:
-            self._redirect('/first_form')
+            self._redirect(self.get_root_url() + 'first_form')

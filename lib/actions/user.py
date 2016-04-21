@@ -159,8 +159,8 @@ class User(Kontext):
             'limit': limit
         }
 
-    @exposed(return_type='json', argmappings=(ConcArgsMapping,), access_level=1, skip_corpus_init=True)
-    def set_favorite_item(self, request, conc_args):
+    @exposed(return_type='json', access_level=1, skip_corpus_init=True)
+    def set_favorite_item(self, request):
         """
         """
         main_corp = self.cm.get_Corpus(request.form['corpus_id'], request.form['subcorpus_id'])

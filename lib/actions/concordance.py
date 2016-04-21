@@ -33,7 +33,7 @@ from kwiclib import Kwic
 import l10n
 from l10n import import_string
 from translation import ugettext as _
-from argmapping import WidectxArgsMapping, ConcArgsMapping, QueryInputs, Parameter
+from argmapping import WidectxArgsMapping, Parameter
 from texttypes import TextTypeCollector, get_tt
 
 
@@ -114,7 +114,7 @@ class Actions(Kontext):
     def _restore_aligned_forms(self):
         sess_key = 'aligned_forms:%s' % self.args.corpname
         if sess_key in self._session and not self.args.sel_aligned:
-            self.get_args_mapping(ConcArgsMapping).sel_aligned = self._session[sess_key].keys()
+            self.args.sel_aligned = self._session[sess_key].keys()
 
     def _get_speech_segment(self):
         """
@@ -257,8 +257,8 @@ class Actions(Kontext):
         out['line_numbers'] = self.args.line_numbers
         return out
 
-    @exposed(argmappings=(ConcArgsMapping, QueryInputs))
-    def first_form(self, request, conc_args, query_input_args):
+    @exposed()
+    def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
         out = {}
@@ -271,9 +271,9 @@ class Actions(Kontext):
         self._attach_aligned_corpora_info(out)
         self._attach_tag_builder(out)
         out['user_menu'] = True
-        out['aligned_corpora'] = conc_args.getlist('sel_aligned')
+        out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
         out['TextTypeSel'] = get_tt(self._corp(), self.ui_lang).export_with_norms(ret_nums=False)
-        self._export_subcorpora_list(conc_args.corpname, out)
+        self._export_subcorpora_list(self.args.corpname, out)
         self._attach_query_metadata(out)
         return out
 
@@ -607,7 +607,8 @@ class Actions(Kontext):
     def first(self):
 
         ans = {}
-        self._store_semi_persistent_attrs(('queryselector', 'sel_aligned'))
+        self._store_semi_persistent_attrs(('sel_aligned', ))
+        self._save_options(['queryselector'])
         try:
             self._set_first_query(self.args.fc_lemword_window_type,
                                   self.args.fc_lemword_wsize,
