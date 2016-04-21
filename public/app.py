@@ -176,6 +176,9 @@ class App(object):
         translation.activate(ui_lang)
         l10n.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)  # TODO remove?
+        app_url_prefix = settings.get_str('global', 'action_path_prefix', '')
+        if app_url_prefix and environ['PATH_INFO'].startswith(app_url_prefix):
+            environ['PATH_INFO'] = environ['PATH_INFO'][len(app_url_prefix):]
 
         sessions = plugins.get('sessions')
         request = Request(environ)
