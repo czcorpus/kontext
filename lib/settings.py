@@ -60,6 +60,17 @@ def get(section, key=None, default=None):
     return default
 
 
+def get_str(section, key, default=''):
+    """
+    Instead of possible None the method returns an empty string.
+    Everything else is just like regular get().
+    """
+    ans = get(section, key, default)
+    if ans is None:
+        ans = ''
+    return ans
+
+
 def get_meta(section, key):
     """
     Returns metadata (= XML element attributes) attached to a respective element
