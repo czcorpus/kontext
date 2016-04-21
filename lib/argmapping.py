@@ -209,7 +209,6 @@ class GlobalArgs(object):
     align = Parameter('')
     sel_aligned = Parameter([], persistent=Parameter.SEMI_PERSISTENT)
     maincorp = Parameter('')  # used only in case of parallel corpora - specifies primary corp.
-    refs_up = Parameter(0, persistent=Parameter.PERSISTENT)
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants no refs"
 
     shuffle = Parameter(0, persistent=Parameter.PERSISTENT)

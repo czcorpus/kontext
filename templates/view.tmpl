@@ -59,7 +59,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 <tr>
     <td></td>  ## matches selection checkbox
     #for $i, $c in enumerate($Par_conc_corpnames)
-    <td class="concordance-col-heading" #if not $refs_up#colspan="2"#end if# #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
+    <td class="concordance-col-heading" colspan="2" #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
     #if $c.n in $KWICCorps
     <a class="select-primary-lang" href="view?$join_params($q, $Globals.update('maincorp', $c.n).update('viewmode', 'align'), 'q=x-' + $c.n)" title="$_('Click to make the language primary')"><b>$c.label</b></a>
     #else

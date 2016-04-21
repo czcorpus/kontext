@@ -26,7 +26,7 @@ class Options(Kontext):
     def get_mapping_url_prefix(self):
         return '/options/'
 
-    def _set_new_viewopts(self, newctxsize='', refs_up='', ctxunit='', line_numbers=0):
+    def _set_new_viewopts(self, newctxsize='', ctxunit='', line_numbers=0):
         if ctxunit == '@pos':
             ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
@@ -111,14 +111,13 @@ class Options(Kontext):
         return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
-    def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=(), shuffle=0):
+    def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,
                                 allpos=allpos,
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 structattrs=structattrs)
         self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
-        # TODO refs_up ???
         if self.args.q:
             self._redirect_to_conc()
         else:
@@ -134,8 +133,8 @@ class Options(Kontext):
         return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
-    def viewoptsx(self, newctxsize='', ctxunit='', refs_up='', line_numbers=0):
-        self._set_new_viewopts(newctxsize=newctxsize, refs_up=refs_up, ctxunit=ctxunit, line_numbers=line_numbers)
+    def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0):
+        self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers)
         self._save_options(self.GENERAL_OPTIONS)
 
         if self.args.q:
