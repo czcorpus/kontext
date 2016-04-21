@@ -668,16 +668,16 @@ export class ViewPage {
         $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
             let jqRealTarget = null;
 
-            if ($(event.target).data('url')) {
+            if ($(event.target).data('action')) {
                 jqRealTarget = $(event.target);
 
-            } else if ($(event.target).parent().data('url')) {
+            } else if ($(event.target).parent().data('action')) {
                 jqRealTarget = $(event.target).parent();
             }
 
             detail.showDetail(
                 event.currentTarget,
-                jqRealTarget.data('url'),
+                jqRealTarget.data('action'),
                 jqRealTarget.data('params'),
                 self.layoutModel,
                 self.viewDetailDoneCallback.bind(self)
@@ -689,7 +689,7 @@ export class ViewPage {
             $(event.target).closest('tr').addClass('active');
             detail.showRefDetail(
                 event.target,
-                $(event.target).data('url'),
+                $(event.target).data('action'),
                 $(event.target).data('params'),
                 function (jqXHR, textStatus, errorThrown) {
                     self.layoutModel.showMessage('error', errorThrown);
@@ -742,7 +742,7 @@ export class ViewPage {
             $(this).one('click', function (event) {
                 detail.showDetail(
                     event.currentTarget,
-                    $(this).data('url'),
+                    $(this).data('action'),
                     $(this).data('params'),
                     self.layoutModel,
                     // Expand link, when clicked, must bind the same event handler

@@ -152,12 +152,8 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     };
 
     function attachDisplayWholeDocumentTrigger(layoutModel, tooltipBox, triggerElm) {
-        var prom = $.ajax(
-            $(triggerElm).data('url') + '?' + $(triggerElm).data('params'),
-            {
-                type : 'GET',
-            }
-        );
+        var url = layoutModel.createActionUrl($(triggerElm).data('action')) + '?' + $(triggerElm).data('params');
+        var prom = $.ajax(url, { type : 'GET' });
         $(tooltipBox.getContentElement())
             .empty()
             .append('<img src="' + layoutModel.createStaticUrl('img/ajax-loader.gif')
