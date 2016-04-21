@@ -35,7 +35,7 @@ from translation import ugettext as _
 import scheduled
 from templating import StateGlobals, join_params
 import fallback_corpus
-from argmapping import ConcArgsMapping, Parameter, AttrMappingInfo, GlobalArgs
+from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MainMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
 from texttypes import TextTypeCollector, get_tt
@@ -416,21 +416,11 @@ class Kontext(Controller):
             q_id = None
         return q_id
 
-    @staticmethod
-    def get_args_mapping_keys(clazz):
-        """
-        Returns a list of parameter names defined by 'clazz' argument mapping.
-        Please note that it is independent on whether the current action registers
-        'clazz' or not (i.e. a list of keys is returned for any existing argument mapping
-        during any action dispatching).
-        """
-        return AttrMappingInfo(clazz()).get_names()
-
     def _redirect_to_conc(self):
         """
         Redirects to the current concordance
         """
-        args = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
+        args = self._get_attrs(ConcArgsMapping)
         if self._q_code:
             args.append(('q', '~%s' % self._q_code))
         else:
@@ -991,7 +981,7 @@ class Kontext(Controller):
         self._update_output_with_conc_params(new_query_key, result)
 
         result['corpname_url'] = 'corpname=' + self.args.corpname if self.args.corpname else ''
-        global_var_val = self._get_attrs(self.get_args_mapping_keys(ConcArgsMapping))
+        global_var_val = self._get_attrs(ConcArgsMapping)
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = StateGlobals(global_var_val)
         result['human_corpname'] = None

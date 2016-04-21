@@ -54,59 +54,36 @@ class Parameter(object):
         return self.persistent & p_level == p_level
 
 
-class AttrMappingInfo(object):
-    """
-    If a user requires an argument mapping object, this proxy is returned. This
-    version can only inform about defined arguments.
-    """
-    def __init__(self, mapping):
-        self._mapping = mapping
-
-    def get_params(self, persistence=None):
-        def is_param(m):
-            return isinstance(m, Parameter) and (persistence is None or
-                                                 m.meets_persistence(persistence))
-        return inspect.getmembers(self._mapping.__class__, predicate=is_param)
-
-    def get_names(self, persistence=None):
-        return [k for k, _ in self.get_params(persistence)]
-
-
-class ConcArgsMapping(object):
-    """
-    This class covers all the attributes representing a concordance. I.e. the application should
-    be able to restore any concordance just by using these parameters.
-
-    Please note that this list does not include the 'q' parameter which collects currently built query
-    (it has been inherited from Bonito2).
-    """
-    corpname = Parameter(u'', persistent=Parameter.SEMI_PERSISTENT)
-    usesubcorp = Parameter(u'')
-    maincorp = Parameter(u'')
-    viewmode = Parameter('kwic')
-    pagesize = Parameter(40, persistent=Parameter.PERSISTENT)
-    align = Parameter('')
-    attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
-    attr_allpos = Parameter(u'kw')
-    ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
-    structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
-    # None means "not initialized" while '' means "user wants to show no refs"
-    refs = Parameter(None)
-    sel_aligned = Parameter([], persistent=Parameter.SEMI_PERSISTENT)
+# this attribute set covers all the attributes representing a concordance. I.e. the application should
+# be able to restore any concordance just by using these parameters. Please note that this list does not include
+# the 'q' parameter which collects currently built query.
+ConcArgsMapping = (
+    'corpname',
+    'usesubcorp',
+    'maincorp',
+    'viewmode',
+    'pagesize',
+    'align',
+    'attrs',
+    'attr_allpos',
+    'ctxattrs',
+    'structs',
+    'refs',
+    'sel_aligned'
+)
 
 
-class WidectxArgsMapping(object):
-    """
-    Attributes needed to open correct detailed KWIC context.
-    """
-    attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
-    attr_allpos = Parameter(u'kw')
-    ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
-    structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
-    refs = Parameter(None)
+# Attributes needed to open correct detailed KWIC context
+WidectxArgsMapping = (
+    'attrs',
+    'attr_allpos',
+    'ctxattrs',
+    'structs',
+    'refs'
+)
 
 
-class GeneralArgs(object):
+class GlobalArgs(object):
     # specifies response output format (used in case default one is not applicable)
     format = Parameter(u'')
 
@@ -115,8 +92,6 @@ class GeneralArgs(object):
     # to the "action"
     reload = Parameter(0)
 
-
-class GlobalArgs(GeneralArgs):
     fc_lemword_window_type = Parameter(u'both')
     fc_lemword_type = Parameter(u'all')
     fc_lemword_wsize = Parameter(5)
