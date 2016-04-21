@@ -102,13 +102,13 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
     </td>
     <td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
-        data-url="widectx" data-params="$join_params('pos='+$str($l.toknum),
+        data-action="widectx" data-params="$join_params('pos='+$str($l.toknum),
         'hitlen='+$str($l.hitlen), 'corpname='+$longcorpname, $widectx_globals)">
   #else
     #if not $l.Kwic
     <i class="note">$_('<--not translated-->')</i>
     #end if
-    <span class="no-kwic-text" data-url="widectx" data-params="$join_params('pos='+$str($l.toknum),
+    <span class="no-kwic-text" data-action="widectx" data-params="$join_params('pos='+$str($l.toknum),
         'hitlen='+$str($l.hitlen), 'corpname='+$longcorpname, $widectx_globals)">
   #end if
   #for $k in $l.Kwic
@@ -310,7 +310,7 @@ $query_overview_bar()
                 </td>
                 <td class="syntax-tree">
                 </td>
-                <td class="ref" data-url="fullref" data-params="pos=$l.toknum&corpname=$corpname" title="$l.ref">
+                <td class="ref" data-action="fullref" data-params="pos=$l.toknum&corpname=$corpname" title="$l.ref">
                     $l.ref
                 </td>
 
@@ -320,7 +320,7 @@ $query_overview_bar()
                     #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
                         #set $bcname = $Par_conc_corpnames[$ii+1].n
                         #if $ll.ref
-                        <td class="ref" data-url="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n">$ll.ref</td>
+                        <td class="ref" data-action="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n">$ll.ref</td>
                         #else
                         <td></td>
                         #end if
