@@ -164,12 +164,6 @@ class PyConc(manatee.Concordance):
                              excludekwic)
         self.delete_pnfilter(collnum, ispositive)
 
-    @staticmethod
-    def add_block_items(items, attr='class', val='even', block_size=3):
-        for i in [i for i in range(len(items)) if (i / block_size) % 2]:
-            items[i][attr] = val
-        return items
-
     def get_attr_values_sizes(self, full_attr_name):
         """
         Returns all values of provided structural attribute and their corresponding sizes in positions.
@@ -344,9 +338,7 @@ class PyConc(manatee.Concordance):
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
             lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
-
-        return {'Head': head,
-                'Items': self.add_block_items(lines, block_size=2)}
+        return dict(Head=head, Items=lines)
 
     def xdistribution(self, xrange, yrange):
         """
@@ -369,10 +361,9 @@ class PyConc(manatee.Concordance):
                     'f': 'absolute freq.',
                     'd': 'logDice',
                     }
-
         items = []
         colls = manatee.CollocItems(self, cattr, csortfn, cminfreq, cminbgr,
-                                    cfromw, ctow, 2 ** 29)
+                                    cfromw, ctow, max_lines)
         qfilter = '%%s%i %i 1 [%s="%%s"]' % (cfromw, ctow, cattr)
         i = 0
         while not colls.eos():
@@ -389,12 +380,7 @@ class PyConc(manatee.Concordance):
 
         head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] \
             + [{'n': statdesc.get(s, s), 's': s} for s in cbgrfns]
-        return {
-            'Head': head,
-            'Items': self.add_block_items(items),
-            'Total': i,
-            'TotalPages': int(math.ceil(i / float(max_lines)))
-        }
+        return dict(Head=head, Items=items, num_fetched=i)
 
     def linegroup_info_select(self, selected_count=5):
         """

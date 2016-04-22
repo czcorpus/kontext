@@ -1980,6 +1980,9 @@ msgstr "Nepodařilo se získat syntaktický strom kvůli omezení kontextu KWIC 
 msgid "Show line numbers"
 msgstr "Zobrazovat čísla řádků"
 
+msgid "leave empty to load values up to the end"
+msgstr "ponechte prázdné pro načtení řádků až do konce"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
