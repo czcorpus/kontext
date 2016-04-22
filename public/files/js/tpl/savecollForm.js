@@ -19,7 +19,7 @@
 /**
  * This module contains functionality related directly to the savecoll_form.tmpl template
  */
-define(['jquery', 'tpl/document'], function ($, documentModule) {
+define(['jquery', 'tpl/document', 'popupbox'], function ($, documentModule, popupBox) {
     'use strict';
 
     var lib = {};
@@ -60,6 +60,12 @@ define(['jquery', 'tpl/document'], function ($, documentModule) {
         jqForm.find('input[name="saveformat"]').on('click', function (event) {
             lib.updateExportTypeSwitch(jqForm, event.target);
         });
+
+        popupBox.bind(
+            $('form .save-limit-help'),
+            lib.layoutModel.translate('global__coll_save_max_lines_warning_{max_coll_save_size}',
+                    {max_coll_save_size: lib.layoutModel.getConf('saveMaxItems')})
+        );
     };
 
     /**

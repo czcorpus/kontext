@@ -47,6 +47,7 @@ class Actions(Kontext):
     """
 
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
+    SAVECOLL_MAX_LINES = 1000000
 
     """
     This class specifies all the actions KonText offers to a user via HTTP
@@ -1040,13 +1041,12 @@ class Actions(Kontext):
         return out
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
-    def collx(self, line_offset=0, num_lines=None):
+    def collx(self, line_offset=0, num_lines=0):
         """
         list collocations
         """
         self.args.cbgrfns = ''.join(self.args.cbgrfns)
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
-        collstart = (int(self.args.collpage) - 1) * int(self.args.citemsperpage) + int(line_offset)
         if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
             self.args.csortfn = self.args.cbgrfnscbgrfns[0]
 
@@ -1054,14 +1054,19 @@ class Actions(Kontext):
             corplib.frq_db(self.corp, self.args.cattr)  # try to fetch precalculated data
             conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')))
 
-            num_fetch_lines = num_lines if num_lines is not None else self.args.citemsperpage
+            if num_lines > 0:
+                num_fetch_lines = num_lines
+            else:
+                num_fetch_lines = int(self.args.citemsperpage) * int(self.args.collpage) + int(line_offset) + 1
+            collstart = (int(self.args.collpage) - 1) * int(self.args.citemsperpage) + int(line_offset)
             result = conc.collocs(cattr=self.args.cattr, csortfn=self.args.csortfn,
                                   cbgrfns=self.args.cbgrfns, cfromw=self.args.cfromw,
                                   ctow=self.args.ctow, cminfreq=self.args.cminfreq,
                                   cminbgr=self.args.cminbgr, from_idx=collstart,
                                   max_lines=num_fetch_lines)
-            if collstart + self.args.citemsperpage < result['Total']:
+            if collstart + self.args.citemsperpage < result['num_fetched']:
                 result['lastpage'] = 0
+                result['Items'] = result['Items'][:-1]
             else:
                 result['lastpage'] = 1
 
@@ -1074,6 +1079,7 @@ class Actions(Kontext):
             result['to_line'] = 10000  # TODO
             result['attrname'] = self.args.cattr
             result['processing'] = None
+            result['collstart'] = collstart
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
@@ -1090,23 +1096,18 @@ class Actions(Kontext):
             return ans
 
     @exposed(access_level=1, legacy=True)
-    def savecoll_form(self, from_line=1, to_line='', csortfn='', cbgrfns=('t', 'm'),
-                      saveformat='text', heading=0):
-        """
-        """
+    def savecoll_form(self, from_line=1, to_line='', saveformat='text'):
         self.disabled_menu_items = (MainMenu.SAVE, )
         self.args.citemsperpage = sys.maxint
         self.args.collpage = 1  # we must reset this manually because user may have been on any page before
 
-        # to get total num of lines, it is enough to fetch just one
-        # because there is always the 'Total' value available
-        result = self.collx(line_offset=0, num_lines=1)
         if to_line == '':
-            to_line = result['Total']
+            to_line = ''
         return {
             'from_line': from_line,
             'to_line': to_line,
-            'saveformat': saveformat
+            'saveformat': saveformat,
+            'save_max_lines': Actions.SAVECOLL_MAX_LINES
         }
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
@@ -1116,15 +1117,16 @@ class Actions(Kontext):
         """
         from_line = int(from_line)
         if to_line == '':
-            to_line = sys.maxint
+            to_line = Actions.SAVECOLL_MAX_LINES
         else:
             to_line = int(to_line)
+        logging.getLogger(__name__).debug('from: %s, to: %s' % (from_line, to_line))
         num_lines = to_line - from_line + 1
         err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
             raise err
         self.args.collpage = 1
-        self.args.citemsperpage = sys.maxint  # to make sure we include everything
+        self.args.citemsperpage = Actions.SAVECOLL_MAX_LINES  # to make sure we include everything
         result = self.collx(line_offset=(from_line - 1), num_lines=num_lines)
         saved_filename = self._canonical_corpname(self.args.corpname)
         if saveformat == 'text':
@@ -1147,10 +1149,12 @@ class Actions(Kontext):
                 writer.writeheading([''] + [item['n'] for item in result['Head']])
             i = 1
             for item in result['Items']:
-                writer.writerow(i, (item['str'], str(item['freq']))
-                                + tuple([str(stat['s']) for stat in item['Stats']]))
+                writer.writerow(i, (item['str'],
+                                    str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
                 i += 1
             out_data = writer.raw_content()
+        else:
+            raise UserActionException('Unknown format: %s' % (saveformat,))
         return out_data
 
     @exposed(access_level=1, template='widectx.tmpl', legacy=True)
