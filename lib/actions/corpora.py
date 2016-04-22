@@ -95,7 +95,7 @@ class Corpora(Kontext):
         """
         speech_segment = plugins.get('corparch').get_corpus_info(self.args.corpname).speech_segment
         ans = defaultdict(lambda: [])
-        for item in self._corp().get_conf('STRUCTATTRLIST').split(','):
+        for item in self.corp.get_conf('STRUCTATTRLIST').split(','):
             if item != speech_segment:
                 k, v = item.split('.')
                 ans[k].append(v)
@@ -103,5 +103,5 @@ class Corpora(Kontext):
 
     @exposed(return_type='json', legacy=True)
     def bibliography(self, id=''):
-        bib_data = plugins.get('live_attributes').get_bibliography(self._corp(), item_id=id)
+        bib_data = plugins.get('live_attributes').get_bibliography(self.corp, item_id=id)
         return {'bib_data': bib_data}

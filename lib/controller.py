@@ -34,7 +34,6 @@ import inspect
 import time
 import re
 from functools import partial
-from collections import OrderedDict
 import types
 import hashlib
 
@@ -442,6 +441,9 @@ class Controller(object):
         path elements and action names are removed. E.g.:
             The app is installed in http://127.0.0.1/app/ and it is currently processing
             http://127.0.0.1/app/user/login then root URL is still http://127.0.0.1/app/
+
+        Please note that KonText always normalizes PATH_INFO environment
+        variable to '/' (see public/app.py).
         """
         module, _ = self.environ.get('PATH_INFO').rsplit('/', 1)
         module = '%s/' % module
@@ -590,9 +592,8 @@ class Controller(object):
         """
         Parses PATH_INFO into a list of elements
 
-        Returns
-        -------
-        list of path elements
+        returns:
+        a list of path elements
         """
         ac_prefix = self.get_mapping_url_prefix()
         path = self.environ.get('PATH_INFO', '').strip()
@@ -619,7 +620,7 @@ class Controller(object):
         url -- a target URL
         code -- an optional integer HTTP response code (default is 303)
         """
-        #  self._headers.clear() # TODO resolve this
+        # self._headers.clear() # TODO should we?
         self._status = code
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
             url = self.get_root_url() + url
@@ -682,14 +683,14 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def _pre_dispatch(self, path, selectorname, args, action_metadata=None):
+    def _pre_dispatch(self, path, args, action_metadata=None):
         """
         Allows specific operations to be performed before the action itself is processed.
         """
         if action_metadata is None:
             action_metadata = {}
         self.add_validator(partial(self._validate_http_method, action_metadata))
-        return path, selectorname, args
+        return path, args
 
     def _post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
@@ -761,13 +762,12 @@ class Controller(object):
                 return True
         return False
 
-    def run(self, path=None, selectorname=None):
+    def run(self, path=None):
         """
         This method wraps all the processing of an HTTP request.
 
         arguments:
         path -- path part of URL
-        selectorname -- ???
 
         returns:
         a 4-tuple: HTTP status, HTTP headers, valid SID flag, response body
@@ -781,8 +781,7 @@ class Controller(object):
         try:
             self._init_session()
             if self.is_action(path[0]) and self._method_is_exposed(action_metadata):
-                path, selectorname, named_args = self._pre_dispatch(path, selectorname, named_args,
-                                                                    action_metadata)
+                path, named_args = self._pre_dispatch(path, named_args, action_metadata)
                 self._pre_action_validate()
                 methodname, tmpl, result = self.process_method(path[0], path, named_args)
             else:
@@ -818,15 +817,12 @@ class Controller(object):
         self._post_dispatch(methodname, action_metadata, tmpl, result)
 
         # response rendering
-        resp_time = time.time()
         headers += self.output_headers(action_metadata.get('return_type', 'html'))
-
         output = StringIO.StringIO()
         if self._status < 300 or self._status >= 400:
             self.output_result(methodname, tmpl, result, action_metadata, outf=output)
         ans_body = output.getvalue()
         output.close()
-        logging.getLogger(__name__).debug('template rendering time: %s' % (round(time.time() - resp_time, 4),))
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
     def process_error(self, ex, action_name, pos_args, named_args):

@@ -21,7 +21,7 @@ from collections import defaultdict
 from werkzeug.datastructures import MultiDict
 import manatee
 
-from kontext import Kontext, ConcError, MainMenu, LinesGroups
+from kontext import Kontext, MainMenu, LinesGroups
 from controller import UserActionException, exposed
 import settings
 import conclib
@@ -35,6 +35,10 @@ from l10n import import_string
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping, Parameter
 from texttypes import TextTypeCollector, get_tt
+
+
+class ConcError(Exception):
+    pass
 
 
 class Actions(Kontext):
@@ -61,6 +65,42 @@ class Actions(Kontext):
         This is required as it maps the controller to request URLs
         """
         return '/'
+
+    def _attach_tag_builder(self, tpl_out):
+        """
+        arguments:
+        tpl_out -- dict data to be used when building an output page from a template
+        """
+
+        def tag_support(c):
+            return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
+
+        tpl_out['tag_builder_support'] = {
+            '': tag_support(self.args.corpname)
+        }
+        tpl_out['user_menu'] = True
+        if 'Aligned' in tpl_out:
+            for item in tpl_out['Aligned']:
+                tpl_out['tag_builder_support']['_%s' % item['n']] = tag_support(item['n'])
+
+    def _export_subcorpora_list(self, corpname, out):
+        """
+        Updates passed dictionary by information about available sub-corpora.
+        Listed values depend on current user and corpus.
+        If there is a list already present in 'out' then it is extended
+        by the new values.
+
+        arguments:
+        corpname -- corpus id
+        out -- a dictionary used by templating system
+        """
+        basecorpname = corpname.split(':')[0]
+        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
+        if len(subcorp_list) > 0:
+            subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
+        if 'SubcorpList' not in out or out['SubcorpList'] is None:
+            out['SubcorpList'] = []
+        out['SubcorpList'].extend(subcorp_list)
 
     def _export_aligned_form_params(self, aligned_corp, state_only, name_filter=None):
         """
@@ -165,15 +205,25 @@ class Actions(Kontext):
         2 - a named subcorpus
         3 - an ad-hoc subcorpus
         """
-        corpus_name = l10n.import_string(self._corp().get_conf('NAME'),
-                                         from_encoding=self._corp().get_conf('ENCODING'))
+        corpus_name = l10n.import_string(self.corp.get_conf('NAME'),
+                                         from_encoding=self.corp.get_conf('ENCODING'))
         if contains_within:
             return _('related to the subset defined by the selected text types')
-        elif hasattr(self._corp(), 'subcname'):
+        elif hasattr(self.corp, 'subcname'):
             return (_(u'related to the whole %s') % (corpus_name,)) + \
-                    ':%s' % self._corp().subcname
+                    ':%s' % self.corp.subcname
         else:
             return _(u'related to the whole %s') % corpus_name
+
+    @staticmethod
+    def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
+        fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
+        attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)
+        if not ctx:
+            ctx = '%i%s' % (pos, fromcode.get(fcode, '0'))
+        if '~' in ctx and '.' in attr:
+            ctx = ctx.split('~')[0]
+        return attrpart + ctx
 
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
@@ -182,10 +232,10 @@ class Actions(Kontext):
         """
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
         if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
-            self.args.refs = self._corp().get_conf('SHORTREF')
+            self.args.refs = self.corp.get_conf('SHORTREF')
 
         self.args.righttoleft = False
-        if self._corp().get_conf('RIGHTTOLEFT'):
+        if self.corp.get_conf('RIGHTTOLEFT'):
             self.args.righttoleft = True
         if self.args.viewmode == 'kwic':
             self.args.leftctx = self.args.kwicleftctx
@@ -204,11 +254,11 @@ class Actions(Kontext):
                 del self.args.q[i]
             i += 1
 
-        conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
+        conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
                                   samplesize=corpus_info.sample_size)
         self._apply_linegroups(conc)
         conc.switch_aligned(os.path.basename(self.args.corpname))
-        kwic = Kwic(self._corp(), self.args.corpname, conc)
+        kwic = Kwic(self.corp, self.args.corpname, conc)
         labelmap = {}
 
         out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
@@ -227,11 +277,11 @@ class Actions(Kontext):
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
             conclib.PyConc.add_block_items(out['Lines'], block_size=1)
-        if self._corp().get_conf('ALIGNED'):
+        if self.corp.get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
                                'label': corplib.open_corpus(w).get_conf(
                                    'NAME') or w}
-                              for w in self._corp().get_conf('ALIGNED').split(',')]
+                              for w in self.corp.get_conf('ALIGNED').split(',')]
         if self.args.align and not self.args.maincorp:
             self.args.maincorp = os.path.basename(self.args.corpname)
         if len(out['Lines']) == 0:
@@ -272,7 +322,7 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
-        out['TextTypeSel'] = get_tt(self._corp(), self.ui_lang).export_with_norms(ret_nums=False)
+        out['TextTypeSel'] = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)
         self._export_subcorpora_list(self.args.corpname, out)
         self._attach_query_metadata(out)
         return out
@@ -281,7 +331,7 @@ class Actions(Kontext):
     def get_cached_conc_sizes(self):
         from concworker import GeneralWorker
         self._headers['Content-Type'] = 'text/plain'
-        cs = self.call_function(GeneralWorker().get_cached_conc_sizes, (self._corp(),))
+        cs = self.call_function(GeneralWorker().get_cached_conc_sizes, (self.corp,))
         return {
             'finished': cs["finished"],
             'concsize': cs["concsize"],
@@ -307,12 +357,12 @@ class Actions(Kontext):
                         'relconcsize': 0, 'fullsize': fullsize,
                         'finished': conc.finished()}
         if sampled_size:
-            orig_conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
+            orig_conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
                                            q=self.args.q[:i])
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
         return dict(sampled_size=sampled_size, concsize=concsize,
-                    relconcsize=1000000.0 * fullsize / self._corp().search_size(),
+                    relconcsize=1000000.0 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
     @exposed(access_level=1, vars=('concsize', ), legacy=True)
@@ -366,7 +416,7 @@ class Actions(Kontext):
         return self.view()
 
     def _is_err_corpus(self):
-        availstruct = self._corp().get_conf('STRUCTLIST').split(',')
+        availstruct = self.corp.get_conf('STRUCTLIST').split(',')
         return 'err' in availstruct and 'corr' in availstruct
 
     def _compile_basic_query(self, qtype=None, suff='', cname=''):
@@ -397,7 +447,7 @@ class Actions(Kontext):
                     raise ConcError(_('No query entered.'))
         if qtype:
             return queries[qtype] % self.clone_args()
-        thecorp = cname and self.cm.get_Corpus(cname) or self._corp()
+        thecorp = cname and self.cm.get_Corpus(cname) or self.corp
         attrlist = thecorp.get_conf('ATTRLIST').split(',')
         wposlist = dict(self.cm.corpconf_pairs(thecorp, 'WPOSLIST'))
         lposlist = dict(self.cm.corpconf_pairs(thecorp, 'LPOSLIST'))
@@ -532,21 +582,21 @@ class Actions(Kontext):
                 for i in items:
                     self.args.q.append('P%s [%s="%s"]' % (ctx, attrname, i))
 
-        if 'lemma' in self._corp().get_conf('ATTRLIST').split(','):
+        if 'lemma' in self.corp.get_conf('ATTRLIST').split(','):
             lemmaattr = 'lemma'
         else:
             lemmaattr = 'word'
-        wposlist = dict(self.cm.corpconf_pairs(self._corp(), 'WPOSLIST'))
+        wposlist = dict(self.cm.corpconf_pairs(self.corp, 'WPOSLIST'))
         if self.args.queryselector == 'phraserow':
             self.args.default_attr = 'word'  # XXX to be removed with new first form
         if self.args.default_attr:
             qbase = 'a%s,' % self.args.default_attr
         else:
             qbase = 'q'
-        texttypes = TextTypeCollector(self._corp(), self.args).get_query()
+        texttypes = TextTypeCollector(self.corp, self.args).get_query()
         if texttypes:
             ttquery = import_string(' '.join(['within <%s %s />' % nq for nq in texttypes]),
-                                    from_encoding=self._corp().get_conf('ENCODING'))
+                                    from_encoding=self.corp.get_conf('ENCODING'))
         else:
             ttquery = u''
         par_query = ''
@@ -623,7 +673,7 @@ class Actions(Kontext):
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.q.append('f')
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
-            ans['TextTypeSel'] = get_tt(self._corp(), self.ui_lang).export_with_norms(ret_nums=False)
+            ans['TextTypeSel'] = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)
             ans.update(self.view())
         except ConcError as e:
             raise UserActionException(e.message)
@@ -640,7 +690,7 @@ class Actions(Kontext):
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
-        tt = get_tt(self._corp(), self.ui_lang)
+        tt = get_tt(self.corp, self.ui_lang)
         out['TextTypeSel'] = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         return out
 
@@ -657,7 +707,7 @@ class Actions(Kontext):
         if not inclkwic:
             pnfilter = pnfilter.upper()
         rank = {'f': 1, 'l': -1}.get(filfl, 1)
-        texttypes = TextTypeCollector(self._corp(), self.args).get_query()
+        texttypes = TextTypeCollector(self.corp, self.args).get_query()
         try:
             query = self._compile_query(cname=self.args.maincorp)
         except ConcError:
@@ -668,7 +718,7 @@ class Actions(Kontext):
             else:
                 raise ConcError(_('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
-        query = import_string(query, from_encoding=self._corp().get_conf('ENCODING'))
+        query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
         if within:
             wquery = ' within %s:(%s)' % (self.args.maincorp or self.args.corpname, query)
             self.args.q[0] += wquery
@@ -731,7 +781,7 @@ class Actions(Kontext):
             crit_attrs = set(re.findall(r'(\w+)/\s+-?[0-9]+[<>][0-9]+\s*', criteria))
             if len(crit_attrs) == 0:
                 crit_attrs = set(re.findall(r'(\w+\.\w+)\s+[0-9]+', criteria))
-            attr_list = set(self._corp().get_conf('ATTRLIST').split(','))
+            attr_list = set(self.corp.get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
 
         fcrit_is_all_nonstruct = True
@@ -745,8 +795,8 @@ class Actions(Kontext):
         corp_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
         # all the arguments required by freqs calculation backend
-        kwargs = dict(corpname=self._corp().corpname,
-                      subcname=getattr(self._corp(), 'subcname', None),
+        kwargs = dict(corpname=self.corp.corpname,
+                      subcname=getattr(self.corp, 'subcname', None),
                       subcpath=self.subcpath,
                       user_id=self._session_get('user', 'user'),
                       minsize=None, q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
@@ -809,7 +859,7 @@ class Actions(Kontext):
                     if not item['freq']:
                         continue
                     if '.' not in attr:
-                        if attr in self._corp().get_conf('ATTRLIST').split(','):
+                        if attr in self.corp.get_conf('ATTRLIST').split(','):
                             wwords = item['Word'][level]['n'].split('  ')  # two spaces
                             fquery = '%s %s 0 ' % (begin, end)
                             fquery += ''.join(['[%s="%s%s"]'
@@ -819,7 +869,7 @@ class Actions(Kontext):
                                      (attr, item['Word'][0]['n'].split('#')[1])
                     else:  # text types
                         structname, attrname = attr.split('.')
-                        if self._corp().get_conf(structname + '.NESTED'):
+                        if self.corp.get_conf(structname + '.NESTED'):
                             block['unprecise'] = True
                         fquery = '0 0 1 [] within <%s %s="%s" />' \
                                  % (structname, attrname,
@@ -844,7 +894,7 @@ class Actions(Kontext):
         freq = calc_result['conc_size'] - errs - corrs
         if freq > 0 and err_block > -1 and corr_block > -1:
             pfilter = [('q',  'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
-            cc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')),
+            cc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
                                     q=self.args.q + [pfilter[0][1]])
             freq = cc.size()
             err_nfilter, corr_nfilter = '', ''
@@ -981,7 +1031,7 @@ class Actions(Kontext):
         if self.args.maincorp:
             corp = corplib.open_corpus(self.args.maincorp)
         else:
-            corp = self._corp()
+            corp = self.corp
         colllist = corp.get_conf('ATTRLIST').split(',')
         out = {'Coll_attrlist': [{'n': n,
                                   'label': corp.get_conf(n + '.LABEL') or n}
@@ -1001,8 +1051,8 @@ class Actions(Kontext):
             self.args.csortfn = self.args.cbgrfnscbgrfns[0]
 
         try:
-            corplib.frq_db(self._corp(), self.args.cattr)  # try to fetch precalculated data
-            conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')))
+            corplib.frq_db(self.corp, self.args.cattr)  # try to fetch precalculated data
+            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')))
 
             num_fetch_lines = num_lines if num_lines is not None else self.args.citemsperpage
             result = conc.collocs(cattr=self.args.cattr, csortfn=self.args.csortfn,
@@ -1019,7 +1069,7 @@ class Actions(Kontext):
                 item['pfilter'] = [('q', item['pfilter'])]
                 item['nfilter'] = [('q', item['nfilter'])]
                 item['str'] = import_string(item['str'],
-                                            from_encoding=self._corp().get_conf('ENCODING'))
+                                            from_encoding=self.corp.get_conf('ENCODING'))
             result['cmaxitems'] = 10000
             result['to_line'] = 10000  # TODO
             result['attrname'] = self.args.cattr
@@ -1108,7 +1158,7 @@ class Actions(Kontext):
         """
         display a hit in a context of a structure"
         """
-        s = self._corp().get_struct(struct)
+        s = self.corp.get_struct(struct)
         struct_id = s.num_at_pos(pos)
         beg, end = s.beg(struct_id), s.end(struct_id)
         self.args.detail_left_ctx = pos - beg
@@ -1122,7 +1172,7 @@ class Actions(Kontext):
         """
         display a hit in a wider context
         """
-        data = self.call_function(conclib.get_detail_context, (self._corp(), pos))
+        data = self.call_function(conclib.get_detail_context, (self.corp, pos))
         data['allow_left_expand'] = int(getattr(self.args, 'detail_left_ctx', 0)) < \
                 int(data['maxdetail'])
         data['allow_right_expand'] = int(getattr(self.args, 'detail_right_ctx', 0)) < \
@@ -1136,7 +1186,7 @@ class Actions(Kontext):
         """
         display a full reference
         """
-        return self.call_function(conclib.get_full_ref, (self._corp(), pos))
+        return self.call_function(conclib.get_full_ref, (self.corp, pos))
 
     @exposed(access_level=1, vars=('LastSubcorp',), legacy=True)
     def wordlist_form(self, ref_corpname=''):
@@ -1245,7 +1295,7 @@ class Actions(Kontext):
                 if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
                     self.args.wlsort = ''
                 result_list = self.call_function(corplib.wordlist,
-                                                 (self._corp(), self.args.wlwords),
+                                                 (self.corp, self.args.wlwords),
                                                  wlmaxitems=wlmaxitems)[wlstart:]
                 if self.args.wlwords:
                     result['wlcache'] = self.args.wlcache
@@ -1263,7 +1313,7 @@ class Actions(Kontext):
             if '.' in self.args.wlattr:
                 self.args.wlnums = orig_wlnums
             try:
-                result['wlattr_label'] = (self._corp().get_conf(self.args.wlattr + '.LABEL') or
+                result['wlattr_label'] = (self.corp.get_conf(self.args.wlattr + '.LABEL') or
                                           self.args.wlattr)
             except Exception as e:
                 result['wlattr_label'] = self.args.wlattr
@@ -1314,7 +1364,7 @@ class Actions(Kontext):
             qparts.append('%s="%s"' % (self.args.wlattr, self.args.wlpat))
         if not self.args.include_nonwords:
             qparts.append('%s!="%s"' % (self.args.wlattr,
-                                        self._corp().get_conf('NONWORDRE')))
+                                        self.corp.get_conf('NONWORDRE')))
         if self.args.wlwords:
             qq = ['%s=="%s"' % (self.args.wlattr, w.strip()) for w in self.args.wlwords]
             qparts.append('(' + '|'.join(qq) + ')')
@@ -1433,7 +1483,7 @@ class Actions(Kontext):
                 tr = app.AsyncResult(t)
                 if tr.status == 'FAILURE':
                     raise task.ExternalTaskError('Task %s failed' % (t,))
-        return {'status': freq_calc.build_arf_db_status(self._corp(), attrname)}
+        return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
 
     @exposed(legacy=True)
     def attr_vals(self, avattr='', avpat=''):
@@ -1444,7 +1494,7 @@ class Actions(Kontext):
     def saveconc_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = (MainMenu.SAVE, )
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-        conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user'),
+        conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user'),
                                                      corpus_info.sample_size))
         if not to_line:
             to_line = conc.size()
@@ -1487,10 +1537,10 @@ class Actions(Kontext):
 
         try:
             corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-            conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user'),
+            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user'),
                                                          corpus_info.sample_size))
             self._apply_linegroups(conc)
-            kwic = Kwic(self._corp(), self.args.corpname, conc)
+            kwic = Kwic(self.corp, self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
             from_line = int(from_line)
             to_line = int(to_line)
@@ -1540,7 +1590,7 @@ class Actions(Kontext):
                     else:
                         raise ConcError(_('Invalid data'))
 
-                    aligned_corpora = [self._corp()] + \
+                    aligned_corpora = [self.corp] + \
                                       [self.cm.get_Corpus(c)
                                        for c in self.args.align.split(',') if c]
                     writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
@@ -1718,7 +1768,7 @@ class Actions(Kontext):
             query_pref = m.groups()[0]
             query_suff = m.groups()[1]
             self.args.q[0] = u'%s[] %s' % (query_pref, butils.CQLDetectWithin().get_within_part(query_suff))
-            conc = self.call_function(conclib.get_conc, (self._corp(), self._session_get('user', 'user')))
+            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')))
             conc.sync()
             return {'total': conc.fullsize() if conc else None}
         else:

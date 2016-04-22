@@ -67,7 +67,7 @@ class Options(Kontext):
                                for n in corp.get_conf('ATTRLIST').split(',')
                                if n]
         else:
-            corp = self._corp()
+            corp = self.corp
         out['fixed_attr'] = 'word'
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = self.args.structs.split(',')

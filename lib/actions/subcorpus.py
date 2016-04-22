@@ -18,15 +18,18 @@ import time
 import werkzeug.urls
 
 from controller import exposed
-from kontext import Kontext, ConcError, MainMenu, UserActionException, AsyncTaskStatus
+from kontext import Kontext, MainMenu, UserActionException, AsyncTaskStatus
 from translation import ugettext as _
 import plugins
 import l10n
 from l10n import import_string, export_string, format_number
 import corplib
-from argmapping import ConcArgsMapping
 from texttypes import TextTypeCollector, get_tt
 import settings
+
+
+class SubcorpusError(Exception):
+    pass
 
 
 class Subcorpus(Kontext):
@@ -66,7 +69,7 @@ class Subcorpus(Kontext):
         subcname = request.form['subcname']
         within_json = request.form.get('within_json')
         raw_cql = request.form.get('cql')
-        corp_encoding = self._corp().get_conf('ENCODING')
+        corp_encoding = self.corp.get_conf('ENCODING')
 
         if raw_cql:
             aligned_corpora = []
@@ -82,7 +85,7 @@ class Subcorpus(Kontext):
             imp_cql = (full_cql,)
         else:
             within_cql = None
-            tt_query = TextTypeCollector(self._corp(), request).get_query()
+            tt_query = TextTypeCollector(self.corp, request).get_query()
             tmp = ['<%s %s />' % item for item in tt_query]
             aligned_corpora = request.form.getlist('aligned_corpora')
             if len(aligned_corpora) > 0:
@@ -101,7 +104,7 @@ class Subcorpus(Kontext):
             path = path.encode('utf-8')
 
         if len(tt_query) == 1 and len(aligned_corpora) == 0:
-            result = corplib.create_subcorpus(path, self._corp(), tt_query[0][0], tt_query[0][1])
+            result = corplib.create_subcorpus(path, self.corp, tt_query[0][0], tt_query[0][1])
         elif len(tt_query) > 1 or within_cql or len(aligned_corpora) > 0:
             backend, conf = settings.get_full('global', 'calc_backend')
             if backend == 'celery':
@@ -139,7 +142,7 @@ class Subcorpus(Kontext):
                                             _('Subcorpus created but there was a problem saving a backup copy.'))
             return {}
         else:
-            raise ConcError(_('Empty subcorpus!'))
+            raise SubcorpusError(_('Empty subcorpus!'))
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.tmpl', page_model='subcorpForm',
              http_method='POST')
@@ -147,7 +150,7 @@ class Subcorpus(Kontext):
         try:
             ans = self._create_subcorpus(request)
             self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
-        except (ConcError, UserActionException, RuntimeError) as e:
+        except (SubcorpusError, UserActionException, RuntimeError) as e:
             self.add_system_message('error', getattr(e, 'message', e.__repr__()))
             ans = self.subcorp_form(request)
         return ans
@@ -164,12 +167,12 @@ class Subcorpus(Kontext):
         subcnorm = request.args.get('subcnorm', 'tokens')
 
         try:
-            tt_sel = get_tt(self._corp(), self.ui_lang).export_with_norms(subcnorm=subcnorm)
+            tt_sel = get_tt(self.corp, self.ui_lang).export_with_norms(subcnorm=subcnorm)
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)
         structs_and_attrs = {}
-        for s, a in [t.split('.') for t in self._corp().get_conf('STRUCTATTRLIST').split(',')]:
+        for s, a in [t.split('.') for t in self.corp.get_conf('STRUCTATTRLIST').split(',')]:
             if s not in structs_and_attrs:
                 structs_and_attrs[s] = []
             structs_and_attrs[s].append(a)

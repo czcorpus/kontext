@@ -17,9 +17,7 @@ from werkzeug.datastructures import MultiDict
 
 class Parameter(object):
     """
-    Defines an optional property of an argmapping object.
-    The standard way of setting such a property is to define
-    the Parameter instance as a static one.
+    Defines an argument of an argument-mapping template (see below).
     """
 
     NON_PERSISTENT = 0b0000  # not stored at all
@@ -54,8 +52,9 @@ class Parameter(object):
         return self.persistent & p_level == p_level
 
 
-# this attribute set covers all the attributes representing a concordance. I.e. the application should
-# be able to restore any concordance just by using these parameters. Please note that this list does not include
+# This attribute set covers all the arguments representing a concordance.
+# I.e. the application should be able to restore any concordance just by
+# using these parameters. Please note that this list does not include
 # the 'q' parameter which collects currently built query.
 ConcArgsMapping = (
     'corpname',
@@ -73,7 +72,7 @@ ConcArgsMapping = (
 )
 
 
-# Attributes needed to open correct detailed KWIC context
+# Arguments needed to open a correct detailed KWIC context
 WidectxArgsMapping = (
     'attrs',
     'attr_allpos',
@@ -84,6 +83,10 @@ WidectxArgsMapping = (
 
 
 class GlobalArgs(object):
+    """
+    This class serves as a template for argument handling and
+    is not intended to be instantiated.
+    """
     # specifies response output format (used in case default one is not applicable)
     format = Parameter(u'')
 

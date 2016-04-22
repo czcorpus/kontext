@@ -50,9 +50,8 @@ def get_syntax_data(ctrl, request):
     skips its simple JSON serialization.
     """
     try:
-        corp = getattr(ctrl, '_corp')()
-        canonical_corpname = getattr(ctrl, '_canonical_corpname')(corp.corpname)
-        data = plugins.get('syntax_viewer').search_by_token_id(corp, canonical_corpname,
+        canonical_corpname = getattr(ctrl, '_canonical_corpname')(ctrl.corp.corpname)
+        data = plugins.get('syntax_viewer').search_by_token_id(ctrl.corp, canonical_corpname,
                                                                int(request.args.get('kwic_id')))
     except MaximumContextExceeded:
         data = dict(contains_errors=True,
