@@ -1,5 +1,7 @@
 # Copyright (c) 2003-2013  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Milos Husak, Vit Baisa
-# Copyright (c) 2013 Institute of the Czech National Corpus
+# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,21 +35,12 @@ import l10n
 from l10n import format_number, corpus_get_conf
 from translation import ugettext as _
 import scheduled
-from templating import StateGlobals, join_params
+import templating
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MainMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
 from texttypes import TextTypeCollector, get_tt
-
-
-def update_params(params, key, value):
-    return [(k, v) for k, v in params if k != key] + [(key, value)]
-
-
-class ConcError(Exception):
-    def __init__(self, msg):
-        super(ConcError, self).__init__(msg)
 
 
 class LinesGroups(object):
@@ -86,10 +79,10 @@ class LinesGroups(object):
         return ans
 
 
-class LegacyForm(object):
+class RequestArgsProxy(object):
     """
-    A wrapper class which ensures that Werkzeug's request.form (= MultiDict)
-    will be compatible with legacy code in the Kontext class.
+    A wrapper class allowing an access to both
+    Werkzeug's request.form and request.args (MultiDict objects).
     """
     def __init__(self, form, args):
         self._form = form
@@ -120,6 +113,9 @@ class AsyncTaskStatus(object):
     (i.e. user is informed that some calculation/task takes a long time
     and that it is going to run in background and that the user will
     be notified once it is done).
+
+    Please note that concordance calculation uses a different mechanism
+    as it requires continuous update of its status.
 
     Status string is taken from Celery and should always equal
     one of the following: PENDING, STARTED, RETRY, FAILURE, SUCCESS
@@ -477,28 +473,29 @@ class Kontext(Controller):
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
 
-    def _map_args_to_attrs(self, form, selectorname, named_args):
+    def _map_args_to_attrs(self, req_args, named_args):
         """
-        Maps URL and form arguments to self.args.__dict__. This is intended for
-        legacy action methods.
-        """
-        def choose_selector(args, selector):
-            selector += ':'
-            s = len(selector)
-            args.update(dict([(n[s:], v) for n, v in args.items() if n.startswith(selector)]))
+        arguments:
+        req_args -- a RequestArgsProxy instance
+        named_args -- already processed named arguments
 
+        Maps URL and form arguments to self.args.__dict__.
+        Multi-value arguments are not supported. In case you want to
+        access a value list (e.g. stuff like foo=a&foo=b&foo=c)
+        please use request.args.getlist/request.form.getlist methods.
+        """
         param_types = dict(inspect.getmembers(GlobalArgs,
                                               predicate=lambda x: isinstance(x, Parameter)))
 
-        if 'json' in form:
-            json_data = json.loads(form.getvalue('json'))
+        if 'json' in req_args:
+            json_data = json.loads(req_args.getvalue('json'))
             named_args.update(json_data)
-        for k in form.keys():
+        for k in req_args.keys():
             # must remove empty values, this should be achieved by
             # keep_blank_values=0, but it does not work for POST requests
-            if len(form.getvalue(k)) > 0:
+            if len(req_args.getvalue(k)) > 0:
                 key = str(k)
-                val = form.getvalue(k)
+                val = req_args.getvalue(k)
                 if key in param_types:
                     if not param_types[key].is_array() and type(val) is list:
                         # If a parameter (see static Parameter instances) is defined as a scalar
@@ -516,8 +513,6 @@ class Kontext(Controller):
         na = named_args.copy()
 
         convert_types(na, self.clone_args())
-        if selectorname:
-            choose_selector(self.args.__dict__, getattr(self.args, selectorname))
         self.args.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
@@ -545,17 +540,16 @@ class Kontext(Controller):
             self._session['semi_persistent_attrs'] = sp_data.items(multi=True)
 
     # TODO: decompose this method (phase 2)
-    def _pre_dispatch(self, path, selectorname, named_args, action_metadata=None):
+    def _pre_dispatch(self, path, named_args, action_metadata=None):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args.
         """
-        super(Kontext, self)._pre_dispatch(path, selectorname, named_args, action_metadata)
+        super(Kontext, self)._pre_dispatch(path, named_args, action_metadata)
 
         def validate_corpus():
-            c = self._corp()
-            if isinstance(c, fallback_corpus.ErrorCorpus):
-                return c.get_error()
+            if isinstance(self.corp, fallback_corpus.ErrorCorpus):
+                return self.corp.get_error()
             return None
         self.add_validator(validate_corpus)
 
@@ -564,13 +558,13 @@ class Kontext(Controller):
         if not action_metadata:
             action_metadata = {}
 
-        form = LegacyForm(self._request.form, self._request.args)
-
         options, corp_options = self._load_user_settings()
         self._scheduled_actions(options)
         # only general setting can be applied now because
         # we do not know final corpus name yet
         self._apply_general_user_settings(options, self._init_default_settings)
+
+        form = RequestArgsProxy(self._request.form, self._request.args)
 
         # corpus access check and modify path in case user cannot access currently requested corp.
         path = self._check_corpus_access(path, form, action_metadata)
@@ -578,7 +572,7 @@ class Kontext(Controller):
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
         self._apply_corpus_user_settings(corp_options, self.args.corpname)
-        self._map_args_to_attrs(form, selectorname, named_args)
+        self._map_args_to_attrs(form, named_args)
 
         self.cm = corplib.CorpusManager(self.subcpath)
 
@@ -602,7 +596,7 @@ class Kontext(Controller):
         for p in plugins.get_plugins().values():
             if callable(getattr(p, 'setup', None)):
                 p.setup(self)
-        return path, selectorname, named_args
+        return path, named_args
 
     def _post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
@@ -614,22 +608,6 @@ class Kontext(Controller):
         super(Kontext, self)._post_dispatch(methodname, action_metadata, tmpl, result)
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
-
-    def _attach_tag_builder(self, tpl_out):
-        """
-        arguments:
-        tpl_out -- dict data to be used when building an output page from a template
-        """
-        def tag_support(c):
-            return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
-
-        tpl_out['tag_builder_support'] = {
-            '': tag_support(self.args.corpname)
-        }
-        tpl_out['user_menu'] = True
-        if 'Aligned' in tpl_out:
-            for item in tpl_out['Aligned']:
-                tpl_out['tag_builder_support']['_%s' % item['n']] = tag_support(item['n'])
 
     def _attach_query_metadata(self, tpl_out):
         """
@@ -643,25 +621,6 @@ class Kontext(Controller):
         if save_format:
             params['saveformat'] = save_format
         self.save_menu.append({'label': label, 'action': action, 'params': params})
-
-    def _export_subcorpora_list(self, corpname, out):
-        """
-        Updates passed dictionary by information about available sub-corpora.
-        Listed values depend on current user and corpus.
-        If there is a list already present in 'out' then it is extended
-        by the new values.
-
-        arguments:
-        corpname -- corpus id
-        out -- a dictionary used by templating system
-        """
-        basecorpname = corpname.split(':')[0]
-        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
-        if len(subcorp_list) > 0:
-            subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
-        if 'SubcorpList' not in out or out['SubcorpList'] is None:
-            out['SubcorpList'] = []
-        out['SubcorpList'].extend(subcorp_list)
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
@@ -737,12 +696,11 @@ class Kontext(Controller):
         arguments:
         exp_data -- a dict where exported data is stored
         """
-        if self._corp().get_conf('ALIGNED'):
+        if self.corp.get_conf('ALIGNED'):
             exp_data['Aligned'] = []
-            for al in self._corp().get_conf('ALIGNED').split(','):
+            for al in self.corp.get_conf('ALIGNED').split(','):
                 alcorp = corplib.open_corpus(al)
-                exp_data['Aligned'].append({'label': alcorp.get_conf('NAME') or al,
-                                       'n': al})
+                exp_data['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
                 attrlist = alcorp.get_conf('ATTRLIST').split(',')
                 poslist = self.cm.corpconf_pairs(alcorp, 'WPOSLIST')
                 exp_data['Wposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
@@ -753,7 +711,7 @@ class Kontext(Controller):
                     or 'lemma' in attrlist
 
     def self_encoding(self):
-        enc = corpus_get_conf(self._corp(), 'ENCODING')
+        enc = corpus_get_conf(self.corp, 'ENCODING')
         return enc if enc else 'iso-8859-1'
 
     def _app_cookie_names(self):
@@ -762,19 +720,19 @@ class Kontext(Controller):
         """
         return tuple([settings.get('plugins', 'auth')['auth_cookie_name']])
 
-    def _corp(self):
+    @property
+    def corp(self):
         """
-        Returns current corpus (as a manatee object). The method ensures
-        that a corpus-like object is always returned even in case of an error.
-        To interrupt normal request processing a controller validator (see add_validator)
-        is defined.
+        Contains the current corpus. The property always contains a corpus-like object
+        (even in case of an error). Possible values:
+
+        1. a manatee.Corpus instance in case everything is OK (corpus is known, object is initialized
+        without errors)
+        2. an ErrorCorpus instance in case an exception occurred
+        3. an Empty corpus instance in case the action does not need one (but KonText's internals do).
 
         This should be always preferred over accessing _curr_corpus attribute.
 
-        returns:
-        a manatee.Corpus instance in case everything is OK (corpus is known, object is initialized
-        without errors) or ErrorCorpus in case an exception occurred or Empty corpus in case
-        the action does not need one (but KonText's internals do).
         """
         if self.args.corpname:
             try:
@@ -798,7 +756,7 @@ class Kontext(Controller):
         """
         return plugins.get('auth').permitted_corpora(self._session_get('user', 'id'))
 
-    def _load_fav_items(self):
+    def _load_fav_items(self):  # TODO implementation-specific
         return plugins.get('user_items').get_user_items(self._session_get('user', 'id'))
 
     def _add_corpus_related_globals(self, result, maincorp):
@@ -806,7 +764,7 @@ class Kontext(Controller):
         arguments:
         result -- template data dict
         maincorp -- currently focused corpus; please note that in case of aligned
-                    corpora this can be a different one than self._corp()
+                    corpora this can be a different one than self.corp
                     (or self.args.corpname) represents.
         """
         result['corpname'] = self.args.corpname
@@ -816,9 +774,9 @@ class Kontext(Controller):
         result['human_corpname'] = self._human_readable_corpname()
 
         result['corp_description'] = maincorp.get_info()
-        result['corp_size'] = self._corp().size()
+        result['corp_size'] = self.corp.size()
         if self.args.usesubcorp:
-            result['subcorp_size'] = self._corp().search_size()
+            result['subcorp_size'] = self.corp.search_size()
         else:
             result['subcorp_size'] = None
         attrlist = corpus_get_conf(maincorp, 'ATTRLIST').split(',')
@@ -983,7 +941,7 @@ class Kontext(Controller):
         result['corpname_url'] = 'corpname=' + self.args.corpname if self.args.corpname else ''
         global_var_val = self._get_attrs(ConcArgsMapping)
         result['globals'] = self.urlencode(global_var_val)
-        result['Globals'] = StateGlobals(global_var_val)
+        result['Globals'] = templating.StateGlobals(global_var_val)
         result['human_corpname'] = None
 
         result['empty_attr_value_placeholder'] = TextTypeCollector.EMPTY_VAL_PLACEHOLDER
@@ -993,7 +951,7 @@ class Kontext(Controller):
         if self.args.maincorp:
             thecorp = corplib.open_corpus(self.args.maincorp)
         else:
-            thecorp = self._corp()
+            thecorp = self.corp
         if not action_metadata.get('skip_corpus_init', False):
             self._add_corpus_related_globals(result, thecorp)
 
@@ -1053,10 +1011,10 @@ class Kontext(Controller):
 
         # util functions
         result['format_number'] = partial(format_number)
-        result['join_params'] = join_params
+        result['join_params'] = templating.join_params
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
         result['camelize'] = l10n.camelize
-        result['update_params'] = update_params
+        result['update_params'] = templating.update_params
         result['jsonize_user_item'] = user_items.to_json
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
 
@@ -1102,8 +1060,8 @@ class Kontext(Controller):
         to identify the corpus in KonText's code as it is only intended to be printed
         somewhere on a page).
         """
-        if self._corp().get_conf('NAME'):
-            return corpus_get_conf(self._corp(), 'NAME')
+        if self.corp.get_conf('NAME'):
+            return corpus_get_conf(self.corp, 'NAME')
         elif self.args.corpname:
             return self._canonical_corpname(self.args.corpname)
         else:
@@ -1115,7 +1073,7 @@ class Kontext(Controller):
         interpreted as ones containing speech data reference.
         """
         speech_struct = plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment')
-        return speech_struct in corpus_get_conf(self._corp(), 'STRUCTATTRLIST').split(',')
+        return speech_struct in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(',')
 
     @staticmethod
     def _validate_range(actual_range, max_range):
@@ -1148,16 +1106,6 @@ class Kontext(Controller):
         stores user's persistent settings (but can be also passed via URL with some limitations).
         """
         return ','.join(x for x in (self.args.structs, ','.join(self.args.structattrs)) if x)
-
-    @staticmethod
-    def onelevelcrit(prefix, attr, ctx, pos, fcode, icase, bward='', empty=''):
-        fromcode = {'lc': '<0', 'rc': '>0', 'kl': '<0', 'kr': '>0'}
-        attrpart = '%s%s/%s%s%s ' % (prefix, attr, icase, bward, empty)
-        if not ctx:
-            ctx = '%i%s' % (pos, fromcode.get(fcode, '0'))
-        if '~' in ctx and '.' in attr:
-            ctx = ctx.split('~')[0]
-        return attrpart + ctx
 
     @staticmethod
     def _parse_sorting_param(k):
@@ -1194,7 +1142,8 @@ class Kontext(Controller):
             out['custom_menu_items'][item.name] = plugins.get('menu_items').get_items(
                 item.name, self.ui_lang)
 
-    def _uses_internal_user_pages(self):
+    @staticmethod
+    def _uses_internal_user_pages():
         return isinstance(plugins.get('auth'), AbstractInternalAuth)
 
     def get_async_tasks(self):
@@ -1216,8 +1165,8 @@ class Kontext(Controller):
     @exposed(return_type='json', legacy=True)
     def concdesc_json(self):
         out = {'Desc': []}
-        conc_desc = conclib.get_conc_desc(corpus=self._corp(), q=self.args.q,
-                                          subchash=getattr(self._corp(), "subchash", None))
+        conc_desc = conclib.get_conc_desc(corpus=self.corp, q=self.args.q,
+                                          subchash=getattr(self.corp, 'subchash', None))
 
         def nicearg(arg):
             args = arg.split('"')
@@ -1310,7 +1259,7 @@ class PluginApi(object):
 
     @property
     def current_corpus(self):
-        return getattr(self._controller, '_corp')()
+        return self._controller.corp
 
     def redirect(self, url, code=303):
         return getattr(self._controller, '_redirect')(url, code=code)

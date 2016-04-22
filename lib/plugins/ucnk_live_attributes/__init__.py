@@ -88,7 +88,7 @@ def cached(f):
 def filter_attributes(ctrl, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
-    return plugins.get('live_attributes').get_attr_values(ctrl._corp(), attrs, aligned)
+    return plugins.get('live_attributes').get_attr_values(ctrl.corp, attrs, aligned)
 
 
 class AttrArgs(object):
