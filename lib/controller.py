@@ -855,7 +855,7 @@ class Controller(object):
             else:
                 self.add_system_message('error', e2.message)
 
-            self._pre_dispatch(self._exceptmethod, None, named_args,
+            self._pre_dispatch(self._exceptmethod, named_args,
                                self._get_method_metadata(self._exceptmethod))
             em, self._exceptmethod = self._exceptmethod, None
             return self.process_method(em, pos_args, named_args)
