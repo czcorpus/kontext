@@ -1261,6 +1261,10 @@ class PluginApi(object):
     def current_corpus(self):
         return self._controller.corp
 
+    @property
+    def current_url(self):
+        return getattr(self._controller, '_get_current_url')()
+
     def redirect(self, url, code=303):
         return getattr(self._controller, '_redirect')(url, code=code)
 
