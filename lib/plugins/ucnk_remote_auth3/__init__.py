@@ -32,13 +32,12 @@ data to each other). This prevents additional HTTP request from ucnk_appbar.
 Required config.xml/plugins entries (RelaxNG compact format):
 
 element auth {
-    element module { "ucnk_remote_auth2" }
+    element module { "ucnk_remote_auth3" }
     element auth_cookie_name {
         text  # name of a cookie used to store KonText's internal auth ID
     }
-    element central_auth_cookie_name {
-        attribute extension-by { "ucnk"}
-        text  # name of a cookie used by a central-authentication service
+    element api_cookies {
+        element item { text }*  # a list of cnc_toolbar_* cookies to be passed to API as arguments
     }
     element login_url {
         text  # URL where KonText redirects user to log her in; placeholders can be used
@@ -89,7 +88,6 @@ class AuthConf(object):
         self.admins = conf.get('plugins', 'auth').get('ucnk:administrators', [])
         self.login_url = conf.get('plugins', 'auth')['login_url']
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
-        self.cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
         self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
         self.toolbar_server_timeout = int(conf.get('plugins', 'auth')['ucnk:toolbar_server_timeout'])
 
@@ -122,34 +120,11 @@ class CentralAuth(AbstractRemoteAuth):
     def _mk_list_key(user_id):
         return 'corplist:user:%s' % user_id
 
-    def get_ticket(self, cookies):
-        """
-        Returns authentication ticket. Please note that this
-        is not a part of AbstractAuth interface.
-
-        arguments:
-        cookies -- a Cookie.BaseCookie compatible
-
-        returns:
-        ticket id
-        """
-        if self._auth_conf.cookie_name in cookies:
-            ticket_id = cookies[self._auth_conf.cookie_name].value
-        else:
-            ticket_id = None
-        return ticket_id
-
-    def _fetch_toolbar_api_response(self, cookies, curr_lang, args):
-        if not curr_lang:
-            curr_lang = 'en'
-        curr_lang = curr_lang.split('_')[0]
-        ticket_id = self.get_ticket(cookies)
+    def _fetch_toolbar_api_response(self, args):
         connection = httplib.HTTPConnection(self._toolbar_conf.server,
                                             port=self._toolbar_conf.port,
                                             timeout=self._auth_conf.toolbar_server_timeout)
-        req_args = dict(current='kontext', id=ticket_id, lang=curr_lang)
-        req_args.update(args)
-        connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(req_args))
+        connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
         response = connection.getresponse()
         if response and response.status == 200:
             return response.read().decode('utf-8')
@@ -164,15 +139,17 @@ class CentralAuth(AbstractRemoteAuth):
         from the authentication server (aka "CNC toolbar") KonText re-sets user to
         anonymous and shows an error message to a user.
 
-        Method also writes a CNC toolbar's HTML code for page's top bar (this solution
-        is given by CNC toolbar app design).
+        Method also stores the response for CNC toolbar to prevent an extra API call.
         """
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
         api_cookies = self._conf.get('plugins', 'auth', {}).get('api_cookies', [])
-        api_args = map(lambda x: (x[0], x[1].value), filter(lambda x: x[0] in api_cookies, plugin_api.cookies.items()))
-        api_response = self._fetch_toolbar_api_response(plugin_api.cookies, plugin_api.user_lang, api_args)
+
+        api_args = map(lambda x: (x[0][len('cnc_toolbar_'):], x[1].value),
+                       filter(lambda x: x[0] in api_cookies, plugin_api.cookies.items()))
+        api_args.extend([('current',  'kontext'), ('continue', plugin_api.current_url)])
+        api_response = self._fetch_toolbar_api_response(api_args)
         response_obj = json.loads(api_response)
-        plugin_api.set_shared('toolbar', response_obj)  # to make the response available for other plug-ins (toolbar)
+        plugin_api.set_shared('toolbar', response_obj)  # toolbar plug-in will access this
 
         if 'redirect' in response_obj:
             plugin_api.redirect(response_obj['redirect'])
