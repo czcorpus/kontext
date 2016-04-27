@@ -91,7 +91,9 @@ paths['vendor/QUnit'] = './vendor/qunit';
 #end if
 
 #if $app_bar_js
+#if $app_bar_js.main
 paths['plugins/applicationBar/toolbar'] = '$app_bar_js.main';
+#end if
 #for $item in $app_bar_js.deps
 paths['$item.module'] = '$item.url';
 #end for
@@ -104,15 +106,22 @@ requirejs.config({
     shim : {
         'vendor/jscrollpane' : {
             deps: ['jquery']
-        },
+        }
         #if $qunit_test
-        , 'vendor/QUnit' : {
+        ,'vendor/QUnit' : {
             exports : 'QUnit',
             init: function() {
                 QUnit.config.autoload = false;
                 QUnit.config.autostart = false;
             }
         }
+        #end if
+        #if $app_bar_js
+        #for $item in $app_bar_js.deps
+        #if $item.shim
+        ,'$item.module' : { deps: #filter $Jsonize# $item.shim.deps #end filter# }
+        #end if
+        #end for
         #end if
     }
 });

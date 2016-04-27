@@ -39,7 +39,9 @@ class AbstractApplicationBar(object):
         """
         Returns a dict:
             'main': ... url of the main script ...,
-            'deps': [ {'module': ... module name..., 'url': ... module url},...]
+            'deps': [ {'module': ... module name..., 'url': ... module url, 'shim': {...}},...]
+
+            (note: 'shim' is optional)
 
         Returns none if not overridden.
 

@@ -964,12 +964,12 @@ class Kontext(Controller):
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
 
-        if plugins.has_plugin('auth'):
+        if plugins.has_plugin('auth') and isinstance(plugins.get('auth'), AbstractInternalAuth):
             result['login_url'] = plugins.get('auth').get_login_url(self.return_url)
             result['logout_url'] = plugins.get('auth').get_logout_url(self.get_root_url())
         else:
-            result['login_url'] = 'login'
-            result['logout_url'] = 'login'
+            result['login_url'] = None
+            result['logout_url'] = None
 
         if plugins.has_plugin('application_bar'):
             application_bar = plugins.get('application_bar')
@@ -1270,6 +1270,10 @@ class PluginApi(object):
     @property
     def current_url(self):
         return getattr(self._controller, '_get_current_url')()
+
+    @property
+    def root_url(self):
+        return self._controller.get_root_url()
 
     def redirect(self, url, code=303):
         return getattr(self._controller, '_redirect')(url, code=code)

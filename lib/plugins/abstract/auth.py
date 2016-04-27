@@ -38,22 +38,6 @@ class AbstractAuth(object):
             'fullname': _('anonymous')
         }
 
-    def get_login_url(self, return_url=None):
-        """
-        Specifies where should KonText redirect a user in case
-        he wants to log in. In general, it can be KonText's URL
-        or a URL of some other authentication application.
-        """
-        raise NotImplementedError()
-
-    def get_logout_url(self, return_url=None):
-        """
-        Specifies where should KonText redirect a user in case
-        he wants to log out. In general, it can be KonText's URL
-        or a URL of some other authentication application.
-        """
-        raise NotImplementedError()
-
     def is_anonymous(self, user_id):
         return user_id == self._anonymous_id
 
@@ -99,11 +83,54 @@ class AbstractAuth(object):
         """
         raise NotImplementedError()
 
+    def logout_hook(self, plugin_api):
+        """
+        An action performed after logout process finishes
+        """
+        pass
 
-class AbstractInternalAuth(AbstractAuth):
+
+class AbstractSemiInternalAuth(AbstractAuth):
+
+    def validate_user(self, plugin_api, username, password):
+        """
+        Tries to find a user with matching 'username' and 'password'.
+        If a match is found then proper credentials of the user are
+        returned. Otherwise an anonymous user's credentials should be
+        returned.
+
+        arguments:
+        plugin_api -- a kontext.PluginApi instance
+        username -- login username
+        password -- login password
+
+        returns
+        a dict {'id': ..., 'user': ..., 'fullname'} where 'user' means
+        actually 'username'.
+        """
+        raise NotImplementedError()
+
+
+class AbstractInternalAuth(AbstractSemiInternalAuth):
     """
     A general authentication running within KonText.
     """
+
+    def get_login_url(self, return_url=None):
+        """
+        Specifies where should KonText redirect a user in case
+        he wants to log in. In general, it can be KonText's URL
+        or a URL of some other authentication application.
+        """
+        raise NotImplementedError()
+
+    def get_logout_url(self, return_url=None):
+        """
+        Specifies where should KonText redirect a user in case
+        he wants to log out. In general, it can be KonText's URL
+        or a URL of some other authentication application.
+        """
+        raise NotImplementedError()
 
     def update_user_password(self, user_id, password):
         """
@@ -130,24 +157,6 @@ class AbstractInternalAuth(AbstractAuth):
         Tests whether the provided password matches all the
         required properties. This should be consistent with
         get_required_password_properties().
-        """
-        raise NotImplementedError()
-
-    def validate_user(self, plugin_api, username, password):
-        """
-        Tries to find a user with matching 'username' and 'password'.
-        If a match is found then proper credentials of the user are
-        returned. Otherwise an anonymous user's credentials should be
-        returned.
-
-        arguments:
-        plugin_api -- a kontext.PluginApi instance
-        username -- login username
-        password -- login password
-
-        returns
-        a dict {'id': ..., 'user': ..., 'fullname'} where 'user' means
-        actually 'username'.
         """
         raise NotImplementedError()
 
