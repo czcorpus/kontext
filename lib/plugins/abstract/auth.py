@@ -133,7 +133,7 @@ class AbstractInternalAuth(AbstractAuth):
         """
         raise NotImplementedError()
 
-    def validate_user(self, username, password):
+    def validate_user(self, plugin_api, username, password):
         """
         Tries to find a user with matching 'username' and 'password'.
         If a match is found then proper credentials of the user are
@@ -141,6 +141,7 @@ class AbstractInternalAuth(AbstractAuth):
         returned.
 
         arguments:
+        plugin_api -- a kontext.PluginApi instance
         username -- login username
         password -- login password
 

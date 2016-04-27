@@ -42,7 +42,8 @@ class User(Kontext):
     @exposed(template='user/login.tmpl', skip_corpus_init=True)
     def loginx(self, request):
         ans = {}
-        self._session['user'] = plugins.get('auth').validate_user(request.form['username'],
+        self._session['user'] = plugins.get('auth').validate_user(self._plugin_api,
+                                                                  request.form['username'],
                                                                   request.form['password'])
 
         if self._session['user'].get('id', None):
@@ -84,7 +85,7 @@ class User(Kontext):
 
             if not self._uses_internal_user_pages():
                 raise UserActionException(_('This function is disabled.'))
-            logged_in = auth.validate_user(self._session_get('user', 'user'), curr_passwd)
+            logged_in = auth.validate_user(self._plugin_api, self._session_get('user', 'user'), curr_passwd)
 
             if self._is_anonymous_id(logged_in['id']):
                 raise UserActionException(_('Invalid user or password'))
