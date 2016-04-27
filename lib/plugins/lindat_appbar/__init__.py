@@ -30,6 +30,21 @@ class LindatTopBar(AbstractApplicationBar):
     def get_styles(self, plugin_api):
         return [dict(url=self.css_url)]
 
+    def get_scripts(self, plugin_api):
+        deps = [
+            dict(
+                module='discojuice',
+                url='//lindat.mff.cuni.cz/aai/discojuice/discojuice-2.1.en.min',
+                shim=dict(deps=['jquery'])
+            ),
+            dict(
+                module='aai',
+                url='//lindat.mff.cuni.cz/aai/aai',
+                shim=dict(deps=['jquery', 'discojuice'])
+            )
+        ]
+        return dict(main=None, deps=deps)
+
     def get_contents(self, plugin_api, return_url):
         tpl_path = self.get_template(plugin_api.user_lang)
         with open(tpl_path, mode='rb') as fin:

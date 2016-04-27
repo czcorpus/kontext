@@ -20,10 +20,11 @@
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 import RSVP = require('vendor/rsvp');
-
+import aai = require('./aai-config');
 
 export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
     return new RSVP.Promise((resolve:(ans:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
+        aai.init();
         resolve(null);
     });
 }

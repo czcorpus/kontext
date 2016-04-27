@@ -64,10 +64,8 @@ class User(Kontext):
         plugins.get('auth').logout(self._session)
         self._init_session()
         self.refresh_session_id()
-
-        return {
-            'message': ('info', _('You have been logged out'))
-        }
+        plugins.get('auth').logout_hook(self._plugin_api)
+        return dict(message=('info', _('You have been logged out')))
 
     @exposed(access_level=1, template='user/user_password_form.tmpl')
     def user_password_form(self, request):
