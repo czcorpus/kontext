@@ -1234,6 +1234,12 @@ class PluginApi(object):
     def get_shared(self, key, default=None):
         return self._shared_data.get(key, default)
 
+    def get_environ(self, key, default=None):
+        """
+        Return an environment variable
+        """
+        return self._controller.environ.get(key, default)
+
     @property
     def cookies(self):
         return self._cookies
