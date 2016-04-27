@@ -48,7 +48,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
     def _mk_list_key(user_id):
         return 'corplist:user:%s' % user_id
 
-    def validate_user(self, username, password):
+    def validate_user(self, plugin_api, username, password):
         user_data = self._find_user(username)
         valid_pwd = False
         if user_data:
