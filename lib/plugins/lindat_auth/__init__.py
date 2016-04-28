@@ -64,7 +64,6 @@ class LINDATAuth(AbstractSemiInternalAuth):
         self.sessions = sessions
         self.corplist = corplist
         self.admins = admins
-        self._anonymous_user_id = anonymous_id
 
     def anonymous_user(self):
         return dict(id=0, user=None, fullname=_('anonymous'))
@@ -159,4 +158,4 @@ def create_instance(conf, sessions):
                       sessions=sessions,
                       corplist=allowed_corplist,
                       admins=plugin_conf.get('lindat:administrators', []),
-                      anonymous_id=plugin_conf.get('anonymous_user_id'))
+                      anonymous_id=int(plugin_conf['anonymous_user_id']))
