@@ -22,17 +22,14 @@
 /// <reference path="./aai.d.ts" />
 /// <reference path="../../../ts/declarations/common.d.ts" />
 
-import aai = require('aai');
+/// <amd-dependency path="aai" />
 
 
 export function init():void {
     if (!('aai' in window)) {
         throw 'Failed to find LINDAT/CLARIN AAI object. See https://redmine.ms.mff.cuni.cz/projects/lindat-aai for more details!';
     }
-    let opts:aai.AaiOptions = {
-        port: null, host: null, repoPath: null, target: null,
-        responseUrl: null, metadataFeed:null,  serviceName: null, localauth: null
-    }
+    let opts:AAI.AaiOptions = {};
 
     //if ever port is needed (eg. testing other tomcat) it should be in responseUrl and target
     opts.port = Number(window.location.port === '' ? '' : ':' + window.location.port);
@@ -59,5 +56,5 @@ export function init():void {
             '<p style="margin: 5px; color: #888" ><input type="password" name="password" style="font-size: 160%; width: 100%" id="pass" /> <label for="pass">Password</label></p>' +
             '<p  style="" ><input type="submit" style="margin: 20px 2px" name="submit" value="Sign in" /></p>' +
             '</form>';
-    aai.setup(opts);
+    window['aai'].setup(opts);
 }

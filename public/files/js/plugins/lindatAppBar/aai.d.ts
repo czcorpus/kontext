@@ -18,19 +18,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-declare module "aai" {
+declare module AAI {
 
     export interface AaiOptions {
-        port:number;
-        host:string;
-        repoPath:string;
-        target:string;
-        responseUrl:string;
-        metadataFeed:string;
-        serviceName:string;
-        localauth:string;
+        port?:number;
+        host?:string;
+        repoPath?:string;
+        target?:string;
+        responseUrl?:string;
+        metadataFeed?:string;
+        serviceName?:string;
+        localauth?:string;
     }
 
     export function setup(opts:AaiOptions):void;
+
+    var defaults:any;
 
 }
