@@ -10,13 +10,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import time
+
 from controller import exposed, UserActionException
 from kontext import Kontext
 from kontext import MainMenu
 from translation import ugettext as _
 import plugins
 import settings
-from argmapping import ConcArgsMapping
 import l10n
 
 
@@ -211,3 +212,16 @@ class User(Kontext):
             return {'user': user_info}
         else:
             return {'user': {'username': user_info['username']}}
+
+    @exposed(skip_corpus_init=True, http_method='POST')
+    def switch_language(self, request):
+        if plugins.has_plugin('getlang'):
+            pass  # TODO should the plug-in do something here?
+        else:
+            path_prefix = settings.get_str('global', 'action_path_prefix')
+            self._new_cookies['kontext_ui_lang'] = request.form.get('language')
+            self._new_cookies['kontext_ui_lang']['path'] = path_prefix if path_prefix else '/'
+            self._new_cookies['kontext_ui_lang']['expires'] = time.strftime('%a, %d %b %Y %T GMT',
+                                                                            time.gmtime(time.time() + 180 * 24 * 3600))
+            self._redirect(request.form.get('continue'))
+        return {}

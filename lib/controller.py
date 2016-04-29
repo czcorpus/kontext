@@ -220,6 +220,7 @@ class Controller(object):
         self.environ = self._request.environ  # for backward compatibility
         self.ui_lang = ui_lang
         self._cookies = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
+        self._new_cookies = KonTextCookie()
         self._headers = {'Content-Type': 'text/html'}
         self._status = 200
         self._system_messages = []
@@ -238,9 +239,6 @@ class Controller(object):
         # correct _template_dir
         if not os.path.isdir(self._template_dir):
             self._template_dir = imp.find_module('cmpltmpl')[1]
-
-    def _app_cookie_names(self):
-        return ()
 
     def _init_session(self):
         """
@@ -620,7 +618,6 @@ class Controller(object):
         url -- a target URL
         code -- an optional integer HTTP response code (default is 303)
         """
-        # self._headers.clear() # TODO should we?
         self._status = code
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
             url = self.get_root_url() + url
@@ -936,9 +933,8 @@ class Controller(object):
                 v = v.encode('utf-8')
             ans.append((k, v))
         # Cookies
-        for cookie_id in self._app_cookie_names():
-            if cookie_id in self._cookies.keys():
-                ans.append(('Set-Cookie', self._cookies[cookie_id].OutputString()))
+        for cookie_id in self._new_cookies.keys():
+            ans.append(('Set-Cookie', self._new_cookies[cookie_id].OutputString()))
         return ans
 
     def output_result(self, methodname, template, result, action_metadata, outf,

@@ -816,9 +816,12 @@ export class PageModel implements Kontext.PluginProvider {
 
         // Footer's language switch
         $('#switch-language-box a').each(function () {
+            let lang = $(this).data('lang');
+            let form = $('#language-switch-form');
             $(this).bind('click', function () {
-                self.userSettings.set('set_uilang', $(this).data('lang'));
-                win.location.reload();
+                $(form).find('input.language').val(lang);
+                $(form).find('input.continue').val(window.location.href);
+                form.submit();
             });
         });
     }
