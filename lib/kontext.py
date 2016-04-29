@@ -714,12 +714,6 @@ class Kontext(Controller):
         enc = corpus_get_conf(self.corp, 'ENCODING')
         return enc if enc else 'iso-8859-1'
 
-    def _app_cookie_names(self):
-        """
-        Any valid cookie is loaded and available but only these are saved by KonText
-        """
-        return tuple([settings.get('plugins', 'auth')['auth_cookie_name']])
-
     @property
     def corp(self):
         """
