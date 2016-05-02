@@ -1,0 +1,9 @@
+Cheetah >= 2.4.4
+Werkzeug >= 0.11
+# please note that lxml package requires the following system packages:
+# libxml2-dev, libxslt-dev, python-dev
+lxml >= 3.4
+Markdown >= 2.5
+openpyxl >= 2.1
+redis >= 2.10
+PyICU >=1.5

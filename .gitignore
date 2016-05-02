@@ -15,6 +15,7 @@ lib/plugins/devel_*
 node_modules/
 
 # default app installation
+venv/
 conf/*
 !conf/config.sample.xml
 !conf/main-menu.sample.json
