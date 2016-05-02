@@ -1,6 +1,29 @@
 Installation instructions
 =========================
 
+Install dependencies
+--------------------
+
+```
+pip install -r requirements.txt
+```
+
+Please note that the *lxml* package (referred within *requirements.txt*) requires specific dependencies to be
+installed on server:
+
+* *python-dev*
+* *libxml2-dev*
+* *libxslt-dev*
+
+
+On Ubuntu/Debian you can install them by entering the following command:
+
+```
+sudo apt-get install libxml2-dev libxslt-dev python-dev
+```
+
+
+
 Building the project
 --------------------
 
@@ -78,7 +101,7 @@ Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/
 possible. Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
 
 
-### Gunicorn + a reverse proxy (Apache, Nginx)
+### Gunicorn + reverse proxy (Apache, Nginx)
 
 This configuration is best suited for high load environments.
 
@@ -172,7 +195,7 @@ This can be set in *config.xml*'s */kontext/global/debug* by putting *true* or *
 
 ### Production mode
 
-This can be set in *config.xml*'s */kontext/global/debug* by setting the value *false*.
+This can be set in *config.xml*'s */kontext/global/debug* by setting the value *false* (or *0*).
 
 * file post-processing:
     * \*.tmpl files must be compiled by Cheetah templating compiler
@@ -192,17 +215,11 @@ generates files required for the production mode along with some additional Requ
 KonText configuration
 ---------------------
 
-KonText is configured via an XML configuration file located in the *conf* directory.
-KonText loads its configuration from path *../conf/config.xml* (taken relative to the *app.py*).
+KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one from scratch a sample
+configuration *conf/config.sample.xml* can be used to start with.
 
-You can use *conf/config.sample.xml* which
-
-The configuration XML file is expected to be partially customizable according to the needs of 3rd party plug-ins.
-Generally it has two-level structure: *sections* and *key-value items* (where value can be also a list of items (see
-e.g. */kontext/corpora/default_corpora*). Some parts of the file with specific structure can be also processed by
-dedicated functions or modules.
-
-The structure can be understood from the following example:
+The configuration file has mostly two-level structure: *sections* and *key-value items*. Values can be either strings
+or list of items. The structure can be understood from the following example:
 
 ```xml
 <kontext>
@@ -212,79 +229,23 @@ The structure can be understood from the following example:
   <some_other_section>
     <key2>value2</key>
     <key3>
-      <!-- array value -->
+      <!-- list value -->
       <item>value3a</item>
       <item>value3b</item>
     </key3>
   </some_other_section>
+  <plugins>
+    <db>
+    ...
+    </db>
+  ...
+  </plugins>
 </kontext>
 ```
 
-Custom sections have the *extension-by* attribute. The value is a installation/organization-specific
-identifier:
+### Plug-ins
 
-```xml
-<kontext>
-    <global>
-    ...
-    </global>
-    <corpora>
-    ...
-    </corpora>
-    <my_section extension-by="acme">
-        <key1>value1</key1>
-    </my_section>
-</kontext>
-```
-
-
-The value of the attribute is then used as a prefix to access custom items. While core configuration items are accessible
-via two parameters *[section_name]* and *[item_name]* in case of custom values it is *[value_of_extension_for:section_name]*
-or *[value_of_extension_for:item_name]*. If you define your custom section as shown in the previous code example
-then you must use following call to obtain for example the value *value1*:
-
-```python
-settings.get('acme:my_section', 'key1')
-```
-
-Please note that items of your custom section are accessed without any prefix (because the whole section is custom).
-
-You can also add a custom item to a KonText-fixed section:
-
-```xml
-<kontext>
-    <global>
-    ...
-      <my_item extension-by="acme">foo</my_item>
-    </global>
-    <corpora>
-    ...
-    </corpora>
-</kontext>
-```
-
-Such value is then accessible via following call:
-
-```xml
-settings.get('global', 'acme:my_item')
-```
-
-Sample configuration file **config.sample.xml** provides more examples.
-
-### Global configuration
-
-```
-
-```
-
-### Tag-builder component configuration
-
-KonText contains a PoS tag construction widget called "tag builder" which provides an interactive way of writing
-PoS tags. Only positional tagsets are supported. Multiple tagsets can be defined:
-
-
-Concrete corpus can be configured to support the widget in the following way:
-
-```xml
-<corpus ident="my_corpus" tagset="defined_tagset_name" />
-```
+Section named *plugins* is a bit specific as it contains a configuration for custom implementations of
+specific KonText modules. To configure plug-ins properly please refer to *conf/config.sample.xml* and plug-ins
+source codes which should always contain configuration description in
+[RelaxNG compact syntax](http://www.relaxng.org/compact-tutorial-20030326.html).
