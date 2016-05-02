@@ -20,7 +20,7 @@ Features
 
 * rewritten as a **WSGI application** (Bonito-open is CGI-based)
 * modular code design with dynamically loadable plug-ins providing custom functionality implementation
-* fully **decoupled background concordance calculation** based on the [Celery task queue](http://www.celeryproject.org/)
+* fully **decoupled background concordance calculation** based on the [Celery task queue](http://www.celeryproject.org/)  (alternatively, the *multiprocessing* package can be used)
 * completely **rewritten client-side code** (AMD modules, code separated from templates)
 * improved logging, error processing and debugging support
 * improved code documentation
@@ -53,7 +53,8 @@ Requirements
 * a WSGI-compatible server
     * recommended setup: [Gunicorn](http://gunicorn.org/) + a reverse proxy (e.g. [Nginx](http://nginx.org/) or Apache2)
     * supported setup: Apache2 with [mod_wsgi](https://code.google.com/p/modwsgi/)
-* Python *2.7* and
+* Python *2.7* and:
+    * [Cheetah](http://www.cheetahtemplate.org/) Template Engine
     * [lxml](http://lxml.de/) library
     * [werkzeug](http://werkzeug.pocoo.org/) library (provides WSGI middleware)
     * [PyICU](https://pypi.python.org/pypi/PyICU) library (optional but preferred)
@@ -69,10 +70,10 @@ Requirements
 Build and installation
 -----------------------
 
-Please refer to the [INSTALL.md](INSTALL.md) file for details.
+Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details.
 
 
 Customization and contribution
 ------------------------------
 
-Please refer to the [DEVELOPMENT.md](DEVELOPMENT.md) file.
+Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-and-customization).
