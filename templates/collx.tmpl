@@ -40,9 +40,8 @@ $_("Collocations")#slurp
 
 #def custom_save
 #if $processing is None
-    #set global $new_maxitems = $cmaxitems / $collpage
     #filter WebSafe
-    #set $common_save_args = [('cattr', $cattr), ('cfromw', $cfromw), ('ctow', $ctow), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cmaxitems', $new_maxitems), ('cbgrfns', $cbgrfns), ('csortfn', $csortfn), ('collpage', $collpage)]
+    #set $common_save_args = [('cattr', $cattr), ('cfromw', $cfromw), ('ctow', $ctow), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cmaxitems', $cmaxitems), ('cbgrfns', $cbgrfns), ('csortfn', $csortfn), ('collpage', $collpage)]
 
     <li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'csv')], $common_save_args)}">CSV</a></li>
     <li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'xlsx')], $common_save_args)}">XLSX</a></li>

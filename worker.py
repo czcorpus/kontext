@@ -1,5 +1,7 @@
 #  Copyright (c) 2008-2013  Pavel Rychly, Milos Jakubicek
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,6 +17,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
+
+"""
+This module contains all KonText's tasks for Celery. It is intended to
+be loaded by Celery as 'CELERY_APP' (CELERY_APP="worker:app").
+
+The module also generates dynamic tasks exported by KonText
+plug-ins.
+
+It can be run on a different machine than KonText but it still requires
+complete and properly configured KonText package.
+"""
 
 import os
 import imp
@@ -51,6 +64,8 @@ from concworker import wcelery
 import task
 import freq_calc
 import subc_calc
+import coll_calc
+
 
 _, conf = settings.get_full('global', 'calc_backend')
 app = task.get_celery_app(conf['conf'])
@@ -65,6 +80,16 @@ class WorkerTaskException(Exception):
 
 
 def is_compiled(corp, attr, method):
+    """
+    Test whether pre-calculated data for particular
+    combination corpus+attribute+method (arf, docf, frq)
+    already exist.
+
+    arguments:
+    corp -- a manatee.Corpus instance
+    attr -- a name of an attribute
+    method -- one of arf, docf, frq
+    """
     if attr.endswith('.ngr'):
         if corp.get_conf('SUBCPATH'):
             attr = manatee.NGram(corp.get_conf('PATH') + attr,
@@ -82,6 +107,14 @@ def is_compiled(corp, attr, method):
 
 
 def _load_corp(corp_id, subc_path):
+    """
+    Instantiate a manatee.Corpus (or manatee.SubCorpus)
+    instance
+
+    arguments:
+    corp_id -- a corpus identifier
+    subc_path -- path to a subcorpus
+    """
     corp = manatee.Corpus(corp_id)
     if subc_path:
         corp = manatee.SubCorpus(corp, subc_path)
@@ -90,6 +123,15 @@ def _load_corp(corp_id, subc_path):
 
 
 def _compile_frq(corp, attr, logfile):
+    """
+    Generate pre-calculated data for frequency distribution pages.
+
+    arguments:
+    corp -- a manatee.Corpus instance
+    attr -- an attribute name
+    logfile -- a file where calculation status will be written
+               (bonito-open approach)
+    """
     if is_compiled(corp, attr, 'freq'):
         with open(logfile, 'a') as f:
             f.write('\n100 %\n')  # to get proper calculation of total progress
@@ -101,7 +143,14 @@ def _compile_frq(corp, attr, logfile):
 
 class CustomTasks(object):
     """
-    Dynamically register tasks exposed by active plug-ins
+    Dynamically register tasks exposed by active plug-ins.
+
+    Once a plug-in defines a method 'export_tasks()' returning
+    a list of functions, this class generates a list of
+    tasks named [plugin_name].[function_name]. E.g. if
+    the 'db' plugin exports a list of functions containing
+    a single function 'vacuum()' then the class adds a new
+    task 'db.vacuum'.
     """
     def __init__(self, plugin_names):
         for plugin_name in plugin_names:
@@ -111,6 +160,8 @@ class CustomTasks(object):
                     setattr(self, tsk.__name__,
                             app.task(tsk, name='%s.%s' % (plugin_name, tsk.__name__,)))
 
+
+# ----------------------------- CONCORDANCE -----------------------------------
 
 @app.task
 def register(user_id, corpus_id, subc_name, subchash, query, samplesize):
@@ -155,6 +206,41 @@ def calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, sa
     return task(initial_args, subc_path, corpus_name, subc_name, subchash, query, samplesize)
 
 
+# ----------------------------- COLLOCATIONS ----------------------------------
+
+class CollsTask(app.Task):
+
+    cache_data = None
+    cache_path = None
+
+    def after_return(self, *args, **kw):
+        if self.cache_data:
+            with open(self.cache_path, 'wb') as f:
+                cPickle.dump(self.cache_data, f)
+
+
+@app.task(base=CollsTask)
+def calculate_colls(coll_args):
+    """
+    arguments:
+    coll_args -- coll_calc.CollCalcArgs
+    """
+    calculate_colls.cache_path = coll_args.cache_path
+    ans = coll_calc.calculate_colls_bg(coll_args)
+    trigger_cache_limit = settings.get_int('corpora', 'colls_cache_min_lines', 10)
+    if not ans['processing'] and len(ans['data']['Items']) >= trigger_cache_limit:
+        calculate_colls.cache_data = ans['data']
+    return ans
+
+
+@app.task
+def clean_colls_cache():
+    return coll_calc.clean_colls_cache()
+
+
+# ----------------------------- FREQUENCY DISTRIBUTION ------------------------
+
+
 class FreqsTask(app.Task):
 
     cache_data = None
@@ -183,6 +269,9 @@ def calculate_freqs(**kw):
 @app.task
 def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
+
+
+# ----------------------------- DATA PRECALCULATION ---------------------------
 
 
 @app.task
@@ -245,11 +334,14 @@ def compile_docf(corp_id, subcorp_path, attr, logfile):
                                   doc_struct, attr, corp_id))
 
 
+# ----------------------------- SUBCORPORA ------------------------------------
+
 @app.task
 def create_subcorpus(user_id, corp_id, path, tt_query, cql):
     worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
     return worker.run(tt_query, cql, path)
 
 
+# ----------------------------- PLUG-IN TASKS ---------------------------------
 
 custom_tasks = CustomTasks(plugins.get_plugins())

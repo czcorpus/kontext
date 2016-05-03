@@ -349,8 +349,7 @@ class PyConc(manatee.Concordance):
         self.distribution(vals, begs, yrange)
         return zip(vals, begs)
 
-    def collocs(self, cattr='-', csortfn='m', cbgrfns='mt',
-                cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, from_idx=0, max_lines=50):
+    def collocs(self, cattr='-', csortfn='m', cbgrfns='mt', cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, max_lines=0):
         statdesc = {'t': 'T-score',
                     'm': 'MI',
                     '3': 'MI3',
@@ -367,20 +366,21 @@ class PyConc(manatee.Concordance):
         qfilter = '%%s%i %i 1 [%s="%%s"]' % (cfromw, ctow, cattr)
         i = 0
         while not colls.eos():
-            if from_idx <= i < from_idx + max_lines:
-                items.append(
-                    {'str': colls.get_item(), 'freq': colls.get_cnt(),
-                     'Stats': [{'s': '%.3f' % colls.get_bgr(s)}
-                               for s in cbgrfns],
-                     'pfilter': qfilter % ('P', escape(self.import_string(colls.get_item()))),
-                     'nfilter': qfilter % ('N', escape(self.import_string(colls.get_item())))
-                     })
+            if 0 < max_lines < i:
+                break
+            items.append(
+                {'str': colls.get_item(), 'freq': colls.get_cnt(),
+                 'Stats': [{'s': '%.3f' % colls.get_bgr(s)}
+                           for s in cbgrfns],
+                 'pfilter': qfilter % ('P', escape(self.import_string(colls.get_item()))),
+                 'nfilter': qfilter % ('N', escape(self.import_string(colls.get_item())))
+                 })
             colls.next()
             i += 1
 
         head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] \
             + [{'n': statdesc.get(s, s), 's': s} for s in cbgrfns]
-        return dict(Head=head, Items=items, num_fetched=i)
+        return dict(Head=head, Items=items)
 
     def linegroup_info_select(self, selected_count=5):
         """

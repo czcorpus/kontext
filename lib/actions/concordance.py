@@ -27,6 +27,7 @@ import settings
 import conclib
 import corplib
 import freq_calc
+import coll_calc
 import plugins
 import butils
 from kwiclib import Kwic
@@ -1050,50 +1051,28 @@ class Actions(Kontext):
         if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
             self.args.csortfn = self.args.cbgrfnscbgrfns[0]
 
-        try:
-            corplib.frq_db(self.corp, self.args.cattr)  # try to fetch precalculated data
-            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')))
-
-            if num_lines > 0:
-                num_fetch_lines = num_lines
-            else:
-                num_fetch_lines = int(self.args.citemsperpage) * int(self.args.collpage) + int(line_offset) + 1
-            collstart = (int(self.args.collpage) - 1) * int(self.args.citemsperpage) + int(line_offset)
-            result = conc.collocs(cattr=self.args.cattr, csortfn=self.args.csortfn,
-                                  cbgrfns=self.args.cbgrfns, cfromw=self.args.cfromw,
-                                  ctow=self.args.ctow, cminfreq=self.args.cminfreq,
-                                  cminbgr=self.args.cminbgr, from_idx=collstart,
-                                  max_lines=num_fetch_lines)
-            if collstart + self.args.citemsperpage < result['num_fetched']:
-                result['lastpage'] = 0
-                result['Items'] = result['Items'][:-1]
-            else:
-                result['lastpage'] = 1
-
-            for item in result['Items']:
-                item['pfilter'] = [('q', item['pfilter'])]
-                item['nfilter'] = [('q', item['nfilter'])]
-                item['str'] = import_string(item['str'],
-                                            from_encoding=self.corp.get_conf('ENCODING'))
-            result['cmaxitems'] = 10000
-            result['to_line'] = 10000  # TODO
-            result['attrname'] = self.args.cattr
-            result['processing'] = None
-            result['collstart'] = collstart
-            return result
-
-        except corplib.MissingSubCorpFreqFile as e:
-            ans = {'attrname': self.args.cattr, 'tasks': []}
-            out = freq_calc.build_arf_db(e.args[0], self.args.cattr)
-            if type(out) is list:
-                processing = 0
-                ans['tasks'].extend(out)
-            elif out:
-                processing = out
-            else:
-                processing = 0
-            ans['processing'] = processing
-            return ans
+        args = coll_calc.CollCalcArgs()
+        args.corpus_encoding = self.corp.get_conf('ENCODING')
+        args.corpname = self.args.corpname
+        args.subcname = getattr(self.corp, 'subcname', None)
+        args.subcpath = self.subcpath
+        args.user_id = self._session_get('user', 'user')
+        args.q = self.args.q
+        args.minsize = None  # TODO ??
+        args.save = self.args.save
+        args.samplesize = 0  # TODO (check also freqs)
+        args.cattr = self.args.cattr
+        args.csortfn = self.args.csortfn
+        args.cbgrfns = self.args.cbgrfns
+        args.cfromw = self.args.cfromw
+        args.ctow = self.args.ctow
+        args.cminbgr = self.args.cminbgr
+        args.cminfreq = self.args.cminfreq
+        args.line_offset = line_offset
+        args.num_lines = num_lines
+        args.citemsperpage = self.args.citemsperpage
+        args.collpage = self.args.collpage
+        return coll_calc.calculate_colls(args)
 
     @exposed(access_level=1, legacy=True)
     def savecoll_form(self, from_line=1, to_line='', saveformat='text'):
