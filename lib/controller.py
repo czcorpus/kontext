@@ -456,7 +456,7 @@ class Controller(object):
         else:
             protocol = self.environ['wsgi.url_scheme']
         url_items = ('%s://%s' % (protocol, self.environ.get('HTTP_HOST')),
-                     settings.get('global', 'action_path_prefix', ''),
+                     settings.get_str('global', 'action_path_prefix', ''),
                      action_module_path)
         return '/'.join(filter(lambda x: bool(x), map(lambda x: x.strip('/'), url_items))) + '/'
 
