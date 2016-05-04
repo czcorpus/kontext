@@ -192,7 +192,7 @@ class FreqCalc(object):
         self._subcpath = subcpath
 
     def _cache_file_path(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
-        v = str(self._corpname) + str(self._subcname) + str(self._user_id) + ''.join(self._q) + \
+        v = str(self._corpname) + str(self._subcname) + str(self._user_id) + ''.join(self._q).encode('utf-8') + \
             str(fcrit) + str(flimit) + str(freq_sort) + str(ml) + str(ftt_include_empty) + str(rel_mode) + \
             str(collator_locale)
         filename = '%s.pkl' % hashlib.sha1(v).hexdigest()
