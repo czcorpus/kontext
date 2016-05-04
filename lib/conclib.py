@@ -184,7 +184,7 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
         from concworker.wcelery import NotifierFactory
         import task
         app = task.get_celery_app(conf['conf'])
-        res = app.send_task('worker.register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
+        res = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
                                                 subchash, q, samplesize))
         receiver, sender = NotifierFactory(res)()
     else:

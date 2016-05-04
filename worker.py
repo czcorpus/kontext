@@ -164,7 +164,7 @@ class CustomTasks(object):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 @app.task
-def register(user_id, corpus_id, subc_name, subchash, query, samplesize):
+def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -182,12 +182,12 @@ def register(user_id, corpus_id, subc_name, subchash, query, samplesize):
     reg_fn = wcelery.TaskRegistration()
     initial_args = reg_fn(corpus_id, subc_name, subchash, query, samplesize)
     if not initial_args.get('stored_pidfile'):   # we are first trying to calc this
-        calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
+        conc_calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
     return initial_args
 
 
 @app.task(ignore_result=True)  # TODO ignore? what about errors?
-def calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
+def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     """
     Perform actual concordance calculation.
     This is called automatically by the 'register()' function above.
