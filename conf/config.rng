@@ -63,6 +63,16 @@
                             <a:documentation>Theme identifier</a:documentation>
                             <text />
                         </element>
+                        <element name="css">
+                            <choice>
+                                <text />
+                                <oneOrMore>
+                                    <element name="item">
+                                        <text />
+                                    </element>
+                                </oneOrMore>
+                            </choice>
+                        </element>
                         <element name="logo">
                             <a:documentation>Path to a logo</a:documentation>
                             <text />
@@ -403,26 +413,44 @@
                         </interleave>
                         <ref name="customPluginConfiguration" />
                     </element>
-                    <optional>
-                        <element name="application_bar">
+                    <element name="application_bar">
+                        <optional>
                             <a:documentation>An optional plug-in proving 3rd party HTML code
                                 inserted into KonText pages (e.g. an application switch &amp;
                                 authentication module)</a:documentation>
                             <ref name="plugin_common" />
                             <ref name="customPluginConfiguration" />
-                        </element>
-                    </optional>
+                        </optional>
+                    </element>
+                    <element name="footer_bar">
+                        <optional>
+                            <a:documentation>An optional plug-in proving custom HTML code
+                            for page footer</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
+                    </element>
                     <element name="getlang">
-                        <a:documentation>A plug-in to detect user language</a:documentation>
-                        <ref name="plugin_common" />
-                        <ref name="customPluginConfiguration" />
+                        <optional>
+                            <a:documentation>A plug-in to detect user language</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
                     </element>
                     <element name="query_storage">
                         <a:documentation>A plug-in for storing current queries for later retrieval</a:documentation>
                         <ref name="plugin_common" />
-                        <element name="history_max_query_size">
-                            <data type="integer" />
-                        </element>
+                        <interleave>
+                            <element name="history_max_query_size">
+                                <data type="integer" />
+                            </element>
+                            <element name="page_append_records">
+                                <data type="integer" />
+                            </element>
+                            <element name="page_num_records">
+                                <data type="integer" />
+                            </element>
+                        </interleave>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="conc_persistence">
@@ -528,19 +556,19 @@
                         <ref name="plugin_common" />
                         <ref name="customPluginConfiguration" />
                     </element>
-                    <optional>
-                        <element name="subcmixer">
+                    <element name="subcmixer">
+                        <optional>
                             <a:documentation>Generates subcorpora with defined text type ratios (experimental)</a:documentation>
                             <ref name="plugin_common" />
                             <ref name="customPluginConfiguration" />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="syntax_viewer">
+                        </optional>
+                    </element>
+                    <element name="syntax_viewer">
+                        <optional>
                             <ref name="plugin_common" />
                             <ref name="customPluginConfiguration" />
-                        </element>
-                    </optional>
+                        </optional>
+                    </element>
                 </interleave>
             </element>
         </element>
