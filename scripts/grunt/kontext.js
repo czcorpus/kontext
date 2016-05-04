@@ -74,6 +74,22 @@
         return ans;
     }
 
+    function findAllPluginBuildConf(pluginDir, doc) {
+        let ans = {};
+        findPluginTags(doc).forEach((item) => {
+            let dirPath;
+            if (item['jsModule']) {
+                dirPath = pluginDir + '/' + item['jsModule'];
+                fs.readdirSync(dirPath).forEach(function (filename) {
+                    if (filename === 'build.json') {
+                        ans[item['jsModule']] = JSON.parse(fs.readFileSync(dirPath + '/' + filename));
+                    }
+                });
+            }
+        });
+        return ans;
+    }
+
     function resourceIsLocal(path) {
         return !(path.indexOf('//') === 0 || path.indexOf('http') === 0);
     }
@@ -129,11 +145,12 @@
      * E.g. 'jquery' maps to 'vendor/jquery.min', 'plugins/queryStorage'
      * maps to 'plugins/myCoolQueryStorage'.
      *
-     * @param {string} path to KonText XML configuration file (config.xml)
-     * @param {boolean} sets whether a production setup should be exported
+     * @param {string} confPath - a path to KonText XML configuration file (config.xml)
+     * @param {string} pluginsPath - a path to JS/TS plug-ins implementations
+     * @param {boolean} isProduction - set whether a production setup should be exported
      * @return {[fakePath:string]:string}
      */
-    module.exports.loadModulePathMap = function (confPath, isProduction) {
+    module.exports.loadModulePathMap = function (confPath, pluginsPath, isProduction) {
         let data = fs.readFileSync(confPath, {encoding: 'utf8'});
         let DOMParser = require('xmldom').DOMParser;
         let doc = new DOMParser().parseFromString(data);
@@ -150,6 +167,12 @@
             'vendor/immutable': 'vendor/immutable.min',
             'vendor/d3': 'vendor/d3.min',
             'SoundManager' : 'vendor/soundmanager2.min',
+        };
+        let pluginBuildConf = findAllPluginBuildConf(pluginsPath, doc);
+        for (let p in pluginBuildConf) {
+            (pluginBuildConf[p]['ignoreModules'] || []).forEach((item) => {
+                pluginMap[item] = 'empty:'
+            });
         };
         findPluginTags(doc).forEach((item) => {
             pluginMap['plugins/' + item.canonicalName] = item.jsModule ? 'plugins/' + item.jsModule : 'empty:';
