@@ -319,12 +319,26 @@
                     </element>
                     <element name="freqs_cache_ttl">
                         <a:documentation>Number of seconds cached files for the freq. distribution page
-                        remain available. This also depends on how often a respective clean-up procesure runs.
+                        remain available. This also depends on how often a respective clean-up procedure runs.
                         </a:documentation>
                         <data type="integer" />
                     </element>
                     <element name="freqs_cache_min_lines">
-                        <a:documentation>Specifies a minimum number of items frequency data must containt to
+                        <a:documentation>Specifies a minimum number of items frequency data must contain to
+                        be cacheable.</a:documentation>
+                        <data type="integer" />
+                    </element>
+                    <element name="colls_cache_dir">
+                        <text />
+                    </element>
+                    <element name="colls_cache_ttl">
+                        <a:documentation>Number of seconds cached files for the collocations page page
+                        remain available. This also depends on how often a respective clean-up procedure runs.
+                        </a:documentation>
+                        <data type="integer" />
+                    </element>
+                    <element name="colls_cache_min_lines">
+                        <a:documentation>Specifies a minimum number of items collocations data must contain to
                         be cacheable.</a:documentation>
                         <data type="integer" />
                     </element>

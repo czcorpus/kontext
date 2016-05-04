@@ -17,5 +17,13 @@ CELERYBEAT_SCHEDULE = {
         'task': 'worker.conc_cache_cleanup',
         'schedule': crontab(hour='*/12'),
         'kwargs': dict(ttl=120, subdir='student', dry_run=False)
+    },
+    'freqs-cache-cleanup': {
+        'task': 'worker.clean_freqs_cache',
+        'schedule': crontab(hour='*/1')
+    },
+    'colls-cache-cleanup': {
+        'task': 'worker.clean_colls_cache',
+        'schedule': crontab(hour='*/1')
     }
 }

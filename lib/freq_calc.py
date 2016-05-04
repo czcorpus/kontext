@@ -152,7 +152,7 @@ def build_arf_db(corp, attrname):
             log = " 2>> '%s'" % logfilename_m
             if subc_path:
                 cmd = u"mkstats '%s' '%s' %%s '%s' %s" % (corp.get_confpath(), attrname,
-                                                      subc_path.decode('utf-8'), log.decode('utf-8'))
+                                                          subc_path.decode('utf-8'), log.decode('utf-8'))
                 cmd = cmd.encode('utf-8')
             else:
                 cmd = "mkstats '%s' '%s' %%s %s" % (corp.get_confpath(), attrname, log)
