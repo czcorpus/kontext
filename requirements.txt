@@ -1,3 +1,6 @@
+# to install all the KonText dependencies use command
+# pip install -r requirements.txt
+#
 Cheetah >= 2.4.4
 Werkzeug >= 0.11
 # please note that lxml package requires the following system packages:
