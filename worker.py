@@ -245,26 +245,22 @@ def clean_colls_cache():
 class FreqsTask(app.Task):
 
     cache_data = None
+    cache_path = None
 
     def after_return(self, *args, **kw):
         if self.cache_data:
-            with open(self.cache_data['cache_path'], 'wb') as f:
-                cPickle.dump(self.cache_data['data'], f)
+            with open(self.cache_path, 'wb') as f:
+                cPickle.dump(self.cache_data, f)
 
 
 @app.task(base=FreqsTask)
 def calculate_freqs(args):
     args = freq_calc.FreqCalsArgs(**args)
-    fc = freq_calc.FreqCalc(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id,
-                            minsize=args.minsize, q=args.q, fromp=args.fromp, pagesize=args.pagesize,
-                            save=args.save, samplesize=args.samplesize, subcpath=args.subcpath)
-    ans, cache_ans = fc.calc_freqs(flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
-                                   rel_mode=args.rel_mode, fcrit=args.fcrit,
-                                   ftt_include_empty=args.ftt_include_empty,
-                                   collator_locale=args.collator_locale,
-                                   fmaxitems=args.fmaxitems, fpage=args.fpage,
-                                   line_offset=args.line_offset)
-    calculate_freqs.cache_data = cache_ans
+    calculate_freqs.cache_path = args.cache_path
+    ans = freq_calc.calc_freqs_bg(args)
+    trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
+    if max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
+        calculate_freqs.cache_data = ans
     return ans
 
 

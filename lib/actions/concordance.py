@@ -1006,12 +1006,9 @@ class Actions(Kontext):
         """
         multilevel frequency list
         """
-        fcrit = ' '.join([Kontext.onelevelcrit('',
-                                               kwargs.get('ml%dattr' % i, 'word'),
-                                               kwargs.get('ml%dctx' % i, '0'),
-                                               kwargs.get('ml%dpos' % i, 1),
-                                               kwargs.get('ml%dfcode' % i, 'rc'),
-                                               kwargs.get('ml%dicase' % i, ''), 'e')
+        fcrit = ' '.join([self.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'), kwargs.get('ml%dctx' % i, '0'),
+                                            kwargs.get('ml%dpos' % i, 1), kwargs.get('ml%dfcode' % i, 'rc'),
+                                            kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1

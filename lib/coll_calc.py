@@ -56,7 +56,7 @@ class CollCalcArgs(FixedDict):
 
 class CollCalcCache(object):
 
-    MANATEE_MAX_FETCH_LINES = 50
+    MANATEE_DEFAULT_NUM_FETCH_LINES = 50
 
     def __init__(self, corpname, subcname, subcpath, user_id, q, minsize=None, save=0, samplesize=0):
         self._corpname = corpname
@@ -144,14 +144,14 @@ def calculate_colls(coll_args):
         collstart = (int(coll_args.collpage) - 1) * int(coll_args.citemsperpage) + int(coll_args.line_offset)
         collend = collstart + int(coll_args.citemsperpage) + 1
 
-    calc = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
-                         user_id=coll_args.user_id, q=coll_args.q, minsize=coll_args.minsize, save=coll_args.save,
-                         samplesize=coll_args.samplesize)
-    collocs, cache_path = calc.get(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
-                                   cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
-                                   cminfreq=coll_args.cminfreq)
+    cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
+                          user_id=coll_args.user_id, q=coll_args.q, minsize=coll_args.minsize, save=coll_args.save,
+                          samplesize=coll_args.samplesize)
+    collocs, cache_path = cache.get(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
+                                    cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
+                                    cminfreq=coll_args.cminfreq)
     if collocs is None:
-        num_fetch_items = CollCalcCache.MANATEE_MAX_FETCH_LINES
+        num_fetch_items = CollCalcCache.MANATEE_DEFAULT_NUM_FETCH_LINES
     else:
         num_fetch_items = len(collocs['Items'])
 
