@@ -223,8 +223,9 @@ class CollsTask(app.Task):
 def calculate_colls(coll_args):
     """
     arguments:
-    coll_args -- coll_calc.CollCalcArgs
+    coll_args -- dict-serialized coll_calc.CollCalcArgs
     """
+    coll_args = coll_calc.CollCalcArgs(**coll_args)
     calculate_colls.cache_path = coll_args.cache_path
     ans = coll_calc.calculate_colls_bg(coll_args)
     trigger_cache_limit = settings.get_int('corpora', 'colls_cache_min_lines', 10)
@@ -244,25 +245,22 @@ def clean_colls_cache():
 class FreqsTask(app.Task):
 
     cache_data = None
+    cache_path = None
 
     def after_return(self, *args, **kw):
         if self.cache_data:
-            with open(self.cache_data['cache_path'], 'wb') as f:
-                cPickle.dump(self.cache_data['data'], f)
+            with open(self.cache_path, 'wb') as f:
+                cPickle.dump(self.cache_data, f)
 
 
 @app.task(base=FreqsTask)
-def calculate_freqs(**kw):
-    fc = freq_calc.FreqCalc(corpname=kw['corpname'], subcname=kw['subcname'], user_id=kw['user_id'],
-                            minsize=kw['minsize'], q=kw['q'], fromp=kw['fromp'], pagesize=kw['pagesize'],
-                            save=kw['save'], samplesize=kw['samplesize'], subcpath=kw['subcpath'])
-    ans, cache_ans = fc.calc_freqs(flimit=kw['flimit'], freq_sort=kw['freq_sort'], ml=kw['ml'],
-                                   rel_mode=kw['rel_mode'], fcrit=kw['fcrit'],
-                                   ftt_include_empty=kw['ftt_include_empty'],
-                                   collator_locale=kw['collator_locale'],
-                                   fmaxitems=kw['fmaxitems'], fpage=kw['fpage'],
-                                   line_offset=kw['line_offset'])
-    calculate_freqs.cache_data = cache_ans
+def calculate_freqs(args):
+    args = freq_calc.FreqCalsArgs(**args)
+    calculate_freqs.cache_path = args.cache_path
+    ans = freq_calc.calc_freqs_bg(args)
+    trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
+    if max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
+        calculate_freqs.cache_data = ans
     return ans
 
 
