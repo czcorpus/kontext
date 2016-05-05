@@ -37,6 +37,7 @@ element auth {
         text  # name of a cookie used to store KonText's internal auth ID
     }
     element api_cookies {
+        attribute extension-by { "ucnk" }
         element item { text }*  # a list of cnc_toolbar_* cookies to be passed to API as arguments
     }
     element login_url {
@@ -142,7 +143,7 @@ class CentralAuth(AbstractRemoteAuth):
         Method also stores the response for CNC toolbar to prevent an extra API call.
         """
         curr_user_id = plugin_api.session.get('user', {'id': None})['id']
-        api_cookies = self._conf.get('plugins', 'auth', {}).get('api_cookies', [])
+        api_cookies = self._conf.get('plugins', 'auth', {}).get('ucnk:api_cookies', [])
 
         api_args = map(lambda x: (x[0][len('cnc_toolbar_'):], x[1].value),
                        filter(lambda x: x[0] in api_cookies, plugin_api.cookies.items()))
