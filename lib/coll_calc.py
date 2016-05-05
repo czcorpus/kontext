@@ -22,9 +22,10 @@ import conclib
 import freq_calc
 from l10n import import_string
 import settings
+from structures import FixedDict
 
 
-class CollCalcArgs(object):
+class CollCalcArgs(FixedDict):
     """
     Collects all the required arguments passed around when
     calculating collocation profiles.
@@ -106,6 +107,10 @@ def calculate_colls_bg(coll_args):
         collocs = conc.collocs(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
                                cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
                                cminbgr=coll_args.cminbgr, max_lines=coll_args.num_fetch_items)
+        for item in collocs['Items']:
+            item['pfilter'] = [('q', item['pfilter'])]
+            item['nfilter'] = [('q', item['nfilter'])]
+            item['str'] = import_string(item['str'], from_encoding=coll_args.corpus_encoding)
         return dict(data=collocs, processing=None, tasks=[])
     except corplib.MissingSubCorpFreqFile as e:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
@@ -118,7 +123,7 @@ def calculate_colls_bg(coll_args):
         else:
             processing = 0
         ans['processing'] = processing
-        ans['data'] = dict(Items=[], Head=[])  ### ???
+        ans['data'] = dict(Items=[], Head=[])
         return ans
 
 
@@ -163,7 +168,7 @@ def calculate_colls(coll_args):
         if backend == 'celery':
             import task
             app = task.get_celery_app(conf['conf'])
-            res = app.send_task('worker.calculate_colls', args=(coll_args,))
+            res = app.send_task('worker.calculate_colls', args=(coll_args.to_dict(),))
             # worker task caches the value AFTER the result is returned (see worker.py)
             ans = res.get()
         elif backend == 'multiprocessing':
@@ -179,10 +184,6 @@ def calculate_colls(coll_args):
         lastpage=0 if collstart + coll_args.citemsperpage < len(ans['data']['Items']) else 1,
         Items=ans['data']['Items'][collstart:collend - 1]
     )
-    for item in result['Items']:
-        item['pfilter'] = [('q', item['pfilter'])]
-        item['nfilter'] = [('q', item['nfilter'])]
-        item['str'] = import_string(item['str'], from_encoding=coll_args.corpus_encoding)
     return result
 
 

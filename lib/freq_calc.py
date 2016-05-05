@@ -20,13 +20,42 @@ from datetime import datetime
 import time
 import math
 import hashlib
-import cPickle
+import pickle
+from structures import FixedDict
 
 import corplib
 import conclib
 import settings
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
+
+
+class FreqCalsArgs(FixedDict):
+    """
+    Collects all the required arguments passed around when
+    calculating frequency distribution
+    """
+    q = None
+    user_id = None
+    corpname = None
+    # --- corp encoding ??
+    collator_locale = None
+    subcname = None
+    subcpath = None
+    minsize = None
+    fromp = None  # ??
+    pagesize = None  # ??
+    fpage = None  # ??
+    save = 0
+    samplesize = 0
+    flimit = None  # default ??
+    fcrit = None
+    freq_sort = None
+    ml = None  # default ??
+    ftt_include_empty = None  # default ??
+    rel_mode = None
+    fmaxitems = None  # default ??
+    line_offset = None  # ??
 
 
 def corp_freqs_cache_path(corp, attrname):
@@ -217,7 +246,7 @@ class FreqCalc(object):
 
         if os.path.isfile(cache_path):
             with open(cache_path, 'rb') as f:
-                data, conc_size = cPickle.load(f)
+                data, conc_size = pickle.load(f)
         else:
             cm = corplib.CorpusManager(subcpath=self._subcpath)
             corp = cm.get_Corpus(self._corpname, self._subcname)
@@ -269,7 +298,7 @@ def clean_freqs_cache():
     return dict(total_files=len(all_files), num_removed=num_removed, num_error=num_error)
 
 
-def calculate_freqs_mp(**kw):
+def calculate_freqs_mp(args):
     """
     Calculate frequencies via multiprocessing package. Please note
     that this is not suitable for Gunicorn-based installations as forking
@@ -281,17 +310,17 @@ def calculate_freqs_mp(**kw):
 
     def cache_results(data):
         with open(data['cache_path'], 'wb') as f:
-            cPickle.dump(data['data'], f)
+            pickle.dump(data['data'], f)
 
-    fc = FreqCalc(corpname=kw['corpname'], subcname=kw['subcname'], user_id=kw['user_id'],
-                  minsize=kw['minsize'], q=kw['q'], fromp=kw['fromp'], pagesize=kw['pagesize'],
-                  save=kw['save'], samplesize=kw['samplesize'], subcpath=kw['subcpath'])
-    ans, cache_ans = fc.calc_freqs(flimit=kw['flimit'], freq_sort=kw['freq_sort'], ml=kw['ml'],
-                                   rel_mode=kw['rel_mode'], fcrit=kw['fcrit'],
-                                   ftt_include_empty=kw['ftt_include_empty'],
-                                   collator_locale=kw['collator_locale'],
-                                   fmaxitems=kw['fmaxitems'], fpage=kw['fpage'],
-                                   line_offset=kw['line_offset'])
+    fc = FreqCalc(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id,
+                  minsize=args.minsize, q=args.q, fromp=args.fromp, pagesize=args.pagesize,
+                  save=args.save, samplesize=args.samplesize, subcpath=args.subcpath)
+    ans, cache_ans = fc.calc_freqs(flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
+                                   rel_mode=args.rel_mode, fcrit=args.fcrit,
+                                   ftt_include_empty=args.ftt_include_empty,
+                                   collator_locale=args.collator_locale,
+                                   fmaxitems=args.fmaxitems, fpage=args.fpage,
+                                   line_offset=args.line_offset)
     if cache_ans:
         multiprocessing.Process(target=cache_results, args=(cache_ans,)).start()
     return ans

@@ -796,26 +796,37 @@ class Actions(Kontext):
             rel_mode = 0
         corp_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
 
-        # all the arguments required by freqs calculation backend
-        kwargs = dict(corpname=self.corp.corpname,
-                      subcname=getattr(self.corp, 'subcname', None),
-                      subcpath=self.subcpath,
-                      user_id=self._session_get('user', 'user'),
-                      minsize=None, q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
-                      save=self.args.save, samplesize=0, flimit=flimit, fcrit=fcrit, freq_sort=freq_sort, ml=ml,
-                      ftt_include_empty=self.args.ftt_include_empty, rel_mode=rel_mode,
-                      collator_locale=corp_info.collator_locale, fmaxitems=self.args.fmaxitems, fpage=self.args.fpage,
-                      line_offset=line_offset)
+        args = freq_calc.FreqCalsArgs()
+        args.corpname = self.corp.corpname
+        args.subcname = getattr(self.corp, 'subcname', None)
+        args.subcpath = self.subcpath
+        args.user_id = self._session_get('user', 'user')
+        args.minsize = None
+        args.q = self.args.q
+        args.fromp = self.args.fromp
+        args.pagesize = self.args.pagesize
+        args.save = self.args.save
+        args.samplesize = 0
+        args.flimit = flimit
+        args.fcrit = fcrit
+        args.freq_sort = freq_sort
+        args.ml = ml
+        args.ftt_include_empty = self.args.ftt_include_empty
+        args.rel_mode = rel_mode
+        args.collator_locale = corp_info.collator_locale
+        args.fmaxitems = self.args.fmaxitems
+        args.fpage = self.args.fpage
+        args.line_offset = line_offset
 
         backend, conf = settings.get_full('global', 'calc_backend')
         if backend == 'celery':
             import task
             app = task.get_celery_app(conf['conf'])
-            res = app.send_task('worker.calculate_freqs', args=None, kwargs=kwargs)
+            res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),))
             # worker task caches the value AFTER the result is returned (see worker.py)
             calc_result = res.get()
         if backend == 'multiprocessing':
-            calc_result = freq_calc.calculate_freqs_mp(**kwargs)
+            calc_result = freq_calc.calculate_freqs_mp(args)
 
         result = {
             'fcrit': [('fcrit', cr) for cr in fcrit],

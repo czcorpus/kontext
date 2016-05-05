@@ -68,17 +68,23 @@ class FixedDict(object):
     Private-like attributes (i.e. the ones starting with underscore)
     are ignored by FixedDict.
     """
+
     def __setattr__(self, key, value):
         if key[0] != '_' and key not in dict(inspect.getmembers(self.__class__)):
             raise AttributeError('No such attribute: %s' % key)
         else:
             self.__dict__[key] = value
 
-    def __init__(self):
+    def __init__(self, **kw):
         for item in inspect.getmembers(self.__class__):
             if not item[0].startswith('__') and not callable(getattr(self, item[0], None)):
                 self.__dict__[item[0]] = item[1]
+        for k, v in kw.items():
+            setattr(self, k, v)
 
     def __iter__(self):
         for k, v in self.__dict__.items():
             yield k, v
+
+    def to_dict(self):
+        return dict(self.__dict__)

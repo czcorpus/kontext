@@ -223,8 +223,9 @@ class CollsTask(app.Task):
 def calculate_colls(coll_args):
     """
     arguments:
-    coll_args -- coll_calc.CollCalcArgs
+    coll_args -- dict-serialized coll_calc.CollCalcArgs
     """
+    coll_args = coll_calc.CollCalcArgs(**coll_args)
     calculate_colls.cache_path = coll_args.cache_path
     ans = coll_calc.calculate_colls_bg(coll_args)
     trigger_cache_limit = settings.get_int('corpora', 'colls_cache_min_lines', 10)
@@ -252,16 +253,17 @@ class FreqsTask(app.Task):
 
 
 @app.task(base=FreqsTask)
-def calculate_freqs(**kw):
-    fc = freq_calc.FreqCalc(corpname=kw['corpname'], subcname=kw['subcname'], user_id=kw['user_id'],
-                            minsize=kw['minsize'], q=kw['q'], fromp=kw['fromp'], pagesize=kw['pagesize'],
-                            save=kw['save'], samplesize=kw['samplesize'], subcpath=kw['subcpath'])
-    ans, cache_ans = fc.calc_freqs(flimit=kw['flimit'], freq_sort=kw['freq_sort'], ml=kw['ml'],
-                                   rel_mode=kw['rel_mode'], fcrit=kw['fcrit'],
-                                   ftt_include_empty=kw['ftt_include_empty'],
-                                   collator_locale=kw['collator_locale'],
-                                   fmaxitems=kw['fmaxitems'], fpage=kw['fpage'],
-                                   line_offset=kw['line_offset'])
+def calculate_freqs(args):
+    args = freq_calc.FreqCalsArgs(**args)
+    fc = freq_calc.FreqCalc(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id,
+                            minsize=args.minsize, q=args.q, fromp=args.fromp, pagesize=args.pagesize,
+                            save=args.save, samplesize=args.samplesize, subcpath=args.subcpath)
+    ans, cache_ans = fc.calc_freqs(flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
+                                   rel_mode=args.rel_mode, fcrit=args.fcrit,
+                                   ftt_include_empty=args.ftt_include_empty,
+                                   collator_locale=args.collator_locale,
+                                   fmaxitems=args.fmaxitems, fpage=args.fpage,
+                                   line_offset=args.line_offset)
     calculate_freqs.cache_data = cache_ans
     return ans
 
