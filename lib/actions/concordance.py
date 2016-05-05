@@ -818,16 +818,7 @@ class Actions(Kontext):
         args.fpage = self.args.fpage
         args.line_offset = line_offset
 
-        backend, conf = settings.get_full('global', 'calc_backend')
-        if backend == 'celery':
-            import task
-            app = task.get_celery_app(conf['conf'])
-            res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),))
-            # worker task caches the value AFTER the result is returned (see worker.py)
-            calc_result = res.get()
-        if backend == 'multiprocessing':
-            calc_result = freq_calc.calculate_freqs_mp(args)
-
+        calc_result = freq_calc.calculate_freqs(args)
         result = {
             'fcrit': [('fcrit', cr) for cr in fcrit],
             'FCrit': [{'fcrit': cr} for cr in fcrit],

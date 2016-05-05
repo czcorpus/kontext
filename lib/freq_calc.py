@@ -280,6 +280,19 @@ class FreqCalc(object):
                     conc_size=conc_size), cache_ans
 
 
+def calculate_freqs(args):
+    backend, conf = settings.get_full('global', 'calc_backend')
+    if backend == 'celery':
+        import task
+        app = task.get_celery_app(conf['conf'])
+        res = app.send_task('worker.calculate_freqs', args=(args.to_dict(),))
+        # worker task caches the value AFTER the result is returned (see worker.py)
+        calc_result = res.get()
+    if backend == 'multiprocessing':
+        calc_result = calculate_freqs_mp(args)
+    return calc_result
+
+
 def clean_freqs_cache():
     root_dir = settings.get('corpora', 'freqs_cache_dir')
     cache_ttl = settings.get_int('corpora', 'freqs_cache_ttl', 3600)
