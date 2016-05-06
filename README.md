@@ -1,5 +1,4 @@
-KonText
-=======
+![KonText](https://kontext.korpus.cz/files/themes/default/kontext-logo.png)
 
 Introduction
 ------------
