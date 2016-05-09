@@ -376,7 +376,7 @@ class LiveAttributes(AbstractLiveAttributes):
         db = self.db(vanilla_corpname(corpus.corpname))
         col_map = db.execute('PRAGMA table_info(\'bibliography\')').fetchall()
         col_map = OrderedDict([(x[1], x[0]) for x in col_map])
-        ans = db.execute('SELECT * FROM bibliography WHERE id = ?', item_id).fetchone()
+        ans = db.execute('SELECT * FROM bibliography WHERE id = ? LIMIT 1', item_id).fetchone()
         return [(k, ans[i]) for k, i in col_map.items()]
 
     def get_bib_size(self, corpus):
