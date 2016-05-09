@@ -145,6 +145,10 @@ class PyConc(manatee.Concordance):
         else:
             self.swap_kwic_coll(int(options))
 
+    def command_X(self, options):  # this is only for manatee >= 2.130.6
+        self.add_aligned(options)
+        self.filter_aligned(options)
+
     def command_n(self, options):
         self.pn_filter(options, 0)
 

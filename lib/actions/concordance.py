@@ -606,10 +606,8 @@ class Actions(Kontext):
         for al_corpname in self.args.sel_aligned:
             pcq_args = self._export_aligned_form_params(al_corpname, state_only=False,
                                                         name_filter=lambda v: v.startswith('pcq_pos_neg'))
-            if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos':
-                wnot = ''
-            else:
-                wnot = '!'
+            wnot = '' if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos' else '!'
+
             pq = self._compile_basic_query(suff='_' + al_corpname,
                                            cname=al_corpname)
             if pq:
@@ -651,9 +649,12 @@ class Actions(Kontext):
         for al_corpname in self.args.sel_aligned:
             if al_corpname in nopq and not getattr(self.args,
                                                    'include_empty_' + al_corpname, ''):
-                self.args.q.append('x-%s' % al_corpname)
-                self.args.q.append('p0 0 1 []')
-                self.args.q.append('x-%s' % self.args.corpname)
+                if butils.manatee_min_version('2.130.6'):
+                    self.args.q.append('X%s' % al_corpname)
+                else:
+                    self.args.q.append('x-%s' % al_corpname)
+                    self.args.q.append('p0 0 1 []')
+                    self.args.q.append('x-%s' % self.args.corpname)
 
     @exposed(template='view.tmpl', page_model='view', legacy=True)
     def first(self):
