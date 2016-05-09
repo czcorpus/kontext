@@ -735,6 +735,12 @@ class StructTables implements common.CheckboxLists {
         $.each(this.selectionSteps.usedAttributes(), function (i, v) {
             self.attrFieldsetWrapper.find('table[data-attr="' + v + '"]').each(function () {
                 $(this).addClass('locked');
+                let dataTable = $(this).find('.data-rows table');
+                if (dataTable.find('tr:visible').length === 0) {
+                    dataTable.prepend('<tr class="tmp"><td colspan="3">' +
+                        '<label><input type="checkbox" checked="checked" disabled="disabled" /> ' +
+                        self.pluginApi.getConf<string>('emptyAttrValuePlaceholder') + '</label></td></tr>');
+                }
                 (self.onLockCallbacks[v] || (()=>undefined)).apply(self);
                 $(this).find('tr.last-line label').hide();
                 let widget = self.rangeWidgets[v];
@@ -753,6 +759,7 @@ class StructTables implements common.CheckboxLists {
         let self = this;
         this.attrFieldsetWrapper.find('table.envelope').each(function () {
             let attribName = $(this).attr('data-attr');
+            $(this).find('.data-rows table tr.tmp').remove();
             $(this).filter('.locked').find('tr.last-line label').show();
             $(this).removeClass('locked');
             let widget = self.rangeWidgets[attribName];
