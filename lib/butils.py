@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
+import manatee
 
 
 class CQLDetectWithin(object):
@@ -147,3 +148,16 @@ def log_stack(level='debug'):
     fn = getattr(logging.getLogger('STACK'), level)
     stack = '\n'.join([''] + ['    %s' % s for s in get_stack(num_skip=2)])
     fn(*('(thread %s) --> %s' % (threading.current_thread().ident, stack),))
+
+
+def manatee_min_version(ver):
+    """
+    Tests whether the provided version string represents a newer or
+    equal version than the one currently configured.
+
+    arguments:
+    ver -- a version signature string 'X.Y.Z' (e.g. '2.130.7')
+    """
+    ver = int(''.join(map(lambda x: '%03d' % int(x), ver.split('.'))))
+    actual = int(''.join(map(lambda x: '%03d' % int(x), manatee.version().split('-')[-1].split('.'))))
+    return ver >= actual
