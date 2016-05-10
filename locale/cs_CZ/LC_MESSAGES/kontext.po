@@ -1983,6 +1983,9 @@ msgstr "Zobrazovat čísla řádků"
 msgid "leave empty to load values up to the end"
 msgstr "ponechte prázdné pro načtení řádků až do konce"
 
+msgid "Character encoding of this corpus ({0}) does not support one or more characters in the query."
+msgstr "Kódování znaků tohoto korpusu ({0}) nepodporuje jeden či více znaků ve vašem dotazu."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
