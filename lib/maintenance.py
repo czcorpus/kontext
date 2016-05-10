@@ -56,7 +56,7 @@ class MaintenanceController(object):
         return {
             'theme_name': settings.get('theme', 'name'),
             'theme_css': [os.path.normpath('../files/themes/%s/%s' % (theme_name, p))
-                    for p in theme_css],
+                          for p in theme_css],
             'theme_logo_path': os.path.normpath('../files/themes/%s/%s' % (theme_name, logo_img)),
             'theme_logo_mouseover_path': os.path.normpath('../files/themes/%s/%s' % (theme_name,
                                                                                logo_alt_img)),
