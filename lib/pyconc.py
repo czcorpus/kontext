@@ -76,25 +76,29 @@ class PyConc(manatee.Concordance):
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
         self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
-        if action == 'q':
-            params = self.export_string(params)
-            manatee.Concordance.__init__(
-                self, corp, params, sample_size, full_size)
-        elif action == 'a':
-            # query with a default attribute
-            default_attr, query = params.split(',', 1)
-            corp.set_default_attr(default_attr)
-            manatee.Concordance.__init__(
-                self, corp, self.export_string(query), sample_size, full_size)
-        elif action == 'l':
-            # load from a file
-            manatee.Concordance.__init__(self, corp, params)
-        elif action == 's':
-            # stored in _conc_dir
-            manatee.Concordance.__init__(self, corp,
-                                         os.path.join(self.pycorp._conc_dir, corp.corpname, params + '.conc'))
-        else:
-            raise RuntimeError(_('Unknown action: %s') % action)
+        try:
+            if action == 'q':
+                params = self.export_string(params)
+                manatee.Concordance.__init__(
+                    self, corp, params, sample_size, full_size)
+            elif action == 'a':
+                # query with a default attribute
+                default_attr, query = params.split(',', 1)
+                corp.set_default_attr(default_attr)
+                manatee.Concordance.__init__(
+                    self, corp, self.export_string(query), sample_size, full_size)
+            elif action == 'l':
+                # load from a file
+                manatee.Concordance.__init__(self, corp, params)
+            elif action == 's':
+                # stored in _conc_dir
+                manatee.Concordance.__init__(self, corp,
+                                             os.path.join(self.pycorp._conc_dir, corp.corpname, params + '.conc'))
+            else:
+                raise RuntimeError(_('Unknown action: %s') % action)
+        except UnicodeEncodeError:
+            raise RuntimeError('Character encoding of this corpus ({0}) does not support one or more characters in the query.'
+                               .format(self.corpus_encoding))
 
     def command_g(self, options):
         """
