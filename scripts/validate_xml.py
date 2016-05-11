@@ -20,7 +20,7 @@ import argparse
 import os
 
 
-def validate_corplist(schema, conf):
+def validate_config(schema, conf):
     relax = etree.RelaxNG(schema)
     try:
         relax.assertValid(conf)
@@ -40,5 +40,5 @@ if __name__ == '__main__':
                                                             os.path.basename(args.schema_file)))
         schema = etree.parse(schema_f)
         conf = etree.parse(conf_f)
-        validate_corplist(schema, conf)
+        validate_config(schema, conf)
         print(80 * '=')

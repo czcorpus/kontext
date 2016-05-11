@@ -23,6 +23,57 @@ sudo apt-get install libxml2-dev libxslt-dev python-dev
 ```
 
 
+Configure KonText (config.xml)
+------------------------------
+
+Before you can build KonText, a proper configuration must be ready (especially the plug-ins).
+
+KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one from scratch a sample
+configuration *conf/config.sample.xml* can be used to start with.
+
+:bulb: You can always check the configuration using *scripts/validate_setup.py*:
+
+```shell
+python scripts/validate_setup.py conf/config.xml
+```
+(use --help for more information)
+
+The configuration file has mostly two-level structure: *sections* and *key-value items*. Values can be either strings
+or list of items. The structure can be understood from the following example:
+
+```xml
+<kontext>
+  <global>
+    <key1>value1</key>
+  </global>
+  <some_other_section>
+    <key2>value2</key>
+    <key3>
+      <!-- list value -->
+      <item>value3a</item>
+      <item>value3b</item>
+    </key3>
+  </some_other_section>
+  <plugins>
+    <db>
+    ...
+    </db>
+  ...
+  </plugins>
+</kontext>
+```
+
+### Plug-ins
+
+Section named *plugins* is a bit specific as it contains a configuration for custom implementations of
+specific KonText modules. To configure plug-ins properly please refer to *conf/config.sample.xml* and plug-ins
+source codes which should always contain configuration description in
+[RelaxNG compact syntax](http://www.relaxng.org/compact-tutorial-20030326.html).
+
+For more information about plug-ins API and configuration please visit
+[our wiki](https://github.com/czcorpus/kontext/wiki/Plug-in-API).
+
+
 
 Building the project
 --------------------
@@ -30,8 +81,7 @@ Building the project
 To be able to build the project you must have:
 
 * a working [NodeJS](https://nodejs.org/en/download/) (v4.3 or newer) installation
-* properly configured plug-ins in *conf/config.xml* (because the building script uses the information
-  to pack all the necessary JavaScript code)
+* properly configured plug-ins in *conf/config.xml* (see the section above)
 
 In your KonText directory write:
 
@@ -210,42 +260,3 @@ grunt production
 ```
 
 generates files required for the production mode along with some additional RequireJS optimizations (merged libraries).
-
-
-KonText configuration
----------------------
-
-KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one from scratch a sample
-configuration *conf/config.sample.xml* can be used to start with.
-
-The configuration file has mostly two-level structure: *sections* and *key-value items*. Values can be either strings
-or list of items. The structure can be understood from the following example:
-
-```xml
-<kontext>
-  <global>
-    <key1>value1</key>
-  </global>
-  <some_other_section>
-    <key2>value2</key>
-    <key3>
-      <!-- list value -->
-      <item>value3a</item>
-      <item>value3b</item>
-    </key3>
-  </some_other_section>
-  <plugins>
-    <db>
-    ...
-    </db>
-  ...
-  </plugins>
-</kontext>
-```
-
-### Plug-ins
-
-Section named *plugins* is a bit specific as it contains a configuration for custom implementations of
-specific KonText modules. To configure plug-ins properly please refer to *conf/config.sample.xml* and plug-ins
-source codes which should always contain configuration description in
-[RelaxNG compact syntax](http://www.relaxng.org/compact-tutorial-20030326.html).
