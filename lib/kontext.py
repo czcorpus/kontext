@@ -22,6 +22,7 @@ import urllib
 import os.path
 import copy
 import time
+from types import DictType
 
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
@@ -606,6 +607,11 @@ class Kontext(Controller):
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self)._post_dispatch(methodname, action_metadata, tmpl, result)
+        # create and store concordance query key
+        if type(result) is DictType:
+            new_query_key = self._store_conc_params()
+            self._update_output_with_conc_params(new_query_key, result)
+        # log user request
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
 
@@ -927,10 +933,6 @@ class Kontext(Controller):
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
         # TODO testing app state by looking at the message type may not be the best way
         result['display_closed_conc'] = len(self.args.q) > 0 and result.get('message', [None])[0] != 'error'
-
-        # conc_persistence plugin related
-        new_query_key = self._store_conc_params()
-        self._update_output_with_conc_params(new_query_key, result)
 
         result['corpname_url'] = 'corpname=' + self.args.corpname if self.args.corpname else ''
         global_var_val = self._get_attrs(ConcArgsMapping)
