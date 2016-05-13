@@ -20,6 +20,7 @@
 /// <reference path="./flux.d.ts" />
 /// <reference path="./rsvp.d.ts" />
 /// <reference path="./immutable.d.ts" />
+/// <reference path="./jquery.d.ts" />
 
 /**
  *
@@ -103,6 +104,7 @@ declare module Kontext {
         getViews():Kontext.LayoutViews;
         getPlugin<T extends Kontext.Plugin>(name:string):T;
         getUserSettings():Kontext.IUserSettings;
+        hasPlugin(name:string):boolean;
     }
 
     export interface CorpusSetupHandler {
@@ -182,7 +184,7 @@ declare module Kontext {
 
         removeChangeListener(fn:()=>void):void;
 
-        notifyChangeListeners():void;
+        notifyChangeListeners(eventType:string, error?:Error):void;
     }
 
     /**
@@ -241,6 +243,7 @@ declare module Kontext {
         getConf(k:string):any;
         createActionLink(path:string):string;
         createStaticUrl(path:string):string;
+        getLayoutViews():Kontext.LayoutViews;
     }
 
     export interface LayoutStores {
@@ -273,6 +276,7 @@ declare module Kontext {
     export interface AsyncTaskOnUpdate {
         (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
     }
+
 }
 
 
@@ -305,6 +309,207 @@ declare module Plugins {
     export interface IQueryStorage extends Kontext.Plugin {
         detach(elm:HTMLElement):void;
         reset():void;
+    }
+}
+
+
+/**
+ * This module contains types used along with text type
+ * selection component (e.g. when creating a subcorpus).
+ */
+declare module TextTypes {
+
+    /**
+     *
+     */
+    export interface AttributeValue {
+        value:string;
+        selected:boolean;
+        locked:boolean;
+        availItems?:string; // a formatted string representation of a respective number
+        extendedInfo?:{[key:string]:any};
+    }
+
+    /**
+     * An object representing an abstract selection
+     * of attribute values.
+     *
+     * All the modifier methods are expected to
+     * return a new copy of the original object to
+     * preserve immutability.
+     *
+     * Note: non-checkbox-like implementations must
+     * still implement all the methods even if they do not
+     * make much sense there. This is necessary because
+     * of KonText's React components which use duck typing
+     * to determine which sub-component to use.
+     */
+    export interface AttributeSelection {
+
+        attrDoc:string;  // ??
+
+        attrDocLabel:string; // ??
+
+        isInterval:boolean;
+
+        isNumeric:boolean;
+
+        label:string;
+
+        name:string;
+
+
+        /**
+         * Tests whether there is at least one attribute value locked
+         */
+        isLocked():boolean;
+
+        /**
+         */
+        updateValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
+
+        /**
+         * Set new attribute values
+         *
+         * @return a new copy of the original AttributeSelection
+         */
+        setValues(values:Array<AttributeValue>):AttributeSelection;
+
+        /**
+         * Flip checked/unchecked status of the value
+         */
+        toggleValueSelection(idx:number):AttributeSelection;
+
+        /**
+         * Return true in case the selection contains a list
+         * of all available values.
+         */
+        containsFullList():boolean;
+
+        /**
+         * Return true if the original status has been
+         * changed.
+         */
+        hasUserChanges():boolean;
+
+        /**
+         * Export selection status to a simple object
+         */
+        exportSelections():any;
+
+        /**
+         * Preserve only such attribute values whose values can be
+         * found in the items array.
+         */
+        filterItems(items:Array<string>):AttributeSelection; // TODO mutability
+
+        /**
+         *
+         */
+        setExtendedInfo(idx:number, data:Immutable.Map<string, any>):AttributeSelection;
+    }
+
+
+    /**
+     *
+     */
+    export interface ITextTypesStore extends Kontext.PageStore {
+
+        /**
+         * Return a defined structural attribute
+         */
+        getAttribute(ident:string):TextTypes.AttributeSelection;
+
+        /**
+         * Return a list of all the defined attributes
+         */
+        getAttributes():Array<AttributeSelection>;
+
+        /**
+         * Export checkbox selections (e.g. for ajax requests)
+         */
+        exportSelections():{[attr:string]:any};
+
+        /**
+         * Reset store state
+         */
+        reset():void;
+
+        /**
+         * Return a name of the last attribute used
+         * by a range selection widget.
+         */
+        getLastActiveRangeAttr():string;
+
+        /**
+         * Filter existing values of an attribute based on provided values.
+         * E.g. if the attribute "x1" contains values {value: "foo",...}, {value: "bar",...},
+         *  {value:"baz",....} and the "values"" argument contains ["bar", "baz"] then
+         * the store is expected to keep {value: "bar",...}, {value: "baz", ....} for "x1".
+         */
+        filterItems(attrName:string, values:Array<string>):void;
+
+        /**
+         * Update existing values of an attribute via provided map function.
+         * If the map function updates a record then it should create
+         * a new copy. Unchanged objects can be returned directly.
+         */
+        updateItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i:number)=>TextTypes.AttributeValue);
+
+        /**
+         * Sets a new list of values for a specific attribute.
+         */
+        setValues(attrName:string, values:Array<string>):void;
+
+        /**
+         * Returns true if a specific attribute contains at least one selected
+         * value.
+         */
+        hasSelectedItems(attrName:string):boolean;
+
+        /**
+         * Returns a list of attribute names passing 'hasSelectedItems' test.
+         */
+        getAttributesWithSelectedItems(includeLocked:boolean):Array<string>;
+
+        /**
+         * Sets a (typically) numeric summary for a specific attribute.
+         */
+        setAttrSummary(attrName:string, value:AttrSummary):void;
+
+        /**
+         * Returns a (typically) numeric summary for a specific attribute.
+         */
+        getAttrSummary():Immutable.Map<string, AttrSummary>;
+
+        /**
+         * Activate a support for attaching an extended information
+         * for a specific attribute. The 'fn' callback is expected
+         * to update store(s) in such a way that the information becomes
+         * available.
+         */
+        setExtendedInfoSupport<T>(attrName:string, fn:(idx:number)=>RSVP.Promise<T>):void;
+
+        /**
+         * Returns true if a specific attribute has activated support
+         * for displaying extended information.
+         */
+        hasDefinedExtendedInfo(attrName:string):boolean;
+
+        /**
+         * Attaches an extended information item to a specific attribute value.
+         * This is typically used by setExtendedInfoSupport's callback function.
+         */
+        setExtendedInfo(attrName:string, idx:number, data:Immutable.Map<string, any>):void;
+    }
+
+    /**
+     * An additional information containing information
+     * about an attribute.
+     */
+    export interface AttrSummary {
+        text:string;
+        help?:string;
     }
 }
 

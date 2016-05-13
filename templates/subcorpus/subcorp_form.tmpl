@@ -31,6 +31,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.subcmixerFormData = #filter $Jsonize#$subcmixer_form_data#end filter#;
     conf.structsAndAttrs = #filter $Jsonize#$structs_and_attrs#end filter#;
     conf.currentWithinJson = #if $within_json#$within_json#else#''#end if#;
+    conf.textTypesData = $text_types_data;
     pageSelf.init(conf);
 });
 
@@ -78,9 +79,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
         </table>
         <input type="hidden" name="create" value="1" />
 
-        #filter None
-        $tt_sel
-        #end filter
+        <div id="subcorp-text-type-selection"></div>
 
         <div class="buttons">
         <input class="default-button" type="submit" value="$_("Create Subcorpus")" />

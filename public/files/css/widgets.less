@@ -374,6 +374,8 @@ table.corplist td img.starred {
     box-shadow: 5px 5px 7px #aaa;
     padding: 12px;
     color: #444444;
+    text-align: left;
+    white-space: normal;
     .header {
         padding-bottom: 0.4em;
     }
@@ -419,6 +421,16 @@ table.corplist td img.starred {
         cursor: move;
     }
 }
+.tooltip-box.metadata-detail ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+
+    li {
+        padding: 0.1em 0;
+        margin: 0;
+    }
+}
 .tooltip-box.hidden {
     display: none;
 }
@@ -450,20 +462,30 @@ button#reset-tag-button {
         vertical-align: middle;
     }
     div.steps {
-        margin: 10px 0 10px 0;
+        margin: 0.7em 0 0.7em 0;
         text-align: left;
 
+        .step-block {
+            margin-top: 0.6em;
+            display: inline-block;
+        }
+
+        .step-block:not(:first-child) {
+            margin-left: 0.3em;
+        }
+
         span.arrow {
+            display: inline-block;
+            vertical-align: middle;
             color: @color-widget-orange;
         }
-        .step {
+        table.step {
             border-spacing: 0;
             border: 1px solid @color-widget-orange;
             border-radius: @border-radius-default;
             box-shadow: @portal-box-shadow;
-            display: inline-block;
+            height: 3em;
             background-color: #FFFFFF;
-            margin-top: 10px;
         }
         table.step .num {
             background-color: @color-widget-orange;

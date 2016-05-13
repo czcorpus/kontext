@@ -324,7 +324,9 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         out['user_menu'] = True
         out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
-        out['TextTypeSel'] = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)
+        tt_data = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)  # TODO deprecated
+        out['Normslist'] = tt_data['Normslist']
+        out['text_types_data'] = json.dumps(tt_data)
         self._export_subcorpora_list(self.args.corpname, out)
         self._attach_query_metadata(out)
         return out
@@ -694,7 +696,9 @@ class Actions(Kontext):
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
         tt = get_tt(self.corp, self.ui_lang)
-        out['TextTypeSel'] = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
+        tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
+        out['Normslist'] = tt_data['Normslist']
+        out['text_types_data'] = json.dumps(tt_data)
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',

@@ -816,6 +816,11 @@ class Kontext(Controller):
                                               ('lpos', self.args.lpos),
                                               ('usesubcorp', self.args.usesubcorp),
                                               ])
+        result['interval_chars'] = (
+            settings.get('corpora', 'left_interval_char', None),
+            settings.get('corpora', 'interval_char', None),
+            settings.get('corpora', 'right_interval_char', None),
+        )
 
     def _setup_optional_plugins_js(self, result):
         """
@@ -837,6 +842,7 @@ class Kontext(Controller):
                     if js_file:
                         ans[opt_plugin] = js_file
         result['plugin_js'] = ans
+        result['active_plugins'] = plugins.get_plugins(include_missing=False).keys()
 
     def _get_attrs(self, attr_names, force_values=None):
         """

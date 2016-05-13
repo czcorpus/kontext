@@ -22,7 +22,7 @@
  *
  */
 export class SimplePageStore implements Kontext.PageStore {
-    
+
     dispatcher:Dispatcher.Dispatcher<any>;
 
     private changeListeners:Array<Kontext.StoreListener>;

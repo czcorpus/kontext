@@ -29,6 +29,8 @@
 /// <amd-dependency path="plugins/corparch/init" name="corplistComponent" />
 /// <amd-dependency path="plugins/subcmixer/init" name="subcmixer" />
 
+/// <amd-dependency path="../views/textTypes" name="ttViews" />
+
 import $ = require('jquery');
 import document = require('./document');
 import popupBox = require('popupbox');
@@ -37,10 +39,13 @@ import subcorpFormStoreModule = require('../stores/subcorpForm');
 import queryInput = require('../queryInput');
 import liveAttributes = require('plugins/liveAttributes/init');
 import userSettings = require('../userSettings');
+import textTypesStore = require('../stores/textTypes');
 
 // dynamic imports
 declare var subcmixer:Subcmixer.Module;
 declare var corplistComponent:CorpusArchive.Module;
+
+declare var ttViews:any;
 
 
 /**
@@ -48,7 +53,7 @@ declare var corplistComponent:CorpusArchive.Module;
  */
 export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
-    private pageModel:document.PageModel;
+    private layoutModel:document.PageModel;
 
     private corplistComponent:CorpusArchive.Widget;
 
@@ -58,9 +63,11 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     private extendedApi:Kontext.QueryPagePluginApi;
 
+    private textTypesStore:textTypesStore.TextTypesStore;
+
     constructor(pageModel:document.PageModel, viewComponents,
             subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
-        this.pageModel = pageModel;
+        this.layoutModel = pageModel;
         this.extendedApi = queryInput.extendedApi(pageModel, this);
         let subcForm = $('#subcorp-form');
         let corplist = corplistComponent.create(subcForm.find('select[name="corpname"]').get(0),
@@ -122,10 +129,10 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
                 $('#within-json-field').val(self.subcorpFormStore.exportJson());
             });
             $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
-            this.pageModel.renderReactComponent(this.viewComponents.WithinBuilder,
+            this.layoutModel.renderReactComponent(this.viewComponents.WithinBuilder,
                     $('#subc-within-row .container').get(0),
                     {
-                        structsAndAttrs: this.pageModel.getConf('structsAndAttrs')
+                        structsAndAttrs: this.layoutModel.getConf('structsAndAttrs')
                     }
             );
 
@@ -139,7 +146,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
             $(widgetMap['mixer']).show();
             jqSubmitBtn.hide(); // subcmixer uses its own button (nested React component); not sure about this
             subcmixer.create($(widgetMap['mixer']).find('.widget').get(0),
-                    this.pageModel.pluginApi());
+                    this.layoutModel.pluginApi());
         }
     }
 
@@ -158,7 +165,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
     sizeUnitsSafeSwitch():void {
         let self = this;
         $('.text-type-top-bar a').on('click', function (event) {
-            let ans = confirm(self.pageModel.translate('global__this_action_resets_current_selection'));
+            let ans = confirm(self.layoutModel.translate('global__this_action_resets_current_selection'));
 
             if (!ans) {
                 event.preventDefault();
@@ -168,15 +175,15 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
     }
 
     initHints():void {
-        let attrs = this.pageModel.getConf('structsAndAttrs');
-        let msg = this.pageModel.translate('global__within_hint_text');
+        let attrs = this.layoutModel.getConf('structsAndAttrs');
+        let msg = this.layoutModel.translate('global__within_hint_text');
         let hintRoot = $(window.document.createElement('div'));
         let structList = $(window.document.createElement('ul'));
         let hintAttrs = $(window.document.createElement('p'));
 
         hintRoot.append('<p>' + msg + '</p>');
         hintRoot.append(hintAttrs);
-        hintAttrs.append(this.pageModel.translate('global__within_hint_attrs') + ':');
+        hintAttrs.append(this.layoutModel.translate('global__within_hint_attrs') + ':');
 
         for (let p in attrs) {
             if (attrs.hasOwnProperty(p)) {
@@ -194,23 +201,55 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
         );
     }
 
+    createTextTypesComponents():void {
+        let textTypesData = this.layoutModel.getConf<any>('textTypesData');
+        this.textTypesStore = new textTypesStore.TextTypesStore(this.layoutModel.dispatcher,
+                this.layoutModel.pluginApi(), textTypesData);
+        let ttViewComponents = ttViews.init(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.textTypesStore
+        );
+        let liveAttrsProm;
+        if (this.layoutModel.hasPlugin('live_attributes')) {
+            liveAttrsProm = liveAttributes.create(this.extendedApi, this.textTypesStore, textTypesData['bib_attr']);
+
+        } else {
+            liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
+                fulfill(null);
+            });
+        }
+        liveAttrsProm.then(
+            (liveAttrsStore:Kontext.PageStore) => {
+                let liveAttrsViews = liveAttributes.getViews(this.layoutModel.dispatcher,
+                        this.layoutModel.exportMixins(), this.textTypesStore, liveAttrsStore);
+                this.layoutModel.renderReactComponent(
+                    ttViewComponents.TextTypesPanel,
+                    $('#subcorp-text-type-selection').get(0),
+                    {
+                        liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
+                        liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+                        attributes: this.textTypesStore.getAttributes(),
+                        alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora')
+                    }
+                );
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
+    }
+
     init(conf:Kontext.Conf):void {
         let getStoredAlignedCorp = () => {
-            return this.pageModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
+            return this.layoutModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
         }
-        this.pageModel.init().add({
+        this.layoutModel.init().add({
             initSubcCreationVariantSwitch: this.initSubcCreationVariantSwitch(),
             sizeUnitsSafeSwitch: this.sizeUnitsSafeSwitch(),
-            initHints: this.initHints(),
-            liveAttributes: liveAttributes.create(
-                this.extendedApi,
-                conf,
-                $('#live-attrs-update').get(0),
-                $('#live-attrs-reset').get(0),
-                $('.text-type-params').get(0),
-                getStoredAlignedCorp
-            )
+            initHints: this.initHints()
         });
+        this.createTextTypesComponents();
     }
 }
 

@@ -212,6 +212,9 @@ export class PageModel implements Kontext.PluginProvider {
             },
             createStaticUrl(path:string):string {
                 return self.createStaticUrl(path);
+            },
+            getLayoutViews():Kontext.LayoutViews {
+                return self.layoutViews;
             }
         };
         return mixins ? mixins.concat([componentTools]) : [componentTools];
@@ -1038,6 +1041,10 @@ export class PageModel implements Kontext.PluginProvider {
         });
     }
 
+    hasPlugin(name:string):boolean {
+        return this.getConf<Array<string>>('activePlugins').indexOf(name) > -1;
+    }
+
     /**
      *
      */
@@ -1192,5 +1199,9 @@ export class PluginApi implements Kontext.PluginApi {
 
     getUserSettings():Kontext.IUserSettings {
         return this.pageModel.userSettings;
+    }
+
+    hasPlugin(name:string):boolean {
+        return this.pageModel.hasPlugin(name);
     }
 }

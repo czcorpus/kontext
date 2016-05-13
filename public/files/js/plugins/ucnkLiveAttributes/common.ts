@@ -71,15 +71,3 @@ export interface AjaxAnimation {
     stop(): void;
     animElm:HTMLElement;
 }
-
-export interface LiveAttributesApi extends LiveAttributes.Widget {
-
-    createAnimation():AjaxAnimation;
-
-    replaceRawInput(inputElm:HTMLElement, queryArgs:{[key:string]:any}):rsvp.Promise<any>;
-
-    /**
-     * Returns a handler for aligned corpora UI component
-     */
-    getAlignedCorpora():LiveAttributes.IAlignedCorpora;
-}

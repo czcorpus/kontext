@@ -34,6 +34,7 @@ $_("Concordance: Filter form")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, conf) {
+    conf.textTypesData = $text_types_data;
     filterForm.init(conf);
 });
 
