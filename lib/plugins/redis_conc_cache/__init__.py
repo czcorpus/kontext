@@ -161,5 +161,4 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
 
 @inject('db')
 def create_instance(settings, db):
-    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'],
-                               db=db)
+    return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'], db=db)
