@@ -1,5 +1,6 @@
 from lxml import etree
 import sys
+import os
 
 
 def remove_element(elm):
@@ -23,6 +24,63 @@ def update_1(doc):
         remove_element(src_elm)
     else:
         raise Exception('problem finding "corpora/conc_calc_backend" or "global" elements')
+
+
+def update_2(doc):
+    """
+    add global/action_path_prefix
+    add global/static_files_prefix
+    """
+    global_elm = doc.find('global')
+    elm = etree.SubElement(global_elm, 'action_path_prefix')
+    elm.tail = '\n'
+    elm = etree.SubElement(global_elm, 'static_files_prefix')
+    elm.text = '/files'
+    elm.tail = '\n'
+
+
+def update_3(doc):
+    """
+    add corpora/freqs_cache_ttl
+    add corpora/freqs_cache_min_lines
+    add corpora/colls_cache_dir
+    add corpora/colls_cache_ttl
+    add corpora/colls_cache_min_lines
+    """
+    freqs_cache_dir_elm = doc.find('corpora/freqs_cache_dir')
+    corp_elm = freqs_cache_dir_elm.getparent()
+
+    pos = corp_elm.index(freqs_cache_dir_elm)
+    new_elm = etree.Element('freqs_cache_ttl')
+    new_elm.text = '3600'
+    new_elm.tail = '\n'
+    corp_elm.insert(pos + 1, new_elm)
+
+    pos = corp_elm.index(new_elm)
+    new_elm = etree.Element('freqs_cache_min_lines')
+    new_elm.text = '100'
+    new_elm.tail = '\n'
+    corp_elm.insert(pos + 1, new_elm)
+
+    pos = corp_elm.index(new_elm)
+    cache_path = os.path.join(os.path.dirname(freqs_cache_dir_elm.text), 'colls-cache')
+    print('\n>>> Please create a directory [%s]\n' % (cache_path,))
+    new_elm = etree.Element('colls_cache_dir')
+    new_elm.text = cache_path
+    new_elm.tail = '\n'
+    corp_elm.insert(pos + 1, new_elm)
+
+    pos = corp_elm.index(new_elm)
+    new_elm = etree.Element('colls_cache_ttl')
+    new_elm.text = '3600'
+    new_elm.tail = '\n'
+    corp_elm.insert(pos + 1, new_elm)
+
+    pos = corp_elm.index(new_elm)
+    new_elm = etree.Element('colls_cache_min_lines')
+    new_elm.text = '50'
+    new_elm.tail = '\n'
+    corp_elm.insert(pos + 1, new_elm)
 
 
 def process_document(xml_doc, single_upd=None):
