@@ -21,30 +21,13 @@
 
 declare module LiveAttributesInit {
     export function create(pluginApi:Kontext.QueryPagePluginApi,
-                     conf:{[key:string]:string},
-                     updateButton:HTMLElement, resetButton:HTMLElement,
-                     attrFieldsetWrapper:HTMLElement,
-                     getStoredAlignedCorporaFn?:()=>Array<string>):RSVP.Promise<LiveAttributes.Widget>;
-}
+                     textTypesStore:TextTypes.ITextTypesStore,
+                     bibAttr:string):RSVP.Promise<Kontext.PageStore>;
 
-
-declare module LiveAttributes {
-
-
-    export interface Widget {
-    }
-
-   /**
-    * An object handling currently selected aligned corpora
-    */
-    export interface IAlignedCorpora {
-
-        update(data):void;
-
-        reset():void;
-
-        findSelected():Array<string>;
-
-    }
-
+    /**
+     * Return a dict containing one or more React classes representing plug-in's views
+     *
+     * (we are not strict about React classes as we just pass them around)
+     */
+    export function getViews(dispatcher:any, mixins:any, ...stores:any[]):{[name:string]:any};
 }

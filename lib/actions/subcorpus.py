@@ -187,7 +187,8 @@ class Subcorpus(Kontext):
             out['subcmixer_form_data'] = {}
         self._attach_aligned_corpora_info(out)
         out.update({
-            'TextTypeSel': tt_sel,
+            'Normslist': tt_sel['Normslist'],
+            'text_types_data': json.dumps(tt_sel),
             'structs_and_attrs': structs_and_attrs,
             'method': method,
             'within_json': within_json,

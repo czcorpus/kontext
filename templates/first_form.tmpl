@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #encoding UTF-8
 #from translation import ugettext as _
 #from cmpltmpl.util.query import query
+#from templating.filters import *
 #extends query
 
 #def title
@@ -27,6 +28,9 @@ $_("Concordance - First query form")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf) {
+    conf.textTypesData = $text_types_data;
+    conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
+    conf.Wposlist = #filter $Jsonize#$Wposlist#end filter#;
     firstForm.init(conf);
 });
 #end def

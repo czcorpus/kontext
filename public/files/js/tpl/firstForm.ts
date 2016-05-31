@@ -26,6 +26,9 @@
 /// <reference path="../../ts/declarations/abstract-plugins.d.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <amd-dependency path="../views/textTypes" name="ttViews" />
+/// <amd-dependency path="../views/query/context" name="contextViews" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -38,6 +41,12 @@ import conclines = require('../conclines');
 import Immutable = require('vendor/immutable');
 import userSettings = require('../userSettings');
 import initActions = require('../initActions');
+import textTypesStore = require('../stores/textTypes');
+import RSVP = require('vendor/rsvp');
+import util = require('../util');
+
+declare var ttViews:any;
+declare var contextViews:any;
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -61,6 +70,8 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
     private onSubcorpChangeActions:Array<(corpname:string)=>void>;
 
     private alignedCorpora:Array<string>;
+
+    private textTypesStore:textTypesStore.TextTypesStore;
 
     constructor(layoutModel:layoutModule.PageModel, clStorage:conclines.ConcLinesStorage) {
         this.layoutModel = layoutModel;
@@ -356,6 +367,66 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         });
     }
 
+    createTTViews(conf:Kontext.Conf):RSVP.Promise<any> {
+        let textTypesData = this.layoutModel.getConf<any>('textTypesData');
+        this.textTypesStore = new textTypesStore.TextTypesStore(this.layoutModel.dispatcher,
+                this.layoutModel.pluginApi(), textTypesData);
+        let ttViewComponents = ttViews.init(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.textTypesStore
+        );
+
+        let liveAttrsProm;
+        if (this.layoutModel.hasPlugin('live_attributes')) {
+            liveAttrsProm = liveAttributes.create(this.extendedApi, this.textTypesStore, textTypesData['bib_attr']);
+
+        } else {
+            liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
+                fulfill(null);
+            });
+        }
+        let ttProm = liveAttrsProm.then(
+            (liveAttrsStore:Kontext.PageStore) => {
+                let liveAttrsViews = liveAttributes.getViews(this.layoutModel.dispatcher,
+                        this.layoutModel.exportMixins(), this.textTypesStore, liveAttrsStore);
+                this.layoutModel.renderReactComponent(
+                    ttViewComponents.TextTypesPanel,
+                    $('#specify-query-metainformation div.contents').get(0),
+                    {
+                        liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
+                        liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+                        attributes: this.textTypesStore.getAttributes()
+                    }
+                );
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
+        return ttProm.then(
+            (v) => {
+                let contextViewComponents = contextViews.init(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.exportMixins()
+                );
+                this.layoutModel.renderReactComponent(
+                    contextViewComponents.SpecifyKontextForm,
+                    $('#specify-context div.contents').get(0),
+                    {
+                        lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+                        posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+                        hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
+                        wPoSList: this.layoutModel.getConf<any>('Wposlist')
+                    }
+                );
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
+    }
+
     init(conf:Kontext.Conf):initActions.InitActions {
         let queryFormTweaks = queryInput.init(this.layoutModel, this, this.layoutModel.userSettings,
                 $('#mainform').get(0));
@@ -367,10 +438,6 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             restoreAlignedCorpora: this.restoreAlignedCorpora(queryFormTweaks),
             initCorplistComponent: this.initCorplistComponent(),
             makePrimaryButtons : this.makePrimaryButtons(),
-            liveAttributesInit : liveAttributes.create(this.extendedApi, conf,
-                    window.document.getElementById('live-attrs-update'),
-                    window.document.getElementById('live-attrs-reset'),
-                    $('.text-type-params').get(0)),
             registerSubcorpChange : this.registerSubcorpChange(),
             registerAlignedCorpChange: this.registerAlignedCorpChange(),
             textareaSubmitOverride : queryFormTweaks.textareaSubmitOverride(),
@@ -379,10 +446,11 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             fixFormSubmit : queryFormTweaks.fixFormSubmit(),
             bindQueryHelpers: queryFormTweaks.bindQueryHelpers(),
             queryStorageInit : queryStorage.create(this.layoutModel.pluginApi()),
-            updateStateOnError: this.updateStateOnError()
+            updateStateOnError: this.updateStateOnError(),
+            queryFormTweaks: queryFormTweaks.updateToggleableFieldsets()
         });
-        promises.doAfter('liveAttributesInit', () => {
-            queryFormTweaks.updateToggleableFieldsets();
+        promises.doAfter('queryFormTweaks', () => {
+            this.createTTViews(conf);
         });
         return promises;
     }

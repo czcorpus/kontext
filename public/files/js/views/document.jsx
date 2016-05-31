@@ -19,15 +19,15 @@
 define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM, $) {
     'use strict';
 
-    var lib = {},
-        ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+    let lib = {};
+    let ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
     lib.init = function (dispatcher, mixins, storeProvider) {
 
         /**
          * A single struct/attr row
          */
-        var ItemAndNumRow = React.createClass({
+        let ItemAndNumRow = React.createClass({
            render: function () {
                if (this.props.brackets) {
                    return (
@@ -51,7 +51,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
         /**
          * Attribute list table
          */
-        var AttributeList = React.createClass({
+        let AttributeList = React.createClass({
             mixins: mixins,
 
             render: function () {
@@ -82,7 +82,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
         /**
          * Structure list table
          */
-        var StructureList = React.createClass({
+        let StructureList = React.createClass({
             mixins: mixins,
             render: function () {
                 return (
@@ -102,7 +102,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
 
         // ---------------------------------------------------------------
 
-        var SubcorpusInfo = React.createClass({
+        let SubcorpusInfo = React.createClass({
             mixins: mixins,
 
             componentDidMount : function () {
@@ -134,7 +134,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
 
         // ---------------------------------------------------------------
 
-        var CorpusReference = React.createClass({
+        let CorpusReference = React.createClass({
 
             mixins: mixins,
 
@@ -187,7 +187,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
         /**
          * Corpus information box
          */
-        var CorpusInfoBox = React.createClass({
+        let CorpusInfoBox = React.createClass({
 
             mixins: mixins,
 
@@ -299,7 +299,9 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
          * onReady -- a custom action to be performed once the component is mounted
          *            (signature: onReady(DOMNode) )
          */
-        var PopupBox = React.createClass({
+        let PopupBox = React.createClass({
+
+            mixins: mixins,
 
             getInitialState: function () {
                 return {visible: false};
@@ -317,17 +319,47 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
                 }
             },
 
-            render: function () {
-                var classes = 'tooltip-box framed';
+            _renderStatusIcon : function () {
+                let m = {
+                    'info': 'img/info-icon.svg',
+                    'message': 'img/message-icon.png',
+                    'warning': 'img/warning-icon.svg',
+                    'error': 'img/error-icon.svg'
+                };
+                if (!this.props.status || !m[this.props.status]) {
+                    return null;
 
+                } else {
+                    let path = this.createStaticUrl(m[this.props.status]);
+                    return <div><img className="info-icon" src={path} alt={this.props.status} /></div>;
+                }
+            },
+
+            _createStyle : function () {
+                let css = {};
+                for (let p in this.props.customStyle) {
+                    if (this.props.customStyle.hasOwnProperty(p)) {
+                        css[p] = this.props.customStyle[p];
+                    }
+                }
+                return css;
+            },
+
+            render: function () {
+                let classes = 'tooltip-box framed';
                 if (this.props.customClass) {
                     classes += ' ' + this.props.customClass;
                 }
+                let css = this._createStyle();
+                if (this.props.autoSize) {
+                    css['width'] = '31.9%';
+                }
 
                 return (
-                    <div className={classes} style={this.props.customStyle}>
+                    <div className={classes} style={css}>
                         <div className="header">
                             <a className="close-link" onClick={this.closeClickHandler}></a>
+                            {this._renderStatusIcon()}
                         </div>
                         {this.props.children}
                     </div>
@@ -338,7 +370,8 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
 
         // ----------------------------- info/error/warning message box ----------------------
 
-        var Message = React.createClass({
+        let Message = React.createClass({
+
             mixins: mixins,
 
             _handleCloseClick : function (e) {
@@ -381,7 +414,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
             }
         });
 
-        var Messages = React.createClass({
+        let Messages = React.createClass({
 
             getInitialState : function () {
                 return {messages: []};
@@ -422,7 +455,7 @@ define(['vendor/react', 'vendor/react-dom', 'jquery'], function (React, ReactDOM
 
         // -------------------------------------------------------------------
 
-        var QueryHints = React.createClass({
+        let QueryHints = React.createClass({
 
             mixins: mixins,
 

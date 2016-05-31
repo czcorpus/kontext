@@ -132,6 +132,7 @@ requirejs.config({
     for (i = 0; i < names.length; i += 1) {
         define(names[i], [], function () {
             return {
+                getViews : function () { return {}; },
                 create : function () {
                     return {
                         then: function (thenFn) {
@@ -153,6 +154,7 @@ define('win', [], function () { return window; });
 define('conf', [], function () {
     var conf = {};
     conf.page = {};
+    conf.activePlugins = #filter $Jsonize#$active_plugins#end filter#;
     conf.menuAutoHideInterval = 1500;
     conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 5000);
     conf.rootURL = "$root_url";
@@ -188,7 +190,7 @@ define('conf', [], function () {
     conf.queryTypesHints = {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
     };
-
+    conf.ttIntervalChars = #filter $Jsonize#$getVar('interval_chars', [])#end filter#;
     conf.asyncTasks = #filter $Jsonize#$async_tasks#end filter#;
 
     return conf;

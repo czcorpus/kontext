@@ -153,14 +153,13 @@ class AttrArgs(object):
 class LiveAttributes(AbstractLiveAttributes):
 
     def __init__(self, corparch, max_attr_list_size, empty_val_placeholder,
-                 max_attr_visible_chars, interval_chars):
+                 max_attr_visible_chars):
         self.corparch = corparch
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
         self.databases = {}
         self.shorten_value = partial(Shortener().filter, nice=True)
         self._max_attr_visible_chars = max_attr_visible_chars
-        self._interval_chars = interval_chars
 
     def export_actions(self):
         return {concordance.Actions: [filter_attributes]}
@@ -185,9 +184,6 @@ class LiveAttributes(AbstractLiveAttributes):
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         return self.db(corpname) is not None
-
-    def export(self, plugin_api):
-        return {'interval_chars': self._interval_chars}
 
     def calc_max_attr_val_visible_chars(self, corpus_info):
         if corpus_info.metadata.avg_label_attr_len:
@@ -401,13 +397,7 @@ def create_instance(settings, corparch):
     corparch -- corparch plugin
     """
     la_settings = settings.get('plugins', 'live_attributes')
-    interval_chars = (
-        la_settings.get('ucnk:left_interval_char', None),
-        la_settings.get('ucnk:interval_char', None),
-        la_settings.get('ucnk:right_interval_char', None),
-    )
     return LiveAttributes(corparch=corparch,
                           max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
                           empty_val_placeholder=settings.get('corpora', 'empty_attr_value_placeholder'),
-                          max_attr_visible_chars=int(la_settings.get('ucnk:max_attr_visible_chars', 20)),
-                          interval_chars=interval_chars)
+                          max_attr_visible_chars=int(la_settings.get('ucnk:max_attr_visible_chars', 20)))
