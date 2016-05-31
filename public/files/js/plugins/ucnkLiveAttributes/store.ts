@@ -82,7 +82,7 @@ function isArr(v) {
  * attr2: v2#3 [OK]
  * attr3: v3#1 v3#2 [WRONG]
  */
-export class LiveAttrsStore extends util.SimplePageStore {
+export class LiveAttrsStore extends util.SimplePageStore implements LiveAttributesInit.AttrValueTextInputListener {
 
     private pluginApi:Kontext.PluginApi;
 
@@ -129,6 +129,7 @@ export class LiveAttrsStore extends util.SimplePageStore {
                             self.notifyChangeListeners('$LIVE_ATTRIBUTES_REFINE_DONE');
                         },
                         (err) => {
+                            console.error(err);
                             self.pluginApi.showMessage('error', err);
                         }
                     );
@@ -167,7 +168,7 @@ export class LiveAttrsStore extends util.SimplePageStore {
                 }
             });
         });
-        let prom = this.loadFilteredData(this.textTypesStore.exportSelections());
+        let prom = this.loadFilteredData(this.textTypesStore.exportSelections(false));
         return prom.then(
             (data) => {
                 let filterData = this.importFilter(data);
@@ -175,14 +176,20 @@ export class LiveAttrsStore extends util.SimplePageStore {
                 for (k in filterData) {
                     this.textTypesStore.filterItems(k, filterData[k].map((v) =>v.v));
                     this.textTypesStore.updateItems(k, (v, i) => {
-                        return {
-                            value: v.value,
-                            selected: v.selected,
-                            locked: v.locked,
-                            availItems: filterData[k][i].availItems,
-                            extendedInfo: v.extendedInfo
-                        };
+                        if (filterData[k][i]) {
+                            return {
+                                value: v.value,
+                                selected: v.selected,
+                                locked: v.locked,
+                                availItems: filterData[k][i].availItems,
+                                extendedInfo: v.extendedInfo
+                            };
+
+                        } else {
+                            return null;
+                        }
                     });
+                    this.textTypesStore.filter(k, (item) => item !== null);
                 }
                 this.alignedCorpora = this.alignedCorpora.map((value) => {
                     let newVal:AlignedLanguageItem = {
@@ -251,7 +258,7 @@ export class LiveAttrsStore extends util.SimplePageStore {
                 numPosInfo: data['poscount'],
                 attributes: Immutable.List(newAttrs),
                 values: Immutable.Map<string, Array<string>>(newAttrs.map((item) => {
-                    return [item, this.textTypesStore.getAttribute(item).exportSelections()];
+                    return [item, this.textTypesStore.getAttribute(item).exportSelections(false)];
                 }))
             };
             this.selectionSteps = this.selectionSteps.push(newStep);
@@ -344,5 +351,43 @@ export class LiveAttrsStore extends util.SimplePageStore {
             },
             {contentType : 'application/x-www-form-urlencoded'}
         );
+    }
+
+    private loadAutocompleteHint(pattern:string, patternAttr:string, selections:any):RSVP.Promise<any> {
+        let aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
+        return this.pluginApi.ajax(
+            'GET',
+            this.pluginApi.createActionUrl('attr_val_autocomplete'),
+            {
+                corpname: this.pluginApi.getConf<string>('corpname'),
+                pattern: pattern,
+                patternAttr: patternAttr,
+                attrs: JSON.stringify(selections),
+                aligned: JSON.stringify(aligned)
+            },
+            {contentType : 'application/x-www-form-urlencoded'}
+        );
+    }
+
+    getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any> {
+        return (attrName:string, value:string) => {
+            if (value.length > 2) {
+                let prom = this.loadAutocompleteHint(
+                    value, attrName, this.textTypesStore.exportSelections(true));
+                return prom.then(
+                    (v) => {
+                        this.textTypesStore.setAutoComplete(attrName, v[attrName].map(v=>v[2]));
+                    },
+                    (err) => {
+                        console.error(err);
+                    }
+                );
+
+            } else {
+                return new RSVP.Promise<any>((resolve:(v: any)=>void, reject:(e:any)=>void) => {
+                    resolve(null);
+                });
+            }
+        }
     }
 }

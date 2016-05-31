@@ -46,12 +46,13 @@ from controller import exposed
 from actions import concordance
 
 
-def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora):
+def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora, autocomplete_attr):
     """
     Generates a cache key based on the relevant parameters.
     Returned value is hashed.
     """
-    return md5('%r %r %r %r' % (attr_map, max_attr_list_size, corpus, aligned_corpora)).hexdigest()
+    return md5('%r %r %r %r %r' % (attr_map, max_attr_list_size, corpus, aligned_corpora,
+                                   autocomplete_attr)).hexdigest()
 
 
 def vanilla_corpname(corpname):
@@ -69,16 +70,16 @@ def cached(f):
     time.
     """
     @wraps(f)
-    def wrapper(self, corpus, attr_map, aligned_corpora=None):
+    def wrapper(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         db = self.db(vanilla_corpname(corpus.corpname))
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
             ans = self.from_cache(db, key)
             if ans:
                 return ans
-        ans = f(self, corpus, attr_map, aligned_corpora)
+        ans = f(self, corpus, attr_map, aligned_corpora, autocomplete_attr)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
             self.to_cache(db, key, ans)
         return self.format_data_types(ans)
     return wrapper
@@ -88,7 +89,16 @@ def cached(f):
 def filter_attributes(ctrl, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
-    return plugins.get('live_attributes').get_attr_values(ctrl.corp, attrs, aligned)
+    return plugins.get('live_attributes').get_attr_values(corpus=ctrl.corp, attr_map=attrs, aligned_corpora=aligned)
+
+
+@exposed(return_type='json')
+def attr_val_autocomplete(ctrl, request):
+    attrs = json.loads(request.args.get('attrs', '{}'))
+    aligned = json.loads(request.args.get('aligned', '[]'))
+    attrs[request.args['patternAttr']] = '%%%s%%' % request.args['pattern']
+    return plugins.get('live_attributes').get_attr_values(corpus=ctrl.corp, attr_map=attrs, aligned_corpora=aligned,
+                                                          autocomplete_attr=request.args['patternAttr'])
 
 
 class AttrArgs(object):
@@ -127,6 +137,9 @@ class AttrArgs(object):
         returns:
         a SQL WHERE expression in conjunctive normal form
         """
+        def cmp_operator(val):
+            return 'LIKE' if '%' in val else '='
+
         where = []
         sql_values = []
         for key, values in self.data.items():
@@ -134,12 +147,12 @@ class AttrArgs(object):
             cnf_item = []
             if type(values) is list or type(values) is tuple:
                 for value in values:
-                    cnf_item.append('%s.%s = ?' % (item_prefix, key))
+                    cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
                     sql_values.append(self.import_value(value))
             elif type(values) is dict:
                 pass  # a range query  TODO
             else:
-                cnf_item.append('%s.%s = ?' % (item_prefix, key))
+                cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(values)))
                 sql_values.append(self.import_value(values))
 
             if len(cnf_item) > 0:
@@ -162,7 +175,7 @@ class LiveAttributes(AbstractLiveAttributes):
         self._max_attr_visible_chars = max_attr_visible_chars
 
     def export_actions(self):
-        return {concordance.Actions: [filter_attributes]}
+        return {concordance.Actions: [filter_attributes, attr_val_autocomplete]}
 
     def db(self, corpname):
         """
@@ -252,7 +265,7 @@ class LiveAttributes(AbstractLiveAttributes):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
     @cached
-    def get_attr_values(self, corpus, attr_map, aligned_corpora=None):
+    def get_attr_values(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -260,7 +273,8 @@ class LiveAttributes(AbstractLiveAttributes):
         arguments:
         corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
-        aligned_corpora - a list/tuple of corpora names aligned to base one (the 'corpus' argument)
+        aligned_corpora -- a list/tuple of corpora names aligned to base one (the 'corpus' argument)
+        autocomplete_attr -- such attribute will be also part of selection even if it is a part 'WHERE ...' condition
 
         returns:
         a dictionary containing matching attributes and values
@@ -277,6 +291,9 @@ class LiveAttributes(AbstractLiveAttributes):
         srch_attrs = set(attrs) - set(self.import_key(k)
                                       for k in attr_map.keys() if type(attr_map[k]) is not dict)
         srch_attrs.add('poscount')
+
+        if autocomplete_attr:
+            srch_attrs.add(self.import_key(autocomplete_attr))
 
         hidden_attrs = set()
         if bib_id is not None and bib_id not in srch_attrs:
@@ -325,7 +342,6 @@ class LiveAttributes(AbstractLiveAttributes):
 
         poscounts = defaultdict(lambda: defaultdict(lambda: 0))
         max_visible_chars = self.calc_max_attr_val_visible_chars(corpus_info)
-
         for item in self.db(corpname).execute(sql_template, *where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]

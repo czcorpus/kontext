@@ -378,6 +378,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         );
 
         let liveAttrsProm;
+        let ttTextInputCallback;
         if (this.layoutModel.hasPlugin('live_attributes')) {
             liveAttrsProm = liveAttributes.create(this.extendedApi, this.textTypesStore, textTypesData['bib_attr']);
 
@@ -387,7 +388,10 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             });
         }
         let ttProm = liveAttrsProm.then(
-            (liveAttrsStore:Kontext.PageStore) => {
+            (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
+                if (liveAttrsStore) {
+                    this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
+                }
                 let liveAttrsViews = liveAttributes.getViews(this.layoutModel.dispatcher,
                         this.layoutModel.exportMixins(), this.textTypesStore, liveAttrsStore);
                 this.layoutModel.renderReactComponent(

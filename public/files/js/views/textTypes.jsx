@@ -280,13 +280,103 @@ define(['vendor/react'], function (React) {
         // ----------------------------- <RawInputContainer /> --------------------------
 
         let RawInputContainer = React.createClass({
+
+            throttlingTimer : null,
+
+            _inputChangeHandler : function (evt) {
+                let v = evt.target.value;
+
+                dispatcher.dispatch({
+                    actionType: 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED',
+                    props: {
+                        attrName: this.props.attrName,
+                        value: v
+                    }
+                });
+
+                if (this.throttlingTimer) {
+                    window.clearTimeout(this.throttlingTimer);
+                }
+                this.throttlingTimer = window.setTimeout(() => {
+                    dispatcher.dispatch({
+                        actionType: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST',
+                        props: {
+                            attrName: this.props.attrName,
+                            value: v
+                        }
+                    });
+                }, 200);
+            },
+
+            _handleAutoCompleteHintClick : function (value) {
+                dispatcher.dispatch({
+                    actionType: 'TT_ATTRIBUTE_TEXT_INPUT_SILENTLY_CHANGED',
+                    props: {
+                        attrName: this.props.attrName,
+                        value: value
+                    }
+                })
+            },
+
+            _renderAutoComplete : function (data) {
+                return (
+                    <ul className="auto-complete">
+                    {data.map((item) => {
+                        return (
+                            <li key={item}>
+                                <a onClick={this._handleAutoCompleteHintClick.bind(this, item)}>
+                                    {item}
+                                </a>
+                            </li>
+                        );
+                    })}
+                    </ul>
+                );
+            },
+
+            _changeHandler : function (store, action) {
+                if (action === '$TT_RAW_INPUT_VALUE_UPDATED') {
+                    let attr = store.getAttribute(this.props.attrName);
+                    if (attr) {
+                        this.setState({
+                            inputValue: attr.getValue(),
+                            attrObj: textTypesStore.getAttribute(this.props.attrName)
+                        });
+
+                    } else {
+                        throw new Error('Attribute not found: ', this.props.attrName);
+                    }
+                }
+            },
+
+            componentDidMount : function () {
+                textTypesStore.addChangeListener(this._changeHandler);
+            },
+
+            componentWillUnmount : function () {
+                textTypesStore.removeChangeListener(this._changeHandler);
+            },
+
+            getInitialState : function () {
+                return {
+                    inputValue: '',
+                    attrObj: textTypesStore.getAttribute(this.props.attrName)
+                };
+            },
+
             render : function () {
+                let autoComplete = this.state.attrObj.getAutoComplete();
                 return (
                     <table>
                         <tbody>
                             <tr>
                                 <td>
-                                    <input type="text" name={'sca_' + this.props.data.name} />
+                                    <input type="text"
+                                        name={'sca_' + this.props.attrName}
+                                        onChange={this._inputChangeHandler}
+                                        value={this.state.attrObj.getValue()}
+                                        autoComplete="off" />
+                                    {autoComplete.size > 0 ? this._renderAutoComplete(autoComplete) : null}
                                 </td>
                                 <td></td>
                                 <td></td>
@@ -307,7 +397,8 @@ define(['vendor/react'], function (React) {
                     {this.props.data.containsFullList() || this.props.rangeIsOn
                         ? <FullListContainer data={this.props.data} rangeIsOn={this.props.rangeIsOn}
                                 isLocked={this.props.isLocked} hasDefinedExtendedInfo={this.props.hasDefinedExtendedInfo} />
-                        : <RawInputContainer data={this.props.data} isLocked={this.props.isLocked} />
+                        : <RawInputContainer attrName={this.props.data.name}
+                                isLocked={this.props.isLocked} inputTextOnChange={this.props.inputTextOnChange} />
                     }
                     </div>
                 );
