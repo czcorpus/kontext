@@ -78,7 +78,10 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
             });
         }
         let ttProm = liveAttrsProm.then(
-            (liveAttrsStore:Kontext.PageStore) => {
+            (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
+                if (liveAttrsStore) {
+                    this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
+                }
                 let liveAttrsViews = liveAttributes.getViews(this.layoutModel.dispatcher,
                         this.layoutModel.exportMixins(), this.textTypesStore, liveAttrsStore);
                 this.layoutModel.renderReactComponent(

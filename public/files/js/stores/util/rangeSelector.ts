@@ -186,7 +186,7 @@ export class RangeSelector {
             args['aligned'] = JSON.stringify(alignedCorpnames);
         }
 
-        let attrs = this.textTypesStore.exportSelections();
+        let attrs = this.textTypesStore.exportSelections(false);
         for (let p in attribArgs) {
             attrs[p] = attribArgs[p];
         }

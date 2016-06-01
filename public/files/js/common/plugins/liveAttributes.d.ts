@@ -20,9 +20,20 @@
 /// <reference path="../../../ts/declarations/common.d.ts" />
 
 declare module LiveAttributesInit {
+
+    /**
+     * Represents an object which is able to provide
+     * a callback function initiated by textTypesStore
+     * every time user enters a text into one of raw text inputs
+     * (used whenever the number of items to display is too high).
+     */
+    export interface AttrValueTextInputListener extends Kontext.PageStore {
+        getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any>;
+    }
+
     export function create(pluginApi:Kontext.QueryPagePluginApi,
                      textTypesStore:TextTypes.ITextTypesStore,
-                     bibAttr:string):RSVP.Promise<Kontext.PageStore>;
+                     bibAttr:string):RSVP.Promise<AttrValueTextInputListener>;
 
     /**
      * Return a dict containing one or more React classes representing plug-in's views

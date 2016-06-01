@@ -933,6 +933,24 @@ table.envelope .metadata {
     color: @color-light-text;
     text-align: center;
 }
+table.envelope .scrollable ul.auto-complete {
+    position: absolute;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    background-color: #FFFFFF;
+    box-shadow: @portal-box-shadow;
+    border: 1px solid @color-default-green;
+
+    li {
+        padding: 0.3em 0.7em;
+        margin: 0;
+
+        a {
+            text-decoration: none;
+        }
+    }
+}
 table.form {
     margin-top: 10px;
     border-collapse: collapse;

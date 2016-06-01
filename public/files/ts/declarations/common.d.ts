@@ -376,6 +376,20 @@ declare module TextTypes {
         setValues(values:Array<AttributeValue>):AttributeSelection;
 
         /**
+         * Sets a list of items containing hints based on
+         * the current (incomplete) user entry. This applies
+         * in raw text input implementations - checkbox ones
+         * should silently ignore this call (unless they
+         * use it in some way).
+         */
+        setAutoComplete(values:Array<string>):void;
+
+        /**
+         *
+         */
+        getAutoComplete():Immutable.List<string>;
+
+        /**
          * Flip checked/unchecked status of the value
          */
         toggleValueSelection(idx:number):AttributeSelection;
@@ -395,7 +409,7 @@ declare module TextTypes {
         /**
          * Export selection status to a simple object
          */
-        exportSelections():any;
+        exportSelections(lockedOnesOnly:boolean):any;
 
         /**
          * Preserve only such attribute values whose values can be
@@ -406,7 +420,17 @@ declare module TextTypes {
         /**
          *
          */
+        filter(fn:(v:AttributeValue)=>boolean):AttributeSelection;
+
+        /**
+         *
+         */
         setExtendedInfo(idx:number, data:Immutable.Map<string, any>):AttributeSelection;
+
+        /**
+         *
+         */
+        setValue(v:string):AttributeSelection;
     }
 
 
@@ -428,7 +452,7 @@ declare module TextTypes {
         /**
          * Export checkbox selections (e.g. for ajax requests)
          */
-        exportSelections():{[attr:string]:any};
+        exportSelections(lockedOnesOnly:boolean):{[attr:string]:any};
 
         /**
          * Reset store state
@@ -450,6 +474,11 @@ declare module TextTypes {
         filterItems(attrName:string, values:Array<string>):void;
 
         /**
+         *
+         */
+        filter(attrName:string, fn:(v:AttributeValue)=>boolean):void;
+
+        /**
          * Update existing values of an attribute via provided map function.
          * If the map function updates a record then it should create
          * a new copy. Unchanged objects can be returned directly.
@@ -460,6 +489,12 @@ declare module TextTypes {
          * Sets a new list of values for a specific attribute.
          */
         setValues(attrName:string, values:Array<string>):void;
+
+        /**
+         * Please note that this may not apply for all the
+         * attribute items.
+         */
+        setAutoComplete(attrName:string, values:Array<string>):void;
 
         /**
          * Returns true if a specific attribute contains at least one selected
@@ -501,6 +536,9 @@ declare module TextTypes {
          * This is typically used by setExtendedInfoSupport's callback function.
          */
         setExtendedInfo(attrName:string, idx:number, data:Immutable.Map<string, any>):void;
+
+
+        setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>void):void;
     }
 
     /**

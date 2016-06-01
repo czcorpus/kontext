@@ -31,7 +31,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
-    def get_attr_values(self, corpus, attr_map, aligned_corpora=None):
+    def get_attr_values(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -39,7 +39,8 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         arguments:
         corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
-        aligned_corpora - a list/tuple of corpora names aligned to base one (the 'corpus' argument)
+        aligned_corpora -- a list/tuple of corpora names aligned to base one (the 'corpus' argument)
+        autocomplete_attr -- such attribute will be also part of selection even if it is a part 'WHERE ...' condition
 
         returns:
         a dictionary containing matching attributes and values
