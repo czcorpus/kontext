@@ -1038,9 +1038,10 @@ class Actions(Kontext):
             corp = corplib.open_corpus(self.args.maincorp)
         else:
             corp = self.corp
+        corp_enc = corp.get_conf('ENCODING')
         colllist = corp.get_conf('ATTRLIST').split(',')
         out = {'Coll_attrlist': [{'n': n,
-                                  'label': corp.get_conf(n + '.LABEL') or n}
+                                  'label': import_string(corp.get_conf(n + '.LABEL'), from_encoding=corp_enc) or n}
                                  for n in colllist],
                'Pos_ctxs': conclib.pos_ctxs(1, 1)}
         return out
