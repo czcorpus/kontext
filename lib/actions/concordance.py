@@ -141,7 +141,7 @@ class Actions(Kontext):
                     tmp.setlist(attr_name, v)
                 else:
                     tmp[attr_name] = v
-        # we have to ensure Werkzeug sets 'should_save' attribute
+        # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
         # aligned corpora forms inputs require different approach due to their dynamic nature
@@ -662,7 +662,7 @@ class Actions(Kontext):
     def first(self):
 
         ans = {}
-        self._store_semi_persistent_attrs(('sel_aligned', ))
+        self._store_semi_persistent_attrs(('sel_aligned', 'corpname'))
         self._save_options(['queryselector'])
         try:
             self._set_first_query(self.args.fc_lemword_window_type,
