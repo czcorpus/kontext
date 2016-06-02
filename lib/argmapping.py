@@ -156,7 +156,7 @@ class GlobalArgs(object):
     line_numbers = Parameter(0, persistent=Parameter.PERSISTENT)
     # end
 
-    corpname = Parameter('')  # must be an empty string and not None
+    corpname = Parameter('', persistent=Parameter.SEMI_PERSISTENT)  # must be an empty string and not None
     usesubcorp = Parameter(u'')
     subcname = Parameter(u'')
     subcpath = Parameter([])

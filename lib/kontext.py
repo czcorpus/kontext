@@ -538,7 +538,9 @@ class Kontext(Controller):
             curr_corpora = (sp_data.getlist('sel_aligned') + [sp_data.get('corpname', None)])
             if self._request.args['corpname'] not in curr_corpora:
                 sp_data.pop('sel_aligned')
-            self._session['semi_persistent_attrs'] = sp_data.items(multi=True)
+        self._session['semi_persistent_attrs'] = sp_data.items(multi=True)
+        for k, v in self._session['semi_persistent_attrs']:
+            setattr(self.args, k, v)
 
     # TODO: decompose this method (phase 2)
     def _pre_dispatch(self, path, named_args, action_metadata=None):
@@ -660,17 +662,18 @@ class Kontext(Controller):
         may be redirected (if not None)
         """
         cn = ''
-        if 'json' in form:
-            import json
-            cn = str(json.loads(form.getvalue('json')).get('corpname', ''))
 
-        # let's fetch required corpus name from html form or from URL params
+        # 1st option: fetch required corpus name from html form or from URL params
         if not cn and 'corpname' in form:
             cn = form.getvalue('corpname')
         if isinstance(cn, ListType) and len(cn) > 0:
             cn = cn[-1]
 
-        # if no current corpus is set then we try previous user's corpus
+        # 2nd option: try currently initialized corpname (e.g. from restored semi-persistent args)
+        if not cn:
+            cn = self.args.corpname
+
+        # 3rd option (fallback): if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured
         # in settings.xml
         if not cn:
