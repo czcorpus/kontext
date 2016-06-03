@@ -30,9 +30,11 @@ export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi,
     let tagHelperStore = new stores.TagHelperStore(pluginApi, widgetId);
 
     return function (box:PopupBox.TooltipBox, finalize:()=>void) {
+        let contentElm = window.document.createElement('div');
+        box.getRootElement().appendChild(contentElm);
         pluginApi.renderReactComponent(
             view.init(pluginApi.dispatcher(), pluginApi.exportMixins(), tagHelperStore).TagBuilder,
-            box.getRootElement(),
+            contentElm,
             {
                 widgetId: widgetId,
                 doneCallback: () => {
