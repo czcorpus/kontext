@@ -954,12 +954,12 @@ class Controller(object):
             self._add_globals(result, methodname, action_metadata)
             if template.endswith('.tmpl'):
                 template_class = self._get_template_class(template[:-5])
-                result = template_class(searchList=[result, self.args])
+                tpl_ans = template_class(searchList=[result, self.args])
             else:
-                result = Template(template, searchList=[result, self.args])
+                tpl_ans = Template(template, searchList=[result, self.args])
             if return_template:
-                return result
-            result.respond(CheetahResponseFile(outf))
+                return tpl_ans
+            tpl_ans.respond(CheetahResponseFile(outf))
         # Other (string)
         else:
             outf.write(str(result))

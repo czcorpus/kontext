@@ -307,9 +307,10 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
     private textInputChangeCallback:(attrName:string, inputValue:string)=>RSVP.Promise<any>;
 
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pluginApi:Kontext.PluginApi, data:InitialData) {
+    constructor(dispatcher:Dispatcher.Dispatcher<any>, pluginApi:Kontext.PluginApi, data:InitialData,
+            checkedItems:TextTypes.ServerCheckedValues={}) {
         super(dispatcher);
-        this.attributes = Immutable.List(this.importInitialData(data));
+        this.attributes = Immutable.List(this.importInitialData(data, checkedItems));
         this.initialAttributes = this.attributes;
         this.selectAll = Immutable.Map<string, boolean>(
                 this.attributes.map(
@@ -407,7 +408,7 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         }
     }
 
-    private importInitialData(data:InitialData):Array<TextTypes.AttributeSelection> {
+    private importInitialData(data:InitialData, checkedValues:TextTypes.ServerCheckedValues):Array<TextTypes.AttributeSelection> {
         if (data.Blocks.length > 0) {
             return data.Blocks[0].Line.map((attrItem:BlockLine) => {
                 if (attrItem.textboxlength) {
@@ -415,8 +416,14 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
                         !!attrItem.is_interval);
 
                 } else {
+                    let checkedInfo:Array<string> = checkedValues[attrItem.name] || [];
                     let values:Array<TextTypes.AttributeValue> = attrItem.Values.map((valItem:{v:string, xcnt:string}) => {
-                        return {selected: false, value: valItem.v, locked:false, availItems:valItem.xcnt};
+                        return {
+                            selected: checkedInfo.indexOf(valItem.v) > -1 ? true : false,
+                            value: valItem.v,
+                            locked:false,
+                            availItems:valItem.xcnt
+                        };
                     });
                     return new FullAttributeSelection(attrItem.name, attrItem.label, attrItem.numeric,
                             !!attrItem.is_interval, values);
