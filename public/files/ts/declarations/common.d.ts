@@ -550,6 +550,10 @@ declare module TextTypes {
 
 
         setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>void):void;
+
+        getTextInputPlaceholder():string;
+
+        setTextInputPlaceholder(s:string):void;
     }
 
     /**

@@ -52,3 +52,4 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         Returns a list of 2-tuples (attr_name, attr_value).
         """
         raise NotImplementedError()
+

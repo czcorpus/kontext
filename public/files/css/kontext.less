@@ -826,26 +826,35 @@ table.envelope {
     vertical-align: top;
     margin-right: 10px;
     margin-bottom: 15px;
-}
-table.envelope table {
-    border-spacing: 0;
-}
 
-table.envelope tr.attrib-name {
+    table {
+        border-spacing: 0;
 
-    th {
-        padding: 0.6em 1em;
+        td, th {
+            padding: 0.4em 1em;
+        }
     }
 
-    th.focused {
-        color: @color-logo-pink;
+    tr.attrib-name {
+        th {
+            padding: 0.6em 1em;
+        }
+
+        th.focused {
+            color: @color-logo-pink;
+        }
+
+        a.external-help img {
+            width: 0.6em;
+            vertical-align: top;
+        }
     }
 
-    a.external-help img {
-        width: 0.6em;
-        vertical-align: top;
+    input[type="text"] {
+        width: 15em;
     }
 }
+
 
 table.envelope.aligned {
     max-width: 17em;
@@ -866,10 +875,6 @@ table.envelope.aligned td.note {
     padding: 0.4em 1em;
 }
 
-table.envelope table td,
-table.envelope table th {
-    padding: 0.4em 1em;
-}
 table.envelope td > div.scrollable {
     display: block;
     overflow-x: hidden;

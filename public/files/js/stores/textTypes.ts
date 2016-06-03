@@ -306,6 +306,8 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
 
     private textInputChangeCallback:(attrName:string, inputValue:string)=>RSVP.Promise<any>;
 
+    private textInputPlaceholder:string;
+
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pluginApi:Kontext.PluginApi, data:InitialData,
             checkedItems:TextTypes.ServerCheckedValues={}) {
@@ -321,6 +323,7 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         this.rangeSelector = new rangeSelector.RangeSelector(pluginApi, this);
         this.metaInfo = Immutable.Map({});
         this.extendedInfoCallbacks = Immutable.Map({});
+        this.textInputPlaceholder = null;
         let self = this;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -620,4 +623,14 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
     setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>RSVP.Promise<any>):void {
         this.textInputChangeCallback = fn;
     }
+
+
+    setTextInputPlaceholder(s:string):void {
+        this.textInputPlaceholder = s;
+    }
+
+    getTextInputPlaceholder():string {
+        return this.textInputPlaceholder;
+    }
+
 }
