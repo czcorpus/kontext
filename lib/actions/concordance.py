@@ -691,6 +691,7 @@ class Actions(Kontext):
         self.args.lemma = ''
         self.args.lpos = ''
         out = {'within': within}
+        self._store_checked_text_types(self, out)
         if within and not self.contains_errors():
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)

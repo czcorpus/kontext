@@ -331,6 +331,17 @@ declare module TextTypes {
     }
 
     /**
+     * A map of selected attribute values as
+     * obtained from server.
+     *
+     * format: attr_name_1 => [val1#1, val1#2,...],
+     *         attr_name_2 => [val2#1, val2#2,...]
+     */
+    export interface ServerCheckedValues {
+        [key:string]:Array<string>;
+    }
+
+    /**
      * An object representing an abstract selection
      * of attribute values.
      *

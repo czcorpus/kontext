@@ -369,8 +369,12 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
 
     createTTViews(conf:Kontext.Conf):RSVP.Promise<any> {
         let textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.textTypesStore = new textTypesStore.TextTypesStore(this.layoutModel.dispatcher,
-                this.layoutModel.pluginApi(), textTypesData);
+        this.textTypesStore = new textTypesStore.TextTypesStore(
+                this.layoutModel.dispatcher,
+                this.layoutModel.pluginApi(),
+                textTypesData,
+                this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
+        );
         let ttViewComponents = ttViews.init(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),

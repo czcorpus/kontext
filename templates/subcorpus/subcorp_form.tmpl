@@ -32,6 +32,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.structsAndAttrs = #filter $Jsonize#$structs_and_attrs#end filter#;
     conf.currentWithinJson = #if $within_json#$within_json#else#''#end if#;
     conf.textTypesData = $text_types_data;
+    conf.CheckedSca = #filter $Jsonize#$checked_sca#end filter#;
     pageSelf.init(conf);
 });
 

@@ -35,6 +35,7 @@ $_("Concordance: Filter form")#slurp
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, conf) {
     conf.textTypesData = $text_types_data;
+    conf.CheckedSca = #filter $Jsonize#$checked_sca#end filter#;
     filterForm.init(conf);
 });
 
