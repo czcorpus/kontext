@@ -120,6 +120,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                         }));
         this.bibliographyIds = Immutable.List([]);
         this.initialAlignedCorpora = this.alignedCorpora;
+        textTypesStore.setTextInputPlaceholder(this.getTextInputPlaceholder());
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
@@ -389,5 +390,9 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 });
             }
         }
+    }
+
+    getTextInputPlaceholder():string {
+        return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
     }
 }

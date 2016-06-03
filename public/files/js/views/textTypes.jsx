@@ -305,7 +305,7 @@ define(['vendor/react'], function (React) {
                             value: v
                         }
                     });
-                }, 200);
+                }, 300);
             },
 
             _handleAutoCompleteHintClick : function (value) {
@@ -375,6 +375,7 @@ define(['vendor/react'], function (React) {
                                         name={'sca_' + this.props.attrName}
                                         onChange={this._inputChangeHandler}
                                         value={this.state.attrObj.getValue()}
+                                        placeholder={textTypesStore.getTextInputPlaceholder()}
                                         autoComplete="off" />
                                     {autoComplete.size > 0 ? this._renderAutoComplete(autoComplete) : null}
                                 </td>
