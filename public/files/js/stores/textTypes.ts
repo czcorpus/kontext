@@ -412,8 +412,11 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
     }
 
     private importInitialData(data:InitialData, checkedValues:TextTypes.ServerCheckedValues):Array<TextTypes.AttributeSelection> {
-        if (data.Blocks.length > 0) {
-            return data.Blocks[0].Line.map((attrItem:BlockLine) => {
+        let mergedBlocks:Array<BlockLine> = data.Blocks.reduce((prev:Array<BlockLine>, curr:Block) => {
+            return prev.concat(curr.Line);
+        }, []);
+        if (mergedBlocks.length > 0) {
+            return mergedBlocks.map((attrItem:BlockLine) => {
                 if (attrItem.textboxlength) {
                     return new TextInputAttributeSelection(attrItem.name, attrItem.label, attrItem.numeric,
                         !!attrItem.is_interval);
