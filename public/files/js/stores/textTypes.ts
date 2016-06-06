@@ -93,7 +93,7 @@ class TextInputAttributeSelection implements TextTypes.AttributeSelection {
     }
 
     updateValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
-        throw new Error('cannot update values for SrchAttributeSelection');
+        return this;
     }
 
     toggleValueSelection(idx:number):TextTypes.AttributeSelection {
@@ -105,11 +105,11 @@ class TextInputAttributeSelection implements TextTypes.AttributeSelection {
     }
 
     hasUserChanges():boolean {
-        return false; // TODO
+        return !!this.value;
     }
 
     exportSelections(lockedOnesOnly:boolean):any {
-        return null; // TODO
+        return [this.value];
     }
 
     filterItems(items:Array<string>):TextTypes.AttributeSelection {
@@ -548,7 +548,20 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
     updateItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):void {
         let attr = this.getAttribute(attrName);
         let idx = this.attributes.indexOf(attr);
-        this.attributes = this.attributes.set(idx, attr.updateValues(mapFn));
+        let newAttr;
+        if (attr instanceof TextInputAttributeSelection && attr.hasUserChanges()) {
+            let newVal = {
+                value: attr.value,
+                selected: true,
+                locked: true
+            };
+            newAttr = new FullAttributeSelection(attr.name, attr.label, attr.isNumeric,
+                    attr.isInterval, [newVal]);
+
+        } else {
+            newAttr = attr.updateValues(mapFn);
+        }
+        this.attributes = this.attributes.set(idx, newAttr);
     }
 
     setValues(attrName:string, values:Array<string>):void {
