@@ -111,7 +111,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
     subcCreationVariantSwitch(value:string):void {
         let widgetMap = {
             'raw': '#subc-within-row',
-            'gui': '.text-type-params',
+            'gui': '#subcorp-text-type-selection',
             'mixer': '#subc-mixer-row'
         };
         let jqSubmitBtn = $('#subcorp-form').find('input[type=submit]');
@@ -121,12 +121,11 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
             }
         }
         jqSubmitBtn.off('click.customized');
-        let self = this;
+        $(widgetMap[value]).show();
         if (value === 'raw') {
-            $('#subc-within-row').show();
             jqSubmitBtn.show();
             jqSubmitBtn.on('click.customized', (evt:JQueryEventObject) => {
-                $('#within-json-field').val(self.subcorpFormStore.exportJson());
+                $('#within-json-field').val(this.subcorpFormStore.exportJson());
             });
             $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
             this.layoutModel.renderReactComponent(this.viewComponents.WithinBuilder,
@@ -137,23 +136,21 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
             );
 
         } else if (value === 'gui') {
-            $('.text-type-params')
-                .show()
-                .find('input[type="checkbox"]').attr('disabled', null);
             jqSubmitBtn.show();
 
         } else if (value === 'mixer') {
-            $(widgetMap['mixer']).show();
             jqSubmitBtn.hide(); // subcmixer uses its own button (nested React component); not sure about this
             subcmixer.create($(widgetMap['mixer']).find('.widget').get(0),
                     this.layoutModel.pluginApi());
+
+        } else {
+            throw new Error('Unknown subcorpus sub-menu item: ' + value);
         }
     }
 
     initSubcCreationVariantSwitch():void {
-        let self = this;
-        $('input.method-select').on('click', function (event) {
-            self.subcCreationVariantSwitch($(event.target).val());
+        $('input.method-select').on('click', (event) => {
+            this.subcCreationVariantSwitch($(event.target).val());
         });
         this.subcCreationVariantSwitch($('input[name="method"]:checked').val());
     }
@@ -163,9 +160,8 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
      * current unsaved checkbox selection. This forces a dialog box to prevent unwanted action.
      */
     sizeUnitsSafeSwitch():void {
-        let self = this;
-        $('.text-type-top-bar a').on('click', function (event) {
-            let ans = confirm(self.layoutModel.translate('global__this_action_resets_current_selection'));
+        $('.text-type-top-bar a').on('click', (event) => {
+            let ans = confirm(this.layoutModel.translate('global__this_action_resets_current_selection'));
 
             if (!ans) {
                 event.preventDefault();
