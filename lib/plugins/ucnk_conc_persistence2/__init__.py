@@ -45,10 +45,9 @@ import hashlib
 import time
 import re
 import json
+import sqlite3
 
-from sqlalchemy import create_engine
-
-from ..abstract.conc_persistence import AbstractConcPersistence
+from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
 
 
@@ -112,7 +111,7 @@ class ConcPersistence(AbstractConcPersistence):
 
         self.db = db
         self._auth = auth
-        self._archive = create_engine('sqlite:///%s' % settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
+        self._archive = sqlite3.connect(settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
         self._settings = settings
 
     def _mk_key(self, code):
@@ -138,6 +137,11 @@ class ConcPersistence(AbstractConcPersistence):
         """
         return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
 
+    def _execute_sql(self, sql, args=()):
+        cursor = self._archive.cursor()
+        cursor.execute(sql, args)
+        return cursor
+
     def open(self, data_id):
         """
         Loads operation data according to the passed data_id argument.
@@ -151,11 +155,12 @@ class ConcPersistence(AbstractConcPersistence):
         """
         data = self.db.get(self._mk_key(data_id))
         if data is None:
-            tmp = self._archive.execute('SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
+            tmp = self._execute_sql('SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
             if tmp:
                 data = json.loads(tmp[0])
-                self._archive.execute('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
-                                      (int(round(time.time())), data_id))
+                self._execute_sql('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',
+                                  (int(round(time.time())), data_id))
+                self._archive.commit()
         return data
 
     def store(self, user_id, curr_data, prev_data=None):
