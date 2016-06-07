@@ -180,6 +180,8 @@ class Subcorpus(Kontext):
         out = {'SubcorpList': ()}
         if self.environ['REQUEST_METHOD'] == 'POST':
             self._store_checked_text_types(request.form, out)
+        else:
+            out['checked_sca'] = {}
 
         if plugins.has_plugin('subcmixer'):
             out['subcmixer_form_data'] = plugins.get('subcmixer').form_data(self._plugin_api)
