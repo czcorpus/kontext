@@ -499,9 +499,11 @@
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="live_attributes">
-                        <a:documentation>Interactive text types selection</a:documentation>
-                        <ref name="plugin_common" />
-                        <ref name="customPluginConfiguration" />
+                        <optional>
+                            <a:documentation>Interactive text types selection</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
                     </element>
                     <element name="export">
                         <a:documentation>Dataset export modules</a:documentation>
@@ -530,16 +532,20 @@
                         </zeroOrMore>
                     </element>
                     <element name="subc_restore">
-                        <a:documentation>Backup/restore of subcorpora</a:documentation>
-                        <ref name="plugin_common" />
-                        <ref name="customPluginConfiguration" />
+                        <optional>
+                            <a:documentation>Backup/restore of subcorpora</a:documentation>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
                     </element>
                     <element name="locking">
-                        <a:documentation>Internal locking mechanism used when calculating a concordance</a:documentation>
-                        <element name="module">
-                            <text />
-                        </element>
-                        <ref name="customPluginConfiguration" />
+                        <optional>
+                            <a:documentation>Internal locking mechanism used when calculating a concordance</a:documentation>
+                            <element name="module">
+                                <text />
+                            </element>
+                            <ref name="customPluginConfiguration" />
+                        </optional>
                     </element>
                     <element name="taghelper">
                         <a:documentation>An interactive builder of positional tags</a:documentation>
