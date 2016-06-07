@@ -262,12 +262,14 @@
             </element>
             <optional>
                 <element name="mailing">
-                    <element name="smtp_server">
-                        <text />
-                    </element>
-                    <element name="sender">
-                        <text />
-                    </element>
+                    <optional>
+                        <element name="smtp_server">
+                            <text />
+                        </element>
+                        <element name="sender">
+                            <text />
+                        </element>
+                    </optional>
                 </element>
             </optional>
             <element name="logging">
