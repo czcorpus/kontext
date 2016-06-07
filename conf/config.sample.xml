@@ -23,10 +23,7 @@
             <language label="English">en_US</language>
             <language label="slovensky">sk_SK</language>
         </translations>
-        <error_report_url>http://acmecorpora.org/support</error_report_url>
-        <error_report_params>
-          <param name="queryurl">@_get_current_url</param>
-        </error_report_params>
+        <error_report_url />
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
@@ -34,10 +31,7 @@
         <action_path_prefix>/apps/kontext</action_path_prefix>
         <static_files_prefix>/files</static_files_prefix>
     </global>
-    <mailing>
-        <smtp_server>acme.localdomain</smtp_server>
-        <sender>acme@localdomain</sender>
-    </mailing>
+    <mailing />
     <logging>
         <path>/var/log/bonito/application.log</path>
         <file_size>1000000</file_size>
@@ -78,10 +72,7 @@
         <use_db_whitelist>1</use_db_whitelist>
     </corpora>
     <plugins>
-        <db>
-            <module>default_db</module>
-            <db_path extension-by="default">/path/to/your/sqlite3/data/file</db_path>
-        </db>
+        <application_bar />
         <auth>
             <module>default_auth</module>
             <auth_cookie_name>kontext_session</auth_cookie_name>
@@ -89,10 +80,42 @@
             <login_url>http://korpus.test/user/login?continue=%s</login_url>
             <logout_url>http://korpus.test/user/logout?continue=%s</logout_url>
         </auth>
+        <conc_cache>
+            <module>default_conc_cache</module>
+            <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
+        </conc_cache>
+        <conc_persistence>
+            <module>default_conc_persistence</module>
+            <ttl_days extension-by="default">100</ttl_days>
+            <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
+        </conc_persistence>
+        <corparch>
+            <module>default_corparch</module>
+            <js_module>defaultCorparch</js_module>
+            <file>/path/to/your/corpus/tree/xml/file</file>
+            <root_elm_path>//corpora/corplist</root_elm_path>
+            <tag_prefix extension-by="default">+</tag_prefix>
+            <max_num_hints extension-by="default">10</max_num_hints>
+        </corparch>
+        <db>
+            <module>default_db</module>
+            <db_path extension-by="default">/path/to/your/sqlite3/data/file</db_path>
+        </db>
+        <export>
+            <csv>default_csv</csv>
+            <xlsx>default_xlsx</xlsx>
+        </export>
+        <footer_bar />
         <getlang>
             <module>default_getlang</module>
             <cookie extension-by="ucnk">kontext_toolbar_lang</cookie>
         </getlang>
+        <live_attributes />
+        <locking />
+        <menu_items>
+            <module>default_menu_items</module>
+            <data_path extension-by="default">/home/tomas/work/kontext.dev/conf/main-menu.sample.json</data_path>
+        </menu_items>
         <query_storage>
             <module>default_query_storage</module>
             <js_module>ucnkQueryStorage</js_module>
@@ -101,27 +124,6 @@
             <page_num_records>10</page_num_records>
             <num_kept_records extension-by="default">10</num_kept_records>
         </query_storage>
-        <conc_persistence>
-            <module>default_conc_persistence</module>
-            <ttl_days extension-by="default">100</ttl_days>
-            <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
-        </conc_persistence>
-        <locking>
-            <module>redis_locking</module>
-            <ttl extension-by="default">20</ttl>
-            <num_attempts extension-by="default">10</num_attempts>
-        </locking>
-        <conc_cache>
-            <module>default_conc_cache</module>
-            <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
-        </conc_cache>
-        <live_attributes>
-            <module>acme_live_attributes</module>
-            <js_module>acmeLiveAttributes</js_module>
-            <right_interval_char extension-by="acme">+</right_interval_char>
-            <left_interval_char extension-by="acme">-</left_interval_char>
-            <interval_char extension-by="acme">±</interval_char>
-        </live_attributes>
         <settings_storage>
             <module>default_settings_storage</module>
             <excluded_users>
@@ -133,21 +135,9 @@
             <module>default_sessions</module>
             <ttl>14400</ttl>
         </sessions>
-        <corparch>
-            <module>default_corparch</module>
-            <js_module>defaultCorparch</js_module>
-            <file>/path/to/your/corpus/tree/xml/file</file>
-            <root_elm_path>//corpora/corplist</root_elm_path>
-            <tag_prefix extension-by="default">+</tag_prefix>
-            <max_num_hints extension-by="default">10</max_num_hints>
-        </corparch>
-        <export>
-            <csv>default_csv</csv>
-            <xlsx>default_xlsx</xlsx>
-        </export>
-        <subc_restore>
-            <module>acme_subc_restore</module>
-        </subc_restore>
+        <subcmixer />
+        <subc_restore />
+        <syntax_viewer />
         <taghelper>
             <module>default_taghelper</module>
             <clear_interval extension-by="default">86400</clear_interval>
@@ -158,10 +148,6 @@
         <user_items>
             <module>default_user_items</module>
         </user_items>
-        <menu_items>
-            <module>default_menu_items</module>
-            <data_path extension-by="default">/home/tomas/work/kontext.dev/conf/main-menu.sample.json</data_path>
-        </menu_items>
     </plugins>
 </kontext>
 
