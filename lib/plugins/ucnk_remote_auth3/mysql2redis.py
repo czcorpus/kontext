@@ -7,7 +7,7 @@ corpora) from MySQL/MariaDB database to Redis storage.
 It is also used by the syncdb.py script.
 
 The script requires Python Redis client (http://redis-py.readthedocs.org/) and
-SQLAlchemy library (http://www.sqlalchemy.org/).
+MySQL-python library (https://pypi.python.org/pypi/MySQL-python).
 """
 
 import redis
@@ -19,9 +19,6 @@ import MySQLdb
 
 
 def mysql_connection(**kwargs):
-    """
-    Creates a SQLAlchemy engine instance.
-    """
     return MySQLdb.connect(**kwargs)
 
 
@@ -108,10 +105,6 @@ class Export(object):
     """
 
     def __init__(self, mysqldb, version, default_corpora=None):
-        """
-        arguments:
-        mysqldb -- a SQLAlchemy engine instance
-        """
         self._mysql = mysqldb
         self._version = version
         self._default_corpora = default_corpora if default_corpora is not None else ()

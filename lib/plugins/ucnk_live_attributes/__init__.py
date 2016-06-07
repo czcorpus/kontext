@@ -30,12 +30,12 @@ element live_attributes {
 """
 
 import re
-from sqlalchemy import create_engine
 import json
 from functools import wraps
 from hashlib import md5
 from functools import partial
 from collections import defaultdict, OrderedDict
+import sqlite3
 
 import l10n
 from plugins import inject
@@ -187,7 +187,8 @@ class LiveAttributes(AbstractLiveAttributes):
         if corpname not in self.databases:
             db_path = self.corparch.get_corpus_info(corpname).get('metadata', {}).get('database')
             if db_path:
-                self.databases[corpname] = create_engine('sqlite:///%s' % db_path)
+                self.databases[corpname] = sqlite3.connect(db_path)
+                self.databases[corpname].row_factory = sqlite3.Row
             else:
                 self.databases[corpname] = None
         return self.databases[corpname]
@@ -197,6 +198,11 @@ class LiveAttributes(AbstractLiveAttributes):
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         return self.db(corpname) is not None
+
+    def execute_sql(self, db, sql, args=()):
+        cursor = db.cursor()
+        cursor.execute(sql, args)
+        return cursor
 
     def calc_max_attr_val_visible_chars(self, corpus_info):
         if corpus_info.metadata.avg_label_attr_len:
@@ -218,8 +224,7 @@ class LiveAttributes(AbstractLiveAttributes):
                     data[k] = l10n.format_number(data[k])
         return data
 
-    @staticmethod
-    def from_cache(db, key):
+    def from_cache(self, db, key):
         """
         Loads a value from cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -231,13 +236,12 @@ class LiveAttributes(AbstractLiveAttributes):
         returns:
         a stored value matching provided argument or None if nothing is found
         """
-        ans = db.execute("SELECT value FROM cache WHERE key = ?", (key,)).fetchone()
+        ans = self.execute_sql(db, "SELECT value FROM cache WHERE key = ?", (key,)).fetchone()
         if ans:
             return LiveAttributes.format_data_types(json.loads(str(ans[0])))
         return None
 
-    @staticmethod
-    def to_cache(db, key, values):
+    def to_cache(self, db, key, values):
         """
         Stores a data object "values" into the cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -248,7 +252,7 @@ class LiveAttributes(AbstractLiveAttributes):
         values -- a dictionary with arbitrary nesting level
         """
         value = json.dumps(values)
-        db.execute("INSERT INTO cache (key, value) VALUES (?, ?)", key, value)
+        self.execute_sql(db, "INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
 
     @staticmethod
     def export_key(k):
@@ -326,7 +330,7 @@ class LiveAttributes(AbstractLiveAttributes):
 
         ans = {}
         # already selected items are part of the answer; no need to fetch them from db
-        ans.update(dict([(self.import_key(k), v) for k, v in attr_map.items()]))
+        ans.update(dict((self.import_key(k), v) for k, v in attr_map.items()))
         range_attrs = set()
 
         for attr in ans.keys():
@@ -342,7 +346,7 @@ class LiveAttributes(AbstractLiveAttributes):
 
         poscounts = defaultdict(lambda: defaultdict(lambda: 0))
         max_visible_chars = self.calc_max_attr_val_visible_chars(corpus_info)
-        for item in self.db(corpname).execute(sql_template, *where_values).fetchall():
+        for item in self.execute_sql(self.db(corpname), sql_template, where_values).fetchall():
             for attr in selected_attrs:
                 v = item[srch_attr_map[attr]]
                 if v is not None and attr not in hidden_attrs:
@@ -386,9 +390,9 @@ class LiveAttributes(AbstractLiveAttributes):
 
     def get_bibliography(self, corpus, item_id):
         db = self.db(vanilla_corpname(corpus.corpname))
-        col_map = db.execute('PRAGMA table_info(\'bibliography\')').fetchall()
+        col_map = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
         col_map = OrderedDict([(x[1], x[0]) for x in col_map])
-        ans = db.execute('SELECT * FROM bibliography WHERE id = ? LIMIT 1', item_id).fetchone()
+        ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
         return [(k, ans[i]) for k, i in col_map.items()]
 
     def get_bib_size(self, corpus):
@@ -398,7 +402,7 @@ class LiveAttributes(AbstractLiveAttributes):
         db = self.db(vanilla_corpname(corpus.corpname))
         size = self.from_cache(db, 'bib_size')
         if size is None:
-            ans = db.execute('SELECT COUNT(*) FROM bibliography').fetchone()
+            ans = self.execute_sql(db, 'SELECT COUNT(*) FROM bibliography').fetchone()
             size = ans[0]
             self.to_cache(db, 'bib_size', size)
         return size

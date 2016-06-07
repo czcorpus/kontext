@@ -29,7 +29,7 @@ import json
 import logging
 
 import redis
-from sqlalchemy import create_engine
+import sqlite3
 
 MAX_NUM_SHOW_ERRORS = 10
 MAX_INTERVAL_BETWEEN_ITEM_VISITS = 3600 * 24 * 3   # empirical value
@@ -42,11 +42,15 @@ def redis_connection(host, port, db_id):
     return redis.StrictRedis(host=host, port=port, db=db_id)
 
 
-def sqlite_connection(db_path):
-    """
-    Opens an SQLite3 database file and returns an instance of Sqlalchemy engine
-    """
-    return create_engine('sqlite:///%s' % db_path)
+class SQLite3Ops(object):
+    def __init__(self, db_path):
+        self._db = sqlite3.connect(db_path)
+        self._db.row_factory = sqlite3.Row
+
+    def execute(self, sql, args):
+        cursor = self._db.cursor()
+        cursor.execute(sql, args)
+        return cursor
 
 
 class Archiver(object):
@@ -178,7 +182,7 @@ def run(conf, key_prefix, cron_interval, dry_run, persist_level_key, key_alphabe
                                conf.get('plugins', 'db')['default:port'],
                                conf.get('plugins', 'db')['default:id'])
 
-    to_db = sqlite_connection(conf.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
+    to_db = SQLite3Ops(conf.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
     default_ttl = conf.get('plugins', 'conc_persistence')['default:ttl_days']
     try:
         # if 1/3 of TTL is reached then archiving is possible
@@ -207,12 +211,14 @@ def run(conf, key_prefix, cron_interval, dry_run, persist_level_key, key_alphabe
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
     import autoconf
+    import initializer
     settings = autoconf.settings
     logger = autoconf.logger
 
-    import plugins
-    from plugins import redis_db
-    plugins.install_plugin('db', redis_db, autoconf.settings)
+    initializer.init_plugin('db')
+    initializer.init_plugin('sessions')
+    initializer.init_plugin('auth')
+
     from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
 
     parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')

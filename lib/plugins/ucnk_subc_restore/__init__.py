@@ -40,11 +40,22 @@ required entry in config.xml:
 import time
 import urllib
 
-from sqlalchemy import create_engine
 import werkzeug.urls
-from ..abstract.subc_restore import AbstractSubcRestore
+from plugins.abstract.subc_restore import AbstractSubcRestore
 import datetime
 from plugins import inject
+import sqlite3
+
+
+class SQLite3Ops(object):
+    def __init__(self, db_path):
+        self._db = sqlite3.connect(db_path)
+        self._db.row_factory = sqlite3.Row
+
+    def execute(self, sql, args):
+        cursor = self._db.cursor()
+        cursor.execute(sql, args)
+        return cursor
 
 
 class UCNKSubcRestore(AbstractSubcRestore):
@@ -57,7 +68,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
     def __init__(self, conf, corparch):
         self._conf = conf
         self._corparch = corparch
-        self._db = create_engine('sqlite:///%s' % self._conf.get('plugins')['subc_restore']['ucnk:db_path'])
+        self._db = SQLite3Ops(self._conf.get('plugins')['subc_restore']['ucnk:db_path'])
 
     def store_query(self,  user_id, corpname, subcname, cql):
         self._db.execute('INSERT INTO subc_archive (user_id, corpname, subcname, cql, timestamp) '
