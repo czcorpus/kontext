@@ -57,6 +57,9 @@ class SQLite3Ops(object):
         cursor.execute(sql, args)
         return cursor
 
+    def commit(self):
+        self._db.commit()
+
 
 class UCNKSubcRestore(AbstractSubcRestore):
     """
@@ -73,10 +76,12 @@ class UCNKSubcRestore(AbstractSubcRestore):
     def store_query(self,  user_id, corpname, subcname, cql):
         self._db.execute('INSERT INTO subc_archive (user_id, corpname, subcname, cql, timestamp) '
                          'VALUES (?, ?, ?, ?, ?)', (user_id, corpname, subcname, cql, int(time.time())))
+        self._db.commit()
 
     def delete_query(self, user_id, corpname, subcname):
         self._db.execute('DELETE FROM subc_archive WHERE user_id = ? AND corpname = ? AND subcname = ?',
                          (user_id, corpname, subcname))
+        self._db.commit()
 
     def list_queries(self, user_id, from_idx, to_idx=None):
         to_idx = -1 if to_idx is None else to_idx - from_idx
