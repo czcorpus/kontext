@@ -386,7 +386,8 @@ export class ViewPage {
                             $(box.getRootElement()).find('.chart-area').empty();
                             self.showGroupsStats($(box.getRootElement()).find('.chart-area').get(0));
                         },
-                        checkpointUrl: window.location.href
+                        checkpointUrl: window.location.href,
+                        canSendMail: self.layoutModel.getConf<boolean>('can_send_mail')
                      }
                  );
             };

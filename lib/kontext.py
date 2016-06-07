@@ -1040,6 +1040,8 @@ class Kontext(Controller):
 
         result['has_subcmixer'] = plugins.has_plugin('subcmixer')
 
+        result['can_send_mail'] = bool(settings.get('mailing'))
+
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)
         result['plugin_data'] = {}

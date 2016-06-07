@@ -384,6 +384,13 @@ define(['vendor/react', 'jquery'], function (React, $) {
                 }
             },
 
+            _renderEmailButton : function () {
+                if (this.props.canSendMail) {
+                    return <button type="button" onClick={this._openEmailDialogButtonHandler}>{this.translate('linesel__send_the_link_to_mail')}</button>;
+                }
+                return null;
+            },
+
             render: function () {
                 return (
                     <div id="selection-actions">
@@ -404,7 +411,7 @@ define(['vendor/react', 'jquery'], function (React, $) {
                                         defaultEmail={this.state.email}
                                         handleEmailDialogButton={this._handleEmailDialogButton}
                                         emailChangeHandler={this._emailChangeHandler} />
-                                : <button type="button" onClick={this._openEmailDialogButtonHandler}>{this.translate('linesel__send_the_link_to_mail')}</button>
+                                : this._renderEmailButton()
                             }
                         </fieldset>
                     </div>
