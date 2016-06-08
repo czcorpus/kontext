@@ -253,6 +253,7 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         value = json.dumps(values)
         self.execute_sql(db, "INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
+        db.commit()
 
     @staticmethod
     def export_key(k):
