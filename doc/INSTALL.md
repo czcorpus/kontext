@@ -26,7 +26,7 @@ sudo apt-get install libxml2-dev libxslt-dev python-dev
 Configure KonText (config.xml)
 ------------------------------
 
-Before you can build KonText, a proper configuration must be ready (especially the plug-ins).
+Before you can build KonText, a proper configuration must be ready (especially plug-ins).
 
 KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one from scratch a sample
 configuration *conf/config.sample.xml* can be used to start with.
