@@ -142,7 +142,7 @@ is */etc/apache2/sites-enabled/my_config*):
 </VirtualHost>
 ```
 
-*Important note*: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this
+**Important note**: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this
 concrete form as in other case you may experience occasional error responses from Apache server
 (see [mod_wsgi documentation](https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API)
 for details). Also note that such a configuration does not provide the best performance *mod_wsgi* can offer.
