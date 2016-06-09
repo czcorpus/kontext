@@ -83,6 +83,12 @@ def update_3(doc):
     corp_elm.insert(pos + 1, new_elm)
 
 
+def update_4(doc):
+    srch = doc.find('/corpora/use_db_whitelist')
+    if srch is not None:
+        srch.getparent().remove(srch)
+
+
 def process_document(xml_doc, single_upd=None):
     func_name = lambda j: 'update_%d' % j
 

@@ -233,25 +233,22 @@ def conf_path():
     return _state.conf_path
 
 
-def get_default_corpus(corplist):
+def get_default_corpus(allowed_corpora):
     """
     Returns name of the default corpus to be offered to a user. Select first
     corpus from the list which is conform with user's access rights
 
     arguments:
-    corplist -- list of corpora names
+    allowed_corpora -- list of corpora names
 
     returns:
-      name of a corpus to be used as a default one
+    name of a corpus to be used as a default
     """
     default_corp_list = get('corpora', 'default_corpora')
-    if get_bool('corpora', 'use_db_whitelist'):
-        for item in default_corp_list:
-            if item in corplist:
-                return item
+    try:
+        return next(item for item in default_corp_list if item in allowed_corpora)
+    except StopIteration:
         return ''   # '' is 'empty corpus' (None cannot be used here)
-    else:
-        return get('corpora', 'default_corpora')[0]
 
 
 DEBUG_OFF = 0
