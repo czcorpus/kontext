@@ -1,41 +1,38 @@
 <kontext>
     <theme>
-        <name>autumn_mood</name>
-        <css>style.css</css>
-        <logo>logo.png</logo>
-        <logo_mouseover>logo_s.png</logo_mouseover>
-        <logo_href>http://our.kontext.localhost</logo_href>
-        <logo_inline_css>width: 300px;height: 150px</logo_inline_css>
-        <fonts>
-            <item>https://fonts.googleapis.com/css?family=Cousine:400|Roboto:300,400,400italic,700,700italic|Roboto+Condensed:400,700&amp;subset=latin,latin-ext</item>
-        </fonts>
+        <name>default</name>
+        <css />
+        <logo>kontext-logo.svg</logo>
+        <logo_mouseover>kontext-logo_s.svg</logo_mouseover>
+        <logo_href>http://localhost:5000</logo_href> <!-- change this according to your settings -->
+        <logo_inline_css>width: 200px</logo_inline_css>
+        <fonts />
     </theme>
     <global>
-        <deployment_id>20151031_v4</deployment_id>
+        <deployment_id>20151031_v4</deployment_id> <!-- can flush browser's cache when updating app even if HTTP caching headers are not ok -->
         <manatee_path>/optional/path/to/a/non-default/manatee</manatee_path>
         <umask>002</umask>
         <debug>false</debug>
         <maintenance>false</maintenance>
-        <profile_log_path>/optional/path/used/for/profiling/output/if/debug/level/is/2</profile_log_path>
+        <profile_log_path /> <!-- leave this empty unless you want to do a low-level debugging -->
         <max_attr_list_size>30</max_attr_list_size>
         <translations>
             <language label="česky">cs_CZ</language>
             <language label="English">en_US</language>
-            <language label="slovensky">sk_SK</language>
         </translations>
         <error_report_url />
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
         <calc_backend conf="/path/to/celeryconfig.py">celery</calc_backend>
-        <action_path_prefix>/apps/kontext</action_path_prefix>
+        <action_path_prefix>/</action_path_prefix>
         <static_files_prefix>/files</static_files_prefix>
     </global>
     <mailing />
     <logging>
-        <path>/var/log/bonito/application.log</path>
-        <file_size>1000000</file_size>
-        <num_files>5</num_files>
+        <path>/var/log/kontext/application.log</path>
+        <file_size>5000000</file_size>
+        <num_files>10</num_files>
         <values>
             <item>environ:REMOTE_ADDR</item>
             <item>environ:HTTP_USER_AGENT</item>
@@ -63,13 +60,11 @@
         <conc_dir>/var/local/corpora/conc</conc_dir>
         <default_corpora>
             <item>susanne</item>
-            <item>spec/susanne</item>
-            <item>anothercorpus</item>
+            <!-- item>insert_your_default_corpus_here</item -->
         </default_corpora>
-        <speech_files_path>/var/www/data</speech_files_path>
-        <empty_attr_value_placeholder>[empty]</empty_attr_value_placeholder>
+        <speech_files_path />
+        <empty_attr_value_placeholder>--</empty_attr_value_placeholder>
         <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
-        <use_db_whitelist>1</use_db_whitelist>
     </corpora>
     <plugins>
         <application_bar />
