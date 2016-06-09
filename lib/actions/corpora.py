@@ -37,6 +37,7 @@ class Corpora(Kontext):
                                           user_id=self._session_get('user', 'id'),
                                           query=False,
                                           offset=0,
+                                          limit=request.args.get('limit', None),
                                           filter_dict=request.args)
         else:
             params = {}

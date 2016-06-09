@@ -25,6 +25,7 @@ import $ = require('jquery');
 import common = require('./common');
 import commonDefault = require('../defaultCorparch/common');
 import popupBox = require('popupbox');
+import corplist = require('./corplist');
 
 
 /**
@@ -560,7 +561,9 @@ class SearchTab implements WidgetTab {
                 footer: function (info) {
                     if (info.suggestions.length === self.maxNumHints) {
                         let url = self.pluginApi.createActionUrl('/corpora/corplist?query='
-                                + encodeURIComponent(self.getTagQuery() + ' ' + $(self.srchField).val()));
+                                + encodeURIComponent(self.getTagQuery() + ' ' + $(self.srchField).val())
+                                + '&limit=' + corplist.CorplistTableStore.LoadLimit
+                        );
                         return $('<p class="hint">' +
                                 self.pluginApi.translate('defaultCorparch__please_note_results_cut_{maxNum}{link}',
                                         { maxNum: self.maxNumHints, link: url }) +
