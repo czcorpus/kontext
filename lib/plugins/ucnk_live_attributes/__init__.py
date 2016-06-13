@@ -370,6 +370,7 @@ class LiveAttributes(AbstractLiveAttributes):
             del poscounts[attr]
 
         exported = {}
+        values = {}
         collator_locale = corpus_info.collator_locale
 
         for k in ans.keys():
@@ -379,14 +380,14 @@ class LiveAttributes(AbstractLiveAttributes):
                         out_data = l10n.sort(ans[k], collator_locale, key=lambda t: t[0])
                     else:
                         out_data = tuple(l10n.sort(ans[k], collator_locale, key=lambda t: t[0]))
-                    exported[self.export_key(k)] = out_data
+                    values[self.export_key(k)] = out_data
                 else:
-                    exported[self.export_key(k)] = {'length': len(ans[k])}
-
+                    values[self.export_key(k)] = {'length': len(ans[k])}
             else:
-                exported[self.export_key(k)] = ans[k]
-        exported['poscount'] = l10n.format_number(exported['poscount'])
+                values[self.export_key(k)] = ans[k]
+        exported['poscount'] = l10n.format_number(values['poscount'])
         exported['aligned'] = aligned_corpora
+        exported['attr_values'] = values
         return exported
 
     def get_bibliography(self, corpus, item_id):
