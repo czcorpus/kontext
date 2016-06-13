@@ -205,7 +205,8 @@ export class RangeSelector {
         args[attribName] = {from: from, to: to};
         return new RSVP.Promise((fullfill:(d)=>void, reject:(err)=>void) => {
             this.loadData(args).then(
-                (data:{[key:string]:any}) => {
+                // TODO data type relies on liveattrs specific returned data
+                (data:{attr_values:{[key:string]:any}}) => {
                     if (!data['contains_errors']) {
                         this.textTypesStore.setValues(attribName,
                             data[attribName].map(item=>item[0]));

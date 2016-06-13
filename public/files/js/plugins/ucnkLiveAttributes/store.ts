@@ -31,7 +31,17 @@ import Immutable = require('vendor/immutable');
 
 
 interface ServerBibData {
+    contains_errors:boolean;
+    error?:string;
     bib_data:Array<Array<string>>;
+}
+
+interface ServerRefineResponse {
+    contains_errors:boolean;
+    error?:string;
+    aligned:Array<string>;
+    poscount:string; // formatted number of positions
+    attr_values:{[ident:string]:Array<string>}
 }
 
 
@@ -159,6 +169,31 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
         });
     }
 
+    private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {
+        this.bibliographyIds = Immutable.List<string>(
+                filterData[this.bibliographyAttribute].map(v => v.ident));
+        this.textTypesStore.setExtendedInfoSupport(
+            this.bibliographyAttribute,
+            (idx:number) => {
+                return this.loadBibInfo(this.bibliographyIds.get(idx)).then(
+                    (serverData:ServerBibData) => {
+                        if (!serverData.contains_errors) {
+                            let bibData:Immutable.Map<string, any> = Immutable.Map<string, any>(serverData.bib_data);
+                            this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
+                                idx, bibData);
+
+                        } else {
+                            throw new Error(serverData.error);
+                        }
+                    },
+                    (err:any) => {
+                        this.pluginApi.showMessage('error', err);
+                    }
+                );
+            }
+        );
+    }
+
     private processRefine():RSVP.Promise<any> {
         this.textTypesStore.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
             this.textTypesStore.updateItems(attrName, (item:TextTypes.AttributeValue) => {
@@ -171,55 +206,44 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
         });
         let prom = this.loadFilteredData(this.textTypesStore.exportSelections(false));
         return prom.then(
-            (data) => {
-                let filterData = this.importFilter(data);
-                let k;
-                for (k in filterData) {
-                    this.textTypesStore.filterItems(k, filterData[k].map((v) =>v.v));
-                    this.textTypesStore.updateItems(k, (v, i) => {
-                        if (filterData[k][i]) {
-                            return {
-                                value: v.value,
-                                selected: v.selected,
-                                locked: v.locked,
-                                availItems: filterData[k][i].availItems,
-                                extendedInfo: v.extendedInfo
-                            };
+            (data:ServerRefineResponse) => {
+                if (!data.contains_errors) {
+                    let filterData = this.importFilter(data.attr_values);
+                    let k;
+                    for (k in filterData) {
+                        this.textTypesStore.filterItems(k, filterData[k].map((v) =>v.v));
+                        this.textTypesStore.updateItems(k, (v, i) => {
+                            if (filterData[k][i]) {
+                                return {
+                                    value: v.value,
+                                    selected: v.selected,
+                                    locked: v.locked,
+                                    availItems: filterData[k][i].availItems,
+                                    extendedInfo: v.extendedInfo
+                                };
 
-                        } else {
-                            return null;
-                        }
-                    });
-                    this.textTypesStore.filter(k, (item) => item !== null);
-                }
-                this.alignedCorpora = this.alignedCorpora.map((value) => {
-                    let newVal:AlignedLanguageItem = {
-                        label: value.label,
-                        value: value.value,
-                        locked: value.selected ? true : false,
-                        selected: value.selected
+                            } else {
+                                return null;
+                            }
+                        });
+                        this.textTypesStore.filter(k, (item) => item !== null);
                     }
-                    return newVal;
-                }).filter(item=>item.locked).toList();
-                this.updateSelectionSteps(data);
-                if (isArr(filterData[this.bibliographyAttribute])) {
-                    this.bibliographyIds = Immutable.List<string>(
-                                filterData[this.bibliographyAttribute].map(v => v.ident));
-                    this.textTypesStore.setExtendedInfoSupport(
-                        this.bibliographyAttribute,
-                        (idx:number) => {
-                            return this.loadBibInfo(this.bibliographyIds.get(idx)).then(
-                                (serverData:ServerBibData) => {
-                                    let bibData:Immutable.Map<string, any> = Immutable.Map<string, any>(serverData.bib_data);
-                                    this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
-                                        idx, bibData);
-                                },
-                                (err:any) => {
-                                    this.pluginApi.showMessage('error', err);
-                                }
-                            );
+                    this.alignedCorpora = this.alignedCorpora.map((value) => {
+                        let newVal:AlignedLanguageItem = {
+                            label: value.label,
+                            value: value.value,
+                            locked: value.selected ? true : false,
+                            selected: value.selected
                         }
-                    );
+                        return newVal;
+                    }).filter(item=>item.locked).toList();
+                    this.updateSelectionSteps(data);
+                    if (isArr(filterData[this.bibliographyAttribute])) {
+                        this.attachBibData(filterData);
+                    }
+
+                } else {
+                    throw new Error(data.error);
                 }
             },
             (err) => {
@@ -291,7 +315,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
         return this.alignedCorpora.find((item)=>item.selected) !== undefined;
     }
 
-    private importFilter(data:any):{[k:string]:Array<FilterResponseValue>} {
+    private importFilter(data:{[ident:string]:Array<string>}):{[k:string]:Array<FilterResponseValue>} {
         let ans:any = {};
         for (let k in data) {
             if (k.indexOf('.') > 0) {
@@ -376,8 +400,13 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 let prom = this.loadAutocompleteHint(
                     value, attrName, this.textTypesStore.exportSelections(true));
                 return prom.then(
-                    (v) => {
-                        this.textTypesStore.setAutoComplete(attrName, v[attrName].map(v=>v[2]));
+                    (v:ServerRefineResponse) => {
+                        if (!v.contains_errors) {
+                            this.textTypesStore.setAutoComplete(attrName, v.attr_values[attrName].map(v=>v[2]));
+
+                        } else {
+                            throw new Error(v.error);
+                        }
                     },
                     (err) => {
                         console.error(err);
