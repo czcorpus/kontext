@@ -21,7 +21,8 @@
  * This module contains functionality related directly to the first_form.tmpl template
  */
 
-/// <reference path="../../ts/declarations/common.d.ts" />
+/// <reference path="../types/common.d.ts" />
+/// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/soundmanager.d.ts" />
@@ -29,7 +30,6 @@
 /// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
 /// <reference path="../../ts/declarations/detail.d.ts" />
 /// <reference path="../../ts/declarations/views/concordance.d.ts" />
-/// <reference path="../../ts/declarations/abstract-plugins.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');

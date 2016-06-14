@@ -17,12 +17,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../ts/declarations/common.d.ts" />
+/// <reference path="../types/common.d.ts" />
+/// <reference path="../types/plugins/corparch.ts" />
+/// <reference path="../types/plugins/subcmixer.ts" />
+/// <reference path="../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../common/plugins/corparch.ts" />
-/// <reference path="../common/plugins/subcmixer.ts" />
-/// <reference path="../common/plugins/liveAttributes.d.ts" />
 /// <reference path="../views/subcorpForm.d.ts" />
 
 // -- dynamic loading of custom plug-in implementation

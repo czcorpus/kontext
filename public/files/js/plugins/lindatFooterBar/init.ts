@@ -16,16 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/abstract-plugins.d.ts" />
-/// <reference path="../../../ts/declarations/common.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 
 import RSVP = require('vendor/rsvp');
 
 class FooterPlugin implements Kontext.Plugin {
-    
-    constructor() {        
+
+    constructor() {
     }
-    
+
     init():void {
         // do the custom initialization (tracking/analytics script)
         console.log('FooterPlugin.init() finished');
@@ -34,8 +34,8 @@ class FooterPlugin implements Kontext.Plugin {
 
 export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
     return new RSVP.Promise<Kontext.Plugin>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-        let plugin = new FooterPlugin();  
-        plugin.init();      
-        resolve(plugin);    
+        let plugin = new FooterPlugin();
+        plugin.init();
+        resolve(plugin);
     });
 }

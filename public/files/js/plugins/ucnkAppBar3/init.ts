@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../../ts/declarations/abstract-plugins.d.ts" />
 
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');

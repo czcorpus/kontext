@@ -19,7 +19,7 @@
 /// <reference path="../ts/declarations/jquery.d.ts" />
 /// <reference path="../ts/declarations/rsvp.d.ts" />
 /// <reference path="../ts/declarations/popupbox.d.ts" />
-/// <reference path="../ts/declarations/common.d.ts" />
+/// <reference path="./types/common.d.ts" />
 
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');
