@@ -16,11 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/corparch.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
-/// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../common/plugins/corparch.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />

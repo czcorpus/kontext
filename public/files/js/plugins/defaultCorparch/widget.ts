@@ -17,10 +17,10 @@
  */
 
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../../ts/declarations/common.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
-/// <reference path="../../common/plugins/corparch.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/corparch.ts" />
 
 import $ = require('jquery');
 import common = require('./common');

@@ -17,7 +17,7 @@
  */
 
 
-/// <reference path="../ts/declarations/common.d.ts" />
+/// <reference path="./types/common.d.ts" />
 
 
 /**

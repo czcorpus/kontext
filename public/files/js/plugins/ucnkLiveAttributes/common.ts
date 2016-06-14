@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../common/plugins/liveAttributes.d.ts" />
+/// <reference path="../../types/plugins/liveAttributes.d.ts" />
 
 import rsvp = require('vendor/rsvp');
 

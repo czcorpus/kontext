@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/common.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
 /// <amd-dependency path="./view" name="view" />
 

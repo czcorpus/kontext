@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/common.d.ts" />
-/// <reference path="../../common/plugins/liveAttributes.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 /// <amd-dependency path="./view" name="views" />

@@ -17,11 +17,11 @@
  */
 
 
-/// <reference path="../../../ts/declarations/common.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/corparch.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../common/plugins/corparch.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 /// <amd-dependency path="./view" name="views" />
