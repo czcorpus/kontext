@@ -380,11 +380,30 @@ declare module TextTypes {
         updateValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
 
         /**
+         */
+        getValues():Immutable.List<AttributeValue>;
+
+        /**
          * Set new attribute values
          *
          * @return a new copy of the original AttributeSelection
          */
         setValues(values:Array<AttributeValue>):AttributeSelection;
+
+        /**
+         * Add a new value to the list of the current ones.
+         */
+        addValue(value:AttributeValue):AttributeSelection;
+
+        /**
+         * Remove a value from the list of the current ones.
+         */
+        removeValue(value:string):AttributeSelection;
+
+        /**
+         *
+         */
+        clearValues():AttributeSelection;
 
         /**
          * Sets a list of items containing hints based on
@@ -437,11 +456,16 @@ declare module TextTypes {
          *
          */
         setExtendedInfo(idx:number, data:Immutable.Map<string, any>):AttributeSelection;
+    }
 
-        /**
-         *
-         */
-        setValue(v:string):AttributeSelection;
+    /**
+     *
+     */
+    interface TextInputAttributeSelection extends AttributeSelection {
+
+        getTextFieldValue():string;
+
+        setTextFieldValue(v:string):TextInputAttributeSelection
     }
 
 
@@ -454,6 +478,11 @@ declare module TextTypes {
          * Return a defined structural attribute
          */
         getAttribute(ident:string):TextTypes.AttributeSelection;
+
+        /**
+         *
+         */
+        getTextInputAttribute(ident:string):TextInputAttributeSelection
 
         /**
          * Return a list of all the defined attributes

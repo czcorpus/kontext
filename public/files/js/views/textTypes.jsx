@@ -309,13 +309,19 @@ define(['vendor/react'], function (React) {
             },
 
             _handleAutoCompleteHintClick : function (value) {
-                dispatcher.dispatch({
-                    actionType: 'TT_ATTRIBUTE_TEXT_INPUT_SILENTLY_CHANGED',
-                    props: {
-                        attrName: this.props.attrName,
-                        value: value
-                    }
-                })
+                if (typeof this.props.customAutoCompleteHintClickHandler === 'function') {
+                    this.props.customAutoCompleteHintClickHandler(value);
+
+                } else {
+                    dispatcher.dispatch({
+                        actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
+                        props: {
+                            attrName: this.props.attrName,
+                            value: value,
+                            append: false
+                        }
+                    });
+                }
             },
 
             _renderAutoComplete : function (data) {
@@ -339,7 +345,7 @@ define(['vendor/react'], function (React) {
                     let attr = store.getAttribute(this.props.attrName);
                     if (attr) {
                         this.setState({
-                            inputValue: attr.getValue(),
+                            inputValue: attr.getTextFieldValue(),
                             attrObj: textTypesStore.getAttribute(this.props.attrName)
                         });
 
@@ -372,9 +378,9 @@ define(['vendor/react'], function (React) {
                             <tr>
                                 <td>
                                     <input type="text"
-                                        name={'sca_' + this.props.attrName}
+                                        name={this.props.customInputName ? this.props.customInputName : 'sca_' + this.props.attrName}
                                         onChange={this._inputChangeHandler}
-                                        value={this.state.attrObj.getValue()}
+                                        value={this.state.attrObj.getTextFieldValue()}
                                         placeholder={textTypesStore.getTextInputPlaceholder()}
                                         autoComplete="off" />
                                     {autoComplete.size > 0 ? this._renderAutoComplete(autoComplete) : null}
@@ -384,6 +390,75 @@ define(['vendor/react'], function (React) {
                             </tr>
                         </tbody>
                     </table>
+                );
+            }
+        });
+
+        // ----------------------------- <RawInputMultiValueContainer /> --------------------------
+
+        let RawInputMultiValueContainer = React.createClass({
+
+            _handleAutoCompleteHintClick : function (value) {
+                dispatcher.dispatch({
+                    actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
+                    props: {
+                        attrName: this.props.attrName,
+                        value: value,
+                        append: true
+                    }
+                });
+            },
+
+            _changeHandler : function (store, action) {
+                if (action === '$TT_NEW_VALUE_ADDED' || action === '$TT_VALUE_CHECKBOX_STORED') {
+                    this.setState({values: store.getAttribute(this.props.attrName).getValues()});
+                }
+            },
+
+            componentDidMount : function () {
+                textTypesStore.addChangeListener(this._changeHandler);
+            },
+
+            componentWillUnmount : function () {
+                textTypesStore.removeChangeListener(this._changeHandler);
+            },
+
+            getInitialState : function () {
+                return {values: this.props.values};
+            },
+
+            _renderCheckboxes : function () {
+                return this.state.values.map((item, i) => {
+                    return (
+                        <tr key={item.value + String(i)}>
+                            <td>
+                                <CheckBoxItem
+                                        itemIdx={i}
+                                        itemName={this.props.attrName}
+                                        itemValue={item.value}
+                                        itemIsSelected={item.selected}
+                                        itemIsLocked={item.locked}
+                                            />
+                            </td>
+                        </tr>
+                    );
+                });
+            },
+
+            render : function () {
+                return (
+                    <div>
+                        <table>
+                            <tbody>
+                                {this._renderCheckboxes()}
+                            </tbody>
+                        </table>
+                        <RawInputContainer attrName={this.props.attrName}
+                                           isLocked={this.props.isLocked}
+                                           inputTextOnChange={this.props.inputTextOnChange}
+                                           customInputName={null}
+                                           customAutoCompleteHintClickHandler={this._handleAutoCompleteHintClick} />
+                    </div>
                 );
             }
         });
@@ -398,8 +473,11 @@ define(['vendor/react'], function (React) {
                     {this.props.data.containsFullList() || this.props.rangeIsOn
                         ? <FullListContainer data={this.props.data} rangeIsOn={this.props.rangeIsOn}
                                 isLocked={this.props.isLocked} hasDefinedExtendedInfo={this.props.hasDefinedExtendedInfo} />
-                        : <RawInputContainer attrName={this.props.data.name}
-                                isLocked={this.props.isLocked} inputTextOnChange={this.props.inputTextOnChange} />
+                        : <RawInputMultiValueContainer
+                                values={this.props.data.getValues()}
+                                attrName={this.props.data.name}
+                                isLocked={this.props.isLocked}
+                                inputTextOnChange={this.props.inputTextOnChange} />
                     }
                     </div>
                 );
