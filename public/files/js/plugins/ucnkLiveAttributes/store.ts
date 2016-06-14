@@ -136,7 +136,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
                     self.processRefine().then(
                         (v) => {
-                            self.textTypesStore.notifyChangeListeners('$TT_VALUES_FILTERED'); // TODO is this correct in terms of design?
+                            self.textTypesStore.notifyChangeListeners('$TT_VALUES_FILTERED');
                             self.notifyChangeListeners('$LIVE_ATTRIBUTES_REFINE_DONE');
                         },
                         (err) => {
@@ -410,6 +410,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                     },
                     (err) => {
                         console.error(err);
+                        this.pluginApi.showMessage('error', err);
                     }
                 );
 

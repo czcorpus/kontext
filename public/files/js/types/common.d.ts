@@ -380,6 +380,10 @@ declare module TextTypes {
         updateValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
 
         /**
+         */
+        getValues():Immutable.List<AttributeValue>;
+
+        /**
          * Set new attribute values
          *
          * @return a new copy of the original AttributeSelection
@@ -387,18 +391,19 @@ declare module TextTypes {
         setValues(values:Array<AttributeValue>):AttributeSelection;
 
         /**
-         * Sets a list of items containing hints based on
-         * the current (incomplete) user entry. This applies
-         * in raw text input implementations - checkbox ones
-         * should silently ignore this call (unless they
-         * use it in some way).
+         * Add a new value to the list of the current ones.
          */
-        setAutoComplete(values:Array<string>):void;
+        addValue(value:AttributeValue):AttributeSelection;
+
+        /**
+         * Remove a value from the list of the current ones.
+         */
+        removeValue(value:string):AttributeSelection;
 
         /**
          *
          */
-        getAutoComplete():Immutable.List<string>;
+        clearValues():AttributeSelection;
 
         /**
          * Flip checked/unchecked status of the value
@@ -437,11 +442,30 @@ declare module TextTypes {
          *
          */
         setExtendedInfo(idx:number, data:Immutable.Map<string, any>):AttributeSelection;
+    }
+
+    /**
+     *
+     */
+    interface TextInputAttributeSelection extends AttributeSelection {
+
+        getTextFieldValue():string;
+
+        setTextFieldValue(v:string):TextInputAttributeSelection;
 
         /**
-         *
+         * Sets a list of items containing hints based on
+         * the current (incomplete) user entry. This applies
+         * in raw text input implementations - checkbox ones
+         * should silently ignore this call (unless they
+         * use it in some way).
          */
-        setValue(v:string):AttributeSelection;
+        setAutoComplete(values:Array<string>):TextInputAttributeSelection;
+
+        getAutoComplete():Immutable.List<string>;
+
+        resetAutoComplete():TextInputAttributeSelection;
+
     }
 
 
@@ -454,6 +478,11 @@ declare module TextTypes {
          * Return a defined structural attribute
          */
         getAttribute(ident:string):TextTypes.AttributeSelection;
+
+        /**
+         *
+         */
+        getTextInputAttribute(ident:string):TextInputAttributeSelection
 
         /**
          * Return a list of all the defined attributes
