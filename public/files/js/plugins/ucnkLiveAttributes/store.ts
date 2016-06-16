@@ -170,8 +170,13 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     }
 
     private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {
-        this.bibliographyIds = Immutable.List<string>(
-                filterData[this.bibliographyAttribute].map(v => v.ident));
+        let attrObj = this.textTypesStore.getAttribute(this.bibliographyAttribute);
+        let newBibData = filterData[this.bibliographyAttribute];
+
+        // set the data iff server data are full-fledget (i.e. including unique 'ident')
+        if (newBibData.length > 0 && !!newBibData[0].ident) {
+            this.bibliographyIds = Immutable.List<string>(newBibData.map(v => v.ident));
+        }
         this.textTypesStore.setExtendedInfoSupport(
             this.bibliographyAttribute,
             (idx:number) => {
@@ -200,7 +205,9 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 return {
                     value: item.value,
                     selected: item.selected,
-                    locked: true
+                    locked: true,
+                    availItems: item.availItems,
+                    extendedInfo: item.extendedInfo
                 }
             });
         });
@@ -402,7 +409,14 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 return prom.then(
                     (v:ServerRefineResponse) => {
                         if (!v.contains_errors) {
-                            this.textTypesStore.setAutoComplete(attrName, v.attr_values[attrName].map(v=>v[2]));
+                            let filterData = this.importFilter(v.attr_values);
+                            if (isArr(filterData[this.bibliographyAttribute])) {
+                                this.attachBibData(filterData);
+                            }
+                            this.textTypesStore.setAutoComplete(
+                                attrName,
+                                v.attr_values[attrName].map(v => v[2])
+                            );
 
                         } else {
                             throw new Error(v.error);

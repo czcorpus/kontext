@@ -312,7 +312,7 @@ class LiveAttributes(AbstractLiveAttributes):
         selected_attrs = tuple(srch_attrs.union(hidden_attrs))
 
         # a map [db_col_name]=>[db_col_idx]
-        srch_attr_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
+        attr_col_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
 
         attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
         where_sql, where_values = attr_items.export_sql('t1', corpname)
@@ -348,16 +348,16 @@ class LiveAttributes(AbstractLiveAttributes):
             else:
                 ans[attr] = set()
 
-        poscounts = defaultdict(lambda: defaultdict(lambda: 0))
+        poscounts = defaultdict(lambda: defaultdict(lambda: 0))  # {attr_id: {attr_val: num_positions,...},...}
         max_visible_chars = self.calc_max_attr_val_visible_chars(corpus_info)
         for item in self.execute_sql(self.db(corpname), sql_template, where_values).fetchall():
             for attr in selected_attrs:
-                v = item[srch_attr_map[attr]]
+                v = item[attr_col_map[attr]]
                 if v is not None and attr not in hidden_attrs:
                     attr_val = None
                     if attr == bib_label:
                         attr_val = (self.shorten_value(unicode(v), length=max_visible_chars),
-                                    item[srch_attr_map[bib_id]], unicode(v))
+                                    item[attr_col_map[bib_id]], unicode(v))
                     elif type(ans[attr]) is set:
                         attr_val = (self.shorten_value(unicode(v), length=max_visible_chars), v, v)
                     elif type(ans[attr]) is int:

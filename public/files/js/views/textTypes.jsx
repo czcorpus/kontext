@@ -215,13 +215,11 @@ define(['vendor/react'], function (React) {
             }
         });
 
-        // ----------------------------- <FullListContainer /> --------------------------
+        // ----------------------------- <BibInfoButton /> ------------------------------
 
-        let FullListContainer = React.createClass({
+        let BibInfoButton = React.createClass({
 
-            mixins : mixins,
-
-            _mkExtendedInfoClickHandler : function (idx) {
+            _mkHandleClick : function (idx) {
                 return (evt) => {
                     dispatcher.dispatch({
                         actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
@@ -232,6 +230,17 @@ define(['vendor/react'], function (React) {
                     });
                 }
             },
+
+            render : function () {
+                return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
+            }
+        })
+
+        // ----------------------------- <FullListContainer /> --------------------------
+
+        let FullListContainer = React.createClass({
+
+            mixins : mixins,
 
             _renderListOfCheckBoxes : function () {
                 let attrObj = textTypesStore.getAttribute(this.props.attrName);
@@ -252,9 +261,7 @@ define(['vendor/react'], function (React) {
                                     <td className="num">{item.availItems}</td>
                                     <td>
                                     {hasExtendedInfo
-                                        ? (<a onClick={this._mkExtendedInfoClickHandler(i)} className="bib-info">i</a>)
-                                        : null
-                                    }
+                                        ? <BibInfoButton idx={i} attrName={this.props.attrName} /> : null }
                                     {item.extendedInfo
                                         ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={attrObj.name} /> : null}
                                     </td>
@@ -404,7 +411,7 @@ define(['vendor/react'], function (React) {
                         || action === '$TT_NEW_VALUE_ADDED'
                         || action ===  '$TT_ATTRIBUTE_AUTO_COMPLETE_RESET') {
 
-                    let attr = store.getAttribute(this.props.attrName);
+                    let attr = store.getAttribute(this                                .props.attrName);
                     if (attr) {
                         this.setState({
                             inputValue: attr.getTextFieldValue(),
@@ -481,7 +488,9 @@ define(['vendor/react'], function (React) {
             },
 
             _changeHandler : function (store, action) {
-                if (action === '$TT_NEW_VALUE_ADDED' || action === '$TT_VALUE_CHECKBOX_STORED') {
+                if (action === '$TT_NEW_VALUE_ADDED'
+                        || action === '$TT_VALUE_CHECKBOX_STORED'
+                        || action === '$TT_EXTENDED_INFO_CHANGED') {
                     this.setState({values: store.getAttribute(this.props.attrName).getValues()});
                 }
             },
@@ -499,6 +508,8 @@ define(['vendor/react'], function (React) {
             },
 
             _renderCheckboxes : function () {
+                let attrObj = textTypesStore.getAttribute(this.props.attrName);
+                let hasExtendedInfo = textTypesStore.hasDefinedExtendedInfo(this.props.attrName);
                 return this.state.values.map((item, i) => {
                     return (
                         <tr key={item.value + String(i)}>
@@ -510,6 +521,12 @@ define(['vendor/react'], function (React) {
                                         itemIsSelected={item.selected}
                                         itemIsLocked={item.locked}
                                             />
+                            </td>
+                            <td>
+                                {hasExtendedInfo
+                                    ? <BibInfoButton idx={i} attrName={this.props.attrName} /> : null }
+                                {item.extendedInfo
+                                    ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={attrObj.name} /> : null}
                             </td>
                         </tr>
                     );
@@ -647,17 +664,18 @@ define(['vendor/react'], function (React) {
 
             _renderMetaInfo : function () {
                 let layoutViews = this.getLayoutViews();
-                if (this.props.metaInfo) {
+                let metaInfo = textTypesStore.getAttrSummary().get(this.props.attrName);
+                if (metaInfo) {
                     return (
                         <span>
-                            {this.props.metaInfo.text}
+                            {metaInfo.text}
                             {'\u00A0'}
                             <a className="context-help" onClick={this._metaInfoHelpClickHandler}>
                                 <img src={this.createStaticUrl('img/question-mark.svg')} className="over-img" />
                             </a>
                             {this.state.metaInfoHelpVisible
                                 ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info" autoSize={true}>
-                                    {this.props.metaInfo.help}
+                                    {metaInfo.help}
                                    </layoutViews.PopupBox>)
                                 : null}
                         </span>
@@ -713,8 +731,7 @@ define(['vendor/react'], function (React) {
             _storeChangeHandler : function (store, action) {
                 this.setState(React.addons.update(this.state,
                     {
-                        attributes: {$set: store.getAttributes()},
-                        metaInfo: {$set: store.getAttrSummary()}
+                        attributes: {$set: store.getAttributes()}
                     }
                 ));
             },
@@ -732,8 +749,7 @@ define(['vendor/react'], function (React) {
 
             getInitialState : function () {
                 return {
-                    attributes: textTypesStore.getAttributes(),
-                    metaInfo: textTypesStore.getAttrSummary(),
+                    attributes: textTypesStore.getAttributes()
                 };
             },
 
@@ -753,8 +769,7 @@ define(['vendor/react'], function (React) {
                                 : null}
                             {this.state.attributes.map((attrObj) => {
                                 return <TableTextTypeAttribute key={attrObj.name + ':list:' + attrObj.containsFullList()}
-                                            attrName={attrObj.name}
-                                            metaInfo={this.state.metaInfo.get(attrObj.name)} />;
+                                            attrName={attrObj.name} />;
                             })}
                         </div>
                     </div>

@@ -102,13 +102,14 @@ class TextInputAttributeSelection implements TextTypes.TextInputAttributeSelecti
     }
 
     toggleValueSelection(idx:number):TextTypes.AttributeSelection {
-
         let val = this.values.get(idx);
         if (val.selected) {
             return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
                 this.isInterval, this.textFieldValue, this.values.remove(idx), this.autoCompleteHints);
+
+        } else {
+            return this;
         }
-        return this;
     }
 
     containsFullList():boolean {
@@ -134,9 +135,22 @@ class TextInputAttributeSelection implements TextTypes.TextInputAttributeSelecti
     }
 
     filterItems(items:Array<string>):TextTypes.AttributeSelection {
-        let values = this.values.filter((item:TextTypes.AttributeValue) => {
-                        return items.indexOf(item.value) > -1;
-                     }).toList();
+        let values;
+
+        if (this.values.size > 0) {
+            values = this.values.filter((item:TextTypes.AttributeValue) => {
+                return items.indexOf(item.value) > -1;
+            }).toList();
+
+        } else {
+            values = Immutable.List(items).map((item) => {
+                return {
+                    value: item,
+                    selected: false,
+                    locked: false,
+                }
+            }).toList();
+        }
         return new FullAttributeSelection(this.name, this.label,
                 this.isNumeric, this.isInterval, values);
     }
@@ -204,7 +218,17 @@ class TextInputAttributeSelection implements TextTypes.TextInputAttributeSelecti
     }
 
     setExtendedInfo(idx:number, data:Immutable.Map<string, any>):TextTypes.AttributeSelection {
-        return this;
+        let currVal = this.values.get(idx);
+        let newVal = {
+            value: currVal.value,
+            locked: currVal.locked,
+            selected: currVal.selected,
+            availItems: currVal.availItems,
+            extendedInfo: data
+        };
+        let values = this.values.set(idx, newVal);
+        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
+                this.isInterval, this.textFieldValue, values, this.autoCompleteHints);
     }
 
     getTextFieldValue():string {
@@ -258,7 +282,8 @@ class FullAttributeSelection implements TextTypes.AttributeSelection {
             locked: val.locked,
             value: val.value,
             selected: !val.selected,
-            availItems: val.availItems
+            availItems: val.availItems,
+            extendedInfo: val.extendedInfo
         };
         ans.values = ans.values.set(idx, newVal);
         return ans;
@@ -400,7 +425,6 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         let self = this;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-            console.log('action: ', payload.actionType);
             switch (payload.actionType) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
                     self.changeValueSelection(payload.props['attrName'], payload.props['itemIdx']);
