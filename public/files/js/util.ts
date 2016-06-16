@@ -45,8 +45,14 @@ export class SimplePageStore implements Kontext.PageStore {
     };
 
     notifyChangeListeners(eventType:string=SimplePageStore.CHANGE_EVENT, error:Error=null):void {
-        for (var i = 0; i < this.changeListeners.length; i += 1) {
-            this.changeListeners[i].call(this, this, eventType, error);
+        for (let i = 0; i < this.changeListeners.length; i += 1) {
+            try {
+                this.changeListeners[i].call(this, this, eventType, error);
+
+            } catch (e) {
+                console.error(e);
+                throw e;
+            }
         }
     }
 

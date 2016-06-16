@@ -406,20 +406,6 @@ declare module TextTypes {
         clearValues():AttributeSelection;
 
         /**
-         * Sets a list of items containing hints based on
-         * the current (incomplete) user entry. This applies
-         * in raw text input implementations - checkbox ones
-         * should silently ignore this call (unless they
-         * use it in some way).
-         */
-        setAutoComplete(values:Array<string>):void;
-
-        /**
-         *
-         */
-        getAutoComplete():Immutable.List<string>;
-
-        /**
          * Flip checked/unchecked status of the value
          */
         toggleValueSelection(idx:number):AttributeSelection;
@@ -465,7 +451,21 @@ declare module TextTypes {
 
         getTextFieldValue():string;
 
-        setTextFieldValue(v:string):TextInputAttributeSelection
+        setTextFieldValue(v:string):TextInputAttributeSelection;
+
+        /**
+         * Sets a list of items containing hints based on
+         * the current (incomplete) user entry. This applies
+         * in raw text input implementations - checkbox ones
+         * should silently ignore this call (unless they
+         * use it in some way).
+         */
+        setAutoComplete(values:Array<string>):TextInputAttributeSelection;
+
+        getAutoComplete():Immutable.List<string>;
+
+        resetAutoComplete():TextInputAttributeSelection;
+
     }
 
 

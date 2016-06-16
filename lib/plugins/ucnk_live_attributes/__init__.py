@@ -298,7 +298,10 @@ class LiveAttributes(AbstractLiveAttributes):
         srch_attrs.add('poscount')
 
         if autocomplete_attr:
-            srch_attrs.add(self.import_key(autocomplete_attr))
+            autocomplete_attr_imp = self.import_key(autocomplete_attr)
+            srch_attrs.add(autocomplete_attr_imp)
+        else:
+            autocomplete_attr_imp = None
 
         hidden_attrs = set()
         if bib_id is not None and bib_id not in srch_attrs:
@@ -372,10 +375,9 @@ class LiveAttributes(AbstractLiveAttributes):
         exported = {}
         values = {}
         collator_locale = corpus_info.collator_locale
-
         for k in ans.keys():
             if type(ans[k]) is set:
-                if len(ans[k]) <= self.max_attr_list_size or k in range_attrs:
+                if len(ans[k]) <= self.max_attr_list_size or k in range_attrs or k == autocomplete_attr_imp:
                     if k == bib_label:
                         out_data = l10n.sort(ans[k], collator_locale, key=lambda t: t[0])
                     else:
