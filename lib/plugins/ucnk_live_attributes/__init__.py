@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -10,10 +12,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 Interactive (ad hoc) subcorpus selection.
 
@@ -40,10 +38,11 @@ import sqlite3
 import l10n
 from plugins import inject
 import plugins
-from ..abstract.live_attributes import AbstractLiveAttributes
+from plugins.abstract.live_attributes import AbstractLiveAttributes
 from templating.filters import Shortener
 from controller import exposed
 from actions import concordance
+import query
 
 
 def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora, autocomplete_attr):
@@ -101,68 +100,6 @@ def attr_val_autocomplete(ctrl, request):
                                                           autocomplete_attr=request.args['patternAttr'])
 
 
-class AttrArgs(object):
-    """
-    Stores a multi-value dictionary and allows an export
-    to SQL WHERE expression as used by the plugin.
-    E.g.: attributes = { 'key1' : ['value1_1', 'value1_2'], 'key2' : ['value2_1'] }
-    leads to the following SQL "component": (key1 = ? OR key1 = ?) AND (key2 = ?)
-    and attached values: ('value1_1', 'value1_2', 'value2_1')
-    """
-    def __init__(self, data, empty_val_placeholder):
-        """
-        arguments:
-        data -- a dictionary where values are either lists or single values
-        empty_val_placeholder -- value used instead of an empty value
-        """
-        self.data = data
-        self.empty_val_placeholder = empty_val_placeholder
-
-    def __len__(self):
-        return len(self.data)
-
-    def import_value(self, value):
-        if value == self.empty_val_placeholder:
-            return ''  # important! - cannot use None here as it is converted to NULL within database
-        return value
-
-    def export_sql(self, item_prefix, corpus_id):
-        """
-        Exports data into a SQL WHERE expression
-
-        arguments:
-        item_prefix -- prefix used to identify attach columns properly in case multiple tables (e.g. via JOIN) is used
-        corpus_name -- identifer of the corpus
-
-        returns:
-        a SQL WHERE expression in conjunctive normal form
-        """
-        def cmp_operator(val):
-            return 'LIKE' if '%' in val else '='
-
-        where = []
-        sql_values = []
-        for key, values in self.data.items():
-            key = key.replace('.', '_')
-            cnf_item = []
-            if type(values) is list or type(values) is tuple:
-                for value in values:
-                    cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
-                    sql_values.append(self.import_value(value))
-            elif type(values) is dict:
-                pass  # a range query  TODO
-            else:
-                cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(values)))
-                sql_values.append(self.import_value(values))
-
-            if len(cnf_item) > 0:
-                where.append('(%s)' % ' OR '.join(cnf_item))
-
-        where.append('%s.corpus_id = ?' % item_prefix)
-        sql_values.append(corpus_id)
-        return ' AND '.join(where), sql_values
-
-
 class LiveAttributes(AbstractLiveAttributes):
 
     def __init__(self, corparch, max_attr_list_size, empty_val_placeholder,
@@ -209,10 +146,6 @@ class LiveAttributes(AbstractLiveAttributes):
             return corpus_info.metadata.avg_label_attr_len
         else:
             return self._max_attr_visible_chars
-
-    @staticmethod
-    def apply_prefix(values, prefix):
-        return ['%s.%s' % (prefix, v) for v in values]
 
     @staticmethod
     def format_data_types(data):
@@ -286,110 +219,74 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         corpname = vanilla_corpname(corpus.corpname)
         corpus_info = self.corparch.get_corpus_info(corpname)
-        bib_label = LiveAttributes.import_key(corpus_info.metadata.label_attr)
-        bib_id = LiveAttributes.import_key(corpus_info.metadata.id_attr)
-        attrs = self._get_subcorp_attrs(corpus)
 
-        if bib_label and bib_label not in attrs:
-            attrs.append(bib_label)
+        srch_attrs = set(self._get_subcorp_attrs(corpus))
+        expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
 
-        srch_attrs = set(attrs) - set(self.import_key(k)
-                                      for k in attr_map.keys() if type(attr_map[k]) is not dict)
+        # add bibliography column if required
+        bib_label = self.import_key(corpus_info.metadata.label_attr)
+        if bib_label:
+            srch_attrs.add(bib_label)
+        # always include number of positions column
         srch_attrs.add('poscount')
-
+        # if in autocomplete mode then always expand list of the target column
         if autocomplete_attr:
-            autocomplete_attr_imp = self.import_key(autocomplete_attr)
-            srch_attrs.add(autocomplete_attr_imp)
-        else:
-            autocomplete_attr_imp = None
+            a = self.import_key(autocomplete_attr)
+            srch_attrs.add(a)
+            expand_attrs.add(a)
+        # also make sure that range attributes are expanded to full lists
+        for k, v in attr_map.items():
+            if query.is_range_argument(v):
+                expand_attrs.add(self.import_key(k))
 
-        hidden_attrs = set()
-        if bib_id is not None and bib_id not in srch_attrs:
-            hidden_attrs.add(bib_id)
-        if not bib_id:
-            hidden_attrs.add('id')
+        query_builder = query.QueryBuilder(corpus_info=corpus_info,
+                                           attr_map=attr_map,
+                                           srch_attrs=srch_attrs,
+                                           aligned_corpora=aligned_corpora,
+                                           autocomplete_attr=self.import_key(autocomplete_attr),
+                                           empty_val_placeholder=self.empty_val_placeholder)
+        data_iterator = query.DataIterator(self.db(corpname), query_builder)
 
-        selected_attrs = tuple(srch_attrs.union(hidden_attrs))
+        # initialize result dictionary
+        ans = dict((attr, set()) for attr in srch_attrs)
+        ans['poscount'] = 0
 
-        # a map [db_col_name]=>[db_col_idx]
-        attr_col_map = dict([(x[1], x[0]) for x in enumerate(selected_attrs)])
+        # 1) values collected one by one are collected in tmp_ans and then moved to 'ans' with some exporting tweaks
+        # 2) in case of values exceeding max. allowed list size we just accumulate their size directly to ans[attr]
+        tmp_ans = defaultdict(lambda: defaultdict(lambda: 0))  # {attr_id: {attr_val: num_positions,...},...}
+        shorten_val = partial(self.shorten_value, length=self.calc_max_attr_val_visible_chars(corpus_info))
+        bib_id = self.import_key(corpus_info.metadata.id_attr)
 
-        attr_items = AttrArgs(attr_map, self.empty_val_placeholder)
-        where_sql, where_values = attr_items.export_sql('t1', corpname)
-
-        join_sql = []
-        i = 2
-        for item in aligned_corpora:
-            join_sql.append('JOIN item AS t%d ON t1.item_id = t%d.item_id' % (i, i))
-            where_sql += ' AND t%d.corpus_id = ?' % i
-            where_values.append(item)
-            i += 1
-
-        if len(where_sql) > 0:
-            sql_template = "SELECT DISTINCT %s FROM item AS t1 %s WHERE %s" \
-                           % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql), where_sql)
-        else:
-            sql_template = "SELECT DISTINCT %s FROM item AS t1 %s " \
-                           % (', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
-
-        ans = {}
-        # already selected items are part of the answer; no need to fetch them from db
-        ans.update(dict((self.import_key(k), v) for k, v in attr_map.items()))
-        range_attrs = set()
-
-        for attr in ans.keys():
-            if type(ans[attr]) is dict:
-                ans[attr] = set()   # currently we throw away the range and load all the stuff
-                range_attrs.add(attr)
-
-        for attr in srch_attrs:
-            if attr in ('poscount',):
-                ans[attr] = 0
-            else:
-                ans[attr] = set()
-
-        poscounts = defaultdict(lambda: defaultdict(lambda: 0))  # {attr_id: {attr_val: num_positions,...},...}
-        max_visible_chars = self.calc_max_attr_val_visible_chars(corpus_info)
-        for item in self.execute_sql(self.db(corpname), sql_template, where_values).fetchall():
-            for attr in selected_attrs:
-                v = item[attr_col_map[attr]]
-                if v is not None and attr not in hidden_attrs:
-                    attr_val = None
-                    if attr == bib_label:
-                        attr_val = (self.shorten_value(unicode(v), length=max_visible_chars),
-                                    item[attr_col_map[bib_id]], unicode(v))
-                    elif type(ans[attr]) is set:
-                        attr_val = (self.shorten_value(unicode(v), length=max_visible_chars), v, v)
-                    elif type(ans[attr]) is int:
-                        ans[attr] += int(v)
-
-                    if attr_val is not None:
-                        poscounts[attr][attr_val] += item['poscount']
-
+        # here we iterate through [(row1, key1), (row1, key2),..., (row1, keyM), (row2, key1), (row2, key2),...]
+        for row, col_key in data_iterator:
+            if type(ans[col_key]) is set:
+                val_ident = row[bib_id] if col_key == bib_label else row[col_key]
+                attr_val = (shorten_val(unicode(row[col_key])), val_ident, row[col_key])
+                tmp_ans[col_key][attr_val] += row['poscount']
+            elif type(ans[col_key]) is int:
+                ans[col_key] += int(row[col_key])  # we rely on proper 'ans' initialization here (in terms of types)
         # here we append position count information to the respective items
-        for attr, v in poscounts.items():
+        for attr, v in tmp_ans.items():
             for k, c in v.items():
                 ans[attr].add(k + (l10n.format_number(c),))
-            del poscounts[attr]
+        tmp_ans.clear()
+        return self._export_attr_values(data=ans, aligned_corpora=aligned_corpora,
+                                        expand_attrs=expand_attrs,
+                                        collator_locale=corpus_info.collator_locale)
 
-        exported = {}
+    def _export_attr_values(self, data, aligned_corpora, expand_attrs, collator_locale):
         values = {}
-        collator_locale = corpus_info.collator_locale
-        for k in ans.keys():
-            if type(ans[k]) is set:
-                if len(ans[k]) <= self.max_attr_list_size or k in range_attrs or k == autocomplete_attr_imp:
-                    if k == bib_label:
-                        out_data = l10n.sort(ans[k], collator_locale, key=lambda t: t[0])
-                    else:
-                        out_data = tuple(l10n.sort(ans[k], collator_locale, key=lambda t: t[0]))
+        exported = dict(attr_values=values, aligned=aligned_corpora)
+        for k in data.keys():
+            if type(data[k]) is set:
+                if len(data[k]) <= self.max_attr_list_size or k in expand_attrs:
+                    out_data = l10n.sort(data[k], collator_locale, key=lambda t: t[0])
                     values[self.export_key(k)] = out_data
                 else:
-                    values[self.export_key(k)] = {'length': len(ans[k])}
+                    values[self.export_key(k)] = {'length': len(data[k])}
             else:
-                values[self.export_key(k)] = ans[k]
+                values[self.export_key(k)] = data[k]
         exported['poscount'] = l10n.format_number(values['poscount'])
-        exported['aligned'] = aligned_corpora
-        exported['attr_values'] = values
         return exported
 
     def get_bibliography(self, corpus, item_id):

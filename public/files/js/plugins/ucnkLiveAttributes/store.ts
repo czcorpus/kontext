@@ -203,6 +203,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
         this.textTypesStore.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
             this.textTypesStore.updateItems(attrName, (item:TextTypes.AttributeValue) => {
                 return {
+                    ident: item.ident,
                     value: item.value,
                     selected: item.selected,
                     locked: true,
@@ -218,10 +219,11 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                     let filterData = this.importFilter(data.attr_values);
                     let k;
                     for (k in filterData) {
-                        this.textTypesStore.filterItems(k, filterData[k].map((v) =>v.v));
+                        this.textTypesStore.filterItems(k, filterData[k].map(v => v.ident));
                         this.textTypesStore.updateItems(k, (v, i) => {
                             if (filterData[k][i]) {
                                 return {
+                                    ident: v.ident,
                                     value: v.value,
                                     selected: v.selected,
                                     locked: v.locked,
@@ -325,25 +327,15 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     private importFilter(data:{[ident:string]:Array<string>}):{[k:string]:Array<FilterResponseValue>} {
         let ans:any = {};
         for (let k in data) {
-            if (k.indexOf('.') > 0) {
+            if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
                 if (isArr(data[k])) {
                     ans[k] = data[k].map((v) => {
-                        if (isArr(v)) {
-                            return {
-                                v: v[0],
-                                ident: v[1],
-                                lock: false,
-                                availItems: v[3]
-                            };
-
-                        } else {
-                            return {
-                                v: v,
-                                ident: null,
-                                lock: true,
-                                availItems: null
-                            };
-                        }
+                        return {
+                            v: v[0],
+                            ident: v[1],
+                            lock: false,
+                            availItems: v[3]
+                        };
                     });
                     this.textTypesStore.setAttrSummary(k, null);
 
@@ -415,7 +407,9 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                             }
                             this.textTypesStore.setAutoComplete(
                                 attrName,
-                                v.attr_values[attrName].map(v => v[2])
+                                v.attr_values[attrName].map((v) => {
+                                        return {ident: v[1], label: v[2]};
+                                })
                             );
 
                         } else {

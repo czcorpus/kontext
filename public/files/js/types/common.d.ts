@@ -323,11 +323,17 @@ declare module TextTypes {
      *
      */
     export interface AttributeValue {
+        ident: string;
         value:string;
         selected:boolean;
         locked:boolean;
         availItems?:string; // a formatted string representation of a respective number
         extendedInfo?:{[key:string]:any};
+    }
+
+    export interface AutoCompleteItem {
+        ident: string;
+        label: string;
     }
 
     /**
@@ -460,9 +466,9 @@ declare module TextTypes {
          * should silently ignore this call (unless they
          * use it in some way).
          */
-        setAutoComplete(values:Array<string>):TextInputAttributeSelection;
+        setAutoComplete(values:Array<AutoCompleteItem>):TextInputAttributeSelection;
 
-        getAutoComplete():Immutable.List<string>;
+        getAutoComplete():Immutable.List<AutoCompleteItem>;
 
         resetAutoComplete():TextInputAttributeSelection;
 
@@ -534,7 +540,7 @@ declare module TextTypes {
          * Please note that this may not apply for all the
          * attribute items.
          */
-        setAutoComplete(attrName:string, values:Array<string>):void;
+        setAutoComplete(attrName:string, values:Array<AutoCompleteItem>):void;
 
         /**
          * Returns true if a specific attribute contains at least one selected

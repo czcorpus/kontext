@@ -96,6 +96,7 @@ export class RangeSelector {
         let numChecked = 0;
         this.textTypesStore.updateItems(attribName, (item:TextTypes.AttributeValue) => {
             let newItem = {
+                ident: item.ident,
                 value: item.value,
                 locked: item.locked,
                 selected: item.selected
@@ -128,6 +129,7 @@ export class RangeSelector {
 
         this.textTypesStore.updateItems(attribName, (item:TextTypes.AttributeValue) => {
             let newItem = {
+                ident: item.ident,
                 value: item.value,
                 locked: item.locked,
                 selected: item.selected
@@ -209,7 +211,7 @@ export class RangeSelector {
                 (data:{attr_values:{[key:string]:any}}) => {
                     if (!data['contains_errors']) {
                         this.textTypesStore.setValues(attribName,
-                            data[attribName].map(item=>item[0]));
+                                data.attr_values[attribName].map(item=>item[0]));
                         fullfill(data);
 
                     } else {
