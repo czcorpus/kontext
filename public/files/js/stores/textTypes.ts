@@ -65,7 +65,7 @@ export interface InitialData {
 /**
  *
  */
-class TextInputAttributeSelection implements TextTypes.AttributeSelection {
+class TextInputAttributeSelection implements TextTypes.TextInputAttributeSelection {
 
     attrDoc:string;  // ??
 
@@ -79,25 +79,37 @@ class TextInputAttributeSelection implements TextTypes.AttributeSelection {
 
     name:string;
 
-    autoCompleteHints:Immutable.List<string>;
+    autoCompleteHints:Immutable.List<TextTypes.AutoCompleteItem>;
 
-    value:string;
+    values:Immutable.List<TextTypes.AttributeValue>; // it supports appending values via a single text input
 
-    constructor(name:string, label:string, isNumeric:boolean, isInterval:boolean, value?:string) {
+    textFieldValue:string;
+
+    constructor(name:string, label:string, isNumeric:boolean, isInterval:boolean,
+            textFieldValue:string, values:Immutable.List<TextTypes.AttributeValue>,
+            autoCompleteHints:Immutable.List<TextTypes.AutoCompleteItem>) {
         this.name = name;
         this.label = label;
         this.isNumeric = isNumeric;
         this.isInterval = isInterval;
-        this.autoCompleteHints = Immutable.List([]);
-        this.value = value;
+        this.autoCompleteHints = autoCompleteHints ? autoCompleteHints : Immutable.List([]);
+        this.values = values ? values : Immutable.List([]);
     }
 
     updateValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
-        return this;
+        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
+                this.isInterval, this.textFieldValue, this.values.map(mapFn).toList(), this.autoCompleteHints);
     }
 
     toggleValueSelection(idx:number):TextTypes.AttributeSelection {
-        throw new Error('cannot update values for SrchAttributeSelection');
+        let val = this.values.get(idx);
+        if (val.selected) {
+            return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
+                this.isInterval, this.textFieldValue, this.values.remove(idx), this.autoCompleteHints);
+
+        } else {
+            return this;
+        }
     }
 
     containsFullList():boolean {
@@ -105,49 +117,128 @@ class TextInputAttributeSelection implements TextTypes.AttributeSelection {
     }
 
     hasUserChanges():boolean {
-        return !!this.value;
+        return this.values.find((item:TextTypes.AttributeValue) => {
+            return item.selected === true;
+        }) !== undefined;
     }
 
     exportSelections(lockedOnesOnly:boolean):any {
-        return [this.value];
+        let items = lockedOnesOnly ?
+                this.values.filter((item:TextTypes.AttributeValue)=>item.locked) : this.values;
+        return items
+            .filter((item:TextTypes.AttributeValue) => {
+                return item.selected === true;
+            })
+            .map((item:TextTypes.AttributeValue) => {
+                return item.ident;
+            }).toJS();
     }
 
     filterItems(items:Array<string>):TextTypes.AttributeSelection {
-        throw new Error('cannot filter items from SrchAttributeSelection');
+        let values;
+        if (this.values.size > 0) {
+            values = this.values.filter((item:TextTypes.AttributeValue) => {
+                return items.indexOf(item.ident) > -1;
+            }).toList();
+
+        } else {
+            values = Immutable.List(items).map((item) => {
+                return {
+                    value: item,
+                    selected: false,
+                    locked: false,
+                }
+            }).toList();
+        }
+        return new FullAttributeSelection(this.name, this.label,
+                this.isNumeric, this.isInterval, values);
     }
 
     filter(fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AttributeSelection {
-        throw new Error('cannot filter items from SrchAttributeSelection');
+        let values = this.values.filter(fn).toList();
+        return new FullAttributeSelection(this.name, this.label,
+                this.isNumeric, this.isInterval, values);
     }
+
+    addValue(value:TextTypes.AttributeValue):TextTypes.AttributeSelection {
+        if (this.values.find(x => x.value === value.value) === undefined) {
+            return new TextInputAttributeSelection(this.name, this.label,
+                    this.isNumeric, this.isInterval, this.textFieldValue, this.values.push(value),
+                    this.autoCompleteHints);
+
+        } else {
+            return this;
+        }
+    }
+
+    removeValue(value:string):TextTypes.AttributeSelection {
+        let idx = this.values.map(x => x.value).toList().indexOf(value);
+        if (idx > -1) {
+            let newValues = this.values.remove(idx);
+            return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
+                    this.isInterval, this.textFieldValue, newValues, this.autoCompleteHints);
+
+        } else {
+            return this;
+        }
+    }
+
+    clearValues():TextTypes.AttributeSelection {
+        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
+                    this.isInterval, this.textFieldValue, this.values.clear(), this.autoCompleteHints);
+    }
+
+    getValues():Immutable.List<TextTypes.AttributeValue> {
+        return this.values;
+    }
+
 
     setValues(values:Array<TextTypes.AttributeValue>):TextTypes.AttributeSelection {
         return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, values);
+                this.isInterval, Immutable.List(values));
     }
 
-    setAutoComplete(values:Array<string>):void {
-        this.autoCompleteHints = this.autoCompleteHints.merge(values);
+    setAutoComplete(values:Array<TextTypes.AutoCompleteItem>):TextInputAttributeSelection {
+        let newValues = Immutable.List(values);
+        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric, this.isInterval,
+                this.textFieldValue, this.values, this.autoCompleteHints.clear().merge(newValues));
     }
 
-    getAutoComplete():Immutable.List<string> {
+    resetAutoComplete():TextInputAttributeSelection {
+        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric, this.isInterval,
+                this.textFieldValue, this.values, Immutable.List([]));
+    }
+
+    getAutoComplete():Immutable.List<TextTypes.AutoCompleteItem> {
         return this.autoCompleteHints;
     }
 
     isLocked():boolean {
-        return false;
+        return !!this.values.find(item=>item.locked);
     }
 
     setExtendedInfo(idx:number, data:Immutable.Map<string, any>):TextTypes.AttributeSelection {
-        throw new Error('cannot set extended info for TextInputAttributeSelection');
-    }
-
-    setValue(v:string):TextInputAttributeSelection {
+        let currVal = this.values.get(idx);
+        let newVal = {
+            ident: currVal.ident,
+            value: currVal.value,
+            locked: currVal.locked,
+            selected: currVal.selected,
+            availItems: currVal.availItems,
+            extendedInfo: data
+        };
+        let values = this.values.set(idx, newVal);
         return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, v);
+                this.isInterval, this.textFieldValue, values, this.autoCompleteHints);
     }
 
-    getValue():string {
-        return this.value;
+    getTextFieldValue():string {
+        return this.textFieldValue;
+    }
+
+    setTextFieldValue(v:string):TextInputAttributeSelection {
+        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
+                this.isInterval, v, this.values, this.autoCompleteHints);
     }
 }
 
@@ -171,28 +262,30 @@ class FullAttributeSelection implements TextTypes.AttributeSelection {
     values:Immutable.List<TextTypes.AttributeValue>;
 
     constructor(name:string, label:string, isNumeric:boolean, isInterval:boolean,
-            values:Array<TextTypes.AttributeValue>) {
+            values:Immutable.List<TextTypes.AttributeValue>) {
         this.name = name;
         this.label = label;
         this.isNumeric = isNumeric;
         this.isInterval = isInterval;
-        this.values = Immutable.List(values);
+        this.values = values;
     }
 
     updateValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
         return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.values.map(mapFn).toArray());
+                this.isInterval, this.values.map(mapFn).toList());
     }
 
     toggleValueSelection(idx:number):TextTypes.AttributeSelection {
         let ans:FullAttributeSelection = new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.values.toArray());
+                this.isInterval, this.values);
         let val = ans.values.get(idx);
         let newVal = {
+            ident: val.ident,
             locked: val.locked,
             value: val.value,
             selected: !val.selected,
-            availItems: val.availItems
+            availItems: val.availItems,
+            extendedInfo: val.extendedInfo
         };
         ans.values = ans.values.set(idx, newVal);
         return ans;
@@ -216,33 +309,44 @@ class FullAttributeSelection implements TextTypes.AttributeSelection {
                 return item.selected === true;
             })
             .map((item:TextTypes.AttributeValue) => {
-                return item.value;
+                return item.ident;
             }).toJS();
     }
 
     filterItems(items:Array<string>):TextTypes.AttributeSelection {
         let values = this.values.filter((item:TextTypes.AttributeValue) => {
-                        return items.indexOf(item.value) > -1;
-                     }).toArray();
+                        return items.indexOf(item.ident) > -1;
+                     }).toList();
         return new FullAttributeSelection(this.name, this.label,
                 this.isNumeric, this.isInterval, values);
     }
 
     filter(fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AttributeSelection {
-        let values = this.values.filter(fn).toArray();
+        let values = this.values.filter(fn).toList();
         return new FullAttributeSelection(this.name, this.label,
                 this.isNumeric, this.isInterval, values);
     }
 
-    setValues(values:Array<TextTypes.AttributeValue>):TextTypes.AttributeSelection {
-        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, values);
+    getValues():Immutable.List<TextTypes.AttributeValue> {
+        return this.values;
     }
 
-    setAutoComplete(values:Array<string>):void {} // ignoring intentionally
+    setValues(values:Array<TextTypes.AttributeValue>):TextTypes.AttributeSelection {
+        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
+                this.isInterval, Immutable.List(values));
+    }
 
-    getAutoComplete():Immutable.List<string> {
-        return Immutable.List<string>([]);
+    addValue(value:TextTypes.AttributeValue):TextTypes.AttributeSelection {
+        throw new Error('FullAttributeSelection cannot add new values');
+    }
+
+    removeValue(value:string):TextTypes.AttributeSelection {
+        throw new Error('FullAttributeSelection cannot remove values');
+    }
+
+    clearValues():TextTypes.AttributeSelection {
+        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
+                this.isInterval, this.values = this.values.clear());
     }
 
     isLocked():boolean {
@@ -252,6 +356,7 @@ class FullAttributeSelection implements TextTypes.AttributeSelection {
     setExtendedInfo(idx:number, data:{[key:string]:any}):TextTypes.AttributeSelection {
         let currVal = this.values.get(idx);
         let newVal = {
+            ident: currVal.ident,
             value: currVal.value,
             locked: currVal.locked,
             selected: currVal.selected,
@@ -260,11 +365,7 @@ class FullAttributeSelection implements TextTypes.AttributeSelection {
         };
         let values = this.values.set(idx, newVal);
         return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, values.toArray());
-    }
-
-    setValue(v:string):FullAttributeSelection {
-        throw new Error('Cannot set value for ' + this.name);
+                this.isInterval, values);
     }
 }
 
@@ -364,13 +465,18 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
                         throw new Error('Attribute not found: ' + payload.props['attrName']);
                     }
                     break;
-                case 'TT_ATTRIBUTE_TEXT_INPUT_SILENTLY_CHANGED':
-                    self.setTextInputAttrValue(payload.props['attrName'], payload.props['value']);
-                    self.notifyChangeListeners('$TT_RAW_INPUT_VALUE_UPDATED');
+                case 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED':
+                    self.setTextInputAttrValue(payload.props['attrName'], payload.props['ident'],
+                            payload.props['label'], payload.props['append']);
+                    self.notifyChangeListeners('$TT_NEW_VALUE_ADDED');
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED':
                     self.handleAttrTextInputChange(payload.props['attrName'], payload.props['value']);
                     self.notifyChangeListeners('$TT_RAW_INPUT_VALUE_UPDATED');
+                    break;
+                case 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET':
+                    self.resetAutoComplete(payload.props['attrName']);
+                    self.notifyChangeListeners('$TT_ATTRIBUTE_AUTO_COMPLETE_RESET');
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST':
                     self.handleAttrTextInputAutoCompleteRequest(payload.props['attrName'], payload.props['value']).then(
@@ -387,12 +493,19 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         });
     }
 
-    private handleAttrTextInputChange(attrName:string, value:string) {
-        let attr = this.getAttribute(attrName);
+    private resetAutoComplete(attrName:string):void {
+        let attr = this.getTextInputAttribute(attrName);
         if (attr) {
             let idx = this.attributes.indexOf(attr);
-            let newAttr = attr.setValue(value);
-            this.attributes = this.attributes.set(idx, newAttr);
+            this.attributes = this.attributes.set(idx, attr.resetAutoComplete());
+        }
+    }
+
+    private handleAttrTextInputChange(attrName:string, value:string) {
+        let attr = this.getTextInputAttribute(attrName);
+        if (attr) {
+            let idx = this.attributes.indexOf(attr);
+            this.attributes = this.attributes.set(idx, attr.setTextFieldValue(value));
         }
     }
 
@@ -402,13 +515,23 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         }
     }
 
-    private setTextInputAttrValue(attrName:string, value:string):void {
-        let attr:any = this.getAttribute(attrName);
-        if (attr && attr instanceof TextInputAttributeSelection) {
-            let idx = this.attributes.indexOf(attr);
-            let newAttr = attr.setValue(value);
-            this.attributes = this.attributes.set(idx, newAttr);
+    private setTextInputAttrValue(attrName:string, ident:string, label:string, append:boolean):void {
+        let attr:TextTypes.AttributeSelection = this.getTextInputAttribute(attrName);
+        let idx = this.attributes.indexOf(attr);
+        let newVal:TextTypes.AttributeValue = {
+            ident: ident,
+            value: label,
+            selected: true,
+            locked: false
+        };
+        let newAttr;
+        if (append) {
+            newAttr = attr.addValue(newVal);
+
+        } else {
+            newAttr = attr.clearValues().addValue(newVal);
         }
+        this.attributes = this.attributes.set(idx, newAttr);
     }
 
     private importInitialData(data:InitialData, checkedValues:TextTypes.ServerCheckedValues):Array<TextTypes.AttributeSelection> {
@@ -419,20 +542,23 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
             return mergedBlocks.map((attrItem:BlockLine) => {
                 if (attrItem.textboxlength) {
                     return new TextInputAttributeSelection(attrItem.name, attrItem.label, attrItem.numeric,
-                        !!attrItem.is_interval);
+                        !!attrItem.is_interval, null, Immutable.List([]), Immutable.List([]));
 
                 } else {
                     let checkedInfo:Array<string> = checkedValues[attrItem.name] || [];
-                    let values:Array<TextTypes.AttributeValue> = attrItem.Values.map((valItem:{v:string, xcnt:string}) => {
-                        return {
-                            selected: checkedInfo.indexOf(valItem.v) > -1 ? true : false,
-                            value: valItem.v,
-                            locked:false,
-                            availItems:valItem.xcnt
-                        };
-                    });
+                    let values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
+                        (valItem:{v:string, xcnt:string}) => {
+                            return {
+                                value: valItem.v,
+                                ident: valItem.v, // TODO what about bib items?
+                                selected: checkedInfo.indexOf(valItem.v) > -1 ? true : false,
+                                locked:false,
+                                availItems:valItem.xcnt
+                            };
+                        }
+                    );
                     return new FullAttributeSelection(attrItem.name, attrItem.label, attrItem.numeric,
-                            !!attrItem.is_interval, values);
+                            !!attrItem.is_interval, Immutable.List(values));
                 }
             });
         }
@@ -448,7 +574,7 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         } else {
             throw new Error('no such attribute value: ' + attrIdent);
         }
-        this.notifyChangeListeners('$TT_VALUE_CHECKBOX_CLICKED');
+        this.notifyChangeListeners('$TT_VALUE_CHECKBOX_STORED');
     }
 
     private applyRange(attrName:string, fromVal:number, toVal: number, strictInterval:boolean,
@@ -475,6 +601,7 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
             let newVal = this.selectAll.get(ident);
             this.attributes = this.attributes.set(idx, item.updateValues((item) => {
                 return {
+                    ident: item.ident,
                     value: item.value,
                     selected: newVal,
                     locked: item.locked
@@ -493,6 +620,14 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
 
     getAttribute(ident:string):TextTypes.AttributeSelection {
         return this.attributes.find((val) => val.name === ident);
+    }
+
+    getTextInputAttribute(ident:string):TextTypes.TextInputAttributeSelection {
+        let ans = this.attributes.find(val => val.name === ident);
+        if (ans instanceof TextInputAttributeSelection) {
+            return ans;
+        }
+        return undefined;
     }
 
     replaceAttribute(ident:string, val:TextTypes.AttributeSelection):void {
@@ -525,17 +660,7 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         let newAttr;
         let idx = this.attributes.indexOf(attr);
         if (idx > -1) {
-            if (attr.containsFullList()) {
-                newAttr = attr.filterItems(items);
-
-            } else {
-                let values = items.map((v) => {
-                    return {value: v, selected: false, locked: false, availItems:null}
-                });
-                newAttr = new FullAttributeSelection(attr.name,
-                    attr.label, attr.isNumeric, attr.isInterval, values);
-            }
-            this.attributes = this.attributes.set(idx, newAttr);
+            this.attributes = this.attributes.set(idx, attr.filterItems(items));
         }
     }
 
@@ -548,19 +673,7 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
     updateItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):void {
         let attr = this.getAttribute(attrName);
         let idx = this.attributes.indexOf(attr);
-        let newAttr;
-        if (attr instanceof TextInputAttributeSelection && attr.hasUserChanges()) {
-            let newVal = {
-                value: attr.value,
-                selected: true,
-                locked: true
-            };
-            newAttr = new FullAttributeSelection(attr.name, attr.label, attr.isNumeric,
-                    attr.isInterval, [newVal]);
-
-        } else {
-            newAttr = attr.updateValues(mapFn);
-        }
+        let newAttr = attr.updateValues(mapFn);
         this.attributes = this.attributes.set(idx, newAttr);
     }
 
@@ -569,6 +682,7 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         let idx = this.attributes.indexOf(attr);
         let values2:Array<TextTypes.AttributeValue> = values.map((item:string) => {
             return {
+                ident: item, // TODO what about bib items?
                 value: item,
                 selected: false,
                 locked: false
@@ -582,10 +696,11 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
         }
     }
 
-    setAutoComplete(attrName:string, values:Array<string>):void {
-        let attr = this.getAttribute(attrName);
+    setAutoComplete(attrName:string, values:Array<TextTypes.AutoCompleteItem>):void {
+        let attr = this.getTextInputAttribute(attrName);
         if (attr) {
-            attr.setAutoComplete(values);
+            let idx = this.attributes.indexOf(attr);
+            this.attributes = this.attributes.set(idx, attr.setAutoComplete(values));
         }
     }
 

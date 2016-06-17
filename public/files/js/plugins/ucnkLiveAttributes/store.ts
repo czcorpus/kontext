@@ -136,7 +136,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
                     self.processRefine().then(
                         (v) => {
-                            self.textTypesStore.notifyChangeListeners('$TT_VALUES_FILTERED'); // TODO is this correct in terms of design?
+                            self.textTypesStore.notifyChangeListeners('$TT_VALUES_FILTERED');
                             self.notifyChangeListeners('$LIVE_ATTRIBUTES_REFINE_DONE');
                         },
                         (err) => {
@@ -170,8 +170,13 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     }
 
     private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {
-        this.bibliographyIds = Immutable.List<string>(
-                filterData[this.bibliographyAttribute].map(v => v.ident));
+        let attrObj = this.textTypesStore.getAttribute(this.bibliographyAttribute);
+        let newBibData = filterData[this.bibliographyAttribute];
+
+        // set the data iff server data are full-fledget (i.e. including unique 'ident')
+        if (newBibData.length > 0 && !!newBibData[0].ident) {
+            this.bibliographyIds = Immutable.List<string>(newBibData.map(v => v.ident));
+        }
         this.textTypesStore.setExtendedInfoSupport(
             this.bibliographyAttribute,
             (idx:number) => {
@@ -198,9 +203,12 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
         this.textTypesStore.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
             this.textTypesStore.updateItems(attrName, (item:TextTypes.AttributeValue) => {
                 return {
+                    ident: item.ident,
                     value: item.value,
                     selected: item.selected,
-                    locked: true
+                    locked: true,
+                    availItems: item.availItems,
+                    extendedInfo: item.extendedInfo
                 }
             });
         });
@@ -211,10 +219,11 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                     let filterData = this.importFilter(data.attr_values);
                     let k;
                     for (k in filterData) {
-                        this.textTypesStore.filterItems(k, filterData[k].map((v) =>v.v));
+                        this.textTypesStore.filterItems(k, filterData[k].map(v => v.ident));
                         this.textTypesStore.updateItems(k, (v, i) => {
                             if (filterData[k][i]) {
                                 return {
+                                    ident: v.ident,
                                     value: v.value,
                                     selected: v.selected,
                                     locked: v.locked,
@@ -318,25 +327,15 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     private importFilter(data:{[ident:string]:Array<string>}):{[k:string]:Array<FilterResponseValue>} {
         let ans:any = {};
         for (let k in data) {
-            if (k.indexOf('.') > 0) {
+            if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
                 if (isArr(data[k])) {
                     ans[k] = data[k].map((v) => {
-                        if (isArr(v)) {
-                            return {
-                                v: v[0],
-                                ident: v[1],
-                                lock: false,
-                                availItems: v[3]
-                            };
-
-                        } else {
-                            return {
-                                v: v,
-                                ident: null,
-                                lock: true,
-                                availItems: null
-                            };
-                        }
+                        return {
+                            v: v[0],
+                            ident: v[1],
+                            lock: false,
+                            availItems: v[3]
+                        };
                     });
                     this.textTypesStore.setAttrSummary(k, null);
 
@@ -402,7 +401,16 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 return prom.then(
                     (v:ServerRefineResponse) => {
                         if (!v.contains_errors) {
-                            this.textTypesStore.setAutoComplete(attrName, v.attr_values[attrName].map(v=>v[2]));
+                            let filterData = this.importFilter(v.attr_values);
+                            if (isArr(filterData[this.bibliographyAttribute])) {
+                                this.attachBibData(filterData);
+                            }
+                            this.textTypesStore.setAutoComplete(
+                                attrName,
+                                v.attr_values[attrName].map((v) => {
+                                        return {ident: v[1], label: v[2]};
+                                })
+                            );
 
                         } else {
                             throw new Error(v.error);
@@ -410,6 +418,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                     },
                     (err) => {
                         console.error(err);
+                        this.pluginApi.showMessage('error', err);
                     }
                 );
 

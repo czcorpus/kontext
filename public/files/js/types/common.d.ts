@@ -323,11 +323,17 @@ declare module TextTypes {
      *
      */
     export interface AttributeValue {
+        ident: string;
         value:string;
         selected:boolean;
         locked:boolean;
         availItems?:string; // a formatted string representation of a respective number
         extendedInfo?:{[key:string]:any};
+    }
+
+    export interface AutoCompleteItem {
+        ident: string;
+        label: string;
     }
 
     /**
@@ -380,6 +386,10 @@ declare module TextTypes {
         updateValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
 
         /**
+         */
+        getValues():Immutable.List<AttributeValue>;
+
+        /**
          * Set new attribute values
          *
          * @return a new copy of the original AttributeSelection
@@ -387,18 +397,19 @@ declare module TextTypes {
         setValues(values:Array<AttributeValue>):AttributeSelection;
 
         /**
-         * Sets a list of items containing hints based on
-         * the current (incomplete) user entry. This applies
-         * in raw text input implementations - checkbox ones
-         * should silently ignore this call (unless they
-         * use it in some way).
+         * Add a new value to the list of the current ones.
          */
-        setAutoComplete(values:Array<string>):void;
+        addValue(value:AttributeValue):AttributeSelection;
+
+        /**
+         * Remove a value from the list of the current ones.
+         */
+        removeValue(value:string):AttributeSelection;
 
         /**
          *
          */
-        getAutoComplete():Immutable.List<string>;
+        clearValues():AttributeSelection;
 
         /**
          * Flip checked/unchecked status of the value
@@ -437,11 +448,30 @@ declare module TextTypes {
          *
          */
         setExtendedInfo(idx:number, data:Immutable.Map<string, any>):AttributeSelection;
+    }
+
+    /**
+     *
+     */
+    interface TextInputAttributeSelection extends AttributeSelection {
+
+        getTextFieldValue():string;
+
+        setTextFieldValue(v:string):TextInputAttributeSelection;
 
         /**
-         *
+         * Sets a list of items containing hints based on
+         * the current (incomplete) user entry. This applies
+         * in raw text input implementations - checkbox ones
+         * should silently ignore this call (unless they
+         * use it in some way).
          */
-        setValue(v:string):AttributeSelection;
+        setAutoComplete(values:Array<AutoCompleteItem>):TextInputAttributeSelection;
+
+        getAutoComplete():Immutable.List<AutoCompleteItem>;
+
+        resetAutoComplete():TextInputAttributeSelection;
+
     }
 
 
@@ -454,6 +484,11 @@ declare module TextTypes {
          * Return a defined structural attribute
          */
         getAttribute(ident:string):TextTypes.AttributeSelection;
+
+        /**
+         *
+         */
+        getTextInputAttribute(ident:string):TextInputAttributeSelection
 
         /**
          * Return a list of all the defined attributes
@@ -505,7 +540,7 @@ declare module TextTypes {
          * Please note that this may not apply for all the
          * attribute items.
          */
-        setAutoComplete(attrName:string, values:Array<string>):void;
+        setAutoComplete(attrName:string, values:Array<AutoCompleteItem>):void;
 
         /**
          * Returns true if a specific attribute contains at least one selected

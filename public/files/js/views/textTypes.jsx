@@ -215,46 +215,55 @@ define(['vendor/react'], function (React) {
             }
         });
 
-        // ----------------------------- <FullListContainer /> --------------------------
+        // ----------------------------- <BibInfoButton /> ------------------------------
 
-        let FullListContainer = React.createClass({
+        let BibInfoButton = React.createClass({
 
-            mixins : mixins,
-
-            _mkExtendedInfoClickHandler : function (idx) {
+            _mkHandleClick : function (idx) {
                 return (evt) => {
                     dispatcher.dispatch({
                         actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
                         props: {
-                            attrName: this.props.data.name,
+                            attrName: this.props.attrName,
                             idx: idx
                         }
                     });
                 }
             },
 
+            render : function () {
+                return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
+            }
+        })
+
+        // ----------------------------- <FullListContainer /> --------------------------
+
+        let FullListContainer = React.createClass({
+
+            mixins : mixins,
+
             _renderListOfCheckBoxes : function () {
+                let hasExtendedInfo = textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name);
                 return (
                     <table>
                         <tbody>
-                        {this.props.data.values.map((item, i) => {
+                        {this.props.attrObj.getValues().map((item, i) => {
                             return (
                                 <tr key={item.value + String(i)}>
                                     <td><CheckBoxItem
                                             itemIdx={i}
-                                            itemName={this.props.data.name}
+                                            itemName={this.props.attrObj.name}
                                             itemValue={item.value}
                                             itemIsSelected={item.selected}
                                             itemIsLocked={item.locked}
                                              /></td>
                                     <td className="num">{item.availItems}</td>
                                     <td>
-                                    {this.props.hasDefinedExtendedInfo
-                                        ? (<a onClick={this._mkExtendedInfoClickHandler(i)}
-                                            className="bib-info">i</a>) : null}
-
+                                    {hasExtendedInfo
+                                        ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} /> : null }
                                     {item.extendedInfo
-                                        ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={this.props.data.name} /> : null}
+                                        ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={this.props.attrObj.name} />
+                                        : null}
                                     </td>
                                 </tr>
                             );
@@ -269,10 +278,83 @@ define(['vendor/react'], function (React) {
                     <div>
                         {
                             this.props.rangeIsOn
-                            ? <RangeSelector attrName={this.props.data.name} />
+                            ? <RangeSelector attrName={this.props.attrObj.name} />
                             : this._renderListOfCheckBoxes()
                         }
                     </div>
+                );
+            }
+        });
+
+        // ----------------------------- <AutoCompleteBox /> --------------------------
+
+        let AutoCompleteBox = React.createClass({
+
+            _outsideClick : false,
+
+            _handleAutoCompleteHintClick : function (item) {
+                if (typeof this.props.customAutoCompleteHintClickHandler === 'function') {
+                    this.props.customAutoCompleteHintClickHandler(item);
+
+                } else {
+                    dispatcher.dispatch({
+                        actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
+                        props: {
+                            attrName: this.props.attrObj.name,
+                            ident: item.ident,
+                            label: item.label,
+                            append: false
+                        }
+                    });
+                }
+            },
+
+            _handleDocumentClick : function (event) {
+                if (event.eventPhase === Event.CAPTURING_PHASE) {
+                    this._outsideClick = true;
+
+                } else if (event.eventPhase === Event.BUBBLING_PHASE) {
+                    if (this._outsideClick) {
+                        dispatcher.dispatch({
+                            actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET',
+                            props: {
+                                attrName: this.props.attrObj.name
+                            }
+                        });
+                        this._outsideClick = false;
+                    }
+                }
+            },
+
+            _handleAutoCompleteAreaClick : function (event) {
+                this._outsideClick = false;
+            },
+
+            componentDidMount : function () {
+                window.document.addEventListener('click', this._handleDocumentClick, true);
+                window.document.addEventListener('click', this._handleDocumentClick, false);
+            },
+
+            componentWillUnmount : function () {
+                window.document.removeEventListener('click', this._handleDocumentClick, true);
+                window.document.removeEventListener('click', this._handleDocumentClick, false);
+            },
+
+            render : function () {
+                let data = this.props.attrObj.getAutoComplete();
+                return (
+                    <ul className="auto-complete"
+                        onClick={this._handleAutoCompleteAreaClick}>
+                    {data.map((item) => {
+                        return (
+                            <li key={item.ident}>
+                                <a onClick={this._handleAutoCompleteHintClick.bind(this, item)}>
+                                    {item.label}
+                                </a>
+                            </li>
+                        );
+                    })}
+                    </ul>
                 );
             }
         });
@@ -289,7 +371,7 @@ define(['vendor/react'], function (React) {
                 dispatcher.dispatch({
                     actionType: 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED',
                     props: {
-                        attrName: this.props.attrName,
+                        attrName: this.props.attrObj.name,
                         value: v
                     }
                 });
@@ -301,89 +383,105 @@ define(['vendor/react'], function (React) {
                     dispatcher.dispatch({
                         actionType: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST',
                         props: {
-                            attrName: this.props.attrName,
+                            attrName: this.props.attrObj.name,
                             value: v
                         }
                     });
                 }, 300);
             },
 
-            _handleAutoCompleteHintClick : function (value) {
-                dispatcher.dispatch({
-                    actionType: 'TT_ATTRIBUTE_TEXT_INPUT_SILENTLY_CHANGED',
-                    props: {
-                        attrName: this.props.attrName,
-                        value: value
-                    }
-                })
-            },
+            _renderAutoComplete : function () {
+                if (this.props.attrObj.getAutoComplete().size > 0) {
+                    return <AutoCompleteBox attrObj={this.props.attrObj}
+                                 customAutoCompleteHintClickHandler={this.props.customAutoCompleteHintClickHandler} />;
 
-            _renderAutoComplete : function (data) {
-                return (
-                    <ul className="auto-complete">
-                    {data.map((item) => {
-                        return (
-                            <li key={item}>
-                                <a onClick={this._handleAutoCompleteHintClick.bind(this, item)}>
-                                    {item}
-                                </a>
-                            </li>
-                        );
-                    })}
-                    </ul>
-                );
-            },
-
-            _changeHandler : function (store, action) {
-                if (action === '$TT_RAW_INPUT_VALUE_UPDATED') {
-                    let attr = store.getAttribute(this.props.attrName);
-                    if (attr) {
-                        this.setState({
-                            inputValue: attr.getValue(),
-                            attrObj: textTypesStore.getAttribute(this.props.attrName)
-                        });
-
-                    } else {
-                        throw new Error('Attribute not found: ', this.props.attrName);
-                    }
+                } else {
+                    return null;
                 }
             },
 
-            componentDidMount : function () {
-                textTypesStore.addChangeListener(this._changeHandler);
-            },
-
-            componentWillUnmount : function () {
-                textTypesStore.removeChangeListener(this._changeHandler);
-            },
-
-            getInitialState : function () {
-                return {
-                    inputValue: '',
-                    attrObj: textTypesStore.getAttribute(this.props.attrName)
-                };
-            },
-
             render : function () {
-                let autoComplete = this.state.attrObj.getAutoComplete();
                 return (
                     <table>
                         <tbody>
                             <tr>
                                 <td>
                                     <input type="text"
-                                        name={'sca_' + this.props.attrName}
+                                        name={this.props.customInputName
+                                                ? this.props.customInputName
+                                                : 'sca_' + this.props.attrObj.name}
                                         onChange={this._inputChangeHandler}
-                                        value={this.state.attrObj.getValue()}
+                                        value={this.props.attrObj.getTextFieldValue()}
                                         placeholder={textTypesStore.getTextInputPlaceholder()}
                                         autoComplete="off" />
-                                    {autoComplete.size > 0 ? this._renderAutoComplete(autoComplete) : null}
+                                    {this._renderAutoComplete()}
                                 </td>
                                 <td></td>
                                 <td></td>
                             </tr>
                         </tbody>
                     </table>
+                );
+            }
+        });
+
+        // ----------------------------- <RawInputMultiValueContainer /> --------------------------
+
+        let RawInputMultiValueContainer = React.createClass({
+
+            _handleAutoCompleteHintClick : function (item) { // typeof item = TextTypes.AutoCompleteItem
+                dispatcher.dispatch({
+                    actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
+                    props: {
+                        attrName: this.props.attrObj.name,
+                        ident: item.ident,
+                        label: item.label,
+                        append: true
+                    }
+                });
+            },
+
+            _renderCheckboxes : function () {
+                let values = this.props.attrObj.getValues();
+                let hasExtendedInfo = textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name);
+                return values.map((item, i) => {
+                    return (
+                        <tr key={item.value + String(i)}>
+                            <td>
+                                <CheckBoxItem
+                                        itemIdx={i}
+                                        itemName={this.props.attrObj.name}
+                                        itemValue={item.value}
+                                        itemIsSelected={item.selected}
+                                        itemIsLocked={item.locked}
+                                            />
+                            </td>
+                            <td>
+                                {hasExtendedInfo
+                                    ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} /> : null }
+                                {item.extendedInfo
+                                    ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={this.props.attrObj.name} />
+                                    : null}
+                            </td>
+                        </tr>
+                    );
+                });
+            },
+
+            render : function () {
+                return (
+                    <div>
+                        <table>
+                            <tbody>
+                                {this._renderCheckboxes()}
+                            </tbody>
+                        </table>
+                        <RawInputContainer attrObj={this.props.attrObj}
+                                           isLocked={this.props.isLocked}
+                                           inputTextOnChange={this.props.inputTextOnChange}
+                                           customInputName={null}
+                                           customAutoCompleteHintClickHandler={this._handleAutoCompleteHintClick} />
+                    </div>
                 );
             }
         });
@@ -395,11 +493,13 @@ define(['vendor/react'], function (React) {
             render : function () {
                 return (
                     <div className="scrollable">
-                    {this.props.data.containsFullList() || this.props.rangeIsOn
-                        ? <FullListContainer data={this.props.data} rangeIsOn={this.props.rangeIsOn}
-                                isLocked={this.props.isLocked} hasDefinedExtendedInfo={this.props.hasDefinedExtendedInfo} />
-                        : <RawInputContainer attrName={this.props.data.name}
-                                isLocked={this.props.isLocked} inputTextOnChange={this.props.inputTextOnChange} />
+                    {this.props.attrObj.containsFullList() || this.props.rangeIsOn
+                        ? <FullListContainer attrObj={this.props.attrObj} rangeIsOn={this.props.rangeIsOn}
+                                isLocked={this.props.isLocked} />
+                        : <RawInputMultiValueContainer
+                                attrObj={this.props.attrObj}
+                                isLocked={this.props.isLocked}
+                                inputTextOnChange={this.props.inputTextOnChange} />
                     }
                     </div>
                 );
@@ -426,34 +526,10 @@ define(['vendor/react'], function (React) {
                 return null;
             },
 
-            _changeHandler : function (store, action) {
-                if (action === '$TT_RANGE_APPLIED' &&
-                        textTypesStore.getLastActiveRangeAttr() === this.props.attrObj.name) {
-                    this.setState({
-                        rangeIsOn: false, // <- switch back to a list mode to allow user to view the result,
-                        hasDefinedExtendedInfo: textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name)
-                    });
-
-                } else {
-                    this.setState(React.addons.update(this.state,
-                        {hasDefinedExtendedInfo: {$set: textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name)}}
-                    ));
-                }
-            },
-
-            componentDidMount: function () {
-                textTypesStore.addChangeListener(this._changeHandler);
-            },
-
-            componentWillUnmount: function () {
-                textTypesStore.removeChangeListener(this._changeHandler);
-            },
-
             getInitialState : function () {
                 return {
-                    rangeIsOn : this.props.attrObj.isInterval,
-                    metaInfoHelpVisible: false,
-                    hasDefinedExtendedInfo: textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name)
+                    rangeIsOn : this.props.attrObj.isInterval && !this.props.attrObj.hasUserChanges(),
+                    metaInfoHelpVisible: false
                 };
             },
 
@@ -496,17 +572,18 @@ define(['vendor/react'], function (React) {
 
             _renderMetaInfo : function () {
                 let layoutViews = this.getLayoutViews();
-                if (this.props.metaInfo) {
+                let metaInfo = textTypesStore.getAttrSummary().get(this.props.attrObj.name);
+                if (metaInfo) {
                     return (
                         <span>
-                            {this.props.metaInfo.text}
+                            {metaInfo.text}
                             {'\u00A0'}
                             <a className="context-help" onClick={this._metaInfoHelpClickHandler}>
                                 <img src={this.createStaticUrl('img/question-mark.svg')} className="over-img" />
                             </a>
                             {this.state.metaInfoHelpVisible
                                 ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info" autoSize={true}>
-                                    {this.props.metaInfo.help}
+                                    {metaInfo.help}
                                    </layoutViews.PopupBox>)
                                 : null}
                         </span>
@@ -523,17 +600,16 @@ define(['vendor/react'], function (React) {
                     classes.push('locked');
                 }
                 return (
-                    <table key={this.props.attrObj.name} border="0" className={classes.join(' ')}>
+                    <table border="0" className={classes.join(' ')}>
                         <tbody>
                             <tr className="attrib-name">
                                 <th>{this.props.attrObj.name}</th>
                             </tr>
                             <tr className={this.state.rangeIsOn ? 'range' : 'data-rows'}>
                                 <td>
-                                    <ValueSelector data={this.props.attrObj}
+                                    <ValueSelector attrObj={this.props.attrObj}
                                             rangeIsOn={this.state.rangeIsOn}
-                                            isLocked={this.props.attrObj.isLocked()}
-                                            hasDefinedExtendedInfo={this.state.hasDefinedExtendedInfo} />
+                                            isLocked={this.props.attrObj.isLocked()}  />
                                 </td>
                             </tr>
                             <tr className="metadata">
@@ -560,30 +636,28 @@ define(['vendor/react'], function (React) {
         let TextTypesPanel = React.createClass({
             mixins: mixins,
 
-            _changeHandler : function (store, action) {
+            _storeChangeHandler : function (store, action) {
                 this.setState(React.addons.update(this.state,
                     {
-                        attributes: {$set: store.getAttributes()},
-                        metaInfo: {$set: store.getAttrSummary()}
+                        attributes: {$set: store.getAttributes()}
                     }
                 ));
             },
 
             componentDidMount: function () {
-                textTypesStore.addChangeListener(this._changeHandler);
+                textTypesStore.addChangeListener(this._storeChangeHandler);
                 if (typeof this.props.onReady === 'function') {
                     this.props.onReady();
                 }
             },
 
             componentWillUnmount: function () {
-                textTypesStore.removeChangeListener(this._changeHandler);
+                textTypesStore.removeChangeListener(this._storeChangeHandler);
             },
 
             getInitialState : function () {
                 return {
-                    attributes: textTypesStore.getAttributes(),
-                    metaInfo: textTypesStore.getAttrSummary(),
+                    attributes: textTypesStore.getAttributes()
                 };
             },
 
@@ -602,8 +676,8 @@ define(['vendor/react'], function (React) {
                                 ? <this.props.liveAttrsCustomTT alignedCorpora={this.props.alignedCorpora} />
                                 : null}
                             {this.state.attributes.map((attrObj) => {
-                                return <TableTextTypeAttribute key={attrObj.name}
-                                          attrObj={attrObj} metaInfo={this.state.metaInfo.get(attrObj.name)} />;
+                                return <TableTextTypeAttribute key={attrObj.name + ':list:' + attrObj.containsFullList()}
+                                            attrObj={attrObj} />;
                             })}
                         </div>
                     </div>
