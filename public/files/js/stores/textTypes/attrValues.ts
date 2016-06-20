@@ -313,7 +313,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         if (item.containsFullList()) {
             this.selectAll = this.selectAll.set(ident, !this.selectAll.get(ident));
             let newVal = this.selectAll.get(ident);
-            this.attributes = this.attributes.set(idx, item.updateValues((item) => {
+            this.attributes = this.attributes.set(idx, item.mapValues((item) => {
                 return {
                     ident: item.ident,
                     value: item.value,
@@ -369,12 +369,12 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return ans;
     }
 
-    filterItems(attrName:string, items:Array<string>):void {
+    updateItems(attrName:string, items:Array<string>):void {
         let attr = this.getAttribute(attrName);
         let newAttr;
         let idx = this.attributes.indexOf(attr);
         if (idx > -1) {
-            this.attributes = this.attributes.set(idx, attr.filterItems(items));
+            this.attributes = this.attributes.set(idx, attr.updateItems(items));
         }
     }
 
@@ -384,10 +384,10 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.attributes = this.attributes.set(idx, attr.filter(fn));
     }
 
-    updateItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):void {
+    mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):void {
         let attr = this.getAttribute(attrName);
         let idx = this.attributes.indexOf(attr);
-        let newAttr = attr.updateValues(mapFn);
+        let newAttr = attr.mapValues(mapFn);
         this.attributes = this.attributes.set(idx, newAttr);
     }
 

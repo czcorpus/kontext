@@ -63,7 +63,7 @@ export class TextInputAttributeSelection implements TextTypes.TextInputAttribute
         this.values = values ? values : Immutable.List([]);
     }
 
-    updateValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
+    mapValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
         return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
                 this.isInterval, this.textFieldValue, this.values.map(mapFn).toList(), this.autoCompleteHints);
     }
@@ -101,7 +101,7 @@ export class TextInputAttributeSelection implements TextTypes.TextInputAttribute
             }).toJS();
     }
 
-    filterItems(items:Array<string>):TextTypes.AttributeSelection {
+    updateItems(items:Array<string>):TextTypes.AttributeSelection {
         let values;
         if (this.values.size > 0) {
             values = this.values.filter((item:TextTypes.AttributeValue) => {
@@ -241,7 +241,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
         this.values = values;
     }
 
-    updateValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
+    mapValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
         return new FullAttributeSelection(this.name, this.label, this.isNumeric,
                 this.isInterval, this.values.map(mapFn).toList());
     }
@@ -284,7 +284,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             }).toJS();
     }
 
-    filterItems(items:Array<string>):TextTypes.AttributeSelection {
+    updateItems(items:Array<string>):TextTypes.AttributeSelection {
         let values = this.values.filter((item:TextTypes.AttributeValue) => {
                         return items.indexOf(item.ident) > -1;
                      }).toList();

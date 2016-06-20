@@ -61,9 +61,9 @@ export interface AlignedLangSelectionStep extends SelectionStep {
 
 
 interface FilterResponseValue {
+    ident:string;
     v:string;
     lock:boolean;
-    ident?:string;
     availItems?:string;
 }
 
@@ -201,7 +201,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
 
     private processRefine():RSVP.Promise<any> {
         this.textTypesStore.getAttributesWithSelectedItems(false).forEach((attrName:string) => {
-            this.textTypesStore.updateItems(attrName, (item:TextTypes.AttributeValue) => {
+            this.textTypesStore.mapItems(attrName, (item:TextTypes.AttributeValue) => {
                 return {
                     ident: item.ident,
                     value: item.value,
@@ -217,14 +217,14 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
             (data:ServerRefineResponse) => {
                 if (!data.contains_errors) {
                     let filterData = this.importFilter(data.attr_values);
-                    let k;
+                    let k; // mut be defined here (ES5 cannot handle for(let k...) here)
                     for (k in filterData) {
-                        this.textTypesStore.filterItems(k, filterData[k].map(v => v.ident));
-                        this.textTypesStore.updateItems(k, (v, i) => {
+                        this.textTypesStore.updateItems(k, filterData[k].map(v => v.ident));
+                        this.textTypesStore.mapItems(k, (v, i) => {
                             if (filterData[k][i]) {
                                 return {
-                                    ident: v.ident,
-                                    value: v.value,
+                                    ident: filterData[k][i].ident,
+                                    value: filterData[k][i].v,
                                     selected: v.selected,
                                     locked: v.locked,
                                     availItems: filterData[k][i].availItems,
@@ -325,14 +325,14 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     }
 
     private importFilter(data:{[ident:string]:Array<string>}):{[k:string]:Array<FilterResponseValue>} {
-        let ans:any = {};
+        let ans:{[k:string]:Array<FilterResponseValue>} = {};
         for (let k in data) {
             if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
                 if (isArr(data[k])) {
                     ans[k] = data[k].map((v) => {
                         return {
-                            v: v[0],
                             ident: v[1],
+                            v: v[0],
                             lock: false,
                             availItems: v[3]
                         };

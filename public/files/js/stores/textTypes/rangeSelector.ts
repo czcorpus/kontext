@@ -100,7 +100,7 @@ export class RangeSelector {
 
     private checkRange(attribName:string, fromVal:number, toVal:number, keepCurrent:boolean):number {
         let numChecked = 0;
-        this.textTypesStore.updateItems(attribName, (item:TextTypes.AttributeValue) => {
+        this.textTypesStore.mapItems(attribName, (item:TextTypes.AttributeValue) => {
             let newItem = {
                 ident: item.ident,
                 value: item.value,
@@ -133,7 +133,7 @@ export class RangeSelector {
             throw new Error(this.pluginApi.translate('ucnkLA__at_least_one_required'));
         }
 
-        this.textTypesStore.updateItems(attribName, (item:TextTypes.AttributeValue) => {
+        this.textTypesStore.mapItems(attribName, (item:TextTypes.AttributeValue) => {
             let newItem = {
                 ident: item.ident,
                 value: item.value,
