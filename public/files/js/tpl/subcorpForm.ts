@@ -18,34 +18,31 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/corparch.ts" />
 /// <reference path="../types/plugins/subcmixer.ts" />
 /// <reference path="../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
-/// <reference path="../views/subcorpForm.d.ts" />
 
 // -- dynamic loading of custom plug-in implementation
 /// <amd-dependency path="plugins/corparch/init" name="corplistComponent" />
 /// <amd-dependency path="plugins/subcmixer/init" name="subcmixer" />
 
-/// <amd-dependency path="../views/textTypes" name="ttViews" />
-
 import $ = require('jquery');
 import document = require('./document');
 import popupBox = require('popupbox');
-import subcorpFormViews = require('views/subcorpForm');
+import {init as subcorpViewsInit} from 'views/subcorpForm';
 import subcorpFormStoreModule = require('../stores/subcorpForm');
 import queryInput = require('../queryInput');
 import liveAttributes = require('plugins/liveAttributes/init');
 import userSettings = require('../userSettings');
-import textTypesStore = require('../stores/textTypes');
+import textTypesStore = require('../stores/textTypes/attrValues');
+import {init as ttViewsInit} from 'views/textTypes';
 
 // dynamic imports
 declare var subcmixer:Subcmixer.Module;
 declare var corplistComponent:CorpusArchive.Module;
-
-declare var ttViews:any;
 
 
 /**
@@ -205,7 +202,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
                 textTypesData,
                 this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
-        let ttViewComponents = ttViews.init(
+        let ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.textTypesStore
@@ -262,7 +259,7 @@ export function init(conf:Kontext.Conf) {
     let subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
         layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
         layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
-    let subcorpFormComponents = subcorpFormViews.init(layoutModel.dispatcher,
+    let subcorpFormComponents = subcorpViewsInit(layoutModel.dispatcher,
             layoutModel.exportMixins(), subcorpFormStore);
     let pageModel = new SubcorpForm(layoutModel, subcorpFormComponents,
             subcorpFormStore);

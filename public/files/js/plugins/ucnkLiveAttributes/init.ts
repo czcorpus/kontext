@@ -19,24 +19,22 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="./view.d.ts" />
 /// <reference path="../../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-/// <amd-dependency path="./view" name="views" />
 
-
-import textTypesStore = require('../../stores/textTypes');
+import textTypesStore = require('../../stores/textTypes/attrValues');
 import liveAttrsStore = require('./store');
 import RSVP = require('vendor/rsvp');
 import common = require('./common');
-declare var views:any;
+import {init as viewInit} from './view';
 
 
 
 export function getViews(dispatcher:Dispatcher.Dispatcher<any>,
         mixins:Kontext.ComponentCoreMixins, ...stores:any[]):{[name:string]:any} {
-    let components = views.init(dispatcher, mixins, stores[0], stores[1]);
-    return components;
+    return viewInit(dispatcher, mixins, stores[0], stores[1]);
 }
 
 

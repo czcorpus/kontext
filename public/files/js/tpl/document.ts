@@ -34,7 +34,7 @@ import popupbox = require('popupbox');
 import applicationBar = require('plugins/applicationBar/init');
 import footerBar = require('plugins/footerBar/init');
 import flux = require('vendor/Dispatcher');
-import documentViews = require('views/document');
+import {init as documentViewsInit} from 'views/document';
 import React = require('vendor/react');
 import ReactDOM = require('vendor/react-dom');
 import RSVP = require('vendor/rsvp');
@@ -1051,7 +1051,7 @@ export class PageModel implements Kontext.PluginProvider {
     init():initActions.InitActions {
         let self = this;
 
-        this.layoutViews = documentViews.init(this.dispatcher, this.exportMixins(),
+        this.layoutViews = documentViewsInit(this.dispatcher, this.exportMixins(),
                 this.getStores());
 
         this.userSettings.init();

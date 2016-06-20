@@ -23,13 +23,12 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../types/plugins/corparch.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
-/// <amd-dependency path="../views/textTypes" name="ttViews" />
-/// <amd-dependency path="../views/query/context" name="contextViews" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -42,12 +41,11 @@ import conclines = require('../conclines');
 import Immutable = require('vendor/immutable');
 import userSettings = require('../userSettings');
 import initActions = require('../initActions');
-import textTypesStore = require('../stores/textTypes');
+import textTypesStore = require('../stores/textTypes/attrValues');
 import RSVP = require('vendor/rsvp');
 import util = require('../util');
-
-declare var ttViews:any;
-declare var contextViews:any;
+import {init as ttViewsInit} from 'views/textTypes';
+import {init as contextViewsInit} from 'views/query/context';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -376,7 +374,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                 textTypesData,
                 this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
-        let ttViewComponents = ttViews.init(
+        let ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.textTypesStore
@@ -415,7 +413,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         );
         return ttProm.then(
             (v) => {
-                let contextViewComponents = contextViews.init(
+                let contextViewComponents = contextViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins()
                 );

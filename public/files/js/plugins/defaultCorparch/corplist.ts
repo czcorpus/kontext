@@ -325,11 +325,11 @@ export class CorplistPage implements Customized.CorplistPage {
 
     protected corplistTableStore:CorplistTableStore;
 
-    constructor(pluginApi:Kontext.PluginApi, views:any) {
+    constructor(pluginApi:Kontext.PluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
         this.corplistTableStore = new CorplistTableStore(pluginApi);
         this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
-        this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+        this.components = viewsInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
                 pluginApi.getViews(), this.corplistFormStore, this.corplistTableStore);
     }
 

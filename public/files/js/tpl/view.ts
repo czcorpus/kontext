@@ -29,7 +29,7 @@
 /// <reference path="../../ts/declarations/d3.d.ts" />
 /// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
 /// <reference path="../../ts/declarations/detail.d.ts" />
-/// <reference path="../../ts/declarations/views/concordance.d.ts" />
+/// <reference path="../types/views.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -38,7 +38,7 @@ import documentModule = require('./document');
 import detail = require('detail');
 import popupBox = require('popupbox');
 import conclines = require('../conclines');
-import concViews = require('views/concordance');
+import {init as concViewsInit} from 'views/concordance';
 import concStores = require('../stores/concordance');
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
@@ -925,7 +925,7 @@ export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
     let lineSelectionStore = new concStores.LineSelectionStore(layoutModel,
             layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
-    let views = concViews.init(layoutModel.dispatcher, layoutModel.exportMixins(),
+    let views = concViewsInit(layoutModel.dispatcher, layoutModel.exportMixins(),
             lineSelectionStore, layoutModel.getStores().userInfoStore);
 
     let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;

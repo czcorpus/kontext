@@ -18,18 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../../ts/declarations/flux.d.ts" />
-/// <reference path="../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 
-import util = require('../util');
+import {SimplePageStore} from '../../util';
 import Immutable = require('vendor/immutable');
-import rangeSelector = require('./util/rangeSelector');
+import rangeSelector = require('./rangeSelector');
+import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
 
 
 /**
- * Server-side data
+ * Server-side data a returned by respective AJAX calls.
  */
 export interface BlockLine {
     Values?:Array<{v:string; xcnt?:string}>;
@@ -62,313 +63,6 @@ export interface InitialData {
 }
 
 
-/**
- *
- */
-class TextInputAttributeSelection implements TextTypes.TextInputAttributeSelection {
-
-    attrDoc:string;  // ??
-
-    attrDocLabel:string; // ??
-
-    isInterval:boolean;
-
-    isNumeric:boolean;
-
-    label:string;
-
-    name:string;
-
-    autoCompleteHints:Immutable.List<TextTypes.AutoCompleteItem>;
-
-    values:Immutable.List<TextTypes.AttributeValue>; // it supports appending values via a single text input
-
-    textFieldValue:string;
-
-    constructor(name:string, label:string, isNumeric:boolean, isInterval:boolean,
-            textFieldValue:string, values:Immutable.List<TextTypes.AttributeValue>,
-            autoCompleteHints:Immutable.List<TextTypes.AutoCompleteItem>) {
-        this.name = name;
-        this.label = label;
-        this.isNumeric = isNumeric;
-        this.isInterval = isInterval;
-        this.autoCompleteHints = autoCompleteHints ? autoCompleteHints : Immutable.List([]);
-        this.values = values ? values : Immutable.List([]);
-    }
-
-    updateValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
-        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.textFieldValue, this.values.map(mapFn).toList(), this.autoCompleteHints);
-    }
-
-    toggleValueSelection(idx:number):TextTypes.AttributeSelection {
-        let val = this.values.get(idx);
-        if (val.selected) {
-            return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.textFieldValue, this.values.remove(idx), this.autoCompleteHints);
-
-        } else {
-            return this;
-        }
-    }
-
-    containsFullList():boolean {
-        return false;
-    }
-
-    hasUserChanges():boolean {
-        return this.values.find((item:TextTypes.AttributeValue) => {
-            return item.selected === true;
-        }) !== undefined;
-    }
-
-    exportSelections(lockedOnesOnly:boolean):any {
-        let items = lockedOnesOnly ?
-                this.values.filter((item:TextTypes.AttributeValue)=>item.locked) : this.values;
-        return items
-            .filter((item:TextTypes.AttributeValue) => {
-                return item.selected === true;
-            })
-            .map((item:TextTypes.AttributeValue) => {
-                return item.ident;
-            }).toJS();
-    }
-
-    filterItems(items:Array<string>):TextTypes.AttributeSelection {
-        let values;
-        if (this.values.size > 0) {
-            values = this.values.filter((item:TextTypes.AttributeValue) => {
-                return items.indexOf(item.ident) > -1;
-            }).toList();
-
-        } else {
-            values = Immutable.List(items).map((item) => {
-                return {
-                    value: item,
-                    selected: false,
-                    locked: false,
-                }
-            }).toList();
-        }
-        return new FullAttributeSelection(this.name, this.label,
-                this.isNumeric, this.isInterval, values);
-    }
-
-    filter(fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AttributeSelection {
-        let values = this.values.filter(fn).toList();
-        return new FullAttributeSelection(this.name, this.label,
-                this.isNumeric, this.isInterval, values);
-    }
-
-    addValue(value:TextTypes.AttributeValue):TextTypes.AttributeSelection {
-        if (this.values.find(x => x.value === value.value) === undefined) {
-            return new TextInputAttributeSelection(this.name, this.label,
-                    this.isNumeric, this.isInterval, this.textFieldValue, this.values.push(value),
-                    this.autoCompleteHints);
-
-        } else {
-            return this;
-        }
-    }
-
-    removeValue(value:string):TextTypes.AttributeSelection {
-        let idx = this.values.map(x => x.value).toList().indexOf(value);
-        if (idx > -1) {
-            let newValues = this.values.remove(idx);
-            return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
-                    this.isInterval, this.textFieldValue, newValues, this.autoCompleteHints);
-
-        } else {
-            return this;
-        }
-    }
-
-    clearValues():TextTypes.AttributeSelection {
-        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
-                    this.isInterval, this.textFieldValue, this.values.clear(), this.autoCompleteHints);
-    }
-
-    getValues():Immutable.List<TextTypes.AttributeValue> {
-        return this.values;
-    }
-
-
-    setValues(values:Array<TextTypes.AttributeValue>):TextTypes.AttributeSelection {
-        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, Immutable.List(values));
-    }
-
-    setAutoComplete(values:Array<TextTypes.AutoCompleteItem>):TextInputAttributeSelection {
-        let newValues = Immutable.List(values);
-        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric, this.isInterval,
-                this.textFieldValue, this.values, this.autoCompleteHints.clear().merge(newValues));
-    }
-
-    resetAutoComplete():TextInputAttributeSelection {
-        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric, this.isInterval,
-                this.textFieldValue, this.values, Immutable.List([]));
-    }
-
-    getAutoComplete():Immutable.List<TextTypes.AutoCompleteItem> {
-        return this.autoCompleteHints;
-    }
-
-    isLocked():boolean {
-        return !!this.values.find(item=>item.locked);
-    }
-
-    setExtendedInfo(idx:number, data:Immutable.Map<string, any>):TextTypes.AttributeSelection {
-        let currVal = this.values.get(idx);
-        let newVal = {
-            ident: currVal.ident,
-            value: currVal.value,
-            locked: currVal.locked,
-            selected: currVal.selected,
-            availItems: currVal.availItems,
-            extendedInfo: data
-        };
-        let values = this.values.set(idx, newVal);
-        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.textFieldValue, values, this.autoCompleteHints);
-    }
-
-    getTextFieldValue():string {
-        return this.textFieldValue;
-    }
-
-    setTextFieldValue(v:string):TextInputAttributeSelection {
-        return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, v, this.values, this.autoCompleteHints);
-    }
-}
-
-/**
- *
- */
-class FullAttributeSelection implements TextTypes.AttributeSelection {
-
-    attrDoc:string;  // ??
-
-    attrDocLabel:string; // ??
-
-    isInterval:boolean;
-
-    isNumeric:boolean;
-
-    label:string;
-
-    name:string;
-
-    values:Immutable.List<TextTypes.AttributeValue>;
-
-    constructor(name:string, label:string, isNumeric:boolean, isInterval:boolean,
-            values:Immutable.List<TextTypes.AttributeValue>) {
-        this.name = name;
-        this.label = label;
-        this.isNumeric = isNumeric;
-        this.isInterval = isInterval;
-        this.values = values;
-    }
-
-    updateValues(mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):TextTypes.AttributeSelection {
-        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.values.map(mapFn).toList());
-    }
-
-    toggleValueSelection(idx:number):TextTypes.AttributeSelection {
-        let ans:FullAttributeSelection = new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.values);
-        let val = ans.values.get(idx);
-        let newVal = {
-            ident: val.ident,
-            locked: val.locked,
-            value: val.value,
-            selected: !val.selected,
-            availItems: val.availItems,
-            extendedInfo: val.extendedInfo
-        };
-        ans.values = ans.values.set(idx, newVal);
-        return ans;
-    }
-
-    containsFullList():boolean {
-        return true;
-    }
-
-    hasUserChanges():boolean {
-        return this.values.find((item:TextTypes.AttributeValue) => {
-            return item.selected === true;
-        }) !== undefined;
-    }
-
-    exportSelections(lockedOnesOnly:boolean):any {
-        let items = lockedOnesOnly ?
-                this.values.filter((item:TextTypes.AttributeValue)=>item.locked) : this.values;
-        return items
-            .filter((item:TextTypes.AttributeValue) => {
-                return item.selected === true;
-            })
-            .map((item:TextTypes.AttributeValue) => {
-                return item.ident;
-            }).toJS();
-    }
-
-    filterItems(items:Array<string>):TextTypes.AttributeSelection {
-        let values = this.values.filter((item:TextTypes.AttributeValue) => {
-                        return items.indexOf(item.ident) > -1;
-                     }).toList();
-        return new FullAttributeSelection(this.name, this.label,
-                this.isNumeric, this.isInterval, values);
-    }
-
-    filter(fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AttributeSelection {
-        let values = this.values.filter(fn).toList();
-        return new FullAttributeSelection(this.name, this.label,
-                this.isNumeric, this.isInterval, values);
-    }
-
-    getValues():Immutable.List<TextTypes.AttributeValue> {
-        return this.values;
-    }
-
-    setValues(values:Array<TextTypes.AttributeValue>):TextTypes.AttributeSelection {
-        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, Immutable.List(values));
-    }
-
-    addValue(value:TextTypes.AttributeValue):TextTypes.AttributeSelection {
-        throw new Error('FullAttributeSelection cannot add new values');
-    }
-
-    removeValue(value:string):TextTypes.AttributeSelection {
-        throw new Error('FullAttributeSelection cannot remove values');
-    }
-
-    clearValues():TextTypes.AttributeSelection {
-        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, this.values = this.values.clear());
-    }
-
-    isLocked():boolean {
-        return !!this.values.find(item=>item.locked);
-    }
-
-    setExtendedInfo(idx:number, data:{[key:string]:any}):TextTypes.AttributeSelection {
-        let currVal = this.values.get(idx);
-        let newVal = {
-            ident: currVal.ident,
-            value: currVal.value,
-            locked: currVal.locked,
-            selected: currVal.selected,
-            availItems: currVal.availItems,
-            extendedInfo: data
-        };
-        let values = this.values.set(idx, newVal);
-        return new FullAttributeSelection(this.name, this.label, this.isNumeric,
-                this.isInterval, values);
-    }
-}
-
 
 /**
  * Provides essential general operations on available text types
@@ -377,7 +71,7 @@ class FullAttributeSelection implements TextTypes.AttributeSelection {
  * All the state data is based on Immutable.js except for individual data
  * items which are updated via manual copying (i.e. no Immutable.Record).
  */
-export class TextTypesStore extends util.SimplePageStore implements TextTypes.ITextTypesStore {
+export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTypesStore {
 
     private attributes:Immutable.List<TextTypes.AttributeSelection>;
 
@@ -399,14 +93,34 @@ export class TextTypesStore extends util.SimplePageStore implements TextTypes.IT
 
     private pluginApi:Kontext.PluginApi;
 
+    /**
+     * TODO - this is kind of a hack
+     */
     private lastActiveRangeAttr:string;
 
+    /**
+     * Represents meta information related to the whole attribute
+     * (i.e. not just to a single value).
+     */
     private metaInfo:Immutable.Map<string, TextTypes.AttrSummary>;
 
+    /**
+     * Contains externally registered callbacks invoked in case
+     * user clicks to the [i] icon. The store must be set to provide
+     * such a functionality.
+     */
     private extendedInfoCallbacks:Immutable.Map<string, (idx:number)=>RSVP.Promise<any>>; // TODO type
 
+    /**
+     * Contains externally registered callbacks invoked in case
+     * user writes something to text-input based value selection boxes.
+     * This can be used e.g. to provide auto-complete features.
+     */
     private textInputChangeCallback:(attrName:string, inputValue:string)=>RSVP.Promise<any>;
 
+    /**
+     *
+     */
     private textInputPlaceholder:string;
 
 

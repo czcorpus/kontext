@@ -21,17 +21,17 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="./view.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
-/// <amd-dependency path="./view" name="views" />
-declare var views:any;
 
 import $ = require('jquery');
 import util = require('../../util');
 import common = require('./common');
 import widget = require('./widget');
 import corplist = require('./corplist');
+import {init as viewsInit} from './view';
 
 /**
  *
@@ -39,7 +39,7 @@ import corplist = require('./corplist');
  * @returns {CorplistPage}
  */
 export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
-    return new corplist.CorplistPage(pluginApi, views);
+    return new corplist.CorplistPage(pluginApi, viewsInit);
 }
 
 /**
