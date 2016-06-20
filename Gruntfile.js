@@ -209,8 +209,8 @@
             },
             "babel": {
                 options: {
-                    plugins: ['transform-react-jsx'],
-                    presets: ['es2015', 'react']
+                    plugins: ['transform-react-jsx', "transform-es2015-modules-amd"],
+                    presets: ['es2015', 'react'],
                 },
                 all: {
                     files: [
