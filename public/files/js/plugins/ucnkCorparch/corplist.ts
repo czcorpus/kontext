@@ -16,13 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <amd-dependency path="./view" name="views" />
-
 import $ = require('jquery');
 import util = require('../../util');
 import common = require('./common');
 import corplistDefault = require('../defaultCorparch/corplist');
-declare var views:any;
 
 /**
  * This store handles corplist 'filter' form
@@ -178,12 +175,12 @@ export class CorplistPage implements Customized.CorplistPage {
 
     protected corplistTableStore:CorplistTableStore;
 
-    constructor(pluginApi:Kontext.PluginApi, views:any) {
+    constructor(pluginApi:Kontext.PluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
         this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
         this.corplistTableStore = new CorplistTableStore(pluginApi);
         this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
-        this.components = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+        this.components = viewsInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
                 pluginApi.getViews(), this.corplistFormStore, this.corplistTableStore);
     }
 

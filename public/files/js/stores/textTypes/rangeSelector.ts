@@ -31,7 +31,13 @@ enum IntervalChar {
 
 
 /**
+ * This class provides an additional functionality able to provide
+ * a more convenient way how to select ordered items - by a range.
  *
+ * The current implementation is only able to find matching items
+ * from the ones available on the client-side (if a text-input box
+ * is present due to large number of items then it can load full list
+ * from server). I.e. there is no range selection on the server performed.
  */
 export class RangeSelector {
 

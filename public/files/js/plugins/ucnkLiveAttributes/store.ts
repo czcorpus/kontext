@@ -26,7 +26,7 @@
 import util = require('../../util');
 import tplDocument = require('../../tpl/document');
 import RSVP = require('vendor/rsvp');
-import textTypesStore = require('../../stores/textTypes');
+import textTypesStore = require('../../stores/textTypes/attrValues');
 import Immutable = require('vendor/immutable');
 
 

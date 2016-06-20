@@ -17,20 +17,17 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
-
-/// <amd-dependency path="../views/textTypes" name="ttViews" />
-/// <amd-dependency path="../views/query/context" name="contextViews" />
 
 import documentModule = require('./document');
 import queryInput = require('../queryInput');
 import queryStorage = require('plugins/queryStorage/init');
 import liveAttributes = require('plugins/liveAttributes/init');
 import initActions = require('../initActions');
-import textTypesStore = require('../stores/textTypes');
-
-declare var ttViews:any;
-declare var contextViews:any;
+import textTypesStore = require('../stores/textTypes/attrValues');
+import {init as ttViewsInit} from 'views/textTypes';
+import {init as contextViewsInit} from 'views/query/context';
 
 /**
  * Corpus handling actions are not used here on the "filter" page but
@@ -67,7 +64,7 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
                 textTypesData,
                 this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
-        let ttViewComponents = ttViews.init(
+        let ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.textTypesStore
@@ -105,7 +102,7 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
         );
         return ttProm.then(
             (v) => {
-                let contextViewComponents = contextViews.init(
+                let contextViewComponents = contextViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins()
                 );

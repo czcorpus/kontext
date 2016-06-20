@@ -19,17 +19,16 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins/corparch.ts" />
+/// <reference path="./view.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-/// <amd-dependency path="./view" name="views" />
-declare var views:any;
-
 import util = require('../../util');
 import Immutable = require('vendor/immutable');
 import $ = require('jquery');
+import {init as viewInit} from './view';
 
 
 export interface Node {
@@ -149,7 +148,7 @@ export function create(selectElm:HTMLElement, pluginApi:Kontext.QueryPagePluginA
     let treeStore = new TreeWidgetStore(pluginApi, (corpusIdent:string) => {
         window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpusIdent);
     });
-    let viewsLib = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+    let viewsLib = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
             treeStore);
     pluginApi.renderReactComponent(
         viewsLib.CorptreeWidget,
@@ -172,7 +171,7 @@ export class CorplistPage implements Customized.CorplistPage {
         this.treeStore = new TreeWidgetStore(pluginApi, (corpusIdent:string) => {
             window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpusIdent);
         });
-        this.viewsLib = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(),
+        this.viewsLib = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
                 this.treeStore);
     }
 

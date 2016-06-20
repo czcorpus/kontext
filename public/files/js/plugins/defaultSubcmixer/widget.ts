@@ -16,13 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <amd-dependency path="./view" name="views" />
 /// <reference path="../../types/common.d.ts" />
-
-declare var views:any;
+/// <reference path="./view.d.ts" />
 
 import util = require('../../util');
 import $ = require('jquery');
+import {init as viewInit} from './view';
 
 
 export enum Operator {
@@ -332,16 +331,16 @@ export interface TextTypesInfo {
  */
 export class SubcMixerWidget {
 
-    pluginApi:Kontext.PluginApi;
+    private pluginApi:Kontext.PluginApi;
 
-    views:any;
+    private views:any;
 
     selectedCategories:SelectedCategoriesStore;
 
     constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
         this.selectedCategories = new SelectedCategoriesStore(pluginApi.dispatcher(), pluginApi);
-        this.views = views.init(pluginApi.dispatcher(), pluginApi.exportMixins(), this.selectedCategories);
+        this.views = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(), this.selectedCategories);
     }
 
     create(targetElm:HTMLElement, textTypes:TextTypesInfo) {

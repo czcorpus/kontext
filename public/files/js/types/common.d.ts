@@ -618,11 +618,5 @@ declare module "queryInput" {
     export function bindQueryHelpers(formElm:string|HTMLElement|JQuery, api:Kontext.PluginApi);
 }
 
-/**
- *
- */
-declare module "views/document" {
-    export function init(...args:any[]):Kontext.LayoutViews;
-}
 
 

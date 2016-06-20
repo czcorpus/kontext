@@ -17,11 +17,11 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="./view.d.ts" />
 /// <reference path="../../../ts/declarations/popupbox.d.ts" />
-/// <amd-dependency path="./view" name="view" />
 
 import stores = require('./stores');
-declare var view:any;
+import {init as viewInit} from './view';
 
 
 export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi,
@@ -33,7 +33,7 @@ export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi,
         let contentElm = window.document.createElement('div');
         box.getRootElement().appendChild(contentElm);
         pluginApi.renderReactComponent(
-            view.init(pluginApi.dispatcher(), pluginApi.exportMixins(), tagHelperStore).TagBuilder,
+            viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(), tagHelperStore).TagBuilder,
             contentElm,
             {
                 widgetId: widgetId,
