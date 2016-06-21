@@ -17,7 +17,7 @@
  */
 
 import React from 'vendor/react';
-import REactDOM from 'vendor/react-dom';
+import ReactDOM from 'vendor/react-dom';
 import $ from 'jquery';
 
 
