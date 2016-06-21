@@ -91,9 +91,9 @@ export function init(dispatcher, mixins, subcorpFormStore) {
         };
     }
 
-    // ------------------------------------------- <WithinLine /> ----------------------------
+    // ------------------------------------------- <ExpressionDescLine /> ----------------------------
 
-    let WithinLine = React.createClass({
+    let ExpressionDescLine = React.createClass({
         mixins : mixins,
 
         _createPrevLinkRef : function (i) {
@@ -111,10 +111,6 @@ export function init(dispatcher, mixins, subcorpFormStore) {
                     <td className="line-id" rowSpan="2">{this.props.viewIdx + 1})</td>
                         <td colSpan="3">
                         <span className="set-desc">{this._createPrevLinkRef(this.props.viewIdx)}</span>
-                        <WithinSwitch changeHandler={createLineChangeHandler.call(this, 'negated', this.props.rowIdx,
-                                            (v)=>({'within': false, '!within': true})[v])}
-                                        withinType={this.props.lineData.negated ? '!within' : 'within'} />
-                        <strong>:</strong>
                     </td>
                 </tr>
             );
@@ -142,6 +138,10 @@ export function init(dispatcher, mixins, subcorpFormStore) {
             return (
                 <tr>
                     <td>
+                        <WithinSwitch changeHandler={createLineChangeHandler.call(this, 'negated', this.props.rowIdx,
+                                            (v)=>({'within': false, '!within': true})[v])}
+                                        withinType={this.props.lineData.negated ? '!within' : 'within'} />
+                        {'\u00a0'}
                         <select onChange={createLineChangeHandler.call(self, 'structureName', this.props.rowIdx)}
                             defaultValue={this.props.lineData.structureName}>
                         {
@@ -203,7 +203,7 @@ export function init(dispatcher, mixins, subcorpFormStore) {
 
         _renderStructLine : function (line, viewIdx) {
             return [
-                <WithinLine key ={'wl' + line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
+                <ExpressionDescLine key ={'wl' + line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
                     lineData={line} structsAndAttrs={this.props.structsAndAttrs} />,
                 <StructLine key={'sl' + line.rowIdx} rowIdx={line.rowIdx} viewIdx={viewIdx}
                     lineData={line} structsAndAttrs={this.props.structsAndAttrs} />
