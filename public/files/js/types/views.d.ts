@@ -59,7 +59,7 @@ declare module "views/textTypes" {
 declare module "views/query/context" {
 
     export interface QueryContextViews {
-        SpecifyKontextForm:any;
+        SpecifyContextForm:any;
     }
 
     export function init(dispatcher, mixins):QueryContextViews;

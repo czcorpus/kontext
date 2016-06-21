@@ -418,7 +418,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                     this.layoutModel.exportMixins()
                 );
                 this.layoutModel.renderReactComponent(
-                    contextViewComponents.SpecifyKontextForm,
+                    contextViewComponents.SpecifyContextForm,
                     $('#specify-context div.contents').get(0),
                     {
                         lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],

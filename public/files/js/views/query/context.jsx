@@ -90,7 +90,7 @@ export function init(dispatcher, mixins) {
                             <th align="left">
                             {this.props.hasLemmaAttr
                                 ? this.translate('query__lw_lemmas')
-                                : this.tranlsate('query__lw_word_forms')
+                                : this.translate('query__lw_word_forms')
                             }
                             </th>
                             <td>
@@ -141,9 +141,9 @@ export function init(dispatcher, mixins) {
         }
     });
 
-    // ------------------------------- <SpecifyKontextForm /> ---------------------
+    // ------------------------------- <SpecifyContextForm /> ---------------------
 
-    let SpecifyKontextForm = React.createClass({
+    let SpecifyContextForm = React.createClass({
 
         mixins : mixins,
 
@@ -167,6 +167,6 @@ export function init(dispatcher, mixins) {
 
 
     return {
-        SpecifyKontextForm: SpecifyKontextForm
+        SpecifyContextForm: SpecifyContextForm
     };
 }
