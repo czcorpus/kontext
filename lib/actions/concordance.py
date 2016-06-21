@@ -278,7 +278,7 @@ class Actions(Kontext):
 
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
-            conclib.PyConc.add_block_items(out['Lines'], block_size=1)
+            corplib.add_block_items(out['Lines'], block_size=1)
         if self.corp.get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
                                'label': corplib.open_corpus(w).get_conf(
