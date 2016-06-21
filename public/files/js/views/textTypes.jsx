@@ -512,7 +512,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
         _renderModeSwitch : function (obj) {
             if (this.props.attrObj.isInterval) {
-                let label = this.state.rangeIsOn
+                let label = this.props.rangeIsOn
                     ? this.translate('query__tt_select_individual')
                     : this.translate('query__tt_select_range');
                 return (
@@ -522,13 +522,6 @@ export function init(dispatcher, mixins, textTypesStore) {
                 );
             }
             return null;
-        },
-
-        getInitialState : function () {
-            return {
-                rangeIsOn : this.props.attrObj.isInterval && !this.props.attrObj.hasUserChanges(),
-                metaInfoHelpVisible: false
-            };
         },
 
         _selectAllHandler : function () {
@@ -541,8 +534,11 @@ export function init(dispatcher, mixins, textTypesStore) {
         },
 
         _intervalModeSwitchHandler : function () {
-            this.setState({
-                rangeIsOn: !this.state.rangeIsOn
+            dispatcher.dispatch({
+                actionType: 'TT_TOGGLE_RANGE_MODE',
+                props: {
+                    attrName: this.props.attrObj.name
+                }
             });
         },
 
@@ -561,11 +557,11 @@ export function init(dispatcher, mixins, textTypesStore) {
         },
 
         _metaInfoHelpClickHandler : function () {
-            this.setState(React.addons.update(this.state, {metaInfoHelpVisible: {$set: !this.state.metaHelp}}));
+            this.setState({metaInfoHelpVisible: true});
         },
 
         _helpCloseHandler : function () {
-            this.setState(React.addons.update(this.state, {metaInfoHelpVisible: {$set: false}}));
+            this.setState({metaInfoHelpVisible: false});
         },
 
         _renderMetaInfo : function () {
@@ -592,6 +588,18 @@ export function init(dispatcher, mixins, textTypesStore) {
             }
         },
 
+        getInitialState : function () {
+            return {
+                metaInfoHelpVisible: false
+            };
+        },
+
+        shouldComponentUpdate : function (nextProps, nextState) {
+            return this.props.attrObj !== nextProps.attrObj
+                    || this.props.rangeIsOn !== nextProps.rangeIsOn
+                    || this.state.metaInfoHelpVisible !== nextState.metaInfoHelpVisible;
+        },
+
         render : function () {
             let classes = ['envelope'];
             if (this.props.attrObj.isLocked()) {
@@ -603,10 +611,10 @@ export function init(dispatcher, mixins, textTypesStore) {
                         <tr className="attrib-name">
                             <th>{this.props.attrObj.name}</th>
                         </tr>
-                        <tr className={this.state.rangeIsOn ? 'range' : 'data-rows'}>
+                        <tr className={this.props.rangeIsOn ? 'range' : 'data-rows'}>
                             <td>
                                 <ValueSelector attrObj={this.props.attrObj}
-                                        rangeIsOn={this.state.rangeIsOn}
+                                        rangeIsOn={this.props.rangeIsOn}
                                         isLocked={this.props.attrObj.isLocked()}  />
                             </td>
                         </tr>
@@ -635,11 +643,10 @@ export function init(dispatcher, mixins, textTypesStore) {
         mixins: mixins,
 
         _storeChangeHandler : function (store, action) {
-            this.setState(React.addons.update(this.state,
-                {
-                    attributes: {$set: store.getAttributes()}
-                }
-            ));
+            this.setState({
+                attributes: textTypesStore.getAttributes(),
+                rangeModes: textTypesStore.getRangeModes()
+            });
         },
 
         componentDidMount: function () {
@@ -655,7 +662,8 @@ export function init(dispatcher, mixins, textTypesStore) {
 
         getInitialState : function () {
             return {
-                attributes: textTypesStore.getAttributes()
+                attributes: textTypesStore.getAttributes(),
+                rangeModes: textTypesStore.getRangeModes()
             };
         },
 
@@ -675,7 +683,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                             : null}
                         {this.state.attributes.map((attrObj) => {
                             return <TableTextTypeAttribute key={attrObj.name + ':list:' + attrObj.containsFullList()}
-                                        attrObj={attrObj} />;
+                                        attrObj={attrObj} rangeIsOn={this.state.rangeModes.get(attrObj.name)} />;
                         })}
                     </div>
                 </div>

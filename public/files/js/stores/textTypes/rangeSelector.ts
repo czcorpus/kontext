@@ -20,9 +20,11 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 
 import RSVP = require('vendor/rsvp');
+import Immutable = require('vendor/immutable');
 
 
 enum IntervalChar {
@@ -45,9 +47,17 @@ export class RangeSelector {
 
     private textTypesStore:TextTypes.ITextTypesStore;
 
+    /**
+     * Specifies whether a specific component (given by its respective
+     * structure name) is in 'range' mode.
+     */
+    private modeStatus:Immutable.Map<string, boolean>;
+
     constructor(pluginApi:Kontext.PluginApi, textTypesStore:TextTypes.ITextTypesStore) {
         this.pluginApi = pluginApi;
         this.textTypesStore = textTypesStore;
+        this.modeStatus = Immutable.Map<string, boolean>(textTypesStore.getAttributes().map(
+                item => [item.name, item.isInterval ? true : false]));
     }
 
     /**
@@ -100,7 +110,7 @@ export class RangeSelector {
 
     private checkRange(attribName:string, fromVal:number, toVal:number, keepCurrent:boolean):number {
         let numChecked = 0;
-        this.textTypesStore.updateItems(attribName, (item:TextTypes.AttributeValue) => {
+        this.textTypesStore.mapItems(attribName, (item:TextTypes.AttributeValue) => {
             let newItem = {
                 ident: item.ident,
                 value: item.value,
@@ -122,8 +132,7 @@ export class RangeSelector {
 
 
     private checkIntervalRange(attribName:string, fromVal:number, toVal:number,
-            strictMode:boolean, keepCurrent:boolean):number {
-        let numChecked = 0;
+            strictMode:boolean, keepCurrent:boolean):TextTypes.AttributeSelection {
 
         function isEmpty(v) {
             return isNaN(v) || v === null || v === undefined;
@@ -133,7 +142,7 @@ export class RangeSelector {
             throw new Error(this.pluginApi.translate('ucnkLA__at_least_one_required'));
         }
 
-        this.textTypesStore.updateItems(attribName, (item:TextTypes.AttributeValue) => {
+        return this.textTypesStore.mapItems(attribName, (item:TextTypes.AttributeValue) => {
             let newItem = {
                 ident: item.ident,
                 value: item.value,
@@ -151,7 +160,6 @@ export class RangeSelector {
                             || (lft <= toVal && rgt <= toVal && isEmpty(fromVal))
                             || (lft >= fromVal && rgt >= fromVal && isEmpty(toVal))) {
                         newItem.selected = true;
-                        numChecked += 1;
 
                     } else if (!keepCurrent) {
                         newItem.selected = false;
@@ -161,7 +169,6 @@ export class RangeSelector {
                     if ((lft >= fromVal && lft <= toVal) || (lft >= fromVal && isEmpty(toVal)) || (rgt >= fromVal && isNaN(toVal))
                             || (rgt >= fromVal && rgt <= toVal) || (lft <= toVal && isEmpty(fromVal)) || (rgt <= toVal && isNaN(fromVal))) {
                         newItem.selected = true;
-                        numChecked += 1;
 
                     } else if (!keepCurrent) {
                         newItem.selected = true;
@@ -170,8 +177,6 @@ export class RangeSelector {
                 return newItem;
             }
         });
-
-        return numChecked;
     }
 
 
@@ -232,8 +237,7 @@ export class RangeSelector {
     }
 
     applyRange(attrName:string, fromVal:number, toVal:number, strictInterval:boolean,
-            keepCurrent:boolean):RSVP.Promise<number> {
-        let numChecked;
+            keepCurrent:boolean):RSVP.Promise<TextTypes.AttributeSelection> {
 
         if (isNaN(fromVal) && isNaN(toVal)) {
             this.pluginApi.showMessage('warning',
@@ -250,17 +254,30 @@ export class RangeSelector {
 
             return prom.then(
                 () => {
-                    numChecked = this.checkIntervalRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
-                    if (numChecked === 0) {
+                    let currSelection = this.textTypesStore.getAttribute(attrName);
+                    this.checkIntervalRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
+                    let ans = this.textTypesStore.getAttribute(attrName);
+                    if (currSelection.getNumOfSelectedItems() === ans.getNumOfSelectedItems()) {
                         this.pluginApi.showMessage('warning',
                                 this.pluginApi.translate('ucnkLA__nothing_selected'));
+
+                    } else {
+                        this.modeStatus = this.modeStatus.set(attrName, false);
                     }
-                    return numChecked;
+                    return ans;
                 },
                 (err) => {
                     this.pluginApi.showMessage('error', this.pluginApi.translate('ucnkLA__failed_to_calc_range'));
                 }
             );
         }
+    }
+
+    setRangeMode(attrName:string, rangeIsOn:boolean) {
+        this.modeStatus = this.modeStatus.set(attrName, rangeIsOn);
+    }
+
+    getRangeModes():Immutable.Map<string, boolean> {
+        return this.modeStatus;
     }
 }

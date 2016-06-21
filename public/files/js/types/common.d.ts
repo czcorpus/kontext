@@ -74,7 +74,7 @@ declare module Kontext {
     export type InitCallback = InitCallbackObject|(()=>void);
 
     /**
-     * An interface used by KonText plug-ins
+     * An interface used by KonText plug-ins                    ident: ite
      */
     export interface PluginApi {
         getConf<T>(key:string):T;
@@ -383,7 +383,7 @@ declare module TextTypes {
 
         /**
          */
-        updateValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
+        mapValues(mapFn:(item:AttributeValue, i?:number)=>AttributeValue):AttributeSelection;
 
         /**
          */
@@ -433,11 +433,15 @@ declare module TextTypes {
          */
         exportSelections(lockedOnesOnly:boolean):any;
 
+        getNumOfSelectedItems():number;
+
         /**
          * Preserve only such attribute values whose values can be
-         * found in the items array.
+         * found in the items array. In case the selection does
+         * not contain any values then all the values within 'items'
+         * are imported!
          */
-        filterItems(items:Array<string>):AttributeSelection; // TODO mutability
+        updateItems(items:Array<string>):AttributeSelection;
 
         /**
          *
@@ -506,18 +510,12 @@ declare module TextTypes {
         reset():void;
 
         /**
-         * Return a name of the last attribute used
-         * by a range selection widget.
-         */
-        getLastActiveRangeAttr():string;
-
-        /**
          * Filter existing values of an attribute based on provided values.
          * E.g. if the attribute "x1" contains values {value: "foo",...}, {value: "bar",...},
          *  {value:"baz",....} and the "values"" argument contains ["bar", "baz"] then
          * the store is expected to keep {value: "bar",...}, {value: "baz", ....} for "x1".
          */
-        filterItems(attrName:string, values:Array<string>):void;
+        updateItems(attrName:string, values:Array<string>):void;
 
         /**
          *
@@ -529,7 +527,7 @@ declare module TextTypes {
          * If the map function updates a record then it should create
          * a new copy. Unchanged objects can be returned directly.
          */
-        updateItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i:number)=>TextTypes.AttributeValue);
+        mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i:number)=>TextTypes.AttributeValue);
 
         /**
          * Sets a new list of values for a specific attribute.
@@ -589,6 +587,10 @@ declare module TextTypes {
         getTextInputPlaceholder():string;
 
         setTextInputPlaceholder(s:string):void;
+
+        setRangeMode(attrName:string, rangeIsOn:boolean);
+
+        getRangeModes():Immutable.Map<string, boolean>;
     }
 
     /**
