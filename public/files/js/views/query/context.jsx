@@ -149,7 +149,7 @@ export function init(dispatcher, mixins) {
 
         render : function () {
             return (
-                <div className="foo">
+                <div>
                     <h3>{this.props.hasLemmaAttr
                         ? this.translate('query__lemma_filter')
                         : this.translate('query__word_form_filter')}
@@ -158,8 +158,9 @@ export function init(dispatcher, mixins) {
                         lemmaWindowSizes={this.props.lemmaWindowSizes} />
 
                     <h3>{this.translate('query__pos_filter')}</h3>
-                    <PoSFilter posWindowSizes={this.props.posWindowSizes}
-                                wPoSList={this.props.wPoSList}/>
+                    {this.props.WPoSList && this.props.WPoSList.length > 0
+                        ? <PoSFilter posWindowSizes={this.props.posWindowSizes} wPoSList={this.props.wPoSList}/>
+                        : null}
                 </div>
             );
         }
