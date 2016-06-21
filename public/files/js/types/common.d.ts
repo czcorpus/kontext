@@ -433,6 +433,8 @@ declare module TextTypes {
          */
         exportSelections(lockedOnesOnly:boolean):any;
 
+        getNumOfSelectedItems():number;
+
         /**
          * Preserve only such attribute values whose values can be
          * found in the items array. In case the selection does
@@ -506,12 +508,6 @@ declare module TextTypes {
          * Reset store state
          */
         reset():void;
-
-        /**
-         * Return a name of the last attribute used
-         * by a range selection widget.
-         */
-        getLastActiveRangeAttr():string;
 
         /**
          * Filter existing values of an attribute based on provided values.
@@ -591,6 +587,10 @@ declare module TextTypes {
         getTextInputPlaceholder():string;
 
         setTextInputPlaceholder(s:string):void;
+
+        setRangeMode(attrName:string, rangeIsOn:boolean);
+
+        getRangeModes():Immutable.Map<string, boolean>;
     }
 
     /**

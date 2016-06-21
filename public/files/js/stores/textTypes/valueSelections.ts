@@ -207,6 +207,10 @@ export class TextInputAttributeSelection implements TextTypes.TextInputAttribute
         return new TextInputAttributeSelection(this.name, this.label, this.isNumeric,
                 this.isInterval, v, this.values, this.autoCompleteHints);
     }
+
+    getNumOfSelectedItems():number {
+        return this.values.reduce((p, curr) => p + (curr.selected ? 1 : 0), 0);
+    }
 }
 
 /**
@@ -337,5 +341,9 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
         let values = this.values.set(idx, newVal);
         return new FullAttributeSelection(this.name, this.label, this.isNumeric,
                 this.isInterval, values);
+    }
+
+    getNumOfSelectedItems():number {
+        return this.values.reduce((p, curr) => p + (curr.selected ? 1 : 0), 0);
     }
 }

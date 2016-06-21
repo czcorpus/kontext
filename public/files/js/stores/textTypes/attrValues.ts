@@ -94,11 +94,6 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     private pluginApi:Kontext.PluginApi;
 
     /**
-     * TODO - this is kind of a hack
-     */
-    private lastActiveRangeAttr:string;
-
-    /**
      * Represents meta information related to the whole attribute
      * (i.e. not just to a single value).
      */
@@ -134,7 +129,6 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     (item:TextTypes.AttributeSelection)=>[item.name, false]
                 ).toList());
         this.pluginApi = pluginApi;
-        this.lastActiveRangeAttr = null;
         this.rangeSelector = new rangeSelector.RangeSelector(pluginApi, this);
         this.metaInfo = Immutable.Map({});
         this.extendedInfoCallbacks = Immutable.Map({});
@@ -153,6 +147,10 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     self.applyRange(payload.props['attrName'], payload.props['fromVal'],
                             payload.props['toVal'], payload.props['strictInterval'],
                             payload.props['keepCurrent']);
+                    break;
+                case 'TT_TOGGLE_RANGE_MODE':
+                    self.setRangeMode(payload.props['attrName'], !self.getRangeModes().get(payload.props['attrName']));
+                    self.notifyChangeListeners();
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
                     let fn = self.extendedInfoCallbacks.get(payload.props['attrName']);
@@ -295,16 +293,13 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
             keepCurrent:boolean) {
         let prom = this.rangeSelector.applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
         prom.then(
-            (v:number) => {
-                if (v > 0) {
-                    this.lastActiveRangeAttr = attrName;
-                    this.notifyChangeListeners('$TT_RANGE_APPLIED');
-                }
+            (newSelection:TextTypes.AttributeSelection) => {
+                this.notifyChangeListeners();
             },
             (err) => {
                 this.pluginApi.showMessage('error', err);
             }
-        )
+        );
     }
 
     private applySelectAll(ident:string) {
@@ -327,7 +322,6 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
 
     reset():void {
         this.attributes = this.initialAttributes;
-        this.lastActiveRangeAttr = null;
         this.selectAll = this.selectAll.map((item)=>false).toMap();
         this.metaInfo = this.metaInfo.clear();
     }
@@ -418,10 +412,6 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         }
     }
 
-    getLastActiveRangeAttr():string {
-        return this.lastActiveRangeAttr;
-    }
-
     hasSelectedItems(attrName:string):boolean {
         let attr = this.getAttribute(attrName);
         if (attr) {
@@ -476,6 +466,14 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
 
     getTextInputPlaceholder():string {
         return this.textInputPlaceholder;
+    }
+
+    setRangeMode(attrName:string, rangeIsOn:boolean) {
+        this.rangeSelector.setRangeMode(attrName, rangeIsOn);
+    }
+
+    getRangeModes():Immutable.Map<string, boolean> {
+        return this.rangeSelector.getRangeModes();
     }
 
 }
