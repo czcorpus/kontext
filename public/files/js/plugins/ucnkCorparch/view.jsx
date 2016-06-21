@@ -18,12 +18,12 @@
 
 import React from 'vendor/react';
 import $ from 'jquery';
-import defaultView from '../defaultCorparch/view';
+import {init as defaultViewInit} from '../defaultCorparch/view';
 
 
 export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
-    let defaultComponents = defaultView.init(dispatcher, mixins, layoutViews, formStore, listStore);
+    let defaultComponents = defaultViewInit(dispatcher, mixins, layoutViews, formStore, listStore);
 
     /**
      *

@@ -90,7 +90,7 @@ export function init(dispatcher, mixins) {
                             <th align="left">
                             {this.props.hasLemmaAttr
                                 ? this.translate('query__lw_lemmas')
-                                : this.tranlsate('query__lw_word_forms')
+                                : this.translate('query__lw_word_forms')
                             }
                             </th>
                             <td>
@@ -141,15 +141,15 @@ export function init(dispatcher, mixins) {
         }
     });
 
-    // ------------------------------- <SpecifyKontextForm /> ---------------------
+    // ------------------------------- <SpecifyContextForm /> ---------------------
 
-    let SpecifyKontextForm = React.createClass({
+    let SpecifyContextForm = React.createClass({
 
         mixins : mixins,
 
         render : function () {
             return (
-                <div className="foo">
+                <div>
                     <h3>{this.props.hasLemmaAttr
                         ? this.translate('query__lemma_filter')
                         : this.translate('query__word_form_filter')}
@@ -158,8 +158,9 @@ export function init(dispatcher, mixins) {
                         lemmaWindowSizes={this.props.lemmaWindowSizes} />
 
                     <h3>{this.translate('query__pos_filter')}</h3>
-                    <PoSFilter posWindowSizes={this.props.posWindowSizes}
-                                wPoSList={this.props.wPoSList}/>
+                    {this.props.WPoSList && this.props.WPoSList.length > 0
+                        ? <PoSFilter posWindowSizes={this.props.posWindowSizes} wPoSList={this.props.wPoSList}/>
+                        : null}
                 </div>
             );
         }
@@ -167,6 +168,6 @@ export function init(dispatcher, mixins) {
 
 
     return {
-        SpecifyKontextForm: SpecifyKontextForm
+        SpecifyContextForm: SpecifyContextForm
     };
 }

@@ -126,28 +126,21 @@ requirejs.config({
     }
 });
 
-(function (names) {
+require(['vendor/rsvp'], function (RSVP) {
     var i;
-
-    for (i = 0; i < names.length; i += 1) {
-        define(names[i], [], function () {
+    for (i = 0; i < missingPlugins.length; i += 1) {
+        define(missingPlugins[i], [], function () {
             return {
                 getViews : function () { return {}; },
                 create : function () {
-                    return {
-                        then: function (thenFn) {
-                            thenFn({
-                                init : function () {},
-                                reset : function () {},
-                                detach : function () {}
-                            });
-                        }
-                    };
+                    return new RSVP.Promise((fulfill, reject) => {
+                        fulfill(null);
+                    });
                 }
             };
         });
     }
-}(missingPlugins));
+});
 
 define('win', [], function () { return window; });
 
