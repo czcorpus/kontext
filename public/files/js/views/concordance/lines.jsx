@@ -149,7 +149,7 @@ export function init(dispatcher, mixins, lineStore) {
             let alignedCorpora = this.props.data.languages.rest();
             return (
                 <tr data-toknum={primaryLang.tokenNumber} data-linegroup={this.props.data.lineGroup}>
-                    <td className="line-num">{this.props.data.lineNumber}</td>
+                    <td className="line-num">{this.props.showLineNumbers ? this.props.data.lineNumber + 1 : null}</td>
                     <td className="manual-selection">
                         <input type="text" data-kwiclen={this.props.data.kwicLength}
                             data-position={primaryLang.tokenNumber}
@@ -187,7 +187,8 @@ export function init(dispatcher, mixins, lineStore) {
                          viewMode={this.props.ViewMode}
                          corpname={this.props.corpname}
                          corpsWithKwic={this.props.KWICCorps}
-                         wideCtxGlobals={this.props.WideCtxGlobals} />;
+                         wideCtxGlobals={this.props.WideCtxGlobals}
+                         showLineNumbers={this.props.ShowLineNumbers} />;
         },
 
         render : function () {

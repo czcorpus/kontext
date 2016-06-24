@@ -44,6 +44,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.CorporaColumns = #filter $Jsonize#${CorporaColumns}#end filter#;
     conf.KWICCorps = #filter $Jsonize#$KWICCorps#end filter#;
     conf.ViewMode = '${viewmode}';
+    conf.ShowLineNumbers = #if $line_numbers#true#else#false#end if#;
     conf.Lines = #filter $Jsonize#$Lines#end filter#;
     var model = pageSelf.init(conf);
 

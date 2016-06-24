@@ -769,6 +769,7 @@ export class ViewPage {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             let props = {
                 ViewMode: this.layoutModel.getConf<string>('ViewMode'),
+                ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
                 KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
                 CorporaColumns: this.layoutModel.getConf<Array<string>>('CorporaColumns'),
                 WideCtxGlobals: this.layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
