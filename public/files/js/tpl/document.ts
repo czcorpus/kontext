@@ -1009,6 +1009,11 @@ export class PageModel implements Kontext.PluginProvider {
         return this.conf[item];
     }
 
+    /**
+     * Return a list of concordance arguments and their values. Multi-value keys
+     * are preserved.
+     * Output format: [[k1, v1_1], [k1, v1_2], ...., [kn, vn_1], ..., [kn, vn_m]]
+     */
     getConcArgs():util.MultiDict {
         return new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
     }

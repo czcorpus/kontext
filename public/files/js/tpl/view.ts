@@ -42,7 +42,7 @@ import conclines = require('../conclines');
 import {init as lineSelViewsInit} from 'views/concordance/lineSelection';
 import {init as linesViewInit} from 'views/concordance/lines';
 import lineSelStores = require('../stores/concordance/lineSelection');
-import {ConcLineStore, ServerLineData} from '../stores/concordance/lines';
+import {ConcLineStore, ServerLineData, ViewConfiguration} from '../stores/concordance/lines';
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
@@ -765,19 +765,9 @@ export class ViewPage {
         this.layoutModel.mouseOverImages(boxInst.getRootElement());
     }
 
-    renderLines():RSVP.Promise<any> {
+    renderLines(props:ViewConfiguration):RSVP.Promise<any> {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-            let props = {
-                ViewMode: this.layoutModel.getConf<string>('ViewMode'),
-                ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
-                KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
-                CorporaColumns: this.layoutModel.getConf<Array<string>>('CorporaColumns'),
-                WideCtxGlobals: this.layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                onReady: () => {
-                    resolve(null);
-                }
-            };
+            props.onReady = () => resolve(null);
             this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
                 window.document.getElementById('conclines-wrapper'), props);
         });
@@ -927,10 +917,10 @@ export class ViewPage {
         this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
-    init():void {
+    init(lineViewProps:ViewConfiguration):void {
         this.layoutModel.init().then(
             () => {
-                return this.renderLines();
+                return this.renderLines(lineViewProps);
             }
         ).then(
             () => {
@@ -958,19 +948,47 @@ export class ViewPage {
 
 export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
-    let lineSelectionStore = new lineSelStores.LineSelectionStore(layoutModel,
-            layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
-    let lineSelViews = lineSelViewsInit(layoutModel.dispatcher, layoutModel.exportMixins(),
-            lineSelectionStore, layoutModel.getStores().userInfoStore);
-
-    let lineViewStore = new ConcLineStore(layoutModel, layoutModel.dispatcher,
-            layoutModel.getConf<Array<ServerLineData>>('Lines'));
-    let concLinesViews = linesViewInit(layoutModel.dispatcher, layoutModel.exportMixins(),
-            lineViewStore);
-
+    let lineSelectionStore = new lineSelStores.LineSelectionStore(
+            layoutModel,
+            layoutModel.dispatcher,
+            conclines.openStorage(()=>{}),
+            'simple'
+    );
+    let lineSelViews = lineSelViewsInit(
+            layoutModel.dispatcher,
+            layoutModel.exportMixins(),
+            lineSelectionStore,
+            layoutModel.getStores().userInfoStore
+    );
+    let lineViewProps:ViewConfiguration = {
+        ViewMode: layoutModel.getConf<string>('ViewMode'),
+        ShowLineNumbers: layoutModel.getConf<boolean>('ShowLineNumbers'),
+        KWICCorps: layoutModel.getConf<Array<string>>('KWICCorps'),
+        CorporaColumns: layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
+        WideCtxGlobals: layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
+        baseCorpname: layoutModel.getConf<string>('corpname'),
+        mainCorp: layoutModel.getConcArgs()['maincorp']
+    };
+    let lineViewStore = new ConcLineStore(
+            layoutModel,
+            layoutModel.dispatcher,
+            lineViewProps,
+            layoutModel.getConf<Array<ServerLineData>>('Lines')
+    );
+    let concLinesViews = linesViewInit(
+            layoutModel.dispatcher,
+            layoutModel.exportMixins(),
+            lineViewStore
+    );
     let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;
-    let pageModel = new ViewPage(layoutModel, lineSelViews, lineSelectionStore, concLinesViews,
-            lineViewStore, hasLockedGroups);
-    pageModel.init();
+    let pageModel = new ViewPage(
+            layoutModel,
+            lineSelViews,
+            lineSelectionStore,
+            concLinesViews,
+            lineViewStore,
+            hasLockedGroups
+    );
+    pageModel.init(lineViewProps);
     return pageModel;
 };

@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 /// <reference path="../../../ts/declarations/react.d.ts" />
 
 import React from 'vendor/react';
@@ -30,23 +29,22 @@ export function init(dispatcher, mixins, lineStore) {
 
     let ConcColsHeading = React.createClass({
 
+        _handleSetMainCorpClick : function (corpusId) {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_CHANGE_MAIN_CORPUS',
+                props: {
+                    maincorp: corpusId
+                }
+            });
+        },
+
         _renderCol : function (corpInfo) {
             let colSpan = this.props.viewMode === 'kwic' ? 3 : 1;
-            let link;
-
-            if (this.props.corpsWithKwic.indexOf(corpInfo.n) > -1) {
-                link = '';
-                // "view?$join_params($q, $Globals.update('maincorp', $c.n).update('viewmode', 'align'), 'q=x-' + $c.n)" title="$_('Click to make the language primary')"
-
-            } else {
-                link = '';
-                // filter_form?$join_params($q, $globals, 'maincorp=' + $c.n, 'within=1')
-            }
 
             return [
                 <td key={'ref:' + corpInfo.n}>{/* matches reference column */}</td>,
                 <td key={corpInfo.n} className="concordance-col-heading" colSpan={colSpan} align="center">
-                    <a className="select-primary-lang" href={link}>{corpInfo.label}</a>
+                    <a className="select-primary-lang" onClick={this._handleSetMainCorpClick.bind(this, corpInfo.n)}>{corpInfo.label}</a>
                 </td>
             ];
         },
@@ -101,15 +99,23 @@ export function init(dispatcher, mixins, lineStore) {
             }
         },
 
+        _exportTextElmClass : function (corpname, ...customClasses) {
+            let ans = customClasses.slice();
+            if (corpname === this.props.mainCorp) {
+                ans.push('maincorp');
+            }
+            return ans.join(' ');
+        },
+
         _renderText : function (corpusOutput, corpusIdx) {
             let corpname = this.props.cols[corpusIdx].n;
             let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             let refActionLink = this.createActionLink('fullref') + '?pos=' + corpusOutput.tokenNumber +
-                    '&corpname=' + this.props.corpname;
+                    '&corpname=' + this.props.baseCorpname;
             let wideCtxGlobals = this.props.wideCtxGlobals || [];
             let kwicActionArgs = 'pos=' + corpusOutput.tokenNumber +
                     '&hitlen=' + // TODO !!
-                    '&corpname=' + this.props.corpname +
+                    '&corpname=' + this.props.baseCorpname +
                     '&' + wideCtxGlobals.map(item => item[0] + '=' + encodeURIComponent(item[1])).join('&');
 
             let ans = [
@@ -119,22 +125,22 @@ export function init(dispatcher, mixins, lineStore) {
             ];
             if (this.props.viewMode === 'kwic') {
                 ans = ans.concat([
-                    <td key="lc" className="lc">
+                    <td key="lc" className={this._exportTextElmClass(corpname, 'lc')}>
                         {corpusOutput.left.map(this._renderLeftChunk)}
                     </td>,
-                    <td key="kw" className="kw" data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                    <td key="kw" className={this._exportTextElmClass(corpname, 'kw')} data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
                         {corpusOutput.kwic.map((item, i) => {
                             return <strong key={'k:' + String(i)} className={item.className}>{item.text}</strong>;
                         })}
                     </td>,
-                    <td key="rc" className="rc">
+                    <td key="rc" className={this._exportTextElmClass(corpname, 'rc')}>
                         {corpusOutput.right.map(this._renderRightChunk)}
                     </td>
                 ]);
 
             } else {
                 ans.push(
-                    <td key="par" className="par" data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                    <td key="par" className={this._exportTextElmClass(corpname, 'par')} data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
                         {corpusOutput.left.map(this._renderLeftChunk)}
                         {corpusOutput.kwic.map((item, i) => this._renderKwicChunk(item, i, hasKwic))}
                         {corpusOutput.right.map(this._renderRightChunk)}
@@ -185,7 +191,8 @@ export function init(dispatcher, mixins, lineStore) {
                          data={item}
                          cols={this.props.CorporaColumns}
                          viewMode={this.props.ViewMode}
-                         corpname={this.props.corpname}
+                         baseCorpname={this.props.baseCorpname}
+                         mainCorp={this.props.mainCorp}
                          corpsWithKwic={this.props.KWICCorps}
                          wideCtxGlobals={this.props.WideCtxGlobals}
                          showLineNumbers={this.props.ShowLineNumbers} />;

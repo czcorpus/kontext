@@ -23,7 +23,7 @@
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore, MultiDict} from '../../util';
 import {PageModel} from '../../tpl/document';
 import Immutable = require('vendor/immutable');
 import {Line, KWICSection, TextChunk} from './line';
@@ -51,6 +51,17 @@ export interface SingleCorpServerLineData {
 
 export interface ServerLineData extends SingleCorpServerLineData {
     Align:Array<SingleCorpServerLineData>;
+}
+
+export interface ViewConfiguration {
+    ViewMode:string;
+    ShowLineNumbers:boolean;
+    KWICCorps:Array<string>;
+    CorporaColumns:Array<{n:string; label:string}>;
+    WideCtxGlobals:Array<Array<string>>;
+    baseCorpname:string;
+    mainCorp:string;
+    onReady?:()=>void;
 }
 
 
@@ -98,20 +109,61 @@ export class ConcLineStore extends SimplePageStore {
 
     private lines:Immutable.List<Line>;
 
+    private viewMode:string;
+
+    private showLineNumbers:boolean;
+
+    private kwicCorps:Immutable.List<string>;
+
+    private corporaColumns:Immutable.List<{n:string; label:string}>;
+
+    private wideCtxGlobals:Array<Array<string>>;
+
+    private baseCorpname:string;
+
+    private mainCorp:string;
+
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>,
-            initialData:Array<ServerLineData>) {
+            lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
         super(dispatcher);
         let self = this;
         this.layoutModel = layoutModel;
+        this.viewMode = lineViewProps.ViewMode;
+        this.showLineNumbers = lineViewProps.ShowLineNumbers;
+        this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
+        this.corporaColumns = Immutable.List(lineViewProps.CorporaColumns);
+        this.baseCorpname = lineViewProps.baseCorpname;
+        this.mainCorp = lineViewProps.mainCorp;
         this.lines = importData(initialData);
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
-                case 'CONC_LINES_KWIC_SELECTED':
+                case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
+                    self.changeMainCorpus(payload.props['maincorp']);
                 break;
             }
         });
+    }
+
+    private changeMainCorpus(corpusId:string) {
+        let args:MultiDict = this.layoutModel.getConcArgs();
+        if (this.hasKwic(corpusId)) {
+            args.set('maincorp', corpusId);
+            args.set('viewmode', 'align');
+            args.add('q', 'x-' + corpusId);
+
+        } else {
+            args.set('maincorp', corpusId);
+            args.set('within', 1);
+        }
+        let link = this.layoutModel.createActionUrl('view') + '?' + this.layoutModel.encodeURLParameters(args);
+        window.location.href = link; // TODO
+
+    }
+
+    hasKwic(corpusId:string):boolean {
+        return this.kwicCorps.indexOf(corpusId) > -1;
     }
 
     getLines():Immutable.List<Line> {
