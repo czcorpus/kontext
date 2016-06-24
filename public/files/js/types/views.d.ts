@@ -22,14 +22,14 @@ declare module "views/document" {
 }
 
 
-declare module "views/concordance" {
+declare module "views/concordance/lineSelection" {
 
-    export interface ConcordanceViews {
+    export interface LineSelectionViews {
         LineSelectionMenu:any;
         LockedLineGroupsMenu:any;
     }
 
-    export function init(dispatcher:any, mixins:any, lineSelectionStore:any, userInfoStore:any):ConcordanceViews;
+    export function init(dispatcher:any, mixins:any, lineSelectionStore:any, userInfoStore:any):LineSelectionViews;
 }
 
 
