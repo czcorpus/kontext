@@ -92,3 +92,72 @@ export function getCaretPosition(inputElm) {
     }
     return 0;
 }
+
+/**
+ * A dictionary which mimics Werkzeug's Multidict
+ * type. It provides:
+ * 1) traditional d[k] access to a single value
+ * 2) access to a list of values via getlist(k)
+ *
+ * Values can be also modifed but the only
+ * reliable way is to use set(k, v), add(k, v) methods
+ * (d[k] = v cannot set internal dict containing lists
+ * of values).
+ */
+export class MultiDict {
+
+    private _data:any;
+
+    constructor(data:Array<Array<string>>) {
+        this._data = {};
+        for (let i = 0; i < data.length; i += 1) {
+            let k = data[i][0];
+            let v = data[i][1];
+            if (this._data[k] === undefined) {
+                this._data[k] = [];
+            }
+            this._data[k].push(v);
+            this[k] = v;
+        }
+    }
+
+    getList(key:string):Array<string> {
+        return this._data[key];
+    }
+
+    /**
+     * Set a new value. In case there is
+     * already a value present it is removed
+     * first.
+     */
+    set(key:string, value:any) {
+        this[key] = value;
+        this._data[key] = [value];
+    }
+
+    /**
+     * Add a new value. Traditional
+     * dictionary mode rewrites current value
+     * but the 'multi-value' mode appends the
+     * value to the list of existing ones.
+     */
+    add(key:string, value:any) {
+        this[key] = value;
+        if (this._data[key] === undefined) {
+            this._data[key] = [];
+        }
+        this._data[key].push(value);
+    }
+
+    items():Array<Array<string>> {
+        let ans = [];
+        for (let p in this._data) {
+            if (this._data.hasOwnProperty(p)) {
+                for (let i = 0; i < this._data[p].length; i += 1) {
+                    ans.push([p, this._data[p][i]]);
+                }
+            }
+        }
+        return ans;
+    }
+}

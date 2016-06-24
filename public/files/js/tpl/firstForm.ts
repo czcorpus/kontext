@@ -273,8 +273,8 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             self.removeActiveParallelCorpus(newPrimary);
             self.addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
 
-            urlArgs = self.layoutModel.getConf('currentArgs'); // TODO possible mutability issues
-            urlArgs['corpname'] = newPrimary;
+            urlArgs = self.layoutModel.getConcArgs();
+            urlArgs.set('corpname', newPrimary);
 
             let currAligned = self.layoutModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
             let idxActive = currAligned.indexOf(newPrimary);

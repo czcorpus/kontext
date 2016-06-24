@@ -22,11 +22,11 @@
 /// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp-ajax.d.ts" />
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
-/// <reference path="../../ts/declarations/immutable.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -998,24 +998,19 @@ export class PageModel implements Kontext.PluginProvider {
      * @param params
      * @returns {string}
      */
-    encodeURLParameters(params:{[key:string]:any}):string {
+    encodeURLParameters(params:util.MultiDict):string {
         let ans = [];
-        for (let p in params) {
-            if (params.hasOwnProperty(p)) {
-                let v = params[p];
-                if (Object.prototype.toString.call(v) !== '[object Array]') {
-                    v = [v];
-                }
-                for (let i = 0; i < v.length; i += 1) {
-                    ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(v[i]));
-                }
-            }
-        }
-        return ans.join('&');
+        return params.items().map((item) => {
+            return encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]);
+        }).join('&');
     }
 
     getConf<T>(item:string):T {
         return this.conf[item];
+    }
+
+    getConcArgs():util.MultiDict {
+        return new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
     }
 
     pluginApi():PluginApi {
