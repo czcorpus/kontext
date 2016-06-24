@@ -40,6 +40,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
     conf.concLineMaxGroupNum = $conc_line_max_group_num;
+    conf.Lines = #filter $Jsonize#$Lines#end filter#;
     var model = pageSelf.init(conf);
 
     #if not $finished and $async and $save and not $sampled_size
@@ -294,43 +295,6 @@ $query_overview_bar()
         #set $KWICCorps = list($CollCorps)
     #end if
     <div id="conclines-wrapper">
-        #if $len($Lines) > 0
-
-        <table id="conclines">
-            #filter None
-            $align_heading($viewmode, $KWICCorps)
-            #end filter
-
-            #for $i, $l in $enumerate($Lines)
-            <tr data-toknum="$l.toknum" data-linegroup="$l.linegroup">
-                <td class="line-num">#if $line_numbers#$($int($l.linenum) + 1)#end if#</td>
-                <td class="manual-selection">
-                    <input type="checkbox" value="1" data-linenum="$l.linenum" data-position="$l.toknum"
-                           data-kwiclen="$l.kwiclen" />
-                </td>
-                <td class="syntax-tree">
-                </td>
-                <td class="ref" data-action="fullref" data-params="pos=$l.toknum&corpname=$corpname" title="$l.ref">
-                    $l.ref
-                </td>
-
-                #filter None
-                    $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-
-                    #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
-                        #set $bcname = $Par_conc_corpnames[$ii+1].n
-                        #if $ll.ref
-                        <td class="ref" data-action="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n">$ll.ref</td>
-                        #else
-                        <td></td>
-                        #end if
-                        $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-                    #end for
-                #end filter
-            </tr>
-            #end for
-        </table>
-        #end if
     </div>
 
     <div id="conc-bottom-bar">

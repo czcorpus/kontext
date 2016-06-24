@@ -39,7 +39,9 @@ import detail = require('detail');
 import popupBox = require('popupbox');
 import conclines = require('../conclines');
 import {init as lineSelViewsInit} from 'views/concordance/lineSelection';
+import {init as linesViewInit} from 'views/concordance/lines';
 import lineSelStores = require('../stores/concordance/lineSelection');
+import {ConcLineStore, ServerLineData} from '../stores/concordance/lines';
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
@@ -110,17 +112,23 @@ export class ViewPage {
 
     private lineSelectionStore:lineSelStores.LineSelectionStore;
 
+    private lineViewStore:ConcLineStore;
+
     private hasLockedGroups:boolean;
 
-    private views:any; // TODO
+    private lineSelViews:any; // TODO
+
+    private lineViews:any; // TODO
 
     private touchHandler:TouchHandler;
 
-    constructor(layoutModel:documentModule.PageModel, views:any, lineSelectionStore:lineSelStores.LineSelectionStore,
-            hasLockedGroups:boolean) {
+    constructor(layoutModel:documentModule.PageModel, lineSelViews:any, lineSelectionStore:lineSelStores.LineSelectionStore,
+            lineViews:any, lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.views = views;
+        this.lineSelViews = lineSelViews;
         this.lineSelectionStore = lineSelectionStore;
+        this.lineViews = lineViews;
+        this.lineViewStore = lineViewStore;
         this.hasLockedGroups = hasLockedGroups;
         this.touchHandler = new TouchHandler();
     }
@@ -376,7 +384,7 @@ export class ViewPage {
                     box.close();
                 });
                 self.layoutModel.renderReactComponent(
-                    self.views.LockedLineGroupsMenu,
+                    self.lineSelViews.LockedLineGroupsMenu,
                     box.getRootElement(),
                     {
                         doneCallback: () => {
@@ -404,7 +412,7 @@ export class ViewPage {
                     box.close();
                 });
                 self.layoutModel.renderReactComponent(
-                    self.views.LineSelectionMenu,
+                    self.lineSelViews.LineSelectionMenu,
                     box.getRootElement(),
                     {
                         doneCallback: finalize.bind(self.layoutModel)
@@ -756,6 +764,12 @@ export class ViewPage {
         this.layoutModel.mouseOverImages(boxInst.getRootElement());
     }
 
+    renderLines():void {
+        let props = {};
+        this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
+                window.document.getElementById('conclines-wrapper'), props);
+    }
+
     /**
      *
      */
@@ -901,6 +915,7 @@ export class ViewPage {
 
     init():initActions.InitActions {
         return this.layoutModel.init().add({
+            renderLines: this.renderLines(),
             addClearSelectionHandler : this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this)),
             initLineSelection: this.initLineSelection(),
             misc: this.misc(),
@@ -925,11 +940,17 @@ export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
     let lineSelectionStore = new lineSelStores.LineSelectionStore(layoutModel,
             layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
-    let views = lineSelViewsInit(layoutModel.dispatcher, layoutModel.exportMixins(),
+    let lineSelViews = lineSelViewsInit(layoutModel.dispatcher, layoutModel.exportMixins(),
             lineSelectionStore, layoutModel.getStores().userInfoStore);
 
+    let lineViewStore = new ConcLineStore(layoutModel, layoutModel.dispatcher,
+            layoutModel.getConf<Array<ServerLineData>>('Lines'));
+    let concLinesViews = linesViewInit(layoutModel.dispatcher, layoutModel.exportMixins(),
+            lineViewStore);
+
     let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;
-    let pageModel = new ViewPage(layoutModel, views, lineSelectionStore, hasLockedGroups);
+    let pageModel = new ViewPage(layoutModel, lineSelViews, lineSelectionStore, concLinesViews,
+            lineViewStore, hasLockedGroups);
     pageModel.init();
     return pageModel;
 };
