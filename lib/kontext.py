@@ -455,13 +455,13 @@ class Kontext(Controller):
         if plugins.has_plugin('conc_persistence'):
             if op_id:
                 tpl_data['q'] = 'q=~%s' % op_id
-                tpl_data['Q'] = [{'q': '~%s' % op_id}]
+                tpl_data['Q'] = ['~%s' % op_id]
             else:
                 tpl_data['q'] = ''
                 tpl_data['Q'] = []
         else:
             tpl_data['q'] = self.urlencode([('q', q) for q in self.args.q])
-            tpl_data['Q'] = [{'q': q} for q in self.args.q]
+            tpl_data['Q'] = self.args.q[:]
         tpl_data['num_lines_in_groups'] = len(self._lines_groups)
         tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
 
@@ -973,6 +973,7 @@ class Kontext(Controller):
         global_var_val = self._get_attrs(ConcArgsMapping)
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = templating.StateGlobals(global_var_val)
+        result['Globals'].set('q', [q for q in result.get('Q')])
         result['human_corpname'] = None
 
         result['empty_attr_value_placeholder'] = TextTypeCollector.EMPTY_VAL_PLACEHOLDER

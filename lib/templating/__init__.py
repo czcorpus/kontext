@@ -45,17 +45,20 @@ class StateGlobals(object):
     def items(self):
         return self._data.items()
 
+    def export(self):
+        ans = []
+        for k, v in self._data.items():
+            for item in v:
+                ans.append((k, item))
+        return ans
+
     def to_json(self):
         """
         Export data as a JSON string. The format is
         [[k1, v1_1], [k1, v1_2],..., [kn, vn_m]]
         (i.e. no dictionary to preserve multi-value items)
         """
-        ans = []
-        for k, v in self._data.items():
-            for item in v:
-                ans.append((k, item))
-        return json.dumps(ans)
+        return json.dumps(self.export())
 
     def _copy_data(self):
         return [(k, v[:]) for k, v in self._data.items()]
@@ -82,6 +85,12 @@ class StateGlobals(object):
             new_data[args[0]].append(args[1])
         return StateGlobals(data=new_data)
 
+    def set(self, k, v):
+        if hasattr(v, '__iter__'):
+            self._data[k] = v
+        else:
+            self._data[k] = [v]
+
 
 def update_params(params, key, value):
     return [(k, v) for k, v in params if k != key] + [(key, value)]
@@ -105,7 +114,7 @@ def join_params(*args):
         if a is None:
             continue
         if isinstance(a, StateGlobals):
-            a = [(k, v) for k, v in a.items()]
+            a = [(k, v) for k, v in a.export()]
         if type(a) in (tuple, list, dict):
             if type(a) is dict:
                 a = a.items()

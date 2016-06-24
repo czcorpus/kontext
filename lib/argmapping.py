@@ -82,7 +82,8 @@ class Parameter(object):
 # This attribute set covers all the arguments representing a concordance.
 # I.e. the application should be able to restore any concordance just by
 # using these parameters. Please note that this list does not include
-# the 'q' parameter which collects currently built query.
+# the 'q' parameter which collects currently built query and is handled
+# individually.
 ConcArgsMapping = (
     'corpname',
     'usesubcorp',
