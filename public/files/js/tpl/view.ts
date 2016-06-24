@@ -38,8 +38,8 @@ import documentModule = require('./document');
 import detail = require('detail');
 import popupBox = require('popupbox');
 import conclines = require('../conclines');
-import {init as concViewsInit} from 'views/concordance';
-import concStores = require('../stores/concordance');
+import {init as lineSelViewsInit} from 'views/concordance/lineSelection';
+import lineSelStores = require('../stores/concordance/lineSelection');
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
@@ -108,7 +108,7 @@ export class ViewPage {
 
     private layoutModel:documentModule.PageModel;
 
-    private lineSelectionStore:concStores.LineSelectionStore;
+    private lineSelectionStore:lineSelStores.LineSelectionStore;
 
     private hasLockedGroups:boolean;
 
@@ -116,7 +116,7 @@ export class ViewPage {
 
     private touchHandler:TouchHandler;
 
-    constructor(layoutModel:documentModule.PageModel, views:any, lineSelectionStore:concStores.LineSelectionStore,
+    constructor(layoutModel:documentModule.PageModel, views:any, lineSelectionStore:lineSelStores.LineSelectionStore,
             hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
         this.views = views;
@@ -923,9 +923,9 @@ export class ViewPage {
 
 export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
-    let lineSelectionStore = new concStores.LineSelectionStore(layoutModel,
+    let lineSelectionStore = new lineSelStores.LineSelectionStore(layoutModel,
             layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
-    let views = concViewsInit(layoutModel.dispatcher, layoutModel.exportMixins(),
+    let views = lineSelViewsInit(layoutModel.dispatcher, layoutModel.exportMixins(),
             lineSelectionStore, layoutModel.getStores().userInfoStore);
 
     let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;

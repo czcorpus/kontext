@@ -16,13 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../../ts/declarations/flux.d.ts" />
-/// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import util = require('../util');
-import conclines = require('../conclines');
-import tplDocument = require('../tpl/document');
+import util = require('../../util');
+import conclines = require('../../conclines');
+import tplDocument = require('../../tpl/document');
 
 
 export interface RedirectingResponse {
