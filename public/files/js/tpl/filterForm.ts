@@ -132,11 +132,12 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
 export function init(conf:Kontext.Conf) {
 
     let layoutModel = new documentModule.PageModel(conf);
+    let queryFormTweaks;
     layoutModel.init().then(() => {
             let corpusSetupHandler = new CorpusSetupHandler(layoutModel);
             let extendedApi = queryInput.extendedApi(layoutModel, corpusSetupHandler);
 
-            let queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi,
+            queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi,
                     layoutModel.userSettings, $('#mainform').get(0));
             queryFormTweaks.bindQueryFieldsetsEvents();
             queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
@@ -150,12 +151,13 @@ export function init(conf:Kontext.Conf) {
             return queryStorage.create(extendedApi);
     }).then(
         (plugin) => {
+            queryFormTweaks.bindQueryStorageDetach(plugin.detach.bind(plugin));
+            queryFormTweaks.bindQueryStorageReset(plugin.reset.bind(plugin));
             let prom = new RSVP.Promise<Kontext.Plugin>(
                 (resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                    resolve(layoutModel.getPlugin<Kontext.Plugin>('queryStorage'));
+                    resolve(plugin);
                 }
             );
-            layoutModel.registerPlugin('queryStorage', prom);
             return prom;
         },
         (err) => {

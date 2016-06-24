@@ -623,7 +623,10 @@ export class ViewPage {
                 onShow: function () {
                     $(this.getRootElement()).find('a.fast-login').on('click', (evt:JQueryEventObject) => {
                         $(evt.target).attr('href', null);
-                        self.layoutModel.getPlugin<applicationBar.Toolbar>('applicationBar').openLoginDialog();
+                        self.layoutModel.dispatcher.dispatch({
+                            actionType: 'USER_SHOW_LOGIN_DIALOG',
+                            props: {}
+                        });
                         evt.preventDefault();
                     });
                 }

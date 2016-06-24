@@ -92,7 +92,7 @@ function getLocalStorage():Storage {
 /**
  *
  */
-export class PageModel implements Kontext.PluginProvider {
+export class PageModel {
 
     /**
      * KonText configuration (per-page dynamic object)
@@ -157,7 +157,6 @@ export class PageModel implements Kontext.PluginProvider {
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
         this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
-        this.plugins = {};
         this.initCallbacks = [];
         this.mainMenu = new menu.MainMenu(this.pluginApi());
         this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
@@ -254,71 +253,6 @@ export class PageModel implements Kontext.PluginProvider {
             if (newValue === '1') {
                 selectAllElm.checked = false;
             }
-        }
-    }
-
-    /**
-     * Adds a plug-in to the model. In general, it is not
-     * required to do this on a page using some plug-in but
-     * in that case it will not be possible to use plug-in
-     * related methods of document.js model.
-     *
-     * @param name
-     * @param plugin
-     */
-    registerPlugin(name:string, pluginPromise:RSVP.Promise<Kontext.Plugin>) {
-        pluginPromise.then((plugin:Kontext.Plugin) => {
-            this.plugins[name] = plugin;
-        });
-    }
-
-    /**
-     * @param name
-     */
-    getPlugin<T extends Kontext.Plugin>(name:string):T {
-        return this.plugins[name];
-    }
-
-    /**
-     * Calls a function on a registered plug-in with some additional
-     * testing of target's callability.
-     *
-     * @param {string} name
-     * @param {string} fn
-     * @param {string} [args]
-     * @return the same value as called plug-in method
-     */
-    callPlugin(name:string, fn:string, args?:any[]) {
-        if (typeof this.plugins[name] === 'object'
-            && typeof this.plugins[name][fn] === 'function') {
-            return this.plugins[name][fn].apply(this.plugins[name][fn], args);
-
-        } else {
-            throw new Error("Failed to call method " + fn + " on plug-in " + name);
-        }
-    }
-
-    /**
-     * Registers a callback called during model initialization.
-     * It can be either a function or an object specifying plug-in's function
-     * ({plugin : 'name', 'method' : 'method name', 'args' : [optional array of arguments]})
-     * @param fn
-     */
-    registerInitCallback(fn:Kontext.InitCallback):void;
-    registerInitCallback(fn:()=>void):void;
-    registerInitCallback(fn):void {
-        let self = this;
-
-        if (typeof fn === 'function') {
-            this.initCallbacks.push(fn);
-
-        } else if (typeof fn === 'object' && fn['plugin'] && fn['method']) {
-            this.initCallbacks.push(function () {
-                self.callPlugin(fn['plugin'], fn['method'], fn['args']);
-            });
-
-        } else {
-            throw new Error('Registered invalid callback');
         }
     }
 
@@ -1061,8 +995,8 @@ export class PageModel implements Kontext.PluginProvider {
                 this.asyncTaskChecker.init();
 
                 // init plug-ins
-                this.registerPlugin('applicationBar', applicationBar.create(this.pluginApi()));
-                this.registerPlugin('footerBar', footerBar.create(this.pluginApi()));
+                applicationBar.create(this.pluginApi());
+                footerBar.create(this.pluginApi());
 
                 $.each(this.initCallbacks, function (i, fn:()=>void) {
                     fn();
@@ -1141,12 +1075,6 @@ export class PluginApi implements Kontext.PluginApi {
         this.pageModel.pluginResets.push(fn);
     }
 
-    registerInitCallback(fn:Kontext.InitCallback):void;
-    registerInitCallback(fn:()=>void):void;
-    registerInitCallback(fn):void {
-        return this.pageModel.registerInitCallback(fn);
-    }
-
     userIsAnonymous():boolean {
         return this.getConf<boolean>('anonymousUser');
     }
@@ -1186,10 +1114,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     getViews():Kontext.LayoutViews {
         return this.pageModel.layoutViews;
-    }
-
-    getPlugin<T extends Kontext.Plugin>(name:string) {
-        return this.pageModel.getPlugin<T>(name);
     }
 
     getUserSettings():Kontext.IUserSettings {

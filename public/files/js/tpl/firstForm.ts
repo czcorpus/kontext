@@ -457,11 +457,12 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
             return queryStorage.create(this.layoutModel.pluginApi());
         }).then(
             (plugin) => {
+                queryFormTweaks.bindQueryStorageDetach(plugin.detach.bind(plugin));
+                queryFormTweaks.bindQueryStorageReset(plugin.reset.bind(plugin));
                 let prom = new RSVP.Promise<Kontext.Plugin>(
                     (resolve:(v:Kontext.Plugin)=>void, reject:(err:any)=>void) => {
-                        resolve(this.layoutModel.getPlugin('queryStorageInit'));
+                        resolve(plugin);
                 });
-                this.layoutModel.registerPlugin('queryStorage', prom);
                 return prom;
             },
             (err) => {

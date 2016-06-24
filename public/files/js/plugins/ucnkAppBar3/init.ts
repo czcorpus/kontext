@@ -24,36 +24,18 @@
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');
 import toolbar = require('plugins/applicationBar/toolbar');
-
-/**
- *
- */
-export class AppBar implements Kontext.Plugin {
-
-    pluginApi:Kontext.PluginApi;
-
-    constructor(pluginApi:Kontext.PluginApi) {
-        this.pluginApi = pluginApi;
-    }
-
-    init(): void {
-    }
-
-    openLoginDialog():void {
-        toolbar.openLoginDialog();
-    }
-}
+import {AppBarStore} from './store';
 
 export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
     return new RSVP.Promise((resolve:(ans:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
-       var appBar = new AppBar(pluginApi);
-        if ($('.appbar-loading-msg').data('reload-toolbar') == 1) {
-            pluginApi.registerInitCallback({plugin: 'applicationBar', method: 'toolbarReloader'});
-
-        } else {
-            appBar.init();
-        }
-        resolve(appBar);
+        let appBarStore = new AppBarStore(
+            pluginApi,
+            pluginApi.dispatcher(),
+            () => {
+                toolbar.openLoginDialog();
+            }
+        );
+        resolve(null); // TODO
     });
 }
 
