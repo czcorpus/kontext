@@ -134,8 +134,6 @@ class GlobalArgs(object):
     ml = Parameter(0)
     concarf = Parameter(u'')
     Aligned = Parameter([])
-    prevlink = Parameter(u'')
-    nextlink = Parameter(u'')
     concsize = Parameter(u'')
     Lines = Parameter([])
     fromp = Parameter(u'1')

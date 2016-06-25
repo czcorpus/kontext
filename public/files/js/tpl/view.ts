@@ -42,7 +42,7 @@ import conclines = require('../conclines');
 import {init as lineSelViewsInit} from 'views/concordance/lineSelection';
 import {init as linesViewInit} from 'views/concordance/lines';
 import lineSelStores = require('../stores/concordance/lineSelection');
-import {ConcLineStore, ServerLineData, ViewConfiguration} from '../stores/concordance/lines';
+import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination} from '../stores/concordance/lines';
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
@@ -678,6 +678,44 @@ export class ViewPage {
         $('#groupmenu').attr('corpname', this.layoutModel.getConf<string>('corpname'));
         $('#groupmenu').attr('queryparams', this.layoutModel.getConf<string>('q'));
 
+        let paginationHandler = (elm) => {
+            this.layoutModel.dispatcher.dispatch({
+                actionType: 'CONCORDANCE_CHANGE_PAGE',
+                props: {
+                    action: $(elm.currentTarget).data('action')
+                }
+            });
+        };
+
+        let changeListener = (store:any, action) => {
+            let currentPage = store.getCurrentPage();
+            let pagination:ServerPagination = store.getPagination();
+
+            function updateNavigForm(elm:HTMLElement) {
+                $(elm).find('.bonito-pagination-core input[name="fromp"]').val(currentPage);
+                if (currentPage > 1) {
+                    $(elm).find('.bonito-pagination-left').removeClass('hidden');
+
+                } else {
+                    $(elm).find('.bonito-pagination-left').addClass('hidden');
+                }
+                if (currentPage < pagination.lastPage) {
+                    $(elm).find('.bonito-pagination-right').removeClass('hidden');
+
+                } else {
+                    $(elm).find('.bonito-pagination-right').addClass('hidden');
+                }
+            }
+
+            updateNavigForm(window.document.getElementById('navigation_form'));
+            updateNavigForm(window.document.getElementById('navigation_form2'));
+        };
+
+        this.lineViewStore.addChangeListener(changeListener);
+
+        $('#navigation_form').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
+        $('#navigation_form2').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
+
         $('td.kw strong,td.par strong,td.coll strong,td.par span.no-kwic-text').bind('click', function (event) {
             let jqRealTarget = null;
 
@@ -967,6 +1005,8 @@ export function init(conf):ViewPage {
         CorporaColumns: layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
         WideCtxGlobals: layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
         baseCorpname: layoutModel.getConf<string>('corpname'),
+        pagination: layoutModel.getConf<ServerPagination>('Pagination'),
+        currentPage: layoutModel.getConf<number>('FromPage'),
         mainCorp: layoutModel.getConcArgs()['maincorp']
     };
     let lineViewStore = new ConcLineStore(

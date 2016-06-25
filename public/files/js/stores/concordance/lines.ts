@@ -28,6 +28,7 @@ import {PageModel} from '../../tpl/document';
 import Immutable = require('vendor/immutable');
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import SoundManager = require('SoundManager');
+import RSVP = require('vendor/rsvp');
 
 export interface ServerTextChunk {
     class:string;
@@ -35,6 +36,13 @@ export interface ServerTextChunk {
     open_link?:{speech_path:string};
     close_link?:{speech_path:string};
     continued?:boolean;
+}
+
+export interface ServerPagination {
+    firstPage:number;
+    prevPage:number;
+    nextPage:number;
+    lastPage:number;
 }
 
 export interface SingleCorpServerLineData {
@@ -65,6 +73,8 @@ export interface ViewConfiguration {
     WideCtxGlobals:Array<Array<string>>;
     baseCorpname:string;
     mainCorp:string;
+    pagination:ServerPagination;
+    currentPage:number;
     onReady?:()=>void;
 }
 
@@ -239,6 +249,10 @@ export class ConcLineStore extends SimplePageStore {
 
     private playerAttachedChunk:TextChunk;
 
+    private pagination:ServerPagination;
+
+    private currentPage:number;
+
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
@@ -252,6 +266,8 @@ export class ConcLineStore extends SimplePageStore {
         this.baseCorpname = lineViewProps.baseCorpname;
         this.mainCorp = lineViewProps.mainCorp;
         this.lines = importData(initialData);
+        this.pagination = lineViewProps.pagination; // TODO possible mutable mess
+        this.currentPage = lineViewProps.currentPage;
         this.audioPlayer = new AudioPlayer(this.setStopStatus.bind(this));
 
 
@@ -268,8 +284,41 @@ export class ConcLineStore extends SimplePageStore {
                     self.handlePlayerControls(payload.props['action']);
                     self.notifyChangeListeners();
                 break;
+                case 'CONCORDANCE_CHANGE_PAGE':
+                    let action = payload.props['action'];
+                    self.changePage(payload.props['action'], payload.props['pageNum']).then(
+                        (data) => {
+                            try {
+                                self.lines = importData(data['Lines']);
+                                self.pagination = data['pagination'];
+                                self.currentPage = data['fromp'];
+
+                            } catch (e) {
+                                console.error(e);
+                            }
+                            self.notifyChangeListeners();
+                        },
+                        (err) => {
+                            self.layoutModel.showMessage('error', err);
+                            // TODO notify
+                        }
+                    );
             }
         });
+    }
+
+    private changePage(action:string, pageNumber?:number):RSVP.Promise<any> {
+        let args = this.layoutModel.getConcArgs();
+        args.set('fromp', action === 'customPage' ? pageNumber : this.pagination[action]);
+        args.set('format', 'json');
+        let url = this.layoutModel.createActionUrl('view') + '?' +
+            this.layoutModel.encodeURLParameters(args);
+        return this.layoutModel.ajax(
+            'GET',
+            url,
+            {},
+            {contentType : 'application/x-www-form-urlencoded'}
+        );
     }
 
     private createAudioLink(textChunk:TextChunk):string {
@@ -337,6 +386,14 @@ export class ConcLineStore extends SimplePageStore {
 
     getLines():Immutable.List<Line> {
         return this.lines;
+    }
+
+    getPagination():ServerPagination {
+        return this.pagination;
+    }
+
+    getCurrentPage():number {
+        return this.currentPage;
     }
 }
 

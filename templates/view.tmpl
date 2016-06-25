@@ -45,6 +45,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.KWICCorps = #filter $Jsonize#$KWICCorps#end filter#;
     conf.ViewMode = '${viewmode}';
     conf.ShowLineNumbers = #if $line_numbers#true#else#false#end if#;
+    conf.Pagination = #filter $Jsonize#$pagination#end filter#;
+    conf.FromPage = #if $fromp#$fromp#else#0#end if#;
     conf.Lines = #filter $Jsonize#$Lines#end filter#;
     var model = pageSelf.init(conf);
 
@@ -136,12 +138,12 @@ $query_overview_bar()
         #if $numofpages
             <div class="bonito-pagination">
             <form action="view" id="$navid">
-            #if $prevlink
-                <div class="bonito-pagination-left">
-                <a href="view?$join_params($q, $firstlink, $globals)"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
-                <a href="view?$join_params($q, $prevlink, $globals)"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
-                </div>
-            #end if
+
+
+            <div class="bonito-pagination-left #unless $pagination.prevPage#hidden#end unless#">
+            <a data-action="firstPage"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
+            <a data-action="prevPage"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
+            </div>
 
             <div class="bonito-pagination-core">
               #filter None
@@ -151,14 +153,10 @@ $query_overview_bar()
               / <span class="numofpages" title="$numofpages">$format_number($numofpages, mask='%d')</span>
             </div>
 
-            #if $nextlink
-                <div class="bonito-pagination-right">
-                <a href="view?$join_params($q, $nextlink, $globals)" id="$nextid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
-                <a id="lastpage" href="view?$join_params($q, $lastlink, $globals)"><img class="over-img" src="${files_path}/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="${files_path}/img/last-page_s.svg" /></a>
-                </div>
-            #else
-                <a id="$nextid"></a>
-            #end if
+            <div class="bonito-pagination-right #unless $pagination.nextPage#hidden#end unless#">
+            <a data-action="nextPage" id="$nextid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
+            <a data-action="lastPage" id="lastpage"><img class="over-img" src="${files_path}/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="${files_path}/img/last-page_s.svg" /></a>
+            </div>
 
             #if $Sort_idx
                 <div class="jump-to">
