@@ -22,6 +22,7 @@
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../../ts/declarations/modernizr.d.ts" />
 
 import {SimplePageStore, MultiDict} from '../../util';
 import {PageModel} from '../../tpl/document';
@@ -29,6 +30,7 @@ import Immutable = require('vendor/immutable');
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import SoundManager = require('SoundManager');
 import RSVP = require('vendor/rsvp');
+declare var Modernizr:Modernizr.ModernizrStatic;
 
 export interface ServerTextChunk {
     class:string;
@@ -151,9 +153,15 @@ class AudioPlayer {
 
     private onStop:()=>void;
 
-    constructor(onStop:()=>void) {
+    constructor(sm2FilesURL:string, onStop:()=>void) {
         this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
         this.soundManager = SoundManager.getInstance();
+        this.soundManager.setup({
+            url: sm2FilesURL,
+            flashVersion: 9,
+            debugMode : false,
+            preferFlash : false
+        });
         this.itemsToPlay = Immutable.List([]);
     }
 
@@ -273,8 +281,12 @@ export class ConcLineStore extends SimplePageStore {
         this.mainCorp = lineViewProps.mainCorp;
         this.lines = importData(initialData);
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
-        this.currentPage = lineViewProps.currentPage;
-        this.audioPlayer = new AudioPlayer(this.setStopStatus.bind(this));
+        this.currentPage = lineViewProps.currentPage || 1;
+        this.pushHistoryState(this.currentPage);
+        this.audioPlayer = new AudioPlayer(
+            this.layoutModel.createStaticUrl('misc/soundmanager2/'),
+            this.setStopStatus.bind(this)
+        );
 
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -291,6 +303,7 @@ export class ConcLineStore extends SimplePageStore {
                     self.notifyChangeListeners();
                 break;
                 case 'CONCORDANCE_CHANGE_PAGE':
+                case 'CONCORDANCE_REVISIT_PAGE':
                     let action = payload.props['action'];
                     self.changePage(payload.props['action'], payload.props['pageNum']).then(
                         (data) => {
@@ -298,6 +311,9 @@ export class ConcLineStore extends SimplePageStore {
                                 self.lines = importData(data['Lines']);
                                 self.pagination = data['pagination'];
                                 self.currentPage = data['fromp'];
+                                if (payload.actionType === 'CONCORDANCE_CHANGE_PAGE') {
+                                    self.pushHistoryState(self.currentPage);
+                                }
 
                             } catch (e) {
                                 console.error(e);
@@ -323,6 +339,16 @@ export class ConcLineStore extends SimplePageStore {
                     }
             }
         });
+    }
+
+    private pushHistoryState(pageNum:number):void {
+        if (Modernizr.history) {
+            let args = this.layoutModel.getConcArgs();
+            args.set('fromp', pageNum);
+            let url = this.layoutModel.createActionUrl('view') + '?' +
+                this.layoutModel.encodeURLParameters(args);
+            window.history.pushState({ pagination: true, pageNum: pageNum }, '', url);
+        }
     }
 
     private changePage(action:string, pageNumber?:number):RSVP.Promise<any> {

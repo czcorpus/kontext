@@ -709,9 +709,27 @@ export class ViewPage {
 
             updateNavigForm(window.document.getElementById('navigation_form'));
             updateNavigForm(window.document.getElementById('navigation_form2'));
+
+            this.initLineSelection();
+            syntaxViewer.create(this.layoutModel.pluginApi());
         };
 
         this.lineViewStore.addChangeListener(changeListener);
+
+        if (Modernizr.history) {
+            // register event to load lines via ajax in case user hits back
+            window.onpopstate = (event) => {
+                if (event.state && event.state['pagination']) {
+                    this.layoutModel.dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_REVISIT_PAGE',
+                        props: {
+                            action: 'customPage',
+                            pageNum: event.state['pageNum']
+                        }
+                    })
+                }
+            }
+        }
 
         this.lineViewStore.bindExternalRefsDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
             detail.showRefDetail(
@@ -784,15 +802,6 @@ export class ViewPage {
                 width: 'nice'
             }
         );
-    }
-
-    private soundManagerInit():void {
-        SoundManager.getInstance().setup({
-            url: this.layoutModel.createStaticUrl('misc/soundmanager2/'),
-            flashVersion: 9,
-            debugMode : false,
-            preferFlash : false
-        });
     }
 
     renderLines(props:ViewConfiguration):RSVP.Promise<any> {
@@ -969,7 +978,6 @@ export class ViewPage {
                 }
                 this.onBeforeUnloadAsk();
                 this.grantPaginationPageLeave();
-                this.soundManagerInit();
                 this.setStateUrl();
                 this.attachIpmCalcTrigger();
                 this.updateLocalAlignedCorpora();
