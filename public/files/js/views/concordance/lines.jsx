@@ -209,7 +209,7 @@ export function init(dispatcher, mixins, lineStore) {
                     {corpusOutput.left.map(this._renderLeftChunk)}
                 </td>,
                 <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
-                        data-action={this.createActionLink('widectx')} _renderKwicChunkdata-params={kwicActionArgs}>
+                        data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
                 </td>,
                 <td key="rc" className={this._exportTextElmClass(corpname, 'rc')}>
