@@ -672,7 +672,7 @@ export class ViewPage {
     /**
      * @todo refactor this
      */
-    private misc():void {
+    private setupLineActions():void {
         let self = this;
 
         $('#groupmenu').attr('corpname', this.layoutModel.getConf<string>('corpname'));
@@ -725,38 +725,51 @@ export class ViewPage {
                     this.lineViewStore.setLineFocus(lineIdx, true);
                     this.lineViewStore.notifyChangeListeners();
                 },
-                (jqXHR, textStatus, errorThrown) => {
+                () => {
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    // TODO dtto
+                },
+                (jqXHR, textStatus, error) => {
                     // TODO dtto
                     this.lineViewStore.setLineFocus(lineIdx, false);
                     this.lineViewStore.notifyChangeListeners();
-                    self.layoutModel.showMessage('error', errorThrown);
+                    self.layoutModel.showMessage('error', error);
                 }
             );
         });
 
+        this.lineViewStore.bindExternalKwicDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
+            let args = this.layoutModel.getConcArgs().toDict();
+            args['corpname'] = corpusId; // just for sure (is should be already in args)
+            args['pos'] = String(tokenNum);
+            detail.showDetail(
+                this.layoutModel.createActionUrl('widectx'),
+                args,
+                this.layoutModel,
+                () => {
+                    // TODO
+                    // here we're doing a dirty hack to glue
+                    // the old code in detail.js with newer Flux store
+                    this.lineViewStore.setLineFocus(lineIdx, true);
+                    this.lineViewStore.notifyChangeListeners();
+                },
+                () => {
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    // TODO dtto
+                },
+                (jqXHR, textStatus, error) => {
+                    // TODO dtto
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    self.layoutModel.showMessage('error', error);
+                }
+            );
+        });
 
         $('#navigation_form').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
         $('#navigation_form2').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
-
-        $('td.kw strong,td.par strong,td.coll strong,td.par span.no-kwic-text').bind('click', function (event) {
-            let jqRealTarget = null;
-
-            if ($(event.target).data('action')) {
-                jqRealTarget = $(event.target);
-
-            } else if ($(event.target).parent().data('action')) {
-                jqRealTarget = $(event.target).parent();
-            }
-
-            detail.showDetail(
-                event.currentTarget,
-                jqRealTarget.data('action'),
-                jqRealTarget.data('params'),
-                self.layoutModel,
-                self.viewDetailDoneCallback.bind(self)
-            );
-            event.stopPropagation();
-        });
     }
 
     private addWarnings():void {
@@ -780,29 +793,6 @@ export class ViewPage {
             debugMode : false,
             preferFlash : false
         });
-    }
-
-    /**
-     *
-     * @param boxInst
-     */
-    viewDetailDoneCallback(boxInst):void {
-        let self = this;
-        $('a.expand-link').each(function () {
-            $(this).one('click', function (event) {
-                detail.showDetail(
-                    event.currentTarget,
-                    $(this).data('action'),
-                    $(this).data('params'),
-                    self.layoutModel,
-                    // Expand link, when clicked, must bind the same event handler
-                    // for the new expand link. That's why this 'callback recursion' is present.
-                    self.viewDetailDoneCallback.bind(self)
-                );
-                event.preventDefault();
-            });
-        });
-        this.layoutModel.mouseOverImages(boxInst.getRootElement());
     }
 
     renderLines(props:ViewConfiguration):RSVP.Promise<any> {
@@ -972,7 +962,7 @@ export class ViewPage {
             () => {
                 this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this));
                 this.initLineSelection();
-                this.misc();
+                this.setupLineActions();
                 this.addWarnings();
                 if (this.layoutModel.getConf('anonymousUser')) {
                     this.anonymousUserWarning();

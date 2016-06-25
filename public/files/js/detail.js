@@ -103,7 +103,7 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
 
     /**
      */
-    lib.showRefDetail = function (url, params, layoutModel, succCallback, errorCallback) {
+    lib.showRefDetail = function (url, params, layoutModel, succCallback, closeCallback, errorCallback) {
         var ajaxLoader = layoutModel.createAjaxLoader();
 
         enableAjaxLoadingNotification(ajaxLoader);
@@ -129,7 +129,9 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
                     closeIcon : true,
                     timeout : null,
                     onClose : function () {
-                        $('#conclines tr.active').removeClass('active');
+                        if (typeof closeCallback === 'function' ) {
+                            closeCallback();
+                        }
                         lib.currentDetail = null;
                     }
                 });
@@ -166,19 +168,8 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
     }
 
     /**
-     * @param {HTMLElement|jQuery|string} eventTarget
-     * @param {String} url
-     * @param {{}} params
-     * @param layoutModel
-     * @param {Function} [callback] function called after the ajax's complete event is triggered
      */
-    lib.showDetail = function (eventTarget, url, params, layoutModel, callback) {
-
-        function errorHandler(jqXHR, textStatus, error) {
-            layoutModel.showMessage('error', error);
-        }
-        var ajaxAnim = layoutModel.createAjaxLoader();
-        enableAjaxLoadingNotification(ajaxAnim);
+    lib.showDetail = function (url, params, layoutModel, onSuccess, onClose, onError) {
 
         $.ajax({
             url : url,
@@ -187,17 +178,8 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
             success: function (data) {
                 var leftPos;
 
-                disableAjaxLoadingNotification(ajaxAnim);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
-                }
-
-                if (!$(eventTarget).hasClass('expand-link')) {
-                    $('#conclines tr.prev-active').removeClass('prev-active');
-                    $(eventTarget).closest('tr').addClass('active');
-
-                } else {
-                    $('#conclines tr.prev-active').removeClass('prev-active').addClass('active');
                 }
                 lib.currentDetail = popupBox.extended(layoutModel.pluginApi()).open(data, null, {
                     type : 'plain',
@@ -206,7 +188,9 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
                     closeIcon : true,
                     timeout : null,
                     onClose : function () {
-                        $('#conclines tr.active').removeClass('active').addClass('prev-active');
+                        if (typeof onClose === 'function' ) {
+                            onClose();
+                        }
                         lib.currentDetail = null;
                     },
                     onShow : function () {
@@ -220,14 +204,15 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
                 leftPos = $(win).width() / 2 - lib.currentDetail.getPosition().width / 2;
                 lib.currentDetail.setCss('left', leftPos + 'px');
 
-                if (typeof callback === 'function') {
-                    callback(lib.currentDetail);
+                if (typeof onSuccess === 'function') {
+                    onSuccess(lib.currentDetail);
                 }
             },
 
             error : function (jqXHR, textStatus, errorThrown) {
-                disableAjaxLoadingNotification(ajaxAnim);
-                errorHandler(jqXHR, textStatus, errorThrown);
+                if (typeof onError === 'function') {
+                    onError(jqXHR, textStatus, errorThrown);
+                }
             }
         });
     };

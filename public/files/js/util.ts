@@ -160,4 +160,18 @@ export class MultiDict {
         }
         return ans;
     }
+
+    /**
+     * Return a copy of internal dictionary holding last
+     * value of each key.
+     */
+    toDict():{[key:string]:string} {
+        let ans:{[key:string]:string} = {};
+        for (let k in this._data) {
+            if (this._data.hasOwnProperty(k)) {
+                ans[k] = this._data[k];
+            }
+        }
+        return ans;
+    }
 }

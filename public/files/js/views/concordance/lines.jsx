@@ -209,7 +209,8 @@ export function init(dispatcher, mixins, lineStore) {
                     {corpusOutput.left.map(this._renderLeftChunk)}
                 </td>,
                 <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
-                        data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                        onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
+                                 corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
                 </td>,
                 <td key="rc" className={this._exportTextElmClass(corpname, 'rc')}>
@@ -222,7 +223,8 @@ export function init(dispatcher, mixins, lineStore) {
             let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             return [
                 <td key="par" className={this._exportTextElmClass(corpname, 'par')}
-                        data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                        onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
+                                 corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.left.map(this._renderLeftChunk)}
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
                     {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.kwic.get(-1)))}
@@ -274,8 +276,15 @@ export function init(dispatcher, mixins, lineStore) {
             });
         },
 
-        _handleKwicClick : function () {
-
+        _handleKwicClick : function (corpusId, tokenNumber, lineIdx) {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
+                props: {
+                    corpusId: corpusId,
+                    tokenNumber: tokenNumber,
+                    lineIdx: lineIdx
+                }
+            });
         },
 
         render : function () {

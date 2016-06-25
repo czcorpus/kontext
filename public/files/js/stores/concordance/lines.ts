@@ -316,6 +316,11 @@ export class ConcLineStore extends SimplePageStore {
                                 payload.props['tokenNumber'], payload.props['lineIdx']);
                     }
                 break;
+                case 'CONCORDANCE_SHOW_KWIC_DETAIL':
+                    if (typeof self.externalKwicDetailFn === 'function') {
+                        self.externalKwicDetailFn(payload.props['corpusId'],
+                                payload.props['tokenNumber'], payload.props['lineIdx']);
+                    }
             }
         });
     }
@@ -413,7 +418,14 @@ export class ConcLineStore extends SimplePageStore {
         this.externalRefsDetailFn = fn;
     }
 
+    bindExternalKwicDetailFn(fn:(corpusId:string, tokenNum:number, lineIdx:number)=>void):void {
+        this.externalKwicDetailFn = fn;
+    }
+
     setLineFocus(lineIdx:number, focus:boolean) {
+        this.lines.forEach(item => {
+            item.hasFocus = false;
+        });
         this.lines.get(lineIdx).hasFocus = focus; // TODO mutability issues
     }
 }
