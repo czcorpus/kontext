@@ -22,7 +22,7 @@ declare module "detail" {
 
     export function showDetail(eventTarget:any, url:any, params:any, layoutModel:any, callback:any);
 
-    export function showRefDetail(eventTarget:any, url:any, params:any, callback:any, layoutModel:any);
+    export function showRefDetail(url:any, params:any, layoutModel:any, onSuccess:any, OnError:any);
 
     export function closeDetail():void;
 

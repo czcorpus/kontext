@@ -248,8 +248,10 @@ export function init(dispatcher, mixins, lineStore) {
             let kwicActionArgs = this._createKwicActionArgs(corpusOutput);
 
             let ans = [
-                <td key="ref" className="ref" title="click to see details" data-action={refActionLink}>
-                        {corpusOutput.ref}
+                <td key="ref" className="ref" title="click to see details"
+                        onClick={this._handleRefsClick.bind(this, this.props.baseCorpname,
+                                 corpusOutput.tokenNumber, this.props.lineIdx)}>
+                    {corpusOutput.ref}
                 </td>
             ];
             if (this.props.viewMode === 'kwic') {
@@ -261,11 +263,30 @@ export function init(dispatcher, mixins, lineStore) {
             return ans;
         },
 
+        _handleRefsClick : function (corpusId, tokenNumber, lineIdx) {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_SHOW_REF_DETAIL',
+                props: {
+                    corpusId: corpusId,
+                    tokenNumber: tokenNumber,
+                    lineIdx: lineIdx
+                }
+            });
+        },
+
+        _handleKwicClick : function () {
+
+        },
+
         render : function () {
             let primaryLang = this.props.data.languages.first();
             let alignedCorpora = this.props.data.languages.rest();
+            let htmlClasses = [];
+            if (this.props.data.hasFocus) {
+                htmlClasses.push('active');
+            }
             return (
-                <tr data-toknum={primaryLang.tokenNumber} data-linegroup={this.props.data.lineGroup}>
+                <tr className={htmlClasses.join(' ')} data-toknum={primaryLang.tokenNumber} data-linegroup={this.props.data.lineGroup}>
                     <td className="line-num">{this.props.showLineNumbers ? this.props.data.lineNumber + 1 : null}</td>
                     <td className="manual-selection">
                         <input type="text" data-kwiclen={this.props.data.kwicLength}

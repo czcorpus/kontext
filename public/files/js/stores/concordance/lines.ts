@@ -253,6 +253,12 @@ export class ConcLineStore extends SimplePageStore {
 
     private currentPage:number;
 
+    private focusedLine:number;
+
+    private externalRefsDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
+
+    private externalKwicDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
+
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
@@ -303,6 +309,13 @@ export class ConcLineStore extends SimplePageStore {
                             // TODO notify
                         }
                     );
+                break;
+                case 'CONCORDANCE_SHOW_REF_DETAIL':
+                    if (typeof self.externalRefsDetailFn === 'function') {
+                        self.externalRefsDetailFn(payload.props['corpusId'],
+                                payload.props['tokenNumber'], payload.props['lineIdx']);
+                    }
+                break;
             }
         });
     }
@@ -394,6 +407,14 @@ export class ConcLineStore extends SimplePageStore {
 
     getCurrentPage():number {
         return this.currentPage;
+    }
+
+    bindExternalRefsDetailFn(fn:(corpusId:string, tokenNum:number, lineIdx:number)=>void):void {
+        this.externalRefsDetailFn = fn;
+    }
+
+    setLineFocus(lineIdx:number, focus:boolean) {
+        this.lines.get(lineIdx).hasFocus = focus; // TODO mutability issues
     }
 }
 

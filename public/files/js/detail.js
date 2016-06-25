@@ -102,13 +102,8 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
     }
 
     /**
-     * @param {HTMLElement|jQuery|string} eventTarget
-     * @param {String} url
-     * @param {{}} params
-     * @param {Function} errorCallback
-     * @param {PageModel} layoutModel
      */
-    lib.showRefDetail = function (eventTarget, url, params, errorCallback, layoutModel) {
+    lib.showRefDetail = function (url, params, layoutModel, succCallback, errorCallback) {
         var ajaxLoader = layoutModel.createAjaxLoader();
 
         enableAjaxLoadingNotification(ajaxLoader);
@@ -126,8 +121,6 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
-                $(eventTarget).closest('tr').addClass('active');
-                $('#conclines tr.prev-active').removeClass('prev-active');
 
                 lib.currentDetail = popupBox.open(render, null, {
                     type : 'plain',
@@ -142,6 +135,7 @@ define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
                 });
                 leftPos = $(win).width() / 2 - lib.currentDetail.getPosition().width / 2;
                 lib.currentDetail.setCss('left', leftPos + 'px');
+                succCallback();
             },
 
             error : function (jqXHR, textStatus, errorThrown) {

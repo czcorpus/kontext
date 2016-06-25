@@ -713,6 +713,28 @@ export class ViewPage {
 
         this.lineViewStore.addChangeListener(changeListener);
 
+        this.lineViewStore.bindExternalRefsDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
+            detail.showRefDetail(
+                this.layoutModel.createActionUrl('fullref'),
+                {corpname: corpusId, pos: tokenNum},
+                this.layoutModel,
+                () => {
+                    // TODO
+                    // here we're doing a dirty hack to glue
+                    // the old code in detail.js with newer Flux store
+                    this.lineViewStore.setLineFocus(lineIdx, true);
+                    this.lineViewStore.notifyChangeListeners();
+                },
+                (jqXHR, textStatus, errorThrown) => {
+                    // TODO dtto
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    self.layoutModel.showMessage('error', errorThrown);
+                }
+            );
+        });
+
+
         $('#navigation_form').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
         $('#navigation_form2').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
 
@@ -732,20 +754,6 @@ export class ViewPage {
                 jqRealTarget.data('params'),
                 self.layoutModel,
                 self.viewDetailDoneCallback.bind(self)
-            );
-            event.stopPropagation();
-        });
-
-        $('td.ref').bind('click', function (event) {
-            $(event.target).closest('tr').addClass('active');
-            detail.showRefDetail(
-                event.target,
-                $(event.target).data('action'),
-                $(event.target).data('params'),
-                function (jqXHR, textStatus, errorThrown) {
-                    self.layoutModel.showMessage('error', errorThrown);
-                },
-                self.layoutModel
             );
             event.stopPropagation();
         });

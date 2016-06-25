@@ -82,5 +82,6 @@ export class Line {
     lineGroup:string;
     lineNumber:number;
     kwicLength:number;
+    hasFocus:boolean;
     languages:Immutable.List<LangSection>;
 }
