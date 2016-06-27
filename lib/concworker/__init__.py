@@ -54,11 +54,19 @@ class InitialNotifierFactory(object):
         return Receiver(), Sender()
 
 
+class DummyLock(object):
+    def __enter__(self):
+        return None
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+
 class GeneralWorker(object):
 
     def __init__(self):
         self._cache_factory = plugins.get('conc_cache')
-        self._lock_factory = plugins.get('locking')
+        self._lock_factory = plugins.get('locking') if plugins.has_plugin('locking') else DummyLock()
 
     @staticmethod
     def _update_pidfile(file_path, **kwargs):

@@ -597,7 +597,7 @@ class Controller(object):
         path = self.environ.get('PATH_INFO', '').strip()
 
         if not path.startswith(ac_prefix):  # this should not happen unless you hack the code here and there
-            raise Exception('URL -> action mapping error')
+            raise Exception('URL-action mapping error: cannot match prefix [%s] with path [%s]' % (path, ac_prefix))
         else:
             path = path[len(ac_prefix):]
 
