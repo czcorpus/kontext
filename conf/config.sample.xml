@@ -25,7 +25,7 @@
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
         <calc_backend conf="/path/to/celeryconfig.py">celery</calc_backend>
-        <action_path_prefix>/</action_path_prefix>
+        <action_path_prefix />
         <static_files_prefix>/files</static_files_prefix>
     </global>
     <mailing />
@@ -91,10 +91,13 @@
             <root_elm_path>//corpora/corplist</root_elm_path>
             <tag_prefix extension-by="default">+</tag_prefix>
             <max_num_hints extension-by="default">10</max_num_hints>
+            <default_page_list_size extension-by="default">30</default_page_list_size>
         </corparch>
         <db>
-            <module>default_db</module>
-            <db_path extension-by="default">/path/to/your/sqlite3/data/file</db_path>
+            <module>redis_db</module>
+            <host extension-by="default">localhost</host>
+            <port extension-by="default">6379</port>
+            <id extension-by="default">1</id>
         </db>
         <export>
             <csv>default_csv</csv>
@@ -103,7 +106,8 @@
         <footer_bar />
         <getlang>
             <module>default_getlang</module>
-            <cookie extension-by="ucnk">kontext_toolbar_lang</cookie>
+            <cookie extension-by="default">kontext_toolbar_lang</cookie>
+            <fallback_lang extension-by="default">en_US</fallback_lang>
         </getlang>
         <live_attributes />
         <locking />
