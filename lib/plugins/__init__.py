@@ -23,7 +23,11 @@ def inject_plugin(name, obj):
 
 
 def add_missing_plugin(name):
-    _plugins[name] = None
+    if name != 'locking':
+        _plugins[name] = None
+    else:
+        from abstract.locking import DummyLock
+        inject_plugin('locking', DummyLock())
 
 
 def flush_plugins():

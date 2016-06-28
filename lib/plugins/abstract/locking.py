@@ -15,6 +15,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+class DummyLock(object):
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    def create(self, *args):
+        return self
+
+
 class AbstractLock(object):
     """
     General locking plug-in implementation. All the parameters including
