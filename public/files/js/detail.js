@@ -181,7 +181,7 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     lib.showDetail = function (eventTarget, url, params, layoutModel, callback) {
 
         function errorHandler(jqXHR, textStatus, error) {
-            lib.layoutModel.showMessage('error', error);
+            layoutModel.showMessage('error', error);
         }
         var ajaxAnim = layoutModel.createAjaxLoader();
         enableAjaxLoadingNotification(ajaxAnim);

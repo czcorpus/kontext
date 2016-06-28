@@ -24,7 +24,7 @@ import stores = require('./stores');
 import {init as viewInit} from './view';
 
 
-export function getPopupBoxRenderer(pluginApi:Kontext.PluginApi,
+export function create(pluginApi:Kontext.PluginApi,
         insertCallback:(value:string)=>void, widgetId:number):(box:PopupBox.TooltipBox, finalize:()=>void)=>void {
 
     let tagHelperStore = new stores.TagHelperStore(pluginApi, widgetId);

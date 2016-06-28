@@ -26,52 +26,180 @@ import React from 'vendor/react';
 
 export function init(dispatcher, mixins, lineStore) {
 
-    let Line = React.createClass({
+    // ------------------------- <ConcColsHeading /> ---------------------------
+
+    let ConcColsHeading = React.createClass({
+
+        _renderCol : function (corpInfo) {
+            let colSpan = this.props.viewMode === 'kwic' ? 3 : 1;
+            let link;
+
+            if (this.props.corpsWithKwic.indexOf(corpInfo.n) > -1) {
+                link = '';
+                // "view?$join_params($q, $Globals.update('maincorp', $c.n).update('viewmode', 'align'), 'q=x-' + $c.n)" title="$_('Click to make the language primary')"
+
+            } else {
+                link = '';
+                // filter_form?$join_params($q, $globals, 'maincorp=' + $c.n, 'within=1')
+            }
+
+            return [
+                <td key={'ref:' + corpInfo.n}>{/* matches reference column */}</td>,
+                <td key={corpInfo.n} className="concordance-col-heading" colSpan={colSpan} align="center">
+                    <a className="select-primary-lang" href={link}>{corpInfo.label}</a>
+                </td>
+            ];
+        },
+
         render : function () {
-            let primaryLang = this.props.data.languages.get(0);
-            console.log('this.props.data: ', this.props.data);
-            console.log('primaryLang: ', primaryLang);
             return (
-                <tr data-toknum="267200" data-linegroup="_">
-                    <td className="line-num">1</td>
+                <tr>
+                    <td>{/* matches line number column */}</td>
+                    <td>{/* matches selection checkbox column */}</td>
+                    <td>{/* matches syntax tree column */}</td>
+                    {this.props.cols.map(item => this._renderCol(item))}
+                </tr>
+            );
+        }
+
+    });
+
+
+    // ------------------------- <Line /> ---------------------------
+
+    let Line = React.createClass({
+
+        mixins : mixins,
+
+        _renderKwicChunk : function (item, i, hasKwic) {
+            if (hasKwic) {
+                return <strong key={'k:' + String(i)} className={item.className}>{item.text}</strong>;
+
+            } else if (!item.text) {
+                return '<--not translated-->';
+
+            } else {
+                return item.text;
+            }
+        },
+
+        _renderLeftChunk : function (item, i) {
+            if (item.className) {
+                return <span key={'l:' + String(i)} className={item.className}>{item.text}</span>;
+
+            } else {
+                return item.text;
+            }
+        },
+
+        _renderRightChunk : function (item, i) {
+            if (item.className) {
+                return <span key={'r:' + String(i)} className={item.className}>{item.text}</span>;
+
+            } else {
+                return item.text;
+            }
+        },
+
+        _renderText : function (corpusOutput, corpusIdx) {
+            let corpname = this.props.cols[corpusIdx].n;
+            let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
+            let refActionLink = this.createActionLink('fullref') + '?pos=' + corpusOutput.tokenNumber +
+                    '&corpname=' + this.props.corpname;
+            let wideCtxGlobals = this.props.wideCtxGlobals || [];
+            let kwicActionArgs = 'pos=' + corpusOutput.tokenNumber +
+                    '&hitlen=' + // TODO !!
+                    '&corpname=' + this.props.corpname +
+                    '&' + wideCtxGlobals.map(item => item[0] + '=' + encodeURIComponent(item[1])).join('&');
+
+            let ans = [
+                <td key="ref" className="ref" title="click to see details" data-action={refActionLink}>
+                        {corpusOutput.ref}
+                </td>
+            ];
+            if (this.props.viewMode === 'kwic') {
+                ans = ans.concat([
+                    <td key="lc" className="lc">
+                        {corpusOutput.left.map(this._renderLeftChunk)}
+                    </td>,
+                    <td key="kw" className="kw" data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                        {corpusOutput.kwic.map((item, i) => {
+                            return <strong key={'k:' + String(i)} className={item.className}>{item.text}</strong>;
+                        })}
+                    </td>,
+                    <td key="rc" className="rc">
+                        {corpusOutput.right.map(this._renderRightChunk)}
+                    </td>
+                ]);
+
+            } else {
+                ans.push(
+                    <td key="par" className="par" data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                        {corpusOutput.left.map(this._renderLeftChunk)}
+                        {corpusOutput.kwic.map((item, i) => this._renderKwicChunk(item, i, hasKwic))}
+                        {corpusOutput.right.map(this._renderRightChunk)}
+                    </td>
+                );
+            }
+            return ans;
+        },
+
+        render : function () {
+            let primaryLang = this.props.data.languages.first();
+            let alignedCorpora = this.props.data.languages.rest();
+            return (
+                <tr data-toknum={primaryLang.tokenNumber} data-linegroup={this.props.data.lineGroup}>
+                    <td className="line-num">{this.props.data.lineNumber}</td>
                     <td className="manual-selection">
-                        <input type="text" data-kwiclen="1" data-position="267200" data-linenum="0"
-                            inputMode="numeric" style={{width: '1.4em'}} />
+                        <input type="text" data-kwiclen={this.props.data.kwicLength}
+                            data-position={primaryLang.tokenNumber}
+                            data-linenum="0" inputMode="numeric" style={{width: '1.4em'}} />
                     </td>
                     <td className="syntax-tree" style={{display: 'table-cell'}}>
-                        <img src="" title="Click to see the syntax tree" />
                     </td>
-                    <td className="ref" title="click to see details">
-                        {primaryLang.ref}
-                    </td>
-                    <td className="lc ">
-                        {primaryLang.left.map(item => item.text)}
-                    </td>
-                    <td className="kw " data-action="widectx" data-params="pos=267200&amp;hitlen=&amp;corpname=syn2010&amp;attrs=word&amp;attr_allpos=kw&amp;ctxattrs=word&amp;refs=%3Dopus.nazev">
-                        {primaryLang.kwic.map(item => {
-                            return <strong className={item.className}>{item.text}</strong>;
-                        })}
-                    </td>
-                    <td className="rc ">
-                        {primaryLang.right.map(item => item.text)}
-                    </td>
+                    {this._renderText(primaryLang, 0)}
+                    {alignedCorpora.map((alCorp, i) => this._renderText(alCorp, i + 1))}
                 </tr>
             );
         }
     });
 
+    // ------------------------- <ConcLines /> ---------------------------
+
     let ConcLines = React.createClass({
+
+        mixins : mixins,
 
         getInitialState : function () {
             return {lines: lineStore.getLines()};
         },
 
+        componentDidMount : function () {
+            if (typeof this.props.onReady === 'function') { // <-- a glue with legacy dode
+                this.props.onReady();
+            }
+        },
+
+        _renderLine : function (item, i) {
+            return <Line key={String(i) + ':' + item.toknum}
+                         data={item}
+                         cols={this.props.CorporaColumns}
+                         viewMode={this.props.ViewMode}
+                         corpname={this.props.corpname}
+                         corpsWithKwic={this.props.KWICCorps}
+                         wideCtxGlobals={this.props.WideCtxGlobals} />;
+        },
+
         render : function () {
-            console.log('data: ', this.state.lines.toJS());
             return (
                 <table id="conclines">
                     <tbody>
-                        {this.state.lines.map(item => <Line key={item.toknum} data={item} />)}
+                        {this.props.CorporaColumns.length > 1 ?
+                            <ConcColsHeading cols={this.props.CorporaColumns} corpsWithKwic={this.props.KWICCorps}
+                                    viewMode={this.props.ViewMode} />
+                            : null
+                        }
+                        {this.state.lines.map((item, i) => this._renderLine(item, i))}
                     </tbody>
                 </table>
             );

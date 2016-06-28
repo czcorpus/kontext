@@ -30,6 +30,7 @@
 /// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
 /// <reference path="../../ts/declarations/detail.d.ts" />
 /// <reference path="../types/views.d.ts" />
+/// <reference path="../../ts/declarations/rsvp.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -46,8 +47,8 @@ import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
 import userSettings = require('../userSettings');
-import initActions = require('../initActions');
 import applicationBar = require('plugins/applicationBar/init');
+import RSVP = require('vendor/rsvp');
 declare var Modernizr:Modernizr.ModernizrStatic;
 declare var jqueryPeriodic:any;
 
@@ -674,7 +675,7 @@ export class ViewPage {
         $('#groupmenu').attr('corpname', this.layoutModel.getConf<string>('corpname'));
         $('#groupmenu').attr('queryparams', this.layoutModel.getConf<string>('q'));
 
-        $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
+        $('td.kw strong,td.par strong,td.coll strong,td.par span.no-kwic-text').bind('click', function (event) {
             let jqRealTarget = null;
 
             if ($(event.target).data('action')) {
@@ -764,10 +765,22 @@ export class ViewPage {
         this.layoutModel.mouseOverImages(boxInst.getRootElement());
     }
 
-    renderLines():void {
-        let props = {};
-        this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
+    renderLines():RSVP.Promise<any> {
+        let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+            let props = {
+                ViewMode: this.layoutModel.getConf<string>('ViewMode'),
+                KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
+                CorporaColumns: this.layoutModel.getConf<Array<string>>('CorporaColumns'),
+                WideCtxGlobals: this.layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
+                corpname: this.layoutModel.getConf<string>('corpname'),
+                onReady: () => {
+                    resolve(null);
+                }
+            };
+            this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
                 window.document.getElementById('conclines-wrapper'), props);
+        });
+        return ans;
     }
 
     /**
@@ -913,26 +926,32 @@ export class ViewPage {
         this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
-    init():initActions.InitActions {
-        return this.layoutModel.init().add({
-            renderLines: this.renderLines(),
-            addClearSelectionHandler : this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this)),
-            initLineSelection: this.initLineSelection(),
-            misc: this.misc(),
-            addWarnings: this.addWarnings(),
-            anonUserWarning: (() => {
+    init():void {
+        this.layoutModel.init().then(
+            () => {
+                return this.renderLines();
+            }
+        ).then(
+            () => {
+                this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this));
+                this.initLineSelection();
+                this.misc();
+                this.addWarnings();
                 if (this.layoutModel.getConf('anonymousUser')) {
                     this.anonymousUserWarning();
                 }
-            })(),
-            onBeforeUnloadAsk: this.onBeforeUnloadAsk(),
-            grantPaginationPageLeave: this.grantPaginationPageLeave(),
-            soundManagerInit: this.soundManagerInit(),
-            setStateUrl: this.setStateUrl(),
-            attachIpmCalcTrigger: this.attachIpmCalcTrigger(),
-            updateLocalAlignedCorpora: this.updateLocalAlignedCorpora(),
-            syntaxViewer: syntaxViewer.create(this.layoutModel.pluginApi())
-        });
+                this.onBeforeUnloadAsk();
+                this.grantPaginationPageLeave();
+                this.soundManagerInit();
+                this.setStateUrl();
+                this.attachIpmCalcTrigger();
+                this.updateLocalAlignedCorpora();
+                syntaxViewer.create(this.layoutModel.pluginApi());
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
     }
 }
 

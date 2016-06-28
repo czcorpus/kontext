@@ -33,10 +33,10 @@ export interface ServerTextChunk {
     str:string;
 }
 
-export interface ServerLineData {
-    Left:Immutable.List<ServerTextChunk>;
-    Right:Immutable.List<ServerTextChunk>;
-    Kwic:Immutable.List<ServerTextChunk>;
+export interface SingleCorpServerLineData {
+    Left:Array<ServerTextChunk>;
+    Right:Array<ServerTextChunk>;
+    Kwic:Array<ServerTextChunk>;
     rightsize:number;
     hitlen:string;
     linegroup:string;
@@ -49,20 +49,43 @@ export interface ServerLineData {
     toknum:number;
 }
 
+export interface ServerLineData extends SingleCorpServerLineData {
+    Align:Array<SingleCorpServerLineData>;
+}
+
 
 function importData(data:Array<ServerLineData>):Immutable.List<Line> {
     let ans:Array<Line> = [];
 
     data.forEach((item:ServerLineData) => {
-        let line:KWICSection = {
+        let line:Array<KWICSection> = [];
+
+        line.push({
             tokenNumber: item.toknum,
             lineNumber: item.linenum,
             ref: item.ref,
             left: Immutable.List<TextChunk>(item.Left.map(v => {return {className: v.class, text: v.str}; })),
             right: Immutable.List<TextChunk>(item.Right.map(v => {return {className: v.class, text: v.str}; })),
             kwic: Immutable.List<TextChunk>(item.Kwic.map(v => {return {className: v.class, text: v.str}; }))
-        }
-        ans.push({languages:Immutable.List([line])}); // TODO
+        });
+
+        line = line.concat((item.Align || []).map((item) => {
+            return {
+                tokenNumber: item.toknum,
+                lineNumber: item.linenum,
+                ref: item.ref,
+                left: Immutable.List<TextChunk>(item.Left.map(v => {return {className: v.class, text: v.str}; })),
+                right: Immutable.List<TextChunk>(item.Right.map(v => {return {className: v.class, text: v.str}; })),
+                kwic: Immutable.List<TextChunk>(item.Kwic.map(v => {return {className: v.class, text: v.str}; }))
+            };
+        }));
+
+        ans.push({
+            lineNumber: item.linenum,
+            lineGroup: item.linegroup,
+            kwicLength: item.kwiclen,
+            languages: Immutable.List(line)
+        }); // TODO
     });
 
     return Immutable.List(ans);

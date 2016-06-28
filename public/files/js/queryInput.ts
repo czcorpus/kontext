@@ -125,7 +125,7 @@ export class QueryFormTweaks {
         };
         popupBox.bind(
             triggerElm,
-            tagbuilder.getPopupBoxRenderer(self.pluginApi, insertCallback, widgetId),
+            tagbuilder.create(self.pluginApi, insertCallback, widgetId),
             {
                 type: 'plain',
                 htmlClass: 'tag-builder-widget',

@@ -48,5 +48,8 @@ export class SentSection extends LangSection {
 
 
 export class Line {
+    lineGroup:string;
+    lineNumber:number;
+    kwicLength:number;
     languages:Immutable.List<LangSection>;
 }

@@ -276,7 +276,6 @@ declare module Kontext {
     export interface AsyncTaskOnUpdate {
         (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
     }
-
 }
 
 

@@ -47,7 +47,6 @@ import IntlMessageFormat = require('vendor/intl-messageformat');
 import Immutable = require('vendor/immutable');
 import asyncTask = require('../asyncTask');
 import userSettings = require('../userSettings');
-import initActions = require('../initActions');
 import menu = require('../menu');
 
 /**
@@ -127,11 +126,6 @@ export class PageModel implements Kontext.PluginProvider {
     mainMenu:menu.MainMenu;
 
     /**
-     * Results of partial page initializations.
-     */
-    initActions:initActions.InitActions;
-
-    /**
      * Local user settings
      */
     userSettings:userSettings.UserSettings;
@@ -166,7 +160,6 @@ export class PageModel implements Kontext.PluginProvider {
         this.plugins = {};
         this.initCallbacks = [];
         this.mainMenu = new menu.MainMenu(this.pluginApi());
-        this.initActions = new initActions.InitActions();
         this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
@@ -1048,39 +1041,41 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      *
      */
-    init():initActions.InitActions {
-        let self = this;
-
-        this.layoutViews = documentViewsInit(this.dispatcher, this.exportMixins(),
+    init():RSVP.Promise<any> {
+        return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+            try {
+                this.layoutViews = documentViewsInit(this.dispatcher, this.exportMixins(),
                 this.getStores());
 
-        this.userSettings.init();
+                this.userSettings.init();
+                this.bindStaticElements();
+                this.bindCorpusDescAction();
+                this.bindSubcorpusDescAction();
+                this.queryOverview();
+                this.mainMenu.init();
+                this.timeoutMessages();
+                this.mouseOverImages();
+                this.enhanceMessages();
+                this.externalHelpLinks();
+                this.initNotifications();
+                this.asyncTaskChecker.init();
 
-        this.initActions.add({
-            bindStaticElements: self.bindStaticElements(),
-            bindCorpusDescAction: self.bindCorpusDescAction(),
-            bindSubcorpusDescAction: self.bindSubcorpusDescAction(),
-            queryOverview: self.queryOverview(),
-            mainMenuInit: self.mainMenu.init(),
-            timeoutMessages: self.timeoutMessages(),
-            mouseOverImages: self.mouseOverImages(),
-            enhanceMessages: self.enhanceMessages(),
-            externalHelpLinks: self.externalHelpLinks(),
-            showNotification: self.initNotifications(),
-            initAsyncTaskChecking: self.asyncTaskChecker.init()
+                // init plug-ins
+                this.registerPlugin('applicationBar', applicationBar.create(this.pluginApi()));
+                this.registerPlugin('footerBar', footerBar.create(this.pluginApi()));
+
+                $.each(this.initCallbacks, function (i, fn:()=>void) {
+                    fn();
+                });
+
+                this.registerCoreEvents();
+
+                resolve(null);
+
+            } catch (e) {
+                reject(e);
+            }
         });
-
-        // init plug-ins
-        this.registerPlugin('applicationBar', applicationBar.create(self.pluginApi()));
-        this.registerPlugin('footerBar', footerBar.create(self.pluginApi()));
-
-        $.each(this.initCallbacks, function (i, fn:()=>void) {
-            fn();
-        });
-
-        this.registerCoreEvents();
-
-        return this.initActions;
     }
 }
 

@@ -40,7 +40,6 @@ import liveAttributes = require('plugins/liveAttributes/init');
 import conclines = require('../conclines');
 import Immutable = require('vendor/immutable');
 import userSettings = require('../userSettings');
-import initActions = require('../initActions');
 import textTypesStore = require('../stores/textTypes/attrValues');
 import RSVP = require('vendor/rsvp');
 import util = require('../util');
@@ -434,32 +433,41 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
         );
     }
 
-    init(conf:Kontext.Conf):initActions.InitActions {
+    init(conf:Kontext.Conf):void {
         let queryFormTweaks = queryInput.init(this.layoutModel, this, this.layoutModel.userSettings,
                 $('#mainform').get(0));
-        let promises = this.layoutModel.init().add({
-            initQuerySelector : this.initQuerySelector(queryFormTweaks),
-            bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button')),
-            bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
-            bindParallelCorporaCheckBoxes : this.bindParallelCorporaCheckBoxes(queryFormTweaks),
-            restoreAlignedCorpora: this.restoreAlignedCorpora(queryFormTweaks),
-            initCorplistComponent: this.initCorplistComponent(),
-            makePrimaryButtons : this.makePrimaryButtons(),
-            registerSubcorpChange : this.registerSubcorpChange(),
-            registerAlignedCorpChange: this.registerAlignedCorpChange(),
-            textareaSubmitOverride : queryFormTweaks.textareaSubmitOverride(),
-            textareaHints : queryFormTweaks.textareaHints(),
-            initQuerySwitching : queryFormTweaks.initQuerySwitching(),
-            fixFormSubmit : queryFormTweaks.fixFormSubmit(),
-            bindQueryHelpers: queryFormTweaks.bindQueryHelpers(),
-            queryStorageInit : queryStorage.create(this.layoutModel.pluginApi()),
-            updateStateOnError: this.updateStateOnError(),
-            queryFormTweaks: queryFormTweaks.updateToggleableFieldsets()
-        });
-        promises.doAfter('queryFormTweaks', () => {
+        this.layoutModel.init().then(() => {
+            this.initQuerySelector(queryFormTweaks);
+            queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button'));
+            queryFormTweaks.bindQueryFieldsetsEvents();
             this.createTTViews(conf);
-        });
-        return promises;
+            this.bindParallelCorporaCheckBoxes(queryFormTweaks);
+            this.restoreAlignedCorpora(queryFormTweaks);
+            this.initCorplistComponent();
+            this.makePrimaryButtons();
+            this.registerSubcorpChange();
+            this.registerAlignedCorpChange();
+            queryFormTweaks.textareaSubmitOverride();
+            queryFormTweaks.textareaHints();
+            queryFormTweaks.initQuerySwitching();
+            queryFormTweaks.fixFormSubmit();
+            queryFormTweaks.bindQueryHelpers();
+            this.updateStateOnError();
+            queryFormTweaks.updateToggleableFieldsets();
+            return queryStorage.create(this.layoutModel.pluginApi());
+        }).then(
+            (plugin) => {
+                let prom = new RSVP.Promise<Kontext.Plugin>(
+                    (resolve:(v:Kontext.Plugin)=>void, reject:(err:any)=>void) => {
+                        resolve(this.layoutModel.getPlugin('queryStorageInit'));
+                });
+                this.layoutModel.registerPlugin('queryStorage', prom);
+                return prom;
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
     }
 }
 
@@ -471,9 +479,8 @@ export function init(conf:Kontext.Conf):FirstFormPage {
     });
     clStorage.clear();
     let pageModel = new FirstFormPage(layoutModel, clStorage);
-    let promises:initActions.InitActions = pageModel.init(conf);
+    pageModel.init(conf);
 
-    layoutModel.registerPlugin('queryStorage', promises.get('queryStorageInit'));
     layoutModel.mouseOverImages();
     return pageModel;
 }

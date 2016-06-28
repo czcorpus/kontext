@@ -86,8 +86,8 @@ class KwicPageData(FixedDict):
     concsize = None
     result_arf = None
     result_relative_freq = None
-    CollCorps = ()
-    Par_conc_corpnames = ()
+    KWICCorps = ()
+    CorporaColumns = ()
 
 
 class Kwic(object):
@@ -147,6 +147,9 @@ class Kwic(object):
 
         self.add_aligns(out, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
                         leftctx, rightctx, attrs, ctxattrs, refs, structs, labelmap, righttoleft, alignlist)
+        if len(out.CorporaColumns) == 0:
+            out.CorporaColumns = [dict(n=self.corpus.corpname, label=self.corpus.get_conf('NAME'))]
+            out.KWICCorps = [self.corpus.corpname]
 
         if labelmap:
             out['GroupNumbers'] = format_labelmap(labelmap)
@@ -204,10 +207,11 @@ class Kwic(object):
         al_lines = []
         corps_with_colls = manatee.StrVector()
         self.conc.get_aligned(corps_with_colls)
-        result.CollCorps = corps_with_colls
-        result.Par_conc_corpnames = [dict(n=c.get_conffile(),
-                                          label=c.get_conf('NAME') or c.get_conffile())
-                                     for c in [self.conc.orig_corp] + alignlist]
+        result.KWICCorps = [c for c in corps_with_colls]
+        if self.corpus.corpname not in result.KWICCorps:
+            result.KWICCorps = [self.corpus.corpname] + result.KWICCorps
+        result.CorporaColumns = [dict(n=c.get_conffile(), label=c.get_conf('NAME') or c.get_conffile())
+                                 for c in [self.conc.orig_corp] + alignlist]
         for al_corp in alignlist:
             al_corpname = al_corp.get_conffile()
             if al_corpname in corps_with_colls:

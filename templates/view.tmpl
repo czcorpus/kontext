@@ -40,6 +40,10 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
     conf.concLineMaxGroupNum = $conc_line_max_group_num;
+    conf.WideCtxGlobals = #filter $Jsonize#$widectx_globals#end filter#;
+    conf.CorporaColumns = #filter $Jsonize#${CorporaColumns}#end filter#;
+    conf.KWICCorps = #filter $Jsonize#$KWICCorps#end filter#;
+    conf.ViewMode = '${viewmode}';
     conf.Lines = #filter $Jsonize#$Lines#end filter#;
     var model = pageSelf.init(conf);
 
@@ -54,23 +58,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 });
 #end def
 
-
-#def align_heading($viewmode, $KWICCorps)
-#if $getVar('Par_conc_corpnames', [])
-<tr>
-    <td></td>  ## matches selection checkbox
-    #for $i, $c in enumerate($Par_conc_corpnames)
-    <td class="concordance-col-heading" colspan="2" #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
-    #if $c.n in $KWICCorps
-    <a class="select-primary-lang" href="view?$join_params($q, $Globals.update('maincorp', $c.n).update('viewmode', 'align'), 'q=x-' + $c.n)" title="$_('Click to make the language primary')"><b>$c.label</b></a>
-    #else
-    <a class="select-primary-lang" href="filter_form?$join_params($q, $globals, 'maincorp=' + $c.n, 'within=1')" title="$_('Click to make the language primary')"><b>$c.label</b></a>
-    #end if
-    </td>
-    #end for
-</tr>
-#end if
-#end def
 
 #def display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $longcorpname)
   #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
@@ -287,14 +274,8 @@ $query_overview_bar()
     </div>
 
     ## concordance lines
-    #set $basecorpname = $corpname.split('/')[-1]
-    #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
-    #if $len($CollCorps) == 0:
-        #set $KWICCorps = list([$basecorpname])
-    #else
-        #set $KWICCorps = list($CollCorps)
-    #end if
     <div id="conclines-wrapper">
+        <img class="loader-anim" src="${files_path}/img/ajax-loader.gif" alt="$_('Loading...')" />
     </div>
 
     <div id="conc-bottom-bar">
