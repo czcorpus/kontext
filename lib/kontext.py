@@ -98,10 +98,27 @@ class RequestArgsProxy(object):
     def keys(self):
         return list(set(self._form.keys() + self._args.keys()))
 
-    def getvalue(self, k):
+    def getlist(self, k):
+        """
+        Returns a list of values matching passed argument
+        name. List is returned even if there is a single
+        value avalilable.
+
+        URL arguments have higher priority over POST ones.
+        """
         tmp = self._form.getlist(k)
         if len(tmp) == 0 and k in self._args:
             tmp = self._args.getlist(k)
+        return tmp
+
+    def getvalue(self, k):
+        """
+        Returns either a single value or a list of values
+        depending on HTTP request arguments.
+
+        URL arguments have higher priority over POST ones.
+        """
+        tmp = self.getlist(k)
         return tmp if len(tmp) > 1 else tmp[0]
 
 
@@ -183,6 +200,8 @@ class Kontext(Controller):
 
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
+
+    PARAM_TYPES = dict(inspect.getmembers(GlobalArgs, predicate=lambda x: isinstance(x, Parameter)))
 
     _conc_dir = u''
     _files_path = settings.get('global', 'static_files_prefix', u'../files')
@@ -485,8 +504,6 @@ class Kontext(Controller):
         access a value list (e.g. stuff like foo=a&foo=b&foo=c)
         please use request.args.getlist/request.form.getlist methods.
         """
-        param_types = dict(inspect.getmembers(GlobalArgs,
-                                              predicate=lambda x: isinstance(x, Parameter)))
 
         if 'json' in req_args:
             json_data = json.loads(req_args.getvalue('json'))
@@ -497,8 +514,8 @@ class Kontext(Controller):
             if len(req_args.getvalue(k)) > 0:
                 key = str(k)
                 val = req_args.getvalue(k)
-                if key in param_types:
-                    if not param_types[key].is_array() and type(val) is list:
+                if key in self.PARAM_TYPES:
+                    if not self.PARAM_TYPES[key].is_array() and type(val) is list:
                         # If a parameter (see static Parameter instances) is defined as a scalar
                         # but the web framework returns a list (e.g. an HTML form contains a key
                         # with multiple occurrences) then a possible conflict emerges. Although
@@ -506,7 +523,7 @@ class Kontext(Controller):
                         # inconsistencies. In such cases we use only last value as we expect that
                         # the last value overwrites previous ones with the same key.
                         val = val[-1]
-                    elif param_types[key].is_array() and not type(val) is list:
+                    elif self.PARAM_TYPES[key].is_array() and not type(val) is list:
                         # A Parameter object is expected to be a list but
                         # web framework returns a scalar value
                         val = [val]
@@ -532,7 +549,15 @@ class Kontext(Controller):
             self.args.corpname = ''
         return path
 
-    def _init_semi_persistent_args(self):
+    def _init_semi_persistent_args(self, form_proxy):
+        """
+        Update self.args using semi persistent attributes. Only values
+        not present in provided form_proxy are updated.
+
+        arguments:
+        form_proxy -- a RequestArgsProxy instance
+
+        """
         sp_data = MultiDict(self._session_get('semi_persistent_attrs'))
         if 'corpname' in self._request.args and 'sel_aligned' in sp_data:
             curr_corpora = (sp_data.getlist('sel_aligned') + [sp_data.get('corpname', None)])
@@ -540,7 +565,8 @@ class Kontext(Controller):
                 sp_data.pop('sel_aligned')
         self._session['semi_persistent_attrs'] = sp_data.items(multi=True)
         for k, v in self._session['semi_persistent_attrs']:
-            setattr(self.args, k, v)
+            if k not in form_proxy:
+                self.PARAM_TYPES[k].update_attr(self.args, k, v)
 
     # TODO: decompose this method (phase 2)
     def _pre_dispatch(self, path, named_args, action_metadata=None):
@@ -556,7 +582,9 @@ class Kontext(Controller):
             return None
         self.add_validator(validate_corpus)
 
-        self._init_semi_persistent_args()
+        form = RequestArgsProxy(self._request.form, self._request.args)
+
+        self._init_semi_persistent_args(form)
 
         if not action_metadata:
             action_metadata = {}
@@ -566,8 +594,6 @@ class Kontext(Controller):
         # only general setting can be applied now because
         # we do not know final corpus name yet
         self._apply_general_user_settings(options, self._init_default_settings)
-
-        form = RequestArgsProxy(self._request.form, self._request.args)
 
         # corpus access check and modify path in case user cannot access currently requested corp.
         path = self._check_corpus_access(path, form, action_metadata)

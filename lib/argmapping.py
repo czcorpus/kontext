@@ -45,6 +45,33 @@ class Parameter(object):
             ans = self.value
         return ans
 
+    def update_attr(self, obj, k, v):
+        """
+        Update obj's 'k' attribute using scalar value
+        'v'. This means different things based
+        on whether obj.[k] is array or not.
+
+        Rules:
+        1. empty string and None reset current obj.[k]
+        2. non empty value is appended to array type and
+           replaces current value of scalar type
+
+        arguments:
+        obj -- argument mapping object
+        k -- a string key
+        v -- a simple type value (string, int, float)
+        """
+        if v == '' or v is None:
+            if self.is_array():
+                setattr(obj, k, [])
+            else:
+                setattr(obj, k, None)
+        else:
+            if self.is_array():
+                setattr(obj, k, getattr(obj, k, []) + [v])
+            else:
+                setattr(obj, k, v)
+
     def is_array(self):
         return type(self.value) is tuple or type(self.value) is list
 
@@ -210,7 +237,7 @@ class GlobalArgs(object):
     senrightctx_tpl = Parameter('1:%s')
     viewmode = Parameter('kwic')
     align = Parameter('')
-    sel_aligned = Parameter([], persistent=Parameter.SEMI_PERSISTENT)
+    sel_aligned = Parameter([])
     maincorp = Parameter('')  # used only in case of parallel corpora - specifies primary corp.
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants no refs"
 
