@@ -711,15 +711,6 @@ export class ViewPage {
             );
             event.stopPropagation();
         });
-
-        $('a.speech-link').each(function () {
-            $(this).bind('click', function (event) {
-                detail.openSpeech(this);
-                event.stopPropagation();
-                event.preventDefault();
-                return false;
-            });
-        });
     }
 
     private addWarnings():void {
@@ -771,8 +762,14 @@ export class ViewPage {
     renderLines(props:ViewConfiguration):RSVP.Promise<any> {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             props.onReady = () => resolve(null);
-            this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
-                window.document.getElementById('conclines-wrapper'), props);
+            try {
+                this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
+                    window.document.getElementById('conclines-wrapper'), props);
+
+            } catch (e) {
+                console.error(e.stack);
+                throw e;
+            }
         });
         return ans;
     }

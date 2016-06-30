@@ -307,7 +307,6 @@ class Kwic(object):
         fragment_separator = '<%s' % speech_struct_str
         last_fragment = None
         last_speech_id = prev_speech_id
-        create_speech_path = lambda sp_id: urllib.urlencode({'corpname': self.corpus_fullname, 'chunk': sp_id})
 
         for item in line:
             item['str'] = self.import_string(item['str'])
@@ -324,9 +323,9 @@ class Kwic(object):
                     'class': item['class']
                 }
                 if frag_ext.startswith(fragment_separator):
-                    newline_item['open_link'] = {'speech_path': create_speech_path(speech_id)}
+                    newline_item['open_link'] = {'speech_path': speech_id}
                 elif frag_ext.endswith('</%s>' % speech_struct_str):
-                    newline_item['close_link'] = {'speech_path': create_speech_path(speech_id)}
+                    newline_item['close_link'] = {'speech_path': speech_id}
                 newline.append(newline_item)
                 last_fragment = newline_item
         # we have to treat specific situations related to the end of the

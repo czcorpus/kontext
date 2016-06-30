@@ -26,6 +26,4 @@ declare module "detail" {
 
     export function closeDetail():void;
 
-    export function openSpeech(arg:any):void;
-
 }

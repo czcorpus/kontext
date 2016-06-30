@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, popupBox, win) {
+define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
     'use strict';
 
     var lib = {};
@@ -236,15 +236,6 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 errorHandler(jqXHR, textStatus, errorThrown);
             }
         });
-    };
-
-    /**
-     *
-     * @param linkElem
-     */
-    lib.openSpeech = function (linkElem) {
-        var speechURL = $(linkElem).attr('href');
-        audioPlayer.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
     };
 
     return lib;

@@ -23,27 +23,58 @@
 import Immutable = require('vendor/immutable');
 
 
-export class LangSection {
-    tokenNumber:number;
-    lineNumber:number;
-    ref:string;
-}
-
 export class TextChunk {
     className:string;
     text:string;
+    openLink:{speechPath:string};
+    closeLink:{speechPath:string};
+    continued:boolean;
+    showAudioPlayer:boolean;
 }
+
+
+export abstract class LangSection {
+    tokenNumber:number;
+    lineNumber:number;
+    ref:string;
+
+    constructor(tokenNumber:number, lineNumber:number, ref:string) {
+        this.tokenNumber = tokenNumber;
+        this.lineNumber = lineNumber;
+        this.ref = ref;
+    }
+
+    abstract getAllChunks():Immutable.List<TextChunk>;
+}
+
 
 export class KWICSection extends LangSection {
     left:Immutable.List<TextChunk>;
     kwic:Immutable.List<TextChunk>;
     right:Immutable.List<TextChunk>;
 
+    constructor(tokenNumber:number, lineNumber:number, ref:string,
+            left:Immutable.List<TextChunk>, kwic:Immutable.List<TextChunk>,
+            right:Immutable.List<TextChunk>) {
+        super(tokenNumber, lineNumber, ref);
+        this.left = left;
+        this.kwic = kwic;
+        this.right = right;
+    }
+
+    getAllChunks():Immutable.List<TextChunk> {
+        return this.left.concat(this.kwic, this.right).toList();
+    }
 
 }
 
+
 export class SentSection extends LangSection {
     items:Immutable.List<TextChunk>;
+
+    getAllChunks():Immutable.List<TextChunk> {
+        return this.items;
+    }
 }
 
 
