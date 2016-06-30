@@ -31,6 +31,8 @@ import {Line, KWICSection, TextChunk} from './line';
 export interface ServerTextChunk {
     class:string;
     str:string;
+    open_link?:{speech_path:string};
+    close_link?:{speech_path:string};
 }
 
 export interface SingleCorpServerLineData {

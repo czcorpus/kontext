@@ -107,6 +107,34 @@ export function init(dispatcher, mixins, lineStore) {
             return ans.join(' ');
         },
 
+        _renderTextKwicMode : function (corpname, corpusOutput, kwicActionArgs) {
+            return [
+                <td key="lc" className={this._exportTextElmClass(corpname, 'lc')}>
+                    {corpusOutput.left.map(this._renderLeftChunk)}
+                </td>,
+                <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
+                        data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                    {corpusOutput.kwic.map((item, i) => {
+                        return <strong key={'k:' + String(i)} className={item.className}>{item.text}</strong>;
+                    })}
+                </td>,
+                <td key="rc" className={this._exportTextElmClass(corpname, 'rc')}>
+                    {corpusOutput.right.map(this._renderRightChunk)}
+                </td>
+            ];
+        },
+
+        _renderTextParMode : function (corpname, corpusOutput, kwicActionArgs) {
+            return [
+                <td key="par" className={this._exportTextElmClass(corpname, 'par')}
+                        data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
+                    {corpusOutput.left.map(this._renderLeftChunk)}
+                    {corpusOutput.kwic.map((item, i) => this._renderKwicChunk(item, i, hasKwic))}
+                    {corpusOutput.right.map(this._renderRightChunk)}
+                </td>
+            ]
+        },
+
         _renderText : function (corpusOutput, corpusIdx) {
             let corpname = this.props.cols[corpusIdx].n;
             let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
@@ -124,28 +152,10 @@ export function init(dispatcher, mixins, lineStore) {
                 </td>
             ];
             if (this.props.viewMode === 'kwic') {
-                ans = ans.concat([
-                    <td key="lc" className={this._exportTextElmClass(corpname, 'lc')}>
-                        {corpusOutput.left.map(this._renderLeftChunk)}
-                    </td>,
-                    <td key="kw" className={this._exportTextElmClass(corpname, 'kw')} data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
-                        {corpusOutput.kwic.map((item, i) => {
-                            return <strong key={'k:' + String(i)} className={item.className}>{item.text}</strong>;
-                        })}
-                    </td>,
-                    <td key="rc" className={this._exportTextElmClass(corpname, 'rc')}>
-                        {corpusOutput.right.map(this._renderRightChunk)}
-                    </td>
-                ]);
+                ans = ans.concat(this._renderTextKwicMode(corpname, corpusOutput, kwicActionArgs));
 
             } else {
-                ans.push(
-                    <td key="par" className={this._exportTextElmClass(corpname, 'par')} data-action={this.createActionLink('widectx')} data-params={kwicActionArgs}>
-                        {corpusOutput.left.map(this._renderLeftChunk)}
-                        {corpusOutput.kwic.map((item, i) => this._renderKwicChunk(item, i, hasKwic))}
-                        {corpusOutput.right.map(this._renderRightChunk)}
-                    </td>
-                );
+                ans = ans.concat(this._renderTextParMode(corpname, corpusOutput, kwicActionArgs));
             }
             return ans;
         },
