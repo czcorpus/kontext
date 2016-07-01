@@ -13,7 +13,7 @@
 ;(function(f) {
   // CommonJS
   if (typeof exports === "object" && typeof module !== "undefined") {
-    module.exports = f(require('react'));
+    module.exports = f(require('vendor/react'));
 
   // RequireJS
   } else if (typeof define === "function" && define.amd) {
