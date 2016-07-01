@@ -70,24 +70,32 @@ def tokens2strclass(tokens):
             for i in range(0, len(tokens), 2)]
 
 
+class Pagination(object):
+    first_page = 1
+    prev_page = None
+    next_page = None
+    last_page = None
+
+    def export(self):
+        return dict(firstPage=self.first_page, prevPage=self.prev_page,
+                    nextPage=self.next_page, lastPage=self.last_page)
+
+
 class KwicPageData(FixedDict):
     """
     Defines data required to render a KWIC page
     """
     Lines = None
     GroupNumbers = None
-    prevlink = None
-    firstlink = None
     fromp = None
     numofpages = None
     Page = None
-    nextlink = None
-    lastlink = None
+    pagination = None
     concsize = None
     result_arf = None
     result_relative_freq = None
-    CollCorps = ()
-    Par_conc_corpnames = ()
+    KWICCorps = ()
+    CorporaColumns = ()
 
 
 class Kwic(object):
@@ -141,26 +149,30 @@ class Kwic(object):
             fromp = 1
 
         out = KwicPageData()
+        pagination = Pagination()
         out.Lines = self.kwiclines(speech_attr, (fromp - 1) * pagesize + line_offset,
                                    fromp * pagesize + line_offset, leftctx, rightctx, attrs, ctxattrs,
                                    refs, structs, labelmap, righttoleft, alignlist)
 
         self.add_aligns(out, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
                         leftctx, rightctx, attrs, ctxattrs, refs, structs, labelmap, righttoleft, alignlist)
+        if len(out.CorporaColumns) == 0:
+            out.CorporaColumns = [dict(n=self.corpus.corpname, label=self.corpus.get_conf('NAME'))]
+            out.KWICCorps = [self.corpus.corpname]
 
         if labelmap:
             out['GroupNumbers'] = format_labelmap(labelmap)
         if fromp > 1:
-            out.prevlink = 'fromp=%i' % (fromp - 1)
-            out.firstlink = 'fromp=1'
+            pagination.prev_page = fromp - 1
+            pagination.first_page = 1
         if self.conc.size() > pagesize:
             out.fromp = fromp
             out.numofpages = numofpages = (self.conc.size() - 1) / pagesize + 1
             if numofpages < 30:
                 out.Page = [{'page': x} for x in range(1, numofpages + 1)]
             if fromp < numofpages:
-                out.nextlink = 'fromp=%i' % (fromp + 1)
-                out.lastlink = 'fromp=%i' % numofpages
+                pagination.next_page = fromp + 1
+                pagination.last_page = numofpages
         out.concsize = self.conc.size()
 
         if type(self.corpus) == manatee.SubCorpus:
@@ -179,6 +191,7 @@ class Kwic(object):
             for line, part in itertools.product(out.Lines, ('Kwic', 'Left', 'Right')):
                 for item in line[part]:
                     item['str'] = item['str'].replace('===NONE===', '')
+        out.pagination = pagination.export()
         return dict(out)
 
     def add_aligns(self, result, fromline, toline, leftctx='40#', rightctx='40#',
@@ -204,10 +217,11 @@ class Kwic(object):
         al_lines = []
         corps_with_colls = manatee.StrVector()
         self.conc.get_aligned(corps_with_colls)
-        result.CollCorps = corps_with_colls
-        result.Par_conc_corpnames = [dict(n=c.get_conffile(),
-                                          label=c.get_conf('NAME') or c.get_conffile())
-                                     for c in [self.conc.orig_corp] + alignlist]
+        result.KWICCorps = [c for c in corps_with_colls]
+        if self.corpus.corpname not in result.KWICCorps:
+            result.KWICCorps = [self.corpus.corpname] + result.KWICCorps
+        result.CorporaColumns = [dict(n=c.get_conffile(), label=c.get_conf('NAME') or c.get_conffile())
+                                 for c in [self.conc.orig_corp] + alignlist]
         for al_corp in alignlist:
             al_corpname = al_corp.get_conffile()
             if al_corpname in corps_with_colls:
@@ -303,7 +317,6 @@ class Kwic(object):
         fragment_separator = '<%s' % speech_struct_str
         last_fragment = None
         last_speech_id = prev_speech_id
-        create_speech_path = lambda sp_id: urllib.urlencode({'corpname': self.corpus_fullname, 'chunk': sp_id})
 
         for item in line:
             item['str'] = self.import_string(item['str'])
@@ -320,9 +333,9 @@ class Kwic(object):
                     'class': item['class']
                 }
                 if frag_ext.startswith(fragment_separator):
-                    newline_item['open_link'] = {'speech_path': create_speech_path(speech_id)}
+                    newline_item['open_link'] = {'speech_path': speech_id}
                 elif frag_ext.endswith('</%s>' % speech_struct_str):
-                    newline_item['close_link'] = {'speech_path': create_speech_path(speech_id)}
+                    newline_item['close_link'] = {'speech_path': speech_id}
                 newline.append(newline_item)
                 last_fragment = newline_item
         # we have to treat specific situations related to the end of the

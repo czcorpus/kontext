@@ -19,13 +19,14 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
+/// <reference path="../../ts/declarations/rsvp.d.ts" />
 
 import documentModule = require('./document');
 import queryInput = require('../queryInput');
 import queryStorage = require('plugins/queryStorage/init');
 import liveAttributes = require('plugins/liveAttributes/init');
-import initActions = require('../initActions');
 import textTypesStore = require('../stores/textTypes/attrValues');
+import RSVP = require('vendor/rsvp');
 import {init as ttViewsInit} from 'views/textTypes';
 import {init as contextViewsInit} from 'views/query/context';
 
@@ -131,26 +132,36 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
 export function init(conf:Kontext.Conf) {
 
     let layoutModel = new documentModule.PageModel(conf);
-    let promises:initActions.InitActions = layoutModel.init();
-    let corpusSetupHandler = new CorpusSetupHandler(layoutModel);
-    let extendedApi = queryInput.extendedApi(layoutModel, corpusSetupHandler);
+    let queryFormTweaks;
+    layoutModel.init().then(() => {
+            let corpusSetupHandler = new CorpusSetupHandler(layoutModel);
+            let extendedApi = queryInput.extendedApi(layoutModel, corpusSetupHandler);
 
-
-    let queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi,
-            layoutModel.userSettings, $('#mainform').get(0));
-
-    promises.add({
-        bindQueryFieldsetsEvents : queryFormTweaks.bindQueryFieldsetsEvents(),
-        bindBeforeSubmitActions : queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
-        updateToggleableFieldsets : queryFormTweaks.updateToggleableFieldsets(),
-        textareaSubmitOverride : queryFormTweaks.textareaSubmitOverride(),
-        textareaHints : queryFormTweaks.textareaHints(),
-        initQuerySwitching : queryFormTweaks.initQuerySwitching(),
-        fixFormSubmit : queryFormTweaks.fixFormSubmit(),
-        bindQueryHelpers: queryFormTweaks.bindQueryHelpers(),
-        queryStorage : queryStorage.create(extendedApi),
-        ttViews: corpusSetupHandler.createTTViews()
-    });
-
-    layoutModel.registerPlugin('queryStorage', promises.get<Kontext.Plugin>('queryStorage'));
+            queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi,
+                    layoutModel.userSettings, $('#mainform').get(0));
+            queryFormTweaks.bindQueryFieldsetsEvents();
+            queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
+            queryFormTweaks.updateToggleableFieldsets(),
+            queryFormTweaks.textareaSubmitOverride(),
+            queryFormTweaks.textareaHints(),
+            queryFormTweaks.initQuerySwitching(),
+            queryFormTweaks.fixFormSubmit(),
+            queryFormTweaks.bindQueryHelpers(),
+            corpusSetupHandler.createTTViews();
+            return queryStorage.create(extendedApi);
+    }).then(
+        (plugin) => {
+            queryFormTweaks.bindQueryStorageDetach(plugin.detach.bind(plugin));
+            queryFormTweaks.bindQueryStorageReset(plugin.reset.bind(plugin));
+            let prom = new RSVP.Promise<Kontext.Plugin>(
+                (resolve:(v:any)=>void, reject:(e:any)=>void) => {
+                    resolve(plugin);
+                }
+            );
+            return prom;
+        },
+        (err) => {
+            layoutModel.showMessage('error', err);
+        }
+    );
 }

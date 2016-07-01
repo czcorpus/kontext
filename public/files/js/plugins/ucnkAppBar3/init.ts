@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,36 +26,43 @@
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');
 import toolbar = require('plugins/applicationBar/toolbar');
+import {PageModel} from '../../tpl/document';
+import {SimplePageStore} from '../../util';
 
-/**
- *
- */
-export class AppBar implements Kontext.Plugin {
 
-    pluginApi:Kontext.PluginApi;
+export class AppBarStore extends SimplePageStore {
 
-    constructor(pluginApi:Kontext.PluginApi) {
-        this.pluginApi = pluginApi;
+    private layoutModel:PageModel;
+
+    constructor(dispatcher:Dispatcher.Dispatcher<any>) {
+        super(dispatcher);
+        let self = this;
+
+        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+            switch (payload.actionType) {
+                case 'USER_SHOW_LOGIN_DIALOG':
+                    toolbar.openLoginDialog();
+                    break;
+            }
+        });
+    }
+}
+
+export class AppBarPlugin implements Kontext.Plugin {
+
+    private store:AppBarStore;
+
+    constructor(store:AppBarStore) {
+        this.store = store;
     }
 
-    init(): void {
-    }
-
-    openLoginDialog():void {
-        toolbar.openLoginDialog();
-    }
+    init(api:Kontext.PluginApi):void {}
 }
 
 export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
     return new RSVP.Promise((resolve:(ans:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
-       var appBar = new AppBar(pluginApi);
-        if ($('.appbar-loading-msg').data('reload-toolbar') == 1) {
-            pluginApi.registerInitCallback({plugin: 'applicationBar', method: 'toolbarReloader'});
-
-        } else {
-            appBar.init();
-        }
-        resolve(appBar);
+        let appBarStore = new AppBarStore(pluginApi.dispatcher());
+        resolve(new AppBarPlugin(appBarStore));
     });
 }
 

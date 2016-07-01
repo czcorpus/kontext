@@ -40,6 +40,14 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
     conf.concLineMaxGroupNum = $conc_line_max_group_num;
+    conf.WideCtxGlobals = #filter $Jsonize#$widectx_globals#end filter#;
+    conf.CorporaColumns = #filter $Jsonize#${CorporaColumns}#end filter#;
+    conf.KWICCorps = #filter $Jsonize#$KWICCorps#end filter#;
+    conf.ViewMode = '${viewmode}';
+    conf.ShowLineNumbers = #if $line_numbers#true#else#false#end if#;
+    conf.Pagination = #filter $Jsonize#$pagination#end filter#;
+    conf.FromPage = #if $fromp#$fromp#else#0#end if#;
+    conf.Lines = #filter $Jsonize#$Lines#end filter#;
     var model = pageSelf.init(conf);
 
     #if not $finished and $async and $save and not $sampled_size
@@ -51,117 +59,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     model.reloadHits(conf);
     #end if
 });
-#end def
-
-
-#def align_heading($viewmode, $KWICCorps)
-#if $getVar('Par_conc_corpnames', [])
-<tr>
-    <td></td>  ## matches selection checkbox
-    #for $i, $c in enumerate($Par_conc_corpnames)
-    <td class="concordance-col-heading" colspan="2" #if $viewmode == 'kwic' and $c.n in $KWICCorps# colspan="3" align="center" #end if#>
-    #if $c.n in $KWICCorps
-    <a class="select-primary-lang" href="view?$join_params($q, $Globals.update('maincorp', $c.n).update('viewmode', 'align'), 'q=x-' + $c.n)" title="$_('Click to make the language primary')"><b>$c.label</b></a>
-    #else
-    <a class="select-primary-lang" href="filter_form?$join_params($q, $globals, 'maincorp=' + $c.n, 'within=1')" title="$_('Click to make the language primary')"><b>$c.label</b></a>
-    #end if
-    </td>
-    #end for
-</tr>
-#end if
-#end def
-
-#def display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $longcorpname)
-  #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
-    <td class="lc #if $basecorpname == $maincorp#maincorp#end if#" >
-  #else
-    <td class="par #if $basecorpname == $maincorp#maincorp#end if#">
-  #end if
-
-  #set $closed_segment = None
-  #for $ll in $l.Left
-    #if $ll.has_key('open_link')
-        #if $closed_segment and $closed_segment != $ll.open_link.speech_path# <a class="speech-link" href="${root_url}audio?$closed_segment&$ll.open_link.speech_path">+</a> #end if#
-        #set $closed_segment = None
-    <a href="${root_url}audio?$ll.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[#if $ll.open_link.has_key('continued') #&hellip;#end if #</a>
-    #end if
-
-    #if $ll.has_key('class') and $ll.class
-      <i class='$ll.class'>
-    #end if
-    $ll.str
-    #if $ll.has_key('class') and $ll.class
-      </i>
-    #end if
-    #if $ll.has_key('close_link')
-       #set $closed_segment = $ll.close_link.speech_path
-    <a href="${root_url}audio?$ll.close_link.speech_path" class="speech-link" title="$_("Click to play audio")">]</a>
-    #end if
-
-  #end for
-  #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
-    </td>
-    <td class="kw #if $basecorpname == $maincorp#maincorp#end if#"
-        data-action="widectx" data-params="$join_params('pos='+$str($l.toknum),
-        'hitlen='+$str($l.hitlen), 'corpname='+$longcorpname, $widectx_globals)">
-  #else
-    #if not $l.Kwic
-    <i class="note">$_('<--not translated-->')</i>
-    #end if
-    <span class="no-kwic-text" data-action="widectx" data-params="$join_params('pos='+$str($l.toknum),
-        'hitlen='+$str($l.hitlen), 'corpname='+$longcorpname, $widectx_globals)">
-  #end if
-  #for $k in $l.Kwic
-
-    ## opening audio bracket for KWIC
-    #if $k.has_key('open_link')
-        #if $closed_segment and $closed_segment != $k.open_link.speech_path# <a class="speech-link" href="${root_url}audio?$closed_segment&$k.open_link.speech_path">+</a> #end if#
-        #set $closed_segment = None
-    <a href="${root_url}audio?$k.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[#if $k.open_link.has_key('continued') #&hellip;#end if #</a>
-    #end if
-
-    #if $k.get('class', '') and $basecorpname in $KWICCorps
-      <b class='$k.class'>
-    #end if
-    $k.str
-    #if $k.has_key('class') and $k.class
-      </b>
-    #end if
-
-    ## closing audio breacket for KWIC
-    #if $k.has_key('close_link')
-       #set $closed_segment = $k.close_link.speech_path
-    <a href="${root_url}audio?$k.close_link.speech_path" class="speech-link" title="$_("Click to play audio")">]</a>
-    #end if
-
-  #end for
-  #if $viewmode == 'kwic' and $basecorpname in $KWICCorps
-    </td>
-    <td class="rc #if $basecorpname == $maincorp#maincorp#end if#">
-  #else
-    </span>
-  #end if
-
-  #set $closed_segment = None
-  #for $rr in $l.Right
-    #if $rr.has_key('open_link')
-        #if $closed_segment and $closed_segment != $rr.open_link.speech_path# <a class="speech-link" href="${root_url}audio?$closed_segment&$rr.open_link.speech_path">+</a> #end if#
-        #set $closed_segment = None
-    <a href="${root_url}audio?$rr.open_link.speech_path" class="speech-link" title="$_("Click to play audio")">[</a>
-    #end if
-    #if $rr.has_key('class') and $rr.class
-      <i class='$rr.class'>
-    #end if
-    $rr.str
-    #if $rr.has_key('class') and $rr.class
-      </i>
-    #end if
-    #if $rr.has_key('close_link')
-    <a href="${root_url}audio?$rr.close_link.speech_path" class="speech-link" title="$_("Click to play audio")">]</a>
-    #set $closed_segment = $rr.close_link.speech_path
-    #end if
-  #end for
-  </td>
 #end def
 
 
@@ -241,12 +138,12 @@ $query_overview_bar()
         #if $numofpages
             <div class="bonito-pagination">
             <form action="view" id="$navid">
-            #if $prevlink
-                <div class="bonito-pagination-left">
-                <a href="view?$join_params($q, $firstlink, $globals)"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
-                <a href="view?$join_params($q, $prevlink, $globals)"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
-                </div>
-            #end if
+
+
+            <div class="bonito-pagination-left #unless $pagination.prevPage#hidden#end unless#">
+            <a data-action="firstPage"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
+            <a data-action="prevPage"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
+            </div>
 
             <div class="bonito-pagination-core">
               #filter None
@@ -256,14 +153,10 @@ $query_overview_bar()
               / <span class="numofpages" title="$numofpages">$format_number($numofpages, mask='%d')</span>
             </div>
 
-            #if $nextlink
-                <div class="bonito-pagination-right">
-                <a href="view?$join_params($q, $nextlink, $globals)" id="$nextid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
-                <a id="lastpage" href="view?$join_params($q, $lastlink, $globals)"><img class="over-img" src="${files_path}/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="${files_path}/img/last-page_s.svg" /></a>
-                </div>
-            #else
-                <a id="$nextid"></a>
-            #end if
+            <div class="bonito-pagination-right #unless $pagination.nextPage#hidden#end unless#">
+            <a data-action="nextPage" id="$nextid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
+            <a data-action="lastPage" id="lastpage"><img class="over-img" src="${files_path}/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="${files_path}/img/last-page_s.svg" /></a>
+            </div>
 
             #if $Sort_idx
                 <div class="jump-to">
@@ -286,51 +179,8 @@ $query_overview_bar()
     </div>
 
     ## concordance lines
-    #set $basecorpname = $corpname.split('/')[-1]
-    #set $cpath = ('/' in $corpname) and ($corpname.rsplit('/', 1)[-2] + '/') or ''
-    #if $len($CollCorps) == 0:
-        #set $KWICCorps = list([$basecorpname])
-    #else
-        #set $KWICCorps = list($CollCorps)
-    #end if
     <div id="conclines-wrapper">
-        #if $len($Lines) > 0
-
-        <table id="conclines">
-            #filter None
-            $align_heading($viewmode, $KWICCorps)
-            #end filter
-
-            #for $i, $l in $enumerate($Lines)
-            <tr data-toknum="$l.toknum" data-linegroup="$l.linegroup">
-                <td class="line-num">#if $line_numbers#$($int($l.linenum) + 1)#end if#</td>
-                <td class="manual-selection">
-                    <input type="checkbox" value="1" data-linenum="$l.linenum" data-position="$l.toknum"
-                           data-kwiclen="$l.kwiclen" />
-                </td>
-                <td class="syntax-tree">
-                </td>
-                <td class="ref" data-action="fullref" data-params="pos=$l.toknum&corpname=$corpname" title="$l.ref">
-                    $l.ref
-                </td>
-
-                #filter None
-                    $display_conc_line($l, $basecorpname, $viewmode, $KWICCorps, $corpname)
-
-                    #for $ii,$ll in $enumerate($l.get('Align', [])) ## aligned lines
-                        #set $bcname = $Par_conc_corpnames[$ii+1].n
-                        #if $ll.ref
-                        <td class="ref" data-action="fullref" data-params="pos=$ll.toknum&corpname=$Par_conc_corpnames[$ii+1].n">$ll.ref</td>
-                        #else
-                        <td></td>
-                        #end if
-                        $display_conc_line($ll, $bcname, $viewmode, $KWICCorps, $cpath+$bcname)
-                    #end for
-                #end filter
-            </tr>
-            #end for
-        </table>
-        #end if
+        <img class="loader-anim" src="${files_path}/img/ajax-loader.gif" alt="$_('Loading...')" />
     </div>
 
     <div id="conc-bottom-bar">

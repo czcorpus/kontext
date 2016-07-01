@@ -146,9 +146,28 @@ declare module "SoundManager" {
         wmode?:string;
     }
 
+    export interface InstantPlayConfig extends SoundManagerConfig {
+        id:string;
+        autoLoad:boolean;
+        autoPlay:boolean;
+        volume:number;
+        onload:(succ:boolean)=>void;
+        onplay:()=>void;
+        onfinish:()=>void;
+        onerror:(e)=>void;
+    }
+
+    export interface Sound {
+        play():void;
+    }
 
     export interface SoundManager {
        setup(conf:SoundManagerConfig):void;
+       createSound(conf:InstantPlayConfig):Sound;
+       destroySound(playSessionId:string):void;
+       stop(playSessionId:string):void;
+       play(playSessionId:string):void;
+       pause(playSessionId:string):void;
     }
 
     export interface GetInstance {

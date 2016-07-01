@@ -24,12 +24,14 @@
 /// <reference path="../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../ts/declarations/rsvp.d.ts" />
 
 // -- dynamic loading of custom plug-in implementation
 /// <amd-dependency path="plugins/corparch/init" name="corplistComponent" />
 /// <amd-dependency path="plugins/subcmixer/init" name="subcmixer" />
 
 import $ = require('jquery');
+import RSVP = require('vendor/rsvp');
 import document = require('./document');
 import popupBox = require('popupbox');
 import {init as subcorpViewsInit} from 'views/subcorpForm';
@@ -244,11 +246,16 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
         let getStoredAlignedCorp = () => {
             return this.layoutModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
         }
-        this.layoutModel.init().add({
-            initSubcCreationVariantSwitch: this.initSubcCreationVariantSwitch(),
-            sizeUnitsSafeSwitch: this.sizeUnitsSafeSwitch(),
-            initHints: this.initHints()
-        });
+        this.layoutModel.init().then(
+            () => {
+                this.initSubcCreationVariantSwitch();
+                this.sizeUnitsSafeSwitch();
+                this.initHints();
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
         this.createTextTypesComponents();
     }
 }

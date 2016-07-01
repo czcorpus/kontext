@@ -20,12 +20,10 @@
 
 declare module "detail" {
 
-    export function showDetail(eventTarget:any, url:any, params:any, layoutModel:any, callback:any);
+    export function showDetail(url:any, params:any, layoutModel:any, onSuccess:any, onClose:any, onError:any);
 
-    export function showRefDetail(eventTarget:any, url:any, params:any, callback:any, layoutModel:any);
+    export function showRefDetail(url:any, params:any, layoutModel:any, onSuccess:any, onClose:any, onError:any);
 
     export function closeDetail():void;
-
-    export function openSpeech(arg:any):void;
 
 }

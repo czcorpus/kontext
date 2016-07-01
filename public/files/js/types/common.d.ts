@@ -74,7 +74,7 @@ declare module Kontext {
     export type InitCallback = InitCallbackObject|(()=>void);
 
     /**
-     * An interface used by KonText plug-ins                    ident: ite
+     * An interface used by KonText plug-ins
      */
     export interface PluginApi {
         getConf<T>(key:string):T;
@@ -90,8 +90,6 @@ declare module Kontext {
         formatDate(d:Date):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
-        registerInitCallback(fn:InitCallback):void;
-        registerInitCallback(fn:()=>void):void;
         userIsAnonymous():boolean;
         contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
@@ -102,7 +100,6 @@ declare module Kontext {
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
         getViews():Kontext.LayoutViews;
-        getPlugin<T extends Kontext.Plugin>(name:string):T;
         getUserSettings():Kontext.IUserSettings;
         hasPlugin(name:string):boolean;
     }
@@ -156,14 +153,6 @@ declare module Kontext {
      */
     export interface Plugin {
         init(api:PluginApi):void;
-    }
-
-
-    /**
-     *
-     */
-    export interface PluginProvider {
-        getPlugin(name:string):Plugin;
     }
 
     /**
@@ -276,7 +265,6 @@ declare module Kontext {
     export interface AsyncTaskOnUpdate {
         (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
     }
-
 }
 
 

@@ -12,7 +12,7 @@
 
 import urllib
 import json
-import copy
+from collections import defaultdict
 
 import werkzeug.urls
 
@@ -20,19 +20,24 @@ import werkzeug.urls
 class StateGlobals(object):
     """
     A simple wrapper for $Globals template variable. Unfortunately,
-    current code (which comes from Bonito2 operates with $globals
-    (see the difference: [g]lobals vs. [G]lobals) which is an escaped,
-    hard to update string.
+    current KonText code (which comes from Bonito2) operates mostly
+    with a different value: $globals (see the difference: [g]lobals vs. [G]lobals)
+    which is just an escaped, hard to update string.
+
+    StateGlobals acts as a multi-value dictionary.
 
     This object should replace $globals in the future because it
     allows easier updates: $Globals.update('corpname', 'bar').to_s()
     """
     def __init__(self, data):
-        self._data = {}
-        if type(data) is dict:
+        self._data = defaultdict(lambda: [])
+        if isinstance(data, defaultdict):
             self._data = data
+        elif type(data) is dict:
+            self._data.update(data)
         else:
-            self._data = dict(data)
+            for item in data:
+                self._data[item[0]].append(item[1])
 
     def __iter__(self):
         return iter(self._data)
@@ -40,11 +45,23 @@ class StateGlobals(object):
     def items(self):
         return self._data.items()
 
-    def to_s(self):
-        return urllib.urlencode(self._data)
+    def export(self):
+        ans = []
+        for k, v in self._data.items():
+            for item in v:
+                ans.append((k, item))
+        return ans
 
     def to_json(self):
-        return json.dumps(self._data)
+        """
+        Export data as a JSON string. The format is
+        [[k1, v1_1], [k1, v1_2],..., [kn, vn_m]]
+        (i.e. no dictionary to preserve multi-value items)
+        """
+        return json.dumps(self.export())
+
+    def _copy_data(self):
+        return [(k, v[:]) for k, v in self._data.items()]
 
     def update(self, *args):
         """
@@ -58,12 +75,21 @@ class StateGlobals(object):
         returns:
         updated copy of the called object
         """
-        new_data = copy.deepcopy(self._data)
+        new_data = defaultdict(lambda: [])
+        for k, v in self._copy_data():
+            new_data[k] = v
         if type(args[0]) is dict:
-            new_data.update(args[0])
+            for k, v in args[0].items():
+                new_data[k].append(v)
         elif len(args) == 2:
-            new_data[args[0]] = args[1]
+            new_data[args[0]].append(args[1])
         return StateGlobals(data=new_data)
+
+    def set(self, k, v):
+        if hasattr(v, '__iter__'):
+            self._data[k] = v
+        else:
+            self._data[k] = [v]
 
 
 def update_params(params, key, value):
@@ -88,7 +114,7 @@ def join_params(*args):
         if a is None:
             continue
         if isinstance(a, StateGlobals):
-            a = [(k, v) for k, v in a.items()]
+            a = [(k, v) for k, v in a.export()]
         if type(a) in (tuple, list, dict):
             if type(a) is dict:
                 a = a.items()

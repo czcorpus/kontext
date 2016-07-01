@@ -30,6 +30,7 @@
 /// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
 /// <reference path="../../ts/declarations/detail.d.ts" />
 /// <reference path="../types/views.d.ts" />
+/// <reference path="../../ts/declarations/rsvp.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -39,13 +40,15 @@ import detail = require('detail');
 import popupBox = require('popupbox');
 import conclines = require('../conclines');
 import {init as lineSelViewsInit} from 'views/concordance/lineSelection';
+import {init as linesViewInit} from 'views/concordance/lines';
 import lineSelStores = require('../stores/concordance/lineSelection');
+import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination} from '../stores/concordance/lines';
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
 import userSettings = require('../userSettings');
-import initActions = require('../initActions');
 import applicationBar = require('plugins/applicationBar/init');
+import RSVP = require('vendor/rsvp');
 declare var Modernizr:Modernizr.ModernizrStatic;
 declare var jqueryPeriodic:any;
 
@@ -110,17 +113,23 @@ export class ViewPage {
 
     private lineSelectionStore:lineSelStores.LineSelectionStore;
 
+    private lineViewStore:ConcLineStore;
+
     private hasLockedGroups:boolean;
 
-    private views:any; // TODO
+    private lineSelViews:any; // TODO
+
+    private lineViews:any; // TODO
 
     private touchHandler:TouchHandler;
 
-    constructor(layoutModel:documentModule.PageModel, views:any, lineSelectionStore:lineSelStores.LineSelectionStore,
-            hasLockedGroups:boolean) {
+    constructor(layoutModel:documentModule.PageModel, lineSelViews:any, lineSelectionStore:lineSelStores.LineSelectionStore,
+            lineViews:any, lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.views = views;
+        this.lineSelViews = lineSelViews;
         this.lineSelectionStore = lineSelectionStore;
+        this.lineViews = lineViews;
+        this.lineViewStore = lineViewStore;
         this.hasLockedGroups = hasLockedGroups;
         this.touchHandler = new TouchHandler();
     }
@@ -376,7 +385,7 @@ export class ViewPage {
                     box.close();
                 });
                 self.layoutModel.renderReactComponent(
-                    self.views.LockedLineGroupsMenu,
+                    self.lineSelViews.LockedLineGroupsMenu,
                     box.getRootElement(),
                     {
                         doneCallback: () => {
@@ -404,7 +413,7 @@ export class ViewPage {
                     box.close();
                 });
                 self.layoutModel.renderReactComponent(
-                    self.views.LineSelectionMenu,
+                    self.lineSelViews.LineSelectionMenu,
                     box.getRootElement(),
                     {
                         doneCallback: finalize.bind(self.layoutModel)
@@ -614,7 +623,10 @@ export class ViewPage {
                 onShow: function () {
                     $(this.getRootElement()).find('a.fast-login').on('click', (evt:JQueryEventObject) => {
                         $(evt.target).attr('href', null);
-                        self.layoutModel.getPlugin<applicationBar.Toolbar>('applicationBar').openLoginDialog();
+                        self.layoutModel.dispatcher.dispatch({
+                            actionType: 'USER_SHOW_LOGIN_DIALOG',
+                            props: {}
+                        });
                         evt.preventDefault();
                     });
                 }
@@ -660,54 +672,122 @@ export class ViewPage {
     /**
      * @todo refactor this
      */
-    private misc():void {
+    private setupLineActions():void {
         let self = this;
 
         $('#groupmenu').attr('corpname', this.layoutModel.getConf<string>('corpname'));
         $('#groupmenu').attr('queryparams', this.layoutModel.getConf<string>('q'));
 
-        $('td.kw b,td.par b,td.coll b,td.par span.no-kwic-text').bind('click', function (event) {
-            let jqRealTarget = null;
+        let paginationHandler = (elm) => {
+            this.layoutModel.dispatcher.dispatch({
+                actionType: 'CONCORDANCE_CHANGE_PAGE',
+                props: {
+                    action: $(elm.currentTarget).data('action')
+                }
+            });
+        };
 
-            if ($(event.target).data('action')) {
-                jqRealTarget = $(event.target);
+        let changeListener = (store:any, action) => {
+            let currentPage = store.getCurrentPage();
+            let pagination:ServerPagination = store.getPagination();
 
-            } else if ($(event.target).parent().data('action')) {
-                jqRealTarget = $(event.target).parent();
+            function updateNavigForm(elm:HTMLElement) {
+                $(elm).find('.bonito-pagination-core input[name="fromp"]').val(currentPage);
+                if (currentPage > 1) {
+                    $(elm).find('.bonito-pagination-left').removeClass('hidden');
+
+                } else {
+                    $(elm).find('.bonito-pagination-left').addClass('hidden');
+                }
+                if (currentPage < pagination.lastPage) {
+                    $(elm).find('.bonito-pagination-right').removeClass('hidden');
+
+                } else {
+                    $(elm).find('.bonito-pagination-right').addClass('hidden');
+                }
             }
 
-            detail.showDetail(
-                event.currentTarget,
-                jqRealTarget.data('action'),
-                jqRealTarget.data('params'),
-                self.layoutModel,
-                self.viewDetailDoneCallback.bind(self)
-            );
-            event.stopPropagation();
-        });
+            updateNavigForm(window.document.getElementById('navigation_form'));
+            updateNavigForm(window.document.getElementById('navigation_form2'));
 
-        $('td.ref').bind('click', function (event) {
-            $(event.target).closest('tr').addClass('active');
+            this.initLineSelection();
+            syntaxViewer.create(this.layoutModel.pluginApi());
+        };
+
+        this.lineViewStore.addChangeListener(changeListener);
+
+        if (Modernizr.history) {
+            // register event to load lines via ajax in case user hits back
+            window.onpopstate = (event) => {
+                if (event.state && event.state['pagination']) {
+                    this.layoutModel.dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_REVISIT_PAGE',
+                        props: {
+                            action: 'customPage',
+                            pageNum: event.state['pageNum']
+                        }
+                    })
+                }
+            }
+        }
+
+        this.lineViewStore.bindExternalRefsDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
             detail.showRefDetail(
-                event.target,
-                $(event.target).data('action'),
-                $(event.target).data('params'),
-                function (jqXHR, textStatus, errorThrown) {
-                    self.layoutModel.showMessage('error', errorThrown);
+                this.layoutModel.createActionUrl('fullref'),
+                {corpname: corpusId, pos: tokenNum},
+                this.layoutModel,
+                () => {
+                    // TODO
+                    // here we're doing a dirty hack to glue
+                    // the old code in detail.js with newer Flux store
+                    this.lineViewStore.setLineFocus(lineIdx, true);
+                    this.lineViewStore.notifyChangeListeners();
                 },
-                self.layoutModel
+                () => {
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    // TODO dtto
+                },
+                (jqXHR, textStatus, error) => {
+                    // TODO dtto
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    self.layoutModel.showMessage('error', error);
+                }
             );
-            event.stopPropagation();
         });
 
-        $('a.speech-link').each(function () {
-            $(this).bind('click', function (event) {
-                detail.openSpeech(this);
-                event.stopPropagation();
-                event.preventDefault();
-                return false;
-            });
+        this.lineViewStore.bindExternalKwicDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
+            let args = this.layoutModel.getConcArgs().toDict();
+            args['corpname'] = corpusId; // just for sure (is should be already in args)
+            args['pos'] = String(tokenNum);
+            detail.showDetail(
+                this.layoutModel.createActionUrl('widectx'),
+                args,
+                this.layoutModel,
+                () => {
+                    // TODO
+                    // here we're doing a dirty hack to glue
+                    // the old code in detail.js with newer Flux store
+                    this.lineViewStore.setLineFocus(lineIdx, true);
+                    this.lineViewStore.notifyChangeListeners();
+                },
+                () => {
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    // TODO dtto
+                },
+                (jqXHR, textStatus, error) => {
+                    // TODO dtto
+                    this.lineViewStore.setLineFocus(lineIdx, false);
+                    this.lineViewStore.notifyChangeListeners();
+                    self.layoutModel.showMessage('error', error);
+                }
+            );
         });
+
+        $('#navigation_form').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
+        $('#navigation_form2').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
     }
 
     private addWarnings():void {
@@ -724,36 +804,19 @@ export class ViewPage {
         );
     }
 
-    private soundManagerInit():void {
-        SoundManager.getInstance().setup({
-            url: this.layoutModel.createStaticUrl('misc/soundmanager2/'),
-            flashVersion: 9,
-            debugMode : false,
-            preferFlash : false
-        });
-    }
+    renderLines(props:ViewConfiguration):RSVP.Promise<any> {
+        let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+            props.onReady = () => resolve(null);
+            try {
+                this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
+                    window.document.getElementById('conclines-wrapper'), props);
 
-    /**
-     *
-     * @param boxInst
-     */
-    viewDetailDoneCallback(boxInst):void {
-        let self = this;
-        $('a.expand-link').each(function () {
-            $(this).one('click', function (event) {
-                detail.showDetail(
-                    event.currentTarget,
-                    $(this).data('action'),
-                    $(this).data('params'),
-                    self.layoutModel,
-                    // Expand link, when clicked, must bind the same event handler
-                    // for the new expand link. That's why this 'callback recursion' is present.
-                    self.viewDetailDoneCallback.bind(self)
-                );
-                event.preventDefault();
-            });
+            } catch (e) {
+                console.error(e.stack);
+                throw e;
+            }
         });
-        this.layoutModel.mouseOverImages(boxInst.getRootElement());
+        return ans;
     }
 
     /**
@@ -899,37 +962,79 @@ export class ViewPage {
         this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
-    init():initActions.InitActions {
-        return this.layoutModel.init().add({
-            addClearSelectionHandler : this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this)),
-            initLineSelection: this.initLineSelection(),
-            misc: this.misc(),
-            addWarnings: this.addWarnings(),
-            anonUserWarning: (() => {
+    init(lineViewProps:ViewConfiguration):void {
+        this.layoutModel.init().then(
+            () => {
+                return this.renderLines(lineViewProps);
+            }
+        ).then(
+            () => {
+                this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this));
+                this.initLineSelection();
+                this.setupLineActions();
+                this.addWarnings();
                 if (this.layoutModel.getConf('anonymousUser')) {
                     this.anonymousUserWarning();
                 }
-            })(),
-            onBeforeUnloadAsk: this.onBeforeUnloadAsk(),
-            grantPaginationPageLeave: this.grantPaginationPageLeave(),
-            soundManagerInit: this.soundManagerInit(),
-            setStateUrl: this.setStateUrl(),
-            attachIpmCalcTrigger: this.attachIpmCalcTrigger(),
-            updateLocalAlignedCorpora: this.updateLocalAlignedCorpora(),
-            syntaxViewer: syntaxViewer.create(this.layoutModel.pluginApi())
-        });
+                this.onBeforeUnloadAsk();
+                this.grantPaginationPageLeave();
+                this.setStateUrl();
+                this.attachIpmCalcTrigger();
+                this.updateLocalAlignedCorpora();
+                syntaxViewer.create(this.layoutModel.pluginApi());
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
     }
 }
 
 export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
-    let lineSelectionStore = new lineSelStores.LineSelectionStore(layoutModel,
-            layoutModel.dispatcher, conclines.openStorage(()=>{}), 'simple');
-    let views = lineSelViewsInit(layoutModel.dispatcher, layoutModel.exportMixins(),
-            lineSelectionStore, layoutModel.getStores().userInfoStore);
-
+    let lineSelectionStore = new lineSelStores.LineSelectionStore(
+            layoutModel,
+            layoutModel.dispatcher,
+            conclines.openStorage(()=>{}),
+            'simple'
+    );
+    let lineSelViews = lineSelViewsInit(
+            layoutModel.dispatcher,
+            layoutModel.exportMixins(),
+            lineSelectionStore,
+            layoutModel.getStores().userInfoStore
+    );
+    let lineViewProps:ViewConfiguration = {
+        ViewMode: layoutModel.getConf<string>('ViewMode'),
+        ShowLineNumbers: layoutModel.getConf<boolean>('ShowLineNumbers'),
+        KWICCorps: layoutModel.getConf<Array<string>>('KWICCorps'),
+        CorporaColumns: layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
+        WideCtxGlobals: layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
+        baseCorpname: layoutModel.getConf<string>('corpname'),
+        pagination: layoutModel.getConf<ServerPagination>('Pagination'),
+        currentPage: layoutModel.getConf<number>('FromPage'),
+        mainCorp: layoutModel.getConcArgs()['maincorp']
+    };
+    let lineViewStore = new ConcLineStore(
+            layoutModel,
+            layoutModel.dispatcher,
+            lineViewProps,
+            layoutModel.getConf<Array<ServerLineData>>('Lines')
+    );
+    let concLinesViews = linesViewInit(
+            layoutModel.dispatcher,
+            layoutModel.exportMixins(),
+            lineViewStore
+    );
     let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;
-    let pageModel = new ViewPage(layoutModel, views, lineSelectionStore, hasLockedGroups);
-    pageModel.init();
+    let pageModel = new ViewPage(
+            layoutModel,
+            lineSelViews,
+            lineSelectionStore,
+            concLinesViews,
+            lineViewStore,
+            hasLockedGroups
+    );
+    pageModel.init(lineViewProps);
     return pageModel;
 };

@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, popupBox, win) {
+define(['jquery', 'popupbox', 'win'], function ($, popupBox, win) {
     'use strict';
 
     var lib = {};
@@ -102,13 +102,8 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     }
 
     /**
-     * @param {HTMLElement|jQuery|string} eventTarget
-     * @param {String} url
-     * @param {{}} params
-     * @param {Function} errorCallback
-     * @param {PageModel} layoutModel
      */
-    lib.showRefDetail = function (eventTarget, url, params, errorCallback, layoutModel) {
+    lib.showRefDetail = function (url, params, layoutModel, succCallback, closeCallback, errorCallback) {
         var ajaxLoader = layoutModel.createAjaxLoader();
 
         enableAjaxLoadingNotification(ajaxLoader);
@@ -126,8 +121,6 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
                 }
-                $(eventTarget).closest('tr').addClass('active');
-                $('#conclines tr.prev-active').removeClass('prev-active');
 
                 lib.currentDetail = popupBox.open(render, null, {
                     type : 'plain',
@@ -136,12 +129,15 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     closeIcon : true,
                     timeout : null,
                     onClose : function () {
-                        $('#conclines tr.active').removeClass('active');
+                        if (typeof closeCallback === 'function' ) {
+                            closeCallback();
+                        }
                         lib.currentDetail = null;
                     }
                 });
                 leftPos = $(win).width() / 2 - lib.currentDetail.getPosition().width / 2;
                 lib.currentDetail.setCss('left', leftPos + 'px');
+                succCallback();
             },
 
             error : function (jqXHR, textStatus, errorThrown) {
@@ -172,19 +168,8 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
     }
 
     /**
-     * @param {HTMLElement|jQuery|string} eventTarget
-     * @param {String} url
-     * @param {{}} params
-     * @param layoutModel
-     * @param {Function} [callback] function called after the ajax's complete event is triggered
      */
-    lib.showDetail = function (eventTarget, url, params, layoutModel, callback) {
-
-        function errorHandler(jqXHR, textStatus, error) {
-            lib.layoutModel.showMessage('error', error);
-        }
-        var ajaxAnim = layoutModel.createAjaxLoader();
-        enableAjaxLoadingNotification(ajaxAnim);
+    lib.showDetail = function (url, params, layoutModel, onSuccess, onClose, onError) {
 
         $.ajax({
             url : url,
@@ -193,17 +178,8 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
             success: function (data) {
                 var leftPos;
 
-                disableAjaxLoadingNotification(ajaxAnim);
                 if (lib.currentDetail) {
                     lib.currentDetail.close();
-                }
-
-                if (!$(eventTarget).hasClass('expand-link')) {
-                    $('#conclines tr.prev-active').removeClass('prev-active');
-                    $(eventTarget).closest('tr').addClass('active');
-
-                } else {
-                    $('#conclines tr.prev-active').removeClass('prev-active').addClass('active');
                 }
                 lib.currentDetail = popupBox.extended(layoutModel.pluginApi()).open(data, null, {
                     type : 'plain',
@@ -212,7 +188,9 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                     closeIcon : true,
                     timeout : null,
                     onClose : function () {
-                        $('#conclines tr.active').removeClass('active').addClass('prev-active');
+                        if (typeof onClose === 'function' ) {
+                            onClose();
+                        }
                         lib.currentDetail = null;
                     },
                     onShow : function () {
@@ -226,25 +204,17 @@ define(['jquery', 'audioplayer', 'popupbox', 'win'], function ($, audioPlayer, p
                 leftPos = $(win).width() / 2 - lib.currentDetail.getPosition().width / 2;
                 lib.currentDetail.setCss('left', leftPos + 'px');
 
-                if (typeof callback === 'function') {
-                    callback(lib.currentDetail);
+                if (typeof onSuccess === 'function') {
+                    onSuccess(lib.currentDetail);
                 }
             },
 
             error : function (jqXHR, textStatus, errorThrown) {
-                disableAjaxLoadingNotification(ajaxAnim);
-                errorHandler(jqXHR, textStatus, errorThrown);
+                if (typeof onError === 'function') {
+                    onError(jqXHR, textStatus, errorThrown);
+                }
             }
         });
-    };
-
-    /**
-     *
-     * @param linkElem
-     */
-    lib.openSpeech = function (linkElem) {
-        var speechURL = $(linkElem).attr('href');
-        audioPlayer.create('audio-wrapper', linkElem, { volume : 90 }).play(speechURL);
     };
 
     return lib;

@@ -302,11 +302,10 @@ class Actions(Kontext):
                                  'leftctx=%s&rightctx=%s' % (self.args.leftctx, self.args.rightctx))
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
-        out['widectx_globals'] = self._get_attrs(WidectxArgsMapping,
-                                                 dict(structs=self._get_struct_opts()))
+        out['widectx_globals'] = self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts()))
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         out['aligned_corpora'] = self.args.sel_aligned
-        out['line_numbers'] = self.args.line_numbers
+        out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
         return out
 
     @exposed()

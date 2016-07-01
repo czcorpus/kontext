@@ -64,3 +64,13 @@ declare module "views/query/context" {
 
     export function init(dispatcher, mixins):QueryContextViews;
 }
+
+
+declare module "views/concordance/lines" {
+
+    export interface ConcLinesViews {
+        ConcLines:any;
+    }
+
+    export function init(dispatcher, mixins, lineStore):ConcLinesViews;
+}

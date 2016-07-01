@@ -22,11 +22,11 @@
 /// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp-ajax.d.ts" />
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
-/// <reference path="../../ts/declarations/immutable.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
@@ -47,7 +47,6 @@ import IntlMessageFormat = require('vendor/intl-messageformat');
 import Immutable = require('vendor/immutable');
 import asyncTask = require('../asyncTask');
 import userSettings = require('../userSettings');
-import initActions = require('../initActions');
 import menu = require('../menu');
 
 /**
@@ -93,7 +92,7 @@ function getLocalStorage():Storage {
 /**
  *
  */
-export class PageModel implements Kontext.PluginProvider {
+export class PageModel {
 
     /**
      * KonText configuration (per-page dynamic object)
@@ -127,11 +126,6 @@ export class PageModel implements Kontext.PluginProvider {
     mainMenu:menu.MainMenu;
 
     /**
-     * Results of partial page initializations.
-     */
-    initActions:initActions.InitActions;
-
-    /**
      * Local user settings
      */
     userSettings:userSettings.UserSettings;
@@ -163,10 +157,8 @@ export class PageModel implements Kontext.PluginProvider {
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
         this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
-        this.plugins = {};
         this.initCallbacks = [];
         this.mainMenu = new menu.MainMenu(this.pluginApi());
-        this.initActions = new initActions.InitActions();
         this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
@@ -261,71 +253,6 @@ export class PageModel implements Kontext.PluginProvider {
             if (newValue === '1') {
                 selectAllElm.checked = false;
             }
-        }
-    }
-
-    /**
-     * Adds a plug-in to the model. In general, it is not
-     * required to do this on a page using some plug-in but
-     * in that case it will not be possible to use plug-in
-     * related methods of document.js model.
-     *
-     * @param name
-     * @param plugin
-     */
-    registerPlugin(name:string, pluginPromise:RSVP.Promise<Kontext.Plugin>) {
-        pluginPromise.then((plugin:Kontext.Plugin) => {
-            this.plugins[name] = plugin;
-        });
-    }
-
-    /**
-     * @param name
-     */
-    getPlugin<T extends Kontext.Plugin>(name:string):T {
-        return this.plugins[name];
-    }
-
-    /**
-     * Calls a function on a registered plug-in with some additional
-     * testing of target's callability.
-     *
-     * @param {string} name
-     * @param {string} fn
-     * @param {string} [args]
-     * @return the same value as called plug-in method
-     */
-    callPlugin(name:string, fn:string, args?:any[]) {
-        if (typeof this.plugins[name] === 'object'
-            && typeof this.plugins[name][fn] === 'function') {
-            return this.plugins[name][fn].apply(this.plugins[name][fn], args);
-
-        } else {
-            throw new Error("Failed to call method " + fn + " on plug-in " + name);
-        }
-    }
-
-    /**
-     * Registers a callback called during model initialization.
-     * It can be either a function or an object specifying plug-in's function
-     * ({plugin : 'name', 'method' : 'method name', 'args' : [optional array of arguments]})
-     * @param fn
-     */
-    registerInitCallback(fn:Kontext.InitCallback):void;
-    registerInitCallback(fn:()=>void):void;
-    registerInitCallback(fn):void {
-        let self = this;
-
-        if (typeof fn === 'function') {
-            this.initCallbacks.push(fn);
-
-        } else if (typeof fn === 'object' && fn['plugin'] && fn['method']) {
-            this.initCallbacks.push(function () {
-                self.callPlugin(fn['plugin'], fn['method'], fn['args']);
-            });
-
-        } else {
-            throw new Error('Registered invalid callback');
         }
     }
 
@@ -1005,24 +932,24 @@ export class PageModel implements Kontext.PluginProvider {
      * @param params
      * @returns {string}
      */
-    encodeURLParameters(params:{[key:string]:any}):string {
+    encodeURLParameters(params:util.MultiDict):string {
         let ans = [];
-        for (let p in params) {
-            if (params.hasOwnProperty(p)) {
-                let v = params[p];
-                if (Object.prototype.toString.call(v) !== '[object Array]') {
-                    v = [v];
-                }
-                for (let i = 0; i < v.length; i += 1) {
-                    ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(v[i]));
-                }
-            }
-        }
-        return ans.join('&');
+        return params.items().map((item) => {
+            return encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]);
+        }).join('&');
     }
 
     getConf<T>(item:string):T {
         return this.conf[item];
+    }
+
+    /**
+     * Return a list of concordance arguments and their values. Multi-value keys
+     * are preserved.
+     * Output format: [[k1, v1_1], [k1, v1_2], ...., [kn, vn_1], ..., [kn, vn_m]]
+     */
+    getConcArgs():util.MultiDict {
+        return new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
     }
 
     pluginApi():PluginApi {
@@ -1048,39 +975,41 @@ export class PageModel implements Kontext.PluginProvider {
     /**
      *
      */
-    init():initActions.InitActions {
-        let self = this;
-
-        this.layoutViews = documentViewsInit(this.dispatcher, this.exportMixins(),
+    init():RSVP.Promise<any> {
+        return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+            try {
+                this.layoutViews = documentViewsInit(this.dispatcher, this.exportMixins(),
                 this.getStores());
 
-        this.userSettings.init();
+                this.userSettings.init();
+                this.bindStaticElements();
+                this.bindCorpusDescAction();
+                this.bindSubcorpusDescAction();
+                this.queryOverview();
+                this.mainMenu.init();
+                this.timeoutMessages();
+                this.mouseOverImages();
+                this.enhanceMessages();
+                this.externalHelpLinks();
+                this.initNotifications();
+                this.asyncTaskChecker.init();
 
-        this.initActions.add({
-            bindStaticElements: self.bindStaticElements(),
-            bindCorpusDescAction: self.bindCorpusDescAction(),
-            bindSubcorpusDescAction: self.bindSubcorpusDescAction(),
-            queryOverview: self.queryOverview(),
-            mainMenuInit: self.mainMenu.init(),
-            timeoutMessages: self.timeoutMessages(),
-            mouseOverImages: self.mouseOverImages(),
-            enhanceMessages: self.enhanceMessages(),
-            externalHelpLinks: self.externalHelpLinks(),
-            showNotification: self.initNotifications(),
-            initAsyncTaskChecking: self.asyncTaskChecker.init()
+                // init plug-ins
+                applicationBar.create(this.pluginApi());
+                footerBar.create(this.pluginApi());
+
+                $.each(this.initCallbacks, function (i, fn:()=>void) {
+                    fn();
+                });
+
+                this.registerCoreEvents();
+
+                resolve(null);
+
+            } catch (e) {
+                reject(e);
+            }
         });
-
-        // init plug-ins
-        this.registerPlugin('applicationBar', applicationBar.create(self.pluginApi()));
-        this.registerPlugin('footerBar', footerBar.create(self.pluginApi()));
-
-        $.each(this.initCallbacks, function (i, fn:()=>void) {
-            fn();
-        });
-
-        this.registerCoreEvents();
-
-        return this.initActions;
     }
 }
 
@@ -1146,12 +1075,6 @@ export class PluginApi implements Kontext.PluginApi {
         this.pageModel.pluginResets.push(fn);
     }
 
-    registerInitCallback(fn:Kontext.InitCallback):void;
-    registerInitCallback(fn:()=>void):void;
-    registerInitCallback(fn):void {
-        return this.pageModel.registerInitCallback(fn);
-    }
-
     userIsAnonymous():boolean {
         return this.getConf<boolean>('anonymousUser');
     }
@@ -1191,10 +1114,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     getViews():Kontext.LayoutViews {
         return this.pageModel.layoutViews;
-    }
-
-    getPlugin<T extends Kontext.Plugin>(name:string) {
-        return this.pageModel.getPlugin<T>(name);
     }
 
     getUserSettings():Kontext.IUserSettings {

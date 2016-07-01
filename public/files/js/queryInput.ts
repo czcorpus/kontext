@@ -98,12 +98,24 @@ export class QueryFormTweaks {
 
     private maxEncodedParamsLength:number;
 
+    private queryStorageDetach:(elm:HTMLElement)=>void;
+
+    private queryStorageReset:()=>void;
+
     constructor(pluginApi:Kontext.QueryPagePluginApi, userSettings:userSettings.UserSettings,
             formElm:HTMLElement) {
         this.pluginApi = pluginApi;
         this.userSettings = userSettings;
         this.formElm = formElm;
         this.maxEncodedParamsLength = 1500;
+    }
+
+    bindQueryStorageDetach(fn:(elm:HTMLElement)=>void) {
+        this.queryStorageDetach = fn;
+    }
+
+    bindQueryStorageReset(fn:()=>void) {
+        this.queryStorageReset = fn;
     }
 
     /**
@@ -125,7 +137,7 @@ export class QueryFormTweaks {
         };
         popupBox.bind(
             triggerElm,
-            tagbuilder.getPopupBoxRenderer(self.pluginApi, insertCallback, widgetId),
+            tagbuilder.create(self.pluginApi, insertCallback, widgetId),
             {
                 type: 'plain',
                 htmlClass: 'tag-builder-widget',
@@ -338,10 +350,10 @@ export class QueryFormTweaks {
         if (source.hasOwnProperty('currentTarget')) { // reset plug-in only if this is called as part of some event handler
             $('.query-area input.history, .query-area textarea.history').each(function () {
                 if (typeof $(this).data('plugin') === 'object') {
-                    self.pluginApi.getPlugin<Plugins.IQueryStorage>('queryStorage').detach(this);
+                    self.queryStorageDetach(this);
                 }
             });
-            self.pluginApi.getPlugin<Plugins.IQueryStorage>('queryStorage').reset();
+            self.queryStorageReset();
         }
         this.initVirtualKeyboard(jqFocusElem);
     }
