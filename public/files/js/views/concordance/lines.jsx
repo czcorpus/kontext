@@ -209,6 +209,7 @@ export function init(dispatcher, mixins, lineStore) {
                     {corpusOutput.left.map(this._renderLeftChunk)}
                 </td>,
                 <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
+                        title={this.translate('concview__click_for_broader_context')}
                         onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
@@ -224,7 +225,8 @@ export function init(dispatcher, mixins, lineStore) {
             return [
                 <td key="par" className={this._exportTextElmClass(corpname, 'par')}
                         onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
-                                 corpusOutput.tokenNumber, this.props.lineIdx)}>
+                                 corpusOutput.tokenNumber, this.props.lineIdx)}
+                        title={this.translate('concview__click_for_broader_context')}>
                     {corpusOutput.left.map(this._renderLeftChunk)}
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
                     {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.kwic.get(-1)))}
@@ -250,7 +252,7 @@ export function init(dispatcher, mixins, lineStore) {
             let kwicActionArgs = this._createKwicActionArgs(corpusOutput);
 
             let ans = [
-                <td key="ref" className="ref" title="click to see details"
+                <td key="ref" className="ref" title={this.translate('concview__click_for_details')}
                         onClick={this._handleRefsClick.bind(this, this.props.baseCorpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.ref}
