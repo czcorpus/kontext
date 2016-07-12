@@ -139,7 +139,11 @@
         "query__tt_select_range": "Select a range",
         "query__tt_keep_current_selection": "Add to my current selection",
         "query__tt_range_help_text": "Ambiguously dated documents may meet the selected time range only partially, e.g. the time range 1800-1850 can be specified to include or exclude a document dated 1795±10 (1785-1805).",
-        "query__tt_{num}_items": "{num} items"
+        "query__tt_{num}_items": "{num} items",
+        "concview__next_page_btn": "Next page",
+        "concview__last_page_btn": "Last page",
+        "concview__prev_page_btn": "Previous page",
+        "concview__first_page_btn": "First page"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -282,6 +286,10 @@
         "query__tt_select_range": "Vybrat rozsah",
         "query__tt_keep_current_selection": "Přidat k mému stávajícímu výběru",
         "query__tt_range_help_text": "Texty s přibližnou datací mohou zvolenému časovému rozsahu vyhovovat jen částečně: např. do rozmezí let 1800-1850 tak může, nebo nemusí být zahrnut i text datovaný 1795±10 (1785-1805).",
-        "query__tt_{num}_items": "{num} položek"
+        "query__tt_{num}_items": "{num} položek",
+        "concview__next_page_btn": "následující stránka",
+        "concview__last_page_btn": "poslední stránka",
+        "concview__prev_page_btn": "předchozí stránka",
+        "concview__first_page_btn": "první stránka"
 	}
 }

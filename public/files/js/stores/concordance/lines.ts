@@ -23,6 +23,7 @@
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/modernizr.d.ts" />
+/// <reference path="../../../ts/declarations/soundmanager.d.ts" />
 
 import {SimplePageStore, MultiDict} from '../../util';
 import {PageModel} from '../../tpl/document';
@@ -267,6 +268,8 @@ export class ConcLineStore extends SimplePageStore {
 
     private externalKwicDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
 
+    private externalOnPageUpdate:()=>void;
+
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
@@ -319,12 +322,19 @@ export class ConcLineStore extends SimplePageStore {
                                 console.error(e);
                             }
                             self.notifyChangeListeners();
+                            if (typeof self.externalOnPageUpdate === 'function') {
+                                self.externalOnPageUpdate();
+                            }
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);
                             // TODO notify
                         }
                     );
+                break;
+                case 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES':
+                    self.pagination.lastPage = payload.props['availPages'];
+                    self.notifyChangeListeners();
                 break;
                 case 'CONCORDANCE_SHOW_REF_DETAIL':
                     if (typeof self.externalRefsDetailFn === 'function') {
@@ -339,6 +349,10 @@ export class ConcLineStore extends SimplePageStore {
                     }
             }
         });
+    }
+
+    addOnPageUpdateHandler (fn:()=>void):void {
+        this.externalOnPageUpdate = fn;
     }
 
     private pushHistoryState(pageNum:number):void {

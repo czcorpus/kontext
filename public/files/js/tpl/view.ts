@@ -25,6 +25,7 @@
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
+/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/soundmanager.d.ts" />
 /// <reference path="../../ts/declarations/d3.d.ts" />
 /// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
@@ -40,6 +41,7 @@ import detail = require('detail');
 import popupBox = require('popupbox');
 import conclines = require('../conclines');
 import {init as lineSelViewsInit} from 'views/concordance/lineSelection';
+import {init as paginatorViewsInit} from 'views/concordance/paginator';
 import {init as linesViewInit} from 'views/concordance/lines';
 import lineSelStores = require('../stores/concordance/lineSelection');
 import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination} from '../stores/concordance/lines';
@@ -121,17 +123,26 @@ export class ViewPage {
 
     private lineViews:any; // TODO
 
+    private paginatorViews:any; // TODO
+
     private touchHandler:TouchHandler;
 
     constructor(layoutModel:documentModule.PageModel, lineSelViews:any, lineSelectionStore:lineSelStores.LineSelectionStore,
-            lineViews:any, lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
+            lineViews:any, paginatorViews:any, lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
         this.lineSelViews = lineSelViews;
         this.lineSelectionStore = lineSelectionStore;
         this.lineViews = lineViews;
+        this.paginatorViews = paginatorViews;
         this.lineViewStore = lineViewStore;
         this.hasLockedGroups = hasLockedGroups;
         this.touchHandler = new TouchHandler();
+        // we must handle non-React widgets; once they are integrated
+        // as React components, this won't be necessary
+        lineViewStore.addOnPageUpdateHandler(() => {
+            this.initLineSelection();
+            syntaxViewer.create(this.layoutModel.pluginApi());
+        });
     }
 
 
@@ -592,19 +603,6 @@ export class ViewPage {
     }
 
     /**
-     * Some links/forms must be allowed to avoid beforeunload check (e.g. pagination)
-     */
-    private grantPaginationPageLeave():void {
-        $('.bonito-pagination form').on('submit', function () {
-            $(win).off('beforeunload.alert_unsaved');
-        });
-
-        $('.bonito-pagination a').on('click', function () {
-            $(win).off('beforeunload.alert_unsaved');
-        });
-    }
-
-    /**
      * Let's bother poor user with a notification in
      * case she is not logged-in.
      */
@@ -678,44 +676,6 @@ export class ViewPage {
         $('#groupmenu').attr('corpname', this.layoutModel.getConf<string>('corpname'));
         $('#groupmenu').attr('queryparams', this.layoutModel.getConf<string>('q'));
 
-        let paginationHandler = (elm) => {
-            this.layoutModel.dispatcher.dispatch({
-                actionType: 'CONCORDANCE_CHANGE_PAGE',
-                props: {
-                    action: $(elm.currentTarget).data('action')
-                }
-            });
-        };
-
-        let changeListener = (store:any, action) => {
-            let currentPage = store.getCurrentPage();
-            let pagination:ServerPagination = store.getPagination();
-
-            function updateNavigForm(elm:HTMLElement) {
-                $(elm).find('.bonito-pagination-core input[name="fromp"]').val(currentPage);
-                if (currentPage > 1) {
-                    $(elm).find('.bonito-pagination-left').removeClass('hidden');
-
-                } else {
-                    $(elm).find('.bonito-pagination-left').addClass('hidden');
-                }
-                if (currentPage < pagination.lastPage) {
-                    $(elm).find('.bonito-pagination-right').removeClass('hidden');
-
-                } else {
-                    $(elm).find('.bonito-pagination-right').addClass('hidden');
-                }
-            }
-
-            updateNavigForm(window.document.getElementById('navigation_form'));
-            updateNavigForm(window.document.getElementById('navigation_form2'));
-
-            this.initLineSelection();
-            syntaxViewer.create(this.layoutModel.pluginApi());
-        };
-
-        this.lineViewStore.addChangeListener(changeListener);
-
         if (Modernizr.history) {
             // register event to load lines via ajax in case user hits back
             window.onpopstate = (event) => {
@@ -785,9 +745,6 @@ export class ViewPage {
                 }
             );
         });
-
-        $('#navigation_form').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
-        $('#navigation_form2').find('.bonito-pagination-left a,.bonito-pagination-right a').on('click', paginationHandler);
     }
 
     private addWarnings():void {
@@ -810,6 +767,14 @@ export class ViewPage {
             try {
                 this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
                     window.document.getElementById('conclines-wrapper'), props);
+
+                let topPgWraper = $(window.document.getElementById('conc-top-bar'));
+                this.layoutModel.renderReactComponent(this.paginatorViews.Paginator,
+                    topPgWraper.find('.bonito-pagination').get(0), {});
+
+                let bottomPgWraper = $(window.document.getElementById('conc-bottom-bar'));
+                this.layoutModel.renderReactComponent(this.paginatorViews.Paginator,
+                    bottomPgWraper.find('.bonito-pagination').get(0), {});
 
             } catch (e) {
                 console.error(e.stack);
@@ -852,7 +817,12 @@ export class ViewPage {
                     }
 
                     $('#result-info span.ipm').html(num2Str(data.relconcsize.toFixed(2)));
-                    $('.numofpages').html(num2Str(Math.ceil(data.concsize / self.layoutModel.getConf<number>('numLines'))));
+                    self.layoutModel.dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES',
+                        props: {
+                            availPages: Math.ceil(data.concsize / self.layoutModel.getConf<number>('numLines'))
+                        }
+                    });
 
                     if (data.fullsize > 0) {
                         $('#fullsize').html(num2Str(data.fullsize));
@@ -977,7 +947,6 @@ export class ViewPage {
                     this.anonymousUserWarning();
                 }
                 this.onBeforeUnloadAsk();
-                this.grantPaginationPageLeave();
                 this.setStateUrl();
                 this.attachIpmCalcTrigger();
                 this.updateLocalAlignedCorpora();
@@ -1026,12 +995,18 @@ export function init(conf):ViewPage {
             layoutModel.exportMixins(),
             lineViewStore
     );
+    let paginatorViews = paginatorViewsInit(
+            layoutModel.dispatcher,
+            layoutModel.exportMixins(),
+            lineViewStore
+    );
     let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;
     let pageModel = new ViewPage(
             layoutModel,
             lineSelViews,
             lineSelectionStore,
             concLinesViews,
+            paginatorViews,
             lineViewStore,
             hasLockedGroups
     );

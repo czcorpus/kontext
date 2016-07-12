@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="./common.d.ts" />
+
 
 declare module "views/document" {
     export function init(dispatcher:any, mixins:any, storeProvider:any):Kontext.LayoutViews;
@@ -32,6 +34,25 @@ declare module "views/concordance/lineSelection" {
     export function init(dispatcher:any, mixins:any, lineSelectionStore:any, userInfoStore:any):LineSelectionViews;
 }
 
+
+declare module "views/concordance/lines" {
+
+    export interface ConcLinesViews {
+        ConcLines:any;
+    }
+
+    export function init(dispatcher:any, mixins:any, lineStore:any):ConcLinesViews;
+}
+
+
+declare module "views/concordance/paginator" {
+
+    export interface PaginatorViews {
+        Paginator:any;
+    }
+
+    export function init(dispatcher:any, mixins:any, lineStore:any):PaginatorViews;
+}
 
 
 declare module "views/subcorpForm" {
@@ -63,14 +84,4 @@ declare module "views/query/context" {
     }
 
     export function init(dispatcher, mixins):QueryContextViews;
-}
-
-
-declare module "views/concordance/lines" {
-
-    export interface ConcLinesViews {
-        ConcLines:any;
-    }
-
-    export function init(dispatcher, mixins, lineStore):ConcLinesViews;
 }

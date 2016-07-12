@@ -133,49 +133,7 @@ $query_overview_bar()
             </div>
         </div>
 
-        #block navigation($navid="navigation_form", $nextid="next")
-        ## navigation
-        #if $numofpages
-            <div class="bonito-pagination">
-            <form action="view" id="$navid">
-
-
-            <div class="bonito-pagination-left #unless $pagination.prevPage#hidden#end unless#">
-            <a data-action="firstPage"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("First")" title="$_("First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
-            <a data-action="prevPage"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("Previous")" title="$_("Previous")" data-alt-img="${files_path}/img/prev-page_s.svg" /></a>
-            </div>
-
-            <div class="bonito-pagination-core">
-              #filter None
-              $input_hidden
-              #end filter
-              <input type="text" name="fromp" value="$fromp" size="2" />
-              / <span class="numofpages" title="$numofpages">$format_number($numofpages, mask='%d')</span>
-            </div>
-
-            <div class="bonito-pagination-right #unless $pagination.nextPage#hidden#end unless#">
-            <a data-action="nextPage" id="$nextid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next")" title="$_("Next")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
-            <a data-action="lastPage" id="lastpage"><img class="over-img" src="${files_path}/img/last-page.svg" alt="$_("Last")" title="$_("Last")" data-alt-img="${files_path}/img/last-page_s.svg" /></a>
-            </div>
-
-            #if $Sort_idx
-                <div class="jump-to">
-                    $_("Jump to"):
-                    <select onchange="this.form.fromp.value = this.value; this.form.submit();">
-                    #for $idx in $Sort_idx
-                        <option value="$idx.page" title="$idx.label" #if $idx.page == $fromp#selected="selected"#end if#>
-                        #filter $Shortener
-                        ${idx.label, length=20}
-                        #end filter
-                        </option>
-                    #end for
-                    </select>
-                </div>
-            #end if
-            </form>
-            </div>
-        #end if
-        #end block
+        <div class="bonito-pagination"></div>
     </div>
 
     ## concordance lines
@@ -184,9 +142,7 @@ $query_overview_bar()
     </div>
 
     <div id="conc-bottom-bar">
-    #filter None
-    $navigation("navigation_form2", "next2")
-    #end filter
+        <div class="bonito-pagination"></div>
     </div>
 </div>
 
