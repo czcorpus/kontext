@@ -28,25 +28,31 @@ export function init(dispatcher, mixins, lineStore) {
     // ------------------------- <JumpTo /> ---------------------------
 
     let JumpTo = React.createClass({
-        /*
-        #if $Sort_idx
-                <div class="jump-to">
-                    $_("Jump to"):
-                    <select onchange="this.form.fromp.value = this.value; this.form.submit();">
-                    #for $idx in $Sort_idx
-                        <option value="$idx.page" title="$idx.label" #if $idx.page == $fromp#selected="selected"#end if#>
-                        #filter $Shortener
-                        ${idx.label, length=20}
-                        #end filter
-                        </option>
-                    #end for
-                    </select>
-                </div>
-            #end if
-        */
+        // TODO implement a proper initialization of currently selected item
+        mixins : mixins,
+
+        _selectChangeHandler : function (event) {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_CHANGE_PAGE',
+                props: {
+                    action: 'customPage',
+                    pageNum: Number(event.currentTarget.value)
+                }
+            });
+        },
+
         render : function () {
             return (
-                <div className="jump-to">jump to</div>
+                <div className="jump-to">
+                    {this.translate('concview__sort_jump_to')}
+                    {'\u00A0'}
+                    <select onChange={this._selectChangeHandler}>
+                    {this.props.sortIdx.map((item) => {
+                        return <option key={item.page + ':' + item.label}
+                                    value={item.page}>{item.label}</option>;
+                    })}
+                    </select>
+                </div>
             );
         }
     });
@@ -275,6 +281,8 @@ export function init(dispatcher, mixins, lineStore) {
                             <NextPgButton clickHandler={this._navigActionHandler} />
                             <LastPgButton clickHandler={this._navigActionHandler} />
                         </div>) : null}
+
+                    {this.props.SortIdx.length > 0 ? <JumpTo sortIdx={this.props.SortIdx} /> : null}
                 </div>
             );
         }

@@ -55,7 +55,7 @@ declare var Modernizr:Modernizr.ModernizrStatic;
 declare var jqueryPeriodic:any;
 
 // TODO this is an experimental touch event handler.
-    // Default behavior of the 'view' component should be observed carefully first.
+// Default behavior of the 'view' component should be observed carefully first.
 class TouchHandler {
 
     startX = null;
@@ -771,11 +771,11 @@ export class ViewPage {
 
                 let topPgWraper = $(window.document.getElementById('conc-top-bar'));
                 this.layoutModel.renderReactComponent(this.paginatorViews.Paginator,
-                    topPgWraper.find('.bonito-pagination').get(0), {});
+                    topPgWraper.find('.bonito-pagination').get(0), props);
 
                 let bottomPgWraper = $(window.document.getElementById('conc-bottom-bar'));
                 this.layoutModel.renderReactComponent(this.paginatorViews.Paginator,
-                    bottomPgWraper.find('.bonito-pagination').get(0), {});
+                    bottomPgWraper.find('.bonito-pagination').get(0), props);
 
             } catch (e) {
                 console.error(e.stack);
@@ -1002,6 +1002,7 @@ export function init(conf):ViewPage {
         KWICCorps: layoutModel.getConf<Array<string>>('KWICCorps'),
         CorporaColumns: layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
         WideCtxGlobals: layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
+        SortIdx: layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
         baseCorpname: layoutModel.getConf<string>('corpname'),
         pagination: layoutModel.getConf<ServerPagination>('Pagination'),
         currentPage: layoutModel.getConf<number>('FromPage'),

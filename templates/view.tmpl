@@ -48,6 +48,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.Pagination = #filter $Jsonize#$pagination#end filter#;
     conf.FromPage = #if $fromp#$fromp#else#0#end if#;
     conf.Lines = #filter $Jsonize#$Lines#end filter#;
+    conf.SortIdx = #filter $Jsonize#$Sort_idx#end filter#;
     var model = pageSelf.init(conf);
 
     #if not $finished and $async and $save and not $sampled_size

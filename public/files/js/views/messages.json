@@ -145,7 +145,8 @@
         "concview__prev_page_btn": "Previous page",
         "concview__first_page_btn": "First page",
         "concview__click_for_details": "Click to see details",
-        "concview__click_for_broader_context": "Click to see the wider context"
+        "concview__click_for_broader_context": "Click to see the wider context",
+        "concview__sort_jump_to": "Jump to"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -294,6 +295,7 @@
         "concview__prev_page_btn": "předchozí stránka",
         "concview__first_page_btn": "první stránka",
         "concview__click_for_details": "Klikněte pro zobrazení detailů",
-        "concview__click_for_broader_context": "Klikněte pro zobrazení širšího kontextu"
+        "concview__click_for_broader_context": "Klikněte pro zobrazení širšího kontextu",
+        "concview__sort_jump_to": "Přejít na"
 	}
 }
