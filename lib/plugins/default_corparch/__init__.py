@@ -24,7 +24,7 @@ Required config.xml/plugins entries (RelaxNG compact format):
 
 element corparch {
     element module { "default_corparch" }
-    element js_file { text }
+    element js_module { text }
     element file { text }  # a path to a configuration XML file
     element root_elm_path { text } # an XPath query leading to a root element where configuration can be found
     element tag_prefix {
