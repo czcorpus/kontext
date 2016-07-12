@@ -22,7 +22,19 @@ The tree data are extracted from Manatee where it is expected from
 a token to contain an attribute with a relative reference to its parent.
 All the properties are configured via an external JSON file.
 
+Required config.xml/plugins entries (RelaxNG compact format):
+
+element syntax_viewer {
+    element module { "default_syntax_viewer" }
+    element js_module { "defaultSyntaxViewer" }
+    element config_path {
+        attribute extension-by { "default" }
+        text # a path to JSON config file (see below)
+    }
+}
+
 Configuration JSON:
+
 {
   "corpora": {
     ... this is backend dependent, see backend modules for details ...
