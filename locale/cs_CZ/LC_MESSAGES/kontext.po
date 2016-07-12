@@ -1707,21 +1707,6 @@ msgstr "Načítá se..."
 msgid "<--not translated-->"
 msgstr "<--nepřeloženo-->"
 
-#: cmpltmpl/view.py:729 cmpltmpl/view.py:734
-msgid "First"
-msgstr "první"
-
-#: cmpltmpl/view.py:749 cmpltmpl/view.py:754
-msgid "Previous"
-msgstr "předchozí"
-
-#: cmpltmpl/view.py:804 cmpltmpl/view.py:809
-msgid "Next"
-msgstr "další"
-
-#: cmpltmpl/view.py:824 cmpltmpl/view.py:829
-msgid "Last"
-msgstr "poslední"
 
 #: cmpltmpl/view.py:846
 msgid "Jump to"

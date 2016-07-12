@@ -616,7 +616,6 @@ class Actions(Kontext):
             if not pq or wnot:
                 nopq.append(al_corpname)
         self.args.q = [qbase + self._compile_query() + ttquery + par_query]
-
         if fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
                           fc_lemword.split(),

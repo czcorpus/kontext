@@ -558,11 +558,31 @@ section > .bonito-pagination form {
 ul.query-toolbox li {
     display: inline-block;
 }
-.bonito-pagination-core input[type='text'] {
-    width: 40px;
-}
+
 .bonito-pagination-core {
     vertical-align: middle;
+
+    .curr-page {
+        background-color: #ffffff;
+        display: inline-block;
+        width: 3em;
+        border: @input-border-style;
+        border-radius: @input-border-radius;
+        padding-right: 0.4em;
+        padding-left: 0.4em;
+        text-align: left;
+
+        input {
+            width: 3em;
+            border: none;
+        }
+
+        img.ajax-loader-bar {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    }
+
 }
 .bonito-pagination-left {
     display: inline-block;
