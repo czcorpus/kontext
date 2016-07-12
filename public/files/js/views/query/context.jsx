@@ -54,7 +54,7 @@ export function init(dispatcher, mixins) {
         render : function () {
             return (
                 <tr>
-                    <th align="left">{this.translate('query__window')}:</th>
+                    <th>{this.translate('query__window')}:</th>
                     <td>
                         <select name="fc_lemword_window_type">
                             <option value="left">{this.translate('query__left')}</option>
@@ -87,7 +87,7 @@ export function init(dispatcher, mixins) {
                     <tbody>
                         <TRWindowSelector options={this.props.lemmaWindowSizes} />
                         <tr>
-                            <th align="left">
+                            <th>
                             {this.props.hasLemmaAttr
                                 ? this.translate('query__lw_lemmas')
                                 : this.translate('query__lw_word_forms')

@@ -606,7 +606,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                 classes.push('locked');
             }
             return (
-                <table border="0" className={classes.join(' ')}>
+                <table className={classes.join(' ')}>
                     <tbody>
                         <tr className="attrib-name">
                             <th>{this.props.attrObj.name}</th>

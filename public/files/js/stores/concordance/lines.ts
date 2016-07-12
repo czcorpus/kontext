@@ -74,6 +74,7 @@ export interface ViewConfiguration {
     KWICCorps:Array<string>;
     CorporaColumns:Array<{n:string; label:string}>;
     WideCtxGlobals:Array<Array<string>>;
+    SortIdx:Array<{page:number; label:string}>;
     baseCorpname:string;
     mainCorp:string;
     pagination:ServerPagination;
