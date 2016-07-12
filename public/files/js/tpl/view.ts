@@ -725,11 +725,12 @@ export class ViewPage {
                 this.layoutModel.createActionUrl('widectx'),
                 args,
                 this.layoutModel,
-                () => {
+                (popupBox) => {
                     // TODO
                     // here we're doing a dirty hack to glue
                     // the old code in detail.js with newer Flux store
                     this.lineViewStore.setLineFocus(lineIdx, true);
+                    this.viewDetailDoneCallback(popupBox);
                     this.lineViewStore.notifyChangeListeners();
                 },
                 () => {
@@ -782,6 +783,28 @@ export class ViewPage {
             }
         });
         return ans;
+    }
+
+    viewDetailDoneCallback(boxInst):void {
+        let self = this;
+        $('a.expand-link').each(function () {
+            $(this).one('click', function (event) {
+                detail.showDetail(
+                    self.layoutModel.createActionUrl($(this).data('action')),
+                    $(this).data('params'),
+                    self.layoutModel,
+                    // Expand link, when clicked, must bind the same event handler
+                    // for the new expand link. That's why this 'callback recursion' is present.
+                    self.viewDetailDoneCallback.bind(self),
+                    () => {},
+                    (err) => {
+                        self.layoutModel.showMessage('error', err);
+                    }
+                );
+                event.preventDefault();
+            });
+        });
+        this.layoutModel.mouseOverImages(boxInst.getRootElement());
     }
 
     /**
