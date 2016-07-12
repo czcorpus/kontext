@@ -32,6 +32,9 @@ export function init(dispatcher, mixins, lineStore) {
         mixins : mixins,
 
         _selectChangeHandler : function (event) {
+            if (typeof this.props.clickHandler === 'function') {
+                this.props.clickHandler();
+            }
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_CHANGE_PAGE',
                 props: {
@@ -282,7 +285,8 @@ export function init(dispatcher, mixins, lineStore) {
                             <LastPgButton clickHandler={this._navigActionHandler} />
                         </div>) : null}
 
-                    {this.props.SortIdx.length > 0 ? <JumpTo sortIdx={this.props.SortIdx} /> : null}
+                    {this.props.SortIdx.length > 0 ? <JumpTo sortIdx={this.props.SortIdx}
+                            clickHandler={this._navigActionHandler} /> : null}
                 </div>
             );
         }
