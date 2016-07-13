@@ -268,7 +268,7 @@ export function init(dispatcher, mixins, lineStore) {
 
         render : function () {
             return (
-                <div>
+                <div className="bonito-pagination">
                     {this.state.currentPage > 1 ?
                         (<div className="bonito-pagination-left">
                             <FirstPgButton clickHandler={this._navigActionHandler} />

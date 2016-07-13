@@ -29,15 +29,6 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
     let SimpleSelectionModeSwitch = React.createClass({
         mixins: mixins,
 
-        _changeHandler : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_MODE_CHANGED',
-                props: {
-                    mode: evt.target.value
-                }
-            });
-        },
-
         render : function () {
             return (
                 <select name="actions" defaultValue={this.props.initialAction}
@@ -55,15 +46,6 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
 
     let GroupsSelectionModelSwitch = React.createClass({
         mixins : mixins,
-
-        _changeHandler : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_MODE_CHANGED',
-                props: {
-                    mode: evt.target.value
-                }
-            });
-        },
 
         render : function () {
             return (
@@ -84,16 +66,9 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         mixins: mixins,
 
         _changeHandler : function (store, status) {
-            if (status === 'STATUS_UPDATED') {
+            if (status === '$STATUS_UPDATED') {
                 this.setState(React.addons.update(this.state,
                         {mode: {$set: lineSelectionStore.getMode()}}));
-
-            } else if (status === 'STATUS_UPDATED_LINES_SAVED') {
-                this.setState(React.addons.update(this.state,
-                        {
-                            checkpointUrl: {$set: lineSelectionStore.getLastCheckpoint()}
-                        }
-                ));
             }
         },
 
@@ -128,13 +103,6 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
 
         componentWillUnmount : function () {
             lineSelectionStore.removeChangeListener(this._changeHandler);
-        },
-
-        componentDidUpdate : function () {
-            // we must inform non-react environment (here popupbox.js) we are ready here
-            if (typeof this.props.doneCallback === 'function') {
-                this.props.doneCallback();
-            }
         },
 
         render : function () {
@@ -227,7 +195,7 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                     <span className="arrow">{'\u00A0\u21E8\u00A0'}</span>
                     <label>{this.translate('linesel__new_label_name')}:</label>
                     {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleDstInputChange} />
-                    <ul clasName="note">
+                    <ul className="note">
                         <li>{this.translate('linesel__if_empty_lab_then_remove')}</li>
                         <li>{this.translate('linesel__if_existing_lab_then_merge')}</li>
                     </ul>
@@ -245,18 +213,16 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         mixins: mixins,
 
         _changeHandler : function (store, status) {
-            if (status === 'STATUS_UPDATED') {
+            if (status === '$STATUS_UPDATED') {
                 this.setState(React.addons.update(this.state,
-                        {hasData: {$set: true}})); /// TODO set once d3.js stuff is ready etc.
-                if (typeof this.props.chartCallback === 'function') {
-                    this.props.chartCallback();
-                }
+                        {dataChanged: {$set: true}}));
 
             } else if (status === 'USER_INFO_REFRESHED') {
                 this.setState(React.addons.update(this.state,
                     {
                         email: {$set: userInfoStore.getCredentials()['email']},
-                        emailDialog: {$set: true}
+                        emailDialog: {$set: true},
+                        dataChanged: {$set: false}
                     }
                 ));
 
@@ -264,7 +230,8 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                 this.setState(React.addons.update(this.state,
                     {
                         email: {$set: null},
-                        emailDialog: {$set: false}
+                        emailDialog: {$set: false},
+                        dataChanged: {$set: false}
                     }
                 ));
             }
@@ -297,7 +264,12 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                     });
                     break;
                 case 'rename-group-label':
-                    this.setState(React.addons.update(this.state, {renameLabelDialog: {$set: true}}));
+                    this.setState(React.addons.update(this.state,
+                        {
+                            renameLabelDialog: {$set: true},
+                            dataChanged: {$set: false}
+                        }
+                    ));
                     break;
 
             }
@@ -312,7 +284,12 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
 
         _handleEmailDialogButton : function (evt) {
             if (evt.target.value === 'cancel') {
-                this.setState(React.addons.update(this.state, {emailDialog: {$set: false}}));
+                this.setState(React.addons.update(this.state,
+                    {
+                        emailDialog: {$set: false},
+                        dataChanged: {$set: false}
+                    }
+                ));
 
             } else if (evt.target.value === 'send') {
                 dispatcher.dispatch({
@@ -325,7 +302,12 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         },
 
         _emailChangeHandler : function (evt) {
-            this.setState(React.addons.update(this.state, {email: {$set: evt.target.value}}));
+            this.setState(React.addons.update(this.state,
+                {
+                    email: {$set: evt.target.value},
+                    dataChanged: {$set: false}
+                }
+            ));
         },
 
         componentDidMount : function () {
@@ -344,16 +326,16 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
             userInfoStore.removeChangeListener(this._changeHandler);
         },
 
-        componentDidUpdate : function () {
-            // we must inform non-react environment (here popupbox.js) we are ready here
-            if (typeof this.props.doneCallback === 'function') {
-                this.props.doneCallback();
+        componentDidUpdate : function (prevProps, prevState) {
+            // we must inform non-react chart building function to redraw d3 charts
+            if (typeof this.props.chartCallback === 'function') {
+                this.props.chartCallback(!this.state.dataChanged);
             }
         },
 
         getInitialState : function () {
             return {
-                hasData: false,
+                dataChanged: true,
                 emailDialog: false,
                 renameLabelDialog: false,
                 email: null
@@ -361,7 +343,12 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         },
 
         _handleRenameCancel : function () {
-            this.setState(React.addons.update(this.state, {renameLabelDialog: {$set: false}}));
+            this.setState(React.addons.update(this.state,
+                {
+                    renameLabelDialog: {$set: false},
+                    dataChanged: {$set: false}
+                }
+            ));
         },
 
         _renderActionArea : function () {
@@ -405,7 +392,7 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                         <legend>{this.translate('linesel__line_selection_link_heading')}</legend>
                         <input className="conc-link" type="text" readOnly="true"
                                 onClick={(e)=> e.target.select()}
-                                value={this.props.checkpointUrl} />
+                                value={lineSelectionStore.getLastCheckpointUrl()} />
                         {
                             this.state.emailDialog
                             ? <EmailDialog

@@ -68,6 +68,16 @@ export interface ServerLineData extends SingleCorpServerLineData {
     Align:Array<SingleCorpServerLineData>;
 }
 
+export interface ConcSummary {
+    concSize: number;
+    fullSize: number;
+    sampledSize: number;
+    ipm: number;
+    ipmRelatedTo: string;
+    arf: number;
+    isShuffled: boolean;
+}
+
 export interface ViewConfiguration {
     ViewMode:string;
     ShowLineNumbers:boolean;
@@ -75,11 +85,15 @@ export interface ViewConfiguration {
     CorporaColumns:Array<{n:string; label:string}>;
     WideCtxGlobals:Array<Array<string>>;
     SortIdx:Array<{page:number; label:string}>;
+    NumItemsInLockedGroups:number;
     baseCorpname:string;
     mainCorp:string;
     pagination:ServerPagination;
     currentPage:number;
+    concSummary:ConcSummary;
+    canSendEmail:boolean;
     onReady?:()=>void;
+    onChartFrameReady?:(usePrevData:boolean)=>void;
 }
 
 /**
@@ -265,6 +279,8 @@ export class ConcLineStore extends SimplePageStore {
 
     private focusedLine:number;
 
+    private numItemsInLockedGroups:number;
+
     private externalRefsDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
 
     private externalKwicDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
@@ -284,6 +300,7 @@ export class ConcLineStore extends SimplePageStore {
         this.baseCorpname = lineViewProps.baseCorpname;
         this.mainCorp = lineViewProps.mainCorp;
         this.lines = importData(initialData);
+        this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
         this.pushHistoryState(this.currentPage);
@@ -311,21 +328,13 @@ export class ConcLineStore extends SimplePageStore {
                     let action = payload.props['action'];
                     self.changePage(payload.props['action'], payload.props['pageNum']).then(
                         (data) => {
-                            try {
-                                self.lines = importData(data['Lines']);
-                                self.pagination = data['pagination'];
-                                self.currentPage = data['fromp'];
-                                if (payload.actionType === 'CONCORDANCE_CHANGE_PAGE') {
-                                    self.pushHistoryState(self.currentPage);
-                                }
-
-                            } catch (e) {
-                                console.error(e);
-                            }
-                            self.notifyChangeListeners();
                             if (typeof self.externalOnPageUpdate === 'function') {
                                 self.externalOnPageUpdate();
                             }
+                            if (payload.actionType === 'CONCORDANCE_CHANGE_PAGE') {
+                                self.pushHistoryState(self.currentPage);
+                            }
+                            self.notifyChangeListeners();
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);
@@ -352,6 +361,10 @@ export class ConcLineStore extends SimplePageStore {
         });
     }
 
+    getNumItemsInLockedGroups():number {
+        return this.numItemsInLockedGroups;
+    }
+
     addOnPageUpdateHandler (fn:()=>void):void {
         this.externalOnPageUpdate = fn;
     }
@@ -366,18 +379,53 @@ export class ConcLineStore extends SimplePageStore {
         }
     }
 
-    private changePage(action:string, pageNumber?:number):RSVP.Promise<any> {
+    /**
+     * Reload data on current concordance page.
+     * The returned promise passes URL argument matching
+     * currently displayed data page.
+     */
+    reloadPage(concId?:string):RSVP.Promise<MultiDict> {
+        return this.changePage('customPage', this.currentPage, concId);
+    }
+
+    /**
+     * Changes current data page - either by moving <--, <-, ->, --> or
+     * by entering a specific page number.
+     * The returned promise passes URL argument matching
+     * currently displayed data page.
+     */
+    private changePage(action:string, pageNumber?:number, concId?:string):RSVP.Promise<MultiDict> {
         let args = this.layoutModel.getConcArgs();
-        args.set('fromp', action === 'customPage' ? pageNumber : this.pagination[action]);
+        let pageNum = action === 'customPage' ? pageNumber : this.pagination[action];
+        args.set('fromp', pageNum);
         args.set('format', 'json');
+        if (concId) {
+            args.set('q', concId);
+        }
         let url = this.layoutModel.createActionUrl('view') + '?' +
-            this.layoutModel.encodeURLParameters(args);
-        return this.layoutModel.ajax(
+                this.layoutModel.encodeURLParameters(args);
+        let prom = this.layoutModel.ajax(
             'GET',
             url,
             {},
             {contentType : 'application/x-www-form-urlencoded'}
+
+        ).then(
+            (data) => {
+                try {
+                    this.lines = importData(data['Lines']);
+                    this.numItemsInLockedGroups = data['num_lines_in_groups'];
+                    this.pagination = data['pagination'];
+                    this.currentPage = pageNum;
+                    return this.layoutModel.getConcArgs();
+
+                } catch (e) {
+                    console.error(e);
+                    throw e;
+                }
+            }
         );
+        return prom;
     }
 
     private createAudioLink(textChunk:TextChunk):string {

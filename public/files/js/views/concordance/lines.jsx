@@ -23,7 +23,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, lineStore) {
+export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
@@ -122,6 +122,115 @@ export function init(dispatcher, mixins, lineStore) {
         }
     });
 
+    // ------------------------- <LineSelCheckbox /> ---------------------------
+
+    let LineSelCheckbox = React.createClass({
+
+        _checkboxChangeHandler : function (event) {
+            this.setState({checked: !this.state.checked});
+            dispatcher.dispatch({
+                actionType: 'LINE_SELECTION_SELECT_LINE',
+                props: {
+                    value: event.currentTarget.checked ? 1 : null,
+                    lineNumber: this.props.lineNumber,
+                    tokenNumber: this.props.tokenNumber,
+                    kwicLength: this.props.kwicLength
+                }
+            });
+        },
+
+        _handleStoreChange : function () {
+            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            this.setState({checked: tmp ? true : false});
+        },
+
+        componentDidMount : function () {
+            lineStore.addChangeListener(this._handleStoreChange);
+        },
+
+        componentWillUnmount : function () {
+            lineStore.removeChangeListener(this._handleStoreChange);
+        },
+
+        getInitialState : function () {
+            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            return {checked: tmp ? true : false};
+        },
+
+        render : function () {
+            return <input type="checkbox" checked={this.state.checked}
+                        onChange={this._checkboxChangeHandler} />;
+        }
+    });
+
+    // ------------------------- <LineSelInput /> ---------------------------
+
+    let LineSelInput = React.createClass({
+
+        _textChangeHandler : function (event) {
+            this.setState({value: event.currentTarget.value});
+            dispatcher.dispatch({
+                actionType: 'LINE_SELECTION_SELECT_LINE',
+                props: {
+                    value: event.currentTarget.value ? Number(event.currentTarget.value) : -1,
+                    lineNumber: this.props.lineNumber,
+                    tokenNumber: this.props.tokenNumber,
+                    kwicLength: this.props.kwicLength
+                }
+            });
+        },
+
+        _handleStoreChange : function () {
+            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            this.setState({value: tmp ? tmp[1] : ''});
+        },
+
+        componentDidMount : function () {
+            lineStore.addChangeListener(this._handleStoreChange);
+        },
+
+        componentWillUnmount : function () {
+            lineStore.removeChangeListener(this._handleStoreChange);
+        },
+
+        getInitialState : function () {
+            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            return {value: tmp ? tmp[1] : ''};
+        },
+
+        render : function () {
+            return <input type="text" inputMode="numeric" style={{width: '1.4em'}}
+                        value={this.state.value} onChange={this._textChangeHandler} />;
+        }
+    });
+
+    // ------------------------- <TdLineSelection /> ---------------------------
+
+    let TdLineSelection = React.createClass({
+
+        _renderInput : function () {
+            if (this.props.lockedGroupId) {
+                return <span className="group-id">{this.props.lockedGroupId}</span>;
+
+            } else if (this.props.mode === 'simple') {
+                return <LineSelCheckbox {...this.props} />;
+
+            } else if (this.props.mode === 'groups') {
+                return <LineSelInput {...this.props} />;
+
+            } else {
+                return null;
+            }
+        },
+
+        render : function () {
+            return (
+                <td className="manual-selection">
+                    {this._renderInput()}
+                </td>
+            );
+        }
+    });
 
     // ------------------------- <Line /> ---------------------------
 
@@ -296,15 +405,17 @@ export function init(dispatcher, mixins, lineStore) {
             if (this.props.data.hasFocus) {
                 htmlClasses.push('active');
             }
+            // note: "data-toknum" below is used by non-react widgets
             return (
-                <tr className={htmlClasses.join(' ')} data-toknum={primaryLang.tokenNumber} data-linegroup={this.props.data.lineGroup}>
+                <tr className={htmlClasses.join(' ')} data-toknum={primaryLang.tokenNumber}>
                     <td className="line-num">{this.props.showLineNumbers ? this.props.data.lineNumber + 1 : null}</td>
-                    <td className="manual-selection">
-                        <input type="text" data-kwiclen={this.props.data.kwicLength}
-                            data-position={primaryLang.tokenNumber}
-                            data-linenum="0" inputMode="numeric" style={{width: '1.4em'}} />
-                    </td>
-                    <td className="syntax-tree" style={{display: 'table-cell'}}>
+                    <TdLineSelection
+                        kwicLength={this.props.data.kwicLength}
+                        tokenNumber={primaryLang.tokenNumber}
+                        lineNumber={this.props.data.lineNumber}
+                        mode={this.props.lineSelMode}
+                        lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null} />
+                    <td className="syntax-tree">
                     </td>
                     {this._renderText(primaryLang, 0)}
                     {alignedCorpora.map((alCorp, i) => this._renderText(alCorp, i + 1))}
@@ -319,16 +430,34 @@ export function init(dispatcher, mixins, lineStore) {
 
         mixins : mixins,
 
+        _getLineSelMode : function () {
+            if (lineStore.getNumItemsInLockedGroups() > 0) {
+                return 'groups';
+
+            } else {
+                return lineSelectionStore.getMode();
+            }
+        },
+
         _storeChangeListener : function () {
-            this.setState({lines: lineStore.getLines()});
+            this.setState({
+                lines: lineStore.getLines(),
+                lineSelMode: this._getLineSelMode(),
+                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
+            });
         },
 
         getInitialState : function () {
-            return {lines: lineStore.getLines()};
+            return {
+                lines: lineStore.getLines(),
+                lineSelMode: this._getLineSelMode(),
+                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
+            };
         },
 
         componentDidMount : function () {
             lineStore.addChangeListener(this._storeChangeListener);
+            lineSelectionStore.addChangeListener(this._storeChangeListener);
             if (typeof this.props.onReady === 'function') { // <-- a glue with legacy dode
                 this.props.onReady();
             }
@@ -336,6 +465,7 @@ export function init(dispatcher, mixins, lineStore) {
 
         componentWillUnmount : function () {
             lineStore.removeChangeListener(this._storeChangeListener);
+            lineSelectionStore.removeChangeListener(this._storeChangeListener);
         },
 
         _renderLine : function (item, i) {
@@ -348,7 +478,9 @@ export function init(dispatcher, mixins, lineStore) {
                          mainCorp={this.props.mainCorp}
                          corpsWithKwic={this.props.KWICCorps}
                          wideCtxGlobals={this.props.WideCtxGlobals}
-                         showLineNumbers={this.props.ShowLineNumbers} />;
+                         showLineNumbers={this.props.ShowLineNumbers}
+                         lineSelMode={this.state.lineSelMode}
+                         numItemsInLockedGroups={this.state.numItemsInLockedGroups} />;
         },
 
         render : function () {

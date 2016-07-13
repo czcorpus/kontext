@@ -41,7 +41,7 @@ declare module "views/concordance/lines" {
         ConcLines:any;
     }
 
-    export function init(dispatcher:any, mixins:any, lineStore:any):ConcLinesViews;
+    export function init(dispatcher:any, mixins:any, lineStore:any, lineSelectionStore:any):ConcLinesViews;
 }
 
 
@@ -52,6 +52,16 @@ declare module "views/concordance/paginator" {
     }
 
     export function init(dispatcher:any, mixins:any, lineStore:any):PaginatorViews;
+}
+
+declare module "views/concordance/main" {
+
+    export interface ConcordanceView {
+        ConcordanceView:any;
+    }
+
+    export function init(dispatcher:any, mixins:any, lineStore:any, lineSelectionStore:any, userInfoStore:any,
+            layoutViews:Kontext.LayoutViews):ConcordanceView;
 }
 
 

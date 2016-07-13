@@ -232,6 +232,7 @@ declare module Kontext {
         getConf(k:string):any;
         createActionLink(path:string):string;
         createStaticUrl(path:string):string;
+        formatNumber(value:number):string;
         getLayoutViews():Kontext.LayoutViews;
     }
 

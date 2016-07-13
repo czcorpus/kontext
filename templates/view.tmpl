@@ -49,6 +49,15 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.FromPage = #if $fromp#$fromp#else#0#end if#;
     conf.Lines = #filter $Jsonize#$Lines#end filter#;
     conf.SortIdx = #filter $Jsonize#$Sort_idx#end filter#;
+    conf.ConcSize = $concsize;
+    conf.FullSize = $fullsize;
+    conf.SampledSize = $sampled_size;
+    conf.ResultIpm = $result_relative_freq;
+    conf.ResultIpmRelTo = #filter $Jsonize#$result_relative_freq_rel_to#end filter#;
+    conf.ResultArf = #if $result_arf#$result_arf#else#null#end if#;
+    conf.ResultShuffled = #filter $Jsonize#$result_shuffled#end filter#;
+    conf.NumLinesInGroups = $num_lines_in_groups;
+    conf.LinesGroupsNumbers = #filter $Jsonize#$lines_groups_numbers#end filter#;
     var model = pageSelf.init(conf);
 
     #if not $finished and $async and $save and not $sampled_size
@@ -63,89 +72,12 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #end def
 
 
-#def num_hits($c_size, $f_size)
-#if $c_size == $f_size:
-<span id="conc-loader"></span> <strong id="fullsize" title="$f_size">$format_number($f_size, mask='%d')</strong>
-#else
-<a class="size-warning" data-size-limit="$format_number($c_size, mask='%d')"><img src="${files_path}/img/warning-icon.svg" /></a>
-<span id="loader"></span>
-<strong>$format_number($c_size, mask='%d')</strong> ($_('out of total') <span id="fullsize" title="$f_size">$format_number($f_size, mask='%d'))</span>
-#end if
-#end def
-
 #def state_navigation
 #filter None
 $query_overview_bar()
 #end filter
 #end def
 
-
 #def concordance
-#filter WebSafe
-
-<div id="conc-wrapper">
-    <div id="conc-top-bar">
-        <div id="result-info">
-            #if $usesubcorp
-                $_("Subcorpus"): <strong>$usesubcorp</strong> <span class="separ">|</span>
-            #end if
-
-            #if $q[2] == "R"
-                #set $online_sample = True
-            #else
-                #set $online_sample = False
-            #end if
-
-            $_('Hits'): #filter None# $num_hits($concsize, $fullsize) #end filter#
-            #if $sampled_size# <span class="separ">|</span> $_("random sample of size") <strong>$sampled_size</strong>#end if#
-            <span id="conc-calc-info" title="$concsize">
-            #if not $finished
-              $_('calculating') ...#slurp
-            #end if
-            </span>
-
-            <span class="separ">|</span>
-            <abbr title="$_('instances per million positions') ($result_relative_freq_rel_to)">i.p.m.</abbr>:
-
-            #if $getVar('query_contains_within', False) is False:
-                <span class="ipm">$format_number($result_relative_freq, mask='%01.2f')</span>
-                $result_relative_freq_rel_to
-            #else
-                <a class="calculate-ipm" data-total-hits="$fullsize">$_('calculate')</a>
-            #end if
-
-            #if $result_arf
-            <span class="separ">|</span> <abbr title="$_('Average Reduced Frequency')">$_('ARF')</abbr>:
-            <strong id="arf">$format_number($result_arf, mask='%01.2f')</strong>
-            #end if
-
-            <span class="separ">|</span>
-            <span class="notice-shuffled">
-            #if $result_shuffled#$_('Result is shuffled')#else#$_('Result is sorted')#end if#
-            </span>
-            <br />
-            <div class="line-ops">
-                $_('Line selection'):
-                <select id="selection-mode-switch">
-                    <option value="simple">$_('simple')</option>
-                    <option value="groups">$_('groups')</option>
-                </select>
-                <span class="lines-selection"></span>
-            </div>
-        </div>
-
-        <div class="bonito-pagination"></div>
-    </div>
-
-    ## concordance lines
-    <div id="conclines-wrapper">
-        <img class="loader-anim" src="${files_path}/img/ajax-loader.gif" alt="$_('Loading...')" />
-    </div>
-
-    <div id="conc-bottom-bar">
-        <div class="bonito-pagination"></div>
-    </div>
-</div>
-
-#end filter
+<div id="conc-wrapper"></div>
 #end def

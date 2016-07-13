@@ -25,6 +25,7 @@
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp-ajax.d.ts" />
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
+/// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 /// <reference path="../../ts/declarations/popupbox.d.ts" />
 
@@ -48,6 +49,7 @@ import Immutable = require('vendor/immutable');
 import asyncTask = require('../asyncTask');
 import userSettings = require('../userSettings');
 import menu = require('../menu');
+declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**
  *
@@ -205,6 +207,9 @@ export class PageModel {
             createStaticUrl(path:string):string {
                 return self.createStaticUrl(path);
             },
+            formatNumber(value:number):string {
+                return self.formatNumber(value);
+            },
             getLayoutViews():Kontext.LayoutViews {
                 return self.layoutViews;
             }
@@ -314,6 +319,24 @@ export class PageModel {
             ans.reset = false;
         }
         return ans;
+    }
+
+    /**
+     * Replace current state with the one specified by passed arguments.
+     *
+     * @param action action name (e.g. 'first_form', 'subcorpus/subcorp_list')
+     * @param args a multi-dict instance containing URL arguments to be used
+     * @param stateData (just like in window.history.replaceState)
+     * @param title (just like in window.history.replaceState), default is window.document.title
+     */
+    historyReplaceState(action:string, args:util.MultiDict, stateData?:any, title?:string):void {
+         if (Modernizr.history) {
+            window.history.replaceState(
+                stateData || {},
+                title || window.document.title,
+                this.createActionUrl(action) + '?' + this.encodeURLParameters(args)
+            );
+         }
     }
 
     /**
@@ -950,6 +973,12 @@ export class PageModel {
      */
     getConcArgs():util.MultiDict {
         return new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+    }
+
+    setConcArg(name:string, value:any) {
+        let tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        tmp.set(name, value);
+        this.conf['currentArgs'] = tmp.items();
     }
 
     pluginApi():PluginApi {
