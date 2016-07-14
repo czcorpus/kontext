@@ -40,11 +40,9 @@ import documentModule = require('./document');
 import detail = require('detail');
 import popupBox = require('popupbox');
 import conclines = require('../conclines');
-import {init as lineSelViewsInit} from 'views/concordance/lineSelection';
-import {init as paginatorViewsInit} from 'views/concordance/paginator';
-import {init as linesViewInit} from 'views/concordance/lines';
+import {init as concViewsInit} from 'views/concordance/main';
 import lineSelStores = require('../stores/concordance/lineSelection');
-import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination} from '../stores/concordance/lines';
+import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary} from '../stores/concordance/lines';
 import SoundManager = require('SoundManager');
 import d3 = require('vendor/d3');
 import syntaxViewer = require('plugins/syntaxViewer/init');
@@ -119,28 +117,22 @@ export class ViewPage {
 
     private hasLockedGroups:boolean;
 
-    private lineSelViews:any; // TODO
-
-    private lineViews:any; // TODO
-
-    private paginatorViews:any; // TODO
+    private concViews:any; // TODO
 
     private touchHandler:TouchHandler;
 
-    constructor(layoutModel:documentModule.PageModel, lineSelViews:any, lineSelectionStore:lineSelStores.LineSelectionStore,
-            lineViews:any, paginatorViews:any, lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
+    private lastGroupStats:any; // group stats cache
+
+    constructor(layoutModel:documentModule.PageModel, lineSelectionStore:lineSelStores.LineSelectionStore,
+            lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.lineSelViews = lineSelViews;
         this.lineSelectionStore = lineSelectionStore;
-        this.lineViews = lineViews;
-        this.paginatorViews = paginatorViews;
         this.lineViewStore = lineViewStore;
         this.hasLockedGroups = hasLockedGroups;
         this.touchHandler = new TouchHandler();
         // we must handle non-React widgets; once they are integrated
         // as React components, this won't be necessary
         lineViewStore.addOnPageUpdateHandler(() => {
-            this.initLineSelection();
             syntaxViewer.create(this.layoutModel.pluginApi());
         });
     }
@@ -150,85 +142,7 @@ export class ViewPage {
         return this.layoutModel.translate(s, values);
     }
 
-
-    getUISelectionMode():string {
-        let conclines = $('#conclines');
-        if (conclines.find('td.manual-selection input[type=\'checkbox\']').length > 0) {
-            return 'simple';
-
-        } else if (conclines.find('td.manual-selection input[type=\'text\']').length > 0) {
-            return 'groups';
-        }
-        return null;
-    }
-
-
-    private setDefinedGroups():void {
-        $('#selection-mode-switch')
-            .val('groups')
-            .attr('disabled', 'disabled');
-        $('#conclines tr').each(function () {
-            let elm = $(this).find('.manual-selection');
-            let groupElm = window.document.createElement('span');
-            let inputElm = elm.find('input');
-            let kwiclen = inputElm.attr('data-kwiclen');
-            let position = inputElm.attr('data-position');
-            let lineNum = inputElm.attr('data-linenum');
-
-            $(groupElm)
-                .attr('data-kwiclen', kwiclen)
-                .attr('data-position', position)
-                .attr('data-linenum', lineNum)
-                .text($(this).attr('data-linegroup'))
-                .addClass('group-id');
-            elm.empty().append(groupElm);
-        });
-    }
-
-
-    /**
-     * According to the data found in sessionStorage iterates over current page's
-     * lines and (un)checks them appropriately. In case sessionStorage is not
-     * supported all the checkboxes are disabled.
-     */
-    refreshSelection():void {
-        let self = this;
-        function applyOn(currMode, setValFn) {
-            return function (i, item) {
-                self.rowSelectionEvent(item, currMode);
-                if (!self.lineSelectionStore.supportsSessionStorage()) {
-                    $(item).attr('disabled', 'disabled');
-
-                } else {
-                    setValFn(item);
-                }
-            }
-        }
-        let storeMode = this.lineSelectionStore.getMode();
-        if (this.getUISelectionMode() !== storeMode) {
-            self.updateUISelectionMode();
-        }
-        $('#selection-mode-switch').val(storeMode);
-        if (storeMode === 'simple') {
-            $('#conclines td.manual-selection input[type=\'checkbox\']').each(applyOn(storeMode, (item) => {
-                if (self.lineSelectionStore.containsLine($(item).attr('data-position'))) {
-                    item.checked = true;
-
-                } else {
-                    item.checked = false;
-                }
-            }));
-
-        } else if (storeMode === 'groups') {
-            $('#conclines td.manual-selection input[type=\'text\']').each(applyOn(storeMode, (item) => {
-                let data = self.lineSelectionStore.getLine($(item).attr('data-position'));
-                $(item).val(data ? data[1] : null);
-            }));
-        }
-        self.reinitSelectionMenuLink();
-    }
-
-    showGroupsStats(rootElm):void {
+    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
         let self = this;
 
         function renderChart(data):d3.scale.Ordinal<string, string> {
@@ -322,14 +236,31 @@ export class ViewPage {
             $(rootElm).append(labelWrapper);
         }
 
-        this.layoutModel.ajax(
-            'GET',
-            this.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
-                    + this.layoutModel.getConf('stateParams'),
-            {},
-            {contentType : 'application/x-www-form-urlencoded'}
-        ).then(
-            function (data) {
+        let prom;
+
+        if (this.lastGroupStats && usePrevData) {
+            prom = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+                resolve(this.lastGroupStats);
+            });
+
+        } else {
+            prom = this.layoutModel.ajax(
+                'GET',
+                this.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
+                        + this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs()),
+                {},
+                {contentType : 'application/x-www-form-urlencoded'}
+
+            ).then(
+                (data) => {
+                    this.lastGroupStats = data;
+                    return data;
+                }
+            );
+        }
+
+        prom.then(
+            (data) => {
                 let chartData = [];
                 let colors:any;
 
@@ -342,249 +273,10 @@ export class ViewPage {
                 colors = renderChart(chartData);
                 renderLabels(chartData, colors, rootElm);
             },
-            function (err) {
+            (err) => {
                 self.layoutModel.showMessage('error', err);
             }
         );
-    }
-
-    getNumSelectedItems():number {
-        if (this.hasLockedGroups) {
-            return this.layoutModel.getConf<number>('numLinesInGroups');
-
-        } else {
-            return this.lineSelectionStore.size();
-        }
-    }
-
-    toggleWarning(targetElm):void {
-        if (this.hasLockedGroups) {
-            targetElm.addClass('info');
-            targetElm.attr('title', this.translate('linesel__you_have_saved_line_groups'));
-
-        } else if (this.getNumSelectedItems() > 0) {
-            targetElm.addClass('warn');
-            targetElm.attr('title', this.translate('linesel__you_have_unsaved_line_sel'));
-
-        } else {
-            targetElm.removeClass('warn');
-            targetElm.attr('title', null);
-        }
-    }
-
-    /**
-     *
-     * @param numSelected
-     */
-    private reinitSelectionMenuLink():void {
-        let linesSelectionWrap = $('#result-info .lines-selection');
-        let createContent:(box:popupBox.TooltipBox, finalize:()=>void)=>void;
-        let createContentChecked:(box:popupBox.TooltipBox, finalize:()=>void)=>void;
-        let self = this;
-
-        linesSelectionWrap.empty();
-
-        if (this.hasLockedGroups) {
-            createContent = function (box, finalize) {
-                let actionRegId = self.layoutModel.dispatcher.register((payload) => {
-                    if (payload.actionType === 'ERROR') {
-                        box.close();
-                        self.layoutModel.dispatcher.unregister(actionRegId);
-                    }
-                });
-                self.lineSelectionStore.addActionFinishHandler(() => {
-                    box.close();
-                });
-                self.layoutModel.renderReactComponent(
-                    self.lineSelViews.LockedLineGroupsMenu,
-                    box.getRootElement(),
-                    {
-                        doneCallback: () => {
-                            finalize.call(self.layoutModel);
-                        },
-                        chartCallback: () => {
-                            $(box.getRootElement()).find('.chart-area').empty();
-                            self.showGroupsStats($(box.getRootElement()).find('.chart-area').get(0));
-                        },
-                        checkpointUrl: window.location.href,
-                        canSendMail: self.layoutModel.getConf<boolean>('can_send_mail')
-                     }
-                 );
-            };
-
-        } else {
-            createContent = function (box, finalize) {
-                var actionRegId = self.layoutModel.dispatcher.register(function (payload) {
-                    if (payload.actionType === 'ERROR') {
-                        box.close();
-                        self.layoutModel.dispatcher.unregister(actionRegId);
-                    }
-                });
-                self.lineSelectionStore.addActionFinishHandler(function () {
-                    box.close();
-                });
-                self.layoutModel.renderReactComponent(
-                    self.lineSelViews.LineSelectionMenu,
-                    box.getRootElement(),
-                    {
-                        doneCallback: finalize.bind(self.layoutModel)
-                    }
-                 );
-            };
-        }
-
-        createContentChecked = function (box, finalize) {
-            if (self.getNumSelectedItems() > 0) {
-                createContent(box, finalize);
-
-            } else {
-                $(box.getRootElement()).append(self.translate('linesel__you_have_no_sel_lines'));
-                finalize();
-            }
-        }
-
-        let numSelected = this.getNumSelectedItems();
-        let viewMenuLink:HTMLElement = window.document.createElement('a');
-        $(viewMenuLink).append('<span class="value">' + numSelected + '</span> '
-                + self.translate('global__selected_lines'));
-        if (!popupBox.hasAttachedPopupBox(viewMenuLink)) {
-            popupBox.bind(viewMenuLink, createContentChecked, {
-                type : 'plain',
-                closeIcon : true,
-                timeout: null,
-                onClose: function () { // beware - 'this' refers to the popupbox instance
-                    self.layoutModel.unmountReactComponent(this.getRootElement());
-                    self.lineSelectionStore.removeAllActionFinishHandlers();
-                }
-            });
-        }
-        linesSelectionWrap
-            .append('(')
-            .append(viewMenuLink)
-            .append(')');
-        self.toggleWarning(linesSelectionWrap);
-    }
-
-    /**
-     * Updates selection mode (group vs. simple) in UI according
-     * to a state in the lineSelectionStore.
-     */
-    updateUISelectionMode():void {
-        let self = this;
-        let mode = this.lineSelectionStore.getMode();
-
-        function applyStoredValue(jqElm) {
-            let line = self.lineSelectionStore.getLine(jqElm.attr('data-position'));
-            if (line && mode === 'groups') {
-                jqElm.val(line[1]);
-
-            } else if (line && mode === 'simple') {
-                jqElm.prop('checked', true);
-            }
-        }
-
-        $('#conclines').find('td.manual-selection > *').each(function (item) {
-            let inputElm = window.document.createElement('input');
-            let kwiclen = $(this).attr('data-kwiclen');
-            let position = $(this).attr('data-position');
-            let lineNum = $(this).attr('data-linenum');
-            $(inputElm)
-                .attr('type', mode === 'simple' ? 'checkbox' : 'text')
-                .attr('data-kwiclen', kwiclen)
-                .attr('data-position', position)
-                .attr('data-linenum', lineNum);
-            if (mode === 'groups') {
-                $(inputElm)
-                    .attr('inputmode', 'numeric')
-                    .css('width', '1.4em');
-            }
-            $(this).replaceWith(inputElm);
-            applyStoredValue($(inputElm));
-            self.rowSelectionEvent(inputElm, mode);
-        });
-    }
-
-    /**
-     * Handle manual mode selection
-     */
-    private bindSelectionModeSwitch():void {
-        $('#selection-mode-switch')
-            .off('change')
-            .on('change', (evt) => {
-                let mode = $(evt.currentTarget).val();
-                this.lineSelectionStore.setMode(mode);
-                this.updateUISelectionMode();
-                this.reinitSelectionMenuLink();
-                let realHeight = $('#conclines').height();
-            }
-        );
-    }
-
-    private getMaxGroupId():number {
-        return this.layoutModel.getConf<number>('concLineMaxGroupNum');
-    }
-
-    private validateGroupNameInput(s):boolean {
-        let v = parseInt(s);
-        if (!isNaN(v) && v <= this.getMaxGroupId()) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Handle click on concordance line checkboxes or change in line group text input fields
-     */
-    rowSelectionEvent(elm, mode):void {
-        let self = this;
-        let jqLineSel = $('.lines-selection');
-
-        if (mode === 'simple') {
-            $(elm).on('click', function (e) {
-                let id = $(e.currentTarget).attr('data-position');
-                let kwiclen:number = parseInt($(e.currentTarget).attr('data-kwiclen') || '1', 10);
-
-                if ($(e.currentTarget).is(':checked')) {
-                    self.lineSelectionStore.addLine(id, kwiclen, null);
-
-                } else {
-                    self.lineSelectionStore.removeLine(id);
-                }
-                jqLineSel.find('.value').text(String(self.getNumSelectedItems()));
-                self.toggleWarning(jqLineSel);
-            });
-
-        } else if (mode === 'groups') {
-            $(elm).on('change keyup', function (e) {
-                let id = $(e.currentTarget).attr('data-position');
-                let kwiclen = parseInt($(e.currentTarget).attr('data-kwiclen') || '1', 10);
-                let groupId = parseInt($(e.currentTarget).val() || 0, 10);
-                let inputValue = $(e.currentTarget).val();
-
-                if (inputValue !== '') {
-                    if (self.validateGroupNameInput(inputValue)) {
-                        $(e.currentTarget)
-                            .removeClass('error')
-                            .attr('title', null);
-                        self.lineSelectionStore.addLine(id, kwiclen, groupId);
-
-                    } else {
-                        $(e.currentTarget)
-                            .addClass('error')
-                            .attr('title', self.translate('linesel__error_group_name_please_use{max_group}',
-                                    {max_group: self.getMaxGroupId()}));
-                    }
-
-                } else {
-                    $(e.currentTarget)
-                        .removeClass('error')
-                        .attr('title', null);
-                    self.lineSelectionStore.removeLine(id);
-                }
-                jqLineSel.find('.value').text(String(self.getNumSelectedItems()));
-                self.toggleWarning(jqLineSel);
-            });
-        }
     }
 
     /**
@@ -671,11 +363,6 @@ export class ViewPage {
      * @todo refactor this
      */
     private setupLineActions():void {
-        let self = this;
-
-        $('#groupmenu').attr('corpname', this.layoutModel.getConf<string>('corpname'));
-        $('#groupmenu').attr('queryparams', this.layoutModel.getConf<string>('q'));
-
         if (Modernizr.history) {
             // register event to load lines via ajax in case user hits back
             window.onpopstate = (event) => {
@@ -712,7 +399,7 @@ export class ViewPage {
                     // TODO dtto
                     this.lineViewStore.setLineFocus(lineIdx, false);
                     this.lineViewStore.notifyChangeListeners();
-                    self.layoutModel.showMessage('error', error);
+                    this.layoutModel.showMessage('error', error);
                 }
             );
         });
@@ -742,7 +429,7 @@ export class ViewPage {
                     // TODO dtto
                     this.lineViewStore.setLineFocus(lineIdx, false);
                     this.lineViewStore.notifyChangeListeners();
-                    self.layoutModel.showMessage('error', error);
+                    this.layoutModel.showMessage('error', error);
                 }
             );
         });
@@ -766,16 +453,8 @@ export class ViewPage {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             props.onReady = () => resolve(null);
             try {
-                this.layoutModel.renderReactComponent(this.lineViews.ConcLines,
-                    window.document.getElementById('conclines-wrapper'), props);
-
-                let topPgWraper = $(window.document.getElementById('conc-top-bar'));
-                this.layoutModel.renderReactComponent(this.paginatorViews.Paginator,
-                    topPgWraper.find('.bonito-pagination').get(0), props);
-
-                let bottomPgWraper = $(window.document.getElementById('conc-bottom-bar'));
-                this.layoutModel.renderReactComponent(this.paginatorViews.Paginator,
-                    bottomPgWraper.find('.bonito-pagination').get(0), props);
+                this.layoutModel.renderReactComponent(this.concViews.ConcordanceView,
+                    window.document.getElementById('conc-wrapper'), props);
 
             } catch (e) {
                 console.error(e.stack);
@@ -934,22 +613,6 @@ export class ViewPage {
         });
     }
 
-    private initLineSelection():void {
-        this.lineSelectionStore.addOnReenableEdit(() => {
-            $('#selection-mode-switch').attr('disabled', null);
-            this.hasLockedGroups = false;
-            $(win).off('beforeunload.alert_unsaved');
-        });
-        if (this.hasLockedGroups) {
-            this.setDefinedGroups();
-
-        } else {
-            this.bindSelectionModeSwitch();
-            this.refreshSelection();
-        }
-        this.reinitSelectionMenuLink();
-    }
-
     private updateLocalAlignedCorpora():void {
         let serverSideAlignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
         this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
@@ -958,12 +621,23 @@ export class ViewPage {
     init(lineViewProps:ViewConfiguration):void {
         this.layoutModel.init().then(
             () => {
+                lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
+                    let frame = window.document.getElementById('selection-actions');
+                    $(frame).find('.chart-area').empty();
+                    this.showGroupsStats($(frame).find('.chart-area').get(0), usePrevData);
+                };
+            	this.concViews = concViewsInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.exportMixins(),
+                    this.lineViewStore,
+                    this.lineSelectionStore,
+                    this.layoutModel.getStores().userInfoStore,
+                    this.layoutModel.layoutViews
+                );
                 return this.renderLines(lineViewProps);
             }
         ).then(
             () => {
-                this.lineSelectionStore.addClearSelectionHandler(this.refreshSelection.bind(this));
-                this.initLineSelection();
                 this.setupLineActions();
                 this.addWarnings();
                 if (this.layoutModel.getConf('anonymousUser')) {
@@ -984,18 +658,16 @@ export class ViewPage {
 
 export function init(conf):ViewPage {
     let layoutModel = new documentModule.PageModel(conf);
-    let lineSelectionStore = new lineSelStores.LineSelectionStore(
-            layoutModel,
-            layoutModel.dispatcher,
-            conclines.openStorage(()=>{}),
-            'simple'
-    );
-    let lineSelViews = lineSelViewsInit(
-            layoutModel.dispatcher,
-            layoutModel.exportMixins(),
-            lineSelectionStore,
-            layoutModel.getStores().userInfoStore
-    );
+
+    let concSummaryProps:ConcSummary = {
+        concSize: layoutModel.getConf<number>('ConcSize'),
+        fullSize: layoutModel.getConf<number>('FullSize'),
+        sampledSize: layoutModel.getConf<number>('SampledSize'),
+        ipm: layoutModel.getConf<number>('ResultIpm'),
+        ipmRelatedTo: layoutModel.getConf<string>('ResultIpmRelTo'),
+        arf: layoutModel.getConf<number>('ResultArf'),
+        isShuffled: layoutModel.getConf<boolean>('ResultShuffled')
+    };
     let lineViewProps:ViewConfiguration = {
         ViewMode: layoutModel.getConf<string>('ViewMode'),
         ShowLineNumbers: layoutModel.getConf<boolean>('ShowLineNumbers'),
@@ -1003,10 +675,13 @@ export function init(conf):ViewPage {
         CorporaColumns: layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
         WideCtxGlobals: layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
         SortIdx: layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
+        NumItemsInLockedGroups: layoutModel.getConf<number>('NumLinesInGroups'),
         baseCorpname: layoutModel.getConf<string>('corpname'),
         pagination: layoutModel.getConf<ServerPagination>('Pagination'),
         currentPage: layoutModel.getConf<number>('FromPage'),
-        mainCorp: layoutModel.getConcArgs()['maincorp']
+        mainCorp: layoutModel.getConcArgs()['maincorp'],
+        concSummary: concSummaryProps,
+        canSendEmail: layoutModel.getConf<boolean>('can_send_mail')
     };
     let lineViewStore = new ConcLineStore(
             layoutModel,
@@ -1014,25 +689,18 @@ export function init(conf):ViewPage {
             lineViewProps,
             layoutModel.getConf<Array<ServerLineData>>('Lines')
     );
-    let concLinesViews = linesViewInit(
+    let lineSelectionStore = new lineSelStores.LineSelectionStore(
+            layoutModel,
             layoutModel.dispatcher,
-            layoutModel.exportMixins(),
-            lineViewStore
+            lineViewStore,
+            conclines.openStorage(()=>{}),
+            'simple'
     );
-    let paginatorViews = paginatorViewsInit(
-            layoutModel.dispatcher,
-            layoutModel.exportMixins(),
-            lineViewStore
-    );
-    let hasLockedGroups = layoutModel.getConf('numLinesInGroups') > 0;
     let pageModel = new ViewPage(
             layoutModel,
-            lineSelViews,
             lineSelectionStore,
-            concLinesViews,
-            paginatorViews,
             lineViewStore,
-            hasLockedGroups
+            layoutModel.getConf<number>('NumLinesInGroups') > 0
     );
     pageModel.init(lineViewProps);
     return pageModel;

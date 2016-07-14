@@ -146,7 +146,15 @@
         "concview__first_page_btn": "First page",
         "concview__click_for_details": "Click to see details",
         "concview__click_for_broader_context": "Click to see the wider context",
-        "concview__sort_jump_to": "Jump to"
+        "concview__sort_jump_to": "Jump to",
+        "concview__result_sorted": "Result is sorted",
+        "concview__result_shuffled": "Result is shuffled",
+        "concview__out_of_total": "Out of total",
+        "concview__hits_label": "Hits",
+        "concview__line_sel": "Line selection",
+        "concview__line_sel_simple": "simple",
+        "concview__line_sel_groups": "groups",
+        "concview__num_sel_lines": "selected"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -296,6 +304,14 @@
         "concview__first_page_btn": "první stránka",
         "concview__click_for_details": "Klikněte pro zobrazení detailů",
         "concview__click_for_broader_context": "Klikněte pro zobrazení širšího kontextu",
-        "concview__sort_jump_to": "Přejít na"
+        "concview__sort_jump_to": "Přejít na",
+        "concview__result_sorted": "Výsledek je setříděn",
+        "concview__result_shuffled": "Výsledek je promíchán",
+        "concview__out_of_total": "Z celkových",
+        "concview__hits_label": "Výskytů",
+        "concview__line_sel": "Výběr řádků",
+        "concview__line_sel_simple": "základní",
+        "concview__line_sel_groups": "skupiny",
+        "concview__num_sel_lines": "vybráno"
 	}
 }

@@ -30,7 +30,7 @@ function loadAll() {
     var data;
 
     try {
-        data = JSON.parse(window.sessionStorage[accessKey]);
+        data = JSON.parse(window.sessionStorage[accessKey]) || {};
 
     } catch (e) {
         window.sessionStorage[accessKey] = '{}';
@@ -106,11 +106,10 @@ export class ConcLinesStorage {
      * is encoded like this: [kwic_token_id, kwic_len, line_number, category].
      */
     getAll():any {
-        var ans = [],
-            p,
-            item;
+        let ans = [];
+        let item;
 
-        for (p in this.data) {
+        for (let p in this.data) {
             if (this.data.hasOwnProperty(p)) {
                 item = this.data[p];
                 ans.push([parseInt(p, 10)].concat(item.slice(0)));
@@ -162,15 +161,15 @@ export class ConcLinesStorage {
         return 'simple';  // default mode
     }
 
-    switchMode():void {
-        if (this.getMode() === 'groups') {
+    setMode(mode:string):void {
+        if (mode === 'simple') {
             for (let p in this.data) {
                 if (this.data.hasOwnProperty(p)) {
                     this.data[p][1] = null;
                 }
             }
 
-        } else if (this.getMode() === 'simple') {
+        } else if (mode === 'groups') {
             for (let p in this.data) {
                 if (this.data.hasOwnProperty(p)) {
                     this.data[p][1] = ConcLinesStorage.DEFAULT_GROUP_ID;

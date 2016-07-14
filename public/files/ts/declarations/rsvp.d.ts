@@ -23,6 +23,7 @@ declare module RSVP {
         constructor(action:(resolve:(v:T)=>void, reject:(e:any)=>void)=>void);
 
         then<V>(onFulfilled?:(v:T)=>V, onRejected?:(err:any)=>any):Promise<V>;
+        then<V>(onFulfilled?:(v:T)=>Promise<V>, onRejected?:(err:any)=>any):Promise<V>;
     }
 }
 
