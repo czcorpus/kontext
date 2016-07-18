@@ -468,6 +468,12 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             lineSelectionStore.removeChangeListener(this._storeChangeListener);
         },
 
+        componentDidUpdate : function (prevProps, prevstate) {
+            if (typeof this.props.onPageUpdate === 'function') {
+                this.props.onPageUpdate();
+            }
+        },
+
         _renderLine : function (item, i) {
             return <Line key={String(i) + ':' + item.languages.first().tokenNumber}
                          lineIdx={i}

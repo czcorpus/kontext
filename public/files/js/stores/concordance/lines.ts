@@ -93,6 +93,7 @@ export interface ViewConfiguration {
     concSummary:ConcSummary;
     canSendEmail:boolean;
     onReady?:()=>void;
+    onPageUpdate?:()=>void;
     onChartFrameReady?:(usePrevData:boolean)=>void;
 }
 
@@ -285,8 +286,6 @@ export class ConcLineStore extends SimplePageStore {
 
     private externalKwicDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
 
-    private externalOnPageUpdate:()=>void;
-
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
@@ -328,9 +327,6 @@ export class ConcLineStore extends SimplePageStore {
                     let action = payload.props['action'];
                     self.changePage(payload.props['action'], payload.props['pageNum']).then(
                         (data) => {
-                            if (typeof self.externalOnPageUpdate === 'function') {
-                                self.externalOnPageUpdate();
-                            }
                             if (payload.actionType === 'CONCORDANCE_CHANGE_PAGE') {
                                 self.pushHistoryState(self.currentPage);
                             }
@@ -363,10 +359,6 @@ export class ConcLineStore extends SimplePageStore {
 
     getNumItemsInLockedGroups():number {
         return this.numItemsInLockedGroups;
-    }
-
-    addOnPageUpdateHandler (fn:()=>void):void {
-        this.externalOnPageUpdate = fn;
     }
 
     private pushHistoryState(pageNum:number):void {
