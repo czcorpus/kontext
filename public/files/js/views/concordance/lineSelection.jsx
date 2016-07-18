@@ -68,7 +68,11 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         _changeHandler : function (store, status) {
             if (status === '$STATUS_UPDATED') {
                 this.setState(React.addons.update(this.state,
-                        {mode: {$set: lineSelectionStore.getMode()}}));
+                    {
+                        mode: {$set: lineSelectionStore.getMode()},
+                        waiting: {$set: false}
+                    }
+                ));
             }
         },
 
@@ -82,6 +86,8 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
             let eventId = actionMap[evt.target.value] || null;
 
             if (eventId) {
+                this.setState(React.addons.update(this.state,
+                        {waiting: {$set: true}}));
                 dispatcher.dispatch({
                     actionType: eventId,
                     props: {}
@@ -90,7 +96,10 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         },
 
         getInitialState : function () {
-            return {mode: 'simple'};
+            return {
+                mode: 'simple',
+                waiting: false
+            };
         },
 
         componentDidMount : function () {
@@ -129,7 +138,11 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                 <div id="selection-actions">
                     <h3>{heading}</h3>
                     {this.translate('global__actions')}:{'\u00A0'}
-                    <form action="delete_lines" method="POST">{switchComponent}</form>
+                    {switchComponent}
+                    {this.state.waiting ?
+                        <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                title={this.translate('global__loading')} />
+                        : null}
                 </div>
             );
         }
@@ -215,7 +228,11 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         _changeHandler : function (store, status) {
             if (status === '$STATUS_UPDATED') {
                 this.setState(React.addons.update(this.state,
-                        {dataChanged: {$set: true}}));
+                        {
+                            dataChanged: {$set: true},
+                            waiting: {$set: false}
+                        }
+                ));
 
             } else if (status === 'USER_INFO_REFRESHED') {
                 this.setState(React.addons.update(this.state,
@@ -240,6 +257,7 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         _actionSwitchHandler : function (evt) {
             switch (evt.target.value) {
                 case 'edit-groups':
+                    this.setState(React.addons.update(this.state, {waiting: {$set: true}}));
                     dispatcher.dispatch({
                         actionType: 'LINE_SELECTION_REENABLE_EDIT',
                         props: {}
@@ -338,7 +356,8 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                 dataChanged: true,
                 emailDialog: false,
                 renameLabelDialog: false,
-                email: null
+                email: null,
+                waiting: false
             };
         },
 
@@ -367,6 +386,10 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                             <option value="remove-other-lines">{this.translate('linesel__remove_non_group_lines')}</option>
                             <option value="clear-groups">{this.translate('linesel__clear_line_groups')}</option>
                         </select>
+                        {this.state.waiting ?
+                            <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                title={this.translate('global__loading')} />
+                            : null}
                     </div>
                 );
             }
