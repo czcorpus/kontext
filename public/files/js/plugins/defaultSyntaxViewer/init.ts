@@ -95,12 +95,15 @@ class SyntaxTreeViewer {
     }
 
     init():void {
-        $('#conclines').find('td.syntax-tree').each((i, elm:HTMLElement) => {
-            let trElm = $(elm).closest('tr');
-            if (trElm.attr('data-toknum')) {
-                $(elm).append(this.createActionButton(trElm.attr('data-toknum'))).show();
-            }
-        });
+        let srch = $('#conclines').find('td.syntax-tree');
+        srch
+            .empty()
+            .each((i, elm:HTMLElement) => {
+                let trElm = $(elm).closest('tr');
+                if (trElm.attr('data-toknum')) {
+                    $(elm).append(this.createActionButton(trElm.attr('data-toknum'))).show();
+                }
+            });
     }
 }
 
