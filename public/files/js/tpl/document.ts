@@ -173,8 +173,7 @@ export class PageModel {
     }
 
     /**
-     *
-     * @returns
+     * Returns layout stores (i.e. the stores used virtually on any page)
      */
     getStores():Kontext.LayoutStores {
         return {
@@ -261,6 +260,10 @@ export class PageModel {
         }
     }
 
+    /**
+     * Register a handler triggered each time an asynchronous
+     * server task is updated (typically finished)
+     */
     addOnAsyncTaskUpdate(fn:Kontext.AsyncTaskOnUpdate) {
         this.asyncTaskChecker.addOnUpdate(fn);
     }
@@ -299,30 +302,7 @@ export class PageModel {
     }
 
     /**
-     * Normalizes error representation (sometimes it is a string,
-     * sometimes it is an object) into an object with well defined
-     * properties.
-     *
-     * @param obj
-     */
-    unpackError(obj):{message:string; error:Error; reset:boolean} {
-        let ans:{message:string; error:Error; reset:boolean} = {message:null, error:null, reset:null};
-
-        if (typeof obj === 'object') {
-            ans.message = obj.message;
-            ans.error = obj.error;
-            ans.reset = obj.reset || false;
-
-        } else {
-            ans.message = obj;
-            ans.error = null;
-            ans.reset = false;
-        }
-        return ans;
-    }
-
-    /**
-     * Replace current state with the one specified by passed arguments.
+     * Replace the current state with the one specified by passed arguments.
      *
      * @param action action name (e.g. 'first_form', 'subcorpus/subcorp_list')
      * @param args a multi-dict instance containing URL arguments to be used
@@ -340,6 +320,8 @@ export class PageModel {
     }
 
     /**
+     * Appends an animated image symbolizing loading of data.
+     *
      * @param elm
      * @param options
      * @return
@@ -441,6 +423,8 @@ export class PageModel {
     }
 
     /**
+     * Pops-up a user message at the center of page.
+     *
      * @param msgType - one of 'info', 'warning', 'error', 'plain'
      * @param message - text of the message
      */
@@ -453,23 +437,6 @@ export class PageModel {
         }
         this.messageStore.addMessage(msgType, message, onClose);
     };
-
-    /**
-     * Transforms an existing element into a context help link with bound pop-up message.
-     *
-     * @param triggerElm - an element to be transformed into a context help link
-     * @param text - a text of the help message
-     */
-    contextHelp(triggerElm:HTMLElement, text:string):void {
-        let image = win.document.createElement('img');
-
-        $(triggerElm).addClass('context-help');
-        $(image).attr('data-alt-img', this.createStaticUrl('img/question-mark_s.svg'))
-            .attr('src', this.createStaticUrl('img/question-mark.svg'))
-            .addClass('over-img');
-        $(triggerElm).append(image);
-        popupbox.bind(triggerElm, text, {width: 'nice'});
-    }
 
     /**
      * Modifies form (actually, it is always the #mainform)
@@ -489,28 +456,6 @@ export class PageModel {
             subcorpSelect.val(null);
         }
         jqFormElm.submit();
-    }
-
-    /**
-     *
-     * @param value
-     * @param groupSepar - separator character for thousands groups
-     * @param radixSepar - separator character for integer and fractional parts
-     */
-    formatNum(value:number|string, groupSepar:string, radixSepar:string):string {
-        let offset = 0;
-        let numParts = value.toString().split('.');
-        let s:Array<string> = numParts[0].split('').reverse();
-        let len = s.length;
-        for (let i = 3; i < len; i += 3) {
-            s.splice(i + offset, 0, groupSepar);
-            offset += 1;
-        }
-        let ans = s.reverse().join('');
-        if (numParts[1] !== undefined) {
-            ans += radixSepar + numParts[1];
-        }
-        return ans;
     }
 
     /**
@@ -1106,10 +1051,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     userIsAnonymous():boolean {
         return this.getConf<boolean>('anonymousUser');
-    }
-
-    contextHelp(triggerElm, text) {
-        return this.pageModel.contextHelp(triggerElm, text);
     }
 
     formChangeCorpus(event) {

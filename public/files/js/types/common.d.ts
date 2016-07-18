@@ -91,7 +91,6 @@ declare module Kontext {
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
         userIsAnonymous():boolean;
-        contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
         dispatcher():Dispatcher.Dispatcher<any>; // TODO type
         exportMixins(...mixins:any[]):any[];
