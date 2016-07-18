@@ -130,11 +130,6 @@ export class ViewPage {
         this.lineViewStore = lineViewStore;
         this.hasLockedGroups = hasLockedGroups;
         this.touchHandler = new TouchHandler();
-        // we must handle non-React widgets; once they are integrated
-        // as React components, this won't be necessary
-        lineViewStore.addOnPageUpdateHandler(() => {
-            syntaxViewer.create(this.layoutModel.pluginApi());
-        });
     }
 
 
@@ -511,7 +506,7 @@ export class ViewPage {
                     var num2Str;
 
                     num2Str = function (n) {
-                        return self.layoutModel.formatNum(n, data.thousandsSeparator, data.decimalSeparator);
+                        return self.layoutModel.formatNumber(n);
                     };
 
                     if (data.end) {
@@ -621,11 +616,16 @@ export class ViewPage {
     init(lineViewProps:ViewConfiguration):void {
         this.layoutModel.init().then(
             () => {
+                // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
                     let frame = window.document.getElementById('selection-actions');
                     $(frame).find('.chart-area').empty();
                     this.showGroupsStats($(frame).find('.chart-area').get(0), usePrevData);
                 };
+                lineViewProps.onPageUpdate = () => {
+                    syntaxViewer.create(this.layoutModel.pluginApi());
+                };
+
             	this.concViews = concViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),

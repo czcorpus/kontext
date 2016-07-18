@@ -331,7 +331,6 @@ define(['win', 'jquery'], function (win, $) {
 
         this.contentElm = win.document.createElement('div');
         $(this.rootElm).append(this.contentElm);
-
         if (fetchOption('closeIcon', false)) {
             this.jqCloseIcon = $('<a class="close-link" title="' +
                     mixins.translate('close') + '"></a>');

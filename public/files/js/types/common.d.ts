@@ -91,7 +91,6 @@ declare module Kontext {
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
         userIsAnonymous():boolean;
-        contextHelp(triggerElm:HTMLElement, text:string);
         shortenText(s:string, length:number);
         dispatcher():Dispatcher.Dispatcher<any>; // TODO type
         exportMixins(...mixins:any[]):any[];
@@ -219,6 +218,7 @@ declare module Kontext {
         CorpusReference:React.ReactClass;
         CorpusInfoBox:React.ReactClass;
         PopupBox:React.ReactClass;
+        InlineHelp:React.ReactClass;
         Messages:React.ReactClass;
         QueryHints:React.ReactClass;
         SubcorpusInfo:React.ReactClass;
