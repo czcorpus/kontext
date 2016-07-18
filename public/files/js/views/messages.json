@@ -154,7 +154,10 @@
         "concview__line_sel": "Line selection",
         "concview__line_sel_simple": "simple",
         "concview__line_sel_groups": "groups",
-        "concview__num_sel_lines": "selected"
+        "concview__num_sel_lines": "selected",
+        "concview__ipm_help": "instances per million positions",
+        "concview__ipm_rel_to_the_{corpname}": "related to the whole {corpname}",
+        "concview__arf_help": "Average Reduced Frequency"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -312,6 +315,9 @@
         "concview__line_sel": "Výběr řádků",
         "concview__line_sel_simple": "základní",
         "concview__line_sel_groups": "skupiny",
-        "concview__num_sel_lines": "vybráno"
+        "concview__num_sel_lines": "vybráno",
+        "concview__ipm_help": "výskytů na milion pozic",
+        "concview__ipm_rel_to_the_{corpname}": "vztaženo k celému {corpname}",
+        "concview__arf_help": "Průměrná redukovaná frekvence"
 	}
 }

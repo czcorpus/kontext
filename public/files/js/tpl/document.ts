@@ -611,21 +611,12 @@ export class PageModel {
      */
     bindCorpusDescAction() {
         let self = this;
-        let jqDescLink = $('#corpus-desc-link');
+        let descLink = window.document.getElementById('corpus-desc-link');
 
-        popupbox.extended(self.pluginApi()).bind(jqDescLink,
-            function (box, finalize) {
-                let actionRegId;
-
-                // TODO - please note this is not Flux pattern at all; it will be fixed
-                actionRegId = self.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-                    if (payload.actionType === 'ERROR') {
-                        box.close();
-                        self.dispatcher.unregister(actionRegId);
-                    }
-                });
-                self.renderReactComponent(self.layoutViews.CorpusInfoBox,
-                        box.getRootElement(), {doneCallback: finalize.bind(self)});
+        popupbox.extended(self.pluginApi()).bind(
+            descLink,
+            (box, finalize) => {
+                finalize();
             },
             {
                 width: 'nice',
@@ -634,6 +625,18 @@ export class PageModel {
                 timeout: 0,
                 onClose: function () {
                     self.unmountReactComponent(this.getRootElement());
+                },
+                onShow : function () {
+                    let box = this;
+                    // TODO - please note this is not Flux pattern at all; it will be fixed
+                    let actionRegId = self.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+                    if (payload.actionType === 'ERROR') {
+                        box.close();
+                        self.dispatcher.unregister(actionRegId);
+                    }
+                });
+                self.renderReactComponent(self.layoutViews.CorpusInfoBox,
+                        this.getContentElement(), {});
                 }
             }
         );

@@ -10,9 +10,15 @@
 
 #conc-top-bar,
 #conc-bottom-bar {
-  overflow: hidden;
   padding: 0.4em 1em;
   line-height: 1.8em;
+}
+
+#conc-top-bar::after,
+#conc-bottom-bar::after {
+    content: "";
+    display: block;
+    clear: both;
 }
 
 #conc-top-bar,
@@ -470,7 +476,7 @@ table#conclines .concordance-col-heading {
 #result-info {
     margin: 0;
     float: left;
-    width: 70%;
+    width: 80%;
     font-size: 1em;
     font-family: @condensed-font-family;
 

@@ -218,6 +218,7 @@ declare module Kontext {
         CorpusReference:React.ReactClass;
         CorpusInfoBox:React.ReactClass;
         PopupBox:React.ReactClass;
+        InlineHelp:React.ReactClass;
         Messages:React.ReactClass;
         QueryHints:React.ReactClass;
         SubcorpusInfo:React.ReactClass;

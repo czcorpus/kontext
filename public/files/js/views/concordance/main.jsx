@@ -223,24 +223,22 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                     <span id="conc-calc-info" title="90"></span>
                     <span className="separ">|</span>
                     <abbr>i.p.m.</abbr>
-                    <sup>
-                        <a className="context-help">
-                            <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')}
-                                data-alt-img={this.createStaticUrl('img/question-mark_s.svg')} />
-                        </a>
-                    </sup>:
+                    <layoutViews.InlineHelp customStyle={{minWidth: '25em'}}>
+                        {this.translate('concview__ipm_help')}
+                        {'\u00A0'}
+                        ({this.translate('concview__ipm_rel_to_the_{corpname}', {corpname: this.props.corpname})})
+                    </layoutViews.InlineHelp>
+                    :{'\u00A0'}
                     <span className="ipm">{this.props.ipm}</span>
                     {'\u00A0'}
-                    {this.props.ipmRelatedTo}
+                    ({this.props.ipmRelatedTo})
                     {'\u00A0'}
                     <span className="separ">|</span>
                     <abbr>ARF</abbr>
-                    <sup>
-                        <a className="context-help">
-                            <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')}
-                                data-alt-img={this.createStaticUrl('img/question-mark_s.svg')} />
-                        </a>
-                    </sup>:{'\u00A0'}
+                    <layoutViews.InlineHelp customStyle={{minWidth: '20em'}}>
+                    {this.translate('concview__arf_help')}
+                    </layoutViews.InlineHelp>
+                    :{'\u00A0'}
                     <strong id="arf">{this.props.arf ? this.props.arf : '-'}</strong>
                     <span className="separ">|</span>
                     <span className="notice-shuffled">
@@ -271,7 +269,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                         <ConcSummary {...this.props.concSummary}
                             numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
                             onChartFrameReady={this.props.onChartFrameReady}
-                            canSendMail={this.props.canSendMail} />
+                            canSendMail={this.props.canSendMail}
+                            corpname={this.props.baseCorpname} />
                         <paginationViews.Paginator {...this.props} />
                     </div>
                     <div id="conclines-wrapper">

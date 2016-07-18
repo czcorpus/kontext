@@ -248,7 +248,7 @@ export function init(dispatcher, mixins, storeProvider) {
             if (!this.state.corpname) {
                 return (
                     <div id="corpus-details-box">
-                        <img src={this.createStaticUrl('img/ajax-loader.gif')}
+                        <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader.gif')}
                             alt={this.translate('global__loading')} title={this.translate('global__loading')} />
                     </div>
                 );
@@ -270,7 +270,7 @@ export function init(dispatcher, mixins, storeProvider) {
 
                         <h3>{this.translate('global__corpus_info_metadata_heading')}</h3>
 
-                        <table className="structs-and-attrs" border="0">
+                        <table className="structs-and-attrs">
                             <tbody>
                                 <tr>
                                     <td>
@@ -367,6 +367,39 @@ export function init(dispatcher, mixins, storeProvider) {
                 </div>
             );
         }
+    });
+
+    // ------------------------------ <InlineHelp /> -----------------------------
+
+    let InlineHelp = React.createClass({
+
+        mixins : mixins,
+
+        _clickHandler : function () {
+            this.setState({helpVisible: !this.state.helpVisible});
+        },
+
+        getInitialState : function () {
+            return {helpVisible: false};
+        },
+
+        render : function () {
+            return (
+                <sup style={{display: 'inline-block'}}>
+                    <a className="context-help" onClick={this._clickHandler}>
+                        <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')}
+                                data-alt-img={this.createStaticUrl('img/question-mark_s.svg')} />
+                    </a>
+                    {this.state.helpVisible ?
+                        <PopupBox onCloseClick={this._clickHandler}
+                                customStyle={this.props.customStyle}>
+                            {this.props.children}
+                        </PopupBox>
+                        : null}
+                </sup>
+            );
+        }
+
     });
 
 
@@ -503,6 +536,7 @@ export function init(dispatcher, mixins, storeProvider) {
         CorpusReference: CorpusReference,
         CorpusInfoBox: CorpusInfoBox,
         PopupBox: PopupBox,
+        InlineHelp: InlineHelp,
         Messages: Messages,
         QueryHints: QueryHints,
         SubcorpusInfo: SubcorpusInfo
