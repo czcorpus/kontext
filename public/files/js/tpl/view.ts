@@ -28,7 +28,6 @@
 /// <reference path="../../ts/declarations/soundmanager.d.ts" />
 /// <reference path="../../ts/declarations/d3.d.ts" />
 /// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
-/// <reference path="../../ts/declarations/detail.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
@@ -36,8 +35,7 @@ import win = require('win');
 import $ = require('jquery');
 import jqueryPeriodic = require('vendor/jquery.periodic');
 import documentModule = require('./document');
-import detail = require('detail');
-import popupBox = require('popupbox');
+import popupBox = require('../popupbox');
 import conclines = require('../conclines');
 import {init as concViewsInit} from 'views/concordance/main';
 import lineSelStores = require('../stores/concordance/lineSelection');
@@ -48,6 +46,7 @@ import syntaxViewer = require('plugins/syntaxViewer/init');
 import userSettings = require('../userSettings');
 import applicationBar = require('plugins/applicationBar/init');
 import RSVP = require('vendor/rsvp');
+import {ConcDetail} from '../detail';
 declare var Modernizr:Modernizr.ModernizrStatic;
 declare var jqueryPeriodic:any;
 
@@ -122,6 +121,8 @@ export class ViewPage {
 
     private lastGroupStats:any; // group stats cache
 
+    private concDetail:ConcDetail;
+
     constructor(layoutModel:documentModule.PageModel, lineSelectionStore:lineSelStores.LineSelectionStore,
             lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
@@ -129,6 +130,7 @@ export class ViewPage {
         this.lineViewStore = lineViewStore;
         this.hasLockedGroups = hasLockedGroups;
         this.touchHandler = new TouchHandler();
+        this.concDetail = new ConcDetail(layoutModel.pluginApi());
     }
 
 
@@ -373,10 +375,9 @@ export class ViewPage {
         }
 
         this.lineViewStore.bindExternalRefsDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
-            detail.showRefDetail(
+            this.concDetail.showRefDetail(
                 this.layoutModel.createActionUrl('fullref'),
                 {corpname: corpusId, pos: tokenNum},
-                this.layoutModel,
                 () => {
                     // TODO
                     // here we're doing a dirty hack to glue
@@ -389,7 +390,7 @@ export class ViewPage {
                     this.lineViewStore.notifyChangeListeners();
                     // TODO dtto
                 },
-                (jqXHR, textStatus, error) => {
+                (error) => {
                     // TODO dtto
                     this.lineViewStore.setLineFocus(lineIdx, false);
                     this.lineViewStore.notifyChangeListeners();
@@ -402,10 +403,9 @@ export class ViewPage {
             let args = this.layoutModel.getConcArgs().toDict();
             args['corpname'] = corpusId; // just for sure (is should be already in args)
             args['pos'] = String(tokenNum);
-            detail.showDetail(
+            this.concDetail.showDetail(
                 this.layoutModel.createActionUrl('widectx'),
                 args,
-                this.layoutModel,
                 (popupBox) => {
                     // TODO
                     // here we're doing a dirty hack to glue
@@ -419,7 +419,7 @@ export class ViewPage {
                     this.lineViewStore.notifyChangeListeners();
                     // TODO dtto
                 },
-                (jqXHR, textStatus, error) => {
+                (error) => {
                     // TODO dtto
                     this.lineViewStore.setLineFocus(lineIdx, false);
                     this.lineViewStore.notifyChangeListeners();
@@ -462,10 +462,9 @@ export class ViewPage {
         let self = this;
         $('a.expand-link').each(function () {
             $(this).one('click', function (event) {
-                detail.showDetail(
+                self.concDetail.showDetail(
                     self.layoutModel.createActionUrl($(this).data('action')),
                     $(this).data('params'),
-                    self.layoutModel,
                     // Expand link, when clicked, must bind the same event handler
                     // for the new expand link. That's why this 'callback recursion' is present.
                     self.viewDetailDoneCallback.bind(self),
