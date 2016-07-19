@@ -27,7 +27,7 @@
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
-/// <reference path="../../ts/declarations/popupbox.d.ts" />
+
 
 import win = require('win');
 import $ = require('jquery');

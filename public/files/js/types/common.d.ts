@@ -592,6 +592,14 @@ declare module TextTypes {
     }
 }
 
+declare module Legacy {
+
+    export interface IPopupBox {
+        getContentElement():HTMLElement;
+        close():void;
+    }
+}
+
 /**
  *
  */

@@ -18,7 +18,6 @@
 
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
-/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins/corparch.ts" />
 

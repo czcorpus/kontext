@@ -22,7 +22,6 @@
 /// <reference path="../types/plugins/corparch.ts" />
 /// <reference path="../types/plugins/subcmixer.ts" />
 /// <reference path="../types/plugins/liveAttributes.d.ts" />
-/// <reference path="../../ts/declarations/popupbox.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 

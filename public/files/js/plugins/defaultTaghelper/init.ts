@@ -18,18 +18,18 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="./view.d.ts" />
-/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
 import stores = require('./stores');
 import {init as viewInit} from './view';
+import {TooltipBox} from '../../popupbox';
 
 
 export function create(pluginApi:Kontext.PluginApi,
-        insertCallback:(value:string)=>void, widgetId:number):(box:PopupBox.TooltipBox, finalize:()=>void)=>void {
+        insertCallback:(value:string)=>void, widgetId:number):(box:TooltipBox, finalize:()=>void)=>void {
 
     let tagHelperStore = new stores.TagHelperStore(pluginApi, widgetId);
 
-    return function (box:PopupBox.TooltipBox, finalize:()=>void) {
+    return function (box:TooltipBox, finalize:()=>void) {
         let contentElm = window.document.createElement('div');
         box.getRootElement().appendChild(contentElm);
         pluginApi.renderReactComponent(

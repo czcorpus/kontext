@@ -17,7 +17,6 @@
  */
 
 /// <reference path="../types/common.d.ts" />
-/// <reference path="../../ts/declarations/popupbox.d.ts" />
 
 import document = require('tpl/document');
 import $ = require('jquery');

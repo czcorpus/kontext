@@ -20,7 +20,6 @@
 /// <reference path="./types/common.d.ts" />
 /// <reference path="./types/plugins/abstract.d.ts" />
 /// <reference path="../ts/declarations/jquery.d.ts" />
-/// <reference path="../ts/declarations/popupbox.d.ts" />
 /// <reference path="../ts/declarations/virtual-keyboard.d.ts" />
 /// <reference path="../ts/declarations/cookies.d.ts" />
 /// <reference path="../ts/declarations/rsvp.d.ts" />
