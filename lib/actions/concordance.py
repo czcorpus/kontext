@@ -30,7 +30,7 @@ import freq_calc
 import coll_calc
 import plugins
 import butils
-from kwiclib import Kwic
+from kwiclib import Kwic, KwicPageArgs
 import l10n
 from l10n import import_string
 from translation import ugettext as _
@@ -260,15 +260,15 @@ class Actions(Kontext):
                                   samplesize=corpus_info.sample_size)
         self._apply_linegroups(conc)
         conc.switch_aligned(os.path.basename(self.args.corpname))
-        kwic = Kwic(self.corp, self.args.corpname, conc)
-        labelmap = {}
 
-        out = self.call_function(kwic.kwicpage, (self._get_speech_segment(), ),
-                                 labelmap=labelmap,
-                                 alignlist=[self.cm.get_Corpus(c)
-                                            for c in self.args.align.split(',') if c],
-                                 structs=self._get_struct_opts(),
-                                 token_mouseover=corpus_info.token_mouseover)
+        kwic = Kwic(self.corp, self.args.corpname, conc)
+        kwic_args = KwicPageArgs(self.args)
+        kwic_args.speech_attr = self._get_speech_segment()
+        kwic_args.labelmap = {}
+        kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align.split(',') if c]
+        kwic_args.structs = self._get_struct_opts()
+        kwic_args.token_mouseover = corpus_info.token_mouseover
+        out = kwic.kwicpage(kwic_args)
 
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
@@ -291,10 +291,17 @@ class Actions(Kontext):
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
 
-        params = 'pagesize=%s&leftctx=%s&rightctx=%s&saveformat=%s&heading=%s' \
-                 '&numbering=%s&align_kwic=%s&from_line=%s&to_line=%s' \
-                 % (self.args.pagesize, self.args.leftctx, self.args.rightctx, '%s',
-                    self.args.heading, self.args.numbering, self.args.align_kwic, 1, conc.size())
+        params = '&'.join(map(lambda x: '%s=%s' % x, [
+            ('pagesize', self.args.pagesize),
+            ('leftctx', self.args.leftctx),
+            ('rightctx', self.args.rightctx),
+            ('saveformat', '%s'),
+            ('heading', self.args.heading),
+            ('numbering', self.args.numbering),
+            ('align_kwic', self.args.align_kwic),
+            ('from_line', 1),
+            ('to_line', conc.size())
+        ]))
         self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
         self._add_save_menu_item('XLSX', 'saveconc', params % 'xlsx')
         self._add_save_menu_item('XML', 'saveconc', params % 'xml')
@@ -1538,19 +1545,20 @@ class Actions(Kontext):
             err = self._validate_range((from_line, to_line), (1, conc.size()))
             if err is not None:
                 raise err
-            page_size = to_line - (from_line - 1)
-            fromp = 1
-            line_offset = (from_line - 1)
-            labelmap = {}
 
-            data = self.call_function(kwic.kwicpage, (self._get_speech_segment(),),
-                                      fromp=fromp, pagesize=page_size, line_offset=line_offset,
-                                      labelmap=labelmap, align=(),
-                                      alignlist=[self.cm.get_Corpus(c)
-                                                 for c in self.args.align.split(',') if c],
-                                      leftctx=leftctx, rightctx=rightctx,
-                                      structs=self._get_struct_opts())
+            kwic_args = KwicPageArgs(self.args)
+            kwic_args.speech_attr = self._get_speech_segment()
+            kwic_args.fromp = 1
+            kwic_args.pagesize = to_line - (from_line - 1)
+            kwic_args.line_offset = (from_line - 1)
+            kwic_args.labelmap = {}
+            kwic_args.align = ()
+            kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align.split(',') if c]
+            kwic_args.leftctx = leftctx
+            kwic_args.rightctx = rightctx
+            kwic_args.structs = self._get_struct_opts()
 
+            data = kwic.kwicpage(kwic_args)
             mkfilename = lambda suffix: '%s-concordance.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
             if saveformat == 'text':
