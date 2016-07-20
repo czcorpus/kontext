@@ -267,7 +267,8 @@ class Actions(Kontext):
                                  labelmap=labelmap,
                                  alignlist=[self.cm.get_Corpus(c)
                                             for c in self.args.align.split(',') if c],
-                                 structs=self._get_struct_opts())
+                                 structs=self._get_struct_opts(),
+                                 token_mouseover=corpus_info.token_mouseover)
 
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())

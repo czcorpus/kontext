@@ -98,6 +98,52 @@ class KwicPageData(FixedDict):
     CorporaColumns = ()
 
 
+class Attrs(object):
+    """
+    Handles user and mouseover attributes. While Manatee returns
+    just a bunch of values joined into a single string, in KonText
+    we need two groups of attributes:
+    1) user-selected attributes (= the ones visible in a "Bonito-open" way)
+    2) configured mouseover attributes (= the ones visible on mouse-over)
+
+    This class handles these two groups at once and is able to export values
+    for both mentioned cases.
+    """
+    def __init__(self, attrs, mouseover_attrs):
+        if type(attrs) in (str, unicode):
+            attrs = attrs.split(',')
+        self._attrs = []
+        for item in attrs + [x for x in mouseover_attrs if x not in attrs]:
+            flag = 0
+            if item in attrs:
+                flag += 1
+            if item in mouseover_attrs:
+                flag += 2
+            self._attrs.append((item, flag))
+
+    def export_all(self):
+        return ','.join(x[0] for x in self._attrs)
+
+    def process_output(self, s):
+        """
+         Filter out mouse_over items from attribute string
+         produced by Manatee (e.g.: "/-/Pred_Co//VB-S---3P-AA---I/b\u00fdt")
+         and return them as separate data items
+
+         return:
+         a 2-tuple (output_string, mouseover_list_of_pairs)
+        """
+        tmp = re.split(r'/+', s)
+        ans = []
+        mouseover = []
+        for i in range(len(tmp)):
+            if self._attrs[i][1] & 1 == 1:
+                ans.append(tmp[i])
+            if self._attrs[i][1] & 2 == 2:
+                mouseover.append((self._attrs[i][0], tmp[i]))
+        return '/'.join(ans), mouseover
+
+
 class Kwic(object):
     """
     KWIC related data preparation utilities
@@ -117,7 +163,7 @@ class Kwic(object):
 
     def kwicpage(self, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5',
                  attrs='word', ctxattrs='word', refs='#', structs='p', pagesize=40, labelmap={},
-                 righttoleft=False, alignlist=[], hidenone=0):
+                 righttoleft=False, alignlist=[], hidenone=0, token_mouseover=()):
         """
         Generates template data for page displaying provided concordance
 
@@ -136,6 +182,7 @@ class Kwic(object):
         righttoleft -- bool, optional (default is False), whether text flows from right to left
         alignlist -- list, optional (default is [])
         hidenone -- int (0 or 1), whether display ===EMPTY=== or '' in case a value is empty
+        token_mouseover -- a list of attributes to be shown on mouse-over (currently for KWIC only)
 
         returns:
         KwicPageData converted into a dict
@@ -152,10 +199,11 @@ class Kwic(object):
         pagination = Pagination()
         out.Lines = self.kwiclines(speech_attr, (fromp - 1) * pagesize + line_offset,
                                    fromp * pagesize + line_offset, leftctx, rightctx, attrs, ctxattrs,
-                                   refs, structs, labelmap, righttoleft, alignlist)
+                                   refs, structs, labelmap, righttoleft, alignlist, token_mouseover=token_mouseover)
 
         self.add_aligns(out, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
-                        leftctx, rightctx, attrs, ctxattrs, refs, structs, labelmap, righttoleft, alignlist)
+                        leftctx, rightctx, attrs, ctxattrs, refs, structs, labelmap, righttoleft, alignlist,
+                        token_mouseover=token_mouseover)
         if len(out.CorporaColumns) == 0:
             out.CorporaColumns = [dict(n=self.corpus.corpname, label=self.corpus.get_conf('NAME'))]
             out.KWICCorps = [self.corpus.corpname]
@@ -196,7 +244,7 @@ class Kwic(object):
 
     def add_aligns(self, result, fromline, toline, leftctx='40#', rightctx='40#',
                    attrs='word', ctxattrs='word', refs='#', structs='p', labelmap={}, righttoleft=False,
-                   alignlist=[]):
+                   alignlist=(), token_mouseover=()):
         """
         Adds lines from aligned corpora. Method modifies passed KwicPageData instance by setting
         respective attributes.
@@ -227,13 +275,14 @@ class Kwic(object):
             if al_corpname in corps_with_colls:
                 self.conc.switch_aligned(al_corp.get_conffile())
                 al_lines.append(self.kwiclines(None, fromline, toline, leftctx, rightctx, attrs, ctxattrs,
-                                               refs, structs, labelmap, righttoleft))
+                                               refs, structs, labelmap, righttoleft, token_mouseover=token_mouseover))
             else:
                 self.conc.switch_aligned(self.conc.orig_corp.get_conffile())
                 self.conc.add_aligned(al_corp.get_conffile())
                 self.conc.switch_aligned(al_corp.get_conffile())
                 al_lines.append(
-                    self.kwiclines(None, fromline, toline, '0', '0', 'word', '', refs, structs, labelmap, righttoleft))
+                    self.kwiclines(None, fromline, toline, '0', '0', 'word', '', refs, structs, labelmap, righttoleft,
+                                   token_mouseover=token_mouseover))
 
         # It appears that Manatee returns lists of different lengths in case some translations
         # are missing at the end of a concordance. Following block fixes this issue.
@@ -387,7 +436,7 @@ class Kwic(object):
 
     def kwiclines(self, speech_segment, fromline, toline, leftctx='-5', rightctx='5',
                   attrs='word', ctxattrs='word', refs='#', user_structs='p', labelmap={}, righttoleft=False,
-                  alignlist=[], align_attrname='align', aattrs='word', astructs=''):
+                  alignlist=[], align_attrname='align', aattrs='word', astructs='', token_mouseover=()):
         """
         Generates list of 'kwic' (= keyword in context) lines according to
         the provided Concordance object and additional parameters (like
@@ -423,10 +472,12 @@ class Kwic(object):
         else:
             leftlabel, rightlabel = 'Left', 'Right'
 
+        attrs_tmp = Attrs(attrs, token_mouseover)
+
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
-        kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, fromline, toline), leftctx, rightctx, attrs, ctxattrs,
-                               all_structs, refs)
+        kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, fromline, toline), leftctx, rightctx,
+                               attrs_tmp.export_all(), ctxattrs, all_structs, refs)
         labelmap = labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
@@ -456,6 +507,15 @@ class Kwic(object):
 
             if righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)
+
+            prev = {}
+            for kw in kwicwords:
+                kwicwords_upd = []
+                if kw.get('class') == 'attr':
+                    kw['str'], prev['mouseover'] = attrs_tmp.process_output(kw.get('str', ''))
+                else:
+                    kwicwords_upd.append(kw)
+                prev = kw
 
             leftsize = 0
             for w in leftwords:

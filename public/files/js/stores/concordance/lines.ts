@@ -39,6 +39,7 @@ export interface ServerTextChunk {
     open_link?:{speech_path:string};
     close_link?:{speech_path:string};
     continued?:boolean;
+    mouseover?:Array<Array<string>>;
 }
 
 export interface ServerPagination {
@@ -110,7 +111,8 @@ function importData(data:Array<ServerLineData>):Immutable.List<Line> {
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,
-            showAudioPlayer: false
+            showAudioPlayer: false,
+            mouseover: item.mouseover || []
         };
     }
 

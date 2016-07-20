@@ -262,6 +262,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderKwicChunk : function (prevClosed, hasKwic, item, i, itemList) {
             let ans = [];
+            let mouseover = (item.mouseover || []).map(x => x[0] + ': ' + x[1]).join(', ');
             if (prevClosed && item.openLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[prevClosed, item]} />);
 
@@ -269,7 +270,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[itemList.get(i - 1), item]} />);
             }
             if (hasKwic) {
-                ans.push(<strong key={'k:' + String(i)} className={item.className}>{item.text}</strong>);
+                ans.push(<strong key={'k:' + String(i)} className={item.className} title={mouseover}>{item.text}</strong>);
 
             } else if (!item.text) {
                 ans.push('<--not translated-->');
@@ -318,7 +319,6 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                     {corpusOutput.left.map(this._renderLeftChunk)}
                 </td>,
                 <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
-                        title={this.translate('concview__click_for_broader_context')}
                         onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
@@ -334,8 +334,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             return [
                 <td key="par" className={this._exportTextElmClass(corpname, 'par')}
                         onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
-                                 corpusOutput.tokenNumber, this.props.lineIdx)}
-                        title={this.translate('concview__click_for_broader_context')}>
+                                 corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.left.map(this._renderLeftChunk)}
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
                     {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.kwic.get(-1)))}
