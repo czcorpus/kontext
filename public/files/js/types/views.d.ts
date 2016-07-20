@@ -64,6 +64,15 @@ declare module "views/concordance/main" {
             layoutViews:Kontext.LayoutViews):ConcordanceView;
 }
 
+declare module "views/concordance/detail" {
+
+    export interface RefDetail {
+        RefDetail: any;
+    }
+
+    export function init(dispatcher:any, mixins:any):RefDetail;
+}
+
 
 declare module "views/subcorpForm" {
 
@@ -95,3 +104,4 @@ declare module "views/query/context" {
 
     export function init(dispatcher, mixins):QueryContextViews;
 }
+

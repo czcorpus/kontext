@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,17 +21,21 @@
 /// <reference path="../common.d.ts" />
 /// <reference path="./liveAttributes.d.ts" />
 /// <reference path="./corparch.ts" />
-/// <reference path="../../../ts/declarations/popupbox.d.ts" />
+
 
 /*
 This module contains "fake" plugin modules representing
-general plug-ins implementations with proper module names.
-Each custom implementation is expected to use its own name
-(e.g. a general name is "liveAttributes" and a custom name
-is "MyCoolAttributes"). To be able to compile the project
-TypeScript compiler must be persuaded that general names
-actually exist. At runtime, RequireJS remaps these names
-to custom ones.
+virtual general plug-ins implementations with proper module
+names which can be hardcoded in KonText source codes.
+
+E.g.: KonText requires (if configured) module
+"plugins/applicationBar/init" but a custom implementation
+must use a different name,
+e.g.: "plugins/myOrganizationApplicationBar/init".
+
+To be able to compile the project, TypeScript compiler must be
+persuaded that general names actually exist. At runtime, RequireJS
+remaps these names to custom ones.
 */
 
 declare module 'plugins/applicationBar/init' {
@@ -68,7 +74,7 @@ declare module "plugins/queryStorage/init" {
 
 declare module "plugins/taghelper/init" {
     export function create(pluginApi:Kontext.PluginApi,
-            insertCallback:(value:string)=>void, widgetId:number):(box:PopupBox.TooltipBox, finalize:()=>void)=>void;
+            insertCallback:(value:string)=>void, widgetId:number):(box:Legacy.IPopupBox, finalize:()=>void)=>void;
 }
 
 declare module "plugins/syntaxViewer/init" {

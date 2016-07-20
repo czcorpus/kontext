@@ -20,7 +20,6 @@
 /// <reference path="../../types/plugins/corparch.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
-/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 
 import $ = require('jquery');
 import common = require('./common');

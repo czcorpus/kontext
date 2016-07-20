@@ -19,7 +19,6 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../../ts/declarations/popupbox.d.ts" />
 /// <reference path="./js-treex-view.d.ts" />
 /// <amd-dependency path="./js-treex-view" />
 

@@ -57,6 +57,8 @@ export class LineSelectionStore extends SimplePageStore {
 
     private currentGroupIds:Array<number>;
 
+    private maxGroupId:number;
+
     constructor(layoutModel:tplDocument.PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             concLineStore:ConcLineStore, clStorage:conclines.ConcLinesStorage, mode:string) {
         super(dispatcher);
@@ -67,13 +69,22 @@ export class LineSelectionStore extends SimplePageStore {
         this.mode = this.clStorage.getMode();
         this.actionFinishHandlers = [];
         this.currentGroupIds = this.layoutModel.getConf<Array<number>>('LinesGroupsNumbers');
+        this.maxGroupId = this.layoutModel.getConf<number>('concLineMaxGroupNum');
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'LINE_SELECTION_SELECT_LINE':
-                    self.selectLine(payload.props['value'], payload.props['tokenNumber'],
-                            payload.props['kwicLength']);
-                    self.notifyChangeListeners();
+                    let val = payload.props['value'];
+                    if (!isNaN(val)) {
+                        self.selectLine(val, payload.props['tokenNumber'], payload.props['kwicLength']);
+                        self.notifyChangeListeners();
+
+                    } else {
+                        self.layoutModel.showMessage('error',
+                                self.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
+                                        {max_group: self.maxGroupId})
+                        );
+                    }
                     break;
                 case 'LINE_SELECTION_STATUS_REQUEST':
                     self.notifyChangeListeners('$STATUS_UPDATED');

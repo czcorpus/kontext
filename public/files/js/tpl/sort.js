@@ -106,7 +106,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
     lib.init = function (conf) {
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
-        kwicAlignUtils.fix();
+        kwicAlignUtils.extendKwicAlignmentSelector();
         $('a.kwic-alignment-help').each(function () {
             popupBox.bind($(this), lib.layoutModel.translate('global__this_applies_only_for_mk'), {
                 'top': 'attached-bottom',

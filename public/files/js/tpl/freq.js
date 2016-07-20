@@ -51,7 +51,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
             addLevelButton.show();
         }
 
-        kwicAlignUtils.fix();
+        kwicAlignUtils.extendKwicAlignmentSelector();
     };
 
     /**
@@ -93,7 +93,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
             $('#add-freq-level-button').hide();
         }
 
-        kwicAlignUtils.fix(newLine);
+        kwicAlignUtils.extendKwicAlignmentSelector(newLine);
     };
 
     /**
@@ -124,7 +124,7 @@ define(['tpl/document', 'popupbox', 'jquery', 'kwicAlignUtils'], function (docum
         lib.layoutModel = new documentModule.PageModel(conf);
         lib.layoutModel.init();
         lib.maxNumLevels = lib.layoutModel.conf.multilevel_freq_dist_max_levels;
-        kwicAlignUtils.fix();
+        kwicAlignUtils.extendKwicAlignmentSelector();
         if (lib.layoutModel.conf.lastNumLevels) {
             for (i = 1; i < lib.layoutModel.conf.lastNumLevels; i += 1) {
                 lib.addLevel();

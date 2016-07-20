@@ -27,11 +27,11 @@
 /// <reference path="../../ts/declarations/intl-messageformat.d.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
-/// <reference path="../../ts/declarations/popupbox.d.ts" />
+
 
 import win = require('win');
 import $ = require('jquery');
-import popupbox = require('popupbox');
+import popupbox = require('../popupbox');
 import applicationBar = require('plugins/applicationBar/init');
 import footerBar = require('plugins/footerBar/init');
 import flux = require('vendor/Dispatcher');
@@ -392,6 +392,12 @@ export class PageModel {
             } else {
                 body = encodeArgs(args);
             }
+
+        } else if (typeof args === 'string') {
+            body = args;
+
+        } else {
+            throw new Error('ajax() error: unsupported args type ' + (typeof args));
         }
 
         if (method === 'GET') {
@@ -412,11 +418,13 @@ export class PageModel {
             url: url
         }).then<T>(
             function (data:string) {
-                if (options.accept === 'application/json') {
-                    return JSON.parse(data);
-
-                } else {
-                    return decodeArgs(data);
+                switch (options.accept) {
+                    case 'application/json':
+                        return JSON.parse(data);
+                    case 'application/x-www-form-urlencoded':
+                        return decodeArgs(data);
+                    default:
+                        return data;
                 }
             }
         );
