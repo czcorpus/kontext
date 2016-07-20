@@ -98,6 +98,171 @@ class KwicPageData(FixedDict):
     CorporaColumns = ()
 
 
+class Attrs(object):
+    """
+    Handles user and mouseover attributes. While Manatee returns
+    just a bunch of values joined into a single string, in KonText
+    we need two groups of attributes:
+    1) user-selected attributes (= the ones visible in a "Bonito-open" way)
+    2) configured mouseover attributes (= the ones visible on mouse-over)
+
+    This class handles these two groups at once and is able to export values
+    for both mentioned cases.
+    """
+    def __init__(self, attrs, mouseover_attrs):
+        if type(attrs) in (str, unicode):
+            attrs = attrs.split(',')
+        self._attrs = []
+        for item in attrs + [x for x in mouseover_attrs if x not in attrs]:
+            flag = 0
+            if item in attrs:
+                flag += 1
+            if item in mouseover_attrs:
+                flag += 2
+            self._attrs.append((item, flag))
+
+    def export_all(self):
+        return ','.join(x[0] for x in self._attrs)
+
+    def process_output(self, s):
+        """
+         Filter out mouse_over items from attribute string
+         produced by Manatee (e.g.: "/-/Pred_Co//VB-S---3P-AA---I/b\u00fdt")
+         and return them as separate data items
+
+         return:
+         a 2-tuple (output_string, mouseover_list_of_pairs)
+        """
+        tmp = re.split(r'/+', s)
+        ans = []
+        mouseover = []
+        for i in range(len(tmp)):
+            if self._attrs[i][1] & 1 == 1:
+                ans.append(tmp[i])
+            if self._attrs[i][1] & 2 == 2:
+                mouseover.append((self._attrs[i][0], tmp[i]))
+        return '/'.join(ans), mouseover
+
+
+class KwicLinesArgs(object):
+    """
+    note: please see KwicPageArgs attributes for more information
+    """
+    speech_segment = None
+    fromline = None
+    toline = None
+    leftctx = '-5'
+    rightctx = '5'
+    attrs = 'word'
+    ctxattrs = 'word'
+    refs = '#'
+    user_structs = 'p'
+    labelmap = {}
+    righttoleft = False
+    alignlist=()
+    token_mouseover = ()
+
+    def create_attrs_handler(self):
+        return Attrs(self.attrs, self.token_mouseover)
+
+    def copy(self, **kw):
+        ans = KwicLinesArgs()
+        for k, v in self.__dict__:
+            setattr(ans, k, v)
+        for k, v in kw:
+            setattr(ans, k, v)
+        return ans
+
+
+class KwicPageArgs(object):
+    # 2-tuple sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
+    speech_attr = None
+
+    # page number (starts from 1)
+    fromp = 1
+
+    # first line of the listing (starts from 0)
+    line_offset = 0
+
+    # how many characters/positions/whatever_struct_attrs display on the left side; Use 'str' type!
+    leftctx = '-5'
+
+    # how many characters/positions/whatever_struct_attrs display on the right side; Use 'str' type!
+    rightctx = '5'
+
+    # attributes to be displayed (word, lemma, tag,...)
+    attrs = 'word'
+
+    # ???
+    ctxattrs = 'word'
+
+    # references (text type information derived from structural attributes) to be displayed
+    refs = '#'
+
+    # structures to be displayed
+    structs = 'p'
+
+    # number of lines per page
+    pagesize = 40
+
+    # ???
+    labelmap = {}
+
+    # whether the text flows from right to left
+    righttoleft = False
+
+    # ???
+    alignlist = []
+
+    # whether display ===EMPTY=== or '' in case a value is empty
+    hidenone = 0
+
+    # a list of attributes to be shown on mouse-over (currently for KWIC only)
+    token_mouseover = ()
+
+    def __init__(self, argmapping):
+        for k, v in argmapping.__dict__.items():
+            if hasattr(self, k):
+                setattr(self, k, self._import_val(k, v))
+
+    def _import_val(self, k, v):
+        t = type(getattr(self, k))
+        if t is int:
+            return int(v)
+        elif t is float:
+            return float(v)
+        else:
+            return v
+
+    def to_dict(self):
+        return self.__dict__
+
+    def calc_fromline(self):
+        return (self.fromp - 1) * self.pagesize + self.line_offset
+
+    def calc_toline(self):
+        return self.fromp * self.pagesize + self.line_offset
+
+    def create_kwicline_args(self, **kw):
+        ans = KwicLinesArgs()
+        ans.speech_segment = self.speech_attr
+        ans.fromline = self.calc_fromline()
+        ans.toline = self.calc_toline()
+        ans.leftctx = self.leftctx
+        ans.rightctx = self.rightctx
+        ans.attrs = self.attrs
+        ans.ctxattrs = self.ctxattrs
+        ans.refs = self.refs
+        ans.structs = self.structs
+        ans.labelmap = self.labelmap
+        ans.righttoleft = self.righttoleft
+        ans.alignlist = self.alignlist
+        ans.token_mouseover = self.token_mouseover
+        for k, v in kw.items():
+            setattr(ans, k, v)
+        return ans
+
+
 class Kwic(object):
     """
     KWIC related data preparation utilities
@@ -115,34 +280,19 @@ class Kwic(object):
         self.import_string = partial(import_string, from_encoding=self.corpus_encoding)
         self.export_string = partial(export_string, to_encoding=self.corpus_encoding)
 
-    def kwicpage(self, speech_attr=None, fromp=1, line_offset=0, leftctx='-5', rightctx='5',
-                 attrs='word', ctxattrs='word', refs='#', structs='p', pagesize=40, labelmap={},
-                 righttoleft=False, alignlist=[], hidenone=0):
+    def kwicpage(self, args):
         """
         Generates template data for page displaying provided concordance
 
         arguments:
-        speech_attr -- 2-tuple sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
-        fromp -- page number (starts from 1)
-        line_offset -- first line of the listing (starts from 0)
-        leftctx -- str, optional (default is '-5'), how many characters/positions/whatever_struct_attrs display on the left side
-        rightctx -- str, optional (default is '5'), how many characters/positions/whatever_struct_attrs display on the right side
-        attrs -- str, optional (default is 'word'), attributes to be displayed
-        ctxattrs -- str, optional (default is 'word')
-        refs -- str, optional (default is '#'), references to be displayed
-        structs -- str, optional (default is 'p')
-        pagesize -- int, optional (default is 40), number of lines per page
-        labelmap -- dict, optional (default is {}) ???
-        righttoleft -- bool, optional (default is False), whether text flows from right to left
-        alignlist -- list, optional (default is [])
-        hidenone -- int (0 or 1), whether display ===EMPTY=== or '' in case a value is empty
+            args -- a KwicArgs instance
 
         returns:
         KwicPageData converted into a dict
         """
-        refs = refs.replace('.MAP_OUP', '')  # to be removed ...
+        args.refs = getattr(args, 'refs', '').replace('.MAP_OUP', '')  # to be removed ...
         try:
-            fromp = int(fromp)
+            fromp = int(args.fromp)
             if fromp < 1:
                 fromp = 1
         except:
@@ -150,24 +300,21 @@ class Kwic(object):
 
         out = KwicPageData()
         pagination = Pagination()
-        out.Lines = self.kwiclines(speech_attr, (fromp - 1) * pagesize + line_offset,
-                                   fromp * pagesize + line_offset, leftctx, rightctx, attrs, ctxattrs,
-                                   refs, structs, labelmap, righttoleft, alignlist)
+        out.Lines = self.kwiclines(args.create_kwicline_args())
+        self.add_aligns(out, args.create_kwicline_args(speech_segment=None))
 
-        self.add_aligns(out, (fromp - 1) * pagesize + line_offset, fromp * pagesize + line_offset,
-                        leftctx, rightctx, attrs, ctxattrs, refs, structs, labelmap, righttoleft, alignlist)
         if len(out.CorporaColumns) == 0:
             out.CorporaColumns = [dict(n=self.corpus.corpname, label=self.corpus.get_conf('NAME'))]
             out.KWICCorps = [self.corpus.corpname]
 
-        if labelmap:
-            out['GroupNumbers'] = format_labelmap(labelmap)
+        if args.labelmap:
+            out['GroupNumbers'] = format_labelmap(args.labelmap)
         if fromp > 1:
             pagination.prev_page = fromp - 1
             pagination.first_page = 1
-        if self.conc.size() > pagesize:
+        if self.conc.size() > args.pagesize:
             out.fromp = fromp
-            out.numofpages = numofpages = (self.conc.size() - 1) / pagesize + 1
+            out.numofpages = numofpages = (self.conc.size() - 1) / args.pagesize + 1
             if numofpages < 30:
                 out.Page = [{'page': x} for x in range(1, numofpages + 1)]
             if fromp < numofpages:
@@ -187,16 +334,14 @@ class Kwic(object):
             corpsize = self.corpus.size()
         out.result_relative_freq = round(
             self.conc.size() / (float(corpsize) / 1e6), 2)
-        if hidenone:
+        if args.hidenone:
             for line, part in itertools.product(out.Lines, ('Kwic', 'Left', 'Right')):
                 for item in line[part]:
                     item['str'] = item['str'].replace('===NONE===', '')
         out.pagination = pagination.export()
         return dict(out)
 
-    def add_aligns(self, result, fromline, toline, leftctx='40#', rightctx='40#',
-                   attrs='word', ctxattrs='word', refs='#', structs='p', labelmap={}, righttoleft=False,
-                   alignlist=[]):
+    def add_aligns(self, result, args):
         """
         Adds lines from aligned corpora. Method modifies passed KwicPageData instance by setting
         respective attributes.
@@ -212,7 +357,7 @@ class Kwic(object):
         def fix_length(arr, length):
             return arr + [create_empty_cell() for _ in range(length - len(arr))]
 
-        if not alignlist:
+        if not args.alignlist:
             return
         al_lines = []
         corps_with_colls = manatee.StrVector()
@@ -221,19 +366,19 @@ class Kwic(object):
         if self.corpus.corpname not in result.KWICCorps:
             result.KWICCorps = [self.corpus.corpname] + result.KWICCorps
         result.CorporaColumns = [dict(n=c.get_conffile(), label=c.get_conf('NAME') or c.get_conffile())
-                                 for c in [self.conc.orig_corp] + alignlist]
-        for al_corp in alignlist:
+                                 for c in [self.conc.orig_corp] + args.alignlist]
+        for al_corp in args.alignlist:
             al_corpname = al_corp.get_conffile()
             if al_corpname in corps_with_colls:
                 self.conc.switch_aligned(al_corp.get_conffile())
-                al_lines.append(self.kwiclines(None, fromline, toline, leftctx, rightctx, attrs, ctxattrs,
-                                               refs, structs, labelmap, righttoleft))
+                al_lines.append(self.kwiclines(args))
             else:
                 self.conc.switch_aligned(self.conc.orig_corp.get_conffile())
                 self.conc.add_aligned(al_corp.get_conffile())
                 self.conc.switch_aligned(al_corp.get_conffile())
                 al_lines.append(
-                    self.kwiclines(None, fromline, toline, '0', '0', 'word', '', refs, structs, labelmap, righttoleft))
+                    self.kwiclines(args.copy(leftctx='0', rightctx='0', attrs='word', ctxattrs=''))
+                )
 
         # It appears that Manatee returns lists of different lengths in case some translations
         # are missing at the end of a concordance. Following block fixes this issue.
@@ -310,7 +455,6 @@ class Kwic(object):
         column of a KWIC line - because the KWIC word itself separates left and right columns).
         """
         import re
-        import urllib
 
         newline = []
         speech_struct_str = speech_segment[0] if speech_segment and len(speech_segment) > 0 else None
@@ -385,17 +529,14 @@ class Kwic(object):
         rightwords = moveleft + rightwords
         return leftwords, rightwords
 
-    def kwiclines(self, speech_segment, fromline, toline, leftctx='-5', rightctx='5',
-                  attrs='word', ctxattrs='word', refs='#', user_structs='p', labelmap={}, righttoleft=False,
-                  alignlist=[], align_attrname='align', aattrs='word', astructs=''):
+    def kwiclines(self, args):
         """
         Generates list of 'kwic' (= keyword in context) lines according to
         the provided Concordance object and additional parameters (like
         page number, width of the left and right context etc.).
 
         arguments:
-        speech_segment -- 2-tuple
-        ...
+        args -- a KwicLinesArgs instance
 
         returns:
         a dictionary containing all the required line data (left context, kwic, right context,...)
@@ -404,11 +545,11 @@ class Kwic(object):
         # structs represent which structures are requested by user
         # all_structs contain also internal structures needed to render
         # additional information (like the speech links)
-        all_structs = user_structs
-        if speech_segment:
-            speech_struct_attr_name = '.'.join(speech_segment)
+        all_structs = args.structs
+        if args.speech_segment:
+            speech_struct_attr_name = '.'.join(args.speech_segment)
             speech_struct_attr = self.corpus.get_attr(speech_struct_attr_name)
-            if not speech_struct_attr_name in user_structs:
+            if speech_struct_attr_name not in args.structs:
                 all_structs += ',' + speech_struct_attr_name
         else:
             speech_struct_attr_name = None
@@ -416,46 +557,58 @@ class Kwic(object):
 
         lines = []
 
-        if righttoleft:
+        if args.righttoleft:
             rightlabel, leftlabel = 'Left', 'Right'
-            user_structs += ',ltr'
+            args.structs += ',ltr'
             # from unicodedata import bidirectional
         else:
             leftlabel, rightlabel = 'Left', 'Right'
 
+        attrs_tmp = args.create_attrs_handler()
+
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
-        kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, fromline, toline), leftctx, rightctx, attrs, ctxattrs,
-                               all_structs, refs)
-        labelmap = labelmap.copy()
+        kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),
+                               args.leftctx, args.rightctx,
+                               attrs_tmp.export_all(), args.ctxattrs, all_structs, args.refs)
+        labelmap = args.labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
         maxrightsize = 0
-        filter_out_speech_tag = speech_segment and speech_segment[0] not in user_structs \
+        filter_out_speech_tag = args.speech_segment and args.speech_segment[0] not in args.structs \
             and speech_struct_attr_name in all_structs
 
-        i = fromline
+        i = args.fromline
         while kl.nextline():
             linegroup = str(kl.get_linegroup() or '_')
             linegroup = labelmap.get(linegroup, '#' + linegroup)
-            if speech_segment:
+            if args.speech_segment:
                 leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
             else:
                 leftmost_speech_id = None
-            leftwords, last_left_speech_id = self.postproc_kwicline_part(speech_segment,
+            leftwords, last_left_speech_id = self.postproc_kwicline_part(args.speech_segment,
                                                                          tokens2strclass(kl.get_left()),
                                                                          'left', filter_out_speech_tag,
                                                                          leftmost_speech_id)
-            kwicwords, last_left_speech_id = self.postproc_kwicline_part(speech_segment,
+            kwicwords, last_left_speech_id = self.postproc_kwicline_part(args.speech_segment,
                                                                          tokens2strclass(kl.get_kwic()),
                                                                          'kwic',
                                                                          filter_out_speech_tag,
                                                                          last_left_speech_id)
-            rightwords = self.postproc_kwicline_part(speech_segment, tokens2strclass(kl.get_right()), 'right',
+            rightwords = self.postproc_kwicline_part(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
                                                      filter_out_speech_tag, last_left_speech_id)[0]
 
-            if righttoleft and Kwic.isengword(kwicwords[0]):
+            if args.righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)
+
+            prev = {}
+            for kw in kwicwords:
+                kwicwords_upd = []
+                if kw.get('class') == 'attr':
+                    kw['str'], prev['mouseover'] = attrs_tmp.process_output(kw.get('str', ''))
+                else:
+                    kwicwords_upd.append(kw)
+                prev = kw
 
             leftsize = 0
             for w in leftwords:
@@ -488,7 +641,7 @@ class Kwic(object):
             line['rightspace'] = ' ' * (maxrightsize - line['rightsize'])
         return lines
 
-    def get_sort_idx(self, q=[], pagesize=20):
+    def get_sort_idx(self, q=(), pagesize=20):
         """
         In case sorting is active this method generates shortcuts to pages where new
         first letter of sorted keys (it can be 'left', 'kwic', 'right') starts.

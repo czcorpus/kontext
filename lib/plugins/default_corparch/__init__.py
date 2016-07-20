@@ -494,6 +494,12 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.avg_label_attr_len = getattr(meta_elm.find('avg_label_attr_len'), 'text', None)
             if ans.metadata.avg_label_attr_len is not None:
                 ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
+
+        token_mo = node.find('token_mouseover')
+        if token_mo is not None:
+            for child in token_mo:
+                ans.token_mouseover.append(child.text)
+
         data.append(ans)
 
     def _parse_corplist_node(self, root, data, path='/'):

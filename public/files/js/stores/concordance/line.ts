@@ -30,6 +30,7 @@ export class TextChunk {
     closeLink:{speechPath:string};
     continued:boolean;
     showAudioPlayer:boolean;
+    mouseover:Array<Array<string>>;
 }
 
 
