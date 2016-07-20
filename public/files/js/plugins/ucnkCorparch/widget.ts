@@ -622,7 +622,7 @@ class SearchTab implements WidgetTab {
 
         this.ajaxLoader = window.document.createElement('img');
         $(this.ajaxLoader)
-            .attr('src', this.pluginApi.createStaticUrl('img/ajax-loader.gif'))
+            .attr('src', this.pluginApi.createStaticUrl('img/ajax-loader-bar.gif'))
             .addClass('ajax-loader')
             .addClass('hidden')
             .attr('title', this.pluginApi.translate('global__loading') + '...');
