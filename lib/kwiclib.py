@@ -133,7 +133,7 @@ class Attrs(object):
          return:
          a 2-tuple (output_string, mouseover_list_of_pairs)
         """
-        tmp = re.split(r'/+', s)
+        tmp = s.split('/')
         ans = []
         mouseover = []
         for i in range(len(tmp)):
