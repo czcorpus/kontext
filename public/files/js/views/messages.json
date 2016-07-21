@@ -156,7 +156,13 @@
         "concview__num_sel_lines": "selected",
         "concview__ipm_help": "instances per million positions",
         "concview__ipm_rel_to_the_{corpname}": "related to the whole {corpname}",
-        "concview__arf_help": "Average Reduced Frequency"
+        "concview__arf_help": "Average Reduced Frequency",
+        "wordlist__cannot_save_empty": "Empty result cannot be saved",
+        "wordlist__save_wl_as_header": "Save word list as",
+        "wordlist__include_col_headers": "Include column headers",
+        "wordlist__include_heading": "Include heading",
+        "wordlist__max_num_lines": "Maximum number of lines",
+        "wordlist__save_wl_header": "Save Word List"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -316,6 +322,12 @@
         "concview__num_sel_lines": "vybráno",
         "concview__ipm_help": "výskytů na milion pozic",
         "concview__ipm_rel_to_the_{corpname}": "vztaženo k celému {corpname}",
-        "concview__arf_help": "Průměrná redukovaná frekvence"
+        "concview__arf_help": "Průměrná redukovaná frekvence",
+        "wordlist__cannot_save_empty": "Prázdný výsledek nelze uložit.",
+        "wordlist__save_wl_as_header": "Uložit seznam slov jako",
+        "wordlist__include_col_headers": "Připojit nadpisy sloupců",
+        "wordlist__include_heading": "Připojit hlavičku",
+        "wordlist__max_num_lines": "Maximální počet řádek",
+        "wordlist__save_wl_header": "Uložit seznam slov"
 	}
 }

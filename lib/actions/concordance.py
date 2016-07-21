@@ -1405,15 +1405,25 @@ class Actions(Kontext):
     @exposed(access_level=1, legacy=True)
     def savewl_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = (MainMenu.SAVE, )
-        if to_line == '':
-            to_line = 1000
-
-        ans = {
-            'from_line': from_line,
-            'to_line': to_line,
-        }
-        if to_line == 0:
-            self.add_system_message('error', _('Empty result cannot be saved.'))
+        ans = {}
+        ans['WlStateForm'] = json.dumps(dict(
+            corpname=self.args.corpname,
+            wlattr=self.args.wlattr,
+            wlminfreq=self.args.wlminfreq,
+            wlpat=self.args.wlpat,
+            wlicase=self.args.wlicase,
+            wlsort=self.args.wlsort,
+            usesubcorp=self.args.usesubcorp,
+            ref_corpname=self.args.ref_corpname,
+            ref_usesubcorp=self.args.ref_usesubcorp,
+            wlcache=self.args.wlcache,
+            usearf=self.args.usearf,
+            simple_n=self.args.simple_n,
+            wltype=self.args.wltype,
+            wlnums=self.args.wlnums,
+            include_nonwords=self.args.include_nonwords,
+            blcache=self.args.blcache
+        ).items())
         return ans
 
     @exposed(access_level=1, legacy=True)

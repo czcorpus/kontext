@@ -36,6 +36,7 @@ $_("Save Word List")#slurp
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (savewlForm, conf) {
     conf.files_path = '${files_path}';
+    conf.WlStateForm = $WlStateForm;
     savewlForm.init(conf);
 });
 #end def
@@ -50,82 +51,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (savewlForm, con
       $_("Save Word List")
     #end if
     </h2>
-    <form action="savewl">
-        <input type="hidden" name="corpname" value="$corpname" />
-        <input type="hidden" name="wlattr" value="$wlattr" />
-        <input type="hidden" name="wlminfreq" value="$wlminfreq" />
-        <input type="hidden" name="wlpat" value="$wlpat" />
-        <input type="hidden" name="wlicase" value="$wlicase" />
-        <input type="hidden" name="wlsort" value="$wlsort" />
-        <input type="hidden" name="usesubcorp" value="$usesubcorp" />
-        <input type="hidden" name="ref_corpname" value="$ref_corpname" />
-        <input type="hidden" name="ref_usesubcorp" value="$ref_usesubcorp" />
-        <input type="hidden" name="wlcache" value="$wlcache" />
-        <input type="hidden" name="usearf" value="$usearf" />
-        <input type="hidden" name="simple_n" value="$simple_n" />
-        <input type="hidden" name="wltype" value="$wltype" />
-        <input type="hidden" name="wlnums" value="$wlnums" />
-        <input type="hidden" name="include_nonwords" value="$include_nonwords" />
-        <input type="hidden" name="blcache" value="$blcache" />
-        <table class="form">
-          <tr>
-            <th>
-            #if $keywords
-              $_("Save keywords as"):
-            #else
-              $_("Save word list as"):
-            #end if
-            </th>
-            <td>
-              <label>
-                  <input type="radio" name="saveformat" value="csv"
-                  #if $saveformat == 'csv'
-                  checked="checked"
-                  #end if
-                  /> CSV
-              </label>
-              <label>
-                  <input type="radio" name="saveformat" value="xlsx"
-                  #if $saveformat == 'xlsx'
-                  checked="checked"
-                  #end if
-                  /> XLSX
-              </label>
-              <label>
-                <input type="radio" name="saveformat" value="xml"
-            #if $saveformat == 'xml'
-              checked="checked"
-            #end if
-            /> $_("XML")
-              </label>
-              <label>
-                <input type="radio" name="saveformat" value="text"
-            #if $saveformat == 'text'
-              checked="checked"
-            #end if
-            /> $_("Text")
-              </label>
-            </td>
-          </tr>
-          <tr class="separator">
-            <th>$_("Include heading"):</th>
-            <td><input type="checkbox" name="heading" value="1" checked="checked" /></td>
-          </tr>
-          <tr class="separator">
-            <th>$_("Include column headers"):</th>
-            <td><input type="checkbox" name="colheaders" value="1" checked="checked" /></td>
-          </tr>
-          <tr>
-            <th>$_("Maximum number of lines"):</th>
-            <td><input type="hidden" name="from_line" value="$from_line" size="4" />
-                    <input type="text" name="to_line" value="$to_line" size="4" /></td>
-          </tr>
-        </table>
-
-        <div class="buttons">
-        <input type="submit" id="submit" value="#if $keywords then $_("Save Keywords") else $_("Save Word List")#" />
-        </div>
-    </form>
+    <div id="savewl-form-mount"></div>
 </section>
 #end filter
 #end def

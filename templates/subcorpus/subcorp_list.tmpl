@@ -79,10 +79,10 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 </td>
                 <td class="num">$format_number($item.size, mask='%d')</td>
                 <td>#filter $Datetime#$item.created#end filter#</td>
-                <td data-query="$item.cql">
+                <td data-query="$item.get('cql')">
                 #set $states = []
                 #if $item.deleted# $states.append('<span class="deleted">' + $_('deleted') + '</span>') #end if#
-                #if $item.cql# $states.append($_('backed up')) #end if#
+                #if $item.get('cql')# $states.append($_('backed up')) #end if#
                 #if $len($states) == 0
                   $states.append($_('active'))
                 #end if
@@ -92,7 +92,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 <td>
                   <a class="subc-actions"
                      data-deleted="#filter $Bool2Num#$item.deleted#end filter#"
-                     data-cql="$item.cql"
+                     data-cql="$item.get('cql')"
                      data-subcname="$item.usesubcorp"
                      data-corpname="$item.corpname"
                      data-human_corpname="$item.human_corpname">$_('actions')</a>

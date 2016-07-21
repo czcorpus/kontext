@@ -189,10 +189,6 @@ msgid ""
 msgstr ""
 "Pro vytvoření víceúrovňového seznamu je třeba vybrat vzorec nebo soubor."
 
-#: lib/actions.py:1571
-msgid "Empty result cannot be saved."
-msgstr "Prázdný výsledek nelze uložit."
-
 #: lib/actions.py:1633
 msgid "Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF)."
 msgstr "Chybí konfigurace zobrazení strukturních atributů (SUBCORPATTRS or FULLREF)."
@@ -294,10 +290,6 @@ msgstr "Uložit seznam slov"
 msgid "Save keywords as"
 msgstr "Uložit klíčová slova jako"
 
-#: cmpltmpl/savewl_form.py:294
-msgid "Save word list as"
-msgstr "Uložit seznam slov jako"
-
 #: cmpltmpl/savewl_form.py:309 cmpltmpl/savecoll_form.py:222
 #: cmpltmpl/savefreq_form.py:219 cmpltmpl/saveconc_form.py:205
 msgid "Text"
@@ -312,11 +304,6 @@ msgstr "XML"
 #: cmpltmpl/savefreq_form.py:250 cmpltmpl/saveconc_form.py:236
 msgid "Include heading"
 msgstr "Připojit hlavičku"
-
-#: cmpltmpl/savewl_form.py:349 cmpltmpl/savecoll_form.py:262
-#: cmpltmpl/savefreq_form.py:259
-msgid "Include column headers"
-msgstr "Připojit nadpisy sloupců"
 
 #: cmpltmpl/savewl_form.py:358 cmpltmpl/savecoll_form.py:271
 #: cmpltmpl/savefreq_form.py:268 cmpltmpl/saveconc_form.py:265
@@ -1739,9 +1726,6 @@ msgstr "rozšířit vpravo"
 #: cmpltmpl/widectx.py:221
 msgid "display whole document"
 msgstr "zobrazit celý dokument"
-
-msgid "Maximum number of lines"
-msgstr "Maximální počet řádek"
 
 msgid "Create new subcorpus"
 msgstr "Vytvořit nový subkorpus"
