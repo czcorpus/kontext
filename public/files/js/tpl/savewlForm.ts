@@ -23,8 +23,6 @@
 
 import $ = require('jquery');
 import {PageModel} from './document';
-import {bind as bindPopupBox} from '../popupbox';
-import kwicAlignUtils = require('../kwicAlignUtils');
 import {init as initFormViews} from 'views/wordlist/forms';
 
 
@@ -36,40 +34,6 @@ class SaveWordlistForm {
         this.layoutModel = layoutModel;
     }
 
-
-    updateExportTypeSwitch(jqForm, currentElement) {
-        var jqHeadingInput = $(jqForm).find('input[name="colheaders"]'),
-            jqHeadingRow = jqHeadingInput.closest('tr'),
-            jqHeadingInput2 = $(jqForm).find('input[name="heading"]'),
-            jqHeadingRow2 = jqHeadingInput2.closest('tr');
-
-        if ($(currentElement).val() === 'csv' || $(currentElement).val() === 'xlsx') {
-            jqHeadingInput.prop('disabled', false);
-            jqHeadingRow.show();
-            jqHeadingInput2.prop('disabled', true);
-            jqHeadingRow2.hide();
-
-        } else {
-            jqHeadingInput.prop('disabled', true);
-            jqHeadingRow.hide();
-            jqHeadingInput2.prop('disabled', false);
-            jqHeadingRow2.show();
-        }
-    };
-
-    /**
-     *
-     */
-    bindStaticElements() {
-        var jqForm = $('form[action="savewl"]');
-
-        jqForm.find('input[name="saveformat"]').on('click', (event) => {
-            this.updateExportTypeSwitch(jqForm, event.target);
-        });
-    };
-
-    /**
-     */
     init():void {
         this.layoutModel.init();
         let uiComponents = initFormViews(this.layoutModel.dispatcher,
@@ -82,18 +46,6 @@ class SaveWordlistForm {
                 hiddenInputValues: this.layoutModel.getConf<Array<Array<any>>>('WlStateForm')
             }
         );
-
-        /*
-        this.bindStaticElements();
-
-        // obtain current state of the form and update
-        var jqForm = $('form[action="savewl"]'),
-            checkedRadio = jqForm.find('input[name="saveformat"]:checked').get(0);
-
-        if (checkedRadio) {
-            this.updateExportTypeSwitch(jqForm, checkedRadio);
-        }
-        */
     }
 }
 
