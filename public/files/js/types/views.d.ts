@@ -17,70 +17,78 @@
  */
 
 /// <reference path="./common.d.ts" />
+/// <reference path="../../ts/declarations/react.d.ts" />
+/// <reference path="../../ts/declarations/flux.d.ts" />
 
 
 declare module "views/document" {
-    export function init(dispatcher:any, mixins:any, storeProvider:any):Kontext.LayoutViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            storeProvider:any):Kontext.LayoutViews;
 }
 
 
 declare module "views/concordance/lineSelection" {
 
     export interface LineSelectionViews {
-        LineSelectionMenu:any;
-        LockedLineGroupsMenu:any;
+        LineSelectionMenu:React.ReactClass;
+        LockedLineGroupsMenu:React.ReactClass;
     }
 
-    export function init(dispatcher:any, mixins:any, lineSelectionStore:any, userInfoStore:any):LineSelectionViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            lineSelectionStore:any, userInfoStore:any):LineSelectionViews;
 }
 
 
 declare module "views/concordance/lines" {
 
     export interface ConcLinesViews {
-        ConcLines:any;
+        ConcLines:React.ReactClass;
     }
 
-    export function init(dispatcher:any, mixins:any, lineStore:any, lineSelectionStore:any):ConcLinesViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            lineStore:any, lineSelectionStore:any):ConcLinesViews;
 }
 
 
 declare module "views/concordance/paginator" {
 
     export interface PaginatorViews {
-        Paginator:any;
+        Paginator:React.ReactClass;
     }
 
-    export function init(dispatcher:any, mixins:any, lineStore:any):PaginatorViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            lineStore:any):PaginatorViews;
 }
 
 declare module "views/concordance/main" {
 
     export interface ConcordanceView {
-        ConcordanceView:any;
+        ConcordanceView:React.ReactClass;
     }
 
-    export function init(dispatcher:any, mixins:any, lineStore:any, lineSelectionStore:any, userInfoStore:any,
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            lineStore:any, lineSelectionStore:any, userInfoStore:any,
             layoutViews:Kontext.LayoutViews):ConcordanceView;
 }
 
 declare module "views/concordance/detail" {
 
     export interface RefDetail {
-        RefDetail: any;
+        RefDetail: React.ReactClass;
     }
 
-    export function init(dispatcher:any, mixins:any):RefDetail;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any):RefDetail;
 }
 
 
 declare module "views/subcorpForm" {
 
     export interface SubcorpFormViews {
-        WithinBuilder:any;
+        WithinBuilder:React.ReactClass;
     }
 
-    export function init(dispatcher:any, mixins:any, subcorpFormStore:any):SubcorpFormViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            subcorpFormStore:any):SubcorpFormViews;
 }
 
 
@@ -88,10 +96,11 @@ declare module "views/subcorpForm" {
 declare module "views/textTypes" {
 
     export interface TextTypesViews {
-        TextTypesPanel:any;
+        TextTypesPanel:React.ReactClass;
     }
 
-    export function init(dispatcher:any, mixins:any, textTypesStore:any):TextTypesViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            textTypesStore:any):TextTypesViews;
 
 }
 
@@ -99,9 +108,20 @@ declare module "views/textTypes" {
 declare module "views/query/context" {
 
     export interface QueryContextViews {
-        SpecifyContextForm:any;
+        SpecifyContextForm:React.ReactClass;
     }
 
-    export function init(dispatcher, mixins):QueryContextViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins):QueryContextViews;
+}
+
+
+declare module "views/wordlist/forms" {
+
+    export interface WordlistFormViews {
+        SaveWlForm:React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>,
+            mixins:any):WordlistFormViews;
 }
 

@@ -17,6 +17,7 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/react.d.ts" />

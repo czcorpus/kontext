@@ -44,7 +44,7 @@ export interface Position {
 export interface Options {
     top?:string;
     width?: number|string;
-    height?: number;
+    height?: number|string;
     fontSize?: string;
     timeout?: number;
     type?: string;
