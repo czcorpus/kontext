@@ -241,18 +241,18 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderLeftChunk : function (item, i, itemList) {
             let ans = [];
-
+            let mouseover = (item.mouseover || []).map(x => x[0] + ': ' + x[1]).join(', ');
             if (i > 0 && itemList.get(i - 1).closeLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[itemList.get(i - 1), item]} />);
             }
             if (item.openLink) {
                 ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);
             }
-            if (item.className) {
+            if (item.className && item.text) {
                 ans.push(<span key={'l:' + String(i)} className={item.className}>{item.text}</span>);
 
             } else {
-                ans.push(item.text);
+                ans.push(<span key={'l:' + String(i)} title={mouseover}>{item.text}</span>);
             }
             if (item.closeLink) {
                 ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);
@@ -283,6 +283,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderRightChunk : function (prevClosed, item, i, itemList) {
             let ans = [];
+            let mouseover = (item.mouseover || []).map(x => x[0] + ': ' + x[1]).join(', ');
             if (prevClosed && item.openLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[prevClosed, item]} />);
 
@@ -292,11 +293,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             if (item.openLink) {
                 ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);
             }
-            if (item.className) {
+            if (item.className && item.text) {
                 ans.push(<span key={'r:' + String(i)} className={item.className}>{item.text}</span>);
 
             } else {
-                ans.push(item.text);
+                ans.push(<span key={'r:' + String(i)} title={mouseover}>{item.text}</span>);
             }
             if (item.closeLink) {
                 ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);

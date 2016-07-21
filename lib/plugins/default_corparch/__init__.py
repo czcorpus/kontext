@@ -83,8 +83,8 @@ def translate_markup(s):
 
 class ManateeCorpusInfo(object):
     """
-    Represents information available via manatee module
-    (i.e. information defined in corpus registry file)
+    Represents a subset of corpus information
+    as provided by manatee.Corpus instance
     """
     def __init__(self, corpus, canonical_id):
         self.encoding = corpus.get_conf('ENCODING')
@@ -92,6 +92,7 @@ class ManateeCorpusInfo(object):
         self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
                                   else canonical_id)
         self.description = import_string(corpus.get_info())
+        self.attrs = filter(lambda x: len(x) > 0, corpus.get_conf('ATTRLIST').split(','))
         self.size = corpus.size()
 
 
@@ -495,11 +496,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             if ans.metadata.avg_label_attr_len is not None:
                 ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
 
-        token_mo = node.find('token_mouseover')
-        if token_mo is not None:
-            for child in token_mo:
-                ans.token_mouseover.append(child.text)
-
+        token_mo_elm = node.find('token_mouseover_disable')
+        if token_mo_elm is None:
+            token_mo_elm = node.find('token_mouseover')
+            if token_mo_elm is not None:
+                for child in token_mo_elm:
+                    ans.token_mouseover.append(child.text)
+            if len(ans.token_mouseover) == 0:
+                ans.token_mouseover = self._manatee_corpora.get_info(ans.id).attrs
+        else:
+            ans.token_mouseover = []
         data.append(ans)
 
     def _parse_corplist_node(self, root, data, path='/'):
