@@ -136,7 +136,10 @@ class Attrs(object):
         tmp = s.split('/')
         ans = []
         mouseover = []
+        import logging
+        logging.getLogger(__name__).debug('tmp: %s' % (tmp,))
         for i in range(len(tmp)):
+            logging.getLogger(__name__).debug('attrs[%d]: %s' % (i, self._attrs[i]))
             if self._attrs[i][1] & 1 == 1:
                 ans.append(tmp[i])
             if self._attrs[i][1] & 2 == 2:
@@ -190,10 +193,10 @@ class KwicPageArgs(object):
     # how many characters/positions/whatever_struct_attrs display on the right side; Use 'str' type!
     rightctx = '5'
 
-    # attributes to be displayed (word, lemma, tag,...)
+    # positional attributes to be displayed for KWIC (word, lemma, tag,...)
     attrs = 'word'
 
-    # ???
+    # positional attributes to be displayed for non-KWIC tokens (word, lemma, tag)
     ctxattrs = 'word'
 
     # references (text type information derived from structural attributes) to be displayed
@@ -565,12 +568,13 @@ class Kwic(object):
             leftlabel, rightlabel = 'Left', 'Right'
 
         attrs_tmp = args.create_attrs_handler()
+        ctxattrs_tmp = args.create_attrs_handler()
 
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
         kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),
                                args.leftctx, args.rightctx,
-                               attrs_tmp.export_all(), args.ctxattrs, all_structs, args.refs)
+                               attrs_tmp.export_all(), ctxattrs_tmp.export_all(), all_structs, args.refs)
         labelmap = args.labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
@@ -610,19 +614,28 @@ class Kwic(object):
                     kwicwords_upd.append(kw)
                 prev = kw
 
+            prev = {}
             leftsize = 0
             for w in leftwords:
+                if w['class'] == 'attr':                    
+                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''))
                 if not w['class'] == 'strc':
                     leftsize += len(w['str']) + 1
+                prev = w
             if leftsize > maxleftsize:
                 maxleftsize = leftsize
 
+            prev = {}
             rightsize = 0
             for w in rightwords:
+                if w['class'] == 'attr':
+                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''))                
                 if not w['class'] == 'strc':
                     rightsize += len(w['str']) + 1
+                prev = w
             if rightsize > maxrightsize:
                 maxrightsize = rightsize
+
             line_data = dict(toknum=kl.get_pos(),
                              hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
                              kwiclen=kl.get_kwiclen(),
