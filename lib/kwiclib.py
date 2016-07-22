@@ -98,7 +98,7 @@ class KwicPageData(FixedDict):
     CorporaColumns = ()
 
 
-class Attrs(object):
+class AttrsMerge(object):
     """
     Handles user and mouseover attributes. While Manatee returns
     just a bunch of values joined into a single string, in KonText
@@ -124,16 +124,30 @@ class Attrs(object):
     def export_all(self):
         return ','.join(x[0] for x in self._attrs)
 
-    def process_output(self, s):
+    def process_output(self, attrs, token):
         """
          Filter out mouse_over items from attribute string
          produced by Manatee (e.g.: "/-/Pred_Co//VB-S---3P-AA---I/b\u00fdt")
          and return them as separate data items
 
+         arguments:
+         attrs -- a string containing attributes separated by '/'
+                  (e.g.: /-/Pred_Co//VB-S---3P-AA---I/b\u00fdt)
+         token -- a token the attributes belong to
+
          return:
          a 2-tuple (output_string, mouseover_list_of_pairs)
         """
-        tmp = s.split('/')
+        token = token.strip()
+        # First we must test whether the token itself does not contain
+        # the '/' character, which would make the processing (splitting)
+        # of attributes separated by the very same character impossible.
+        if '/' in token and token in attrs:
+            attrs = attrs.replace(token, token.replace('/', u'\u2215'))
+        # input string starts with '/'
+        # empty 0-th element in split string represents 'word'
+        # which is omitted in attrs string (it exists as a separate value)
+        tmp = attrs.split('/')
         ans = []
         mouseover = []
         for i in range(len(tmp)):
@@ -162,8 +176,8 @@ class KwicLinesArgs(object):
     alignlist=()
     token_mouseover = ()
 
-    def create_attrs_handler(self):
-        return Attrs(self.attrs, self.token_mouseover)
+    def create_attrs_merge(self):
+        return AttrsMerge(self.attrs, self.token_mouseover)
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
@@ -190,10 +204,10 @@ class KwicPageArgs(object):
     # how many characters/positions/whatever_struct_attrs display on the right side; Use 'str' type!
     rightctx = '5'
 
-    # attributes to be displayed (word, lemma, tag,...)
+    # positional attributes to be displayed for KWIC (word, lemma, tag,...)
     attrs = 'word'
 
-    # ???
+    # positional attributes to be displayed for non-KWIC tokens (word, lemma, tag)
     ctxattrs = 'word'
 
     # references (text type information derived from structural attributes) to be displayed
@@ -440,7 +454,7 @@ class Kwic(object):
                 return True
         return False
 
-    def postproc_kwicline_part(self, speech_segment, line, column, filter_speech_tag, prev_speech_id=None):
+    def update_speech_boundaries(self, speech_segment, line, column, filter_speech_tag, prev_speech_id=None):
         """
         arguments:
         speech_attr -- 2-tuple (struct_name, attr_name)
@@ -449,13 +463,16 @@ class Kwic(object):
         filter_speech_tag -- if True then whole speech tag is removed else only its 'speech attribute'
         prev_speech_id -- str identifier of the previously processed speech segment
 
+        | left                 | kwic                     | right     |
+        ---------------------------------------------------------------
+        |  <sp>....</sp> <sp>..|..</sp> <sp>..</sp> <sp>..|..</sp>    |
+
         Returns:
         2-tuple: modified line and the last speech id (which is necessary to obtain proper speech ID in case of partial
-        segment on the "left" left column of a KWIC line and similarly in case of a partial segment on the "right"
-        column of a KWIC line - because the KWIC word itself separates left and right columns).
-        """
-        import re
+        segment on the "left" part of a concordance line and similarly in case of a partial segment on the "right"
+        part of a concordance line).
 
+        """
         newline = []
         speech_struct_str = speech_segment[0] if speech_segment and len(speech_segment) > 0 else None
         fragment_separator = '<%s' % speech_struct_str
@@ -484,9 +501,9 @@ class Kwic(object):
                 last_fragment = newline_item
         # we have to treat specific situations related to the end of the
         # concordance line
-        if last_fragment is not None \
-                and re.search('^<%s(>|[^>]+>)$' % speech_struct_str, last_fragment['str'])\
-                and column == 'right':
+        if (last_fragment is not None and
+                re.search('^<%s(>|[^>]+>)$' % speech_struct_str, last_fragment['str']) and
+                column == 'right'):
             del(last_fragment['open_link'])
         if filter_speech_tag:
             self.remove_tag_from_line(newline, speech_struct_str)
@@ -542,9 +559,7 @@ class Kwic(object):
         a dictionary containing all the required line data (left context, kwic, right context,...)
         """
 
-        # structs represent which structures are requested by user
-        # all_structs contain also internal structures needed to render
-        # additional information (like the speech links)
+        # add structures needed to render speech playback information
         all_structs = args.structs
         if args.speech_segment:
             speech_struct_attr_name = '.'.join(args.speech_segment)
@@ -564,13 +579,16 @@ class Kwic(object):
         else:
             leftlabel, rightlabel = 'Left', 'Right'
 
-        attrs_tmp = args.create_attrs_handler()
+        # generate attrs & ctxattrs containing both user and internal (= the ones
+        # needed to enhance misc. UI elements) structures
+        attrs_tmp = args.create_attrs_merge()
+        ctxattrs_tmp = args.create_attrs_merge()
 
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
         kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),
                                args.leftctx, args.rightctx,
-                               attrs_tmp.export_all(), args.ctxattrs, all_structs, args.refs)
+                               attrs_tmp.export_all(), ctxattrs_tmp.export_all(), all_structs, args.refs)
         labelmap = args.labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
@@ -586,17 +604,17 @@ class Kwic(object):
                 leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
             else:
                 leftmost_speech_id = None
-            leftwords, last_left_speech_id = self.postproc_kwicline_part(args.speech_segment,
-                                                                         tokens2strclass(kl.get_left()),
+            leftwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
+                                                                           tokens2strclass(kl.get_left()),
                                                                          'left', filter_out_speech_tag,
-                                                                         leftmost_speech_id)
-            kwicwords, last_left_speech_id = self.postproc_kwicline_part(args.speech_segment,
-                                                                         tokens2strclass(kl.get_kwic()),
+                                                                           leftmost_speech_id)
+            kwicwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
+                                                                           tokens2strclass(kl.get_kwic()),
                                                                          'kwic',
-                                                                         filter_out_speech_tag,
-                                                                         last_left_speech_id)
-            rightwords = self.postproc_kwicline_part(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
-                                                     filter_out_speech_tag, last_left_speech_id)[0]
+                                                                           filter_out_speech_tag,
+                                                                           last_left_speech_id)
+            rightwords = self.update_speech_boundaries(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
+                                                       filter_out_speech_tag, last_left_speech_id)[0]
 
             if args.righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)
@@ -605,24 +623,33 @@ class Kwic(object):
             for kw in kwicwords:
                 kwicwords_upd = []
                 if kw.get('class') == 'attr':
-                    kw['str'], prev['mouseover'] = attrs_tmp.process_output(kw.get('str', ''))
+                    kw['str'], prev['mouseover'] = attrs_tmp.process_output(kw.get('str', ''), prev.get('str', ''))
                 else:
                     kwicwords_upd.append(kw)
                 prev = kw
 
+            prev = {}
             leftsize = 0
             for w in leftwords:
+                if w['class'] == 'attr':                    
+                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''), prev.get('str', ''))
                 if not w['class'] == 'strc':
                     leftsize += len(w['str']) + 1
+                prev = w
             if leftsize > maxleftsize:
                 maxleftsize = leftsize
 
+            prev = {}
             rightsize = 0
             for w in rightwords:
+                if w['class'] == 'attr':
+                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''), prev.get('str', ''))
                 if not w['class'] == 'strc':
                     rightsize += len(w['str']) + 1
+                prev = w
             if rightsize > maxrightsize:
                 maxrightsize = rightsize
+
             line_data = dict(toknum=kl.get_pos(),
                              hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
                              kwiclen=kl.get_kwiclen(),
