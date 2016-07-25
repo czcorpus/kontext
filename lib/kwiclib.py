@@ -124,11 +124,15 @@ class AttrsMerge(object):
     def export_all(self):
         return ','.join(x[0] for x in self._attrs)
 
-    def process_output(self, attrs, token):
+    def process_output(self, attrs):
         """
          Filter out mouse_over items from attribute string
          produced by Manatee (e.g.: "/-/Pred_Co//VB-S---3P-AA---I/b\u00fdt")
-         and return them as separate data items
+         and return them as separate data items.data
+
+         This functions expects the delimiter used for attributes
+         (typically '/') cannot be found within tokens. Otherwise
+         the parser may fail in a bad way.
 
          arguments:
          attrs -- a string containing attributes separated by '/'
@@ -138,12 +142,6 @@ class AttrsMerge(object):
          return:
          a 2-tuple (output_string, mouseover_list_of_pairs)
         """
-        token = token.strip()
-        # First we must test whether the token itself does not contain
-        # the '/' character, which would make the processing (splitting)
-        # of attributes separated by the very same character impossible.
-        if '/' in token and token in attrs:
-            attrs = attrs.replace(token, token.replace('/', u'\u2215'))
         # input string starts with '/'
         # empty 0-th element in split string represents 'word'
         # which is omitted in attrs string (it exists as a separate value)
@@ -623,7 +621,7 @@ class Kwic(object):
             for kw in kwicwords:
                 kwicwords_upd = []
                 if kw.get('class') == 'attr':
-                    kw['str'], prev['mouseover'] = attrs_tmp.process_output(kw.get('str', ''), prev.get('str', ''))
+                    kw['str'], prev['mouseover'] = attrs_tmp.process_output(kw.get('str', ''))
                 else:
                     kwicwords_upd.append(kw)
                 prev = kw
@@ -631,8 +629,8 @@ class Kwic(object):
             prev = {}
             leftsize = 0
             for w in leftwords:
-                if w['class'] == 'attr':                    
-                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''), prev.get('str', ''))
+                if w['class'] == 'attr':
+                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''))
                 if not w['class'] == 'strc':
                     leftsize += len(w['str']) + 1
                 prev = w
@@ -643,7 +641,7 @@ class Kwic(object):
             rightsize = 0
             for w in rightwords:
                 if w['class'] == 'attr':
-                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''), prev.get('str', ''))
+                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''))
                 if not w['class'] == 'strc':
                     rightsize += len(w['str']) + 1
                 prev = w
