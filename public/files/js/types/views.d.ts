@@ -125,3 +125,13 @@ declare module "views/wordlist/forms" {
             mixins:any):WordlistFormViews;
 }
 
+
+declare module "views/options/structsAttrs" {
+
+    export interface StructsAndAttrsViews {
+        StructsAndAttrsForm: React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>,
+            mixins:any, viewOptionsStore:ViewOptions.IViewOptionsStore):StructsAndAttrsViews;
+}

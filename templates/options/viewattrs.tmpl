@@ -17,6 +17,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
 #from translation import ugettext as _
+#from templating.filters import *
 #from cmpltmpl.document import document
 #extends document
 
@@ -26,6 +27,12 @@ $_("View")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf) {
+    conf.AttrList = #filter $Jsonize#$AttrList#end filter#;
+    conf.FixedAttr = "${fixed_attr}";
+    conf.CurrentAttrs = #filter $Jsonize#$attrs.split(',')#end filter#;
+    conf.Availstructs = #filter $Jsonize#$Availstructs#end filter#;
+    conf.StructAttrs = #filter $Jsonize#$structattrs#end filter#;
+    conf.CurrStructAttrs = #filter $Jsonize#$curr_structattrs#end filter#;
     viewAttrs.init(conf);
 });
 #end def
@@ -35,63 +42,16 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
     #filter WebSafe
     <h2>$_("Attributes, structures and references")</h2>
     <p>#filter None#$($_('Following settings apply only for the <strong>%s</strong> corpus.') % $human_corpname)#end filter#</p>
-    <form id="mainform" action="${root_url}options/viewattrsx">
+
+    <div id="viewattrs-mount"></div>
+
+    <form id="mainformxxx" action="${root_url}options/viewattrsx">
 
     #filter None
     $input_hidden
     #end filter
     <input type='hidden' name='fromp' value='$fromp' />
 
-    <a name="attributes"></a>
-    <fieldset class="settings-group">
-        <legend>$_("Attributes")</legend>
-
-        #set $navid = 'id="firstattr"'
-        #for $a in $AttrList
-        #if $a.n != $fixed_attr
-            #set $checked = $a.n in $attrs.split(',') and 'checked' or ''
-            <label><input type="checkbox" name="setattrs" value="$a.n" $checked $navid/> $a.label</label>
-        #else
-            <input type="hidden" name='setattrs' value="$a.n" />
-            <label><input type="checkbox" checked="true" disabled="true" /> $a.label</label>
-        #end if
-        <br />
-        #set $navid = ''
-        #end for
-        <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
-
-        <hr />
-        <label><input type='radio' name='allpos' value='all'
-        #if $attr_allpos == 'all'#checked="checked"#end if#/> $_("Display attributes for each token")</label><br />
-        <label><input type='radio' name='allpos' value='kw'
-        #if $attr_allpos == 'kw'#checked="checked"#end if#/> $_("Display attributes for KWIC tokens only")</label>
-    </fieldset>
-
-    #if $Availstructs
-    <a name="structures"></a>
-    <fieldset class="settings-group">
-        <legend>$_("Structures")</legend>
-
-        #set $i = 0
-        #for $a in $Availstructs
-            <input id="struct-item-$i" type="checkbox" name="setstructs" value='$a.n' #if $a.sel#checked#end if# />
-            <label class="struct" for="struct-item-$i"><em>&lt;</em>${$a.label or $a.n}<em>&gt;</em></label><br />
-            #set $i = $i + 1
-            <ul class="struct-attrs" data-struct-id="$a.n">
-            #for $sa in $structattrs[$a.n]
-            #set $sa_id = $a.n + '.' + $sa
-            <li>
-                <label>
-                    <input class="structattr-checkbox" data-struct-id="$a.n" type="checkbox" name="structattrs" value="$sa_id" #if $sa_id in $curr_structattrs#checked="checked"#end if# /> $sa
-                </label>
-            </li>
-            #end for
-            </ul>
-        #end for
-
-        <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
-    </fieldset>
-    #end if
 
     <a name="references"></a>
     <fieldset class="settings-group">

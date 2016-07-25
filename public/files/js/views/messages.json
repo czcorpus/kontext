@@ -162,7 +162,10 @@
         "wordlist__include_col_headers": "Include column headers",
         "wordlist__include_heading": "Include heading",
         "wordlist__max_num_lines": "Maximum number of lines",
-        "wordlist__save_wl_header": "Save Word List"
+        "wordlist__save_wl_header": "Save Word List",
+        "options__attributes_hd": "Attributes",
+        "options__structures_hd": "Structures",
+        "options__references_hd": "References"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -328,6 +331,9 @@
         "wordlist__include_col_headers": "Připojit nadpisy sloupců",
         "wordlist__include_heading": "Připojit hlavičku",
         "wordlist__max_num_lines": "Maximální počet řádek",
-        "wordlist__save_wl_header": "Uložit seznam slov"
+        "wordlist__save_wl_header": "Uložit seznam slov",
+        "options__attributes_hd": "Atributy",
+        "options__structures_hd": "Struktury",
+        "options__references_hd": "Metainformace"
 	}
 }

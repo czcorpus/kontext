@@ -70,7 +70,7 @@ class Options(Kontext):
             corp = self.corp
         out['fixed_attr'] = 'word'
         availstruct = corp.get_conf('STRUCTLIST').split(',')
-        structlist = self.args.structs.split(',')
+        structlist = set(self.args.structs.split(',')).union(set([x.split('.')[0] for x in self.args.structattrs]))
         out['Availstructs'] = [{'n': n,
                                 'sel': 'selected' if n in structlist else '',
                                 'label': corp.get_conf(n + '.LABEL')}

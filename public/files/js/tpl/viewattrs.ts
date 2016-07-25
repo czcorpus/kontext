@@ -24,9 +24,12 @@
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/views.d.ts" />
 
 import $ = require('jquery');
 import {PageModel} from './document';
+import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
+
 
 
 class ViewAttrsPage {
@@ -59,34 +62,27 @@ class ViewAttrsPage {
         });
     }
 
-    private uncheckChecked(parentElm):void {
-        $(parentElm).find('input[type="checkbox"]:checked').each(function () {
-            $(this).prop('checked', false);
-        });
-    }
-
-    private setupStructattrCheckboxes() {
-        $(this.mainForm).find('.structattr-checkbox').on('click', (event) => {
-            let triggerElm = $(event.target);
-            let structId = triggerElm.attr('data-struct-id');
-            let parentCheckbox = triggerElm.closest('fieldset').find('input[name="setstructs"][value="' + structId + '"]');
-
-            if (triggerElm.is(':checked') && !parentCheckbox.is(':checked')) {
-                parentCheckbox.prop('checked', true);
-            }
-        });
-
-        $(this.mainForm).find('input[type="checkbox"][name="setstructs"]').on('click', (event) => {
-            this.uncheckChecked($(event.target).closest('fieldset').find('ul[data-struct-id="' + $(event.target).val() + '"]'));
-        });
-    }
-
     init():void {
         this.layoutModel.init();
-        $(this.mainForm).find('input.select-all').each((_, elm:HTMLElement) => {
-            this.layoutModel.applySelectAll(elm, $(elm).closest('fieldset'));
-        });
-        this.setupStructattrCheckboxes();
+
+        let storeData:ViewOptions.PageData = {
+            AttrList: this.layoutModel.getConf<Array<ViewOptions.AttrDesc>>('AttrList'),
+            FixedAttr: this.layoutModel.getConf<string>('FixedAttr'),
+            CurrentAttrs: this.layoutModel.getConf<Array<string>>('CurrentAttrs'),
+            AvailStructs: this.layoutModel.getConf<Array<{sel:string; label:string; n:string}>>('Availstructs'),
+            StructAttrs: this.layoutModel.getConf<{[attr:string]:Array<string>}>('StructAttrs'),
+            CurrStructAttrs: this.layoutModel.getConf<Array<string>>('CurrStructAttrs')
+        };
+        this.layoutModel.getStores().viewOptionsStore.initFromPageData(storeData);
+
+        let views = structsAttrsViewInit(this.layoutModel.dispatcher, this.layoutModel.exportMixins(),
+                this.layoutModel.getStores().viewOptionsStore);
+
+        this.layoutModel.renderReactComponent(
+            views.StructsAndAttrsForm,
+            window.document.getElementById('viewattrs-mount'),
+            {}
+        );
         this.blockUnsaved();
     }
 }
