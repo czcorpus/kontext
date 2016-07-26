@@ -157,6 +157,7 @@
         "concview__ipm_help": "instances per million positions",
         "concview__ipm_rel_to_the_{corpname}": "related to the whole {corpname}",
         "concview__arf_help": "Average Reduced Frequency",
+        "concview__change_display_settings": "Change viewing parameters",
         "wordlist__cannot_save_empty": "Empty result cannot be saved",
         "wordlist__save_wl_as_header": "Save word list as",
         "wordlist__include_col_headers": "Include column headers",
@@ -165,7 +166,11 @@
         "wordlist__save_wl_header": "Save Word List",
         "options__attributes_hd": "Attributes",
         "options__structures_hd": "Structures",
-        "options__references_hd": "References"
+        "options__references_hd": "References",
+        "options__settings_apply_only_for_{corpname}": "Concordance display settings for {corpname}",
+        "options__apply_btn": "Apply View Options",
+        "options__attr_apply_all": "Display attributes for each token",
+        "options__attr_apply_kwic": "Display attributes for KWIC tokens only"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -286,7 +291,7 @@
         "query__pos_filter": "Slovní druh",
         "query__window": "Velikost kontextu",
         "query__window_tokens": "tokenů",
-        "query__left": "vlevo",
+        "query__leoptions__attr_apply_allft": "vlevo",
         "query__right": "vpravo",
         "query__both": "vlevo i vpravo",
         "query__lw_lemmas": "Lemma(ta)",
@@ -326,6 +331,7 @@
         "concview__ipm_help": "výskytů na milion pozic",
         "concview__ipm_rel_to_the_{corpname}": "vztaženo k celému {corpname}",
         "concview__arf_help": "Průměrná redukovaná frekvence",
+        "concview__change_display_settings": "Změnit parametry zobrazení",
         "wordlist__cannot_save_empty": "Prázdný výsledek nelze uložit.",
         "wordlist__save_wl_as_header": "Uložit seznam slov jako",
         "wordlist__include_col_headers": "Připojit nadpisy sloupců",
@@ -334,6 +340,10 @@
         "wordlist__save_wl_header": "Uložit seznam slov",
         "options__attributes_hd": "Atributy",
         "options__structures_hd": "Struktury",
-        "options__references_hd": "Metainformace"
+        "options__references_hd": "Metainformace",
+        "options__settings_apply_only_for_{corpname}": "Nastavení zobrazení konkordance pro {corpname}",
+        "options__apply_btn": "Použít volby zobrazení",
+        "options__attr_apply_all": "Zobrazit atributy pro každý token",
+        "options__attr_apply_kwic": "Zobrazit atributy pouze pro KWIC"
 	}
 }

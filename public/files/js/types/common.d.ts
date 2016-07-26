@@ -291,6 +291,12 @@ declare module ViewOptions {
         selected: boolean;
     }
 
+    export interface RefsDesc {
+        n: string;
+        label: string;
+        selected: boolean;
+    }
+
     export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;
 
     export interface PageData {
@@ -300,15 +306,19 @@ declare module ViewOptions {
         AvailStructs: Array<{sel:string; label:string; n:string}>;
         StructAttrs:{[attr:string]:Array<string>};
         CurrStructAttrs:Array<string>;
+        AvailRefs:Array<{n:string; sel:string; label:string}>;
     }
 
     export interface IViewOptionsStore {
         initFromPageData(data:ViewOptions.PageData):void;
-        loadData():void;
+        loadData():RSVP.Promise<ViewOptions.PageData>;
         isLoaded():boolean;
         getAttributes():Immutable.List<ViewOptions.AttrDesc>;
+        getSelectAllAttributes():boolean;
         getStructures():Immutable.List<ViewOptions.StructDesc>;
         getStructAttrs():ViewOptions.AvailStructAttrs;
+        getReferences():Immutable.List<RefsDesc>;
+        getSelectAllReferences():boolean;
         getFixedAttr():string;
     }
 }

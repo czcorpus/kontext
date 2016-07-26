@@ -68,6 +68,7 @@ declare module "views/concordance/main" {
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
             lineStore:any, lineSelectionStore:any, userInfoStore:any,
+            viewOptionsStore:ViewOptions.IViewOptionsStore,
             layoutViews:Kontext.LayoutViews):ConcordanceView;
 }
 

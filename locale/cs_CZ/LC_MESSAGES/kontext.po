@@ -1434,19 +1434,6 @@ msgstr "jazyky uživatelského rozhraní"
 msgid "version"
 msgstr "verze"
 
-#: cmpltmpl/viewattrs.py:166
-#, python-format
-msgid "Following settings apply only for the <strong>%s</strong> corpus."
-msgstr "Následující nastavení se týkají pouze korpusu <strong>%s</strong>. "
-
-#: cmpltmpl/viewattrs.py:224
-msgid "Display attributes for each token"
-msgstr "Zobrazit atributy pro každý token"
-
-#: cmpltmpl/viewattrs.py:234
-msgid "Display attributes for KWIC tokens only"
-msgstr "Zobrazit atributy pouze pro KWIC"
-
 #: cmpltmpl/viewattrs.py:279
 msgid "References"
 msgstr "Metainformace"

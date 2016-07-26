@@ -657,6 +657,10 @@ a:hover {
 }
 div.buttons {
     padding-top: 2em;
+
+    button:not(:last-child) {
+        margin-right: 0.7em;
+    }
 }
 #specify-context div.contents,
 #specify-query-metainformation div.contents {
@@ -721,6 +725,11 @@ fieldset.inactive {
             margin: 0 0 0 1em;
             padding: 0;
         }
+    }
+
+    select.no-label {
+        display: block;
+        margin-top: 0.9em;
     }
 }
 a.form-extension-switch,

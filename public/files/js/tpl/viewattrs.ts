@@ -71,7 +71,8 @@ class ViewAttrsPage {
             CurrentAttrs: this.layoutModel.getConf<Array<string>>('CurrentAttrs'),
             AvailStructs: this.layoutModel.getConf<Array<{sel:string; label:string; n:string}>>('Availstructs'),
             StructAttrs: this.layoutModel.getConf<{[attr:string]:Array<string>}>('StructAttrs'),
-            CurrStructAttrs: this.layoutModel.getConf<Array<string>>('CurrStructAttrs')
+            CurrStructAttrs: this.layoutModel.getConf<Array<string>>('CurrStructAttrs'),
+            AvailRefs: this.layoutModel.getConf<Array<{n:string; label:string; sel:string}>>('AvailRefs')
         };
         this.layoutModel.getStores().viewOptionsStore.initFromPageData(storeData);
 
@@ -81,7 +82,11 @@ class ViewAttrsPage {
         this.layoutModel.renderReactComponent(
             views.StructsAndAttrsForm,
             window.document.getElementById('viewattrs-mount'),
-            {}
+            {
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                isSubmitMode: true,
+                stateArgs: this.layoutModel.getConcArgs().items()
+            }
         );
         this.blockUnsaved();
     }

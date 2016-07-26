@@ -630,8 +630,10 @@ export class ViewPage {
                     this.lineViewStore,
                     this.lineSelectionStore,
                     this.layoutModel.getStores().userInfoStore,
+                    this.layoutModel.getStores().viewOptionsStore,
                     this.layoutModel.layoutViews
                 );
+
                 return this.renderLines(lineViewProps);
             }
         ).then(

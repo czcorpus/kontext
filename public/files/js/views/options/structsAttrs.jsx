@@ -31,7 +31,7 @@ export function init(dispatcher, mixins, viewOptionsStore) {
 
         _handleClick : function () {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_SET_ATTRIBUTE',
+                actionType: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
                 props: {
                     idx: this.props.idx,
                     ident: this.props.n
@@ -78,9 +78,33 @@ export function init(dispatcher, mixins, viewOptionsStore) {
         render : function () {
             return (
                 <label className="select-all">
-                    <input className="select-all" type="checkbox" />
+                    <input className="select-all" type="checkbox"
+                            onChange={this.props.onChange} checked={this.props.isSelected} />
                     {this.translate('global__select_all')}
                 </label>
+            );
+        }
+    });
+
+    //
+
+    let AttributesTweaks = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            return (
+                <div>
+                    <select name="allpos" className="no-label">
+                        <option value="all">{this.translate('options__attr_apply_all')}</option>
+                        <option value="kw">{this.translate('options__attr_apply_kwic')}</option>
+                    </select>
+
+                    <select name="attr_visibility" className="no-label">
+                        <option value="visible">Display attributes directly in text</option>
+                        <option value="mouseover">Make attributes available on mouse-over</option>
+                    </select>
+                </div>
             );
         }
     });
@@ -90,6 +114,13 @@ export function init(dispatcher, mixins, viewOptionsStore) {
     let FieldsetAttributes = React.createClass({
 
         mixins : mixins,
+
+        _handleSelectAll : function () {
+            dispatcher.dispatch({
+                actionType: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
+                props: {}
+            });
+        },
 
         render : function () {
             return (
@@ -106,7 +137,9 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                         }
                     })}
                     </ul>
-                    <SelectAll />
+                    <SelectAll onChange={this._handleSelectAll} isSelected={this.props.hasSelectAll} />
+                    <hr />
+                    <AttributesTweaks />
                 </fieldset>
             );
         }
@@ -143,7 +176,7 @@ export function init(dispatcher, mixins, viewOptionsStore) {
 
         _handleStructClick : function (event) {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_SET_STRUCTURE',
+                actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
                 props: {
                     structIdent: event.target.value,
                     structAttrIdent: null
@@ -153,7 +186,7 @@ export function init(dispatcher, mixins, viewOptionsStore) {
 
         _handleStructAttrClick : function (structIdent, event) {
             dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_SET_STRUCTURE',
+                actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
                 props: {
                     structIdent: structIdent,
                     structAttrIdent: event.target.value
@@ -174,13 +207,31 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                                                 checked={item.selected} onChange={this._handleStructClick} />
                                         {'<' + item.n + '>'}
                                     </label>
-                                    <StructAttrList items={this.props.structAttrs.get(item.n)}
+                                    <StructAttrList items={this.props.structAttrs.get(item.n) || []}
                                             handleClick={this._handleStructAttrClick.bind(this, item.n)} />
                                 </li>
                             );
                         })}
                     </ul>
                 </fieldset>
+            );
+        }
+    });
+
+
+    // ---------------------------- <LiReferenceItem /> ----------------------
+
+
+    let LiReferenceItem = React.createClass({
+        render : function () {
+            return (
+                <li>
+                    <label>
+                        <input type="checkbox" name="setrefs" value={this.props.n}
+                                checked={this.props.isSelected} onChange={this.props.onChange} />
+                        {this.props.label}
+                    </label>
+                </li>
             );
         }
     });
@@ -193,11 +244,83 @@ export function init(dispatcher, mixins, viewOptionsStore) {
 
         mixins : mixins,
 
+        _handleCheckboxChange : function (idx, evt) {
+            dispatcher.dispatch({
+                actionType: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+                props: {
+                    idx: idx
+                }
+            });
+        },
+
+        _handleSelectAll : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
+                props: {}
+            });
+        },
+
         render : function () {
             return (
                 <fieldset className="settings-group">
                     <legend>{this.translate('options__references_hd')}</legend>
+                    <ul>
+                        {this.props.availRefs.map((item, i) => {
+                            return <LiReferenceItem
+                                        key={item.n}
+                                        idx={i}
+                                        n={item.n}
+                                        label={item.label}
+                                        isSelected={item.selected}
+                                        onChange={this._handleCheckboxChange.bind(this, i)} />;
+                        })}
+                    </ul>
+                    <SelectAll onChange={this._handleSelectAll} isSelected={this.props.hasSelectAll} />
                 </fieldset>
+            );
+        }
+    });
+
+
+    // ---------------------------- <SubmitButtons /> ----------------------
+
+
+    let SubmitButtons = React.createClass({
+        mixins : mixins,
+
+        _handleSaveClick : function () {
+            dispatcher.dispatch({
+                actionType: 'VIEW_OPTIONS_SAVE_SETTINGS',
+                props: {}
+            });
+        },
+
+        _renderButtonVariant : function () {
+            if (this.props.isSubmitMode) {
+                return (
+                    <button type="submit" className="default-button">
+                        {this.translate('options__apply_btn')}
+                    </button>
+                );
+
+            } else {
+                return [
+                    <button key="save" type="button" className="default-button"
+                            onClick={this._handleSaveClick}>
+                        {this.translate('options__apply_btn')}
+                    </button>,
+                    <button key="cancel" type="button" className="default-button" onClick={this.props.externalCloseCallback}>
+                        {this.translate('global__close')}
+                    </button>
+                ]
+            }
+        },
+
+        render : function () {
+            return (
+                <div className="buttons">
+                    {this._renderButtonVariant()}
+                </div>
             );
         }
     });
@@ -215,7 +338,11 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                 fixedAttr: viewOptionsStore.getFixedAttr(),
                 attrList: viewOptionsStore.getAttributes(),
                 availStructs: viewOptionsStore.getStructures(),
-                structAttrs: viewOptionsStore.getStructAttrs()
+                structAttrs: viewOptionsStore.getStructAttrs(),
+                availRefs: viewOptionsStore.getReferences(),
+                hasSelectAllAttrs: viewOptionsStore.getSelectAllAttributes(),
+                hasSellectAllRefs: viewOptionsStore.getSelectAllReferences(),
+                hasLoadedData: viewOptionsStore.isLoaded()
             };
         },
 
@@ -224,6 +351,12 @@ export function init(dispatcher, mixins, viewOptionsStore) {
         },
 
         componentDidMount : function () {
+            if (!this.props.isSubmitMode) {
+                dispatcher.dispatch({
+                    actionType: 'VIEW_OPTIONS_LOAD_DATA',
+                    props: {}
+                });
+            }
             viewOptionsStore.addChangeListener(this._storeChangeHandler);
         },
 
@@ -235,14 +368,39 @@ export function init(dispatcher, mixins, viewOptionsStore) {
             return this._fetchData();
         },
 
+        _renderStateInputs : function () {
+            // <input type="hidden" name="fromp" value="TODO__" />;
+            return (this.props.stateArgs || []).map(item => {
+                return <input key={item[0]} type="hidden" name={item[0]} value={item[1]} />;
+            });
+        },
+
         render : function () {
-            return (
-                <form id="mainform" action={this.createActionLink('options/viewattrsx')}>
-                    <FieldsetAttributes fixedAttr={this.state.fixedAttr} attrList={this.state.attrList} />
-                    <FieldsetStructures availStructs={this.state.availStructs} structAttrs={this.state.structAttrs} />
-                    <FieldsetMetainformation />
-                </form>
-            );
+            if (this.props.isSubmitMode || this.state.hasLoadedData) {
+                return (
+                    <form id="mainform" method="POST" action={this.createActionLink('options/viewattrsx')}>
+                        <p>
+                            {this.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.humanCorpname})}
+                        </p>
+                        {this.props.isSubmitMode ? this._renderStateInputs() : null}
+                        <FieldsetAttributes fixedAttr={this.state.fixedAttr} attrList={this.state.attrList}
+                                hasSelectAll={this.state.hasSelectAllAttrs} />
+                        <FieldsetStructures availStructs={this.state.availStructs} structAttrs={this.state.structAttrs} />
+                        <FieldsetMetainformation availRefs={this.state.availRefs}
+                                hasSelectAll={this.state.hasSellectAllRefs} />
+                        <SubmitButtons externalCloseCallback={this.props.externalCloseCallback}
+                                isSubmitMode={this.props.isSubmitMode} />
+                    </form>
+                );
+
+            } else {
+                return (
+                    <div>
+                        <img src={this.createStaticUrl('img/ajax-loader.gif')}
+                            alt={this.translate('global__loading')} title={this.translate('global__loading')} />
+                    </div>
+                );
+            }
         }
 
     });

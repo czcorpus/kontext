@@ -63,11 +63,11 @@ class Options(Kontext):
         out = {}
         if self.args.maincorp:
             corp = corplib.manatee.Corpus(self.args.maincorp)
-            out['AttrList'] = [{'label': corp.get_conf(n + '.LABEL') or n, 'n': n}
-                               for n in corp.get_conf('ATTRLIST').split(',')
-                               if n]
         else:
             corp = self.corp
+        out['AttrList'] = [{'label': corp.get_conf(n + '.LABEL') or n, 'n': n}
+                           for n in corp.get_conf('ATTRLIST').split(',')
+                           if n]
         out['fixed_attr'] = 'word'
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = set(self.args.structs.split(',')).union(set([x.split('.')[0] for x in self.args.structattrs]))
@@ -108,9 +108,10 @@ class Options(Kontext):
         out['structattrs'] = structattrs
         out['curr_structattrs'] = self.args.structattrs
         out['query_overview'] = self.concdesc_json().get('Desc', [])
+        out['CurrentAttrs'] = self.args.attrs.split(',')
         return out
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, http_method='POST')
     def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,
                                 allpos=allpos,

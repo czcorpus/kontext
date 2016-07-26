@@ -29,48 +29,18 @@ $_("View")#slurp
 require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf) {
     conf.AttrList = #filter $Jsonize#$AttrList#end filter#;
     conf.FixedAttr = "${fixed_attr}";
-    conf.CurrentAttrs = #filter $Jsonize#$attrs.split(',')#end filter#;
+    conf.CurrentAttrs = #filter $Jsonize#$CurrentAttrs#end filter#;
     conf.Availstructs = #filter $Jsonize#$Availstructs#end filter#;
     conf.StructAttrs = #filter $Jsonize#$structattrs#end filter#;
     conf.CurrStructAttrs = #filter $Jsonize#$curr_structattrs#end filter#;
+    conf.AvailRefs = #filter $Jsonize#$Availrefs#end filter#;
     viewAttrs.init(conf);
 });
 #end def
 
 #def main
 <section class="full">
-    #filter WebSafe
     <h2>$_("Attributes, structures and references")</h2>
-    <p>#filter None#$($_('Following settings apply only for the <strong>%s</strong> corpus.') % $human_corpname)#end filter#</p>
-
     <div id="viewattrs-mount"></div>
-
-    <form id="mainformxxx" action="${root_url}options/viewattrsx">
-
-    #filter None
-    $input_hidden
-    #end filter
-    <input type='hidden' name='fromp' value='$fromp' />
-
-
-    <a name="references"></a>
-    <fieldset class="settings-group">
-        <legend>$_("References")</legend>
-
-        #set $i = 0
-        #for $a in $Availrefs
-            #set $checked = ($a.sel) and 'checked="checked"' or ''
-            <input id="ref-item-$i" type="checkbox" name="setrefs" value='$a.n' $checked>
-            <label for="ref-item-$i">$a.label</label><br />
-            #set $i = $i + 1
-        #end for
-        <label class="select-all"><input class="select-all" type="checkbox" />$_('Select all')</label>
-    </fieldset>
-
-    <div class="buttons">
-        <input type="submit" class="default-button" value='$_("Apply View Options")' />
-    </div>
-    </form>
-    #end filter
 </section>
 #end def

@@ -157,6 +157,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             return {checked: tmp ? true : false};
         },
 
+        shouldComponentUpdate : function (nextProps, nextState) {
+            return this.state.checked !== nextState.checked;
+        },
+
         render : function () {
             return <input type="checkbox" checked={this.state.checked}
                         onChange={this._checkboxChangeHandler} />;
@@ -196,6 +200,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         getInitialState : function () {
             let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
             return {value: tmp ? tmp[1] : ''};
+        },
+
+        shouldComponentUpdate : function (nextProps, nextState) {
+            return this.state.value !== nextState.value;
         },
 
         render : function () {
@@ -396,6 +404,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                     lineIdx: lineIdx
                 }
             });
+        },
+
+        shouldComponentUpdate : function (nextProps, nextState) {
+            return this.props.data !== nextProps.data
+                    || this.props.lineSelMode !== nextProps.lineSelMode;
         },
 
         render : function () {

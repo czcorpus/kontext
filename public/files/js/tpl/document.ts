@@ -171,7 +171,7 @@ export class PageModel {
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
         this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
-        this.viewOptionsStore = new ViewOptionsStore(this.dispatcher);
+        this.viewOptionsStore = new ViewOptionsStore(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
         this.asyncTaskChecker = new asyncTask.AsyncTaskChecker(this.pluginApi(),
                 this.getConf<any>('asyncTasks') || []);
@@ -398,6 +398,9 @@ export class PageModel {
             } else {
                 body = encodeArgs(args);
             }
+
+        } else if (args instanceof util.MultiDict) {
+            body = this.encodeURLParameters(args);
 
         } else if (typeof args === 'string') {
             body = args;
