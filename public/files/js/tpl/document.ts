@@ -946,6 +946,12 @@ export class PageModel {
         this.conf['currentArgs'] = tmp.items();
     }
 
+    replaceConcArg(name:string, values:Array<string>):void {
+        let tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        tmp.replace(name, values);
+        this.conf['currentArgs'] = tmp.items();
+    }
+
     pluginApi():PluginApi {
         return new PluginApi(this);
     }

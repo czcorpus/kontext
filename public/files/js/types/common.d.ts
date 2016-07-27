@@ -302,6 +302,8 @@ declare module ViewOptions {
     export interface PageData {
         AttrList: Array<AttrDesc>;
         FixedAttr: string;
+        AttrAllpos: string;
+        AttrVmode: string;
         CurrentAttrs: Array<string>;
         AvailStructs: Array<{sel:string; label:string; n:string}>;
         StructAttrs:{[attr:string]:Array<string>};
@@ -320,6 +322,8 @@ declare module ViewOptions {
         getReferences():Immutable.List<RefsDesc>;
         getSelectAllReferences():boolean;
         getFixedAttr():string;
+        getAttrsVmode():string;
+        getAttrsAllpos():string;
     }
 }
 

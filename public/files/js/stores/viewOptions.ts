@@ -50,10 +50,15 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private hasLoadedData:boolean = false;
 
+    private attrVmode:string; // visible/mouseover // TODO this is required even if the store is not loaded!!
+
+    private attrAllpos:string; // kw/all
+
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
+        this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];
         const self = this;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -68,6 +73,18 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                             this.layoutModel.showMessage('error', err);
                         }
                     );
+                break;
+                case 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY':
+                    if (payload.props['name'] === 'allpos') {
+                        self.attrAllpos = payload.props['value'];
+
+                    } else if (payload.props['name'] === 'attr_vmode') {
+                        self.attrVmode = payload.props['value'];
+                        if (self.attrVmode === 'mouseover') {
+                            self.attrAllpos = 'all';
+                        }
+                    }
+                    self.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE':
                     self.toggleAttribute(payload.props['idx']);
@@ -93,7 +110,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                 case 'VIEW_OPTIONS_SAVE_SETTINGS':
                     self.saveSettings().then(
                         (data) => {
-                            self.notifyChangeListeners();
+                            self.notifyChangeListeners('$VIEW_OPTIONS_SAVE_SETTINGS');
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);
@@ -105,36 +122,46 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
     }
 
     private serialize():any {
-        // m.map((v, k) => v.map(x => k + '.' + x)).valueSeq().flatMap(x => x)
         const ans = {
             setattrs: this.attrList.filter(item => item.selected).map(item => item.n).toArray(),
             setstructs: this.structList.filter(item => item.selected).map(item => item.n).toArray(),
             structattrs: this.structAttrs
                             .map((v, k) => v.filter(x => x.selected))
-                            .map((v, k) => v.map(x => [k, x]))
+                            .map((v, k) => v.map(x => `${k}.${x.n}`))
                             .valueSeq()
                             .flatMap(x => x)
                             .toArray(),
-            setrefs: this.referenceList.filter(item => item.selected).map(item => item.n).toArray()
+            setrefs: this.referenceList.filter(item => item.selected).map(item => item.n).toArray(),
+            attr_allpos: this.getAttrsAllpos(),
+            attr_vmode: this.getAttrsVmode()
         };
 
         return ans;
     }
 
     private saveSettings():RSVP.Promise<any> {
-        /*
-        console.log('serialized: ', this.serialize());
-        return new RSVP.Promise((resolve:()=>void, reject) => {
-            resolve();
-        });
-        */
-
+        const corpname = this.layoutModel.getConf<string>('corpname');
+        const urlArgs = `corpname=${corpname}&format=json`;
+        const formArgs = this.serialize();
         return this.layoutModel.ajax(
             'POST',
-            this.layoutModel.createActionUrl('options/viewattrsx'),
-            this.serialize(),
+            this.layoutModel.createActionUrl('options/viewattrsx') + '?' + urlArgs,
+            formArgs,
             {contentType : 'application/x-www-form-urlencoded'}
-        );
+
+        ).then((data) => {
+            if (this.getAttrsAllpos() === 'all') {
+                this.layoutModel.replaceConcArg('ctxattrs', [formArgs['setattrs'].join(',')]);
+
+            } else if (this.getAttrsAllpos() === 'kw') {
+                this.layoutModel.replaceConcArg('ctxattrs',
+                        [this.layoutModel.getConf<string>('baseAttr')]);
+            }
+            this.layoutModel.replaceConcArg('attrs', [formArgs['setattrs'].join(',')]);
+            this.layoutModel.replaceConcArg('attr_vmode', [this.getAttrsVmode()]);
+            this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
+            this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
+        });
     }
 
     private toggleAllAttributes():void {
@@ -305,8 +332,9 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                 selected: item.sel === 'selected' ? true : false
             };
         }));
-
         this.fixedAttr = data.FixedAttr;
+        this.attrVmode = data.AttrVmode;
+        this.attrAllpos = this.attrVmode !== 'mouseover' ? data.AttrAllpos : 'all';
         this.hasLoadedData = true;
     }
 
@@ -329,6 +357,8 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                     StructAttrs: data['structattrs'],
                     CurrStructAttrs: data['curr_structattrs'],
                     AvailRefs: data['Availrefs'],
+                    AttrAllpos: data['attr_allpos'],
+                    AttrVmode: data['attr_vmode']
                 }
                 this.initFromPageData(imported);
                 return imported;
@@ -367,6 +397,14 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     getSelectAllReferences():boolean {
         return this.selectAllReferences;
+    }
+
+    getAttrsVmode():string {
+        return this.attrVmode;
+    }
+
+    getAttrsAllpos():string {
+        return this.attrAllpos;
     }
 
 }

@@ -34,6 +34,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf
     conf.StructAttrs = #filter $Jsonize#$structattrs#end filter#;
     conf.CurrStructAttrs = #filter $Jsonize#$curr_structattrs#end filter#;
     conf.AvailRefs = #filter $Jsonize#$Availrefs#end filter#;
+    conf.AttrAllpos = "${attr_allpos}";
+    conf.AttrVmode = "${attr_vmode}";
     viewAttrs.init(conf);
 });
 #end def

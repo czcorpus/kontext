@@ -86,21 +86,41 @@ export function init(dispatcher, mixins, viewOptionsStore) {
         }
     });
 
-    //
+    // ---------------------------- <AttributesTweaks /> ----------------------
 
     let AttributesTweaks = React.createClass({
 
         mixins : mixins,
 
+        _handleSelectChange : function (name, event) {
+            dispatcher.dispatch({
+                actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
+                props: {
+                    name: name,
+                    value: event.target.value
+                }
+            });
+        },
+
         render : function () {
             return (
                 <div>
-                    <select name="allpos" className="no-label">
+                    <select name="allpos"
+                            value={this.props.attrsAllpos}
+                            className="no-label"
+                            onChange={this._handleSelectChange.bind(this, 'allpos')}
+                            disabled={this.props.attrsVmode === 'mouseover'}
+                            title={this.props.attrsVmode === 'mouseover' ?
+                                    this.translate('options__locked_allpos_expl') : null}>
                         <option value="all">{this.translate('options__attr_apply_all')}</option>
                         <option value="kw">{this.translate('options__attr_apply_kwic')}</option>
                     </select>
-
-                    <select name="attr_visibility" className="no-label">
+                    {this.props.attrsVmode === 'mouseover' ?
+                        <input type="hidden" name="allpos" value="all" /> : null}
+                    <select name="attr_vmode"
+                            value={this.props.attrsVmode}
+                            onChange={this._handleSelectChange.bind(this, 'attr_vmode')}
+                            className="no-label">
                         <option value="visible">Display attributes directly in text</option>
                         <option value="mouseover">Make attributes available on mouse-over</option>
                     </select>
@@ -139,7 +159,7 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                     </ul>
                     <SelectAll onChange={this._handleSelectAll} isSelected={this.props.hasSelectAll} />
                     <hr />
-                    <AttributesTweaks />
+                    <AttributesTweaks attrsVmode={this.props.attrsVmode} attrsAllpos={this.props.attrsAllpos} />
                 </fieldset>
             );
         }
@@ -342,7 +362,9 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                 availRefs: viewOptionsStore.getReferences(),
                 hasSelectAllAttrs: viewOptionsStore.getSelectAllAttributes(),
                 hasSellectAllRefs: viewOptionsStore.getSelectAllReferences(),
-                hasLoadedData: viewOptionsStore.isLoaded()
+                hasLoadedData: viewOptionsStore.isLoaded(),
+                attrsVmode: viewOptionsStore.getAttrsVmode(),
+                attrsAllpos: viewOptionsStore.getAttrsAllpos()
             };
         },
 
@@ -384,7 +406,8 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                         </p>
                         {this.props.isSubmitMode ? this._renderStateInputs() : null}
                         <FieldsetAttributes fixedAttr={this.state.fixedAttr} attrList={this.state.attrList}
-                                hasSelectAll={this.state.hasSelectAllAttrs} />
+                                hasSelectAll={this.state.hasSelectAllAttrs} attrsAllpos={this.state.attrsAllpos}
+                                attrsVmode={this.state.attrsVmode} />
                         <FieldsetStructures availStructs={this.state.availStructs} structAttrs={this.state.structAttrs} />
                         <FieldsetMetainformation availRefs={this.state.availRefs}
                                 hasSelectAll={this.state.hasSellectAllRefs} />

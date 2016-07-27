@@ -495,17 +495,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.avg_label_attr_len = getattr(meta_elm.find('avg_label_attr_len'), 'text', None)
             if ans.metadata.avg_label_attr_len is not None:
                 ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
-
-        token_mo_elm = node.find('token_mouseover_disable')
-        if token_mo_elm is None:
-            token_mo_elm = node.find('token_mouseover')
-            if token_mo_elm is not None:
-                for child in token_mo_elm:
-                    ans.token_mouseover.append(child.text)
-            if len(ans.token_mouseover) == 0:
-                ans.token_mouseover = self._manatee_corpora.get_info(ans.id).attrs
-        else:
-            ans.token_mouseover = []
         data.append(ans)
 
     def _parse_corplist_node(self, root, data, path='/'):

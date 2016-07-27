@@ -68,6 +68,8 @@ class ViewAttrsPage {
         let storeData:ViewOptions.PageData = {
             AttrList: this.layoutModel.getConf<Array<ViewOptions.AttrDesc>>('AttrList'),
             FixedAttr: this.layoutModel.getConf<string>('FixedAttr'),
+            AttrAllpos: this.layoutModel.getConf<string>('AttrAllpos'),
+            AttrVmode: this.layoutModel.getConf<string>('AttrVmode'),
             CurrentAttrs: this.layoutModel.getConf<Array<string>>('CurrentAttrs'),
             AvailStructs: this.layoutModel.getConf<Array<{sel:string; label:string; n:string}>>('Availstructs'),
             StructAttrs: this.layoutModel.getConf<{[attr:string]:Array<string>}>('StructAttrs'),

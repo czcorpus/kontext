@@ -69,6 +69,8 @@ class Options(Kontext):
                            for n in corp.get_conf('ATTRLIST').split(',')
                            if n]
         out['fixed_attr'] = 'word'
+        out['attr_allpos'] = self.args.attr_allpos
+        out['attr_vmode'] = self.args.attr_vmode
         availstruct = corp.get_conf('STRUCTLIST').split(',')
         structlist = set(self.args.structs.split(',')).union(set([x.split('.')[0] for x in self.args.structattrs]))
         out['Availstructs'] = [{'n': n,
@@ -118,8 +120,10 @@ class Options(Kontext):
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 structattrs=structattrs)
-        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
-        if self.args.q:
+        self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
+        if self.args.format == 'json':
+            return {}
+        elif self.args.q:
             self._redirect_to_conc()
         else:
             self._redirect('/first_form')

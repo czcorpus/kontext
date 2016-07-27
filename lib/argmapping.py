@@ -92,6 +92,7 @@ ConcArgsMapping = (
     'pagesize',
     'align',
     'attrs',
+    'attr_vmode',
     'attr_allpos',
     'ctxattrs',
     'structs',
@@ -206,6 +207,7 @@ class GlobalArgs(object):
     attrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     ctxattrs = Parameter(u'word', persistent=Parameter.PERSISTENT)
     attr_allpos = Parameter(u'kw')
+    attr_vmode = Parameter(u'visible', persistent=Parameter.PERSISTENT)
     allpos = Parameter(u'kw')
     structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
     q = Parameter([])

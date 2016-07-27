@@ -193,6 +193,8 @@ class Kontext(Controller):
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'collpage', 'cbgrfns',
                           'csortfn')
 
+    BASE_ATTR = 'word'
+
     # Default corpus must be accessible to any user, otherwise KonText messes up trying
     # to infer some default corpus name and redirect user there. Hopefully, future releases
     # will avoid this.
@@ -962,7 +964,7 @@ class Kontext(Controller):
         It is called after an action is processed but before any output starts
         """
         Controller._add_globals(self, result, methodname, action_metadata)
-
+        result['base_attr'] = Kontext.BASE_ATTR
         result['files_path'] = self._files_path
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))

@@ -130,9 +130,19 @@ export class MultiDict {
      * already a value present it is removed
      * first.
      */
-    set(key:string, value:any) {
+    set(key:string, value:any):void {
         this[key] = value;
         this._data[key] = [value];
+    }
+
+    /**
+     * Replace the current list of values
+     * associated with the specified key
+     * with a provided list of values.
+     */
+    replace(key:string, values:Array<string>):void {
+        this[key] = values[0];
+        this._data[key] = values || [];
     }
 
     /**

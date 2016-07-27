@@ -164,6 +164,13 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                     <a onClick={this.props.onViewOptionsClick}>
                         {this.translate('concview__change_display_settings')}
                     </a>
+                    {this.props.usesMouseoverAttrs ?
+                        [<span key="sep" className="separ">|</span>,
+                            <img key="bubb" style={{width: '2em'}}
+                                src={this.createStaticUrl('img/bubble.svg')}
+                                alt={this.translate('options__attribs_are_on_mouseover')}
+                                title={this.translate('options__attribs_are_on_mouseover')} />
+                        ] : null}
                 </div>
             );
         }
@@ -268,7 +275,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                             numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                             onChartFrameReady={this.props.onChartFrameReady}
                             onViewOptionsClick={this.props.onViewOptionsClick}
-                            canSendMail={this.props.canSendMail} />;
+                            canSendMail={this.props.canSendMail}
+                            usesMouseoverAttrs={this.props.usesMouseoverAttrs} />;
         }
     });
 
@@ -278,15 +286,20 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
     let ConcordanceView = React.createClass({
 
         _toggleViewOptions : function () {
-            this.setState({viewOptionsVisible: !this.state.viewOptionsVisible});
+            this.setState(React.addons.update(this.state,
+                {viewOptionsVisible: {$set: !this.state.viewOptionsVisible}}));
         },
 
         _onCloseOptionsClick : function () {
-            this.setState({viewOptionsVisible: false});
+            this.setState(React.addons.update(this.state,
+                {viewOptionsVisible: {$set: false}}));
         },
 
         getInitialState : function () {
-            return {viewOptionsVisible: false};
+            return {
+                viewOptionsVisible: false,
+                usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+            };
         },
 
         _renderViewOptions : function () {
@@ -298,6 +311,27 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                         externalCloseCallback={this._onCloseOptionsClick} />
                 </layoutViews.PopupBox>
             );
+        },
+
+        _storeChangeHandler : function (store, action) {
+            if (action === '$VIEW_OPTIONS_SAVE_SETTINGS') {
+                this.setState({
+                    viewOptionsVisible: false,
+                    usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+                });
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_RELOAD_PAGE',
+                    props: {}
+                });
+            }
+        },
+
+        componentDidMount : function () {
+            viewOptionsStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            viewOptionsStore.removeChangeListener(this._storeChangeHandler);
         },
 
         render : function () {
@@ -315,14 +349,17 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                             <ConcToolbar numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
                                     onChartFrameReady={this.props.onChartFrameReady}
                                     canSendMail={this.props.canSendMail}
-                                    onViewOptionsClick={this._toggleViewOptions} />
+                                    onViewOptionsClick={this._toggleViewOptions}
+                                    usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
                         </div>
                     </div>
                     <div id="conclines-wrapper">
                         <linesViews.ConcLines {...this.props} />
                     </div>
                     <div id="conc-bottom-bar">
-                        <paginationViews.Paginator {...this.props} />
+                        <div className="info-level">
+                            <paginationViews.Paginator {...this.props} />
+                        </div>
                     </div>
                 </div>
             );
