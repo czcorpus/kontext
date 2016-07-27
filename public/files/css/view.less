@@ -15,7 +15,7 @@
 
 #conc-top-bar,
 #conc-bottom-bar {
-  padding: 0.4em 1em;
+  padding: 0;
   line-height: 1.8em;
 }
 
@@ -35,12 +35,49 @@
   padding: 0px 20px;
 }
 
-#conc-top-bar span.separ {
-  font-size: 120%;
-  font-weight: normal;
-  color: #00A8E8;
-  padding-left: 0.3em;
-  padding-right: 0.3em;
+#conc-top-bar {
+
+  span.separ {
+    font-size: 120%;
+    font-weight: normal;
+    color: #00A8E8;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+  }
+
+  .info-level {
+    padding: 0.4em 1em;
+  }
+
+  .toolbar-level {
+
+    padding: 0.4em 1em;
+
+    .conc-toolbar {
+      clear: both;
+
+
+      .lines-selection {
+          white-space: nowrap;
+          padding-right: 1.4em;
+          padding-left: 0.3em;
+      }
+
+      .lines-selection.warn {
+          background-image: url(../img/warning-icon.svg);
+          background-size: 1em 1em;
+          background-repeat: no-repeat;
+          background-position: 100% 0.1em;
+      }
+
+      .lines-selection.info {
+          background-image: url(../img/info-icon.svg);
+          background-size: 1em 1em;
+          background-repeat: no-repeat;
+          background-position: 100% 0.1em;
+      }
+    }
+  }
 }
 
 #conclines-wrapper {
@@ -484,6 +521,7 @@ table#conclines .concordance-col-heading {
     width: 80%;
     font-size: 1em;
     font-family: @condensed-font-family;
+    line-height: 2.1em;
 
     #ipm-loader img,
     #conc-loader img {
@@ -507,32 +545,13 @@ table#conclines .concordance-col-heading {
         font-weight: bold;
     }
 
-    .lines-selection {
-        white-space: nowrap;
-        padding-right: 1.4em;
-        padding-left: 0.3em;
-    }
-
-    .lines-selection.warn {
-        background-image: url(../img/warning-icon.svg);
-        background-size: 1em 1em;
-        background-repeat: no-repeat;
-        background-position: 100% 0.1em;
-    }
-
-    .lines-selection.info {
-        background-image: url(../img/info-icon.svg);
-        background-size: 1em 1em;
-        background-repeat: no-repeat;
-        background-position: 100% 0.1em;
-    }
-
     sup {
         vertical-align: middle;
         position: relative;
         top: -0.4em;
         padding-left: 0.2em;
     }
+
 }
 
 #selection-actions {

@@ -78,7 +78,6 @@ class CorpusInfo(DictLike):
         self.collator_locale = 'en_US'  # this does not apply for Manatee functions
         self.citation_info = CitationInfo()
         self.metadata = CorpusMetadata()
-        self.token_mouseover = []  # 'attr' values displayed on kwic mouse-over
 
 
 class BrokenCorpusInfo(CorpusInfo):

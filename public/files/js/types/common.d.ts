@@ -240,7 +240,8 @@ declare module Kontext {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,
         queryHintStore:IQueryHintStore,
-        userInfoStore:UserInfoStore
+        userInfoStore:UserInfoStore,
+        viewOptionsStore:ViewOptions.IViewOptionsStore
     }
 
     export interface AjaxOptions {
@@ -265,6 +266,64 @@ declare module Kontext {
 
     export interface AsyncTaskOnUpdate {
         (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
+    }
+}
+
+
+declare module ViewOptions {
+
+    export interface AttrDesc {
+        n: string;
+        label: string;
+        selected: boolean;
+        locked: boolean;
+    }
+
+    export interface StructDesc {
+        label: string;
+        n: string;
+        selected: boolean;
+        locked: boolean;
+    }
+
+    export interface StructAttrDesc {
+        n: string;
+        selected: boolean;
+    }
+
+    export interface RefsDesc {
+        n: string;
+        label: string;
+        selected: boolean;
+    }
+
+    export type AvailStructAttrs = Immutable.Map<string, Immutable.List<StructAttrDesc>>;
+
+    export interface PageData {
+        AttrList: Array<AttrDesc>;
+        FixedAttr: string;
+        AttrAllpos: string;
+        AttrVmode: string;
+        CurrentAttrs: Array<string>;
+        AvailStructs: Array<{sel:string; label:string; n:string}>;
+        StructAttrs:{[attr:string]:Array<string>};
+        CurrStructAttrs:Array<string>;
+        AvailRefs:Array<{n:string; sel:string; label:string}>;
+    }
+
+    export interface IViewOptionsStore {
+        initFromPageData(data:ViewOptions.PageData):void;
+        loadData():RSVP.Promise<ViewOptions.PageData>;
+        isLoaded():boolean;
+        getAttributes():Immutable.List<ViewOptions.AttrDesc>;
+        getSelectAllAttributes():boolean;
+        getStructures():Immutable.List<ViewOptions.StructDesc>;
+        getStructAttrs():ViewOptions.AvailStructAttrs;
+        getReferences():Immutable.List<RefsDesc>;
+        getSelectAllReferences():boolean;
+        getFixedAttr():string;
+        getAttrsVmode():string;
+        getAttrsAllpos():string;
     }
 }
 

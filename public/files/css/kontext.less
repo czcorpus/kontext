@@ -657,6 +657,10 @@ a:hover {
 }
 div.buttons {
     padding-top: 2em;
+
+    button:not(:last-child) {
+        margin-right: 0.7em;
+    }
 }
 #specify-context div.contents,
 #specify-query-metainformation div.contents {
@@ -705,11 +709,28 @@ div.starred > img {
 fieldset.inactive {
     border-color: #DEDEDE;
 }
-fieldset.settings-group {
+
+#mainform fieldset.settings-group {
     display: inline-block;
     vertical-align: top;
     min-width: 30%;
     margin-right: 1%;
+
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+
+        li {
+            margin: 0 0 0 1em;
+            padding: 0;
+        }
+    }
+
+    select.no-label {
+        display: block;
+        margin-top: 0.9em;
+    }
 }
 a.form-extension-switch,
 #mainform legend {

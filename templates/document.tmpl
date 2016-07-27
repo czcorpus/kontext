@@ -155,6 +155,7 @@ define('conf', [], function () {
     conf.staticUrl = "$static_url";
     conf.corpname = "$corpname";
     conf.subcorpname = #if $getVar('usesubcorp')#"$usesubcorp"#else# null#end if#;
+    conf.baseAttr = "${base_attr}";
     conf.currentAction = "$current_action";
     conf.humanCorpname = "$human_corpname";
     conf.session_cookie_name = "$session_cookie_name";

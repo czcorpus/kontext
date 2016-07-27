@@ -340,6 +340,16 @@ export class ConcLineStore extends SimplePageStore {
                         }
                     );
                 break;
+                case 'CONCORDANCE_RELOAD_PAGE':
+                    self.reloadPage().then(
+                        (data) => {
+                            self.notifyChangeListeners();
+                        },
+                        (err) => {
+                            self.layoutModel.showMessage('error', err);
+                        }
+                    );
+                break;
                 case 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES':
                     self.pagination.lastPage = payload.props['availPages'];
                     self.notifyChangeListeners();

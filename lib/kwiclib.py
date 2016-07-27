@@ -98,64 +98,6 @@ class KwicPageData(FixedDict):
     CorporaColumns = ()
 
 
-class AttrsMerge(object):
-    """
-    Handles user and mouseover attributes. While Manatee returns
-    just a bunch of values joined into a single string, in KonText
-    we need two groups of attributes:
-    1) user-selected attributes (= the ones visible in a "Bonito-open" way)
-    2) configured mouseover attributes (= the ones visible on mouse-over)
-
-    This class handles these two groups at once and is able to export values
-    for both mentioned cases.
-    """
-    def __init__(self, attrs, mouseover_attrs):
-        if type(attrs) in (str, unicode):
-            attrs = attrs.split(',')
-        self._attrs = []
-        for item in attrs + [x for x in mouseover_attrs if x not in attrs]:
-            flag = 0
-            if item in attrs:
-                flag += 1
-            if item in mouseover_attrs:
-                flag += 2
-            self._attrs.append((item, flag))
-
-    def export_all(self):
-        return ','.join(x[0] for x in self._attrs)
-
-    def process_output(self, attrs):
-        """
-         Filter out mouse_over items from attribute string
-         produced by Manatee (e.g.: "/-/Pred_Co//VB-S---3P-AA---I/b\u00fdt")
-         and return them as separate data items.data
-
-         This functions expects the delimiter used for attributes
-         (typically '/') cannot be found within tokens. Otherwise
-         the parser may fail in a bad way.
-
-         arguments:
-         attrs -- a string containing attributes separated by '/'
-                  (e.g.: /-/Pred_Co//VB-S---3P-AA---I/b\u00fdt)
-         token -- a token the attributes belong to
-
-         return:
-         a 2-tuple (output_string, mouseover_list_of_pairs)
-        """
-        # input string starts with '/'
-        # empty 0-th element in split string represents 'word'
-        # which is omitted in attrs string (it exists as a separate value)
-        tmp = attrs.split('/')
-        ans = []
-        mouseover = []
-        for i in range(len(tmp)):
-            if self._attrs[i][1] & 1 == 1:
-                ans.append(tmp[i])
-            if self._attrs[i][1] & 2 == 2:
-                mouseover.append((self._attrs[i][0], tmp[i]))
-        return '/'.join(ans), mouseover
-
-
 class KwicLinesArgs(object):
     """
     note: please see KwicPageArgs attributes for more information
@@ -171,11 +113,9 @@ class KwicLinesArgs(object):
     user_structs = 'p'
     labelmap = {}
     righttoleft = False
-    alignlist=()
-    token_mouseover = ()
-
-    def create_attrs_merge(self):
-        return AttrsMerge(self.attrs, self.token_mouseover)
+    alignlist = ()
+    attr_vmode = 'visible'
+    base_attr = 'word'
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
@@ -229,13 +169,14 @@ class KwicPageArgs(object):
     # whether display ===EMPTY=== or '' in case a value is empty
     hidenone = 0
 
-    # a list of attributes to be shown on mouse-over (currently for KWIC only)
-    token_mouseover = ()
+    # determine whether the non-word attributes should be rendered directly or as a meta-data
+    attr_vmode = 'visible'
 
-    def __init__(self, argmapping):
+    def __init__(self, argmapping, base_attr):
         for k, v in argmapping.__dict__.items():
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
+        self.base_attr = base_attr
 
     def _import_val(self, k, v):
         t = type(getattr(self, k))
@@ -269,7 +210,7 @@ class KwicPageArgs(object):
         ans.labelmap = self.labelmap
         ans.righttoleft = self.righttoleft
         ans.alignlist = self.alignlist
-        ans.token_mouseover = self.token_mouseover
+        ans.attr_vmode = self.attr_vmode
         for k, v in kw.items():
             setattr(ans, k, v)
         return ans
@@ -577,16 +518,11 @@ class Kwic(object):
         else:
             leftlabel, rightlabel = 'Left', 'Right'
 
-        # generate attrs & ctxattrs containing both user and internal (= the ones
-        # needed to enhance misc. UI elements) structures
-        attrs_tmp = args.create_attrs_merge()
-        ctxattrs_tmp = args.create_attrs_merge()
-
         # self.conc.corp() must be used here instead of self.corpus
         # because in case of parallel corpora these two are different and only the latter one is correct
         kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),
                                args.leftctx, args.rightctx,
-                               attrs_tmp.export_all(), ctxattrs_tmp.export_all(), all_structs, args.refs)
+                               args.attrs, args.ctxattrs, all_structs, args.refs)
         labelmap = args.labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
@@ -604,47 +540,40 @@ class Kwic(object):
                 leftmost_speech_id = None
             leftwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
                                                                            tokens2strclass(kl.get_left()),
-                                                                         'left', filter_out_speech_tag,
+                                                                           'left', filter_out_speech_tag,
                                                                            leftmost_speech_id)
             kwicwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
                                                                            tokens2strclass(kl.get_kwic()),
-                                                                         'kwic',
+                                                                           'kwic',
                                                                            filter_out_speech_tag,
                                                                            last_left_speech_id)
             rightwords = self.update_speech_boundaries(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
                                                        filter_out_speech_tag, last_left_speech_id)[0]
 
+            if args.attr_vmode == 'mouseover':
+                attrs_tmp = filter(lambda x: len(x) > 0, args.attrs.strip(args.base_attr).split(','))
+                prev = {}
+                for item in leftwords + kwicwords + rightwords:
+                    if item.get('class') == 'attr':
+                        # TODO configurable delimiter
+                        prev['mouseover'] = [['/'.join(attrs_tmp), item['str'].strip('/')]]
+                        item['str'] = ''
+                    prev = item
+
             if args.righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)
 
-            prev = {}
-            for kw in kwicwords:
-                kwicwords_upd = []
-                if kw.get('class') == 'attr':
-                    kw['str'], prev['mouseover'] = attrs_tmp.process_output(kw.get('str', ''))
-                else:
-                    kwicwords_upd.append(kw)
-                prev = kw
-
-            prev = {}
             leftsize = 0
             for w in leftwords:
-                if w['class'] == 'attr':
-                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''))
                 if not w['class'] == 'strc':
                     leftsize += len(w['str']) + 1
-                prev = w
             if leftsize > maxleftsize:
                 maxleftsize = leftsize
 
-            prev = {}
             rightsize = 0
             for w in rightwords:
-                if w['class'] == 'attr':
-                    w['str'], prev['mouseover'] = ctxattrs_tmp.process_output(w.get('str', ''))
                 if not w['class'] == 'strc':
                     rightsize += len(w['str']) + 1
-                prev = w
             if rightsize > maxrightsize:
                 maxrightsize = rightsize
 

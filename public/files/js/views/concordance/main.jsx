@@ -24,13 +24,16 @@ import React from 'vendor/react';
 import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
+import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
 
 
-export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfoStore, layoutViews) {
+export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfoStore,
+        viewOptionsStore, layoutViews) {
 
     let lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
     let paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
     let linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
+    let viewOptionsViews = structsAttrsViewInit(dispatcher, mixins, viewOptionsStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -100,17 +103,18 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         },
 
         _renderNumSelected : function () {
-            let numSelected = this.props.numSelected > 0 ?
+            const [elmClass, elmTitle] = this._getMsgStatus();
+            const numSelected = this.props.numSelected > 0 ?
                     this.props.numSelected : this.props.numItemsInLockedGroups;
             if (numSelected > 0) {
-                return [
-                    '(',
-                    (<a key="numItems" onClick={this._selectMenuTriggerHandler}>
+                return (
+                    <span className={'lines-selection ' + elmClass} title={elmTitle}>
+                        (<a key="numItems" onClick={this._selectMenuTriggerHandler}>
                         <span className="value">{numSelected}</span>
                         {'\u00A0'}{this.translate('concview__num_sel_lines')}</a>
-                    ),
-                    ')'
-                ];
+                        )
+                    </span>
+                );
 
             } else {
                 return null;
@@ -137,9 +141,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
 
         render : function () {
             let mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionStore.getMode();
-            let [elmClass, elmTitle] = this._getMsgStatus();
             return (
-                <div className="line-ops">
+                <div className="conc-toolbar">
                     {this.translate('concview__line_sel')}:{'\u00A0'}
                     {/* TODO remove id */}
                     <select id="selection-mode-switch"
@@ -149,9 +152,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                         <option value="simple">{this.translate('concview__line_sel_simple')}</option>
                         <option value="groups">{this.translate('concview__line_sel_groups')}</option>
                     </select>
-                    <span className={'lines-selection ' + elmClass} title={elmTitle}>
-                        {this._renderNumSelected()}
-                    </span>
+                    {this._renderNumSelected()}
                     {this.state.menuVisible ?
                         <LineSelectionMenu
                                 onCloseClick={this._closeMenuHandler}
@@ -159,6 +160,17 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendMail={this.props.canSendMail} />
                         :  null}
+                    <span className="separ">|</span>
+                    <a onClick={this.props.onViewOptionsClick}>
+                        {this.translate('concview__change_display_settings')}
+                    </a>
+                    {this.props.usesMouseoverAttrs ?
+                        [<span key="sep" className="separ">|</span>,
+                            <img key="bubb" style={{width: '2em'}}
+                                src={this.createStaticUrl('img/bubble.svg')}
+                                alt={this.translate('options__attribs_are_on_mouseover')}
+                                title={this.translate('options__attribs_are_on_mouseover')} />
+                        ] : null}
                 </div>
             );
         }
@@ -194,28 +206,6 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             }
         },
 
-        getInitialState : function () {
-            return {
-                numSelected: lineSelectionStore.size(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
-            };
-        },
-
-        _storeChangeHandler : function (store, action) {
-            this.setState({
-                numSelected: lineSelectionStore.size(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
-            });
-        },
-
-        componentDidMount : function () {
-            lineSelectionStore.addChangeListener(this._storeChangeHandler);
-        },
-
-        componentWillUnmount : function () {
-            lineSelectionStore.removeChangeListener(this._storeChangeHandler);
-        },
-
         render : function () {
             return (
                 <div id="result-info">
@@ -246,14 +236,47 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                         this.translate('concview__result_shuffled')
                         : this.translate('concview__result_sorted')}
                     </span>
-                    <br />
-                    <LineSelectionOps
+                </div>
+            );
+        }
+    });
+
+
+    // ------------------------- <ConcToolbar /> ---------------------------
+
+
+    let ConcToolbar = React.createClass({
+
+        getInitialState : function () {
+            return {
+                numSelected: lineSelectionStore.size(),
+                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
+            };
+        },
+
+        _storeChangeHandler : function (store, action) {
+            this.setState({
+                numSelected: lineSelectionStore.size(),
+                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
+            });
+        },
+
+        componentDidMount : function () {
+            lineSelectionStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            lineSelectionStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        render : function () {
+            return <LineSelectionOps
                             numSelected={this.state.numSelected}
                             numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                             onChartFrameReady={this.props.onChartFrameReady}
-                            canSendMail={this.props.canSendMail} />
-                </div>
-            );
+                            onViewOptionsClick={this.props.onViewOptionsClick}
+                            canSendMail={this.props.canSendMail}
+                            usesMouseoverAttrs={this.props.usesMouseoverAttrs} />;
         }
     });
 
@@ -262,22 +285,81 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
 
     let ConcordanceView = React.createClass({
 
+        _toggleViewOptions : function () {
+            this.setState(React.addons.update(this.state,
+                {viewOptionsVisible: {$set: !this.state.viewOptionsVisible}}));
+        },
+
+        _onCloseOptionsClick : function () {
+            this.setState(React.addons.update(this.state,
+                {viewOptionsVisible: {$set: false}}));
+        },
+
+        getInitialState : function () {
+            return {
+                viewOptionsVisible: false,
+                usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+            };
+        },
+
+        _renderViewOptions : function () {
+            return (
+                <layoutViews.PopupBox onCloseClick={this._onCloseOptionsClick}
+                        customStyle={{left: '1em', right: '1em'}}>
+                    <viewOptionsViews.StructsAndAttrsForm isSubmitMode={false}
+                        humanCorpname={this.props.baseCorpname}
+                        externalCloseCallback={this._onCloseOptionsClick} />
+                </layoutViews.PopupBox>
+            );
+        },
+
+        _storeChangeHandler : function (store, action) {
+            if (action === '$VIEW_OPTIONS_SAVE_SETTINGS') {
+                this.setState({
+                    viewOptionsVisible: false,
+                    usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+                });
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_RELOAD_PAGE',
+                    props: {}
+                });
+            }
+        },
+
+        componentDidMount : function () {
+            viewOptionsStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            viewOptionsStore.removeChangeListener(this._storeChangeHandler);
+        },
+
         render : function () {
             return (
                 <div>
+                    {this.state.viewOptionsVisible ? this._renderViewOptions() : null }
                     <div id="conc-top-bar">
-                        <ConcSummary {...this.props.concSummary}
-                            numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
-                            onChartFrameReady={this.props.onChartFrameReady}
-                            canSendMail={this.props.canSendMail}
-                            corpname={this.props.baseCorpname} />
-                        <paginationViews.Paginator {...this.props} />
+                        <div className="info-level">
+                            <paginationViews.Paginator {...this.props} />
+                            <ConcSummary {...this.props.concSummary}
+                                corpname={this.props.baseCorpname}
+                                />
+                        </div>
+                        <div className="toolbar-level">
+                            <ConcToolbar numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
+                                    onChartFrameReady={this.props.onChartFrameReady}
+                                    canSendMail={this.props.canSendMail}
+                                    onViewOptionsClick={this._toggleViewOptions}
+                                    usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
+                        </div>
                     </div>
                     <div id="conclines-wrapper">
                         <linesViews.ConcLines {...this.props} />
                     </div>
                     <div id="conc-bottom-bar">
-                        <paginationViews.Paginator {...this.props} />
+                        <div className="info-level">
+                            <paginationViews.Paginator {...this.props} />
+                        </div>
                     </div>
                 </div>
             );

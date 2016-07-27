@@ -262,12 +262,11 @@ class Actions(Kontext):
         conc.switch_aligned(os.path.basename(self.args.corpname))
 
         kwic = Kwic(self.corp, self.args.corpname, conc)
-        kwic_args = KwicPageArgs(self.args)
+        kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
         kwic_args.speech_attr = self._get_speech_segment()
         kwic_args.labelmap = {}
         kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align.split(',') if c]
         kwic_args.structs = self._get_struct_opts()
-        kwic_args.token_mouseover = corpus_info.token_mouseover
         out = kwic.kwicpage(kwic_args)
 
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
@@ -1556,7 +1555,7 @@ class Actions(Kontext):
             if err is not None:
                 raise err
 
-            kwic_args = KwicPageArgs(self.args)
+            kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
             kwic_args.speech_attr = self._get_speech_segment()
             kwic_args.fromp = 1
             kwic_args.pagesize = to_line - (from_line - 1)

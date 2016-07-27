@@ -44,6 +44,7 @@ import rsvpAjax = require('vendor/rsvp-ajax');
 import util = require('../util');
 import docStores = require('../stores/documentStores');
 import userStores = require('../stores/userStores');
+import {ViewOptionsStore} from '../stores/viewOptions';
 import translations = require('translations');
 import IntlMessageFormat = require('vendor/intl-messageformat');
 import Immutable = require('vendor/immutable');
@@ -146,6 +147,8 @@ export class PageModel {
 
     userInfoStore:userStores.UserInfo;
 
+    viewOptionsStore:ViewOptionsStore;
+
     /**
      * A dictionary containing translations for current UI language (conf['uiLang']).
      */
@@ -168,6 +171,7 @@ export class PageModel {
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
         this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
+        this.viewOptionsStore = new ViewOptionsStore(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
         this.asyncTaskChecker = new asyncTask.AsyncTaskChecker(this.pluginApi(),
                 this.getConf<any>('asyncTasks') || []);
@@ -181,7 +185,8 @@ export class PageModel {
             corpusInfoStore: this.corpusInfoStore,
             messageStore: this.messageStore,
             queryHintStore: this.queryHintStore,
-            userInfoStore: this.userInfoStore
+            userInfoStore: this.userInfoStore,
+            viewOptionsStore: this.viewOptionsStore
         };
     }
 
@@ -393,6 +398,9 @@ export class PageModel {
             } else {
                 body = encodeArgs(args);
             }
+
+        } else if (args instanceof util.MultiDict) {
+            body = this.encodeURLParameters(args);
 
         } else if (typeof args === 'string') {
             body = args;
@@ -935,6 +943,12 @@ export class PageModel {
     setConcArg(name:string, value:any) {
         let tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
         tmp.set(name, value);
+        this.conf['currentArgs'] = tmp.items();
+    }
+
+    replaceConcArg(name:string, values:Array<string>):void {
+        let tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        tmp.replace(name, values);
         this.conf['currentArgs'] = tmp.items();
     }
 

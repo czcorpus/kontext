@@ -63,14 +63,16 @@ class Options(Kontext):
         out = {}
         if self.args.maincorp:
             corp = corplib.manatee.Corpus(self.args.maincorp)
-            out['AttrList'] = [{'label': corp.get_conf(n + '.LABEL') or n, 'n': n}
-                               for n in corp.get_conf('ATTRLIST').split(',')
-                               if n]
         else:
             corp = self.corp
+        out['AttrList'] = [{'label': corp.get_conf(n + '.LABEL') or n, 'n': n}
+                           for n in corp.get_conf('ATTRLIST').split(',')
+                           if n]
         out['fixed_attr'] = 'word'
+        out['attr_allpos'] = self.args.attr_allpos
+        out['attr_vmode'] = self.args.attr_vmode
         availstruct = corp.get_conf('STRUCTLIST').split(',')
-        structlist = self.args.structs.split(',')
+        structlist = set(self.args.structs.split(',')).union(set([x.split('.')[0] for x in self.args.structattrs]))
         out['Availstructs'] = [{'n': n,
                                 'sel': 'selected' if n in structlist else '',
                                 'label': corp.get_conf(n + '.LABEL')}
@@ -108,17 +110,20 @@ class Options(Kontext):
         out['structattrs'] = structattrs
         out['curr_structattrs'] = self.args.structattrs
         out['query_overview'] = self.concdesc_json().get('Desc', [])
+        out['CurrentAttrs'] = self.args.attrs.split(',')
         return out
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, http_method='POST')
     def viewattrsx(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
         self._set_new_viewattrs(setattrs=setattrs,
                                 allpos=allpos,
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 structattrs=structattrs)
-        self._save_options(['attrs', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
-        if self.args.q:
+        self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
+        if self.args.format == 'json':
+            return {}
+        elif self.args.q:
             self._redirect_to_conc()
         else:
             self._redirect('/first_form')
