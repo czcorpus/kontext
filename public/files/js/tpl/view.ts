@@ -359,20 +359,18 @@ export class ViewPage {
      * @todo refactor this
      */
     private setupLineActions():void {
-        if (Modernizr.history) {
-            // register event to load lines via ajax in case user hits back
-            window.onpopstate = (event) => {
-                if (event.state && event.state['pagination']) {
-                    this.layoutModel.dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_REVISIT_PAGE',
-                        props: {
-                            action: 'customPage',
-                            pageNum: event.state['pageNum']
-                        }
-                    })
-                }
+        // register event to load lines via ajax in case user hits back
+        this.layoutModel.history.setOnPopState((event) => {
+            if (event.state && event.state['pagination']) {
+                this.layoutModel.dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_REVISIT_PAGE',
+                    props: {
+                        action: 'customPage',
+                        pageNum: event.state['pageNum']
+                    }
+                });
             }
-        }
+        });
 
         this.lineViewStore.bindExternalRefsDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
             this.concDetail.showRefDetail(
@@ -548,17 +546,15 @@ export class ViewPage {
      * method).
      */
     private setStateUrl():void {
-        let stateParams = this.layoutModel.getConf('stateParams');
-        if (Modernizr.history) {
-            window.history.replaceState(
-                {},
-                window.document.title,
-                this.layoutModel.createActionUrl('view') + '?' + stateParams
-            );
-
-        } else if (!this.layoutModel.getConf('replicableQuery')) {
-            window.location.href = '/view?' + stateParams;
-        }
+        this.layoutModel.history.replaceState(
+            'view',
+            this.layoutModel.getConcArgs(),
+            {
+                pagination: true,
+                pageNum: this.lineViewStore.getCurrentPage()
+            },
+            window.document.title
+        );
     }
 
     private attachIpmCalcTrigger():void {
@@ -611,8 +607,8 @@ export class ViewPage {
         this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
-    init(lineViewProps:ViewConfiguration):void {
-        this.layoutModel.init().then(
+    init(lineViewProps:ViewConfiguration):RSVP.Promise<any> {
+        return this.layoutModel.init().then(
             () => {
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
@@ -702,6 +698,12 @@ export function init(conf):ViewPage {
             lineViewStore,
             layoutModel.getConf<number>('NumLinesInGroups') > 0
     );
-    pageModel.init(lineViewProps);
+    pageModel.init(lineViewProps).then(
+        () => {},
+        (err) => {
+            console.error(err);
+            layoutModel.showMessage('error', err);
+        }
+    )
     return pageModel;
 };

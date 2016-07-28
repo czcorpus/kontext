@@ -125,7 +125,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             let elmClass;
             let elmTitle;
             if (this.props.numItemsInLockedGroups > 0) {
-                elmClass = 'info';
+                elmClass = 'info';cons
                 elmTitle = this.translate('linesel__you_have_saved_line_groups');
 
             } else if (this.props.numSelected > 0) {
@@ -166,8 +166,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                     </a>
                     {this.props.usesMouseoverAttrs ?
                         [<span key="sep" className="separ">|</span>,
-                            <img key="bubb" style={{width: '2em'}}
-                                src={this.createStaticUrl('img/bubble.svg')}
+                            <img key="bubb" className="mouseover-available"
+                                src={this.createStaticUrl('img/mouseover-available.svg')}
                                 alt={this.translate('options__attribs_are_on_mouseover')}
                                 title={this.translate('options__attribs_are_on_mouseover')} />
                         ] : null}
@@ -305,7 +305,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         _renderViewOptions : function () {
             return (
                 <layoutViews.PopupBox onCloseClick={this._onCloseOptionsClick}
-                        customStyle={{left: '1em', right: '1em'}}>
+                        customStyle={{left: '1em', right: '1em'}}
+                        customClass="view-options">
                     <viewOptionsViews.StructsAndAttrsForm isSubmitMode={false}
                         humanCorpname={this.props.baseCorpname}
                         externalCloseCallback={this._onCloseOptionsClick} />

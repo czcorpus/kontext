@@ -96,7 +96,7 @@ function getLocalStorage():Storage {
 /**
  *
  */
-export class PageModel {
+export class PageModel implements Kontext.IURLHandler {
 
     /**
      * KonText configuration (per-page dynamic object)
@@ -134,20 +134,22 @@ export class PageModel {
      */
     userSettings:userSettings.UserSettings;
 
+    history:Kontext.IHistory;
+
     /**
      * React component classes
      */
     layoutViews:Kontext.LayoutViews;
 
-    corpusInfoStore:docStores.CorpusInfoStore;
+    private corpusInfoStore:docStores.CorpusInfoStore;
 
-    messageStore:docStores.MessageStore;
+    private messageStore:docStores.MessageStore;
 
-    queryHintStore:docStores.QueryHintStore;
+    private queryHintStore:docStores.QueryHintStore;
 
-    userInfoStore:userStores.UserInfo;
+    private userInfoStore:userStores.UserInfo;
 
-    viewOptionsStore:ViewOptionsStore;
+    private viewOptionsStore:ViewOptionsStore;
 
     /**
      * A dictionary containing translations for current UI language (conf['uiLang']).
@@ -167,6 +169,7 @@ export class PageModel {
         this.mainMenu = new menu.MainMenu(this.pluginApi());
         this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
+        this.history = Modernizr.history ? new util.History(this) : new util.NullHistory();
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
@@ -305,24 +308,6 @@ export class PageModel {
             ans += '...';
         }
         return ans;
-    }
-
-    /**
-     * Replace the current state with the one specified by passed arguments.
-     *
-     * @param action action name (e.g. 'first_form', 'subcorpus/subcorp_list')
-     * @param args a multi-dict instance containing URL arguments to be used
-     * @param stateData (just like in window.history.replaceState)
-     * @param title (just like in window.history.replaceState), default is window.document.title
-     */
-    historyReplaceState(action:string, args:util.MultiDict, stateData?:any, title?:string):void {
-         if (Modernizr.history) {
-            window.history.replaceState(
-                stateData || {},
-                title || window.document.title,
-                this.createActionUrl(action) + '?' + this.encodeURLParameters(args)
-            );
-         }
     }
 
     /**
@@ -897,7 +882,7 @@ export class PageModel {
         }
     }
 
-    createStaticUrl(path) {
+    createStaticUrl(path):string {
         let staticPath = this.conf['staticUrl'];
 
         if (path.indexOf('/') === 0) {
@@ -906,7 +891,7 @@ export class PageModel {
         return staticPath + path;
     }
 
-    createActionUrl(path) {
+    createActionUrl(path):string {
         let staticPath = this.conf['rootPath'];
 
         if (path.indexOf('/') === 0) {

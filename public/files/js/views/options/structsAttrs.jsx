@@ -309,10 +309,32 @@ export function init(dispatcher, mixins, viewOptionsStore) {
         mixins : mixins,
 
         _handleSaveClick : function () {
+            this.setState({isWaiting: true});
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_SAVE_SETTINGS',
                 props: {}
             });
+        },
+
+        getInitialState : function () {
+            return {isWaiting: false};
+        },
+
+        _renderSubmitButton : function () {
+            if (this.state.isWaiting) {
+                return <img key="save-waiting" className="ajax-loader"
+                                src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={this.translate('global__processing')}
+                                title={this.translate('global__processing')} />
+
+            } else {
+                return (
+                    <button key="save" type="button" className="default-button"
+                            onClick={this._handleSaveClick}>
+                        {this.translate('options__apply_btn')}
+                    </button>
+                );
+            }
         },
 
         _renderButtonVariant : function () {
@@ -325,14 +347,12 @@ export function init(dispatcher, mixins, viewOptionsStore) {
 
             } else {
                 return [
-                    <button key="save" type="button" className="default-button"
-                            onClick={this._handleSaveClick}>
-                        {this.translate('options__apply_btn')}
-                    </button>,
-                    <button key="cancel" type="button" className="default-button" onClick={this.props.externalCloseCallback}>
+                    this._renderSubmitButton(),
+                    <button key="cancel" type="button" className="default-button"
+                            onClick={this.props.externalCloseCallback}>
                         {this.translate('global__close')}
                     </button>
-                ]
+                ];
             }
         },
 

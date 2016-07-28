@@ -267,6 +267,27 @@ declare module Kontext {
     export interface AsyncTaskOnUpdate {
         (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
     }
+
+    export interface IMultiDict {
+        getList(key:string):Array<string>;
+        set(key:string, value:any):void;
+        replace(key:string, values:Array<string>):void;
+        add(key:string, value:any):void;
+        items():Array<Array<string>>;
+        toDict():{[key:string]:string};
+    }
+
+    export interface IURLHandler {
+        createStaticUrl(path):string;
+        createActionUrl(path):string;
+        encodeURLParameters(params:IMultiDict):string
+    }
+
+    export interface IHistory {
+        pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
+        replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
+        setOnPopState(fn:(event:{state: any})=>void):void;
+    }
 }
 
 

@@ -304,7 +304,6 @@ export class ConcLineStore extends SimplePageStore {
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
-        this.pushHistoryState(this.currentPage);
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             this.setStopStatus.bind(this)
@@ -343,6 +342,7 @@ export class ConcLineStore extends SimplePageStore {
                 case 'CONCORDANCE_RELOAD_PAGE':
                     self.reloadPage().then(
                         (data) => {
+                            self.pushHistoryState(self.currentPage);
                             self.notifyChangeListeners();
                         },
                         (err) => {
@@ -374,13 +374,10 @@ export class ConcLineStore extends SimplePageStore {
     }
 
     private pushHistoryState(pageNum:number):void {
-        if (Modernizr.history) {
-            let args = this.layoutModel.getConcArgs();
-            args.set('fromp', pageNum);
-            let url = this.layoutModel.createActionUrl('view') + '?' +
-                this.layoutModel.encodeURLParameters(args);
-            window.history.pushState({ pagination: true, pageNum: pageNum }, '', url);
-        }
+        const args = this.layoutModel.getConcArgs();
+        args.set('fromp', pageNum);
+        this.layoutModel.history.pushState(
+            'view', args, { pagination: true, pageNum: pageNum });
     }
 
     /**
