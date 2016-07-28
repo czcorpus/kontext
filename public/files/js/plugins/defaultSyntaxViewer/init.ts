@@ -24,7 +24,7 @@
 
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');
-import popupbox = require('popupbox');
+import popupbox = require('../../popupbox');
 declare var treexView:JQuery;
 
 
@@ -76,10 +76,18 @@ class SyntaxTreeViewer {
     }
 
     private createActionButton(tokenId:string):HTMLElement {
-        let button = window.document.createElement('img');
+        const baseImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon.svg');
+        const overImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon_s.svg');
+        const button = window.document.createElement('img');
         $(button)
-            .attr('src', this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/lindat.pmltq.logo.png'))
-            .attr('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'));
+            .attr('src', baseImg)
+            .attr('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'))
+            .on('mouseover', () => {
+                $(button).attr('src', overImg);
+            })
+            .on('mouseout', () => {
+                $(button).attr('src', baseImg);
+            });
         popupbox.bind(
             button,
             this.createRenderFunction(tokenId),
