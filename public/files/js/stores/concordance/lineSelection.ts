@@ -99,7 +99,7 @@ export class LineSelectionStore extends SimplePageStore {
                         (args:MultiDict) => {
                             self.concLineStore.notifyChangeListeners();
                             self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.historyReplaceState('view', args);
+                            self.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);
@@ -119,7 +119,7 @@ export class LineSelectionStore extends SimplePageStore {
                         (args:MultiDict) => {
                             self.concLineStore.notifyChangeListeners();
                             self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.historyReplaceState('view', args);
+                            self.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);
@@ -134,7 +134,7 @@ export class LineSelectionStore extends SimplePageStore {
                         (args:MultiDict) => {
                             self.concLineStore.notifyChangeListeners();
                             self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.historyReplaceState('view', args);
+                            self.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);
@@ -146,7 +146,7 @@ export class LineSelectionStore extends SimplePageStore {
                         (args:MultiDict) => {
                             self.concLineStore.notifyChangeListeners();
                             self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.historyReplaceState('view', args);
+                            self.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);

@@ -62,7 +62,6 @@ export class SimplePageStore implements Kontext.PageStore {
     }
 }
 
-
 /**
  * Returns position (in number of characters) of cursor in a text input
  *
@@ -104,7 +103,7 @@ export function getCaretPosition(inputElm) {
  * (d[k] = v cannot set internal dict containing lists
  * of values).
  */
-export class MultiDict {
+export class MultiDict implements Kontext.IMultiDict {
 
     private _data:any;
 
@@ -151,7 +150,7 @@ export class MultiDict {
      * but the 'multi-value' mode appends the
      * value to the list of existing ones.
      */
-    add(key:string, value:any) {
+    add(key:string, value:any):void {
         this[key] = value;
         if (this._data[key] === undefined) {
             this._data[key] = [];
@@ -183,5 +182,63 @@ export class MultiDict {
             }
         }
         return ans;
+    }
+}
+
+export class NullHistory implements Kontext.IHistory {
+    replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
+    pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
+    setOnPopState(fn:(event:{state: any})=>void):void {}
+}
+
+
+export class History implements Kontext.IHistory {
+
+    private h:Kontext.IURLHandler;
+
+    constructor(urlHandler:Kontext.IURLHandler) {
+        this.h = urlHandler;
+    }
+
+    /**
+     * Replace the current state with the one specified by passed arguments.
+     *
+     * @param action action name (e.g. 'first_form', 'subcorpus/subcorp_list')
+     * @param args a multi-dict instance containing URL arguments to be used
+     * @param stateData (just like in window.history.replaceState)
+     * @param title (just like in window.history.replaceState), default is window.document.title
+     */
+    replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {
+        if (/^https?:\/\//.exec(action)) {
+            throw new Error('Invalid action specifier (cannot use URL here)');
+        }
+        window.history.replaceState(
+            stateData || {},
+            title || window.document.title,
+            `${this.h.createActionUrl(action)}?${this.h.encodeURLParameters(args)}`
+        );
+    }
+
+    /**
+     * Push a new state
+     *
+     * @param action action name (e.g. 'first_form', 'subcorpus/subcorp_list')
+     * @param args a multi-dict instance containing URL arguments to be used
+     * @param stateData (just like in window.history.replaceState)
+     * @param title (just like in window.history.replaceState), default is window.document.title
+     */
+    pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {
+        if (/^https?:\/\//.exec(action)) {
+            throw new Error('Invalid action specifier (cannot use URL here)');
+        }
+        window.history.pushState(
+            stateData || {},
+            title || window.document.title,
+            `${this.h.createActionUrl(action)}?${this.h.encodeURLParameters(args)}`
+        );
+    }
+
+    setOnPopState(fn:(event:{state: any})=>void):void {
+        window.onpopstate = fn;
     }
 }
