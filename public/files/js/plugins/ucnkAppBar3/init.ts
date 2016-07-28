@@ -36,12 +36,18 @@ export class AppBarStore extends SimplePageStore {
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>) {
         super(dispatcher);
-        let self = this;
+        const self = this;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
-                    toolbar.openLoginDialog();
+                    try {
+                        toolbar.openLoginDialog();
+
+                    } catch (e) {
+                        console.error(e);
+                        self.layoutModel.showMessage('error', self.layoutModel.translate('ucnkAppBar3__failed_to_initialize_toolbar'));
+                    }
                     break;
             }
         });
