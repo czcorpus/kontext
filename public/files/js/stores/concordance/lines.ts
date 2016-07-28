@@ -39,7 +39,7 @@ export interface ServerTextChunk {
     open_link?:{speech_path:string};
     close_link?:{speech_path:string};
     continued?:boolean;
-    mouseover?:Array<Array<string>>;
+    mouseover?:Array<string>;
 }
 
 export interface ServerPagination {
@@ -367,6 +367,10 @@ export class ConcLineStore extends SimplePageStore {
                     }
             }
         });
+    }
+
+    getViewAttrs():Array<string> {
+        return (this.layoutModel.getConcArgs()['attrs'] || []).split(',');
     }
 
     getNumItemsInLockedGroups():number {

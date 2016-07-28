@@ -551,12 +551,11 @@ class Kwic(object):
                                                        filter_out_speech_tag, last_left_speech_id)[0]
 
             if args.attr_vmode == 'mouseover':
-                attrs_tmp = filter(lambda x: len(x) > 0, args.attrs.strip(args.base_attr).split(','))
                 prev = {}
                 for item in leftwords + kwicwords + rightwords:
                     if item.get('class') == 'attr':
                         # TODO configurable delimiter
-                        prev['mouseover'] = [['/'.join(attrs_tmp), item['str'].strip('/')]]
+                        prev['mouseover'] = [item['str'].strip('/')] # a list is used for future compatibility
                         item['str'] = ''
                     prev = item
 

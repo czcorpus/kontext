@@ -91,28 +91,73 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         },
 
         _selectMenuTriggerHandler : function () {
-            this.setState({menuVisible: true});
+            this.setState({
+                menuVisible: true,
+                currViewAttrs: lineStore.getViewAttrs()
+            });
         },
 
         _closeMenuHandler : function () {
-            this.setState({menuVisible: false});
+            this.setState({
+                menuVisible: false,
+                currViewAttrs: lineStore.getViewAttrs()
+            });
+        },
+
+        _storeChangeHandler : function () {
+            this.setState({
+                menuVisible: this.state.menuVisible,
+                currViewAttrs: lineStore.getViewAttrs()
+            });
         },
 
         getInitialState : function () {
-            return {menuVisible: false};
+            return {
+                menuVisible: false,
+                currViewAttrs: lineStore.getViewAttrs()
+            };
+        },
+
+        componentDidMount : function () {
+            lineStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            lineStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        _getMsgStatus : function () {
+            if (this.props.numItemsInLockedGroups > 0) {
+                return [
+                    'img/info-icon.svg',
+                    this.translate('linesel__you_have_saved_line_groups')
+                ];
+
+            } else if (this.props.numSelected > 0) {
+                return [
+                    '/img/warning-icon.svg',
+                    this.translate('linesel__you_have_unsaved_line_sel')
+                ];
+
+            } else {
+                return ['', null];
+            }
         },
 
         _renderNumSelected : function () {
-            const [elmClass, elmTitle] = this._getMsgStatus();
+            const [statusImg, elmTitle] = this._getMsgStatus();
             const numSelected = this.props.numSelected > 0 ?
                     this.props.numSelected : this.props.numItemsInLockedGroups;
             if (numSelected > 0) {
                 return (
-                    <span className={'lines-selection ' + elmClass} title={elmTitle}>
+                    <span className="lines-selection" title={elmTitle}>
+                        {'\u00A0'}
                         (<a key="numItems" onClick={this._selectMenuTriggerHandler}>
                         <span className="value">{numSelected}</span>
                         {'\u00A0'}{this.translate('concview__num_sel_lines')}</a>
                         )
+                        {statusImg ?
+                            <img src={this.createStaticUrl(statusImg)} alt="" title="" /> : null}
                     </span>
                 );
 
@@ -121,26 +166,24 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             }
         },
 
-        _getMsgStatus : function () {
-            let elmClass;
-            let elmTitle;
-            if (this.props.numItemsInLockedGroups > 0) {
-                elmClass = 'info';cons
-                elmTitle = this.translate('linesel__you_have_saved_line_groups');
-
-            } else if (this.props.numSelected > 0) {
-                elmClass = 'warn';
-                elmTitle = this.translate('linesel__you_have_unsaved_line_sel');
+        _renderMouseOverInfo : function () {
+            let mouseoverImg;
+            let mouseoverAlt;
+            if (this.props.usesMouseoverAttrs) {
+                mouseoverImg = 'img/mouseover-available.svg';
+                mouseoverAlt = this.translate('options__attribs_are_on_mouseover_{attrs}',
+                        {attrs: this.state.currViewAttrs.slice(1).join(', ')});;
 
             } else {
-                elmClass = '';
-                elmTitle = null;
+                mouseoverImg = 'img/mouseover-not-available.svg';
+                mouseoverAlt = this.translate('options__attribs_are_not_mouseover');
             }
-            return [elmClass, elmTitle];
+            return <img key="bubb" className="mouseover-available"
+                            src={this.createStaticUrl(mouseoverImg)} alt={mouseoverAlt} title={mouseoverAlt} />;
         },
 
         render : function () {
-            let mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionStore.getMode();
+            const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionStore.getMode();
             return (
                 <div className="conc-toolbar">
                     {this.translate('concview__line_sel')}:{'\u00A0'}
@@ -164,13 +207,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                     <a onClick={this.props.onViewOptionsClick}>
                         {this.translate('concview__change_display_settings')}
                     </a>
-                    {this.props.usesMouseoverAttrs ?
-                        [<span key="sep" className="separ">|</span>,
-                            <img key="bubb" className="mouseover-available"
-                                src={this.createStaticUrl('img/mouseover-available.svg')}
-                                alt={this.translate('options__attribs_are_on_mouseover')}
-                                title={this.translate('options__attribs_are_on_mouseover')} />
-                        ] : null}
+                    <span key="sep" className="separ">|</span>
+                    {this._renderMouseOverInfo()}
                 </div>
             );
         }

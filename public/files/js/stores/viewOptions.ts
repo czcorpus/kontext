@@ -82,6 +82,9 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                         self.attrVmode = payload.props['value'];
                         if (self.attrVmode === 'mouseover') {
                             self.attrAllpos = 'all';
+
+                        } else {
+                            self.attrAllpos = 'kw';
                         }
                     }
                     self.notifyChangeListeners();
