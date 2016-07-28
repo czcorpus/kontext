@@ -342,6 +342,7 @@ export class ConcLineStore extends SimplePageStore {
                 case 'CONCORDANCE_RELOAD_PAGE':
                     self.reloadPage().then(
                         (data) => {
+                            self.pushHistoryState(self.currentPage);
                             self.notifyChangeListeners();
                         },
                         (err) => {
