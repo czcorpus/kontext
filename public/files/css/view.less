@@ -19,8 +19,8 @@
   line-height: 1.8em;
 }
 
-#conc-top-bar::after,
-#conc-bottom-bar::after {
+#conc-top-bar .info-level::after,
+#conc-bottom-bar .info-level::after {
     content: "";
     display: block;
     clear: both;
@@ -28,7 +28,12 @@
 
 #conc-top-bar,
 #conc-bottom-bar {
+
   background-color: @color-default-green;
+
+  .info-level {
+    padding: 0.4em 1em;
+  }
 }
 
 #conc-bottom-bar.minimized {
@@ -43,10 +48,6 @@
     color: #00A8E8;
     padding-left: 0.3em;
     padding-right: 0.3em;
-  }
-
-  .info-level {
-    padding: 0.4em 1em;
   }
 
   .toolbar-level {
