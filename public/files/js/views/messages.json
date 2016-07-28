@@ -173,7 +173,8 @@
         "options__attr_apply_all": "Display attributes for each token",
         "options__attr_apply_kwic": "Display attributes for KWIC tokens only",
         "options__locked_allpos_expl": "When displaying attributes on mouse-over, the function is always available for all the tokens",
-        "options__attribs_are_on_mouseover": "Attributes are available on token mouse-over"
+        "options__attribs_are_on_mouseover_{attrs}": "Attributes are available on token mouse-over. Currently displaying: {attrs}",
+        "options__attribs_are_not_mouseover": "Mouse-over attributes are turned off. You can change this in the view options menu."
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -350,6 +351,7 @@
         "options__attr_apply_all": "Zobrazit atributy pro každý token",
         "options__attr_apply_kwic": "Zobrazit atributy pouze pro KWIC",
         "options__locked_allpos_expl": "V režimu zobrazování atributů při najetí kurzorem myši je funkce vždy k dispozici pro všechny tokeny",
-        "options__attribs_are_on_mouseover": "Atributy jsou k dispozici při najetí kurzorem myši na token"
+        "options__attribs_are_on_mouseover_{attrs}": "Atributy jsou k dispozici při najetí kurzorem myši na token. Aktuálně zobrazuji: {attrs}",
+        "options__attribs_are_not_mouseover": "Zobrazování atributů při najetí kurzorem myši je vypnuto. Zapnout ho můžete v nastavení vlastností zobrazení."
 	}
 }

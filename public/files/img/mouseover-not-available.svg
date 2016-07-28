@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Vrstva_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="22.6777px" height="22.6758px" viewBox="0 0.0002 22.6777 22.6758" enable-background="new 0 0.0002 22.6777 22.6758"
+	 xml:space="preserve">
+<rect y="0.0002" fill="none" width="22.6768" height="22.6758"/>
+<path fill="#C8C8C8" d="M5.6694,0.0002c0,0-5.6689,0-5.6689,5.6689v11.3389c0,0,0,5.668,5.6689,5.668h11.3394
+	c0,0,5.6689,0,5.6689-5.668V5.6692c0,0,0-5.6689-5.6689-5.6689H5.6694z"/>
+<line fill="none" stroke="#EBEBEB" stroke-width="1.5" stroke-linecap="round" x1="19.0479" y1="4.5354" x2="3.6289" y2="4.5354"/>
+<line fill="none" stroke="#EBEBEB" stroke-width="1.5" stroke-linecap="round" x1="19.0479" y1="9.0706" x2="3.6289" y2="9.0706"/>
+<line fill="none" stroke="#EBEBEB" stroke-width="1.5" stroke-linecap="round" x1="19.0479" y1="13.6057" x2="3.6289" y2="13.6057"/>
+<line fill="none" stroke="#EBEBEB" stroke-width="1.5" stroke-linecap="round" x1="19.0479" y1="18.1409" x2="3.6289" y2="18.1409"/>
+<g>
+	<g>
+		<defs>
+			<rect id="SVGID_1_" y="0.0002" width="22.6768" height="22.6758"/>
+		</defs>
+		<clipPath id="SVGID_2_">
+			<use xlink:href="#SVGID_1_"  overflow="visible"/>
+		</clipPath>
+		
+			<line clip-path="url(#SVGID_2_)" fill="none" stroke="#979797" stroke-width="1.8" x1="12.6113" y1="13.8967" x2="18.167" y2="19.5491"/>
+	</g>
+</g>
+<polygon fill="#979799" points="7.9629,9.1682 12.3936,18.887 17.6045,13.7659 "/>
+</svg>

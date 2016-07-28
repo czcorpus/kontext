@@ -249,7 +249,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderLeftChunk : function (item, i, itemList) {
             let ans = [];
-            let mouseover = (item.mouseover || []).map(x => x[0] + ': ' + x[1]).join(', ');
+            let mouseover = (item.mouseover || []).join(', ');
             if (i > 0 && itemList.get(i - 1).closeLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[itemList.get(i - 1), item]} />);
             }
