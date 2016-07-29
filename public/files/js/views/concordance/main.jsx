@@ -172,7 +172,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             if (this.props.usesMouseoverAttrs) {
                 mouseoverImg = 'img/mouseover-available.svg';
                 mouseoverAlt = this.translate('options__attribs_are_on_mouseover_{attrs}',
-                        {attrs: this.state.currViewAttrs.slice(1).join(', ')});;
+                        {attrs: this.state.currViewAttrs.slice(1).join('/')});;
 
             } else {
                 mouseoverImg = 'img/mouseover-not-available.svg';
@@ -204,11 +204,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                                 canSendMail={this.props.canSendMail} />
                         :  null}
                     <span className="separ">|</span>
+                    {this._renderMouseOverInfo()}
                     <a onClick={this.props.onViewOptionsClick}>
                         {this.translate('concview__change_display_settings')}
                     </a>
-                    <span key="sep" className="separ">|</span>
-                    {this._renderMouseOverInfo()}
                 </div>
             );
         }
@@ -336,7 +335,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         getInitialState : function () {
             return {
                 viewOptionsVisible: false,
-                usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
             };
         },
 
@@ -352,11 +351,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             );
         },
 
-        _storeChangeHandler : function (store, action) {
+        _viewOptsStoreChangeHandler : function (store, action) {
             if (action === '$VIEW_OPTIONS_SAVE_SETTINGS') {
                 this.setState({
-                    viewOptionsVisible: false,
-                    usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+                    viewOptionsVisible: true, // we are still waiting until new conc. lines are loaded
+                    usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
                 });
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_RELOAD_PAGE',
@@ -365,12 +364,21 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             }
         },
 
+        _lineStoreChangeHandler : function (store, action) {
+            this.setState({
+                viewOptionsVisible: false,
+                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
+            });
+        },
+
         componentDidMount : function () {
-            viewOptionsStore.addChangeListener(this._storeChangeHandler);
+            viewOptionsStore.addChangeListener(this._viewOptsStoreChangeHandler);
+            lineStore.addChangeListener(this._lineStoreChangeHandler);
         },
 
         componentWillUnmount : function () {
-            viewOptionsStore.removeChangeListener(this._storeChangeHandler);
+            viewOptionsStore.removeChangeListener(this._viewOptsStoreChangeHandler);
+            lineStore.removeChangeListener(this._lineStoreChangeHandler);
         },
 
         render : function () {

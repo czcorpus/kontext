@@ -177,6 +177,8 @@ class KwicPageArgs(object):
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
         self.base_attr = base_attr
+        if self.attr_vmode == 'mouseover':
+            self.ctxattrs = self.attrs
 
     def _import_val(self, k, v):
         t = type(getattr(self, k))

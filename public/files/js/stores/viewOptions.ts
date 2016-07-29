@@ -50,7 +50,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private hasLoadedData:boolean = false;
 
-    private attrVmode:string; // visible/mouseover // TODO this is required even if the store is not loaded!!
+    private attrVmode:string; // visible/mouseover
 
     private attrAllpos:string; // kw/all
 
@@ -80,6 +80,10 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
                     } else if (payload.props['name'] === 'attr_vmode') {
                         self.attrVmode = payload.props['value'];
+                        // Here we limit possible combinations of attrVmode and attrAllPos.
+                        // Please note that server's 'view' action always ensures that:
+                        // if attrVmode == 'mouseover' then attrAllPos = 'all'
+                        // which means that these settings should obey that rule
                         if (self.attrVmode === 'mouseover') {
                             self.attrAllpos = 'all';
 

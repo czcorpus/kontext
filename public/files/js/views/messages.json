@@ -158,7 +158,7 @@
         "concview__ipm_help": "instances per million positions",
         "concview__ipm_rel_to_the_{corpname}": "related to the whole {corpname}",
         "concview__arf_help": "Average Reduced Frequency",
-        "concview__change_display_settings": "Change display options",
+        "concview__change_display_settings": "Display options",
         "wordlist__cannot_save_empty": "Empty result cannot be saved",
         "wordlist__save_wl_as_header": "Save word list as",
         "wordlist__include_col_headers": "Include column headers",
@@ -170,11 +170,15 @@
         "options__references_hd": "References",
         "options__settings_apply_only_for_{corpname}": "Concordance display settings for {corpname}",
         "options__apply_btn": "Apply View Options",
-        "options__attr_apply_all": "Display attributes for each token",
-        "options__attr_apply_kwic": "Display attributes for KWIC tokens only",
+        "options__attr_apply_header": "Viewing options",
+        "options__attr_apply_all": "for each token",
+        "options__attr_apply_kwic": "for KWIC tokens only",
         "options__locked_allpos_expl": "When displaying attributes on mouse-over, the function is always available for all the tokens",
         "options__attribs_are_on_mouseover_{attrs}": "Attributes are available on token mouse-over. Currently displaying: {attrs}",
-        "options__attribs_are_not_mouseover": "Mouse-over attributes are turned off. You can change this in the view options menu."
+        "options__attribs_are_not_mouseover": "Mouse-over attributes are turned off. You can change this in the view options menu.",
+        "options__vmode_switch_mouseover": "on token mouse-over",
+        "options__vmode_switch_visible": "directly in text",
+        "options__vmode_switch_indicator_desc": "This icon is displayed in the header of the concordance window to indicate viewing mode."
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -336,7 +340,7 @@
         "concview__ipm_help": "výskytů na milion pozic",
         "concview__ipm_rel_to_the_{corpname}": "vztaženo k celému {corpname}",
         "concview__arf_help": "Průměrná redukovaná frekvence",
-        "concview__change_display_settings": "Změnit parametry zobrazení",
+        "concview__change_display_settings": "Parametry zobrazení",
         "wordlist__cannot_save_empty": "Prázdný výsledek nelze uložit.",
         "wordlist__save_wl_as_header": "Uložit seznam slov jako",
         "wordlist__include_col_headers": "Připojit nadpisy sloupců",
@@ -348,10 +352,14 @@
         "options__references_hd": "Metainformace",
         "options__settings_apply_only_for_{corpname}": "Nastavení zobrazení konkordance pro {corpname}",
         "options__apply_btn": "Použít volby zobrazení",
-        "options__attr_apply_all": "Zobrazit atributy pro každý token",
-        "options__attr_apply_kwic": "Zobrazit atributy pouze pro KWIC",
+        "options__attr_apply_header": "Možnosti zobrazení",
+        "options__attr_apply_all": "pro každý token",
+        "options__attr_apply_kwic": "pouze pro KWIC",
         "options__locked_allpos_expl": "V režimu zobrazování atributů při najetí kurzorem myši je funkce vždy k dispozici pro všechny tokeny",
         "options__attribs_are_on_mouseover_{attrs}": "Atributy jsou k dispozici při najetí kurzorem myši na token. Aktuálně zobrazuji: {attrs}",
-        "options__attribs_are_not_mouseover": "Zobrazování atributů při najetí kurzorem myši je vypnuto. Zapnout ho můžete v nastavení vlastností zobrazení."
+        "options__attribs_are_not_mouseover": "Zobrazování atributů při najetí kurzorem myši je vypnuto. Zapnout ho můžete v nastavení vlastností zobrazení.",
+        "options__vmode_switch_mouseover": "on token mouse-over",
+        "options__vmode_switch_visible": "directly in text",
+        "options__vmode_switch_indicator_desc": "Tato ikona se zobrazuje v hlavičce okna s konkordancemi a indikuje aktuální režim zobrazení."
 	}
 }
