@@ -373,6 +373,10 @@ export class ConcLineStore extends SimplePageStore {
         return (this.layoutModel.getConcArgs()['attrs'] || []).split(',');
     }
 
+    getViewAttrsVmode():string {
+        return this.layoutModel.getConcArgs()['attr_vmode'];
+    }
+
     getNumItemsInLockedGroups():number {
         return this.numItemsInLockedGroups;
     }

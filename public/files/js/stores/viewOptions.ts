@@ -50,7 +50,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private hasLoadedData:boolean = false;
 
-    private attrVmode:string; // visible/mouseover // TODO this is required even if the store is not loaded!!
+    private attrVmode:string; // visible/mouseover
 
     private attrAllpos:string; // kw/all
 

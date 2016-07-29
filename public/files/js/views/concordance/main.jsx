@@ -336,7 +336,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         getInitialState : function () {
             return {
                 viewOptionsVisible: false,
-                usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
             };
         },
 
@@ -352,11 +352,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             );
         },
 
-        _storeChangeHandler : function (store, action) {
+        _viewOptsStoreChangeHandler : function (store, action) {
             if (action === '$VIEW_OPTIONS_SAVE_SETTINGS') {
                 this.setState({
-                    viewOptionsVisible: false,
-                    usesMouseoverAttrs: viewOptionsStore.getAttrsVmode() === 'mouseover'
+                    viewOptionsVisible: true, // we are still waiting until new conc. lines are loaded
+                    usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
                 });
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_RELOAD_PAGE',
@@ -365,12 +365,21 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             }
         },
 
+        _lineStoreChangeHandler : function (store, action) {
+            this.setState({
+                viewOptionsVisible: false,
+                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
+            });
+        },
+
         componentDidMount : function () {
-            viewOptionsStore.addChangeListener(this._storeChangeHandler);
+            viewOptionsStore.addChangeListener(this._viewOptsStoreChangeHandler);
+            lineStore.addChangeListener(this._lineStoreChangeHandler);
         },
 
         componentWillUnmount : function () {
-            viewOptionsStore.removeChangeListener(this._storeChangeHandler);
+            viewOptionsStore.removeChangeListener(this._viewOptsStoreChangeHandler);
+            lineStore.removeChangeListener(this._lineStoreChangeHandler);
         },
 
         render : function () {
