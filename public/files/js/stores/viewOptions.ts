@@ -173,14 +173,16 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private toggleAllAttributes():void {
         this.selectAllAttrs = !this.selectAllAttrs;
-        this.attrList = this.attrList.map(item => {
-            return {
-                n: item.n,
-                label: item.label,
-                locked: item.locked,
-                selected: this.selectAllAttrs
-            }
-        }).toList();
+        this.attrList = this.attrList
+            .map(item => {
+                return {
+                    n: item.n,
+                    label: item.label,
+                    locked: item.locked,
+                    selected: item.locked ? item.selected : this.selectAllAttrs
+                }
+            })
+            .toList();
     }
 
     private toggleAllReferences():void {
