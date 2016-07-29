@@ -427,20 +427,6 @@ export class ViewPage {
         });
     }
 
-    private addWarnings():void {
-        let jqTriggerElm;
-
-        jqTriggerElm = $('#result-info').find('.size-warning');
-        popupBox.bind(
-            jqTriggerElm,
-            this.translate('global__size_warning', {size: jqTriggerElm.data('size-limit')}),
-            {
-                type: 'warning',
-                width: 'nice'
-            }
-        );
-    }
-
     renderLines(props:ViewConfiguration):RSVP.Promise<any> {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             props.onReady = () => resolve(null);
@@ -481,14 +467,8 @@ export class ViewPage {
      *
      */
     reloadHits():void {
-        let self = this;
+        const self = this;
         let freq = 500;
-
-        $('#conc-loader').empty().append('<img src="' + this.layoutModel.createStaticUrl('img/ajax-loader.gif') + '" alt="'
-            + this.translate('global__calculating')
-            + '" title="' + this.translate('global__calculating')
-            + '" style="width: 24px; height: 24px" />');
-        $('#arf').empty().html(this.translate('global__calculating'));
         /*
          * Checks periodically for the current state of a concordance calculation
          */
@@ -516,23 +496,32 @@ export class ViewPage {
                             availPages: Math.ceil(data.concsize / self.layoutModel.getConf<number>('numLines'))
                         }
                     });
-
-                    if (data.fullsize > 0) {
-                        $('#fullsize').html(num2Str(data.fullsize));
-                        $('#toolbar-hits').html(num2Str(data.fullsize));
+                    if (!data.finished) {
+                        if (data.fullsize > 0) {
+                            self.layoutModel.dispatcher.dispatch({
+                                actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+                                props: {
+                                    finished: false,
+                                    concsize: data.concsize,
+                                    fullsize: data.fullsize
+                                }
+                            });
+                        }
 
                     } else {
-                        $('#fullsize').html(num2Str(data.concsize));
-                        $('#toolbar-hits').html(num2Str(data.concsize));
-                    }
-
-                    if (data.finished) {
                         win.setTimeout(this.periodic.cancel, 1000);
-                        $('#conc-loader').empty();
+                        self.layoutModel.dispatcher.dispatch({
+                            actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+                            props: {
+                                finished: true,
+                                concsize: data.concsize,
+                                fullsize: data.fullsize
+                            }
+                        });
                         /* We are unable to update ARF on the fly which means we
                          * have to reload the page after all the server calculations are finished.
                          */
-                        win.location.reload();
+                        //win.location.reload();
                     }
                 },
                 dataType: 'json'
@@ -635,7 +624,6 @@ export class ViewPage {
         ).then(
             () => {
                 this.setupLineActions();
-                this.addWarnings();
                 if (this.layoutModel.getConf('anonymousUser')) {
                     this.anonymousUserWarning();
                 }
@@ -677,6 +665,7 @@ export function init(conf):ViewPage {
         currentPage: layoutModel.getConf<number>('FromPage'),
         mainCorp: layoutModel.getConcArgs()['maincorp'],
         concSummary: concSummaryProps,
+        Unfinished: layoutModel.getConf<boolean>('Unfinished'),
         canSendEmail: layoutModel.getConf<boolean>('can_send_mail')
     };
     let lineViewStore = new ConcLineStore(

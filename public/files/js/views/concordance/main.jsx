@@ -222,25 +222,25 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         mixins : mixins,
 
         _renderNumHits : function () {
-            if (this.props.concSize === this.props.fullSize) {
-                return [
-                    <span key="hits:1" id="conc-loader"></span>,
-                    <strong key="hits:2" id="fullsize" title={this.props.fullSize}>
-                    {this.formatNumber(this.props.fullSize)}
-                    </strong>
-                ];
+            const ans = [];
+            if (this.props.isUnfinishedCalculation) {
+                ans.push(<span key="hits:1" id="conc-loader">
+                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} title={this.translate('global__processing')}
+                                alt={this.translate('global__processing')} />
+                        </span>);
+            }
+            if (this.props.concSize === this.props.fullSize || this.props.fullSize === -1) { // TODO concSize vs. fullSize
+                ans.push(<strong key="hits:2" id="fullsize" title={this.props.concSize}>
+                        {this.formatNumber(this.props.concSize)}</strong>);
 
             } else {
-                return [
-                    <a key="hits:1b" className="size-warning"><img src={this.createStaticUrl('img/warning-icon.svg')} /></a>,
-                    <span key="hits:2b" id="loader"></span>,
-                    <strong key="hits:3b">{this.formatNumber(this.props.concSize)}</strong>,
-                    this.translate('concview__out_of_total'),
-                    <span key="hits:4b" id="fullsize" title={this.props.fullSize}>
-                        {this.formatNumber(this.props.fullSize)}
-                    </span>
-                ];
+                ans.push(<a key="hits:1b" className="size-warning"><img src={this.createStaticUrl('img/warning-icon.svg')} /></a>);
+                ans.push(<span key="hits:2b" id="loader"></span>);
+                ans.push(<strong key="hits:3b">{this.formatNumber(this.props.concSize)}</strong>);
+                ans.push('\u00a0' + this.translate('concview__out_of_total') + '\u00a0');
+                ans.push(<span key="hits:4b" id="fullsize" title={this.props.fullSize}>{this.formatNumber(this.props.fullSize)}</span>);
             }
+            return ans;
         },
 
         render : function () {
@@ -335,7 +335,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         getInitialState : function () {
             return {
                 viewOptionsVisible: false,
-                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
+                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
+                isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
+                concSummary: lineStore.getConcSummary()
             };
         },
 
@@ -355,7 +357,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             if (action === '$VIEW_OPTIONS_SAVE_SETTINGS') {
                 this.setState({
                     viewOptionsVisible: true, // we are still waiting until new conc. lines are loaded
-                    usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
+                    usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
+                    isUnfinishedCalculation: lineStore.isUnfinishedCalculation()
                 });
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_RELOAD_PAGE',
@@ -367,7 +370,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         _lineStoreChangeHandler : function (store, action) {
             this.setState({
                 viewOptionsVisible: false,
-                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover'
+                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
+                concSummary: lineStore.getConcSummary(),
+                isUnfinishedCalculation: lineStore.isUnfinishedCalculation()
             });
         },
 
@@ -388,8 +393,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                     <div id="conc-top-bar">
                         <div className="info-level">
                             <paginationViews.Paginator {...this.props} />
-                            <ConcSummary {...this.props.concSummary}
+                            <ConcSummary {...this.state.concSummary}
                                 corpname={this.props.baseCorpname}
+                                isUnfinishedCalculation={this.state.isUnfinishedCalculation}
                                 />
                         </div>
                         <div className="toolbar-level">

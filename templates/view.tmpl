@@ -58,15 +58,19 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.ResultShuffled = #filter $Jsonize#$result_shuffled#end filter#;
     conf.NumLinesInGroups = $num_lines_in_groups;
     conf.LinesGroupsNumbers = #filter $Jsonize#$lines_groups_numbers#end filter#;
-    var model = pageSelf.init(conf);
 
-    #if not $finished and $async and $save and not $sampled_size
+    #if $running_calc
     conf.numLines = $len($Lines);
     conf.q = '$q';
     conf.q2 = '$q[2]';
     conf.q2toEnd = '$q[2:]';
     conf.globals = '$globals';
+    conf.Unfinished = true;
+    var model = pageSelf.init(conf);
     model.reloadHits(conf);
+    #else
+    conf.Unfinished = false;
+    var model = pageSelf.init(conf);
     #end if
 });
 #end def
