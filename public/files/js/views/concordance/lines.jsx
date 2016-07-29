@@ -270,7 +270,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderKwicChunk : function (prevClosed, hasKwic, item, i, itemList) {
             let ans = [];
-            let mouseover = (item.mouseover || []).map(x => x[0] + ': ' + x[1]).join(', ');
+            let mouseover = (item.mouseover || []).join(', ');
             if (prevClosed && item.openLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[prevClosed, item]} />);
 
@@ -291,7 +291,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderRightChunk : function (prevClosed, item, i, itemList) {
             let ans = [];
-            let mouseover = (item.mouseover || []).map(x => x[0] + ': ' + x[1]).join(', ');
+            let mouseover = (item.mouseover || []).join(', ');
             if (prevClosed && item.openLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[prevClosed, item]} />);
 

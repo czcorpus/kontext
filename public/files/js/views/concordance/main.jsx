@@ -172,7 +172,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             if (this.props.usesMouseoverAttrs) {
                 mouseoverImg = 'img/mouseover-available.svg';
                 mouseoverAlt = this.translate('options__attribs_are_on_mouseover_{attrs}',
-                        {attrs: this.state.currViewAttrs.slice(1).join(', ')});;
+                        {attrs: this.state.currViewAttrs.slice(1).join('/')});;
 
             } else {
                 mouseoverImg = 'img/mouseover-not-available.svg';
