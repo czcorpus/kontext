@@ -186,7 +186,35 @@ export class ConcDetail {
      */
     showDetail(url:string, params:{[k:string]:any}, onSuccess:(box:popupBox.TooltipBox)=>void,
                 onClose:()=>void, onError:any) {
-        let self = this;
+        const self = this;
+
+        self.newDetailWindow(popupBox.extended(self.pluginApi).open(
+            self.createAjaxLoader(),
+            null,
+            {
+                type : 'plain',
+                domId : 'detail-frame',
+                calculatePosition : false,
+                closeIcon : true,
+                timeout : null,
+                onClose : function () {
+                    if (typeof onClose === 'function' ) {
+                        onClose();
+                    }
+                    self.currentDetail = null;
+                },
+                onShow : function () {
+                    const box = this;
+                    $('#ctx-link').on('click', function (evt) {
+                        self.attachDisplayWholeDocumentTrigger(box, evt.target);
+                    });
+                    box.setCss('width', '50em');
+                    const leftPos = $(window).width() / 2 - box.getPosition().width / 2;
+                    box.setCss('left', leftPos + 'px');
+                }
+            }
+        ));
+
         this.pluginApi.ajax(
             'GET',
             url,
@@ -195,37 +223,11 @@ export class ConcDetail {
                 contentType : 'application/x-www-form-urlencoded',
                 accept: 'text/html'
             }
-
         ).then(
             (html:string) => {
-                let leftPos;
-
-                self.newDetailWindow(popupBox.extended(self.pluginApi).open(
-                    html,
-                    null,
-                    {
-                        type : 'plain',
-                        domId : 'detail-frame',
-                        calculatePosition : false,
-                        closeIcon : true,
-                        timeout : null,
-                        onClose : function () {
-                            if (typeof onClose === 'function' ) {
-                                onClose();
-                            }
-                            self.currentDetail = null;
-                        },
-                        onShow : function () {
-                            let box = this;
-                            $('#ctx-link').on('click', function (evt) {
-                                self.attachDisplayWholeDocumentTrigger(box, evt.target);
-                            });
-                        }
-                    }
-                ));
-                self.currentDetail.setCss('width', '700px');
-                leftPos = $(window).width() / 2 - self.currentDetail.getPosition().width / 2;
-                self.currentDetail.setCss('left', leftPos + 'px');
+                $(self.currentDetail.getContentElement())
+                    .empty()
+                    .append(html);
 
                 if (typeof onSuccess === 'function') {
                     onSuccess(self.currentDetail);

@@ -73,7 +73,7 @@ export function init(dispatcher, mixins, textTypesStore, liveAttrsStore) {
                             <tr>
                                 <td className="num">{idx}</td>
                                 <td className="data">
-                                    <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
+                                    <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />
                                 </td>
                             </tr>
                         </tbody>
