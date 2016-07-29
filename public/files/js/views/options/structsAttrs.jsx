@@ -102,28 +102,50 @@ export function init(dispatcher, mixins, viewOptionsStore) {
             });
         },
 
+        _renderVmodeInfoIcon : function () {
+            let src;
+            let title;
+            if (this.props.attrsVmode === 'mouseover') {
+                src = this.createStaticUrl('img/mouseover-available.svg')
+                title = this.translate('options__vmode_switch_indicator_desc');
+
+            } else {
+                src = this.createStaticUrl('img/mouseover-not-available.svg');
+                title = this.translate('options__vmode_switch_indicator_desc');
+            }
+            return <img className="vmode-indicator" src={src} alt={title} title={title} />;
+        },
+
         render : function () {
             return (
                 <div>
-                    <select name="allpos"
-                            value={this.props.attrsAllpos}
-                            className="no-label"
-                            onChange={this._handleSelectChange.bind(this, 'allpos')}
-                            disabled={this.props.attrsVmode === 'mouseover'}
-                            title={this.props.attrsVmode === 'mouseover' ?
-                                    this.translate('options__locked_allpos_expl') : null}>
-                        <option value="all">{this.translate('options__attr_apply_all')}</option>
-                        <option value="kw">{this.translate('options__attr_apply_kwic')}</option>
-                    </select>
-                    {this.props.attrsVmode === 'mouseover' ?
-                        <input type="hidden" name="allpos" value="all" /> : null}
-                    <select name="attr_vmode"
-                            value={this.props.attrsVmode}
-                            onChange={this._handleSelectChange.bind(this, 'attr_vmode')}
-                            className="no-label">
-                        <option value="visible">Display attributes directly in text</option>
-                        <option value="mouseover">Make attributes available on mouse-over</option>
-                    </select>
+                    <h3 className="label">
+                        {this.translate('options__attr_apply_header')}
+                    </h3>
+                    <div>
+                        <select name="attr_vmode"
+                                value={this.props.attrsVmode}
+                                onChange={this._handleSelectChange.bind(this, 'attr_vmode')}
+                                className="no-label">
+                            <option value="visible">{this.translate('options__vmode_switch_visible')}</option>
+                            <option value="mouseover">{this.translate('options__vmode_switch_mouseover')}</option>
+                        </select>
+                        {this._renderVmodeInfoIcon()}
+                    </div>
+                    <div>
+                        <select name="allpos"
+                                value={this.props.attrsAllpos}
+                                className="no-label"
+                                onChange={this._handleSelectChange.bind(this, 'allpos')}
+                                disabled={this.props.attrsVmode === 'mouseover'}
+                                title={this.props.attrsVmode === 'mouseover' ?
+                                        this.translate('options__locked_allpos_expl') : null}>
+                            <option value="all">{this.translate('options__attr_apply_all')}</option>
+                            <option value="kw">{this.translate('options__attr_apply_kwic')}</option>
+                        </select>
+                        {this.props.attrsVmode === 'mouseover' ?
+                            <input type="hidden" name="allpos" value="all" /> : null}
+                    </div>
                 </div>
             );
         }

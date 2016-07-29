@@ -204,11 +204,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                                 canSendMail={this.props.canSendMail} />
                         :  null}
                     <span className="separ">|</span>
+                    {this._renderMouseOverInfo()}
                     <a onClick={this.props.onViewOptionsClick}>
                         {this.translate('concview__change_display_settings')}
                     </a>
-                    <span key="sep" className="separ">|</span>
-                    {this._renderMouseOverInfo()}
                 </div>
             );
         }
