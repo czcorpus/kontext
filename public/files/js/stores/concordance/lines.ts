@@ -93,6 +93,7 @@ export interface ViewConfiguration {
     currentPage:number;
     concSummary:ConcSummary;
     canSendEmail:boolean;
+    Unfinished:boolean;
     onReady?:()=>void;
     onPageUpdate?:()=>void;
     onChartFrameReady?:(usePrevData:boolean)=>void;
@@ -284,6 +285,10 @@ export class ConcLineStore extends SimplePageStore {
 
     private numItemsInLockedGroups:number;
 
+    private unfinishedCalculation:boolean;
+
+    private concSummary:ConcSummary;
+
     private externalRefsDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
 
     private externalKwicDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
@@ -300,6 +305,8 @@ export class ConcLineStore extends SimplePageStore {
         this.corporaColumns = Immutable.List(lineViewProps.CorporaColumns);
         this.baseCorpname = lineViewProps.baseCorpname;
         this.mainCorp = lineViewProps.mainCorp;
+        this.unfinishedCalculation = lineViewProps.Unfinished;
+        this.concSummary = lineViewProps.concSummary;
         this.lines = importData(initialData);
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
@@ -308,7 +315,6 @@ export class ConcLineStore extends SimplePageStore {
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             this.setStopStatus.bind(this)
         );
-
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
@@ -365,6 +371,13 @@ export class ConcLineStore extends SimplePageStore {
                         self.externalKwicDetailFn(payload.props['corpusId'],
                                 payload.props['tokenNumber'], payload.props['lineIdx']);
                     }
+                break;
+                case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+                    self.unfinishedCalculation = !payload.props['finished'];
+                    self.concSummary.fullSize = payload.props['fullsize'];
+                    self.concSummary.concSize = payload.props['concsize'];
+                    self.notifyChangeListeners();
+                break;
             }
         });
     }
@@ -426,6 +439,7 @@ export class ConcLineStore extends SimplePageStore {
                     this.numItemsInLockedGroups = data['num_lines_in_groups'];
                     this.pagination = data['pagination'];
                     this.currentPage = pageNum;
+                    this.unfinishedCalculation = data['running_calc'];
                     return this.layoutModel.getConcArgs();
 
                 } catch (e) {
@@ -525,6 +539,14 @@ export class ConcLineStore extends SimplePageStore {
             item.hasFocus = false;
         });
         this.lines.get(lineIdx).hasFocus = focus; // TODO mutability issues
+    }
+
+    isUnfinishedCalculation():boolean {
+        return this.unfinishedCalculation;
+    }
+
+    getConcSummary():ConcSummary {
+        return this.concSummary;
     }
 }
 
