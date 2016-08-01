@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
+ * Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,12 +39,14 @@ import applicationBar = require('plugins/applicationBar/init');
 import footerBar = require('plugins/footerBar/init');
 import flux = require('vendor/Dispatcher');
 import {init as documentViewsInit} from 'views/document';
+import {init as menuViewsInit} from 'views/menu';
+import {init as overviewAreaViewsInit} from 'views/overview';
 import React = require('vendor/react');
 import ReactDOM = require('vendor/react-dom');
 import RSVP = require('vendor/rsvp');
 import rsvpAjax = require('vendor/rsvp-ajax');
 import util = require('../util');
-import docStores = require('../stores/documentStores');
+import * as docStores from '../stores/common/layout';
 import userStores = require('../stores/userStores');
 import {ViewOptionsStore} from '../stores/viewOptions';
 import translations = require('translations');
@@ -50,7 +54,6 @@ import IntlMessageFormat = require('vendor/intl-messageformat');
 import Immutable = require('vendor/immutable');
 import asyncTask = require('../asyncTask');
 import userSettings = require('../userSettings');
-import menu = require('../menu');
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**
@@ -96,7 +99,7 @@ function getLocalStorage():Storage {
 /**
  *
  */
-export class PageModel implements Kontext.IURLHandler {
+export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler {
 
     /**
      * KonText configuration (per-page dynamic object)
@@ -123,11 +126,6 @@ export class PageModel implements Kontext.IURLHandler {
      * @type {Array}
      */
     initCallbacks:Array<()=>void>;
-
-    /**
-     *
-     */
-    mainMenu:menu.MainMenu;
 
     /**
      * Local user settings
@@ -166,7 +164,6 @@ export class PageModel implements Kontext.IURLHandler {
         this.conf = conf;
         this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
         this.initCallbacks = [];
-        this.mainMenu = new menu.MainMenu(this.pluginApi());
         this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
         this.history = Modernizr.history ? new util.History(this) : new util.NullHistory();
@@ -209,8 +206,8 @@ export class PageModel implements Kontext.IURLHandler {
             getConf(k:string):any {
                 return self.getConf(k);
             },
-            createActionLink(path:string):string {
-                return self.createActionUrl(path);
+            createActionLink(path:string, args?:Array<Array<string>>):string {
+                return self.createActionUrl(path, args);
             },
             createStaticUrl(path:string):string {
                 return self.createStaticUrl(path);
@@ -461,103 +458,6 @@ export class PageModel implements Kontext.IURLHandler {
     }
 
     /**
-     * Renders a query overview within tooltipBox
-     * instance based on provided data
-     *
-     * @param data
-     * @param {TooltipBox} tooltipBox
-     */
-    renderOverview = function (data, tooltipBox):void {
-        let self = this;
-        let url;
-        let html = '<h3>' + this.translate('global__query_overview') + '</h3><table border="1">';
-        let parentElm = tooltipBox.getRootElement();
-
-        html += '<tr><th>' + self.translate('global__operation') + '</th>';
-        html += '<th>' + self.translate('global__parameters') + '</th>';
-        html += '<th>' + self.translate('global__num_of_hits') + '</th><th></th></tr>';
-
-        $.each(data.Desc, function (i, item:{op:string; arg:string; size:number; tourl:string}) {
-            html += '<tr><td>' + self.escapeHTML(item.op) + '</td>';
-            html += '<td>' + self.escapeHTML(item.arg) + '</td>';
-            html += '<td>' + self.escapeHTML(item.size) + '</td>';
-            html += '<td>';
-            if (item.tourl) {
-                url = 'view?' + item.tourl;
-                html += '<a href="' + url + '">' + self.translate('global__view_result') + '</a>';
-            }
-            html += '</td>';
-            html += '</tr>';
-        });
-        html += '</table>';
-        $(parentElm).html(html);
-    }
-
-    /**
-     *
-     */
-    queryOverview() {
-        let escKeyEventHandlerFunc;
-        let self = this;
-
-        escKeyEventHandlerFunc = function (boxInstance) {
-            return function (event) {
-                if (event.keyCode === 27) {
-                    $('#conclines tr.active').removeClass('active');
-                    if (boxInstance) {
-                        boxInstance.close();
-                    }
-                    $(document).off('keyup.query_overview');
-                }
-            };
-        };
-
-        // query overview
-        $('#query-overview-trigger').on('click', function (event) {
-            let reqUrl = $(event.target).data('json-href');
-
-            $.ajax(reqUrl, {
-                dataType: 'json',
-                success: function (data) {
-                    let box;
-                    let leftPos;
-
-                    if (data.Desc) {
-                        box = popupbox.extended(self.pluginApi()).open(
-                            function (box2, finalize) {
-                                self.renderOverview(data, box2);
-                                finalize();
-                            },
-                            null,
-                            {
-                                type: 'plain',
-                                domId: 'query-overview',
-                                htmlClass: 'query-overview',
-                                closeIcon: true,
-                                calculatePosition: false,
-                                timeout: null
-                            }
-                        );
-                        leftPos = $(window).width() / 2 - box.getPosition().width / 2;
-                        box.setCss('left', leftPos + 'px');
-
-                        $(win.document).on('keyup.query_overview', escKeyEventHandlerFunc(box));
-
-                    } else {
-                        self.showMessage('error', self.translate('global__failed_to_load_query_overview'));
-                    }
-                },
-                error: function () {
-                    self.showMessage('error', self.translate('global__failed_to_load_query_overview'));
-                }
-            });
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
-        });
-    }
-
-    /**
      * @param {HTMLElement|String|jQuery} elm
      * @param {String|jQuery} context checkbox context selector (parent element or list of checkboxes)
      */
@@ -606,97 +506,6 @@ export class PageModel implements Kontext.IURLHandler {
                 self.toggleSelectAllTrigger(evtTarget);
             }
         });
-    }
-
-    /**
-     * @returns {$.Deferred.Promise}
-     */
-    bindCorpusDescAction() {
-        let self = this;
-        let descLink = window.document.getElementById('corpus-desc-link');
-
-        popupbox.extended(self.pluginApi()).bind(
-            descLink,
-            (box, finalize) => {
-                finalize();
-            },
-            {
-                width: 'nice',
-                closeIcon: true,
-                type: 'plain',
-                timeout: 0,
-                onClose: function () {
-                    self.unmountReactComponent(this.getRootElement());
-                },
-                onShow : function () {
-                    let box = this;
-                    // TODO - please note this is not Flux pattern at all; it will be fixed
-                    let actionRegId = self.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-                    if (payload.actionType === 'ERROR') {
-                        box.close();
-                        self.dispatcher.unregister(actionRegId);
-                    }
-                });
-                self.renderReactComponent(self.layoutViews.CorpusInfoBox,
-                        this.getContentElement(), {});
-                }
-            }
-        );
-    }
-
-    bindSubcorpusDescAction() {
-        let triggerLink = $('#active-corpus').find('a.subcorpus');
-        let self = this;
-
-        popupbox.bind(
-            triggerLink,
-            function (box, finalize) {
-                let prom:RSVP.Promise<any> = self.ajax<any>(
-                    'GET',
-                    self.createActionUrl('subcorpus/ajax_subcorp_info'),
-                    {
-                        'corpname': self.getConf('corpname'),
-                        'subcname': self.getConf('subcorpname')
-                    },
-                    {
-                        contentType : 'application/x-www-form-urlencoded'
-                    }
-                );
-                prom.then(
-                    function (data) {
-                        if (!data['contains_errors']) {
-                            self.renderReactComponent(
-                                self.layoutViews.SubcorpusInfo,
-                                box.getRootElement(),
-                                {
-                                    doneCallback: finalize.bind(self),
-                                    corpname: data['corpusName'],
-                                    name: data['subCorpusName'],
-                                    size: data['subCorpusSize'],
-                                    cql: data['extended_info']['cql']
-                                }
-                            );
-
-                        } else {
-                            self.showMessage('error', data['error']);
-                        }
-                    },
-                    function (err) {
-                        self.showMessage('error', err);
-                    }
-                );
-            },
-            {
-                width: 'nice',
-                closeIcon: true,
-                type: 'plain',
-                timeout: 0,
-                domId: 'subcorpus-info-box',
-                onClose: function () {
-                    self.unmountReactComponent(this.getRootElement());
-                }
-            }
-        );
     }
 
     /**
@@ -891,13 +700,19 @@ export class PageModel implements Kontext.IURLHandler {
         return staticPath + path;
     }
 
-    createActionUrl(path):string {
-        let staticPath = this.conf['rootPath'];
+    createActionUrl(path:string, args?:Array<Array<string>>):string {
+        const staticPath = this.conf['rootPath'];
+        let urlArgs = '';
 
+        if (args !== undefined) {
+            urlArgs = args.map(item => {
+                return encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]);
+            }).join('&');
+        }
         if (path.indexOf('/') === 0) {
             path = path.substr(1);
         }
-        return staticPath + path;
+        return staticPath + path + (urlArgs ? '?' + urlArgs : '');
     }
 
     /**
@@ -937,6 +752,29 @@ export class PageModel implements Kontext.IURLHandler {
         this.conf['currentArgs'] = tmp.items();
     }
 
+    exportConcArgs(args:Array<Array<any>>|{[key:string]:any}):string {
+        const tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        let impArgs:Array<Array<string>> = [];
+
+        if (Object.prototype.toString.call(args) !== '[object Array]') {
+            for (let p in args) {
+                if (args.hasOwnProperty(p)) {
+                    impArgs.push([p, args[p]]);
+                }
+            }
+
+        } else {
+            impArgs = <Array<Array<string>>>args;
+        }
+        impArgs.forEach(item => {
+            tmp.replace(item[0], []);
+        });
+        impArgs.forEach(item => {
+            tmp.add(item[0], item[1]);
+        });
+        return this.encodeURLParameters(tmp);
+    }
+
     pluginApi():PluginApi {
         return new PluginApi(this);
     }
@@ -944,8 +782,7 @@ export class PageModel implements Kontext.IURLHandler {
 
     // TODO dispatcher misuse (this should conform Flux pattern)
     private registerCoreEvents():void {
-        let self = this;
-
+        const self = this;
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             if (payload.props['message']) {
                 self.showMessage(payload.props['msgType'], payload.props['message']);
@@ -957,21 +794,62 @@ export class PageModel implements Kontext.IURLHandler {
         return this.getConf<Array<string>>('activePlugins').indexOf(name) > -1;
     }
 
+    private initMainMenu():void {
+        const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this);
+        const menuData = this.getConf<any>('menuData');
+        this.renderReactComponent(
+            menuViews.MainMenu,
+            window.document.getElementById('main-menu-mount'),
+            {submenuItems: Immutable.List(menuData['submenuItems'])}
+        );
+    }
+
+    private initOverviewArea():void {
+        const overviewViews = overviewAreaViewsInit(this.dispatcher, this.exportMixins(),
+                this.corpusInfoStore, this.layoutViews.PopupBox);
+        this.renderReactComponent(
+            overviewViews.OverviewArea,
+            window.document.getElementById('overivew-area-mount'),
+            {}
+        );
+
+        $(window.document.getElementById('corpus-desc-link')).on('click', () => {
+            this.dispatcher.dispatch({
+                actionType: 'OVERVIEW_CORPUS_INFO_REQUIRED',
+                props: {
+                    corpusId: this.getConf<string>('corpname')
+                }
+            });
+        });
+
+         $('#active-corpus').find('a.subcorpus').on('click', () => {
+            this.dispatcher.dispatch({
+                actionType: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
+                props: {
+                    corpusId: this.getConf<string>('corpname'),
+                    subcorpusId: this.getConf<string>('subcorpname')
+                }
+            });
+         });
+    }
+
     /**
      *
      */
     init():RSVP.Promise<any> {
         return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             try {
-                this.layoutViews = documentViewsInit(this.dispatcher, this.exportMixins(),
-                this.getStores());
+
+                this.layoutViews = documentViewsInit(
+                    this.dispatcher,
+                    this.exportMixins(),
+                    this.getStores()
+                );
 
                 this.userSettings.init();
+                this.initMainMenu();
+                this.initOverviewArea();
                 this.bindStaticElements();
-                this.bindCorpusDescAction();
-                this.bindSubcorpusDescAction();
-                this.queryOverview();
-                this.mainMenu.init();
                 this.timeoutMessages();
                 this.mouseOverImages();
                 this.enhanceMessages();
@@ -1016,8 +894,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.createStaticUrl(path);
     }
 
-    createActionUrl(path) {
-        return this.pageModel.createActionUrl(path);
+    createActionUrl(path:string, args?:Array<Array<string>>) {
+        return this.pageModel.createActionUrl(path, args);
     }
 
     ajax<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):RSVP.Promise<T> {
@@ -1103,5 +981,9 @@ export class PluginApi implements Kontext.PluginApi {
 
     hasPlugin(name:string):boolean {
         return this.pageModel.hasPlugin(name);
+    }
+
+    getConcArgs():util.MultiDict {
+        return this.pageModel.getConcArgs();
     }
 }

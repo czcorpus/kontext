@@ -39,7 +39,7 @@ import scheduled
 import templating
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
-from main_menu import MainMenu, MainMenuItem
+from main_menu import MainMenu, MenuGenerator, ConcMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
 from texttypes import TextTypeCollector, get_tt
 
@@ -655,8 +655,14 @@ class Kontext(Controller):
     def _add_save_menu_item(self, label, action, params, save_format=None):
         params = copy.copy(params)
         if save_format:
-            params['saveformat'] = save_format
-        self.save_menu.append({'label': label, 'action': action, 'params': params})
+            if type(params) is dict:
+                params['saveformat'] = save_format
+                params = params.items()
+            elif type(params) is list:
+                params.append(('saveformat', save_format))
+            else:
+                raise ValueError('Unsupported argument type: %s' % type(params))
+        self.save_menu.append(ConcMenuItem(label, action).add_args(*params))
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
@@ -839,8 +845,7 @@ class Kontext(Controller):
             ttcrit_attrs = corpus_get_conf(maincorp, 'FREQTTATTRS')
         else:
             ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
-        result['ttcrit'] = self.urlencode([('fcrit', '%s 0' % a)
-                                           for a in ttcrit_attrs.replace('|', ',').split(',') if a])
+        result['ttcrit'] = [('fcrit', '%s 0' % a) for a in ttcrit_attrs.replace('|', ',').split(',') if a]
         result['corp_uses_tag'] = 'tag' in corpus_get_conf(maincorp, 'ATTRLIST').split(',')
         result['commonurl'] = self.urlencode([('corpname', self.args.corpname),
                                               ('lemma', self.args.lemma),
@@ -971,7 +976,6 @@ class Kontext(Controller):
         # TODO testing app state by looking at the message type may not be the best way
         result['display_closed_conc'] = len(self.args.q) > 0 and result.get('message', [None])[0] != 'error'
 
-        result['corpname_url'] = 'corpname=' + self.args.corpname if self.args.corpname else ''
         global_var_val = self._get_attrs(ConcArgsMapping)
         result['globals'] = self.urlencode(global_var_val)
         result['Globals'] = templating.StateGlobals(global_var_val)
@@ -979,8 +983,6 @@ class Kontext(Controller):
         result['human_corpname'] = None
 
         result['empty_attr_value_placeholder'] = TextTypeCollector.EMPTY_VAL_PLACEHOLDER
-        result['disabled_menu_items'] = self.disabled_menu_items
-        result['save_menu'] = self.save_menu
 
         if self.args.maincorp:
             thecorp = corplib.open_corpus(self.args.maincorp)
@@ -988,6 +990,9 @@ class Kontext(Controller):
             thecorp = self.corp
         if not action_metadata.get('skip_corpus_init', False):
             self._add_corpus_related_globals(result, thecorp)
+            result['uses_corp_instance'] = True
+        else:
+            result['uses_corp_instance'] = False
 
         result['supports_password_change'] = self._uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in self.args.q[:-1]])
@@ -1024,7 +1029,6 @@ class Kontext(Controller):
             result['footer_bar_css'] = None
 
         self._apply_theme(result)
-        self._init_custom_menu_items(result)
 
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
@@ -1077,6 +1081,18 @@ class Kontext(Controller):
         for plg_name, plg in plugins.get_plugins().items():
             if hasattr(plg, 'export'):
                 result['plugin_data'][plg_name] = plg.export(self._plugin_api)
+
+        # main menu
+        menu_items = MenuGenerator(result, self.args).generate(disabled_items=self.disabled_menu_items,
+                                                               save_items=self.save_menu,
+                                                               ui_lang=self.ui_lang)
+        result['menu_data'] = menu_items
+        # We will also generate a simplified static menu which is rewritten
+        # as soon as JS stuff is initiated. It can be used e.g. by search engines.
+        result['static_menu'] = [dict(label=x[1]['label'], disabled=x[1].get('disabled', False),
+                                      action=x[1].get('fallback_action'))
+                                 for x in menu_items['submenuItems']]
+
         # asynchronous tasks
         result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
         return result
@@ -1170,13 +1186,6 @@ class Kontext(Controller):
         for p in src_obj.keys():
             if p.startswith('sca_'):
                 out['checked_sca'][p[4:]] = get_list(src_obj, p)
-
-    def _init_custom_menu_items(self, out):
-        out['custom_menu_items'] = {}
-        menu_items = inspect.getmembers(MainMenu, predicate=lambda p: isinstance(p, MainMenuItem))
-        for item in [x[1] for x in menu_items]:
-            out['custom_menu_items'][item.name] = plugins.get('menu_items').get_items(
-                item.name, self.ui_lang)
 
     @staticmethod
     def _uses_internal_user_pages():

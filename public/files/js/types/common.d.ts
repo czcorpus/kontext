@@ -101,6 +101,7 @@ declare module Kontext {
         getViews():Kontext.LayoutViews;
         getUserSettings():Kontext.IUserSettings;
         hasPlugin(name:string):boolean;
+        getConcArgs():IMultiDict;
     }
 
     export interface CorpusSetupHandler {
@@ -211,17 +212,18 @@ declare module Kontext {
         props:{[name:string]:any};
     }
 
+    export interface OverviewViews {
+
+    }
+
     /**
      *
      */
     export interface LayoutViews {
-        CorpusReference:React.ReactClass;
-        CorpusInfoBox:React.ReactClass;
         PopupBox:React.ReactClass;
         InlineHelp:React.ReactClass;
         Messages:React.ReactClass;
         QueryHints:React.ReactClass;
-        SubcorpusInfo:React.ReactClass;
     }
 
     /**
@@ -278,9 +280,22 @@ declare module Kontext {
     }
 
     export interface IURLHandler {
-        createStaticUrl(path):string;
-        createActionUrl(path):string;
+        createStaticUrl(path:string):string;
+        createActionUrl(path:string, args?:Array<Array<string>>):string;
         encodeURLParameters(params:IMultiDict):string
+    }
+
+    export interface IConcArgsHandler {
+        getConcArgs():IMultiDict;
+        setConcArg(name:string, value:any);
+        replaceConcArg(name:string, values:Array<string>):void;
+
+        /**
+         * Export current conc args to a URL with additional
+         * argument updates. Original arguments stored in model
+         * are unchanged.
+         */
+        exportConcArgs(args:Array<Array<string>>|{[key:string]:any}):string;
     }
 
     export interface IHistory {

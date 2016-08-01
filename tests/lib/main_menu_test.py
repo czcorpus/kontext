@@ -17,7 +17,7 @@
 
 import unittest
 
-from main_menu import MainMenuItem, MainMenu
+from main_menu import MainMenuItemId, MainMenu
 
 
 class MainMenuTest(unittest.TestCase):
@@ -53,7 +53,7 @@ class MainMenuTest(unittest.TestCase):
         self.assertTrue(m.matches('menu-help'))
 
     def test_menu_item_init_and_match(self):
-        m = MainMenuItem('menu-frequency')('foo', 'bar')
+        m = MainMenuItemId('menu-frequency')('foo', 'bar')
         self.assertTrue(m.matches('menu-frequency:foo'))
         self.assertTrue(m.matches('menu-frequency:bar'))
 
@@ -62,5 +62,5 @@ class MainMenuTest(unittest.TestCase):
         self.assertFalse(m.matches('menu-frequency:xxx'))  # non-existing sub-menu
 
     def test_item_name(self):
-        m = MainMenuItem('menu-frequency')('foo')
+        m = MainMenuItemId('menu-frequency')('foo')
         self.assertEqual(m.name, 'menu-frequency')

@@ -172,7 +172,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
               <td class="left">$k.str</td>
               <td></td>
               #set $url_str = $urlquote($k.str.replace('"', '\\"'))
-              <td><a href="first?$join_params($corpname_url, [('usesubcorp', $usesubcorp),
+              <td><a href="first?$join_params([('corpname', $corpname), ('usesubcorp', $usesubcorp),
                     ('phrase', $url_str), ('default_attr', $wlattr), ('qmcase', '1'),
                     ('queryselector', 'phraserow')])">$k.freq</a></td>
 

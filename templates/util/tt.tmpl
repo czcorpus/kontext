@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         #for $i, $nn in $enumerate($Normslist)
         #if $i > 0#|#end if#
         #if $nn.n == $subcnorm#<strong>#end if#
-        <a href="$methodname?$join_params($corpname_url, $tuple((('reload', 1), ('subcnorm', $nn['n']))))">$nn['label']</a>
+        <a href="$methodname?$join_params($tuple((('corpname', $corpname), ('reload', 1), ('subcnorm', $nn['n']))))">$nn['label']</a>
         #if $nn.n == $subcnorm#</strong>#end if#
         #end for
     </div>
