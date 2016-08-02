@@ -251,7 +251,7 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
             return (
                 <div>
-                    <table className="data corplist" border="0">
+                    <table className="data corplist">
                         <tbody>
                             <CorplistHeader />
                             {rows}
