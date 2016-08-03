@@ -17,6 +17,7 @@
  */
 
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../types/ajaxResponses.d.ts" />
 
 import $ = require('jquery');
 import util = require('../../util');
@@ -47,17 +48,17 @@ export class QueryProcessingStore extends util.SimplePageStore {
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
     }
 
-    public exportFilter() {
-        var ans = [];
+    public exportFilter():{[key:string]:string} {
+        var ans = <{[key:string]:string}>{};
 
         if (this.data['filters']) {
             for (var p in this.data['filters']) {
                 if (this.data['filters'].hasOwnProperty(p)) {
-                    ans.push(p + '=' + encodeURIComponent(this.data['filters'][p]));
+                    ans[p] = this.data['filters'][p];
                 }
             }
         }
-        return ans.join('&');
+        return ans;
     }
 
     protected updateFilter(filter:{[key:string]:string}) {
@@ -120,25 +121,47 @@ export class CorplistFormStore extends QueryProcessingStore {
                         }
                         self.selectedKeywords[payload.props['keyword']] =
                             !self.selectedKeywords[payload.props['keyword']];
-                        self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
-                        self.notifyChangeListeners();
-                        break;
+                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                            self.offset).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                    break;
                     case 'KEYWORD_RESET_CLICKED':
                         self.offset = 0;
                         self.selectedKeywords = {};
-                        self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
-                        self.notifyChangeListeners();
-                        break;
+                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                            self.offset).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    console.error(err);
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                    break;
                     case 'EXPANSION_CLICKED':
                         if (payload.props['offset']) {
                             self.offset = payload.props['offset'];
                         }
-                        self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
-                        self.notifyChangeListeners();
-                        break;
+                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                            self.offset).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                    break;
                     case 'FILTER_CHANGED':
                         self.offset = 0;
                         if (payload.props.hasOwnProperty('corpusName')) {
@@ -146,10 +169,17 @@ export class CorplistFormStore extends QueryProcessingStore {
                             delete payload.props['corpusName'];
                         }
                         self.updateFilter(payload.props);
-                        self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
-                        self.notifyChangeListeners();
-                        break;
+                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                            self.offset).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                    break;
                 }
                 return true;
             });
@@ -167,6 +197,7 @@ export interface CorplistData {
     rows:Array<any>; // TODO
 }
 
+
 /**
  * This store handles table dataset
  */
@@ -175,6 +206,8 @@ export class CorplistTableStore extends util.SimplePageStore {
     protected pluginApi:Kontext.PluginApi;
 
     protected data:CorplistData;
+
+    protected detailData:AjaxResponse.CorpusInfo;
 
     static DispatchToken:string;
 
@@ -185,88 +218,142 @@ export class CorplistTableStore extends util.SimplePageStore {
     constructor(pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
-        var self = this;
+        const self = this;
         CorplistTableStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'LIST_STAR_CLICKED':
-                        var prom:any;
-                        var item:common.CorplistItem;
-                        var message;
-
-                        if (payload.props['isFav']) {
-                            item = common.createEmptyCorplistItem();
-                            item.corpus_id = payload.props['corpusId'];
-                            item.id = item.corpus_id;
-                            item.name = payload.props['corpusName'];
-                            item.type = payload.props['type'];
-                            prom = $.ajax(self.pluginApi.createActionUrl('user/set_favorite_item'),
-                                {
-                                    method: 'POST',
-                                    dataType: 'json',
-                                    data: item
-                                }
-                            );
-                            message = self.pluginApi.translate('item added to favorites');
-
-                        } else {
-                            prom = $.ajax(self.pluginApi.createActionUrl('user/unset_favorite_item'),
-                                {
-                                    method: 'POST',
-                                    dataType: 'json',
-                                    data: {id: payload.props['corpusId']}
-                                }
-                            );
-                            message = self.pluginApi.translate('item removed from favorites');
-                        }
-                        prom.then(
-                            function (data) {
-                                if (!data.error) {
-                                    self.updateDataItem(payload.props['corpusId'], {user_item: payload.props['isFav']});
+                        self.changeFavStatus(payload.props['corpusId'], payload.props['corpusName'],
+                            payload.props['type'], payload.props['isFav']).then(
+                                (message) => {
                                     self.notifyChangeListeners();
                                     self.pluginApi.showMessage('info', message);
-
-                                } else {
-                                    self.pluginApi.showMessage('error',
-                                        self.pluginApi.translate('failed to update item'));
-                                    self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, data.error);
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
                                 }
+                            );
+                    break;
+                    case 'CORPARCH_CORPUS_INFO_REQUIRED':
+                        self.loadCorpusInfo(payload.props['corpusId']).then(
+                            (data) => {
+                                self.notifyChangeListeners();
                             },
-                            function (jqXHR, textStatus, errorThrown) {
-                                self.pluginApi.showMessage('error',
-                                    self.pluginApi.translate('failed to update item'));
-                                self.notifyChangeListeners(CorplistTableStore.ERROR_EVENT, errorThrown);
+                            (err) => {
+                                self.pluginApi.showMessage('message', err);
                             }
-                        );
-                        break;
+                        )
+                    break;
+                    case 'CORPARCH_CORPUS_INFO_CLOSED':
+                        self.detailData = null;
+                        self.notifyChangeListeners();
+                    break;
                 }
             }
         );
     }
 
-    public loadData(query:string, filters:string, offset:number, limit?:number):void {
-        var self = this;
-        var prom:any = $.ajax(
-            this.pluginApi.createActionUrl('corpora/ajax_list_corpora')
-            + '?query=' + encodeURIComponent(query)
-            + (offset ? '&offset=' + offset : '')
-            + (limit ? '&limit=' + limit : '')
-            + (filters ? '&' + filters : ''));
-        prom.then(
-            function (data) {
-                if (offset == 0) {
-                    self.setData(data);
+    private changeFavStatus(corpusId:string, corpusName:string, itemType:string,
+            isFav:boolean):RSVP.Promise<string> {
+        let prom:RSVP.Promise<any>;
+        let item:common.CorplistItem;
+        let message;
+
+        if (isFav) {
+            item = common.createEmptyCorplistItem();
+            item.corpus_id = corpusId;
+            item.id = item.corpus_id;
+            item.name = corpusName;
+            item.type = itemType;
+
+            prom = this.pluginApi.ajax<any>(
+                'POST',
+                this.pluginApi.createActionUrl('user/set_favorite_item'),
+                item,
+                {contentType: 'application/x-www-form-urlencoded'}
+            );
+            message = this.pluginApi.translate('item added to favorites');
+
+        } else {
+            prom = this.pluginApi.ajax<any>(
+                'POST',
+                this.pluginApi.createActionUrl('user/unset_favorite_item'),
+                {id: corpusId},
+                {contentType: 'application/x-www-form-urlencoded'}
+            );
+            message = this.pluginApi.translate('item removed from favorites');
+        }
+        return prom.then(
+            (data) => {
+                if (!data.error) {
+                    this.updateDataItem(corpusId, {user_item: isFav});
+                    return message;
 
                 } else {
-                    self.extendData(data);
+                    throw new Error(this.pluginApi.translate('failed to update item'));
                 }
-                self.notifyChangeListeners();
-            },
-            function (err) {
-                // TODO error
-                console.error(err);
             }
-        )
+        );
+    }
+
+    private loadCorpusInfo(corpusId:string):RSVP.Promise<AjaxResponse.CorpusInfo> {
+        return this.pluginApi.ajax<AjaxResponse.CorpusInfo>(
+            'GET',
+            this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
+            {
+                corpname: corpusId
+            },
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        ).then(
+            (data) => {
+                if (!data.contains_errors) {
+                    this.detailData = data;
+                    return data;
+
+                } else {
+                    throw new Error(data.messages[0]);
+                }
+            }
+        );
+    }
+
+    public loadData(query:string, filters:{[key:string]:string}, offset:number, limit?:number):RSVP.Promise<any> {
+        const args = {query: query};
+        if (offset) {
+            args['offset'] = offset;
+        }
+        if (limit) {
+            args['limit'] = limit;
+        }
+        if (filters) {
+            for (let p in filters) {
+                args[p] = filters[p];
+            }
+        }
+        return this.pluginApi.ajax<any>(
+            'GET',
+            this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
+            args,
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        ).then(
+            (data) => {
+                if (data.contains_errors) {
+                    throw new Error(data.mesages[0]);
+
+                } else {
+                    if (offset === 0) {
+                    this.setData(data);
+
+                    } else {
+                        this.extendData(data);
+                    }
+                }
+            }
+        );
     }
 
     protected updateDataItem(corpusId, data) {
@@ -310,6 +397,10 @@ export class CorplistTableStore extends util.SimplePageStore {
     getData():any {
         return this.data;
     }
+
+    getDetail():AjaxResponse.CorpusInfo {
+        return this.detailData;
+    }
 }
 
 /**
@@ -329,8 +420,7 @@ export class CorplistPage implements Customized.CorplistPage {
         this.pluginApi = pluginApi;
         this.corplistTableStore = new CorplistTableStore(pluginApi);
         this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
-        this.components = viewsInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
-                pluginApi.getViews(), this.corplistFormStore, this.corplistTableStore);
+        this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {

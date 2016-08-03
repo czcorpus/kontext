@@ -37,7 +37,7 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
 
     constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
         super(pluginApi);
-        let self = this;
+        const self = this;
         this.corplistTableStore = corplistTableStore;
         this.offset = 0;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
@@ -54,25 +54,47 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
                         }
                         self.selectedKeywords[payload.props['keyword']] =
                             !self.selectedKeywords[payload.props['keyword']];
-                        self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
-                        self.notifyChangeListeners();
-                        break;
+                        self.corplistTableStore.loadData(self.exportQuery(), self.exportFilter(),
+                            self.offset).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                    break;
                     case 'KEYWORD_RESET_CLICKED':
                         self.offset = 0;
                         self.selectedKeywords = {};
                         self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
-                        self.notifyChangeListeners();
-                        break;
+                            self.exportQuery(), self.exportFilter(), self.offset).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                    break;
                     case 'EXPANSION_CLICKED':
                         if (payload.props['offset']) {
                             self.offset = payload.props['offset'];
                         }
                         self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset, CorplistTableStore.LoadLimit);
-                        self.notifyChangeListeners();
-                        break;
+                            self.exportQuery(), self.exportFilter(), self.offset,
+                            CorplistTableStore.LoadLimit).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
+                    break;
                     case 'FILTER_CHANGED':
                         self.offset = 0;
                         if (payload.props.hasOwnProperty('corpusName')) {
@@ -81,8 +103,15 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
                         }
                         self.updateFilter(payload.props);
                         self.corplistTableStore.loadData(
-                            self.exportQuery(), self.exportFilter(), self.offset);
-                        self.notifyChangeListeners();
+                            self.exportQuery(), self.exportFilter(), self.offset).then(
+                                (data) => {
+                                    self.corplistTableStore.notifyChangeListeners();
+                                    self.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    self.pluginApi.showMessage('error', err);
+                                }
+                            );
                         break;
                 }
                 return true;
@@ -116,44 +145,46 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
 
     static DispatchToken:string;
 
-    private sendRequest(data):JQueryXHR {
-        return $.ajax(this.pluginApi.createActionUrl('user/ask_corpus_access'),
-            {
-                method: 'POST',
-                dataType: 'json',
-                data: data
-            }
-        );
-    }
-
     constructor(pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
-        var self = this;
+        const self = this;
         this.pluginApi = pluginApi;
         CorpusAccessRequestStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'CORPUS_ACCESS_REQ_SUBMITTED':
-                        var prom = self.sendRequest(payload.props);
-                        prom.then(
-                            function (ans) {
-                                if (!ans.error) {
-                                    self.pluginApi.showMessage('info',
-                                        self.pluginApi.translate('ucnkCorparch__your_message_sent'));
+                        self.askForAccess(payload.props).then(
+                            (ans) => {
+                                self.pluginApi.showMessage('info',
+                                    self.pluginApi.translate('ucnkCorparch__your_message_sent'));
                                     self.notifyChangeListeners();
-
-                                } else {
-                                    self.pluginApi.showMessage('error', ans.error);
-                                    self.notifyChangeListeners(CorpusAccessRequestStore.ERROR_EVENT, ans.error);
-                                }
                             },
-                            function (jqXHR, textStatus, errorThrown) {
+                            (error) => {
                                 self.pluginApi.showMessage('error',
                                     self.pluginApi.translate('ucnkCorparch__your_message_failed'));
-                                self.notifyChangeListeners(CorpusAccessRequestStore.ERROR_EVENT, errorThrown);
+                                console.error(error);
                             }
                         );
                         break;
+                }
+            }
+        );
+    }
+
+    private askForAccess(data:{[key:string]:string}):RSVP.Promise<any> {
+        return this.pluginApi.ajax<any>(
+            'POST',
+            this.pluginApi.createActionUrl('user/ask_corpus_access'),
+            data,
+            {contentType : 'application/x-www-form-urlencoded'}
+
+        ).then(
+            (data) => {
+                if (!data.contains_errors) {
+                    return data;
+
+                } else {
+                    throw new Error(data.messages[0]);
                 }
             }
         );
@@ -180,8 +211,7 @@ export class CorplistPage implements Customized.CorplistPage {
         this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
         this.corplistTableStore = new CorplistTableStore(pluginApi);
         this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
-        this.components = viewsInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
-                pluginApi.getViews(), this.corplistFormStore, this.corplistTableStore);
+        this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {

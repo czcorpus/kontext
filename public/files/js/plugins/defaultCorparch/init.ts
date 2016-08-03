@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +24,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins/corparch.ts" />
 /// <reference path="./view.d.ts" />
+/// <reference path="../../types/views.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
@@ -32,6 +35,8 @@ import common = require('./common');
 import widget = require('./widget');
 import corplist = require('./corplist');
 import {init as viewInit} from './view';
+import {init as overviewViewInit} from 'views/overview';
+import {CorplistFormStore, CorplistTableStore} from './corplist';
 
 /**
  *
@@ -39,7 +44,24 @@ import {init as viewInit} from './view';
  * @returns {CorplistPage}
  */
 export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
-    return new corplist.CorplistPage(pluginApi, viewInit);
+    const overviewViews = overviewViewInit(
+        pluginApi.dispatcher(),
+        pluginApi.exportMixins(),
+        pluginApi.getStores().corpusInfoStore,
+        pluginApi.getViews().PopupBox
+    );
+    const initViews = (formStore:CorplistFormStore, listStore:CorplistTableStore) => {
+        const ans:any = viewInit(
+            pluginApi.dispatcher(),
+            pluginApi.exportMixins(),
+            pluginApi.getViews(),
+            overviewViews.CorpusInfoBox,
+            formStore,
+            listStore
+        );
+        return ans;
+    }
+    return new corplist.CorplistPage(pluginApi, initViews);
 }
 
 /**
@@ -53,11 +75,8 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
  */
 export function create(selectElm:HTMLElement, pluginApi:Kontext.QueryPagePluginApi,
                        options:CorpusArchive.Options):CorpusArchive.Widget {
-    var corplist:widget.Corplist,
-        data:Array<common.CorplistItem>;
-
-    data = widget.fetchDataFromSelect(selectElm);
-    corplist = new widget.Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
+    const data:Array<common.CorplistItem> = widget.fetchDataFromSelect(selectElm);
+    const corplist:widget.Corplist = new widget.Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
     corplist.bind(selectElm);
     return corplist;
 }

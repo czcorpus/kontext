@@ -113,7 +113,7 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
         },
 
         render: function () {
-            if (!this.props.data.corpname) {
+            if (!this.props.data || !this.props.data.corpname) {
                 return (
                     <div id="corpus-details-box">
                         <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader.gif')}
@@ -231,7 +231,7 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
                 );
 
             } else {
-                return <div>{this.translate('global__no_data_found')}</div>
+                return <div className="empty-citation-info">{this.translate('global__no_citation_info')}</div>
             }
         }
     });
@@ -360,6 +360,7 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
 
 
     return {
-        OverviewArea: OverviewArea
+        OverviewArea: OverviewArea,
+        CorpusInfoBox: CorpusInfoBox
     };
 }

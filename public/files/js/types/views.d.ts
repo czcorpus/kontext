@@ -153,6 +153,7 @@ declare module "views/overview" {
 
     export interface OverviewViews {
         OverviewArea: React.ReactClass;
+        CorpusInfoBox: React.ReactClass;
     }
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,

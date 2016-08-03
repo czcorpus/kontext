@@ -21,9 +21,9 @@ import $ from 'jquery';
 import {init as defaultViewInit} from '../defaultCorparch/view';
 
 
-export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
-
-    let defaultComponents = defaultViewInit(dispatcher, mixins, layoutViews, formStore, listStore);
+export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore) {
+    let defaultComponents = defaultViewInit(dispatcher, mixins, layoutViews, CorpusInfoBox,
+            formStore, listStore);
 
     /**
      *
@@ -165,47 +165,20 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
         mixins: mixins,
 
-        _corpDetailErrorHandler: function () {
-            this.setState(React.addons.update(this.state, {detail: {$set: false}}));
-        },
-
-        _detailClickHandler: function (evt) {
-            evt.preventDefault();
-            this.setState(React.addons.update(this.state, {detail: {$set: true}}));
-        },
-
-        getInitialState: function () {
-            return {detail: false};
-        },
-
-        _detailCloseHandler: function () {
-            this.setState(React.addons.update(this.state, {detail: {$set: false}}));
+        _handleDetailClick : function (corpusId, evt) {
+            this.props.detailClickHandler(corpusId);
         },
 
         render: function () {
-            let keywords = this.props.row.keywords.map(function (k, i) {
+            const keywords = this.props.row.keywords.map(function (k, i) {
                 return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
             });
 
-            let detailBox;
+            const link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+            const size = this.props.row.raw_size ? this.props.row.raw_size : '-';
 
-            if (this.state.detail) {
-                detailBox = <layoutViews.PopupBox
-                    onCloseClick={this._detailCloseHandler}
-                    customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                    <layoutViews.CorpusInfoBox corpusId={this.props.row.id}
-                        parentErrorHandler={this._corpDetailErrorHandler} />
-                </layoutViews.PopupBox>;
-
-            } else {
-                detailBox = null;
-            }
-
-            let link = this.createActionLink('first_form?corpname=' + this.props.row.id);
-            let size = this.props.row.raw_size ? this.props.row.raw_size : '-';
             let userAction = null;
             let corpLink;
-
             if (this.props.enableUserActions) {
                 if (this.props.row.requestable) {
                     corpLink = <span className="inaccessible">{this.props.row.name}</span>;
@@ -234,11 +207,11 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
                         {userAction}
                     </td>
                     <td>
-                        {detailBox}
-                        <p className="desc" style={{display: 'none'}}>
-                        </p>
+                        <p className="desc" style={{display: 'none'}}></p>
                         <a className="detail"
-                            onClick={this._detailClickHandler}>{this.translate('defaultCorparch__corpus_details')}</a>
+                                onClick={this._handleDetailClick.bind(this, this.props.row.id)}>
+                            {this.translate('defaultCorparch__corpus_details')}
+                        </a>
                     </td>
                 </tr>
             );
@@ -251,16 +224,22 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
     let CorplistTable = React.createClass({
 
         changeHandler: function () {
-            this.setState(listStore.getData());
+            const data = listStore.getData();
+            const detail = listStore.getDetail();
+            this.setState({
+                rows: data.rows,
+                nextOffset: data.nextOffset,
+                detailVisible: !!detail,
+                detail: detail
+            });
         },
 
         getInitialState: function () {
             return {
-                filters: this.props.filters,
-                keywords: this.props.keywords,
                 rows: this.props.rows,
-                query: this.props.query,
-                nextOffset: this.props.nextOffset
+                nextOffset: this.props.nextOffset,
+                detailVisible: false,
+                detail: null
             };
         },
 
@@ -272,11 +251,44 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
             listStore.removeChangeListener(this.changeHandler);
         },
 
+        _detailClickHandler: function (corpusId) {
+            this.setState(React.addons.update(this.state, {detailVisible: {$set: true}}));
+            dispatcher.dispatch({
+                actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
+                props: {
+                    corpusId: corpusId
+                }
+            });
+        },
+
+        _detailCloseHandler: function () {
+            this.setState(React.addons.update(this.state, {detailVisible: {$set: false}}));
+            dispatcher.dispatch({
+                actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
+                props: {}
+            });
+        },
+
+        _renderDetailBox: function () {
+            if (this.state.detailVisible) {
+                return (
+                    <layoutViews.PopupBox
+                        onCloseClick={this._detailCloseHandler}
+                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                        <CorpusInfoBox data={this.state.detail} />
+                    </layoutViews.PopupBox>
+                );
+
+            } else {
+                return null;
+            }
+        },
+
         render: function () {
-            let self = this;
-            let rows = this.state.rows.map(function (row, i) {
+            let rows = this.state.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
-                                    enableUserActions={!self.props.anonymousUser} />;
+                                    enableUserActions={!this.props.anonymousUser}
+                                    detailClickHandler={this._detailClickHandler} />;
             });
             let expansion = null;
             if (this.state.nextOffset) {
@@ -285,6 +297,7 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
             return (
                 <div>
+                    {this._renderDetailBox()}
                     <table className="data corplist">
                         <tbody>
                             <defaultComponents.CorplistHeader />

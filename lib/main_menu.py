@@ -22,6 +22,15 @@ import plugins
 
 
 class MainMenuItemId(object):
+    """
+    A special menu item identifier used
+    mainly to define menu items disabled
+    in different actions. It is typically
+    not instantiated directly. See
+    class MainMenu below which contains
+    whole menu structure with specific
+    items already instantiated.
+    """
     def __init__(self, name):
         self.name = name
         self.items = []
@@ -278,15 +287,21 @@ class MenuGenerator(object):
 
         # -------------------------- menu-new-query -------------------------------------
 
-        self.new_query = MenuItemInternal(_('Enter new query'), 'first_form').add_args(
-            ('corpname', self._args['corpname']),
-            ('usecubcorp', self._args['usesubcorp']),
-            ('align', self._args['align'])
-        ).mark_indirect()
+        self.new_query = (
+            MenuItemInternal(_('Enter new query'), 'first_form')
+            .add_args(
+                ('corpname', self._args['corpname']),
+                ('usecubcorp', self._args['usesubcorp']),
+                ('align', self._args['align']))
+            .mark_indirect()
+        )
 
-        self.recent_queries = MenuItemInternal(_('Recent queries'), 'user/query_history').add_args(
-            ('corpname', self._args['corpname'])
-        ).mark_indirect()
+        self.recent_queries = (
+            MenuItemInternal(_('Recent queries'), 'user/query_history')
+            .add_args(
+                ('corpname', self._args['corpname']))
+            .mark_indirect()
+        )
 
         self.word_list = MenuItemInternal(_('Word List'), 'wordlist_form').add_args(
             ('corpname', self._args['corpname']),
@@ -294,16 +309,28 @@ class MenuGenerator(object):
         ).mark_indirect()
 
         # ---------------------------- menu-corpora -------------------------------------
-        self.avail_corpora = MenuItemInternal(_('Available corpora'), 'corpora/corplist').mark_indirect()
 
-        self.my_subcorpora = MenuItemInternal(_('My subcorpora'), 'subcorpus/subcorp_list').mark_indirect()
+        self.avail_corpora = (
+            MenuItemInternal(_('Available corpora'), 'corpora/corplist')
+            .mark_indirect()
+        )
 
-        self.create_subcorpus = MenuItemInternal(_('Create new subcorpus'), 'subcorpus/subcorp_form').add_args(
-            ('corpname', self._args['corpname'])
-        ).mark_indirect()
+        self.my_subcorpora = (
+            MenuItemInternal(_('My subcorpora'), 'subcorpus/subcorp_list')
+            .mark_indirect()
+        )
 
-        # ----------------------MessageSendingItem------------ menu-save ----------------------------------
-        # save items are generated dynamically
+        self.create_subcorpus = (
+            MenuItemInternal(_('Create new subcorpus'), 'subcorpus/subcorp_form')
+            .add_args(
+                ('corpname', self._args['corpname']))
+            .mark_indirect()
+        )
+
+        # -------------------------------- menu-save ------------------------------------
+
+        # save items are generated dynamically during action processing
+        # (see Kontext._add_save_menu_item())
 
         # ----------------------------- menu-concordance --------------------------------
 
@@ -317,40 +344,59 @@ class MenuGenerator(object):
 
         self.query_overview = EventTriggeringItem(_('Query overview'), 'OVERVIEW_SHOW_QUERY_INFO')
 
-        self.query_undo = HideOnCustomCondItem(_('Undo'), 'view').add_args(
-            ('q', self._args['undo_q'])
-        ).enable_if(lambda d: len(d.get('undo_q', [])) > 0)
+        self.query_undo = (
+            HideOnCustomCondItem(_('Undo'), 'view')
+            .add_args(
+                ('q', self._args['undo_q']))
+            .enable_if(lambda d: len(d.get('undo_q', [])) > 0)
+        )
 
         # ------------------------------------ menu-filter ------------------------------
 
-        self.filter_pos = ConcMenuItem(_('Positive'), 'filter_form').add_args(
-            ('pnfilter', 'p')
-        ).mark_indirect()
+        self.filter_pos = (
+            ConcMenuItem(_('Positive'), 'filter_form')
+            .add_args(('pnfilter', 'p'))
+            .mark_indirect()
+        )
 
-        self.filter_neg = ConcMenuItem(_('Negative'), 'filter_form').add_args(
-            ('pnfilter', 'n')
-        ).mark_indirect()
+        self.filter_neg = (
+            ConcMenuItem(_('Negative'), 'filter_form')
+            .add_args(('pnfilter', 'n'))
+            .mark_indirect()
+        )
 
         # ----------------------------------- menu-frequency ----------------------------
 
-        self.freq_lemmas = ConcMenuItem(_('Lemmas'), 'freqs').add_args(
-            ('fcrit', 'lemma/e+0~0>0'),
-            ('ml', 0)
-        ).enable_if(lambda d: 'tag' in [x['n'] for x in self._args.get('AttrList', ())])
-
-        self.freq_node_forms = ConcMenuItem(_('Node forms'), 'freqs').add_args(
-            ('fcrit', 'word/e+0~0>0'),
-            ('ml', 0)
+        self.freq_lemmas = (
+            ConcMenuItem(_('Lemmas'), 'freqs')
+            .add_args(
+                ('fcrit', 'lemma/e+0~0>0'),
+                ('ml', 0))
+            .enable_if(lambda d: 'tag' in [x['n'] for x in self._args.get('AttrList', ())])
         )
 
-        self.freq_doc_ids = ConcMenuItem(_('Doc IDs'), 'freqs').add_args(
-            ('fcrit', self._args['fcrit_shortref']),
-            ('ml', 0)
-        ).enable_if(lambda d: 'fcrit_shortref' in self._args and
-                    '.' in self._args['fcrit_shortref'].split('/')[0])
+        self.freq_node_forms = (
+            ConcMenuItem(_('Node forms'), 'freqs')
+            .add_args(
+                ('fcrit', 'word/e+0~0>0'),
+                ('ml', 0))
+        )
 
-        self.freq_text_types = ConcMenuItem(_('Text Types'), 'freqs').add_args(
-            *self._args.get('ttcrit', [])).add_args(('ml', 0)).enable_if(lambda d: bool(d['ttcrit']))
+        self.freq_doc_ids = (
+            ConcMenuItem(_('Doc IDs'), 'freqs')
+            .add_args(
+                ('fcrit', self._args['fcrit_shortref']),
+                ('ml', 0))
+            .enable_if(lambda d: 'fcrit_shortref' in self._args and
+                       '.' in self._args['fcrit_shortref'].split('/')[0])
+        )
+
+        self.freq_text_types = (
+            ConcMenuItem(_('Text Types'), 'freqs')
+            .add_args(*self._args.get('ttcrit', []))
+            .add_args(('ml', 0))
+            .enable_if(lambda d: bool(d['ttcrit']))
+        )
 
         self.freq_custom = ConcMenuItem(_('Custom'), 'ffreqs').mark_indirect()
 
@@ -362,20 +408,35 @@ class MenuGenerator(object):
 
         self.view_mode_switch = KwicSenModeSwitchItem()
 
-        self.view_structs_attrs = ConcMenuItem(_('Attributes, structures and references'),
-                                               'options/viewattrs').mark_indirect()
+        self.view_structs_attrs = (
+            ConcMenuItem(_('Attributes, structures and references'), 'options/viewattrs')
+            .mark_indirect()
+        )
 
-        self.view_global = MenuItemInternal(_('General view options'),
-                                            'options/viewopts').mark_indirect()
+        self.view_global = (
+            MenuItemInternal(_('General view options'), 'options/viewopts')
+            .mark_indirect()
+        )
 
         # -------------------------------- menu-help ------------------------------------
-        self.how_to_cite_corpus = EventTriggeringItem('global__how_to_cite_corpus', 'OVERVIEW_SHOW_CITATION_INFO'
-                                                      ).add_args(('corpusId', self._args['corpname'])
-                                                                 ).enable_if(lambda d: d['uses_corp_instance'])
+
+        self.how_to_cite_corpus = (
+            EventTriggeringItem('global__how_to_cite_corpus', 'OVERVIEW_SHOW_CITATION_INFO')
+            .add_args(('corpusId', self._args['corpname']))
+            .enable_if(lambda d: d['uses_corp_instance'])
+        )
 
         # -------------------------------------------------------------------------------
 
     def generate(self, disabled_items, save_items, ui_lang):
+        """
+        Generate menu items based on current
+        action and user state.
+
+        arguments:
+
+        disabled_items -- a list of
+        """
 
         def custom_menu_items(section):
             return map(
