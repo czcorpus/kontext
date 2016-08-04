@@ -152,6 +152,7 @@ export class LineSelectionStore extends SimplePageStore {
                         },
                         (err) => {
                             self.layoutModel.showMessage('error', err);
+                            self.notifyChangeListeners('$LINE_SELECTION_USER_ERROR');
                         }
                     )
                     break;
@@ -204,7 +205,13 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     private renameLineGroup(srcGroupNum:number, dstGroupNum:number):RSVP.Promise<MultiDict> {
-        if (!srcGroupNum) {
+        if (isNaN(srcGroupNum) || isNaN(dstGroupNum)) {
+            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
+                reject(this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
+                        {max_group: this.maxGroupId}));
+            });
+
+        } else if (!srcGroupNum) {
             return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
                 reject(this.layoutModel.translate('linesel__group_missing'));
             });

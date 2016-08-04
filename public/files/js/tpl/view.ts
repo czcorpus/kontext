@@ -257,16 +257,15 @@ export class ViewPage {
 
         prom.then(
             (data) => {
-                let chartData = [];
-                let colors:any;
-
+                const chartData = [];
                 for (let p in data) {
                     chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
                 }
+                $(rootElm).empty(); // remove loader
                 $(rootElm).append(
                     '<legend>' + self.translate('linesel__groups_stats_heading') + '</legend>'
                 );
-                colors = renderChart(chartData);
+                const colors = renderChart(chartData);
                 renderLabels(chartData, colors, rootElm);
             },
             (err) => {
@@ -602,7 +601,6 @@ export class ViewPage {
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
                     let frame = window.document.getElementById('selection-actions');
-                    $(frame).find('.chart-area').empty();
                     this.showGroupsStats($(frame).find('.chart-area').get(0), usePrevData);
                 };
                 lineViewProps.onPageUpdate = () => {
