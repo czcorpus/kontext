@@ -22,6 +22,7 @@
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="./view.d.ts" />
+/// <reference path="../../types/views.d.ts" />
 
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
@@ -32,6 +33,8 @@ import common = require('./common');
 import widget = require('./widget');
 import corplist = require('./corplist');
 import {init as viewsInit} from './view';
+import {init as overviewViewInit} from 'views/overview';
+import {CorplistFormStore, CorplistTableStore} from './corplist';
 
 /**
  *
@@ -39,7 +42,24 @@ import {init as viewsInit} from './view';
  * @returns {CorplistPage}
  */
 export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
-    return new corplist.CorplistPage(pluginApi, viewsInit);
+    const overviewViews = overviewViewInit(
+        pluginApi.dispatcher(),
+        pluginApi.exportMixins(),
+        pluginApi.getStores().corpusInfoStore,
+        pluginApi.getViews().PopupBox
+    );
+    const initViews = (formStore:CorplistFormStore, listStore:CorplistTableStore) => {
+        const ans:any = viewsInit(
+            pluginApi.dispatcher(),
+            pluginApi.exportMixins(),
+            pluginApi.getViews(),
+            overviewViews.CorpusInfoBox,
+            formStore,
+            listStore
+        );
+        return ans;
+    }
+    return new corplist.CorplistPage(pluginApi, initViews);
 }
 
 /**

@@ -26,4 +26,4 @@ export interface DefaultCorparchViews {
     CorpKeywordLink:any;
 }
 
-export function init(dispatcher, mixins, layoutViews, formStore, listStore):DefaultCorparchViews;
+export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore):DefaultCorparchViews;

@@ -290,23 +290,22 @@ class Actions(Kontext):
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
 
-        params = '&'.join(map(lambda x: '%s=%s' % x, [
+        params = [
             ('pagesize', self.args.pagesize),
             ('leftctx', self.args.leftctx),
             ('rightctx', self.args.rightctx),
-            ('saveformat', '%s'),
             ('heading', self.args.heading),
             ('numbering', self.args.numbering),
             ('align_kwic', self.args.align_kwic),
             ('from_line', 1),
             ('to_line', conc.size())
-        ]))
-        self._add_save_menu_item('CSV', 'saveconc', params % 'csv')
-        self._add_save_menu_item('XLSX', 'saveconc', params % 'xlsx')
-        self._add_save_menu_item('XML', 'saveconc', params % 'xml')
-        self._add_save_menu_item('TXT', 'saveconc', params % 'text')
+        ]
+        self._add_save_menu_item('CSV', 'saveconc', params, save_format='csv')
+        self._add_save_menu_item('XLSX', 'saveconc', params, save_format='xlsx')
+        self._add_save_menu_item('XML', 'saveconc', params, save_format='xml')
+        self._add_save_menu_item('TXT', 'saveconc', params, save_format='text')
         self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form',
-                                 'leftctx=%s&rightctx=%s' % (self.args.leftctx, self.args.rightctx))
+                                 [('leftctx', self.args.leftctx), ('rightctx', self.args.rightctx)])
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
         out['widectx_globals'] = self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts()))

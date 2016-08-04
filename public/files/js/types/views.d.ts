@@ -106,6 +106,17 @@ declare module "views/textTypes" {
 }
 
 
+declare module "views/menu" {
+
+    export interface MainMenuViews {
+        MainMenu:React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            concArgHandler:Kontext.IConcArgsHandler):MainMenuViews;
+}
+
+
 declare module "views/query/context" {
 
     export interface QueryContextViews {
@@ -135,4 +146,16 @@ declare module "views/options/structsAttrs" {
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>,
             mixins:any, viewOptionsStore:ViewOptions.IViewOptionsStore):StructsAndAttrsViews;
+}
+
+
+declare module "views/overview" {
+
+    export interface OverviewViews {
+        OverviewArea: React.ReactClass;
+        CorpusInfoBox: React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            corpusInfoStore:any, popupBoxComponent:React.ReactClass):OverviewViews;
 }

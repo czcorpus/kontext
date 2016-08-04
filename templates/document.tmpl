@@ -183,6 +183,7 @@ define('conf', [], function () {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
     };
     conf.ttIntervalChars = #filter $Jsonize#$getVar('interval_chars', [])#end filter#;
+    conf.menuData = #filter $Jsonize#$menu_data#end filter#;
     conf.asyncTasks = #filter $Jsonize#$async_tasks#end filter#;
 
     return conf;
@@ -223,122 +224,12 @@ define('conf', [], function () {
                 title="$theme.logo_title"
                 style="$theme.logo_inline_css"
                 data-alt-img="$theme.logo_mouseover_path" /></a>
-            <ul id="menu-level-1">
-                <li id="menu-new-query" class="$menu_status('menu-new-query')">
-                    <a class="trigger" title="$_("Query")">$_("Query")</a>
-                    <ul class="submenu">
-                        <li class="separ"><a title="$_('Enter new query')" href="${root_url}first_form?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, 'lpos='+$lpos, 'align='+$align)">$_('New query')&#8230;</a></li>
-                        <li class="separ $menu_status('menu-new-query:history')"><a title="$_('List of recent queries')" href="${root_url}user/query_history?$corpname_url">$_('Recent queries')&#8230;</a></li>
-                        <li class="$menu_status('menu-new-query:wordlist')"><a title="$_("Various methods for creating word lists")"
-                            href="${root_url}wordlist_form?$join_params($corpname_url, 'include_nonwords=1')">$_("Word List")&#8230;</a></li>
-                    </ul>
-                </li>
-                <li id="menu-corpora" class="$menu_status('menu-corpora')">
-                    <a class="trigger">$_("Corpora")</a>
-                    <ul class="submenu">
-                        <li class="separ"><a href="${root_url}corpora/corplist">$_('Available corpora')&#8230;</a></li>
-                        <li class="$menu_status('menu-corpora:my-subcorpora')"><a title="$_('List of my subcorpora')" href="${root_url}subcorpus/subcorp_list?$join_params($q, $globals)">$_('My subcorpora')&#8230;</a></li>
-                        <li class="$menu_status('menu-corpora:new-subcorpus')"><a title="$_('Create new subcorpus')" href="${root_url}subcorpus/subcorp_form?$corpname_url">$_('Create new subcorpus')&#8230;</a></li>
-                    </ul>
-                </li>
-                <li id="menu-save" class="$menu_status('menu-save')">
-                    <a class="trigger">$_("Save")</a>
-                    <ul class="submenu">
-                        #set $i = 0
-                        #for $item in $save_menu
-                        <li#if $i < $len($save_menu) - 1# class="separ"#end if#><a href="${root_url}$item.action?$join_params($q, $globals, $item.params)">$item.label</a></li>
-                        #set $i = $i + 1
-                        #end for
-                        #block custom_save
-                        #end block
-                    </ul>
-                </li>
-
-                <li id="menu-concordance" class="$menu_status('menu-concordance')">
-                    <a class="trigger">$_("Concordance")</a>
-                    <ul class="submenu">
-                        <li class="separ"><a title="$_('Concordance based on current parameters')" href="${root_url}view?$join_params($q, $globals)">$_('Current concordance')</a></li>
-                        <li class="separ"><a title="$_("Complex sorting options")" href="${root_url}sort?$join_params($q, $globals)">$_('Sorting')&#8230;</a></li>
-                        <li class="separ"><a title="$_("Randomize ordering of lines")" href="${root_url}view?$join_params($q, 'q=f', $globals)">$_("Shuffle")</a></li>
-                        <li class="separ"><a title="$_('Make a random sample from the concordance.')" href="${root_url}reduce_form?$join_params($q, $globals)">$_('Sample')&#8230;</a></li>
-                        <li class="separ"><a id="query-overview-trigger"
-                            title="$_('Details about current query and related operations')"
-                            href="${root_url}concdesc?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)"
-                            data-json-href="${root_url}concdesc_json?$join_params($corpname_url, 'usesubcorp='+$usesubcorp, $q)">$_('Query overview')&#8230;</a></li>
-                        <li class="separ">
-                        #if len($undo_q) > 0
-                        <a title="$_('Revert last operation on current concordance')" href="${root_url}view?$join_params($globals, $undo_q)">$_('Undo')</a>
-                        #else
-                        <span class="disabled" title="$_('Revert last operation on current concordance')" href="${root_url}view?$join_params($globals, $undo_q)">$_('Undo')</span>
-                        #end if
-                        </li>
-                    </ul>
-                </li>
-
-                <li id="menu-filter" class="$menu_status('menu-filter')">
-                    <a class="trigger" title="$_('Make a query on the current concordance.')">$_('Filter')</a>
-                    <ul class="submenu">
-                        <li class="separ"><a href="${root_url}filter_form?$join_params($q, $globals, 'pnfilter=p')">$_('Positive')&#8230;</a></li>
-                        <li><a href="${root_url}filter_form?$join_params($q, $globals, 'pnfilter=n')">$_('Negative')&#8230;</a></li>
-                    </ul>
-                </li>
-
-                <li id="menu-frequency" class="$menu_status('menu-frequency')">
-                    <a class="trigger">$_('Frequency')</a>
-                    <ul class="submenu">
-                        #if 'tag' in [x['n'] for x in $getVar('AttrList', ())]
-                        <li class="separ"><a title="$_("Show frequencies of lemmas")" href="${root_url}freqs?$join_params($q, $globals, 'fcrit=lemma/e+0~0>0', 'ml=0')">$_("Lemmas")</a></li>
-                        #end if
-                        <li class="separ"><a title="$_("Show frequencies of Node forms")" href="${root_url}freqs?$join_params($q, $globals, 'fcrit=word/e+0~0>0', 'ml=0')">$_("Node forms")</a></li>
-                        #if $varExists('fcrit_shortref') and '.' in $fcrit_shortref.split('/')[0]
-                        <li class="separ"><a title="$_("Show frequencies of Doc IDs")" href="${root_url}freqs?$join_params($q, $globals, [('fcrit', $fcrit_shortref), ('ml', 0)])">$_("Doc IDs")</a></li>
-                        #end if
-                        #if $varExists('ttcrit') and $ttcrit
-                        <li class="separ"><a title="$_("Show frequencies of Text Types")" href="${root_url}freqs?$join_params($q, $globals, $ttcrit)">$_("Text Types")</a></li>
-                        #end if
-                        <li><a title="$_("Entry form for computing frequencies")" href="${root_url}freq?$join_params($q, $globals)">$_('Custom')&#8230;</a></li>
-                    </ul>
-                </li>
-
-                <li id="menu-collocations" class="$menu_status('menu-collocations')">
-                    <a class="trigger" title="$_("Collocation candidates")">$_('Collocations')</a>
-                    <ul class="submenu">
-                        <li><a href="${root_url}coll?$join_params($q, $globals)">$_('Custom')&#8230;</a></li>
-                    </ul>
-                </li>
-
-                <li id="menu-view" class="$menu_status('menu-view')">
-                    <a class="trigger">$_('View')</a>
-                    <ul class="submenu">
-                        <li class="separ $menu_status('menu-view:kwic-sentence')">
-                        #if not $align
-                            #if $viewmode == 'sen'
-                            <a title="$_("Show KWICs")" href="${root_url}view?$join_params($Globals.update('viewmode','kwic'), 'fromp='+$to_str($fromp))">$_('KWIC')/$_('Sentence')</a>
-                            #else
-                            <a title="$_("Show sentences")" href="${root_url}view?$join_params($Globals.update('viewmode', 'sen'), 'fromp='+$to_str($fromp))">$_('KWIC')/$_("Sentence")</a>
-                            #end if
-                        #else
-                            #if $viewmode == 'kwic'
-                            <a title="$_("Show sentences")" href="${root_url}view?$join_params($Globals.update('viewmode','sen'), 'fromp='+$to_str($fromp))">$_("KWIC/Sentence/Alignment")</a>
-                            #elif $viewmode == 'sen'
-                            <a title="$_("Show aligned segments")" href="${root_url}view?$join_params($Globals.update('viewmode','align'), 'fromp='+$to_str($fromp))">$_("KWIC/Sentence/Alignment")</a>
-                            #elif $viewmode == 'align'
-                            <a title="$_("Show KWICSs")" href="${root_url}view?$join_params($Globals.update('viewmode','kwic'), 'fromp='+$to_str($fromp))">$_("KWIC/Sentence/Alignment")</a>
-                            #end if
-                        #end if
-                        </li>
-                        <li class="separ $menu_status('menu-view:viewattrs')"><a href="${root_url}options/viewattrs?$join_params($q, $globals, 'fromp='+$to_str($fromp))">$_("Attributes, structures and references")&#8230;</a></li>
-                        <li class="$menu_status('menu-view:viewopts')"><a href="${root_url}options/viewopts?$join_params($q, $globals, 'fromp='+$to_str($fromp))">$_("General view options")&#8230;</a></li>
-                    </ul>
-                </li>
-
-                <li id="menu-help" class="$menu_status('menu-help')">
-                    <a class="trigger" title="$_("Application help and tutorials")" href="#">$_("Help")</a>
-                    <ul class="submenu">
-                    #filter None#$render_custom_menu_items('menu-help')#end filter#
-                    </ul>
-                </li>
-            </ul>
+            <div id="main-menu-mount">
+                <ul id="menu-level-1">
+                #for $menu_item in $static_menu#<li class="#if $menu_item.disabled#disabled#end if#"><a class="trigger"
+                    #if $menu_item.action#href=${root_url}${menu_item.action}#end if#>$menu_item.label</a></li>#end for#
+                </ul>
+            </div>
         </div>
         #if $corpname
         #block state_navigation
@@ -347,6 +238,7 @@ define('conf', [], function () {
         #end filter
         #end block
         #end if
+        <div id="overivew-area-mount"></div>
 
     </div> ## navig wrapper
 </header>
@@ -358,12 +250,10 @@ define('conf', [], function () {
 
     #filter None
     #block concordance
-
     #end block
 
     #block main
     #end block
-
     #end filter
 </div>
 
@@ -491,20 +381,6 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
         #end for
       #end if
     #end for
-#end def
-## ***************************************** ##
-#def menu_status($id)
-    #for $item in $disabled_menu_items
-    #if $item.matches($id)#disabled#end if#
-    #end for
-#end def
-## ***************************************** ##
-#def render_custom_menu_items($section_id)
-    #if $section_id in $custom_menu_items
-    #for $menu_item in $custom_menu_items[$section_id]
-    <li class="separ"><a #if $menu_item.open_in_blank#target="_blank"#end if# href="$menu_item.url">$menu_item.label</a></li>
-    #end for
-    #end if
 #end def
 
 ## ***************************************** ##

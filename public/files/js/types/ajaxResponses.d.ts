@@ -18,13 +18,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/react.d.ts" />
+/// <reference path="./common.d.ts" />
 
-export interface UcnkCorparchViews {
-    CorplistTable:any;
-    FilterForm:any;
+declare module AjaxResponse {
+
+    export interface CitationInfo {
+
+        article_ref:Array<string>;
+
+        default_ref:string;
+
+        other_bibliography:string;
+    }
+
+    export interface CorpusInfo extends Kontext.AjaxResponse {
+
+        attrlist:Array<{name:string; size:string}>;
+
+        citation_info:CitationInfo;
+
+        corpname:string;
+
+        description:string;
+
+        size:string; // formatted number
+
+        web_url:string;
+    }
+
 }
-
-export function init(dispatcher:any, mixins:any, layoutViews:any,
-        CorpusInfoBox:React.ReactClass, formStore:any, listStore:any);

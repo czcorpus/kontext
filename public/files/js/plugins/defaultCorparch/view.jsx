@@ -19,7 +19,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
+export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore) {
 
     // ---------------------------------------------------------------------
     // -------------------------- dataset components -----------------------
@@ -27,28 +27,21 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
     // -------------------------------- <CorplistHeader /> -----------------
 
+
     let CorplistHeader = React.createClass({
+
         mixins: mixins,
-        componentDidMount: function () {
-            let self = this;
-            listStore.addChangeListener(function () {
-                self.setState({htmlClasses: []});
-            });
-            formStore.addChangeListener(function () {
-                self.setState({htmlClasses: ["dataset-loading"]});
-            });
-        },
-        getInitialState: function () {
-            return {htmlClasses: []};
-        },
+
         render: function () {
-            return (<tr className={this.state.htmlClasses.join(' ')}>
-                <th>{this.translate('defaultCorparch__corpus_name')}</th>
-                <th>{this.translate('defaultCorparch__size_in_positions')}</th>
-                <th>{this.translate('defaultCorparch__corpus_labels')}</th>
-                <th></th>
-                <th></th>
-            </tr>);
+            return (
+                <tr>
+                    <th>{this.translate('defaultCorparch__corpus_name')}</th>
+                    <th>{this.translate('defaultCorparch__size_in_positions')}</th>
+                    <th>{this.translate('defaultCorparch__corpus_labels')}</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            );
         }
     });
 
@@ -113,51 +106,27 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
         mixins: mixins,
 
-        _corpDetailErrorHandler: function () {
-            this.setState(React.addons.update(this.state, {detail: {$set: false}}));
+        _renderFavStar : function () {
+            if (this.props.enableUserActions) {
+                return <FavStar corpusId={this.props.row.id}
+                                    corpusName={this.props.row.name}
+                                    isFav={this.props.row.user_item} />;
+
+            } else {
+                return null;
+            }
         },
 
-        _detailClickHandler: function (evt) {
-            evt.preventDefault();
-            this.setState(React.addons.update(this.state, {detail: {$set: true}}));
-        },
-
-        getInitialState: function () {
-            return {detail: false};
-        },
-
-        _detailCloseHandler: function () {
-            this.setState(React.addons.update(this.state, {detail: {$set: false}}));
+        _handleDetailClick : function (corpusId, evt) {
+            this.props.detailClickHandler(corpusId);
         },
 
         render: function () {
-            let keywords = this.props.row.keywords.map(function (k, i) {
+            const keywords = this.props.row.keywords.map(function (k, i) {
                 return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
             });
-
-            let detailBox;
-
-            if (this.state.detail) {
-                detailBox = <layoutViews.PopupBox
-                    onCloseClick={this._detailCloseHandler}
-                    customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                    <layoutViews.CorpusInfoBox corpusId={this.props.row.id}
-                        parentErrorHandler={this._corpDetailErrorHandler} />
-                </layoutViews.PopupBox>;
-
-            } else {
-                detailBox = null;
-            }
-
-            let link = this.createActionLink('first_form?corpname=' + this.props.row.id);
-            let size = this.props.row.raw_size ? this.props.row.raw_size : '-';
-            let favStar = null;
-
-            if (this.props.enableUserActions) {
-                favStar = <FavStar corpusId={this.props.row.id}
-                                    corpusName={this.props.row.name}
-                                    isFav={this.props.row.user_item} />;
-            }
+            const link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+            const size = this.props.row.raw_size ? this.props.row.raw_size : '-';
 
             return (
                 <tr>
@@ -168,14 +137,13 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
                         {keywords}
                     </td>
                     <td>
-                        {favStar}
+                        {this._renderFavStar()}
                     </td>
                     <td>
-                        {detailBox}
-                        <p className="desc" style={{display: 'none'}}>
-                        </p>
-                        <a className="detail"
-                            onClick={this._detailClickHandler}>{this.translate('defaultCorparch__corpus_details')}</a>
+                        <p className="desc" style={{display: 'none'}}></p>
+                        <a className="detail" onClick={this._handleDetailClick.bind(this, this.props.row.id)}>
+                            {this.translate('defaultCorparch__corpus_details')}
+                        </a>
                     </td>
                 </tr>
             );
@@ -211,22 +179,25 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
     // -------------------------------- <CorplistTable /> -----------------
 
-    /**
-     * dataset table
-     */
-    let CorplistTable = React.createClass({
+    const CorplistTable = React.createClass({
 
         changeHandler: function () {
-            this.setState(listStore.getData());
+            const data = listStore.getData();
+            const detail = listStore.getDetail();
+            this.setState({
+                rows: data.rows,
+                nextOffset: data.nextOffset,
+                detailVisible: !!detail,
+                detail: detail
+            });
         },
 
         getInitialState: function () {
             return {
-                filters: this.props.filters,
-                keywords: this.props.keywords,
                 rows: this.props.rows,
-                query: this.props.query,
-                nextOffset: this.props.nextOffset
+                nextOffset: this.props.nextOffset,
+                detailVisible: false,
+                detail: null
             };
         },
 
@@ -238,11 +209,44 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
             listStore.removeChangeListener(this.changeHandler);
         },
 
+        _detailClickHandler: function (corpusId) {
+            this.setState(React.addons.update(this.state, {detailVisible: {$set: true}}));
+            dispatcher.dispatch({
+                actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
+                props: {
+                    corpusId: corpusId
+                }
+            });
+        },
+
+        _detailCloseHandler: function () {
+            this.setState(React.addons.update(this.state, {detailVisible: {$set: false}}));
+            dispatcher.dispatch({
+                actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
+                props: {}
+            });
+        },
+
+        _renderDetailBox: function () {
+            if (this.state.detailVisible) {
+                return (
+                    <layoutViews.PopupBox
+                        onCloseClick={this._detailCloseHandler}
+                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                        <CorpusInfoBox data={this.state.detail} />
+                    </layoutViews.PopupBox>
+                );
+
+            } else {
+                return null;
+            }
+        },
+
         render: function () {
-            let self = this;
-            let rows = this.state.rows.map(function (row, i) {
+            let rows = this.state.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
-                                    enableUserActions={!self.props.anonymousUser} />;
+                                    enableUserActions={!this.props.anonymousUser}
+                                    detailClickHandler={this._detailClickHandler} />;
             });
             let expansion = null;
             if (this.state.nextOffset) {
@@ -251,6 +255,7 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
 
             return (
                 <div>
+                    {this._renderDetailBox()}
                     <table className="data corplist">
                         <tbody>
                             <CorplistHeader />
@@ -326,14 +331,13 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
         },
 
         _handleClick: function (active) {
-            let self = this;
-
-            return function (e) {
+            return (e) => {
                 e.preventDefault();
+                this.props.initWaitingFn();
                 dispatcher.dispatch({
                     actionType: 'KEYWORD_CLICKED',
                     props: {
-                        keyword: self.props.keyword,
+                        keyword: this.props.keyword,
                         status: active,
                         ctrlKey: e.ctrlKey || e.metaKey
                     }
@@ -374,14 +378,18 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
      * A keyword-like link to reset currently set keywords
      */
     let ResetLink = React.createClass({
+
         mixins: mixins,
+
         _handleClick: function (e) {
             e.preventDefault();
+            this.props.initWaitingFn();
             dispatcher.dispatch({
                 actionType: 'KEYWORD_RESET_CLICKED',
                 props: {}
             });
         },
+
         render: function () {
             return <a className="keyword reset"
                         onClick={this._handleClick}><span className="overlay">{this.translate('defaultCorparch__no_keyword')}</span></a>;
@@ -394,20 +402,24 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
      * A form fieldset containing all the available keywords
      */
     let KeywordsField = React.createClass({
+
         mixins: mixins,
+
         getInitialState: function () {
             return {};
         },
+
         render: function () {
-            let links = this.props.keywords.map(function (keyword, i) {
+            let links = this.props.keywords.map((keyword, i) => {
                 return <KeywordLink key={i} keyword={keyword[0]} label={keyword[1]}
-                                    isActive={keyword[2]} overlayColor={keyword[3]} />;
+                                    isActive={keyword[2]} overlayColor={keyword[3]}
+                                    initWaitingFn={this.props.initWaitingFn} />;
             });
 
             return (
                 <fieldset className="keywords">
                     <legend>{this.props.label}</legend>
-                    <ResetLink />
+                    <ResetLink initWaitingFn={this.props.initWaitingFn} />
                     {links}
                     <div className="inline-label hint">({this.translate('defaultCorparch__hold_ctrl_for_multiple')})</div>
                 </fieldset>
@@ -421,12 +433,15 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
      * An input to specify minimum corpus size
      */
     let MinSizeInput = React.createClass({
+
         changeHandler: function (e) {
+            this.props.initWaitingFn();
             dispatcher.dispatch({
                 actionType: 'FILTER_CHANGED',
                 props: {minSize: e.target.value}
             });
         },
+
         render: function () {
             return <input className="min-max" type="text"
                             defaultValue={this.props.minSize}
@@ -440,12 +455,15 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
      * An input to specify maximum corpus size
      */
     let MaxSizeInput = React.createClass({
+
         _changeHandler: function (e) {
+            this.props.initWaitingFn();
             dispatcher.dispatch({
                 actionType: 'FILTER_CHANGED',
                 props: {maxSize: e.target.value}
             });
         },
+
         render : function () {
             return <input className="min-max" type="text"
                             defaultValue={this.props.maxSize}
@@ -456,21 +474,23 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
     // -------------------------------- <NameSearchInput /> -----------------
 
     let NameSearchInput = React.createClass({
-        _timer : null,
-        _changeHandler : function (e) {
-            let self = this;
 
+        _timer : null,
+
+        _changeHandler : function (e) {
             if (this._timer) {
                 clearTimeout(this._timer);
             }
             this._timer = setTimeout(((value) => () => {
+                this.props.initWaitingFn();
                 dispatcher.dispatch({
                     actionType: 'FILTER_CHANGED',
                     props: {corpusName: value}
                 });
-                clearTimeout(self._timer);
+                clearTimeout(this._timer);
             })(e.target.value), 300);
         },
+
         render : function () {
             return <input type="text" defaultValue={this.props.initialValue} onChange={this._changeHandler} />;
         }
@@ -501,15 +521,15 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
                 fields = (
                     <div>
                         <span>{this.translate('defaultCorparch__size_from')}: </span>
-                        <MinSizeInput minSize={this.props.filters.minSize[0]} />
+                        <MinSizeInput minSize={this.props.filters.minSize[0]} initWaitingFn={this.props.initWaitingFn} />
                         <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
-                        <MaxSizeInput maxSize={this.props.filters.maxSize[0]} />
+                        <MaxSizeInput maxSize={this.props.filters.maxSize[0]} initWaitingFn={this.props.initWaitingFn} />
                         <span className="inline-label">{'(' +
                         this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
                         <p>
                             <span>
                             {this.translate('defaultCorparch__corpus_name_input_label')}: </span>
-                            <NameSearchInput initialValue={this.props.filters.name[0]} />
+                            <NameSearchInput initialValue={this.props.filters.name[0]} initWaitingFn={this.props.initWaitingFn} />
                         </p>
                     </div>
                 );
@@ -534,16 +554,53 @@ export function init(dispatcher, mixins, layoutViews, formStore, listStore) {
      * Filter form root component
      */
     let FilterForm = React.createClass({
+
         mixins: mixins,
+
+        _storeChangeHandler : function () {
+            this.setState({isWaiting: false});
+        },
+
+        componentDidMount : function () {
+            listStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            listStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        getInitialState : function () {
+            return {isWaiting: false};
+        },
+
+        _initWaiting : function () {
+            this.setState({isWaiting: true});
+        },
+
+        _renderLoader : function () {
+            if (this.state.isWaiting) {
+                return <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={this.translate('global__loading')} title={this.translate('global__loading')} />;
+
+            } else {
+                return null;
+            }
+        },
+
         render: function () {
             return (
                 <section className="inner">
-                    <h3>{this.translate('defaultCorparch__filters')}</h3>
+                    <div>
+                        <h3>{this.translate('defaultCorparch__filters')}</h3>
+                        {this._renderLoader()}
+                    </div>
                     <KeywordsField
                         keywords={this.props.keywords}
-                        label={this.translate('defaultCorparch__keywords_field_label')} />
+                        label={this.translate('defaultCorparch__keywords_field_label')}
+                        initWaitingFn={this._initWaiting} />
                     <FilterInputFieldset
-                        filters={this.props.filters} />
+                        filters={this.props.filters}
+                        initWaitingFn={this._initWaiting} />
                 </section>
             )
         }

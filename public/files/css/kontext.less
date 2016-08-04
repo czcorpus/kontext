@@ -173,6 +173,10 @@ section h2 {
         margin: 0.2em 0 1em 0;
         font-size: 11pt;
     }
+    .empty-citation-info {
+        margin-top: 1em;
+        margin-bottom: 0.7em;
+    }
 }
 #corpus-details-box td.numeric {
     padding-left: 1em;
@@ -383,7 +387,7 @@ a#logo-wrapper {
 #menu-bar a.trigger:hover {
     cursor: default;
 }
-#menu-level-1 {
+#main-menu-mount {
     box-sizing: border-box;
     margin: 0 0 0 1em;
     padding: 0 0.7em;
@@ -395,6 +399,11 @@ a#logo-wrapper {
     border: 2px solid transparent;
     border-radius: @border-radius-default;
 }
+#menu-level-1 {
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+}
 #menu-level-1 > li {
     display: inline-block;
     margin-top: 0;
@@ -403,9 +412,6 @@ a#logo-wrapper {
     line-height: 1.4em;
     font-weight: normal;
     border: 1px solid transparent;
-}
-#menu-level-1 li ul {
-    display: none;
 }
 #menu-level-1 li.disabled a {
     color: @color-light-text;
@@ -432,7 +438,6 @@ a#logo-wrapper {
     border: 1px solid @color-default-green;
 }
 #menu-level-1 > li.active ul.submenu {
-    display: none;
     position: absolute;
     left: 0;
     background-color: @color-default-green;
@@ -481,6 +486,15 @@ a#logo-wrapper {
 #subcorpus-info-box {
     h2 {
         margin-left: 0;
+    }
+    h3 {
+        font-size: 1em;
+        font-weight: bold;
+        margin-top: 0.7em;
+        margin-bottom: 0;
+    }
+    .item {
+        margin-top: 0.7em;
     }
     .subc-query {
         margin-top: 0.4em;
