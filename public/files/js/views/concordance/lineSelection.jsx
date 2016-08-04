@@ -178,6 +178,7 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         mixins : mixins,
 
         _handleConfirmClick : function () {
+            this.setState(React.addons.update(this.state, {waiting: {$set: true}}));
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_GROUP_RENAME',
                 props: {
@@ -187,17 +188,31 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
             });
         },
 
+        _handleStoreChange : function (store, action) {
+            if (action === '$LINE_SELECTION_USER_ERROR') {
+                this.setState(React.addons.update(this.state, {waiting: {$set: false}}));
+            }
+        },
+
+        componentDidMount : function () {
+            lineSelectionStore.addChangeListener(this._handleStoreChange);
+        },
+
+        componentWillUnmount : function () {
+            lineSelectionStore.removeChangeListener(this._handleStoreChange);
+        },
+
         getInitialState : function () {
-            return {srcGroupNum: null, dstGroupNum: null};
+            return {srcGroupNum: null, dstGroupNum: null, waiting: false};
         },
 
         _handleSrcInputChange : function (evt) {
-            let val = evt.target.value ? Number(evt.target.value) : null;
+            let val = evt.target.value ? parseInt(evt.target.value) : null;
             this.setState(React.addons.update(this.state, {srcGroupNum: {$set: val}}));
         },
 
         _handleDstInputChange : function (evt) {
-            let val = evt.target.value ? Number(evt.target.value) : null;
+            let val = evt.target.value ? parseInt(evt.target.value) : null;
             this.setState(React.addons.update(this.state, {dstGroupNum: {$set: val}}));
         },
 
@@ -214,7 +229,11 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                         <li>{this.translate('linesel__if_empty_lab_then_remove')}</li>
                         <li>{this.translate('linesel__if_existing_lab_then_merge')}</li>
                     </ul>
-                    <button className="ok" type="button" onClick={this._handleConfirmClick}>{this.translate('global__ok')}</button>
+                    {this.state.waiting ?
+                        <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                title={this.translate('global__loading')} />
+                        : <button className="ok" type="button" onClick={this._handleConfirmClick}>{this.translate('global__ok')}</button>
+                    }
                     <button type="button" onClick={this.props.handleCancel}>{this.translate('global__cancel')}</button>
                 </fieldset>
             );
@@ -411,7 +430,10 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
 
                     {this._renderActionArea()}
 
-                    <fieldset className="chart-area"></fieldset>
+                    <fieldset className="chart-area">
+                        <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                title={this.translate('global__loading')} />
+                    </fieldset>
 
                     <fieldset className="generated-link">
                         <legend>{this.translate('linesel__line_selection_link_heading')}</legend>
