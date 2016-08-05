@@ -34,7 +34,7 @@ import plugins
 import settings
 import l10n
 from l10n import format_number, corpus_get_conf
-from translation import ugettext as _
+from translation import ugettext as _, get_avail_languages
 import scheduled
 import templating
 import fallback_corpus
@@ -1037,15 +1037,21 @@ class Kontext(Controller):
         user_items = plugins.get('user_items')
         result['bib_conf'] = plugins.get('corparch').get_corpus_info(self.args.corpname).metadata
 
-        # avalilable languages
+        # available languages; used just by UI language switch
         if plugins.has_plugin('getlang'):
-            result['avail_languages'] = ()
+            result['avail_languages'] = ()  # getlang plug-in provides customized switch
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
 
         hmqs = settings.get('plugins', 'query_storage').get('history_max_query_size', None)
         result['history_max_query_size'] = int(hmqs) if hmqs else None
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
+
+        if settings.contains('global', 'intl_polyfill_url'):
+            result['intl_polyfill_url'] = settings.get('global', 'intl_polyfill_url').format(
+                    ','.join('Intl.~locale.%s' % x for x in get_avail_languages()))
+        else:
+            result['intl_polyfill_url'] = None
 
         # util functions
         result['format_number'] = partial(format_number)

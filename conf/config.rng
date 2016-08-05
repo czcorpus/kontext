@@ -258,6 +258,14 @@
                         <a:documentation>A prefix for static files (typically: /files when installed at the root)</a:documentation>
                         <text />
                     </element>
+                    <optional>
+                        <element name="intl_polyfill_url">
+                            <a:documentation>A URL of a CDN providing Intl polyfill to fix localization
+                                in crappy browsers like Safari
+                            </a:documentation>
+                            <text />
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <optional>

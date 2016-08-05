@@ -27,6 +27,7 @@
         <calc_backend conf="/path/to/celeryconfig.py">celery</calc_backend>
         <action_path_prefix />
         <static_files_prefix>/files</static_files_prefix>
+        <intl_polyfill_url>https://cdn.polyfill.io/v2/polyfill.js?features={0}</intl_polyfill_url>
     </global>
     <mailing />
     <logging>
