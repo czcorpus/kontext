@@ -20,7 +20,6 @@ import os
 from functools import partial
 from sys import stderr
 import re
-import math
 import logging
 
 import manatee
@@ -232,6 +231,13 @@ class PyConc(manatee.Concordance):
                 sumf = float(reduce(add, freqs))
                 corr = min(sumf / max(freqs), sumn / max(norms))
                 return normwidth_rel / sumf * corr, normwidth_rel / sumn * corr
+
+        def label(attr):
+            if '/' in attr:
+                attr = attr[:attr.index('/')]
+            lab = self.pycorp.get_conf(attr + '.LABEL')
+            return self.import_string(lab if lab else attr)
+
         words = manatee.StrVector()
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
@@ -250,13 +256,9 @@ class PyConc(manatee.Concordance):
         sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
 
-        def label(attr):
-            if '/' in attr:
-                attr = attr[:attr.index('/')]
-            return self.pycorp.get_conf(attr + '.LABEL') or attr
-        head = [{'n': label(attrs[x]), 's': x / 2}
+        head = [dict(n=label(attrs[x]), s=x / 2)
                 for x in range(0, len(attrs), 2)]
-        head.append({'n': _('Freq'), 's': 'freq'})
+        head.append(dict(n=_('Freq'), s='freq'))
 
         tofbar, tonbar = compute_corrections(freqs, norms)
         if tonbar and not ml:
@@ -272,14 +274,13 @@ class PyConc(manatee.Concordance):
                 if maxrel < newrel:
                     maxrel = newrel
             if rel_mode == 0:
-                head.append({
-                    'n': 'i.p.m.',
-                    'title': _(
-                        'instances per million positions (refers to the respective category)'),
-                    's': 'rel'}
-                )
+                head.append(dict(
+                    n='i.p.m.',
+                    title=_('instances per million positions (refers to the respective category)'),
+                    s='rel'
+                ))
             else:
-                head.append({'n': 'Freq [%]', 'title': '', 's': 'rel'})
+                head.append(dict(n='Freq [%]', title='', s='rel'))
 
             lines = []
             for w, f, nf in zip(words, freqs, norms):
@@ -299,26 +300,27 @@ class PyConc(manatee.Concordance):
                     1: 10
                 }[rel_mode]
 
-                lines.append({
-                    'Word': [{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
-                    'freq': f,
-                    'fbar': int(f * tofbar) + 1,
-                    'norm': nf,
-                    'nbar': int(nf * tonbar),
-                    'relbar': rel_bar,
-                    'norel': ml,
-                    'freqbar': freq_bar,
-                    'rel': rel_norm_freq
-                })
+                lines.append(dict(
+                    Word=[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
+                    freq=f,
+                    fbar=int(f * tofbar) + 1,
+                    norm=nf,
+                    nbar=int(nf * tonbar),
+                    relbar=rel_bar,
+                    norel=ml,
+                    freqbar=freq_bar,
+                    rel=rel_norm_freq
+                ))
         else:
             lines = []
             for w, f, nf in zip(words, freqs, norms):
                 w = self.import_string(w)
-                lines.append({
-                    'Word': [{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
-                    'freq': f, 'fbar': int(f * tofbar) + 1,
-                    'norel': 1
-                })
+                lines.append(dict(
+                    Word=[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
+                    freq=f,
+                    fbar=int(f * tofbar) + 1,
+                    norel=1
+                ))
 
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
@@ -327,18 +329,17 @@ class PyConc(manatee.Concordance):
             for v in all_vals:
                 if v in used_vals:
                     continue
-                lines.append({
-                    'Word': [{'n': self.import_string(v)}],
-                    'freq': 0,
-                    'rel': 0,
-                    'norm': 0,
-                    'nbar': 0,
-                    'relbar': 0,
-                    'norel': ml,
-                    'freq': 0,
-                    'freqbar': 0,
-                    'fbar': 0,
-                })
+                lines.append(dict(
+                    Word=[{'n': self.import_string(v)}],
+                    freq=0,
+                    rel=0,
+                    norm=0,
+                    nbar=0,
+                    relbar=0,
+                    norel=ml,
+                    freqbar=0,
+                    fbar=0
+                ))
         if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0]['Word'])):
             sortkey = int(sortkey)
             lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v['Word'][sortkey]['n'])
@@ -376,18 +377,17 @@ class PyConc(manatee.Concordance):
         while not colls.eos():
             if 0 < max_lines < i:
                 break
-            items.append(
-                {'str': colls.get_item(), 'freq': colls.get_cnt(),
-                 'Stats': [{'s': '%.3f' % colls.get_bgr(s)}
-                           for s in cbgrfns],
-                 'pfilter': qfilter % ('P', escape(self.import_string(colls.get_item()))),
-                 'nfilter': qfilter % ('N', escape(self.import_string(colls.get_item())))
-                 })
+            items.append(dict(
+                str=colls.get_item(),
+                freq=colls.get_cnt(),
+                Stats=[{'s': '%.3f' % colls.get_bgr(s)} for s in cbgrfns],
+                pfilter=qfilter % ('P', escape(self.import_string(colls.get_item()))),
+                nfilter=qfilter % ('N', escape(self.import_string(colls.get_item())))
+            ))
             colls.next()
             i += 1
 
-        head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] \
-            + [{'n': statdesc.get(s, s), 's': s} for s in cbgrfns]
+        head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] + [{'n': statdesc.get(s, s), 's': s} for s in cbgrfns]
         return dict(Head=head, Items=items)
 
     def linegroup_info_select(self, selected_count=5):

@@ -370,7 +370,7 @@ class MenuGenerator(object):
         self.freq_lemmas = (
             ConcMenuItem(_('Lemmas'), 'freqs')
             .add_args(
-                ('fcrit', 'lemma/e+0~0>0'),
+                ('fcrit', 'lemma/e 0~0>0'),
                 ('ml', 0))
             .enable_if(lambda d: 'tag' in [x['n'] for x in self._args.get('AttrList', ())])
         )
@@ -378,7 +378,7 @@ class MenuGenerator(object):
         self.freq_node_forms = (
             ConcMenuItem(_('Node forms'), 'freqs')
             .add_args(
-                ('fcrit', 'word/e+0~0>0'),
+                ('fcrit', 'word/e 0~0>0'),
                 ('ml', 0))
         )
 
@@ -398,7 +398,7 @@ class MenuGenerator(object):
             .enable_if(lambda d: bool(d['ttcrit']))
         )
 
-        self.freq_custom = ConcMenuItem(_('Custom'), 'ffreqs').mark_indirect()
+        self.freq_custom = ConcMenuItem(_('Custom'), 'freq').mark_indirect()
 
         # -------------------------------- menu-collocations ----------------------------
 
