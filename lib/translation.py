@@ -56,6 +56,13 @@ def load_translations(languages):
             logging.getLogger(__name__).warning('Failed to load translations for %s with error: %r' % (lang, e))
 
 
+def get_avail_languages():
+    """
+    Return a list of installed language codes ('en', 'cs', 'de', ...)
+    """
+    return ['en'] + [x[:2] for x in _translations.keys()]
+
+
 def activate(lang):
     """
     Activates translation for current thread

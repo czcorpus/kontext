@@ -69,6 +69,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <script type="text/javascript" src="$files_path/js/vendor/less.js"></script>
 #end if
 <script type="text/javascript" src="$files_path/js/min/vendor/requirejs.min.js"></script>
+#if $intl_polyfill_url
+<script type="text/javascript">
+if(!window.Intl)try{var hd=document.getElementsByTagName("head")[0],sc=window.document.createElement("script");sc.type="text/javascript",sc.src="${intl_polyfill_url}",hd.appendChild(sc)}catch(a){console.error(a)}
+</script>
+#end if
 <script type="text/javascript" src="$files_path/js/min/vendor/intl.min.js"></script>
 <script type="text/javascript" src="$files_path/js/min/vendor/common.js#if $deployment_id#?v=$deployment_id#end if#"></script>
 #block headers
@@ -133,7 +138,7 @@ require(['vendor/rsvp'], function (RSVP) {
             return {
                 getViews : function () { return {}; },
                 create : function () {
-                    return new RSVP.Promise((fulfill, reject) => {
+                    return new RSVP.Promise(function (fulfill, reject) {
                         fulfill(null);
                     });
                 }

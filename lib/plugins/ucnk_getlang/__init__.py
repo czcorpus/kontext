@@ -60,7 +60,7 @@ class GetLang(AbstractGetLang):
             root_dir = '%s/../../../locale' % os.path.dirname(__file__)
             for item in os.listdir(root_dir):
                 c = item.split('_')[0]
-                if not c in ans:
+                if c not in ans:
                     ans[c] = []
                 ans[c].append(item)
             return ans
