@@ -30,6 +30,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
     let AudioPlayer = React.createClass({
 
         _handleControlClick : function (action) {
+            this.setState({activeButton: action});
             dispatcher.dispatch({
                 actionType: 'AUDIO_PLAYER_CLICK_CONTROL',
                 props: {
@@ -38,13 +39,55 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             });
         },
 
+        _handleLineStoreChange : function () {
+            this.setState({
+                activeButton: lineStore.getAudioPlayerStatus()
+            });
+        },
+
+        componentDidMount : function () {
+            lineStore.addChangeListener(this._handleLineStoreChange);
+        },
+
+        componentWillUnmount : function () {
+            lineStore.removeChangeListener(this._handleLineStoreChange);
+        },
+
+        getInitialState : function () {
+            return {
+                activeButton: lineStore.getAudioPlayerStatus()
+            };
+        },
+
+        _autoSetHtmlClass : function (buttonId) {
+            const ans = [];
+            switch (buttonId) {
+                case 'play':
+                    ans.push('img-button-play');
+                    if (this.state.activeButton === 'play') {
+                        ans.push('img-button-play-active');
+                    }
+                break;
+                case 'pause':
+                    ans.push('img-button-pause');
+                    if (this.state.activeButton === 'pause') {
+                        ans.push('img-button-pause-active');
+                    }
+                break;
+                case 'stop':
+                    ans.push('img-button-stop');
+                break;
+            }
+            return ans.join(' ');
+        },
+
         render : function () {
             return (
                 <div id="audio-wrapper">
                     <div className="audio-controls">
-                        <a onClick={this._handleControlClick.bind(this, 'play')} className="img-button-play"></a>
-                        <a onClick={this._handleControlClick.bind(this, 'pause')} className="img-button-pause-b"></a>
-                        <a onClick={this._handleControlClick.bind(this, 'stop')} className="img-button-stop"></a>
+                        <a onClick={this._handleControlClick.bind(this, 'play')} className={this._autoSetHtmlClass('play')}></a>
+                        <a onClick={this._handleControlClick.bind(this, 'pause')} className={this._autoSetHtmlClass('pause')}></a>
+                        <a onClick={this._handleControlClick.bind(this, 'stop')} className={this._autoSetHtmlClass('stop')}></a>
                     </div>
                 </div>
             );
@@ -107,7 +150,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         render : function () {
-            if (this.props.chunks.length === 1
+            if (this.props.chunks.length == 1
                     && this.props.chunks[this.props.chunks.length - 1].showAudioPlayer) {
                 return (
                     <span>
@@ -251,10 +294,12 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             let ans = [];
             let mouseover = (item.mouseover || []).join(', ');
             if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[itemList.get(i - 1), item]} />);
+                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                            chunks={[itemList.get(i - 1), item]} />);
             }
             if (item.openLink) {
-                ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);
+                ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                            chunks={[item]} />);
             }
             if (item.className && item.text) {
                 ans.push(<span key={'l:' + String(i)} className={item.className}>{item.text}</span>);
@@ -263,7 +308,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(<span key={'l:' + String(i)} title={mouseover}>{item.text}</span>);
             }
             if (item.closeLink) {
-                ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);
+                ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                            chunks={[item]} />);
             }
             return ans;
         },
@@ -272,10 +318,12 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             let ans = [];
             let mouseover = (item.mouseover || []).join(', ');
             if (prevClosed && item.openLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[prevClosed, item]} />);
+                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                        chunks={[prevClosed, item]} />);
 
             } else if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[itemList.get(i - 1), item]} />);
+                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                        chunks={[itemList.get(i - 1), item]} />);
             }
             if (hasKwic) {
                 ans.push(<strong key={'k:' + String(i)} className={item.className} title={mouseover}>{item.text}</strong>);
@@ -293,13 +341,16 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             let ans = [];
             let mouseover = (item.mouseover || []).join(', ');
             if (prevClosed && item.openLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[prevClosed, item]} />);
+                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                            chunks={[prevClosed, item]} />);
 
             } else if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[itemList.get(i - 1), item]} />);
+                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                            chunks={[itemList.get(i - 1), item]} />);
             }
             if (item.openLink) {
-                ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);
+                ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                            chunks={[item]} />);
             }
             if (item.className && item.text) {
                 ans.push(<span key={'r:' + String(i)} className={item.className}>{item.text}</span>);
@@ -308,7 +359,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(<span key={'r:' + String(i)} title={mouseover}>{item.text}</span>);
             }
             if (item.closeLink) {
-                ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname} chunks={[item]} />);
+                ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                            chunks={[item]} />);
             }
             return ans;
         },
@@ -408,7 +460,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         shouldComponentUpdate : function (nextProps, nextState) {
             return this.props.data !== nextProps.data
-                    || this.props.lineSelMode !== nextProps.lineSelMode;
+                    || this.props.lineSelMode !== nextProps.lineSelMode
+                    || this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible;
         },
 
         render : function () {
@@ -456,7 +509,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             this.setState({
                 lines: lineStore.getLines(),
                 lineSelMode: this._getLineSelMode(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
+                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
+                audioPlayerIsVisible: lineStore.audioPlayerIsVisible()
             });
         },
 
@@ -464,7 +518,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             return {
                 lines: lineStore.getLines(),
                 lineSelMode: this._getLineSelMode(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
+                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
+                audioPlayerIsVisible: lineStore.audioPlayerIsVisible()
             };
         },
 
@@ -499,7 +554,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          wideCtxGlobals={this.props.WideCtxGlobals}
                          showLineNumbers={this.props.ShowLineNumbers}
                          lineSelMode={this.state.lineSelMode}
-                         numItemsInLockedGroups={this.state.numItemsInLockedGroups} />;
+                         numItemsInLockedGroups={this.state.numItemsInLockedGroups}
+                         audioPlayerIsVisible={this.state.audioPlayerIsVisible} />;
         },
 
         render : function () {
