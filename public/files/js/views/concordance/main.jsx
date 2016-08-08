@@ -243,6 +243,91 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             return ans;
         },
 
+        getInitialState : function () {
+            return {
+                canCalculateAdHocIpm: lineStore.providesAdHocIpm(),
+                adHocIpm: lineStore.getAdHocIpm(),
+                subCorpName: lineStore.getSubCorpName(),
+                isWaiting: false
+            }
+        },
+
+        _lineStoreChangeHandler : function (store, action) {
+            this.setState({
+                canCalculateAdHocIpm: lineStore.providesAdHocIpm(),
+                adHocIpm: lineStore.getAdHocIpm(),
+                subCorpName: lineStore.getSubCorpName(),
+                isWaiting: action === '$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC' ? false : this.state.isWaiting
+            });
+        },
+
+        componentDidMount : function () {
+            lineStore.addChangeListener(this._lineStoreChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            lineStore.removeChangeListener(this._lineStoreChangeHandler);
+        },
+
+        _getIpm : function () {
+            if (this.state.isWaiting) {
+                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={this.translate('global__calculating')}
+                            title={this.translate('global__calculating')} />;
+
+            } else if (this.props.ipm && !this.state.canCalculateAdHocIpm) {
+                return <span className="ipm">{this.formatNumber(this.props.ipm)}</span>;
+
+            } else if (this.state.adHocIpm) {
+                return <span className="ipm">{this.formatNumber(this.state.adHocIpm)}</span>;
+
+            } else if (this.state.canCalculateAdHocIpm) {
+                return <a onClick={this._handleCalcIpmClick}>{this.translate('global__calculate')}</a>;
+
+            } else {
+                return null;
+            }
+        },
+
+        _getIpmDesc : function () {
+            if (this.state.canCalculateAdHocIpm) {
+                if (this.state.adHocIpm) {
+                    return '(' + this.translate('concview__ipm_rel_to_adhoc') + ')';
+
+                } else {
+                    return null;
+                }
+
+            } else if (this.state.subCorpName) {
+                return '(' + this.translate('concview__ipm_rel_to_the_{subcname}',
+                        {subcname: this.state.subCorpName}) + ')';
+
+            } else {
+                return '(' + this.translate('concview__ipm_rel_to_the_{corpname}',
+                        {corpname: this.props.corpname}) + ')';
+            }
+        },
+
+        _handleCalcIpmClick : function () {
+            let userConfirm = window.confirm(this.translate('global__ipm_calc_may_take_time'));
+            if (userConfirm) {
+                this.setState(React.addons.update(this.state, {isWaiting: {$set: true}}));
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
+                    props: {}
+                });
+            }
+        },
+
+        _getArf : function () {
+            if (this.props.arf) {
+                return <strong id="arf">{this.formatNumber(this.props.arf)}</strong>;
+
+            } else {
+                return <strong id="arf" title={this.translate('concview__arf_not_avail')}>-</strong>;
+            }
+        },
+
         render : function () {
             return (
                 <div id="result-info">
@@ -252,13 +337,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                     <abbr>i.p.m.</abbr>
                     <layoutViews.InlineHelp customStyle={{minWidth: '25em'}}>
                         {this.translate('concview__ipm_help')}
-                        {'\u00A0'}
-                        ({this.translate('concview__ipm_rel_to_the_{corpname}', {corpname: this.props.corpname})})
                     </layoutViews.InlineHelp>
                     :{'\u00A0'}
-                    <span className="ipm">{this.props.ipm}</span>
+                    {this._getIpm()}
                     {'\u00A0'}
-                    ({this.props.ipmRelatedTo})
+                    {this._getIpmDesc()}
                     {'\u00A0'}
                     <span className="separ">|</span>
                     <abbr>ARF</abbr>
@@ -266,7 +349,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                     {this.translate('concview__arf_help')}
                     </layoutViews.InlineHelp>
                     :{'\u00A0'}
-                    <strong id="arf">{this.props.arf ? this.props.arf : '-'}</strong>
+                    {this._getArf()}
                     <span className="separ">|</span>
                     <span className="notice-shuffled">
                     {this.props.isShuffled ?

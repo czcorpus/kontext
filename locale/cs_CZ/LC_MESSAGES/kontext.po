@@ -38,14 +38,6 @@ msgstr "KWIC"
 msgid "%iR"
 msgstr "%iP"
 
-#: lib/conclib.py:208
-#, python-format
-msgid "related to the whole %s"
-msgstr "vztaženo k celému %s"
-
-msgid "related to the subset defined by the selected text types"
-msgstr "vztaženo k podmnožině určené vybranými typy textů"
-
 #: lib/conclib.py:619
 #, python-format
 msgid "Unknown action: %s"
