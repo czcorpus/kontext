@@ -663,7 +663,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     formatNumber(v:number):string {
-        let format:any = new Intl.NumberFormat(this.conf['uiLang']);
+        let format:any = new Intl.NumberFormat(this.conf['uiLang'], {
+            maximumFractionDigits: 2
+        });
         return format.format(v);
     }
 
