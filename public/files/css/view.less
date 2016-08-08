@@ -437,20 +437,55 @@ a.speech-link:hover {
   text-decoration: none;
 }
 
+@keyframes playBlink {
+  0% {
+    background-image: url('../img/media_start.png');
+  }
+  49% {
+    background-image: url('../img/media_start.png');
+  }
+  50% {
+    background-image: url('../img/media_start_b.png');
+  }
+  99% {
+    background-image: url('../img/media_start_b.png');
+  }
+}
+
+
+@keyframes pauseBlink {
+  0% {
+    background-image: url('../img/media_pause.png');
+  }
+  49% {
+    background-image: url('../img/media_pause.png');
+  }
+  50% {
+    background-image: url('../img/media_pause_b.png');
+  }
+  99% {
+    background-image: url('../img/media_pause_b.png');
+  }
+}
+
+.audio-controls a.img-button-play-active {
+  animation-name: playBlink;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+
+.audio-controls a.img-button-pause-active {
+  animation-name: pauseBlink;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+
 .audio-controls a.img-button-play {
   background-image: url('../img/media_start.png');
 }
 
-.audio-controls a.img-button-play-b {
-  background-image: url('../img/media_start_b.png');
-}
-
 .audio-controls a.img-button-pause {
   background-image: url('../img/media_pause.png');
-}
-
-.audio-controls a.img-button-pause-b {
-  background-image: url('../img/media_pause_b.png');
 }
 
 .audio-controls a.img-button-stop {

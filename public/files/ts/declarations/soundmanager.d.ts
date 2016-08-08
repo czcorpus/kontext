@@ -154,7 +154,6 @@ declare module "SoundManager" {
         onload:(succ:boolean)=>void;
         onplay:()=>void;
         onfinish:()=>void;
-        onerror:(e)=>void;
     }
 
     export interface Sound {
@@ -168,6 +167,7 @@ declare module "SoundManager" {
        stop(playSessionId:string):void;
        play(playSessionId:string):void;
        pause(playSessionId:string):void;
+       ontimeout(status:{success:boolean;error:any}):void;
     }
 
     export interface GetInstance {

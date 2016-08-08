@@ -202,15 +202,22 @@ class AudioPlayer {
 
     private status:number;
 
-    private playSessionId:string;
+    private playSessionId:string = 'kontext-playback';
 
     private itemsToPlay:Immutable.List<string>;
 
     private onStop:()=>void;
 
-    constructor(sm2FilesURL:string, onStop:()=>void) {
+    private onPlay:()=>void;
+
+    private onError:()=>void;
+
+    constructor(sm2FilesURL:string, onPlay:()=>void, onStop:()=>void, onError:()=>void) {
         this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
         this.soundManager = SoundManager.getInstance();
+        this.soundManager.ontimeout = function (status) {
+            console.error(status); // TODO
+        }
         this.soundManager.setup({
             url: sm2FilesURL,
             flashVersion: 9,
@@ -218,9 +225,14 @@ class AudioPlayer {
             preferFlash : false
         });
         this.itemsToPlay = Immutable.List([]);
+        this.onPlay = onPlay;
+        this.onStop = onStop;
+        this.onError = onError;
     }
 
     start(itemsToPlay?:Array<string>):void {
+        const self = this;
+
         if (itemsToPlay) {
             this.itemsToPlay = this.itemsToPlay.concat(Immutable.List<string>(itemsToPlay)).toList();
         }
@@ -230,31 +242,29 @@ class AudioPlayer {
             autoLoad: true,
             autoPlay: false,
             volume: 100,
-            onload: function (bSuccess) {
+            onload: (bSuccess) => {
                 if (!bSuccess) {
-                    // TODO handle error
+                    self.onError();
                 }
             },
-            onplay: () => {
+            onplay: function () {
+                self.status = AudioPlayer.PLAYER_STATUS_PLAYING;
+                self.onPlay();
             },
-            onerror: (err) => {
-                console.error(err); // TODO
-            },
-            onfinish: () => {
-                this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
-                this.soundManager.destroySound(this.playSessionId);
-                if (this.itemsToPlay.size > 0) {
-                    this.soundManager.destroySound(this.playSessionId); // TODO do we need this (again)?
-                    this.start();
+            onfinish: function () {
+                self.status = AudioPlayer.PLAYER_STATUS_STOPPED;
+                self.soundManager.destroySound(self.playSessionId);
+                if (self.itemsToPlay.size > 0) {
+                    self.soundManager.destroySound(self.playSessionId); // TODO do we need this (again)?
+                    self.start();
 
                 } else {
-                    this.onStop();
+                    self.onStop();
                 }
             }
         });
-        sound.play();
         this.itemsToPlay = this.itemsToPlay.shift();
-        this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
+        sound.play();
     }
 
     play():void {
@@ -280,8 +290,13 @@ class AudioPlayer {
     }
 
     stop():void {
-        this.soundManager.stop('speech-player'); // TODO wtf value?
+        this.soundManager.stop(this.playSessionId);
         this.soundManager.destroySound(this.playSessionId);
+        this.itemsToPlay = this.itemsToPlay.clear();
+    }
+
+    getStatus():number {
+        return this.status;
     }
 }
 
@@ -356,7 +371,16 @@ export class ConcLineStore extends SimplePageStore {
         this.containsWithin = lineViewProps.ContainsWithin;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
-            this.setStopStatus.bind(this)
+            () => {
+                self.notifyChangeListeners();
+            },
+            this.setStopStatus.bind(this),
+            () => {
+                self.audioPlayer.stop();
+                self.setStopStatus();
+                self.layoutModel.showMessage('error',
+                        self.layoutModel.translate('concview__failed_to_play_audio'));
+            }
         );
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -532,6 +556,7 @@ export class ConcLineStore extends SimplePageStore {
 
     private playAudio(lineIdx:number, chunks:Array<TextChunk>) {
         if (this.playerAttachedChunk) {
+            this.audioPlayer.stop();
             this.playerAttachedChunk.showAudioPlayer = false;
         }
         let availChunks = this.lines.get(lineIdx).languages.get(0).getAllChunks();
@@ -546,6 +571,7 @@ export class ConcLineStore extends SimplePageStore {
         if (this.playerAttachedChunk) {
             this.playerAttachedChunk.showAudioPlayer = false;
             this.playerAttachedChunk = null;
+            this.notifyChangeListeners();
         }
     }
 
@@ -629,5 +655,14 @@ export class ConcLineStore extends SimplePageStore {
     getSubCorpName():string {
         return this.subCorpName;
     }
+
+    audioPlayerIsVisible():boolean {
+        return !!this.playerAttachedChunk;
+    }
+
+    getAudioPlayerStatus():string {
+        return ['stop', 'pause', 'play'][this.audioPlayer.getStatus()];
+    }
+
 }
 
