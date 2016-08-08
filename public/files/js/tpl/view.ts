@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
- * Copyright (c) 2003-2009  Pavel Rychly
+ * Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -545,51 +546,6 @@ export class ViewPage {
         );
     }
 
-    private attachIpmCalcTrigger():void {
-        let self = this;
-        $('#conc-top-bar').find('.calculate-ipm').on('click', function (event) {
-            let q = '[] ' + decodeURIComponent($(event.target).data('query'));
-            let totalHits = parseInt($(event.target).data('total-hits'));
-            let prom;
-            let loaderBox = window.document.createElement('span');
-            let loaderImg = window.document.createElement('img');
-            let userConfirm;
-
-            userConfirm = window.confirm(self.translate('global__ipm_calc_may_take_time'));
-
-            if (userConfirm) {
-                $(loaderImg)
-                    .attr('src', self.layoutModel.createStaticUrl('img/ajax-loader.gif'));
-
-                prom = $.ajax(
-                        self.layoutModel.createActionUrl('ajax_get_within_max_hits') +
-                                '?' + self.layoutModel.getConf('stateParams'),
-                        {
-                            data: {},
-                            dataType: 'json'
-                        }
-                );
-                $(loaderBox)
-                    .attr('id', 'ipm-loader')
-                    .css('position', 'inherit')
-                    .append(loaderImg)
-                    .append(self.translate('global__calculating'));
-                $(event.target).replaceWith(loaderBox);
-
-                prom.then(
-                    function (data) {
-                        var ipm = (totalHits / data.total * 1e6).toFixed(2);
-                        $(loaderBox).replaceWith('<span class="ipm">' + ipm + '</span>');
-                    },
-                    function (err) {
-                        $(loaderBox).remove();
-                        self.layoutModel.showMessage('error', self.translate('global__failed_to_calc_ipm'));
-                    }
-                );
-            }
-        });
-    }
-
     private updateLocalAlignedCorpora():void {
         let serverSideAlignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
         this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
@@ -627,7 +583,6 @@ export class ViewPage {
                 }
                 this.onBeforeUnloadAsk();
                 this.setStateUrl();
-                this.attachIpmCalcTrigger();
                 this.updateLocalAlignedCorpora();
                 syntaxViewer.create(this.layoutModel.pluginApi());
             },
@@ -646,7 +601,6 @@ export function init(conf):ViewPage {
         fullSize: layoutModel.getConf<number>('FullSize'),
         sampledSize: layoutModel.getConf<number>('SampledSize'),
         ipm: layoutModel.getConf<number>('ResultIpm'),
-        ipmRelatedTo: layoutModel.getConf<string>('ResultIpmRelTo'),
         arf: layoutModel.getConf<number>('ResultArf'),
         isShuffled: layoutModel.getConf<boolean>('ResultShuffled')
     };
@@ -659,12 +613,14 @@ export function init(conf):ViewPage {
         SortIdx: layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
         NumItemsInLockedGroups: layoutModel.getConf<number>('NumLinesInGroups'),
         baseCorpname: layoutModel.getConf<string>('corpname'),
+        subCorpName: layoutModel.getConf<string>('subcorpname'),
         pagination: layoutModel.getConf<ServerPagination>('Pagination'),
         currentPage: layoutModel.getConf<number>('FromPage'),
         mainCorp: layoutModel.getConcArgs()['maincorp'],
         concSummary: concSummaryProps,
         Unfinished: layoutModel.getConf<boolean>('Unfinished'),
-        canSendEmail: layoutModel.getConf<boolean>('can_send_mail')
+        canSendEmail: layoutModel.getConf<boolean>('can_send_mail'),
+        ContainsWithin: layoutModel.getConf<boolean>('ContainsWithin')
     };
     let lineViewStore = new ConcLineStore(
             layoutModel,

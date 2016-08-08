@@ -272,9 +272,7 @@ class Actions(Kontext):
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-
         out['query_contains_within'] = self._query_contains_within()
-        out['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(out['query_contains_within'])
 
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':

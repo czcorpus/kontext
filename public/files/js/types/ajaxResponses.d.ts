@@ -46,4 +46,8 @@ declare module AjaxResponse {
         web_url:string;
     }
 
+    export interface WithinMaxHits extends Kontext.AjaxResponse {
+        total:number;
+    }
+
 }

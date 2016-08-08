@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
@@ -74,28 +75,62 @@ export interface ConcSummary {
     fullSize: number;
     sampledSize: number;
     ipm: number;
-    ipmRelatedTo: string;
     arf: number;
     isShuffled: boolean;
 }
 
 export interface ViewConfiguration {
+
+    /**
+     * Determine concordance view mode (kwic/sen/align)
+     */
     ViewMode:string;
+
     ShowLineNumbers:boolean;
+
     KWICCorps:Array<string>;
+
     CorporaColumns:Array<{n:string; label:string}>;
+
     WideCtxGlobals:Array<Array<string>>;
+
     SortIdx:Array<{page:number; label:string}>;
+
     NumItemsInLockedGroups:number;
+
     baseCorpname:string;
+
     mainCorp:string;
+
+    subCorpName:string;
+
     pagination:ServerPagination;
+
     currentPage:number;
+
     concSummary:ConcSummary;
+
     canSendEmail:boolean;
+
+    /**
+     * If true then client regularly fetches status
+     * of the calculation until it is finished.
+     */
     Unfinished:boolean;
+
+    /**
+     * A flag specifying whether the client should
+     * offer an on-demand calculation of i.p.m.
+     * in case Manatee provides results related to
+     * a whole corpus while user wants to see
+     * a result related to his ad-hoc corpus.
+     */
+    ContainsWithin:boolean;
+
     onReady?:()=>void;
+
     onPageUpdate?:()=>void;
+
     onChartFrameReady?:(usePrevData:boolean)=>void;
 }
 
@@ -271,6 +306,8 @@ export class ConcLineStore extends SimplePageStore {
 
     private baseCorpname:string;
 
+    private subCorpName:string;
+
     private mainCorp:string;
 
     private audioPlayer:AudioPlayer;
@@ -293,6 +330,10 @@ export class ConcLineStore extends SimplePageStore {
 
     private externalKwicDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
 
+    private containsWithin:boolean;
+
+    private adHocIpm:number;
+
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>,
             lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
@@ -304,6 +345,7 @@ export class ConcLineStore extends SimplePageStore {
         this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
         this.corporaColumns = Immutable.List(lineViewProps.CorporaColumns);
         this.baseCorpname = lineViewProps.baseCorpname;
+        this.subCorpName = lineViewProps.subCorpName;
         this.mainCorp = lineViewProps.mainCorp;
         this.unfinishedCalculation = lineViewProps.Unfinished;
         this.concSummary = lineViewProps.concSummary;
@@ -311,6 +353,7 @@ export class ConcLineStore extends SimplePageStore {
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
+        this.containsWithin = lineViewProps.ContainsWithin;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             this.setStopStatus.bind(this)
@@ -377,6 +420,17 @@ export class ConcLineStore extends SimplePageStore {
                     self.concSummary.fullSize = payload.props['fullsize'];
                     self.concSummary.concSize = payload.props['concsize'];
                     self.notifyChangeListeners();
+                break;
+                case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
+                    self.calculateAdHocIpm().then(
+                        (data) => {
+                            self.notifyChangeListeners('$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC');
+                        },
+                        (err) => {
+                            console.error(err);
+                            self.layoutModel.showMessage('error', self.layoutModel.translate('global__failed_to_calc_ipm'));
+                        }
+                    );
                 break;
             }
         });
@@ -510,6 +564,21 @@ export class ConcLineStore extends SimplePageStore {
         }
     }
 
+    private calculateAdHocIpm():RSVP.Promise<number> {
+        return this.layoutModel.ajax<AjaxResponse.WithinMaxHits>(
+            'GET',
+            this.layoutModel.createActionUrl('ajax_get_within_max_hits'),
+            this.layoutModel.getConcArgs(),
+            {contentType : 'application/x-www-form-urlencoded'}
+
+        ).then(
+            (data) => {
+                this.adHocIpm = this.concSummary.fullSize / data.total * 1e6;
+                return this.adHocIpm;
+            }
+        )
+    }
+
     hasKwic(corpusId:string):boolean {
         return this.kwicCorps.indexOf(corpusId) > -1;
     }
@@ -547,6 +616,18 @@ export class ConcLineStore extends SimplePageStore {
 
     getConcSummary():ConcSummary {
         return this.concSummary;
+    }
+
+    providesAdHocIpm():boolean {
+        return this.containsWithin;
+    }
+
+    getAdHocIpm():number {
+        return this.adHocIpm;
+    }
+
+    getSubCorpName():string {
+        return this.subCorpName;
     }
 }
 

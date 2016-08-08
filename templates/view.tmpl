@@ -53,11 +53,11 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.FullSize = $fullsize;
     conf.SampledSize = $sampled_size;
     conf.ResultIpm = $result_relative_freq;
-    conf.ResultIpmRelTo = #filter $Jsonize#$result_relative_freq_rel_to#end filter#;
     conf.ResultArf = #if $result_arf#$result_arf#else#null#end if#;
     conf.ResultShuffled = #filter $Jsonize#$result_shuffled#end filter#;
     conf.NumLinesInGroups = $num_lines_in_groups;
     conf.LinesGroupsNumbers = #filter $Jsonize#$lines_groups_numbers#end filter#;
+    conf.ContainsWithin = #filter $Jsonize#$getVar('query_contains_within', False)#end filter#;
 
     #if $running_calc
     conf.numLines = $len($Lines);
