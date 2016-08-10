@@ -446,15 +446,29 @@ export class QueryFormTweaks {
         });
     }
 
+    private setQueryInputWarning(action:string):void {
+        const querySelector = $(this.formElm).find('select.qselector');
+        const queryInput = $('.query-area input.query:visible, .query-area textarea.query:visible');
+        if (action === 'add') {
+            querySelector.addClass('error-input');
+            queryInput.addClass('error-input');
+
+        } else if (action === 'remove') {
+            querySelector.removeClass('error-input');
+            queryInput.removeClass('error-input');
+        }
+    }
+
     /**
      *
      */
     initQuerySwitching():void {
-        let queryTypeHints = this.pluginApi.getConf<{[k:string]:string}>('queryTypesHints');
-        let self = this;
+        const queryTypeHints = this.pluginApi.getConf<{[k:string]:string}>('queryTypesHints');
+        const self = this;
 
         $('select.qselector').each(function () {
             $(this).on('change', function (event) {
+                self.setQueryInputWarning('remove');
                 self.cmdSwitchQuery(event, queryTypeHints);
             });
 
@@ -561,23 +575,22 @@ export class QueryFormTweaks {
     }
 
     isPossibleQueryTypeMismatch(inputElm, queryTypeElm):boolean {
-        let query = $(inputElm).val();
-        let queryType = $(queryTypeElm).find('option:selected').data('type');
-
-        return Boolean(queryType !== 'cql' && (/^(\s*"[^\"]+")+$/.exec(query) || /\[[^\]]*\]/.exec(query))
-            || queryType === 'cql' && (!/^(\s*"[^\"]+")+$/.exec(query) && !/\[[^\]]*\]/.exec(query)));
+        const query = $(inputElm).val().trim();
+        const queryType = $(queryTypeElm).find('option:selected').data('type');
+        const looksLikeCql = !!(/^"[^\"]+"$/.exec(query) || /^\[\w+\s*=\s*"[^"]+"\]$/.exec(query));
+        return !!(queryType === 'iquery' && looksLikeCql || queryType === 'cql' && !looksLikeCql);
     }
 
     /**
      * @param submitElm
      */
     bindBeforeSubmitActions(submitElm):void {
-        let self = this;
+        const self = this;
 
-        $(this.formElm).find(submitElm).on('click', function (event) { // TODO
-            let currQueryElm = $(self.formElm).find('.query-area .query:visible').get(0);
-            let queryTypeElm = $(self.formElm).find('select.qselector').get(0);
-            let data = $(self.formElm).serialize().split('&');
+        $(this.formElm).on('submit', function (event) { // TODO
+            const currQueryElm = $(self.formElm).find('.query-area .query:visible').get(0);
+            const queryTypeElm = $(self.formElm).find('select.qselector').get(0);
+            const data = $(self.formElm).serialize().split('&');
             let cleanData = '';
             let unusedLangs = {};
 
@@ -606,9 +619,7 @@ export class QueryFormTweaks {
             });
 
             if (self.isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
-                $(self.formElm).find('select.qselector').addClass('error-input');
-                $('.query-area input.query:visible, .query-area textarea.query:visible')
-                        .addClass('error-input');
+                self.setQueryInputWarning('add');
                 if (!win.confirm(self.pluginApi.translate('global__query_type_mismatch'))) {
                     event.stopPropagation();
                     event.preventDefault();
