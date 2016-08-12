@@ -307,7 +307,9 @@ export function init(dispatcher, mixins, tagHelperStore) {
                 <h3>{this.translate('taghelper__create_tag_heading')}</h3>
                 {
                     this.state.isWaiting ?
-                    <img className="loader" src={this.createStaticUrl('img/ajax-loader.gif')} /> :
+                    <img className="loader" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                            title={this.translate('global__loading')}
+                            alt={this.translate('global__loading')} /> :
                     null
                 }
                 <div className="tag-header">
