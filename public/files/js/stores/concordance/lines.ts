@@ -407,8 +407,8 @@ export class ConcLineStore extends SimplePageStore {
                             self.notifyChangeListeners();
                         },
                         (err) => {
+                            self.notifyChangeListeners();
                             self.layoutModel.showMessage('error', err);
-                            // TODO notify
                         }
                     );
                 break;
@@ -497,6 +497,13 @@ export class ConcLineStore extends SimplePageStore {
     private changePage(action:string, pageNumber?:number, concId?:string):RSVP.Promise<MultiDict> {
         let args = this.layoutModel.getConcArgs();
         let pageNum = action === 'customPage' ? pageNumber : this.pagination[action];
+
+        if (isNaN(Number(pageNum)) || Math.round(pageNum) !== pageNum) {
+            return new RSVP.Promise((resolve: (v: MultiDict)=>void, reject:(e:any)=>void) => {
+                reject(new Error(this.layoutModel.translate('concview__invalid_page_num_err')));
+            });
+        }
+
         args.set('fromp', pageNum);
         args.set('format', 'json');
         if (concId) {
@@ -511,8 +518,11 @@ export class ConcLineStore extends SimplePageStore {
             {contentType : 'application/x-www-form-urlencoded'}
 
         ).then(
-            (data) => {
+            (data:Kontext.AjaxResponse) => {
                 try {
+                    if (data.contains_errors) {
+                        throw new Error(data.messages[0][1]);
+                    }
                     this.lines = importData(data['Lines']);
                     this.numItemsInLockedGroups = data['num_lines_in_groups'];
                     this.pagination = data['pagination'];
