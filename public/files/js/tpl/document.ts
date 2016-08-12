@@ -422,14 +422,36 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * Pops-up a user message at the center of page.
+     * Pops-up a user message at the center of page. It is able
+     * to handle process error-returned XMLHttpRequest objects
+     * when using RSVP-ajax too.
      *
      * @param msgType - one of 'info', 'warning', 'error', 'plain'
      * @param message - text of the message
      */
-    showMessage = (msgType:string, message:string, onClose?:()=>void) => {
+    showMessage = (msgType:string, message:any, onClose?:()=>void) => {
         let timeout;
-        let self = this;
+
+        if (msgType === 'error') {
+            if (message instanceof XMLHttpRequest) {
+                const respText = (<XMLHttpRequest>message).responseText;
+                try {
+                    let respObj = JSON.parse(respText);
+                    if (respObj['contains_errors'] && respObj['messages']) {
+                        message = respObj['messages'].map(x => x[1]).join(', ');
+
+                    } else {
+                        message = this.translate('global__unknown_error');
+                    }
+
+                } catch (e) {
+                    message = String(respText).substr(100);
+                }
+
+            } else if (typeof message === 'object') {
+                message = message['message']; // TODO this should not be used any more
+            }
+        }
 
         if (typeof message === 'object' && msgType === 'error') {
             message = message['message'];
