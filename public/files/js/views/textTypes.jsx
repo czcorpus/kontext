@@ -164,17 +164,20 @@ export function init(dispatcher, mixins, textTypesStore) {
                     || this.props.itemIsLocked !== nextProps.itemIsLocked;
         },
         render : function () {
+            const itemName = 'sca_' + this.props.itemName;
             return (
                 <label className={this.props.itemIsLocked ? 'locked' : null}>
                     <input
                         type="checkbox"
-                        name={'sca_' + this.props.itemName}
+                        name={itemName}
                         value={this.props.itemValue}
                         className="attr-selector user-selected"
                         checked={this.props.itemIsSelected}
                         onChange={this._clickHandler}
                         disabled={this.props.itemIsLocked}
                     />
+                    {this.props.itemIsLocked ?
+                        <input type="hidden" name={itemName} value={this.props.itemValue} /> : null }
                     {this.props.itemValue}
                 </label>
             );
