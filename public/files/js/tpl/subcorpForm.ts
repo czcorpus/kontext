@@ -21,14 +21,9 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/corparch.ts" />
-/// <reference path="../types/plugins/subcmixer.ts" />
 /// <reference path="../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
-
-// -- dynamic loading of custom plug-in implementation
-/// <amd-dependency path="plugins/corparch/init" name="corplistComponent" />
-/// <amd-dependency path="plugins/subcmixer/init" name="subcmixer" />
 
 import $ = require('jquery');
 import * as RSVP from 'vendor/rsvp';
@@ -38,13 +33,12 @@ import {init as subcorpViewsInit} from 'views/subcorp/forms';
 import * as subcorpFormStoreModule from '../stores/subcorp/form';
 import {extendedApi} from '../queryInput';
 import * as liveAttributes from 'plugins/liveAttributes/init';
+import subcMixer = require('plugins/subcmixer/init');
 import {UserSettings} from '../userSettings';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
+import corplistComponent = require('plugins/corparch/init');
 
-// dynamic imports
-declare var subcmixer:Subcmixer.Module;
-declare var corplistComponent:CorpusArchive.Module;
 
 
 /**
@@ -137,11 +131,6 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
         } else if (value === 'gui') {
             jqSubmitBtn.show();
 
-        } else if (value === 'mixer') {
-            jqSubmitBtn.hide(); // subcmixer uses its own button (nested React component); not sure about this
-            subcmixer.create($(widgetMap['mixer']).find('.widget').get(0),
-                    this.layoutModel.pluginApi());
-
         } else {
             throw new Error('Unknown subcorpus sub-menu item: ' + value);
         }
@@ -223,8 +212,29 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
                 }
-                let liveAttrsViews = liveAttributes.getViews(this.layoutModel.dispatcher,
-                        this.layoutModel.exportMixins(), this.textTypesStore, liveAttrsStore);
+                let subcmixerViews;
+                if (this.layoutModel.getConf<boolean>('HasSubcmixer')) {
+                    const subcmixerStore = subcMixer.create(this.layoutModel.pluginApi(), this.textTypesStore);
+                    subcmixerViews = subcMixer.getViews(
+                        this.layoutModel.dispatcher,
+                        this.layoutModel.exportMixins(),
+                        this.layoutModel.layoutViews,
+                        subcmixerStore
+                    );
+
+                } else {
+                    subcmixerViews = {
+                        SubcMixer: null,
+                        TriggerBtn: null
+                    };
+                }
+                let liveAttrsViews = liveAttributes.getViews(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.exportMixins(),
+                    subcmixerViews,
+                    this.textTypesStore,
+                    liveAttrsStore
+                );
                 this.layoutModel.renderReactComponent(
                     ttViewComponents.TextTypesPanel,
                     $('#subcorp-text-type-selection').get(0),

@@ -33,6 +33,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.currentWithinJson = #if $within_json#$within_json#else#''#end if#;
     conf.textTypesData = $text_types_data;
     conf.CheckedSca = #filter $Jsonize#$checked_sca#end filter#;
+    conf.HasSubcmixer = #filter $Jsonize#$has_subcmixer#end filter#;
     pageSelf.init(conf);
 });
 
@@ -57,9 +58,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             <td>
                 <input id="method-raw-input" class="method-select" type="radio" name="method" value="raw" #if $method == 'raw'#checked="yes"#end if# /><label for="method-raw-input">$_('Custom \'within\' condition')</label>
                 <input id="method-gui-input" class="method-select" type="radio" name="method" value="gui" #if $method == 'gui'#checked="yes"#end if# /><label for="method-gui-input">$_('Attribute list')</label>
-                #if $has_subcmixer
-                <input id="method-type-mixer" class="method-select" type="radio" name="method" value="mixer" #if $method == 'mixer'#checked="yes"#end if# /><label for="method-type-mixer">$_('Custom text types proportions')</label>
-                #end if
             </td>
         </tr>
         <tr id="subc-within-row" style="display: none">
@@ -82,9 +80,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
         <div id="subcorp-text-type-selection"></div>
 
-        <div class="buttons">
-        <input class="default-button" type="submit" value="$_("Create Subcorpus")" />
-        </div>
+        <button class="default-button" type="submit">$_("Create Subcorpus")</button>
     </form>
 </section>
 

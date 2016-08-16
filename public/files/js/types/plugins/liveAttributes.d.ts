@@ -17,7 +17,9 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/subcmixer.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
 declare module LiveAttributesInit {
 
@@ -36,10 +38,22 @@ declare module LiveAttributesInit {
                      textTypesStore:TextTypes.ITextTypesStore,
                      bibAttr:string):RSVP.Promise<AttrValueTextInputListener>;
 
+
+    export interface LiveAttrsViews {
+        LiveAttrsView:React.ReactClass;
+        LiveAttrsCustomTT:React.ReactClass;
+    }
+
     /**
      * Return a dict containing one or more React classes representing plug-in's views
      *
      * (we are not strict about React classes as we just pass them around)
      */
-    export function getViews(dispatcher:any, mixins:any, ...stores:any[]):{[name:string]:any};
+    export function getViews(
+        dispatcher:Dispatcher.Dispatcher<any>,
+        mixins:any,
+        subcMixerViews:Subcmixer.SubcMixerViews,
+        textTypesStore:TextTypes.ITextTypesStore,
+        liveAttrsStore:any // TODO type
+    ):LiveAttrsViews;
 }

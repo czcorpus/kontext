@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
- *                    Institute of the Czech National Corpus
- * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2016 Institute of the Czech National Corpus
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,10 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
-export interface SubcmixerViews {
-    Widget:any;
+declare module Subcmixer {
+
+    export interface ISubcMixerStore {
+        // TODO
+    }
+
+    export interface SubcMixerViews {
+        SubcMixer:React.ReactClass;
+        TriggerBtn:React.ReactClass;
+    }
+
 }
-
-
-export function init(dispatcher:any, mixins:any, textStructureStore:any):SubcmixerViews;

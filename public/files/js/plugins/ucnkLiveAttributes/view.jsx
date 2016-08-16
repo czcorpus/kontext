@@ -21,12 +21,11 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, textTypesStore, liveAttrsStore) {
-
+export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAttrsStore) {
 
     // ----------------------------- <SelectionSteps /> --------------------------
 
-    let SelectionSteps = React.createClass({
+    const SelectionSteps = React.createClass({
 
         mixins : mixins,
 
@@ -111,6 +110,7 @@ export function init(dispatcher, mixins, textTypesStore, liveAttrsStore) {
                         </div>
                     );
                 })}
+                {this.props.items.length > 0 && subcMixerViews.TriggerBtn ? <subcMixerViews.TriggerBtn /> : null}
                 {this.props.isLoading ? this._renderLoading(this.props.items.length + 1) : null}
                 </div>
             );
