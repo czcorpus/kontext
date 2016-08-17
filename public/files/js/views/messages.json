@@ -335,7 +335,7 @@
         "query__tt_keep_current_selection": "Přidat k mému stávajícímu výběru",
         "query__tt_range_help_text": "Texty s přibližnou datací mohou zvolenému časovému rozsahu vyhovovat jen částečně: např. do rozmezí let 1800-1850 tak může, nebo nemusí být zahrnut i text datovaný 1795±10 (1785-1805).",
         "query__tt_{num}_items": "{num} položek",
-        "query__tt_multiple_items_same_name_{num_items}": "Tato položka zastupuje {num_items} záznamů se stejným název.",
+        "query__tt_multiple_items_same_name_{num_items}": "Tato položka zastupuje {num_items} záznamů se stejným názvem.",
         "concview__next_page_btn": "následující stránka",
         "concview__last_page_btn": "poslední stránka",
         "concview__prev_page_btn": "předchozí stránka",
