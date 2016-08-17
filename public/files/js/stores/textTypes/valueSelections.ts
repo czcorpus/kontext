@@ -192,6 +192,7 @@ export class TextInputAttributeSelection implements TextTypes.TextInputAttribute
             locked: currVal.locked,
             selected: currVal.selected,
             availItems: currVal.availItems,
+            numGrouped: currVal.numGrouped,
             extendedInfo: data
         };
         let values = this.values.set(idx, newVal);
@@ -260,6 +261,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             value: val.value,
             selected: !val.selected,
             availItems: val.availItems,
+            numGrouped: val.numGrouped,
             extendedInfo: val.extendedInfo
         };
         ans.values = ans.values.set(idx, newVal);
@@ -336,6 +338,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             locked: currVal.locked,
             selected: currVal.selected,
             availItems: currVal.availItems,
+            numGrouped: currVal.numGrouped,
             extendedInfo: data
         };
         let values = this.values.set(idx, newVal);

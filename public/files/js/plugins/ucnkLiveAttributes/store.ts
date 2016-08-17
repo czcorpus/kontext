@@ -61,9 +61,19 @@ export interface AlignedLangSelectionStep extends SelectionStep {
 
 
 interface FilterResponseValue {
+
     ident:string;
+
     v:string;
+
     lock:boolean;
+
+    /*
+     * Specifies how many items in returned list is actually behind the item.
+     * This typically happens in case there are multiple items with the same name.
+     */
+    numGrouped:number;
+
     availItems?:string;
 }
 
@@ -208,6 +218,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                     selected: item.selected,
                     locked: true,
                     availItems: item.availItems,
+                    numGrouped: item.numGrouped,
                     extendedInfo: item.extendedInfo
                 }
             });
@@ -227,6 +238,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                                     value: filterData[k][i].v,
                                     selected: v.selected,
                                     locked: v.locked,
+                                    numGrouped: filterData[k][i].numGrouped,
                                     availItems: filterData[k][i].availItems,
                                     extendedInfo: v.extendedInfo
                                 };
@@ -334,7 +346,8 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                             ident: v[1],
                             v: v[0],
                             lock: false,
-                            availItems: v[3]
+                            availItems: v[4],
+                            numGrouped: parseInt(v[3])
                         };
                     });
                     this.textTypesStore.setAttrSummary(k, null);

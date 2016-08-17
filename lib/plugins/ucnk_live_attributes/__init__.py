@@ -202,6 +202,29 @@ class LiveAttributes(AbstractLiveAttributes):
     def _get_subcorp_attrs(corpus):
         return [x.replace('.', '_', 1) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS'))]
 
+    @staticmethod
+    def _group_bib_items(data, bib_label):
+        """
+        In bibliography column, items with the same title (column number 2)
+        can be set to be grouped together (corpus/metadata/group_duplicates tag).
+
+        Note.: please note that this cannot be done within the database
+        as we have to treat data columns as independent which is not the
+        case in the database (e.g. GROUP BY ... publish_date,... may
+        produce multiple items with the same title - just from different
+        years/months/...).
+        """
+        ans = OrderedDict()
+        for item in data[bib_label]:
+            label = item[2]
+            if label not in ans:
+                ans[label] = list(item)
+            else:
+                ans[label][3] += 1
+            if ans[label][3] > 1:
+                ans[label][1] = ans[label][2]  # use label as ID for grouped items
+        data[bib_label] = ans.values()
+
     @cached
     def get_attr_values(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """
@@ -261,7 +284,7 @@ class LiveAttributes(AbstractLiveAttributes):
         for row, col_key in data_iterator:
             if type(ans[col_key]) is set:
                 val_ident = row[bib_id] if col_key == bib_label else row[col_key]
-                attr_val = (shorten_val(unicode(row[col_key])), val_ident, row[col_key])
+                attr_val = (shorten_val(unicode(row[col_key])), val_ident, row[col_key], 1)  # 1 = grouping
                 tmp_ans[col_key][attr_val] += row['poscount']
             elif type(ans[col_key]) is int:
                 ans[col_key] += int(row[col_key])  # we rely on proper 'ans' initialization here (in terms of types)
@@ -269,6 +292,8 @@ class LiveAttributes(AbstractLiveAttributes):
         for attr, v in tmp_ans.items():
             for k, c in v.items():
                 ans[attr].add(k + (l10n.format_number(c),))
+        if corpus_info.group_duplicates:
+            self._group_bib_items(ans, bib_label)
         tmp_ans.clear()
         return self._export_attr_values(data=ans, aligned_corpora=aligned_corpora,
                                         expand_attrs=expand_attrs,

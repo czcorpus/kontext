@@ -115,7 +115,8 @@ export class RangeSelector {
                 ident: item.ident,
                 value: item.value,
                 locked: item.locked,
-                selected: item.selected
+                selected: item.selected,
+                numGrouped: item.numGrouped
             };
             let v = parseFloat(item.value);
             if ((v >= fromVal || isNaN(fromVal)) && (v <= toVal || isNaN(toVal))) {
@@ -147,7 +148,8 @@ export class RangeSelector {
                 ident: item.ident,
                 value: item.value,
                 locked: item.locked,
-                selected: item.selected
+                selected: item.selected,
+                numGrouped: item.numGrouped
             };
             let interval = this.decodeRange(item.value);
             if (!interval) {

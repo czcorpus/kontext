@@ -220,6 +220,8 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     let BibInfoButton = React.createClass({
 
+        mixins : mixins,
+
         _mkHandleClick : function (idx) {
             return (evt) => {
                 dispatcher.dispatch({
@@ -233,7 +235,14 @@ export function init(dispatcher, mixins, textTypesStore) {
         },
 
         render : function () {
-            return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
+            if (this.props.numGrouped < 2) {
+                return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
+
+            } else {
+                return <a title={this.translate('query__tt_multiple_items_same_name_{num_items}',
+                            {num_items: this.props.numGrouped})} className="bib-warn">!</a>;
+            }
+
         }
     })
 
@@ -261,7 +270,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                                 <td className="num">{item.availItems}</td>
                                 <td>
                                 {hasExtendedInfo
-                                    ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} /> : null }
+                                    ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} /> : null }
                                 {item.extendedInfo
                                     ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={this.props.attrObj.name} />
                                     : null}
