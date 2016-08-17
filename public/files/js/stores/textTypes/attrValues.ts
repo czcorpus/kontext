@@ -133,7 +133,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.metaInfo = Immutable.Map({});
         this.extendedInfoCallbacks = Immutable.Map({});
         this.textInputPlaceholder = null;
-        let self = this;
+        const self = this;
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
@@ -153,7 +153,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     self.notifyChangeListeners();
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
-                    let fn = self.extendedInfoCallbacks.get(payload.props['attrName']);
+                    const fn = self.extendedInfoCallbacks.get(payload.props['attrName']);
                     if (fn) {
                         fn(payload.props['idx']).then(
                             (v) => {
@@ -166,10 +166,10 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     }
                     break;
                 case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
-                    let attr = self.getAttribute(payload.props['attrName']);
+                    const attr = self.getAttribute(payload.props['attrName']);
                     if (attr) {
-                        let attrIdx = self.attributes.indexOf(attr);
-                        let newAttr = attr.setExtendedInfo(payload.props['idx'], null);
+                        const attrIdx = self.attributes.indexOf(attr);
+                        const newAttr = attr.setExtendedInfo(payload.props['idx'], null);
                         self.attributes = self.attributes.set(attrIdx, newAttr);
                         self.notifyChangeListeners('$TT_EXTENDED_INFO_CHANGED');
 
@@ -206,17 +206,17 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     private resetAutoComplete(attrName:string):void {
-        let attr = this.getTextInputAttribute(attrName);
+        const attr = this.getTextInputAttribute(attrName);
         if (attr) {
-            let idx = this.attributes.indexOf(attr);
+            const idx = this.attributes.indexOf(attr);
             this.attributes = this.attributes.set(idx, attr.resetAutoComplete());
         }
     }
 
     private handleAttrTextInputChange(attrName:string, value:string) {
-        let attr = this.getTextInputAttribute(attrName);
+        const attr = this.getTextInputAttribute(attrName);
         if (attr) {
-            let idx = this.attributes.indexOf(attr);
+            const idx = this.attributes.indexOf(attr);
             this.attributes = this.attributes.set(idx, attr.setTextFieldValue(value));
         }
     }
@@ -228,13 +228,14 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     private setTextInputAttrValue(attrName:string, ident:string, label:string, append:boolean):void {
-        let attr:TextTypes.AttributeSelection = this.getTextInputAttribute(attrName);
-        let idx = this.attributes.indexOf(attr);
-        let newVal:TextTypes.AttributeValue = {
+        const attr:TextTypes.AttributeSelection = this.getTextInputAttribute(attrName);
+        const idx = this.attributes.indexOf(attr);
+        const newVal:TextTypes.AttributeValue = {
             ident: ident,
             value: label,
             selected: true,
-            locked: false
+            locked: false,
+            numGrouped: 1
         };
         let newAttr;
         if (append) {
@@ -247,7 +248,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     private importInitialData(data:InitialData, checkedValues:TextTypes.ServerCheckedValues):Array<TextTypes.AttributeSelection> {
-        let mergedBlocks:Array<BlockLine> = data.Blocks.reduce((prev:Array<BlockLine>, curr:Block) => {
+        const mergedBlocks:Array<BlockLine> = data.Blocks.reduce((prev:Array<BlockLine>, curr:Block) => {
             return prev.concat(curr.Line);
         }, []);
         if (mergedBlocks.length > 0) {
@@ -257,15 +258,16 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                         !!attrItem.is_interval, null, Immutable.List([]), Immutable.List([]));
 
                 } else {
-                    let checkedInfo:Array<string> = checkedValues[attrItem.name] || [];
-                    let values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
+                    const checkedInfo:Array<string> = checkedValues[attrItem.name] || [];
+                    const values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
                         (valItem:{v:string, xcnt:string}) => {
                             return {
                                 value: valItem.v,
                                 ident: valItem.v, // TODO what about bib items?
                                 selected: checkedInfo.indexOf(valItem.v) > -1 ? true : false,
                                 locked:false,
-                                availItems:valItem.xcnt
+                                availItems:valItem.xcnt,
+                                numGrouped: 1 // TODO here we expect that initial data do not have any name duplicities
                             };
                         }
                     );
@@ -278,8 +280,8 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     private changeValueSelection(attrIdent:string, itemIdx:number) {
-        let attr = this.getAttribute(attrIdent);
-        let idx = this.attributes.indexOf(attr);
+        const attr = this.getAttribute(attrIdent);
+        const idx = this.attributes.indexOf(attr);
         if (attr) {
             this.attributes = this.attributes.set(idx, attr.toggleValueSelection(itemIdx));
 
@@ -291,7 +293,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
 
     private applyRange(attrName:string, fromVal:number, toVal: number, strictInterval:boolean,
             keepCurrent:boolean) {
-        let prom = this.rangeSelector.applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
+        const prom = this.rangeSelector.applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
         prom.then(
             (newSelection:TextTypes.AttributeSelection) => {
                 this.notifyChangeListeners();
@@ -303,17 +305,18 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     private applySelectAll(ident:string) {
-        let item = this.getAttribute(ident);
-        let idx = this.attributes.indexOf(item);
+        const item = this.getAttribute(ident);
+        const idx = this.attributes.indexOf(item);
         if (item.containsFullList()) {
             this.selectAll = this.selectAll.set(ident, !this.selectAll.get(ident));
-            let newVal = this.selectAll.get(ident);
+            const newVal = this.selectAll.get(ident);
             this.attributes = this.attributes.set(idx, item.mapValues((item) => {
                 return {
                     ident: item.ident,
                     value: item.value,
                     selected: newVal,
-                    locked: item.locked
+                    locked: item.locked,
+                    numGrouped: item.numGrouped
                 };
             }));
             this.notifyChangeListeners('$TT_SELECT_ALL_UPDATED');
@@ -331,7 +334,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     getTextInputAttribute(ident:string):TextTypes.TextInputAttributeSelection {
-        let ans = this.attributes.find(val => val.name === ident);
+        const ans = this.attributes.find(val => val.name === ident);
         if (ans instanceof TextInputAttributeSelection) {
             return ans;
         }
@@ -339,8 +342,8 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     replaceAttribute(ident:string, val:TextTypes.AttributeSelection):void {
-        let attr = this.getAttribute(ident);
-        let idx = this.attributes.indexOf(attr);
+        const attr = this.getAttribute(ident);
+        const idx = this.attributes.indexOf(attr);
         if (idx > -1) {
             this.attributes = this.attributes.set(idx, val);
 
@@ -354,7 +357,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     exportSelections(lockedOnesOnly:boolean):{[attr:string]:any} {
-        let ans = {};
+        const ans = {};
         this.attributes.forEach((attrSel:TextTypes.AttributeSelection) => {
             if (attrSel.hasUserChanges()) {
                 ans[attrSel.name] = attrSel.exportSelections(lockedOnesOnly);
@@ -364,36 +367,37 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     updateItems(attrName:string, items:Array<string>):void {
-        let attr = this.getAttribute(attrName);
+        const attr = this.getAttribute(attrName);
         let newAttr;
-        let idx = this.attributes.indexOf(attr);
+        const idx = this.attributes.indexOf(attr);
         if (idx > -1) {
             this.attributes = this.attributes.set(idx, attr.updateItems(items));
         }
     }
 
     filter(attrName:string, fn:(v:TextTypes.AttributeValue)=>boolean):void {
-        let attr = this.getAttribute(attrName);
-        let idx = this.attributes.indexOf(attr);
+        const attr = this.getAttribute(attrName);
+        const idx = this.attributes.indexOf(attr);
         this.attributes = this.attributes.set(idx, attr.filter(fn));
     }
 
     mapItems(attrName:string, mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue):void {
-        let attr = this.getAttribute(attrName);
-        let idx = this.attributes.indexOf(attr);
-        let newAttr = attr.mapValues(mapFn);
+        const attr = this.getAttribute(attrName);
+        const idx = this.attributes.indexOf(attr);
+        const newAttr = attr.mapValues(mapFn);
         this.attributes = this.attributes.set(idx, newAttr);
     }
 
     setValues(attrName:string, values:Array<string>):void {
-        let attr = this.getAttribute(attrName);
-        let idx = this.attributes.indexOf(attr);
-        let values2:Array<TextTypes.AttributeValue> = values.map((item:string) => {
+        const attr = this.getAttribute(attrName);
+        const idx = this.attributes.indexOf(attr);
+        const values2:Array<TextTypes.AttributeValue> = values.map((item:string) => {
             return {
                 ident: item, // TODO what about bib items?
                 value: item,
                 selected: false,
-                locked: false
+                locked: false,
+                numGrouped: 1 // TODO is it always OK here?
             };
         });
         if (idx > -1) {
@@ -405,7 +409,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     setAutoComplete(attrName:string, values:Array<TextTypes.AutoCompleteItem>):void {
-        let attr = this.getTextInputAttribute(attrName);
+        const attr = this.getTextInputAttribute(attrName);
         if (attr) {
             let idx = this.attributes.indexOf(attr);
             this.attributes = this.attributes.set(idx, attr.setAutoComplete(values));

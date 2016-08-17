@@ -407,11 +407,28 @@ declare module TextTypes {
      *
      */
     export interface AttributeValue {
+
         ident: string;
+
         value:string;
+
         selected:boolean;
+
         locked:boolean;
-        availItems?:string; // a formatted string representation of a respective number
+
+        /**
+         * How many items are actually hidden behind the value (= have the same name).
+         * Value 1 means there is a single unique value available (such a value should
+         * provide a bibliography information). Higher values mean that there are
+         * multiple items with the same name (which means no biblography info)
+         */
+        numGrouped:number;
+
+        /**
+         * A number of available items formatted as a string
+         */
+        availItems?:string;
+
         extendedInfo?:{[key:string]:any};
     }
 

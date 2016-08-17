@@ -1483,20 +1483,27 @@ a.util-button:hover {
         background-position: right bottom;
     }
 }
-a.bib-info {
+a.bib-info, a.bib-warn {
     font-family: serif;
     font-size: 10pt;
     font-weight: bold;
-    color: #FFFFFF;
-    background-color: @color-logo-blue;
-    border: 1px solid @color-logo-blue;
     border-radius: 2px;
     text-decoration: none;
     padding: 0px 2px;
 }
+a.bib-info {
+    color: #FFFFFF;
+    background-color: @color-logo-blue;
+    border: 1px solid @color-logo-blue;
+}
 a.bib-info:hover {
     color: @color-logo-blue;
     background-color: #FFFFFF;
+}
+a.bib-warn {
+    color: #FFFFFF;
+    background-color: @color-logo-orange;
+    border: 1px solid @color-logo-orange;
 }
 #error-reporting {
     font-size: 7.5pt;
