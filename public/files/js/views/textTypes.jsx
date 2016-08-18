@@ -205,7 +205,7 @@ export function init(dispatcher, mixins, textTypesStore) {
             return (
                 <layoutViews.PopupBox onCloseClick={this._clickCloseHandler}
                             customClass="metadata-detail"
-                            customStyle={{marginLeft: '-5em'}}>
+                            customStyle={{marginLeft: '5em'}}>
                     <ul>
                         {this.props.data.entrySeq().map((item) => {
                             return <li key={item[0]}><strong>{item[0]}:</strong>{'\u00A0'}{item[1]}</li>;
@@ -271,9 +271,6 @@ export function init(dispatcher, mixins, textTypesStore) {
                                 <td>
                                 {hasExtendedInfo
                                     ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} /> : null }
-                                {item.extendedInfo
-                                    ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={this.props.attrObj.name} />
-                                    : null}
                                 </td>
                             </tr>
                         );
@@ -469,9 +466,6 @@ export function init(dispatcher, mixins, textTypesStore) {
                         <td>
                             {hasExtendedInfo
                                 ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} /> : null }
-                            {item.extendedInfo
-                                ? <ExtendedInfoBox data={item.extendedInfo} itemIdx={i} attrName={this.props.attrObj.name} />
-                                : null}
                         </td>
                     </tr>
                 );
@@ -612,6 +606,18 @@ export function init(dispatcher, mixins, textTypesStore) {
                     || this.state.metaInfoHelpVisible !== nextState.metaInfoHelpVisible;
         },
 
+        _renderExtendedInfo : function () {
+            const srch = this.props.attrObj.getValues().findEntry(item => !!item.extendedInfo);
+            if (srch) {
+                const [srchIdx, item] = srch;
+                return <ExtendedInfoBox data={item.extendedInfo} itemIdx={srchIdx}
+                                attrName={this.props.attrObj.name} />;
+
+            } else {
+                return null;
+            }
+        },
+
         render : function () {
             let classes = ['envelope'];
             if (this.props.attrObj.isLocked()) {
@@ -622,6 +628,11 @@ export function init(dispatcher, mixins, textTypesStore) {
                     <tbody>
                         <tr className="attrib-name">
                             <th>{this.props.attrObj.name}</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                {this._renderExtendedInfo()}
+                            </td>
                         </tr>
                         <tr className={this.props.rangeIsOn ? 'range' : 'data-rows'}>
                             <td>

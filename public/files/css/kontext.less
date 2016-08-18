@@ -900,6 +900,11 @@ table.envelope {
         td, th {
             padding: 0.4em 1em;
         }
+
+        td:last-child {
+            padding-right: 1.6em;
+            padding-left: 0;
+        }
     }
 
     tr.attrib-name {
@@ -1484,12 +1489,14 @@ a.util-button:hover {
     }
 }
 a.bib-info, a.bib-warn {
+    display: inline-block;
+    text-align: center;
+    width: 0.8em;
     font-family: serif;
-    font-size: 10pt;
+    font-size: 1em;
     font-weight: bold;
     border-radius: 2px;
     text-decoration: none;
-    padding: 0px 2px;
 }
 a.bib-info {
     color: #FFFFFF;

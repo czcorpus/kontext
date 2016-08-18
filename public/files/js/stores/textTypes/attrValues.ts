@@ -153,29 +153,18 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     self.notifyChangeListeners();
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
-                    const fn = self.extendedInfoCallbacks.get(payload.props['attrName']);
-                    if (fn) {
-                        fn(payload.props['idx']).then(
-                            (v) => {
-                                self.notifyChangeListeners('$TT_EXTENDED_INFO_CHANGED');
-                            },
-                            (err) => {
-                                self.pluginApi.showMessage('error', err);
-                            }
-                        )
-                    }
+                    self.fetchExtendedInfo(payload.props['attrName'], payload.props['idx']).then(
+                        (v) => {
+                            self.notifyChangeListeners('$TT_EXTENDED_INFO_CHANGED');
+                        },
+                        (err) => {
+                            self.pluginApi.showMessage('error', err);
+                        }
+                    );
                     break;
                 case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
-                    const attr = self.getAttribute(payload.props['attrName']);
-                    if (attr) {
-                        const attrIdx = self.attributes.indexOf(attr);
-                        const newAttr = attr.setExtendedInfo(payload.props['idx'], null);
-                        self.attributes = self.attributes.set(attrIdx, newAttr);
-                        self.notifyChangeListeners('$TT_EXTENDED_INFO_CHANGED');
-
-                    } else {
-                        throw new Error('Attribute not found: ' + payload.props['attrName']);
-                    }
+                    self.clearExtendedInfo(payload.props['attrName'], payload.props['idx']);
+                    self.notifyChangeListeners('$TT_EXTENDED_INFO_CHANGED');
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED':
                     self.setTextInputAttrValue(payload.props['attrName'], payload.props['ident'],
@@ -203,6 +192,43 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     break;
             }
         });
+    }
+
+    private clearExtendedInfo(attrName:string, itemIdx:number):void {
+        const attr = this.getAttribute(attrName);
+        if (attr) {
+            const attrIdx = this.attributes.indexOf(attr);
+            const newAttr = attr.setExtendedInfo(itemIdx, null);
+            this.attributes = this.attributes.set(attrIdx, newAttr);
+
+        } else {
+            throw new Error('Attribute not found: ' + attrName);
+        }
+    }
+
+    private fetchExtendedInfo(attrName:string, itemIdx:number):RSVP.Promise<any> {
+        const attr = this.getAttribute(attrName);
+        const attrIdx = this.attributes.indexOf(attr);
+        this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
+            return {
+                availItems: item.availItems,
+                extendedInfo: undefined,
+                ident: item.ident,
+                locked: item.locked,
+                numGrouped: item.numGrouped,
+                selected: item.selected,
+                value: item.value
+            };
+        }));
+        const fn = this.extendedInfoCallbacks.get(attrName);
+        if (fn) {
+            return fn(itemIdx);
+
+        } else {
+            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
+                resolve(null);
+            });
+        }
     }
 
     private resetAutoComplete(attrName:string):void {
@@ -279,7 +305,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return null;
     }
 
-    private changeValueSelection(attrIdent:string, itemIdx:number) {
+    private changeValueSelection(attrIdent:string, itemIdx:number):void {
         const attr = this.getAttribute(attrIdent);
         const idx = this.attributes.indexOf(attr);
         if (attr) {
@@ -291,8 +317,9 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.notifyChangeListeners('$TT_VALUE_CHECKBOX_STORED');
     }
 
+    // TODO move notify... out of the method
     private applyRange(attrName:string, fromVal:number, toVal: number, strictInterval:boolean,
-            keepCurrent:boolean) {
+            keepCurrent:boolean):void {
         const prom = this.rangeSelector.applyRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
         prom.then(
             (newSelection:TextTypes.AttributeSelection) => {
