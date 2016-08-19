@@ -222,7 +222,10 @@ class LiveAttributes(AbstractLiveAttributes):
             else:
                 ans[label][3] += 1
             if ans[label][3] > 1:
-                ans[label][1] = ans[label][2]  # use label as ID for grouped items
+                # use label with special prefix '@' as ID for grouped items
+                # (to be able to distinguish between individual ID-identified and
+                # grouped label-identified items)
+                ans[label][1] = '@' + ans[label][2]
         data[bib_label] = ans.values()
 
     @cached

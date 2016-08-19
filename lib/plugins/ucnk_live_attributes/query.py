@@ -71,8 +71,13 @@ class AttrArgs(object):
             cnf_item = []
             if type(values) is list or type(values) is tuple:
                 for value in values:
-                    cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
-                    sql_values.append(self.import_value(value))
+                    if value[0] != '@':
+                        cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
+                        sql_values.append(self.import_value(value))
+                    else:
+                        cnf_item.append('%s.%s %s ?' % (item_prefix, self._bib_label, cmp_operator(value[1:])))
+                        sql_values.append(self.import_value(value[1:]))
+
             elif is_range_argument(values):
                 pass  # a range query  TODO
             else:
