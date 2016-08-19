@@ -40,7 +40,9 @@ export function init(dispatcher, mixins, textTypesStore, liveAttrsStore) {
             } else {
                 ans = values;
             }
-            return ans.join(joinChar);
+            return ans
+                .map(item => item.substr(0, 1) !== '@' ? item : item.substr(1))
+                .join(joinChar);
         },
 
         _renderAlignedLangsSel : function (item) {
