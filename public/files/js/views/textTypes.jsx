@@ -267,7 +267,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                                         itemIsSelected={item.selected}
                                         itemIsLocked={item.locked}
                                             /></td>
-                                <td className="num">{item.availItems}</td>
+                                <td className="num">{item.availItems ? this.formatNumber(item.availItems) : ''}</td>
                                 <td>
                                 {hasExtendedInfo
                                     ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} /> : null }
