@@ -88,7 +88,6 @@ class KwicPageData(FixedDict):
     Lines = None
     GroupNumbers = None
     fromp = None
-    numofpages = None
     Page = None
     pagination = None
     concsize = None
@@ -255,6 +254,7 @@ class Kwic(object):
 
         out = KwicPageData()
         pagination = Pagination()
+        pagination.first_page = 1
         out.Lines = self.kwiclines(args.create_kwicline_args())
         self.add_aligns(out, args.create_kwicline_args(speech_segment=None))
 
@@ -263,18 +263,19 @@ class Kwic(object):
             out.KWICCorps = [self.corpus.corpname]
 
         if args.labelmap:
-            out['GroupNumbers'] = format_labelmap(args.labelmap)
+            out.GroupNumbers = format_labelmap(args.labelmap)
         if fromp > 1:
             pagination.prev_page = fromp - 1
-            pagination.first_page = 1
         if self.conc.size() > args.pagesize:
             out.fromp = fromp
-            out.numofpages = numofpages = (self.conc.size() - 1) / args.pagesize + 1
+            numofpages = (self.conc.size() - 1) / args.pagesize + 1
             if numofpages < 30:
                 out.Page = [{'page': x} for x in range(1, numofpages + 1)]
             if fromp < numofpages:
                 pagination.next_page = fromp + 1
-                pagination.last_page = numofpages
+            pagination.last_page = numofpages
+        else:
+            pagination.last_page = 1
         out.concsize = self.conc.size()
 
         if type(self.corpus) == manatee.SubCorpus:
