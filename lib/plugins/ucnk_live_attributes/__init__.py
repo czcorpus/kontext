@@ -221,6 +221,7 @@ class LiveAttributes(AbstractLiveAttributes):
                 ans[label] = list(item)
             else:
                 ans[label][3] += 1
+                ans[label][4] += item[4]
             if ans[label][3] > 1:
                 # use label with special prefix '@' as ID for grouped items
                 # (to be able to distinguish between individual ID-identified and
@@ -294,7 +295,9 @@ class LiveAttributes(AbstractLiveAttributes):
         # here we append position count information to the respective items
         for attr, v in tmp_ans.items():
             for k, c in v.items():
-                ans[attr].add(k + (l10n.format_number(c),))
+                ans[attr].add(k + (c,))
+        # now each line contains: (shortened_label, identifier, label, num_grouped_items, num_positions)
+        # where num_grouped_items is initialized to 1
         if corpus_info.group_duplicates:
             self._group_bib_items(ans, bib_label)
         tmp_ans.clear()

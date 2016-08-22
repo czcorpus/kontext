@@ -224,7 +224,7 @@ class TextTypes(object):
     def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
 
-    def export_with_norms(self, subcorpattrs='', format_num=True, ret_nums=True, subcnorm='tokens'):
+    def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens'):
         """
         Returns a text types table containing also an information about
         total occurrences of respective attribute values.
@@ -271,7 +271,7 @@ class TextTypes(object):
                     structname, attrname = col['name'].split('.')
                     for val in col['Values']:
                         v = struct_calc[structname].compute_norm(attrname, val['v'])
-                        val['xcnt'] = l10n.format_number(v) if format_num else v
+                        val['xcnt'] = v
             ans['Blocks'] = tt
             ans['Normslist'] = self._get_normslist(struct_calc.keys()[0])
         else:

@@ -33,7 +33,7 @@ import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelect
  * Server-side data a returned by respective AJAX calls.
  */
 export interface BlockLine {
-    Values?:Array<{v:string; xcnt?:string}>;
+    Values?:Array<{v:string; xcnt?:number}>;
     textboxlength?:number; // Values and textboxlength are mutually exclusive
     attr_doc:string;
     attr_doc_label:string;
@@ -286,7 +286,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                 } else {
                     const checkedInfo:Array<string> = checkedValues[attrItem.name] || [];
                     const values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
-                        (valItem:{v:string, xcnt:string}) => {
+                        (valItem:{v:string, xcnt:number}) => {
                             return {
                                 value: valItem.v,
                                 ident: valItem.v, // TODO what about bib items?

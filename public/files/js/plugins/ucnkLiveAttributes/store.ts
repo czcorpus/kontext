@@ -74,7 +74,7 @@ interface FilterResponseValue {
      */
     numGrouped:number;
 
-    availItems?:string;
+    availItems?:number;
 }
 
 export interface AlignedLanguageItem {
@@ -336,7 +336,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
         return this.alignedCorpora.find((item)=>item.selected) !== undefined;
     }
 
-    private importFilter(data:{[ident:string]:Array<string>}):{[k:string]:Array<FilterResponseValue>} {
+    private importFilter(data:{[ident:string]:Array<any>}):{[k:string]:Array<FilterResponseValue>} {
         let ans:{[k:string]:Array<FilterResponseValue>} = {};
         for (let k in data) {
             if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)

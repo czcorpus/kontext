@@ -425,9 +425,9 @@ declare module TextTypes {
         numGrouped:number;
 
         /**
-         * A number of available items formatted as a string
+         * A number of tokens matching the value
          */
-        availItems?:string;
+        availItems?:number;
 
         extendedInfo?:{[key:string]:any};
     }
