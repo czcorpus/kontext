@@ -24,7 +24,8 @@
 
 
 import {SimplePageStore} from '../../util';
-import Immutable = require('vendor/immutable');
+import * as Immutable from 'vendor/immutable';
+import * as RSVP from 'vendor/rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
 
@@ -209,22 +210,36 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     private fetchExtendedInfo(attrName:string, itemIdx:number):RSVP.Promise<any> {
         const attr = this.getAttribute(attrName);
         const attrIdx = this.attributes.indexOf(attr);
-        this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
-            return {
-                availItems: item.availItems,
-                extendedInfo: undefined,
-                ident: item.ident,
-                locked: item.locked,
-                numGrouped: item.numGrouped,
-                selected: item.selected,
-                value: item.value
-            };
-        }));
-        const fn = this.extendedInfoCallbacks.get(attrName);
-        if (fn) {
-            return fn(itemIdx);
+
+        if (attr.getValues().get(itemIdx).numGrouped < 2) {
+            this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
+                return {
+                    availItems: item.availItems,
+                    extendedInfo: undefined,
+                    ident: item.ident,
+                    locked: item.locked,
+                    numGrouped: item.numGrouped,
+                    selected: item.selected,
+                    value: item.value
+                };
+            }));
+            const fn = this.extendedInfoCallbacks.get(attrName);
+            if (fn) {
+                return fn(itemIdx);
+
+            } else {
+                return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
+                    resolve(null);
+                });
+            }
 
         } else {
+            const message = this.pluginApi.translate(
+                    'query__tt_multiple_items_same_name_{num_items}',
+                    {num_items: attr.getValues().get(itemIdx).numGrouped}
+            );
+            console.log('message: ', message);
+            this.setExtendedInfo(attrName, itemIdx, Immutable.Map({__message__: message}));
             return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
                 resolve(null);
             });

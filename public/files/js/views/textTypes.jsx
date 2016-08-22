@@ -200,17 +200,28 @@ export function init(dispatcher, mixins, textTypesStore) {
             });
         },
 
+        _renderContent : function () {
+            if (this.props.data.has('__message__')) {
+                return <div className="message"><p>{this.props.data.get('__message__')}</p></div>;
+
+            } else {
+                return (
+                    <ul>
+                        {this.props.data.entrySeq().map((item) => {
+                            return <li key={item[0]}><strong>{item[0]}:</strong>{'\u00A0'}{item[1]}</li>;
+                        })}
+                    </ul>
+                );
+            }
+        },
+
         render : function () {
             let layoutViews = this.getLayoutViews();
             return (
                 <layoutViews.PopupBox onCloseClick={this._clickCloseHandler}
                             customClass="metadata-detail"
                             customStyle={{marginLeft: '5em'}}>
-                    <ul>
-                        {this.props.data.entrySeq().map((item) => {
-                            return <li key={item[0]}><strong>{item[0]}:</strong>{'\u00A0'}{item[1]}</li>;
-                        })}
-                    </ul>
+                    {this._renderContent()}
                 </layoutViews.PopupBox>
             );
         }
@@ -239,8 +250,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                 return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
 
             } else {
-                return <a title={this.translate('query__tt_multiple_items_same_name_{num_items}',
-                            {num_items: this.props.numGrouped})} className="bib-warn">!</a>;
+                return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-warn">!</a>
             }
 
         }

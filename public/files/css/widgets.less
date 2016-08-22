@@ -370,15 +370,29 @@ table.corplist td img.starred {
         margin: 1em auto;
     }
 }
-.tooltip-box.metadata-detail ul {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-
-    li {
-        padding: 0.1em 0;
+.tooltip-box.metadata-detail {
+    ul {
         margin: 0;
+        padding: 0;
+        list-style-type: none;
+
+        li {
+            padding: 0.1em 0;
+            margin: 0;
+        }
     }
+    .message {
+        margin: 0.6em;
+        background-image: url(../img/warning-icon.svg);
+        background-repeat: no-repeat;
+        background-size: 1em;
+        background-position: 0 0.2em;
+
+        p:first-letter {
+            padding-left: 1.6em;
+        }
+    }
+
 }
 .tooltip-box.hidden {
     display: none;
