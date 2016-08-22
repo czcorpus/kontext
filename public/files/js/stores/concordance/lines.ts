@@ -488,6 +488,14 @@ export class ConcLineStore extends SimplePageStore {
         return this.changePage('customPage', this.currentPage, concId);
     }
 
+    private pageIsInRange(num:number):boolean {
+        return this.pagination.firstPage <= num && num <= this.pagination.lastPage;
+    }
+
+    private pageNumIsValid(num:number):boolean {
+        return !isNaN(num) && Math.round(num) === num;
+    }
+
     /**
      * Changes current data page - either by moving <--, <-, ->, --> or
      * by entering a specific page number.
@@ -495,10 +503,10 @@ export class ConcLineStore extends SimplePageStore {
      * currently displayed data page.
      */
     private changePage(action:string, pageNumber?:number, concId?:string):RSVP.Promise<MultiDict> {
-        let args = this.layoutModel.getConcArgs();
-        let pageNum = action === 'customPage' ? pageNumber : this.pagination[action];
+        const args = this.layoutModel.getConcArgs();
+        const pageNum:number = Number(action === 'customPage' ? pageNumber : this.pagination[action]);
 
-        if (isNaN(Number(pageNum)) || Math.round(pageNum) !== pageNum) {
+        if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
             return new RSVP.Promise((resolve: (v: MultiDict)=>void, reject:(e:any)=>void) => {
                 reject(new Error(this.layoutModel.translate('concview__invalid_page_num_err')));
             });
