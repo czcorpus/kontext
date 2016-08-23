@@ -49,6 +49,7 @@ export function init(dispatcher, mixins, textTypesStore, liveAttrsStore) {
             return (
                 <span>
                 {this._shortenValues(item.languages, ' + ')}
+                <br />
                 </span>
             );
         },
@@ -189,6 +190,10 @@ export function init(dispatcher, mixins, textTypesStore, liveAttrsStore) {
         render : function () {
             return (
                 <label>
+                    {this.props.item.locked ?
+                        <input type="hidden" name="aligned_corpora" value={this.props.item.value} />
+                        : null
+                    }
                     <input type="checkbox" className="aligned-lang" name="aligned_corpora"
                             onChange={this._clickHandler} checked={this.props.item.selected}
                             value={this.props.item.value} disabled={this.props.item.locked} />
@@ -268,6 +273,7 @@ export function init(dispatcher, mixins, textTypesStore, liveAttrsStore) {
                                                             <td>
                                                                 <AlignedLangItem item={item} itemIdx={i} />
                                                             </td>
+                                                            <td />
                                                         </tr>
                                                     );
                                                 })}

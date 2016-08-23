@@ -280,11 +280,14 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     }
 
     private updateSelectionSteps(data:any):void {
-        if (this.selectionSteps.size === 0 && this.alignedCorpora.filter(item=>item.selected).size > 0) {
-            let mainLang = this.pluginApi.getConf<string>('corpname');
-            let newStep:AlignedLangSelectionStep = {
+        const newAttrs = this.getUnusedAttributes();
+        const selectedAligned = this.alignedCorpora.filter(item=>item.selected);
+
+        if (this.selectionSteps.size === 0 && selectedAligned.size > 0) {
+            const mainLang = this.pluginApi.getConf<string>('corpname');
+            const newStep:AlignedLangSelectionStep = {
                 num: 1,
-                numPosInfo: '',
+                numPosInfo: newAttrs.length > 0 ? null : data['poscount'],
                 attributes : Immutable.List([]),
                 languages : this.alignedCorpora
                                     .splice(0, 0, {
@@ -296,10 +299,9 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                                     .filter((item)=>item.selected).map((item)=>item.value).toArray()
             }
             this.selectionSteps = this.selectionSteps.push(newStep);
-
-        } else {
-            let newAttrs = this.getUnusedAttributes();
-            let newStep:TTSelectionStep = {
+        }
+        if (this.selectionSteps.size > 0 && newAttrs.length > 0 || selectedAligned.size == 0) {
+            const newStep:TTSelectionStep = {
                 num: this.selectionSteps.size + 1,
                 numPosInfo: data['poscount'],
                 attributes: Immutable.List(newAttrs),
@@ -316,7 +318,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     }
 
     getUnusedAttributes():Array<string> {
-        let used = this.getUsedAttributes();
+        const used = this.getUsedAttributes();
         return this.textTypesStore.getAttributesWithSelectedItems(true).filter((item) => {
             return used.indexOf(item) === -1;
         });

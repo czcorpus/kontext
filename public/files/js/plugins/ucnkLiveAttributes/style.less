@@ -1,0 +1,45 @@
+@import '../../../css/shared.less';
+
+.live-attributes {
+    >* {
+        vertical-align: middle;
+    }
+    div.steps {
+        margin: 0.7em 0 0.7em 0;
+        text-align: left;
+
+        .step-block {
+            margin-top: 0.6em;
+            display: inline-block;
+        }
+
+        .step-block:not(:first-child) {
+            margin-left: 0.3em;
+        }
+
+        span.arrow {
+            display: inline-block;
+            vertical-align: middle;
+            color: @color-widget-orange;
+        }
+        table.step {
+            min-height: 3.5em;
+            border-spacing: 0;
+            border: 1px solid @color-widget-orange;
+            border-radius: @border-radius-default;
+            box-shadow: @portal-box-shadow;
+            background-color: #FFFFFF;
+        }
+        table.step .num {
+            background-color: @color-widget-orange;
+            color: #FFFFFF;
+            padding: 8px;
+        }
+        table.step .data {
+            padding: 4px 8px;
+        }
+    }
+    .util-button {
+        margin-top: 12px;
+    }
+}
