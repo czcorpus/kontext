@@ -80,7 +80,7 @@ def cached(f):
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
             self.to_cache(db, key, ans)
-        return self.format_data_types(ans)
+        return self.export_num_strings(ans)
     return wrapper
 
 
@@ -148,13 +148,14 @@ class LiveAttributes(AbstractLiveAttributes):
             return self._max_attr_visible_chars
 
     @staticmethod
-    def format_data_types(data):
+    def export_num_strings(data):
+        """
+        Transform strings representing integer numbers to ints
+        """
         if type(data) is dict:
             for k in data.keys():
                 if type(data[k]) is str and data[k].isdigit():
                     data[k] = int(data[k])
-                if type(data[k]) is int or type(data[k]) is float:
-                    data[k] = l10n.format_number(data[k])
         return data
 
     def from_cache(self, db, key):
@@ -171,7 +172,7 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         ans = self.execute_sql(db, "SELECT value FROM cache WHERE key = ?", (key,)).fetchone()
         if ans:
-            return LiveAttributes.format_data_types(json.loads(str(ans[0])))
+            return LiveAttributes.export_num_strings(json.loads(str(ans[0])))
         return None
 
     def to_cache(self, db, key, values):
@@ -317,7 +318,7 @@ class LiveAttributes(AbstractLiveAttributes):
                     values[self.export_key(k)] = {'length': len(data[k])}
             else:
                 values[self.export_key(k)] = data[k]
-        exported['poscount'] = l10n.format_number(values['poscount'])
+        exported['poscount'] = values['poscount']
         return exported
 
     def get_bibliography(self, corpus, item_id):
