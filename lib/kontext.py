@@ -137,6 +137,11 @@ class AsyncTaskStatus(object):
 
     Status string is taken from Celery and should always equal
     one of the following: PENDING, STARTED, RETRY, FAILURE, SUCCESS
+
+    Attributes:
+        ident (str): task identifier (unique per specific task instance)
+        label (str): user-readable task label
+        status (str): one of
     """
 
     CATEGORY_SUBCORPUS = 'subcorpus'
@@ -1197,13 +1202,23 @@ class Kontext(Controller):
     def _uses_internal_user_pages():
         return isinstance(plugins.get('auth'), AbstractInternalAuth)
 
-    def get_async_tasks(self):
+    def get_async_tasks(self, category=None):
         """
         Returns a list of tasks user is explicitly informed about.
+
+        Args:
+            category (str): task category filter
+        Returns:
+            (list of AsyncTaskStatus)
         """
         if 'async_tasks' in self._session:
-            return [AsyncTaskStatus.from_dict(d) for d in self._session['async_tasks']]
-        return []
+            ans = [AsyncTaskStatus.from_dict(d) for d in self._session['async_tasks']]
+        else:
+            ans = []
+        if category is not None:
+            return filter(lambda item: item.category == category, ans)
+        else:
+            return ans
 
     def _set_async_tasks(self, task_list):
         self._session['async_tasks'] = [at.to_dict() for at in task_list]

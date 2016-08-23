@@ -215,6 +215,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             formatNumber(value:number):string {
                 return self.formatNumber(value);
             },
+            formatDate(d:Date):string {
+                return self.formatDate(d);
+            },
             getLayoutViews():Kontext.LayoutViews {
                 return self.layoutViews;
             }
@@ -270,8 +273,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * Register a handler triggered each time an asynchronous
      * server task is updated (typically finished)
      */
-    addOnAsyncTaskUpdate(fn:Kontext.AsyncTaskOnUpdate) {
+    addOnAsyncTaskUpdate(fn:Kontext.AsyncTaskOnUpdate):void {
         this.asyncTaskChecker.addOnUpdate(fn);
+    }
+
+    registerTask(task:Kontext.AsyncTaskInfo):void {
+        this.asyncTaskChecker.registerTask(task);
     }
 
     /**

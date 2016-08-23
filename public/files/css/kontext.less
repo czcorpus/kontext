@@ -884,6 +884,10 @@ table.data > tbody > tr:nth-child(odd) {
 table.data .deleted {
     color: @color-logo-pink;
 }
+table.data .sort-flag {
+    margin-left: 0.4em;
+    margin-right: 0.4em;
+}
 table.envelope {
     background-color: #FFFFFF;
     border: solid 1px @color-light-frame;
@@ -1770,13 +1774,59 @@ section.corplist {
     border: 2px solid @color-logo-pink !important;
     border-radius: @border-radius-default !important;
 }
-section.my-subcorpora {
+section#my-subcorpora {
     div.mass-op {
         margin: 0.4em 0;
         overflow: hidden;
 
         label.show-deleted {
             float: right;
+        }
+    }
+
+    table td .action-link {
+        text-transform: lowercase;
+    }
+
+    table td.processing {
+        color: @color-logo-pink;
+    }
+
+    .actions {
+        margin-top: 1em;
+    }
+
+    .subcorp-actions {
+        margin-left: 5em;
+
+        > div {
+            padding-top: 0.7em;
+        }
+
+
+        form.subc-action {
+            margin-top: 1em;
+
+            fieldset legend img {
+                margin-left: 0.4em;
+                margin-right: 0.4em;
+            }
+
+            > fieldset > div {
+                margin-top: 1em;
+            }
+
+            label > * {
+                vertical-align: top;
+            }
+
+            textarea {
+                width: 30em;
+            }
+
+            input[type='text'] {
+                width: 20em;
+            }
         }
     }
 }

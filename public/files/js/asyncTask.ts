@@ -63,6 +63,11 @@ export class AsyncTaskChecker {
         this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
     }
 
+    registerTask(task:Kontext.AsyncTaskInfo):void {
+        this.asyncTasks = this.asyncTasks.push(task);
+        this.init();
+    }
+
     private checkForStatus():RSVP.Promise<AsyncTaskResponse> {
          return this.pageModel.ajax(
             'GET',

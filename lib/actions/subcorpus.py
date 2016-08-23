@@ -14,6 +14,7 @@ import os
 import logging
 import json
 import time
+from collections import OrderedDict
 
 import werkzeug.urls
 
@@ -140,7 +141,9 @@ class Subcorpus(Kontext):
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
                                             _('Subcorpus created but there was a problem saving a backup copy.'))
-            return {}
+            unfinished_corpora = filter(lambda at: not at.is_finished(),
+                                        self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
+            return dict(unfinished_subc=[uc.to_dict() for uc in unfinished_corpora])
         else:
             raise SubcorpusError(_('Empty subcorpus!'))
 
@@ -203,24 +206,20 @@ class Subcorpus(Kontext):
     def ajax_create_subcorpus(self, request):
         return self._create_subcorpus(request)
 
-    def _delete_subcorpora(self, subc_list):
-        """
-        arguments:
-        subc_list -- a list of (corpus, subcorpus) tuples or corpus:subcorpus strings
-        """
-        base = self.subcpath[-1]
-        for subcorp_id in subc_list:
-            try:
-                if type(subcorp_id) in (str, unicode):
-                    corp, subcorp = subcorp_id.split(':', 1)
-                else:
-                    corp, subcorp = subcorp_id
-                os.unlink(os.path.join(base, corp, subcorp).encode('utf-8') + '.subc')
-            except TypeError as e:
-                self.add_system_message('error', e)
-
     def _create_full_subc_list(self, queries, subc_files):
         pass
+
+    @exposed(access_level=1, skip_corpus_init=True, http_method='POST', return_type='json')
+    def delete(self, request):
+        selected_corpora = json.loads(request.get_data())
+        subc_user_path = self.subcpath[-1]
+        for item in selected_corpora:
+            try:
+                os.unlink(os.path.join(subc_user_path, item['corpname'],
+                                       item['subcname']).encode('utf-8') + '.subc')
+            except TypeError as e:
+                self.add_system_message('error', e)
+        return {}
 
     @exposed(access_level=1, skip_corpus_init=True)
     def subcorp_list(self, request):
@@ -231,12 +230,8 @@ class Subcorpus(Kontext):
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
-        sort = 'n'  # TODO
+        sort = request.args.get('sort', 'name')
         show_deleted = int(request.args.get('show_deleted', 0))
-        if self.get_http_method() == 'POST':
-            selected_subc = request.form.getlist('selected_subc')
-            self._delete_subcorpora(selected_subc)
-
         data = []
         user_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id')).values()
         for corp in user_corpora:
@@ -244,11 +239,9 @@ class Subcorpus(Kontext):
                 for item in self.cm.subcorp_names(corp):
                     sc = self.cm.get_Corpus(corp, item['n'])
                     data.append({
-                        'n': '%s:%s' % (self._canonical_corpname(corp), item['n']),
-                        'internal_n': '%s:%s' % (corp, item['n']),
-                        'v': item['n'],
+                        'name': '%s:%s' % (self._canonical_corpname(corp), item['n']),
                         'size': sc.search_size(),
-                        'created': sc.created,
+                        'created': time.mktime(sc.created.timetuple()),
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
                         'usesubcorp': item['n'],
@@ -269,31 +262,24 @@ class Subcorpus(Kontext):
                     bool(show_deleted), 0)
             except Exception as e:
                 logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
-                full_list = []
+                full_list = data
         else:
             full_list = data
 
-        # TODO sorting does not work
         sort_key, rev = Kontext._parse_sorting_param(sort)
         if sort_key in ('size', 'created'):
-            data = sorted(data, key=lambda x: x[sort_key], reverse=rev)
+            full_list = sorted(full_list, key=lambda x: x[sort_key], reverse=rev)
         else:
-            data = l10n.sort(data, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
+            full_list = l10n.sort(full_list, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
 
-        sort_keys = dict([(x, (x, '')) for x in ('n', 'size', 'created')])
-        if not rev:
-            sort_keys[sort_key] = ('-%s' % sort_key, '&#8593;')
-        else:
-            sort_keys[sort_key] = (sort_key, '&#8595;')
-
+        unfinished_corpora = filter(lambda at: not at.is_finished(),
+                                    self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
         ans = {
             'SubcorpList': [],   # this is used by subcorpus SELECT element; no need for that here
             'subcorp_list': full_list,
-            'sort_keys': sort_keys,
+            'sort_key': dict(name=sort_key, reverse=rev),
             'show_deleted': show_deleted,
-            'rev': rev,
-            'unfinished_subc': filter(lambda at: at.category == AsyncTaskStatus.CATEGORY_SUBCORPUS and not at.is_finished(),
-                                      self.get_async_tasks())
+            'unfinished_subc': [uc.to_dict() for uc in unfinished_corpora]
         }
         return ans
 

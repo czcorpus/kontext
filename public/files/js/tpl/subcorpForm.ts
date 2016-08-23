@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
- * Copyright (c) 2003-2009  Pavel Rychly
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,15 +31,15 @@
 /// <amd-dependency path="plugins/subcmixer/init" name="subcmixer" />
 
 import $ = require('jquery');
-import RSVP = require('vendor/rsvp');
-import document = require('./document');
-import popupBox = require('popupbox');
-import {init as subcorpViewsInit} from 'views/subcorpForm';
-import subcorpFormStoreModule = require('../stores/subcorpForm');
-import queryInput = require('../queryInput');
-import liveAttributes = require('plugins/liveAttributes/init');
-import userSettings = require('../userSettings');
-import textTypesStore = require('../stores/textTypes/attrValues');
+import * as RSVP from 'vendor/rsvp';
+import {PageModel} from './document';
+import * as popupBox from '../popupbox';
+import {init as subcorpViewsInit} from 'views/subcorp/forms';
+import * as subcorpFormStoreModule from '../stores/subcorp/form';
+import {extendedApi} from '../queryInput';
+import * as liveAttributes from 'plugins/liveAttributes/init';
+import {UserSettings} from '../userSettings';
+import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
 
 // dynamic imports
@@ -51,7 +52,7 @@ declare var corplistComponent:CorpusArchive.Module;
  */
 export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
-    private layoutModel:document.PageModel;
+    private layoutModel:PageModel;
 
     private corplistComponent:CorpusArchive.Widget;
 
@@ -61,12 +62,12 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     private extendedApi:Kontext.QueryPagePluginApi;
 
-    private textTypesStore:textTypesStore.TextTypesStore;
+    private textTypesStore:TextTypesStore;
 
-    constructor(pageModel:document.PageModel, viewComponents,
+    constructor(pageModel:PageModel, viewComponents,
             subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
         this.layoutModel = pageModel;
-        this.extendedApi = queryInput.extendedApi(pageModel, this);
+        this.extendedApi = extendedApi(pageModel, this);
         let subcForm = $('#subcorp-form');
         let corplist = corplistComponent.create(subcForm.find('select[name="corpname"]').get(0),
                 this.extendedApi, {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false});
@@ -197,7 +198,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     createTextTypesComponents():void {
         let textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.textTypesStore = new textTypesStore.TextTypesStore(
+        this.textTypesStore = new TextTypesStore(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData,
@@ -243,7 +244,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     init(conf:Kontext.Conf):void {
         let getStoredAlignedCorp = () => {
-            return this.layoutModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
+            return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
         }
         this.layoutModel.init().then(
             () => {
@@ -261,7 +262,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
 
 export function init(conf:Kontext.Conf) {
-    let layoutModel:document.PageModel = new document.PageModel(conf);
+    let layoutModel:PageModel = new PageModel(conf);
     let subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
         layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
         layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
