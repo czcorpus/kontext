@@ -82,7 +82,7 @@ declare module "views/concordance/detail" {
 }
 
 
-declare module "views/subcorpForm" {
+declare module "views/subcorp/forms" {
 
     export interface SubcorpFormViews {
         WithinBuilder:React.ReactClass;
@@ -92,6 +92,16 @@ declare module "views/subcorpForm" {
             subcorpFormStore:any):SubcorpFormViews;
 }
 
+
+declare module "views/subcorp/list" {
+
+    export interface SubcorpListViews {
+        SubcorpList:React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            PopupBox:React.ReactClass, subcorpListStore:any):SubcorpListViews;
+}
 
 
 declare module "views/textTypes" {

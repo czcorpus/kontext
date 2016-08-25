@@ -235,6 +235,7 @@ declare module Kontext {
         createActionLink(path:string):string;
         createStaticUrl(path:string):string;
         formatNumber(value:number):string;
+        formatDate(d:Date):string;
         getLayoutViews():Kontext.LayoutViews;
     }
 

@@ -20,8 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #from cmpltmpl.document import document
 #extends document
 
-#from templating.filters import Datetime
-#from templating.filters import Bool2Num
+#from templating.filters import *
 
 #def title
 $_("List of my subcorpora")#slurp
@@ -29,91 +28,16 @@ $_("List of my subcorpora")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
+    conf.SubcorpList = #filter $Jsonize#$subcorp_list#end filter#;
+    conf.UnfinishedSubcorpora = #filter $Jsonize#$unfinished_subc#end filter#;
+    conf.SortKey = #filter $Jsonize#$sort_key#end filter#;
     pageSelf.init(conf);
 });
 #end def
 
-
 #def main
-<section class="my-subcorpora">
+<section id="my-subcorpora">
     <h2>$_('My subcorpora')</h2>
-    <form id="mainform" action="${root_url}subcorpus/subcorp_list" method="POST">
-        #filter None
-        <div id="corpus-selection" style="display:none">
-        $corp_sel_node
-        </div>
-        #end filter
-
-        <table class="data" border="0">
-            <thead>
-                <tr>
-                    <th><a href="${root_url}subcorpus/subcorp_list?$q;$globals&sort=$sort_keys.n[0]">$_('name') #filter None#$sort_keys.n[1]#end filter#</a></th>
-                    <th><a href="${root_url}subcorpus/subcorp_list?$q;$globals&sort=$sort_keys.size[0]">$_('size') ($_('positions')) #filter None#$sort_keys.size[1]#end filter#</a></th>
-                    <th><a href="${root_url}subcorpus/subcorp_list?$q;$globals&sort=$sort_keys.created[0]">$_('created') #filter None#$sort_keys.created[1]#end filter#</a></th>
-                    <th>$_('status')</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            #for $item in $unfinished_subc
-            <tr class="unfinished" data-task-ident="$item.ident">
-                <td class="name">$item.label</td>
-                <td class="size num">-</td>
-                <td class="created">-</td>
-                <td class="status">$_('calculating ...')</td>
-                <td class="actions"></td>
-                <td class="selection"></td>
-            </tr>
-            #end for#
-            #for $item in $subcorp_list
-            <tr>
-                <td>
-                  #if not $item.deleted
-                  <a href="${root_url}first_form?corpname=$item.corpname&usesubcorp=$item.usesubcorp" title="$_('Search in the corpus')">
-                  #end if
-                  $item.n
-                  #if not $item.deleted
-                  </a>
-                  #end if
-                </td>
-                <td class="num">$format_number($item.size, mask='%d')</td>
-                <td>#filter $Datetime#$item.created#end filter#</td>
-                <td data-query="$item.get('cql')">
-                #set $states = []
-                #if $item.deleted# $states.append('<span class="deleted">' + $_('deleted') + '</span>') #end if#
-                #if $item.get('cql')# $states.append($_('backed up')) #end if#
-                #if $len($states) == 0
-                  $states.append($_('active'))
-                #end if
-                #set $states = ', '.join($states)
-                #filter None# $states #end filter#
-                </td>
-                <td>
-                  <a class="subc-actions"
-                     data-deleted="#filter $Bool2Num#$item.deleted#end filter#"
-                     data-cql="$item.get('cql')"
-                     data-subcname="$item.usesubcorp"
-                     data-corpname="$item.corpname"
-                     data-human_corpname="$item.human_corpname">$_('actions')</a>
-                </td>
-                <td>
-                    #if not $item.deleted
-                    <input class="selected-subc" type="checkbox" name="selected_subc" value="$item.internal_n" />
-                    #end if
-                </td>
-            </tr>
-            #end for
-            </tbody>
-        </table>
-        <div class="mass-op">
-        <label class="show-deleted">$_('Show also deleted items') <input type="checkbox" class="show-deleted" #if $show_deleted#checked="checked"#end if# /></label>
-        </div>
-        <div class="mass-op">
-            <button type="submit" class="default-button delete-selected"
-                    name="action" value="delete" style="display:none">$_('Delete selected')</button>
-        </div>
-    </form>
+    <div id="my-subcorpora-mount"></di>
 </section>
-
 #end def

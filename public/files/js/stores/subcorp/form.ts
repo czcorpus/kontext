@@ -18,10 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../../ts/declarations/flux.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/flux.d.ts" />
 
-import util = require('../util');
+
+import {SimplePageStore} from '../../util';
 
 
 export class WithinLine {
@@ -39,7 +40,7 @@ export class WithinLine {
 }
 
 
-export class SubcorpFormStore extends util.SimplePageStore {
+export class SubcorpFormStore extends SimplePageStore {
 
     private lines:Array<WithinLine>;
 

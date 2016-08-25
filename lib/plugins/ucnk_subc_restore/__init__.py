@@ -39,6 +39,7 @@ required entry in config.xml:
 
 import time
 import urllib
+import logging
 
 import werkzeug.urls
 from plugins.abstract.subc_restore import AbstractSubcRestore
@@ -128,7 +129,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         to_idx -- last item index (None by default)
 
         returns:
-        a corplist sorted by creation date
+        an unsorted corplist
         """
         subc_queries = self.list_queries(user_id, from_idx, to_idx)
         subc_queries_map = {}
@@ -136,35 +137,36 @@ class UCNKSubcRestore(AbstractSubcRestore):
             subc_queries_map[u'%s:%s' % (x['corpname'], x['subcname'])] = x
 
         if show_deleted:
-            deleted_keys = set(subc_queries_map.keys()) - (set([x['internal_n'] for x in subc_list]))
+            deleted_keys = set(subc_queries_map.keys()) - (set([x['name'] for x in subc_list]))
         else:
             deleted_keys = []
 
         escape_subcname = lambda s: werkzeug.urls.url_quote(s, unsafe='+')
         deleted_items = []
         for dk in deleted_keys:
-            corpus_info = self._corparch.get_corpus_info(subc_queries_map[dk]['corpname'])
-            deleted_items.append({
-                'n': corpname_canonizer(dk),
-                'internal_n': subc_queries_map[dk]['corpname'],
-                'v': dk,
-                'size': None,
-                'created': datetime.datetime.fromtimestamp(subc_queries_map[dk]['timestamp']),
-                'human_corpname': corpus_info.name,
-                'corpname': subc_queries_map[dk]['corpname'],
-                'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
-                'cql': urllib.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
-                'deleted': True
-            })
+            try:
+                corpus_info = self._corparch.get_corpus_info(subc_queries_map[dk]['corpname'])
+                deleted_items.append({
+                    'name': '{0}:{1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
+                    'size': None,
+                    'created': subc_queries_map[dk]['timestamp'],
+                    'human_corpname': corpus_info.name,
+                    'corpname': subc_queries_map[dk]['corpname'],
+                    'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
+                    'cql': urllib.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
+                    'deleted': True
+                })
+            except Exception as ex:
+                logging.getLogger(__name__).warning(ex)
 
         for subc in subc_list:
-            if subc['internal_n'] in subc_queries_map:
-                subc['cql'] = urllib.quote(subc_queries_map[subc['internal_n']]['cql'].encode('utf-8'))
+            if subc['name'] in subc_queries_map:
+                subc['cql'] = urllib.quote(subc_queries_map[subc['name']]['cql'].encode('utf-8'))
             else:
                 subc['cql'] = None
             subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])
 
-        return sorted(subc_list + deleted_items, key=lambda t: t['n'])
+        return subc_list + deleted_items
 
 
 @inject('corparch')
