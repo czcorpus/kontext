@@ -22,7 +22,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
+export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
 
 
     // ------------------------ <TrUnfinishedLine /> --------------------------
@@ -245,7 +245,7 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
 
         render : function () {
             return (
-                <form>
+                <form className="filter">
                     <fieldset>
                         <legend>{this.translate('subclist__filter_heading')}</legend>
                         <div>
@@ -462,18 +462,20 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
 
         render : function () {
             return (
-                <PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions">
-                    <div>
-                        <h3>{this.state.data.name}</h3>
-                        <span className="actions">
-                            {this.translate('global__actions') + ':\u00A0'}
-                        </span>
-                        <select onChange={this._handleActionSelect}>
-                            {this._renderActionMenu()}
-                        </select>
-                        {this._renderActionForm()}
-                    </div>
-                </PopupBox>
+                <layoutViews.ModalOverlay>
+                    <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions">
+                        <div>
+                            <h3>{this.state.data.name}</h3>
+                            <span className="actions">
+                                {this.translate('global__actions') + ':\u00A0'}
+                            </span>
+                            <select onChange={this._handleActionSelect}>
+                                {this._renderActionMenu()}
+                            </select>
+                            {this._renderActionForm()}
+                        </div>
+                    </layoutViews.PopupBox>
+                </layoutViews.ModalOverlay>
             )
         }
     });

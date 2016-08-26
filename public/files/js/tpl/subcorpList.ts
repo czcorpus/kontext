@@ -113,7 +113,7 @@ class SubcorpListPage {
 
     private renderView():void {
         const views = listViewInit(this.layoutModel.dispatcher, this.layoutModel.exportMixins(),
-                this.layoutModel.layoutViews.PopupBox, this.subcorpListStore);
+                this.layoutModel.layoutViews, this.subcorpListStore);
         const props = {};
         this.layoutModel.renderReactComponent(
             views.SubcorpList,

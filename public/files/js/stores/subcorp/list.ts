@@ -192,8 +192,8 @@ export class SubcorpListStore extends SimplePageStore {
         const srcRow = this.lines.get(idx);
         const params = {
             corpname: srcRow.corpname,
-            subcname: subcname ? subcname : srcRow.usesubcorp,
-            cql: cql ? cql : srcRow.cql
+            subcname: subcname !== undefined ? subcname : srcRow.usesubcorp,
+            cql: cql !== undefined ? cql : srcRow.cql
         };
         return this.layoutModel.ajax<AjaxResponse.CreateSubcorpus>(
             'POST',

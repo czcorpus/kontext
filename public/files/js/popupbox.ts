@@ -374,7 +374,6 @@ export class TooltipBox implements Legacy.IPopupBox {
         if (fetchOption('closeIcon', false)) {
             this.jqCloseIcon = $('<a class="close-link" title="' +
                     mixins.translate('close') + '"></a>');
-            $(this.rootElm).addClass('framed');
         }
         if (boxId) {
             this.rootElm.setAttribute('id', boxId);
