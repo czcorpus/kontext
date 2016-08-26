@@ -110,7 +110,6 @@ class Subcorpus(Kontext):
             backend, conf = settings.get_full('global', 'calc_backend')
             if backend == 'celery':
                 import task
-                from kontext import AsyncTaskStatus
                 app = task.get_celery_app(conf['conf'])
                 res = app.send_task('worker.create_subcorpus',
                                     (self._session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
