@@ -1,3 +1,5 @@
+@import "../../../css/shared.less";
+
 section.corplist {
 
     form.filter {
@@ -11,5 +13,178 @@ section.corplist {
             margin-left: 1em;
         }
     }
+}
 
+@corplist-widget-table-spacing: 30pt;
+.corplist-widget {
+    max-width: 500pt;
+    border: 1px solid #E4E4E4;
+    background-color: #FEFDFD;
+    border-radius: 3px;
+    box-shadow: 0 0 10pt #a5a5a5;
+    padding: 1em 0.7pt 0 0.7em;
+    text-align: left;
+}
+.corplist-widget .footer {
+    text-align: center;
+    color: @color-light-text;
+    border-color: @color-light-grey;
+    border-width: 1pt 0 0 0;
+    border-style: solid;
+    font-size: 80%;
+    height: 2em;
+    line-height: 2em;
+    margin-top: 10pt;
+}
+.corplist-widget .tmp-hint img {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+}
+.corplist-widget .srch-field {
+    color: inherit;
+}
+.corplist-widget .srch-field.initial {
+    color: #ababab;
+}
+.corplist-widget table td {
+    padding: 0.2em 1em;
+}
+.corplist-widget table td.tools {
+    padding: 0.2em 0 0 0;
+    text-align: left;
+    vertical-align: middle;
+}
+.corplist-widget tr td a {
+    color: @color-default-text;
+    text-decoration: none;
+}
+.tt-menu .tt-suggestion span.num,
+.corplist-widget tr td.num {
+    color: @color-light-text;
+}
+.corplist-widget tr td a:hover {
+    color: @color-logo-pink;
+    text-decoration: underline;
+}
+.corplist-widget .menu {
+    margin: 0 0 10pt 0;
+    text-align: center;
+}
+.corplist-widget .menu a {
+    text-decoration: none;
+}
+.corplist-widget .menu a.current {
+    text-decoration: underline;
+    font-weight: bold;
+}
+.corplist-widget .labels {
+    padding: 5pt;
+}
+.corplist-widget .labels a {
+    text-decoration: none;
+}
+.corplist-widget .labels a:hover {
+    text-decoration: underline;
+}
+.corplist-widget .srch-box {
+    display: block;
+    text-align: center;
+    margin-top: 10pt;
+}
+.corplist-widget .srch-box .twitter-typeahead {
+    display: block;
+    width: 80%;
+}
+.corplist-widget .corp-search {
+    font-size: 14pt;
+    display: block;
+    width: 100%;
+}
+.corplist-widget .ajax-loader {
+    display: inline-block;
+    margin-right: 10pt;
+}
+.corplist-widget .ajax-loader.hidden {
+    visibility: hidden;
+}
+.corplist-widget .input-wrapper {
+    position: relative;
+    left: -24px;
+}
+.corplist-widget .keyword {
+    #label-design();
+}
+.corplist-widget .keyword.reset {
+    background-color: @color-light-grey;
+    border-color: @color-light-text;
+    color: @color-default-text;
+}
+.corplist-widget .keyword .overlay {
+    border-width: 0;
+    border-radius: @border-radius-default;
+    padding: 0.2em 0.4em;
+    display: inline-block;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    -ms-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+}
+.corplist-widget .keyword.selected {
+    color: @color-bg-light-blue;
+    background-color: @color-logo-blue;
+}
+.corplist-widget table.favorite-list,
+.corplist-widget table.featured-list {
+    display: inline-block;
+    vertical-align: top;
+    box-sizing: border-box;
+    border-spacing: 0;
+}
+.corplist-widget table.favorite-list th.conf {
+    text-align: right;
+    padding-right: 8pt;
+    padding-left: 0;
+
+    img.config {
+        cursor: pointer;
+    }
+}
+.corplist-widget table.favorite-list img.remove {
+    display: inline-block;
+    padding: 0;
+    cursor: pointer;
+    width: @navig-icon-size;
+}
+.corplist-widget table.favorite-list img.remove.disabled {
+    display: none;
+}
+.corplist-widget table.featured-list {
+    margin-left: @corplist-widget-table-spacing;
+}
+.corplist-widget div.tables > table tr {
+    line-height: 1.2em;
+}
+.corplist-widget div.tables > table th {
+    text-align: left;
+    color: @color-logo-pink;
+    padding-left: 1em;
+    height: 1.5em;
+}
+.corplist-widget .labels-hint {
+    padding: 0.5em 0 0 0;
+    color: @color-light-text;
+    font-size: 8pt;
+    text-align: left;
+}
+table.corplist tr.load-more td {
+    text-align: center;
+    padding-top: 1em;
+    padding-bottom: 0.7em;
+}
+table.corplist td img.starred {
+    display: inline-block;
+    vertical-align: middle;
+    width: 1.9em;
 }
