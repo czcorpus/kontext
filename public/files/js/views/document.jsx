@@ -26,7 +26,20 @@ const ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 export function init(dispatcher, mixins, storeProvider) {
 
-    // ------------------------------ general pop-up box -----------------------------
+    // ------------------------------ <ModalOverlay /> -----------------------------
+
+    let ModalOverlay = React.createClass({
+        render : function () {
+            return (
+                <div id="modal-overlay">
+                    {this.props.children}
+                </div>
+            );
+        }
+    });
+
+
+    // ------------------------------ <PopupBox /> -----------------------------
 
     /**
      * React version of KonText popupbox
@@ -84,7 +97,7 @@ export function init(dispatcher, mixins, storeProvider) {
         },
 
         render: function () {
-            let classes = 'tooltip-box framed';
+            let classes = 'tooltip-box';
             if (this.props.customClass) {
                 classes += ' ' + this.props.customClass;
             }
@@ -269,6 +282,7 @@ export function init(dispatcher, mixins, storeProvider) {
     // ------------------------------------------------------------------------------------
 
     return {
+        ModalOverlay: ModalOverlay,
         PopupBox: PopupBox,
         InlineHelp: InlineHelp,
         Messages: Messages,

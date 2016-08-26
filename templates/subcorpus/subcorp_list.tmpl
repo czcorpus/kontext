@@ -31,6 +31,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.SubcorpList = #filter $Jsonize#$subcorp_list#end filter#;
     conf.UnfinishedSubcorpora = #filter $Jsonize#$unfinished_subc#end filter#;
     conf.SortKey = #filter $Jsonize#$sort_key#end filter#;
+    conf.RelatedCorpora = #filter $Jsonize#$related_corpora#end filter#;
     pageSelf.init(conf);
 });
 #end def

@@ -100,7 +100,7 @@ declare module "views/subcorp/list" {
     }
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
-            PopupBox:React.ReactClass, subcorpListStore:any):SubcorpListViews;
+            layoutViews:Kontext.LayoutViews, subcorpListStore:any):SubcorpListViews;
 }
 
 
