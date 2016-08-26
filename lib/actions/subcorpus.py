@@ -230,9 +230,11 @@ class Subcorpus(Kontext):
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
         sort = request.args.get('sort', 'name')
-        show_deleted = int(request.args.get('show_deleted', 0))
+        filter_args = dict(show_deleted=bool(int(request.args.get('show_deleted', 0))),
+                           corpname=request.args.get('corpname'))
         data = []
         user_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id')).values()
+        related_corpora = set()
         for corp in user_corpora:
             try:
                 for item in self.cm.subcorp_names(corp):
@@ -244,8 +246,8 @@ class Subcorpus(Kontext):
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
                         'usesubcorp': item['n'],
-                        'deleted': False
-                    })
+                        'deleted': False})
+                    related_corpora.add(self._canonical_corpname(corp))
             except Exception as e:
                 for d in data:
                     # permitted_corpora does this
@@ -253,12 +255,14 @@ class Subcorpus(Kontext):
                 logging.getLogger(__name__).warn(
                     'Failed to fetch information about subcorpus of [%s]: %s' % (corp, e))
 
+        if filter_args['corpname']:
+            data = filter(lambda item: not filter_args['corpname'] or item['corpname'] == filter_args['corpname'],
+                          data)
+
         if plugins.has_plugin('subc_restore'):
             try:
                 full_list = plugins.get('subc_restore').extend_subc_list(
-                    data, self._session_get('user', 'id'),
-                    self._canonical_corpname,
-                    bool(show_deleted), 0)
+                    data, self._session_get('user', 'id'), filter_args, 0)
             except Exception as e:
                 logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
                 full_list = data
@@ -277,8 +281,9 @@ class Subcorpus(Kontext):
             'SubcorpList': [],   # this is used by subcorpus SELECT element; no need for that here
             'subcorp_list': full_list,
             'sort_key': dict(name=sort_key, reverse=rev),
-            'show_deleted': show_deleted,
-            'unfinished_subc': [uc.to_dict() for uc in unfinished_corpora]
+            'filter': filter_args,
+            'unfinished_subc': [uc.to_dict() for uc in unfinished_corpora],
+            'related_corpora': sorted(related_corpora)
         }
         return ans
 

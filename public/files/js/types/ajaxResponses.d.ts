@@ -74,8 +74,9 @@ declare module AjaxResponse {
     export interface SubcorpList extends Kontext.AjaxResponse {
         SubcorpList:Array<any>; // TODO - do we need this?
         subcorp_list:Array<ServerSubcorpListItem>;
-        show_deleted:boolean;
+        filter:{[k:string]:any};
         sort_key:{name:string; reverse:boolean};
+        related_corpora:Array<string>,
         unfinished_subc:Array<UnfinishedSubcorp>;
     }
 

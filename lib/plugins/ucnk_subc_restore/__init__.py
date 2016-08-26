@@ -111,51 +111,55 @@ class UCNKSubcRestore(AbstractSubcRestore):
         else:
             return None
 
-    def extend_subc_list(self, subc_list, user_id, corpname_canonizer, show_deleted, from_idx, to_idx=None):
+    def extend_subc_list(self, subc_list, user_id, filter_args, from_idx, to_idx=None):
         """
         Enriches KonText's original subcorpora list by the information about queries which
         produced these subcorpora. It it also able to insert an information about deleted
         subcorpora.
 
-        arguments:
-        subc_list -- an original subcorpora list as produced by KonText's respective action
-                     (= list of dict(n=str, v=???, size=int, created=str, corpname=str, usesubcorp=str))
-        user_id -- a database user ID
-        corpname_canonizer -- a function providing a canonized version of a corpus name
-        show_deleted -- if True then the method includes removed subcorpora too (though without
-                        some properties obtained from subcorpora files which are not available in such
-                        case)
-        from_idx -- 0..(num_items-1) list offset
-        to_idx -- last item index (None by default)
+        Args:
+            subc_list (list of dict): an original subcorpora list as produced by KonText's respective action
+                (= list of dict(n=str, v=???, size=int, created=str, corpname=str, usesubcorp=str))
+            user_id (int): a database user ID
+            filter_args (dict): support for 'show_deleted': 0/1 and 'corpname': str
+            from_idx (int): 0..(num_items-1) list offset
+            to_idx (int): last item index (None by default)
 
-        returns:
-        an unsorted corplist
+        Returns:
+            list of dict: a new list containing both the original subc_list and also the extended part
         """
         subc_queries = self.list_queries(user_id, from_idx, to_idx)
         subc_queries_map = {}
         for x in subc_queries:
             subc_queries_map[u'%s:%s' % (x['corpname'], x['subcname'])] = x
 
-        if show_deleted:
+        if filter_args.get('show_deleted', False):
             deleted_keys = set(subc_queries_map.keys()) - (set([x['name'] for x in subc_list]))
         else:
             deleted_keys = []
 
-        escape_subcname = lambda s: werkzeug.urls.url_quote(s, unsafe='+')
+        def corpname_matches(cn):
+            filter_cn = filter_args.get('corpname', None)
+            return not filter_cn or cn == filter_cn
+
+        def escape_subcname(s):
+            return werkzeug.urls.url_quote(s, unsafe='+')
+
         deleted_items = []
         for dk in deleted_keys:
             try:
-                corpus_info = self._corparch.get_corpus_info(subc_queries_map[dk]['corpname'])
-                deleted_items.append({
-                    'name': '{0}:{1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
-                    'size': None,
-                    'created': subc_queries_map[dk]['timestamp'],
-                    'human_corpname': corpus_info.name,
-                    'corpname': subc_queries_map[dk]['corpname'],
-                    'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
-                    'cql': urllib.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
-                    'deleted': True
-                })
+                corpus_name = subc_queries_map[dk]['corpname']
+                if corpname_matches(corpus_name):
+                    corpus_info = self._corparch.get_corpus_info(corpus_name)
+                    deleted_items.append({
+                        'name': '{0}:{1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
+                        'size': None,
+                        'created': subc_queries_map[dk]['timestamp'],
+                        'human_corpname': corpus_info.name,
+                        'corpname': subc_queries_map[dk]['corpname'],
+                        'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
+                        'cql': urllib.quote(subc_queries_map[dk]['cql'].encode('utf-8')),
+                        'deleted': True})
             except Exception as ex:
                 logging.getLogger(__name__).warning(ex)
 

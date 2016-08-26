@@ -57,6 +57,7 @@ export interface SortKey {
 
 export interface ListFilter {
     show_deleted:boolean;
+    corpname:string;
 }
 
 
@@ -68,19 +69,23 @@ export class SubcorpListStore extends SimplePageStore {
 
     private unfinished:Immutable.List<UnfinishedSubcorp>;
 
+    private relatedCorpora:Immutable.List<string>;
+
     private sortKey:SortKey;
 
     private filter:ListFilter;
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
+            relatedCorpora:Array<string>,
             unfinished:Array<AjaxResponse.UnfinishedSubcorp>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.importLines(data);
         this.importUnfinished(unfinished);
+        this.relatedCorpora = Immutable.List<string>(relatedCorpora);
         this.sortKey = sortKey;
-        this.filter = {show_deleted: false};
+        this.filter = {show_deleted: false, corpname: ''};
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
             if (itemList.filter(item => item.category == 'subcorpus').size > 0) {
@@ -249,12 +254,12 @@ export class SubcorpListStore extends SimplePageStore {
     private importLines(data:Array<AjaxResponse.ServerSubcorpListItem>):void {
         this.lines = Immutable.List<SubcorpListItem>(data.map<SubcorpListItem>(item => {
             return {
-                name: item.name,
+                name: decodeURIComponent(item.name),
                 corpname: item.corpname,
-                usesubcorp: item.usesubcorp,
+                usesubcorp: decodeURIComponent(item.usesubcorp),
                 deleted: item.deleted,
                 size: item.size,
-                cql: decodeURIComponent(item.cql),
+                cql: decodeURIComponent(item.cql).trim(),
                 created: new Date(item.created * 1000),
                 selected: false
             }
@@ -318,6 +323,7 @@ export class SubcorpListStore extends SimplePageStore {
                 } else {
                     this.importLines(data.subcorp_list);
                     this.importUnfinished(data.unfinished_subc);
+                    this.relatedCorpora = Immutable.List<string>(data.related_corpora);
                     this.sortKey = {
                         name: data.sort_key.name,
                         reverse: data.sort_key.reverse
@@ -346,7 +352,6 @@ export class SubcorpListStore extends SimplePageStore {
     }
 
     private filterItems(filter:ListFilter):RSVP.Promise<any> {
-        //show_deleted
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.sortKey.reverse ? '-' : '') + this.sortKey.name,
@@ -366,6 +371,7 @@ export class SubcorpListStore extends SimplePageStore {
                 } else {
                     this.importLines(data.subcorp_list);
                     this.importUnfinished(data.unfinished_subc);
+                    this.relatedCorpora = Immutable.List<string>(data.related_corpora);
                     for (let p in filter) {
                         if (filter.hasOwnProperty(p)) {
                             this.filter[p] = filter[p];
@@ -414,5 +420,8 @@ export class SubcorpListStore extends SimplePageStore {
         return this.lines.get(num);
     }
 
+    getRelatedCorpora():Immutable.List<string> {
+        return this.relatedCorpora;
+    }
 }
 

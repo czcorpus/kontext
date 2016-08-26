@@ -227,7 +227,18 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
             dispatcher.dispatch({
                 actionType: 'SUBCORP_LIST_UPDATE_FILTER',
                 props: {
+                    corpname: this.props.filter['corpname'],
                     show_deleted: !this.props.filter['show_deleted']
+                }
+            });
+        },
+
+        _handleCorpusSelection : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'SUBCORP_LIST_UPDATE_FILTER',
+                props: {
+                    corpname: evt.target.value,
+                    show_deleted: this.props.filter['show_deleted']
                 }
             });
         },
@@ -237,10 +248,21 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
                 <form>
                     <fieldset>
                         <legend>{this.translate('subclist__filter_heading')}</legend>
-                        <label>
-                            {this.translate('subclist__show_deleted')}
-                            <input type="checkbox" onChange={this._handleShowDeleted} checked={this.props.filter['show_deleted']} />
-                        </label>
+                        <div>
+                            <label>{this.translate('global__corpus')}:{'\u00A0'}
+                                <select value={this.props.filter.corpname}
+                                        onChange={this._handleCorpusSelection}>
+                                    <option value="">--</option>
+                                    {this.props.relatedCorpora.map(item => <option key={item} value={item}>{item}</option>)}
+                                </select>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                {this.translate('subclist__show_deleted')}:{'\u00A0'}
+                                <input type="checkbox" onChange={this._handleShowDeleted} checked={this.props.filter['show_deleted']} />
+                            </label>
+                        </div>
                     </fieldset>
                 </form>
             );
@@ -286,7 +308,7 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
 
         getInitialState : function () {
             return {
-                newName: this.props.data.name + ' (' + this.translate('global__copy') + ')',
+                newName: this.props.data.usesubcorp + ' (' + this.translate('global__copy') + ')',
                 newCql: this.props.data.cql
             };
         },
@@ -467,6 +489,7 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
             this.setState({
                 hasSelectedLines: subcorpLinesStore.hasSelectedLines(),
                 filter: subcorpLinesStore.getFilter(),
+                relatedCorpora: subcorpLinesStore.getRelatedCorpora(),
                 actionBoxVisible: null
             });
         },
@@ -475,6 +498,7 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
             return {
                 hasSelectedLines: subcorpLinesStore.hasSelectedLines(),
                 filter: subcorpLinesStore.getFilter(),
+                relatedCorpora: subcorpLinesStore.getRelatedCorpora(),
                 actionBoxVisible: null
             };
         },
@@ -510,7 +534,7 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
             return (
                 <div>
                     <section className="inner">
-                        <FilterForm filter={this.state.filter} />
+                        <FilterForm filter={this.state.filter} relatedCorpora={this.state.relatedCorpora} />
                     </section>
                     {this.state.actionBoxVisible !== null
                         ? <ActionBox onCloseClick={this._handleActionsClose} idx={this.state.actionBoxVisible} />

@@ -142,6 +142,7 @@ export function init(conf) {
         layoutModel,
         layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
         layoutModel.getConf<SortKey>('SortKey'),
+        layoutModel.getConf<Array<string>>('RelatedCorpora'),
         layoutModel.getConf<Array<AjaxResponse.UnfinishedSubcorp>>('UnfinishedSubcorpora')
     );
     const pageModel = new SubcorpListPage(layoutModel, subcorpListStore);
