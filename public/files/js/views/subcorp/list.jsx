@@ -108,7 +108,7 @@ export function init(dispatcher, mixins, PopupBox, subcorpLinesStore) {
                     <td>
                         {this.props.item.cql
                             ? <a className="action-link" onClick={this._handleActionClick}>
-                                    {this.translate('global__actions')}{'\u00A0\u2026'}</a>
+                                    {this.translate('global__options')}{'\u00A0\u2026'}</a>
                             : null}
                     </td>
                 </tr>
