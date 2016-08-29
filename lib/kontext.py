@@ -1333,6 +1333,9 @@ class PluginApi(object):
     def current_corpus(self):
         return self._controller.corp
 
+    def get_canonical_corpname(self, c):
+        return plugins.get('auth').canonical_corpname(c)
+
     @property
     def current_url(self):
         return getattr(self._controller, '_get_current_url')()
