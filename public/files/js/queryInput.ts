@@ -583,7 +583,7 @@ export class QueryFormTweaks {
     isPossibleQueryTypeMismatch(inputElm, queryTypeElm):boolean {
         const query = $(inputElm).val().trim();
         const queryType = $(queryTypeElm).find('option:selected').data('type');
-        const looksLikeCql = !!(/^"[^\"]+"$/.exec(query) || /^\[\w+\s*=\s*"[^"]+"\]$/.exec(query));
+        const looksLikeCql = !!(/^"[^\"]+"$/.exec(query) || /^\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]$/.exec(query));
         return !!(queryType === 'iquery' && looksLikeCql || queryType === 'cql' && !looksLikeCql);
     }
 
