@@ -43,5 +43,26 @@ class MaximumContextExceeded(Exception):
 
 class SearchBackend(object):
 
+    def import_parent_val(self, v):
+        """
+        Override this method in case your data is encoded
+        somehow (i.e. there is more than just number expected there).
+
+        Args:
+            v: encoded parent value
+
+        Returns (int):
+            numeric value representation
+        """
+        return int(v)
+
     def get_data(self, corpus, canonical_corpus_id, token_id):
+        """
+        Args:
+            corpus (manatee.Corpus): a respective corpus instance
+            canonical_corpus_id (str): canonical corpus identifier
+            token_id: token numeric ID
+        Returns (tuple(list_of_nodes, TreeNodeEncoder))
+
+        """
         raise NotImplementedError()

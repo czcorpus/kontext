@@ -337,18 +337,16 @@ class ManateeBackend(SearchBackend):
             data.append(item)
         return data
 
-    @staticmethod
-    def _get_abs_reference(curr_idx, item, ref_attr):
+    def _get_abs_reference(self, curr_idx, item, ref_attr):
         if item[ref_attr]:
-            rel_parent = int(item[ref_attr])
+            rel_parent = self.import_parent_val(item[ref_attr])
             return curr_idx + rel_parent if rel_parent != 0 else None
         else:
             return None
 
-    @staticmethod
-    def _process_attr_refs(data, curr_idx, attr_refs):
+    def _process_attr_refs(self, data, curr_idx, attr_refs):
         for ident, items in attr_refs.items():
-            abs_ref = ManateeBackend._get_abs_reference(curr_idx, data[curr_idx], ident)
+            abs_ref = self._get_abs_reference(curr_idx, data[curr_idx], ident)
             if abs_ref is None:
                 data[curr_idx][ident] = '-'
             else:
@@ -356,10 +354,9 @@ class ManateeBackend(SearchBackend):
                 data[curr_idx][ident] = '%s (%s)' % (data[curr_idx][ident],
                                                      ', '.join(map(lambda ar: ref_item[ar], items)))
 
-    @staticmethod
-    def _decode_tree_data(data, parent_attr, attr_refs):
+    def _decode_tree_data(self, data, parent_attr, attr_refs):
         for i in range(1, len(data)):
-            abs_parent = ManateeBackend._get_abs_reference(i, data[i], parent_attr)
+            abs_parent = self._get_abs_reference(i, data[i], parent_attr)
             # Please note that referring to the 0-th node
             # means 'out of range' error too because our 0-th node
             # here is just an auxiliary root element which is referred
@@ -368,19 +365,9 @@ class ManateeBackend(SearchBackend):
                 raise MaximumContextExceeded(
                     'Absolute parent position %d out of range 0..%d' % (abs_parent, len(data) - 1))
             data[i][parent_attr] = abs_parent if abs_parent is not None else 0
-            ManateeBackend._process_attr_refs(data, i, attr_refs)
+            self._process_attr_refs(data, i, attr_refs)
 
     def get_data(self, corpus, canonical_corpus_id, token_id):
-        """
-        arguments:
-        corpus -- a manatee.Corpus instance
-        canonical_corpus_id -- a raw corpus identifier
-                               (i.e. "public/my_corpus" should be inserted as just "corpus")
-        token_id -- a token within a sentence of the interest
-
-        returns:
-        a 2-tuple (list_of_nodes, TreeNodeEncoder)
-        """
         tree_configs = self._conf.get_trees(canonical_corpus_id)
         tree_list = []
         tree_id_list = self._conf.get_tree_display_list(canonical_corpus_id)
