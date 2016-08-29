@@ -204,7 +204,7 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                         </tr>
                         {this.state.unfinished.map(item => <TrUnfinishedLine key={item.name} item={item} /> )}
                         {this.state.lines.map((item, i) => (
-                            <TrDataLine key={item.name} idx={i} item={item} actionButtonHandle={this.props.actionButtonHandle} />
+                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} actionButtonHandle={this.props.actionButtonHandle} />
                         ))}
                     </tbody>
                 </table>
@@ -460,7 +460,7 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                 <layoutViews.ModalOverlay>
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions">
                         <div>
-                            <h3>{this.state.data.name}</h3>
+                            <h3>{this.translate('subclist__backup_of_{subcname}', {subcname: this.state.data.name})}</h3>
                             <span className="actions">
                                 {this.translate('global__actions') + ':\u00A0'}
                             </span>
