@@ -1716,14 +1716,19 @@ section.corplist {
 @media screen and (max-width: 720px) {
     #logo-wrapper {
         display: block !important;
-        text-align: center;
+        text-align: left;
     }
     header .navig-wrapper {
         display: block;
     }
+    #main-menu-mount {
+        margin-left: 0;
+        display: block;
+        width: 80%;
+    }
     #menu-bar {
         margin: 0;
-        font-size: 1.5em;
+        font-size: 1.3em;
         white-space: normal;
         height: auto;
         display: block;
@@ -1734,7 +1739,11 @@ section.corplist {
     #menu-level-1 li {
         display: block;
         height: 1.5em;
-        text-align: center;
+        text-align: left;
+
+        ul.submenu {
+            width: 90%;
+        }
     }
     #menu-level-1 li.disabled {
         display: none;
