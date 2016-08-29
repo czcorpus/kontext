@@ -259,7 +259,7 @@ export class SubcorpListStore extends SimplePageStore {
                 usesubcorp: decodeURIComponent(item.usesubcorp),
                 deleted: item.deleted,
                 size: item.size,
-                cql: decodeURIComponent(item.cql).trim(),
+                cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
                 created: new Date(item.created * 1000),
                 selected: false
             }
