@@ -261,8 +261,7 @@ class Subcorpus(Kontext):
 
         if plugins.has_plugin('subc_restore'):
             try:
-                full_list = plugins.get('subc_restore').extend_subc_list(
-                    data, self._session_get('user', 'id'), filter_args, 0)
+                full_list = plugins.get('subc_restore').extend_subc_list(self._plugin_api, data, filter_args, 0)
             except Exception as e:
                 logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
                 full_list = data
