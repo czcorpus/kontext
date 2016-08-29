@@ -1,4 +1,6 @@
-# Copyright (c) 2016 Institute of the Czech National Corpus
+# Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -94,13 +96,17 @@ class SyntaxDataProvider(SyntaxViewerPlugin):
         return {concordance.Actions: [get_syntax_data]}
 
 
-@plugins.inject('auth')
-def create_instance(conf, auth):
+def load_plugin_conf(conf):
     conf_path = conf.get('plugins', 'syntax_viewer', {}).get('default:config_path')
     if not conf_path or not os.path.isfile(conf_path):
         raise SyntaxDataProviderError('Plug-in configuration file [%s] not found. Please check default:config_path.' %
                                       (conf_path,))
     with open(conf_path, 'rb') as f:
         conf_data = json.load(f)
-        corpora_conf = conf_data.get('corpora', {})
+        return conf_data.get('corpora', {})
+
+
+@plugins.inject('auth')
+def create_instance(conf, auth):
+    corpora_conf = load_plugin_conf(conf)
     return SyntaxDataProvider(corpora_conf, ManateeBackend(corpora_conf), auth)
