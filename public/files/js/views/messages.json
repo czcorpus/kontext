@@ -210,7 +210,9 @@
         "subclist__info_subc_will_be_restored": "The subcorpus will be restored from back-up.",
         "subclist__subc_wipe_confirm_msg": "Subcorpus back-up has been deleted.",
         "subclist__subc_restore_confirm_msg": "Subcorpus is being restored from back-up",
-        "subclist__subc_reuse_confirm_msg": "A new subcorpus is being created"
+        "subclist__subc_reuse_confirm_msg": "A new subcorpus is being created",
+        "subclist__click_to_access_the_backup": "Click to access the backup",
+        "subclist__backup_of_{subcname}": "Backup of subcorpus {subcname}"
 	},
 	"cs-CZ" : {
 		"global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -424,6 +426,8 @@
         "subclist__info_subc_will_be_restored": "Subkorpus bude obnoven ze zálohy.",
         "subclist__subc_wipe_confirm_msg": "Záloha subkorpusu byla zcela odstraněna.",
         "subclist__subc_restore_confirm_msg": "Subkorpus bude obnoven ze zálohy",
-        "subclist__subc_reuse_confirm_msg": "Vytváří se nový subkorpus"
+        "subclist__subc_reuse_confirm_msg": "Vytváří se nový subkorpus",
+        "subclist__click_to_access_the_backup": "Klikněte pro přístup k záloze.",
+        "subclist__backup_of_{subcname}": "Záloha subkorpusu {subcname}"
 	}
 }

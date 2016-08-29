@@ -24,19 +24,18 @@
 /// <reference path="../ts/declarations/cookies.d.ts" />
 /// <reference path="../ts/declarations/rsvp.d.ts" />
 
-import $ = require('jquery');
-import win = require('win');
+import * as $ from 'jquery';
 import cookies = require('vendor/cookies');
-import popupBox = require('popupbox');
-import tagbuilder = require('plugins/taghelper/init');
-import util = require('./util');
-import virtKeyboard = require('vendor/virtual-keyboard');
-import RSVP = require('vendor/rsvp');
-import layoutModel = require('./tpl/document');
-import userSettings = require('./userSettings');
+import * as popupBox from './popupbox';
+import {create as tagbuilderCreate} from 'plugins/taghelper/init';
+import {getCaretPosition} from './util';
+import * as virtKeyboard from 'vendor/virtual-keyboard';
+import * as RSVP from 'vendor/rsvp';
+import {PageModel, PluginApi} from './tpl/document';
+import {UserSettings} from './userSettings';
 
 
-class CustomApi extends layoutModel.PluginApi implements Kontext.QueryPagePluginApi {
+class CustomApi extends PluginApi implements Kontext.QueryPagePluginApi {
 
     pluginApi:Kontext.PluginApi;
 
@@ -46,7 +45,7 @@ class CustomApi extends layoutModel.PluginApi implements Kontext.QueryPagePlugin
 
     corpusSetupHandler:Kontext.CorpusSetupHandler;
 
-    constructor(model:layoutModel.PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler) {
+    constructor(model:PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler) {
         super(model);
         this.corpusSetupHandler = corpusSetupHandler;
         this.queryFieldsetToggleEvents = [];
@@ -91,7 +90,7 @@ export class QueryFormTweaks {
 
     private pluginApi:Kontext.QueryPagePluginApi;
 
-    private userSettings:userSettings.UserSettings;
+    private userSettings:UserSettings;
 
     private formElm:HTMLElement;
 
@@ -101,12 +100,12 @@ export class QueryFormTweaks {
 
     private queryStorageReset:()=>void;
 
-    constructor(pluginApi:Kontext.QueryPagePluginApi, userSettings:userSettings.UserSettings,
+    constructor(pluginApi:Kontext.QueryPagePluginApi, userSettings:UserSettings,
             formElm:HTMLElement) {
         this.pluginApi = pluginApi;
         this.userSettings = userSettings;
         this.formElm = formElm;
-        this.maxEncodedParamsLength = 1500;
+        this.maxEncodedParamsLength = 1500;userSettings
     }
 
     bindQueryStorageDetach(fn:(elm:HTMLElement)=>void) {
@@ -136,7 +135,7 @@ export class QueryFormTweaks {
         };
         popupBox.bind(
             triggerElm,
-            tagbuilder.create(self.pluginApi, insertCallback, widgetId),
+            tagbuilderCreate(self.pluginApi, insertCallback, widgetId),
             {
                 type: 'plain',
                 htmlClass: 'tag-builder-widget',
@@ -152,7 +151,7 @@ export class QueryFormTweaks {
     /**
      * @param {jQuery} jqLinkElement
      */
-    bindWithinHelper(jqLinkElement:HTMLElement) {
+    bindWithinHelper(jqLinkElement:HTMLElement):void {
         let jqInputElement = $('#' + $(jqLinkElement).data('bound-input'));
         let clickAction;
         let buttonEnterAction;
@@ -160,7 +159,7 @@ export class QueryFormTweaks {
 
         clickAction = function (box) {
             return function () {
-                let caretPos = util.getCaretPosition(jqInputElement);
+                let caretPos = getCaretPosition(jqInputElement);
                 let structAttr = $('#within-structattr').val().split('.');
                 let within = 'within <' + structAttr[0] + ' ' + structAttr[1] + '="' + $('#within-value').val() + '" />';
                 let bef = jqInputElement.val().substring(0, caretPos);
@@ -168,7 +167,7 @@ export class QueryFormTweaks {
 
                 jqInputElement.val(bef + within + aft);
                 jqInputElement.focus();
-                $(win.document).off('keypress.withinBoxEnter', buttonEnterAction);
+                $(window.document).off('keypress.withinBoxEnter', buttonEnterAction);
                 box.close();
             };
         };
@@ -193,8 +192,8 @@ export class QueryFormTweaks {
                     box.importElement(jqWithinModal.get(0));
                     $('#within-insert-button').off('click')
                             .one('click', clickAction(box));
-                    $(win.document).off('keypress.withinBoxEnter');
-                    $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
+                    $(window.document).off('keypress.withinBoxEnter');
+                    $(window.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
                     finalize();
 
                 } else {
@@ -226,7 +225,7 @@ export class QueryFormTweaks {
                             jqWithinModal.css('display', 'block');
 
                             $('#within-insert-button').one('click', clickAction(box));
-                            $(win.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
+                            $(window.document).on('keypress.withinBoxEnter', buttonEnterAction(box));
 
                             finalize();
                         },
@@ -244,7 +243,7 @@ export class QueryFormTweaks {
                 type : 'plain',
                 timeout : null,
                 onClose : function () {
-                    $(win.document).off('keypress.withinBoxEnter');
+                    $(window.document).off('keypress.withinBoxEnter');
                 }
             });
     }
@@ -289,10 +288,9 @@ export class QueryFormTweaks {
      * @param {HTMLElement, jQuery.Event} source
      * @param hints
      */
-    cmdSwitchQuery(source:JQueryEventObject|HTMLElement, hints:{[key:string]:string}) {
+    cmdSwitchQuery(source:JQueryEventObject|HTMLElement, hints:{[key:string]:string}):void {
+        const self = this;
         let jqQs;
-        let self = this;
-
         if (source.hasOwnProperty('currentTarget')) {
             jqQs = $(source['currentTarget']);
 
@@ -301,9 +299,9 @@ export class QueryFormTweaks {
         }
 
         hints = hints || {};
-        let newidCom = jqQs.val();
-        let newid = jqQs.val() + jqQs.data('parallel-corp');
-        let jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
+        const newidCom = jqQs.val();
+        const newid = jqQs.val() + jqQs.data('parallel-corp');
+        const jqFocusElem = $('#' + newidCom.substring(0, newidCom.length - 3) + jqQs.data('parallel-corp'));
         let oldval = jqFocusElem.val();
 
         $('#conc-form-clear-button').unbind('click')
@@ -312,7 +310,7 @@ export class QueryFormTweaks {
         });
 
         jqQs.find('option').each(function () {
-            let elementId = $(this).val() + jqQs.data('parallel-corp');
+            const elementId = $(this).val() + jqQs.data('parallel-corp');
             let elementIdCom = $(this).val().substring(0, $(this).val().length - 3);
             let jqElem = $('#' + elementId);
             let jqOldElem;
@@ -329,11 +327,19 @@ export class QueryFormTweaks {
         });
         jqFocusElem.val(oldval);
         if (newid === 'iqueryrow') {
-            let jqQueryTypeHint = $('<a href="#" class="context-help">'
-                + '<img class="over-img" src="' + this.pluginApi.createStaticUrl('img/question-mark.svg') + '" '
-                + 'data-alt-img="' + this.pluginApi.createStaticUrl('img/question-mark_s.svg') + '" /></a>');
-            $('#queryselector').after(jqQueryTypeHint);
-            popupBox.bind(jqQueryTypeHint,
+            const imgElm = window.document.createElement('img');
+            $(imgElm)
+                .addClass('over-img')
+                .attr('src', this.pluginApi.createStaticUrl('img/question-mark.svg'))
+                .attr('data-alt-img', this.pluginApi.createStaticUrl('img/question-mark_s.svg'));
+            const linkElm = window.document.createElement('a');
+            $(linkElm)
+                .addClass('context-help')
+                .addClass('query-type-hint')
+                .append(imgElm);
+            $(window.document.getElementById('queryselector'))
+                .after(linkElm);
+            popupBox.bind(linkElm,
                 hints['iqueryrow'],
                 {
                     top: 'attached-bottom',
@@ -362,9 +368,9 @@ export class QueryFormTweaks {
      * @param f
      */
     clearForm(f):void {
-        let jqQuerySel = $('#queryselector');
-        let prevRowType = jqQuerySel.val();
-        let jqErr = $('#error');
+        const jqQuerySel = $('#queryselector');
+        const prevRowType = jqQuerySel.val();
+        const jqErr = $('#error');
 
         if (jqErr.length === 0) {
             jqErr.css('display', 'none');
@@ -487,7 +493,7 @@ export class QueryFormTweaks {
         // remove empty and unused parameters from URL before form submit
         $(this.formElm).submit(() => { // run before submit
             this.setAlignedCorporaFieldsDisabledState(self.formElm, true);
-            $(win).on('unload', () => {
+            $(window).on('unload', () => {
                 this.setAlignedCorporaFieldsDisabledState(self.formElm, false);
             });
         });
@@ -577,7 +583,7 @@ export class QueryFormTweaks {
     isPossibleQueryTypeMismatch(inputElm, queryTypeElm):boolean {
         const query = $(inputElm).val().trim();
         const queryType = $(queryTypeElm).find('option:selected').data('type');
-        const looksLikeCql = !!(/^"[^\"]+"$/.exec(query) || /^\[\w+\s*=\s*"[^"]+"\]$/.exec(query));
+        const looksLikeCql = !!(/^"[^\"]+"$/.exec(query) || /^\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]$/.exec(query));
         return !!(queryType === 'iquery' && looksLikeCql || queryType === 'cql' && !looksLikeCql);
     }
 
@@ -617,10 +623,10 @@ export class QueryFormTweaks {
                     cleanData += '&' + items[0] + '=' + items[1];
                 }
             });
-
-            if (self.isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
+            if (!$(self.formElm).data('disable-prevalidation')
+                    && self.isPossibleQueryTypeMismatch(currQueryElm, queryTypeElm)) {
                 self.setQueryInputWarning('add');
-                if (!win.confirm(self.pluginApi.translate('global__query_type_mismatch'))) {
+                if (!window.confirm(self.pluginApi.translate('global__query_type_mismatch'))) {
                     event.stopPropagation();
                     event.preventDefault();
                     return false;
@@ -634,7 +640,7 @@ export class QueryFormTweaks {
 }
 
 
-export function extendedApi(model:layoutModel.PageModel,
+export function extendedApi(model:PageModel,
         corpusSetupHandler:Kontext.CorpusSetupHandler):Kontext.QueryPagePluginApi {
     return new CustomApi(model, corpusSetupHandler);
 }
@@ -646,8 +652,8 @@ export function extendedApi(model:layoutModel.PageModel,
  *
  * @param pluginApi
  */
-export function init(model:layoutModel.PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler,
-        settings:userSettings.UserSettings, formElm:HTMLElement):QueryFormTweaks {
+export function init(model:PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler,
+        settings:UserSettings, formElm:HTMLElement):QueryFormTweaks {
     let customApi = new CustomApi(model, corpusSetupHandler);
     return new QueryFormTweaks(customApi, settings, formElm);
 }

@@ -26,15 +26,12 @@ CREATE TABLE subc_archive (
 
 required entry in config.xml:
 
-<plugins>
-...
-    <subc_restore>
-        <module>ucnk_subc_restore</module>
-        <db_path extension-by="ucnk">/path/to/a/sqlite3/db/file</db_path>
-    </subc_restore>
-...
-</plugins>
-
+element subc_restore {
+    element module { "ucnk_subc_restore" }
+    element db_path {
+    { text } # a path to a respective SQLite3 database
+    attribute extension-by { "ucnk" }
+}
 """
 
 import time
@@ -111,16 +108,16 @@ class UCNKSubcRestore(AbstractSubcRestore):
         else:
             return None
 
-    def extend_subc_list(self, subc_list, user_id, filter_args, from_idx, to_idx=None):
+    def extend_subc_list(self, plugin_api, subc_list, filter_args, from_idx, to_idx=None):
         """
         Enriches KonText's original subcorpora list by the information about queries which
         produced these subcorpora. It it also able to insert an information about deleted
         subcorpora.
 
         Args:
+            plugin_api (kontext.PluginApi): a Plugin API instance
             subc_list (list of dict): an original subcorpora list as produced by KonText's respective action
                 (= list of dict(n=str, v=???, size=int, created=str, corpname=str, usesubcorp=str))
-            user_id (int): a database user ID
             filter_args (dict): support for 'show_deleted': 0/1 and 'corpname': str
             from_idx (int): 0..(num_items-1) list offset
             to_idx (int): last item index (None by default)
@@ -128,7 +125,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
         Returns:
             list of dict: a new list containing both the original subc_list and also the extended part
         """
-        subc_queries = self.list_queries(user_id, from_idx, to_idx)
+        subc_queries = self.list_queries(plugin_api.user_id, from_idx, to_idx)
         subc_queries_map = {}
         for x in subc_queries:
             subc_queries_map[u'%s:%s' % (x['corpname'], x['subcname'])] = x
@@ -139,8 +136,9 @@ class UCNKSubcRestore(AbstractSubcRestore):
             deleted_keys = []
 
         def corpname_matches(cn):
+            canon_cn = plugin_api.get_canonical_corpname(cn)
             filter_cn = filter_args.get('corpname', None)
-            return not filter_cn or cn == filter_cn
+            return not filter_cn or canon_cn == filter_cn
 
         def escape_subcname(s):
             return werkzeug.urls.url_quote(s, unsafe='+')

@@ -524,8 +524,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                         <MinSizeInput minSize={this.props.filters.minSize[0]} initWaitingFn={this.props.initWaitingFn} />
                         <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} initWaitingFn={this.props.initWaitingFn} />
-                        <span className="inline-label">{'(' +
-                        this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}</span>
+                        <div className="hint">
+                            {'(' + this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
+                        </div>
                         <p>
                             <span>
                             {this.translate('defaultCorparch__corpus_name_input_label')}: </span>
@@ -590,8 +591,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         render: function () {
             return (
                 <section className="inner">
-                    <div>
-                        <h3>{this.translate('defaultCorparch__filters')}</h3>
+                    <div style={{height: '1em'}}>
                         {this._renderLoader()}
                     </div>
                     <KeywordsField

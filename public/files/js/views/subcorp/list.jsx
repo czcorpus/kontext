@@ -43,7 +43,6 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                     </td>
                     <td className="num">{this.formatDate(this.props.item.created)}</td>
                     <td />
-                    <td />
                 </tr>
             );
         }
@@ -102,13 +101,10 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                         : '-'}
                     </td>
                     <td className="num">{this.formatDate(this.props.item.created)}</td>
-                    <td className="num">
-                        {this.props.item.cql ? '\u2713' : null}
-                    </td>
-                    <td>
+                    <td className="action-link">
                         {this.props.item.cql
-                            ? <a className="action-link" onClick={this._handleActionClick}>
-                                    {this.translate('global__options')}{'\u00A0\u2026'}</a>
+                            ? <a onClick={this._handleActionClick}
+                                    title={this.translate('subclist__click_to_access_the_backup')}>{'\u2713'}</a>
                             : null}
                     </td>
                 </tr>
@@ -205,11 +201,10 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={this.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={this.translate('subclist__col_created')} />
                             <th>{this.translate('subclist__col_backed_up')}</th>
-                            <th />
                         </tr>
                         {this.state.unfinished.map(item => <TrUnfinishedLine key={item.name} item={item} /> )}
                         {this.state.lines.map((item, i) => (
-                            <TrDataLine key={item.name} idx={i} item={item} actionButtonHandle={this.props.actionButtonHandle} />
+                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} actionButtonHandle={this.props.actionButtonHandle} />
                         ))}
                     </tbody>
                 </table>
@@ -465,7 +460,7 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                 <layoutViews.ModalOverlay>
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions">
                         <div>
-                            <h3>{this.state.data.name}</h3>
+                            <h3>{this.translate('subclist__backup_of_{subcname}', {subcname: this.state.data.name})}</h3>
                             <span className="actions">
                                 {this.translate('global__actions') + ':\u00A0'}
                             </span>
