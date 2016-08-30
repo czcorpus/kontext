@@ -65,7 +65,7 @@ msgid ""
 "Failed to process your request. Please try again later or contact system "
 "support."
 msgstr ""
-"Chyba při zpracování požadavku. Opakujte, prosím, akci později nebo "
+"Chyba při zpracování požadavku. Opakujte prosím akci později nebo "
 "kontaktujte technickou podporu."
 
 #: lib/corplib.py:75

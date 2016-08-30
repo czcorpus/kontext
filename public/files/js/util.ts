@@ -31,23 +31,25 @@ export class SimplePageStore implements Kontext.PageStore {
 
     public static ERROR_EVENT:string = 'error';
 
-    addChangeListener = (fn:Kontext.StoreListener) => {
+    addChangeListener(fn:Kontext.StoreListener):void {
         this.changeListeners.push(fn);
-    };
+    }
 
-    removeChangeListener = (fn:Kontext.StoreListener) => {
+    removeChangeListener(fn:Kontext.StoreListener):void {
         for (var i = 0; i < this.changeListeners.length; i += 1) {
             if (this.changeListeners[i] === fn) {
                 this.changeListeners.splice(i, 1);
                 break;
             }
         }
-    };
+    }
 
     notifyChangeListeners(eventType:string=SimplePageStore.CHANGE_EVENT, error:Error=null):void {
-        for (let i = 0; i < this.changeListeners.length; i += 1) {
+        const handlers = this.changeListeners.slice(0);
+        for (let i = 0; i < handlers.length; i += 1) {
             try {
-                this.changeListeners[i].call(this, this, eventType, error);
+                // please note that the first arg has no effect on arrow functions
+                handlers[i].call(this, this, eventType, error);
 
             } catch (e) {
                 console.error(e);

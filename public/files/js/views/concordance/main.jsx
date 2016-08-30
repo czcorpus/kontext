@@ -106,7 +106,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
 
         _storeChangeHandler : function () {
             this.setState({
-                menuVisible: this.state.menuVisible,
+                menuVisible: false, // <- data of lines changed => no need for menu
                 currViewAttrs: lineStore.getViewAttrs()
             });
         },
