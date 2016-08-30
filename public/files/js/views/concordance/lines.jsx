@@ -188,11 +188,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         componentDidMount : function () {
-            lineStore.addChangeListener(this._handleStoreChange);
+            lineSelectionStore.addChangeListener(this._handleStoreChange);
         },
 
         componentWillUnmount : function () {
-            lineStore.removeChangeListener(this._handleStoreChange);
+            lineSelectionStore.removeChangeListener(this._handleStoreChange);
         },
 
         getInitialState : function () {
@@ -215,7 +215,6 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
     let LineSelInput = React.createClass({
 
         _textChangeHandler : function (event) {
-            this.setState({value: event.currentTarget.value});
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_SELECT_LINE',
                 props: {
@@ -233,11 +232,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         componentDidMount : function () {
-            lineStore.addChangeListener(this._handleStoreChange);
+            lineSelectionStore.addChangeListener(this._handleStoreChange);
         },
 
         componentWillUnmount : function () {
-            lineStore.removeChangeListener(this._handleStoreChange);
+            lineSelectionStore.removeChangeListener(this._handleStoreChange);
         },
 
         getInitialState : function () {

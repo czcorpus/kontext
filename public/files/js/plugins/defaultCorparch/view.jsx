@@ -52,42 +52,20 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         mixins: mixins,
 
         _handleClick : function () {
-            let newState = !this.state.isFav;
-
             dispatcher.dispatch({
                 actionType: 'LIST_STAR_CLICKED',
                 props: {
                     corpusId: this.props.corpusId,
                     corpusName: this.props.corpusName,
-                    isFav: newState,
+                    isFav: !this.props.isFav,
                     type: 'corpus'
                 }
             });
         },
 
-        _changeListener : function (store) {
-            let isFav = store.isFav(this.props.corpusId);
-            if (isFav !== this.state.isFav) {
-                this.setState({isFav: isFav});
-            }
-        },
-
-        getInitialState : function () {
-            return {isFav: this.props.isFav};
-        },
-
-        componentDidMount : function () {
-            listStore.addChangeListener(this._changeListener);
-        },
-
-        componentWillUnmount : function () {
-            listStore.removeChangeListener(this._changeListener);
-        },
-
         render: function () {
             let imgUrl;
-
-            if (this.state.isFav) {
+            if (this.props.isFav) {
                 imgUrl = this.createStaticUrl('img/starred.svg');
 
             } else {
