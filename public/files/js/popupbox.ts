@@ -314,7 +314,6 @@ export class TooltipBox implements Legacy.IPopupBox {
                 let deltaX = pos.left - e.pageX;
                 let deltaY = pos.top - e.pageY;
                 let moveHandler = mkMouseMoveHandler(deltaX, deltaY);
-                $(self.rootElm).css('height', $(self.rootElm).height() + 'px');
                 $(window).on('mousemove', moveHandler);
                 $(window).on('mouseup.popupbox', () => {
                     $(window).off('mousemove', moveHandler);
