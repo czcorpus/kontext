@@ -32,7 +32,7 @@ import json
 from functools import wraps
 from hashlib import md5
 from functools import partial
-from collections import defaultdict, OrderedDict
+from collections import defaultdict, OrderedDict, Iterable
 import sqlite3
 
 import l10n
@@ -310,7 +310,7 @@ class LiveAttributes(AbstractLiveAttributes):
         values = {}
         exported = dict(attr_values=values, aligned=aligned_corpora)
         for k in data.keys():
-            if type(data[k]) is set:
+            if isinstance(data[k], Iterable):
                 if len(data[k]) <= self.max_attr_list_size or k in expand_attrs:
                     out_data = l10n.sort(data[k], collator_locale, key=lambda t: t[0])
                     values[self.export_key(k)] = out_data
