@@ -475,7 +475,8 @@ export function init(dispatcher, mixins, textTypesStore) {
                         </td>
                         <td>
                             {hasExtendedInfo
-                                ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} /> : null }
+                                ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} />
+                                : null }
                         </td>
                     </tr>
                 );

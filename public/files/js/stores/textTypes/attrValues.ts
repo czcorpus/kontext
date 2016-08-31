@@ -278,14 +278,14 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
             locked: false,
             numGrouped: 1
         };
-        let newAttr;
+        let updatedAttr;
         if (append) {
-            newAttr = attr.addValue(newVal);
+            updatedAttr = attr.addValue(newVal);
 
         } else {
-            newAttr = attr.clearValues().addValue(newVal);
+            updatedAttr = attr.clearValues().addValue(newVal);
         }
-        this.attributes = this.attributes.set(idx, newAttr);
+        this.attributes = this.attributes.set(idx, updatedAttr);
     }
 
     private importInitialData(data:InitialData, checkedValues:TextTypes.ServerCheckedValues):Array<TextTypes.AttributeSelection> {
