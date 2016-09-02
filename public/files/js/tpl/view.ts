@@ -42,7 +42,7 @@ import {init as concViewsInit} from 'views/concordance/main';
 import lineSelStores = require('../stores/concordance/lineSelection');
 import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary} from '../stores/concordance/lines';
 import SoundManager = require('SoundManager');
-import d3 = require('vendor/d3');
+import * as d3 from 'vendor/d3';
 import syntaxViewer = require('plugins/syntaxViewer/init');
 import userSettings = require('../userSettings');
 import applicationBar = require('plugins/applicationBar/init');
@@ -142,27 +142,23 @@ export class ViewPage {
     showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
         let self = this;
 
-        function renderChart(data):d3.scale.Ordinal<string, string> {
-            let width = 200;
-            let height = 200;
-            let radius = Math.min(width, height) / 2;
-            let color = d3.scale.category20();
-
-            let arc = d3.svg.arc()
+        function renderChart(data):Array<string> {
+            const width = 200;
+            const height = 200;
+            const radius = Math.min(width, height) / 2;
+            const color = d3.schemeCategory20;
+            const arc = d3.arc()
                 .outerRadius(radius - 10)
                 .innerRadius(0);
-
-            let labelArc = d3.svg.arc()
+            const labelArc = d3.arc()
                 .outerRadius(radius - 40)
                 .innerRadius(radius - 40);
-
-            let pie = d3.layout.pie()
+            const pie = d3.pie()
                 .value((d) => d['count'])
                 .sort(null);
 
             data = pie(data);
-
-            let wrapper = d3.select(rootElm).append('svg')
+            const wrapper = d3.select(rootElm).append('svg')
                 .attr('width', width)
                 .attr('height', height)
                 .attr('class', 'chart')
@@ -170,14 +166,14 @@ export class ViewPage {
                     .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')')
                     .attr('class', 'chart-wrapper');
 
-            let g = wrapper.selectAll('.arc')
+            const g = wrapper.selectAll('.arc')
                 .data(data).enter()
                     .append('g')
                     .attr('class', 'arc');
 
             g.append('path')
                 .attr('d', arc)
-                .style('fill', (d, i:any) => color(i));
+                .style('fill', (d, i:any) => color[i]);
 
             if (data.length <= 5) { // direct labels only for small num of portions
                 g.append('text')
