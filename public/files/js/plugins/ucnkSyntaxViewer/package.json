@@ -1,0 +1,12 @@
+{
+  "name": "ucnk-tree-view",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/ucnkTreeView.min.js",
+  "scripts": {
+  },
+  "devDependencies": {
+      "typescript": "~1.8.10",
+      "uglify-js": "latest"
+  }
+}

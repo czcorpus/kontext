@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+    <head>
+        <script type="text/javascript" src="../../vendor/requirejs.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="./style.css" />
+        <style type="text/css">
+        #view1 {
+            width: 1300px;
+            height: 600px;
+            border: 1px solid #dddddd;
+        }
+        </style>
+    </head>
+    <body>
+        <div id="view1"></div>
+        <script type="text/javascript">
+        requirejs.config({
+            baseUrl : './',
+            paths: {
+                'vendor/d3': '../../vendor/d3.min',
+                'ucnkTreeView': './dist/ucnkTreeView'
+            },
+        });
+        require(['ucnkTreeView', './test/data2'], function (ucnkTreeView, data) {
+
+            var fakeMixins = {
+                translate : function (x, v) { return x; },
+                createStaticUrl : function (x) { return '../../../' + x; },
+                createActionLink : function (x) { return x; },
+                getConf : function (k) { return null; },
+                formatNumber: function (v) { return v; },
+                formatDate: function (v) { return v; },
+                getLayoutViews: function () { return null}
+            }
+
+            var opts = {
+                width: 1300,
+                height: null, //600,
+                paddingTop: 20,
+                paddingBottom: 40,
+                paddingLeft: 20,
+                paddingRight: 20,
+                edgeWidth: 1.5
+            };
+            console.log(data);
+
+            ucnkTreeView.createGenerator(fakeMixins)(
+                data,
+                'cs',
+                'default',
+                document.getElementById('view1'),
+                opts
+            );
+        });
+        </script>
+    </body>
+</html>
