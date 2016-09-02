@@ -1492,6 +1492,12 @@ declare namespace d3 {
         [event: string]: (...args: any[]) => void;
     }
 
+    // these are just dirty hacks...
+    export function scaleLinear():any;
+    export var schemeCategory20:Array<string>;
+    export function arc():any;
+    export function pie():any;
+
     export module scale {
         export function identity(): Identity;
 
