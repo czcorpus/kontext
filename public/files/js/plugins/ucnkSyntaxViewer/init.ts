@@ -34,7 +34,7 @@ class SyntaxTreeViewer {
         this.pluginApi = pluginApi;
     }
 
-    private createRenderFunction(tokenId):(box:popupbox.TooltipBox, finalize:()=>void)=>void {
+    private createRenderFunction(tokenId:string, kwicLength:number):(box:popupbox.TooltipBox, finalize:()=>void)=>void {
         return (box:popupbox.TooltipBox, finalize:()=>void) => {
             let ajaxAnim = this.pluginApi.ajaxAnim();
             $('body').append(ajaxAnim);
@@ -44,7 +44,8 @@ class SyntaxTreeViewer {
                 this.pluginApi.createActionUrl('get_syntax_data'),
                 {
                     corpname: this.pluginApi.getConf('corpname'),
-                    kwic_id: tokenId
+                    kwic_id: tokenId,
+                    kwic_len: kwicLength
                 },
                 {contentType : 'application/x-www-form-urlencoded'}
 
@@ -81,7 +82,7 @@ class SyntaxTreeViewer {
         };
     }
 
-    private createActionButton(tokenId:string):HTMLElement {
+    private createActionButton(tokenId:string, kwicLength:number):HTMLElement {
         const baseImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon.svg');
         const overImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon_s.svg');
         const button = window.document.createElement('img');
@@ -96,7 +97,7 @@ class SyntaxTreeViewer {
             });
         popupbox.bind(
             button,
-            this.createRenderFunction(tokenId),
+            this.createRenderFunction(tokenId, kwicLength),
             {
                 type: 'plain',
                 closeIcon: true,
@@ -114,7 +115,8 @@ class SyntaxTreeViewer {
             .each((i, elm:HTMLElement) => {
                 let trElm = $(elm).closest('tr');
                 if (trElm.attr('data-toknum')) {
-                    $(elm).append(this.createActionButton(trElm.attr('data-toknum'))).show();
+                    $(elm).append(this.createActionButton(trElm.attr('data-toknum'),
+                            parseInt(trElm.attr('data-kwiclen')))).show();
                 }
             });
     }

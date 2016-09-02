@@ -19,7 +19,7 @@ from plugins.abstract import CorpusDependentPlugin
 
 class SyntaxViewerPlugin(CorpusDependentPlugin):
 
-    def search_by_token_id(self, corp, canonical_corpname, token_id):
+    def search_by_token_id(self, corp, canonical_corpname, token_id, kwic_len):
         raise NotImplementedError()
 
     def is_enabled_for(self, corpname):
@@ -56,12 +56,13 @@ class SearchBackend(object):
         """
         return int(v)
 
-    def get_data(self, corpus, canonical_corpus_id, token_id):
+    def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
         """
         Args:
             corpus (manatee.Corpus): a respective corpus instance
             canonical_corpus_id (str): canonical corpus identifier
-            token_id: token numeric ID
+            token_id (int): token numeric ID
+            kwic_len (int): number of tokens in KWIC
         Returns (tuple(list_of_nodes, TreeNodeEncoder))
 
         """

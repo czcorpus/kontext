@@ -66,7 +66,8 @@ def get_syntax_data(ctrl, request):
     try:
         canonical_corpname = getattr(ctrl, '_canonical_corpname')(ctrl.corp.corpname)
         data = plugins.get('syntax_viewer').search_by_token_id(ctrl.corp, canonical_corpname,
-                                                               int(request.args.get('kwic_id')))
+                                                               int(request.args.get('kwic_id')),
+                                                               int(request.args.get('kwic_len')))
     except MaximumContextExceeded:
         data = dict(contains_errors=True,
                     error=_('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
@@ -84,8 +85,8 @@ class SyntaxDataProvider(SyntaxViewerPlugin):
         self._backend = backend
         self._auth = auth
 
-    def search_by_token_id(self, corp, canonical_corpname, token_id):
-        data, encoder = self._backend.get_data(corp, canonical_corpname, token_id)
+    def search_by_token_id(self, corp, canonical_corpname, token_id, kwic_len):
+        data, encoder = self._backend.get_data(corp, canonical_corpname, token_id, kwic_len)
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
