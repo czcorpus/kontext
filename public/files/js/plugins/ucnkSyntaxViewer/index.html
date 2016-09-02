@@ -22,17 +22,6 @@
             },
         });
         require(['ucnkTreeView', './test/data2'], function (ucnkTreeView, data) {
-
-            var fakeMixins = {
-                translate : function (x, v) { return x; },
-                createStaticUrl : function (x) { return '../../../' + x; },
-                createActionLink : function (x) { return x; },
-                getConf : function (k) { return null; },
-                formatNumber: function (v) { return v; },
-                formatDate: function (v) { return v; },
-                getLayoutViews: function () { return null}
-            }
-
             var opts = {
                 width: 1300,
                 height: null, //600,
@@ -42,9 +31,7 @@
                 paddingRight: 20,
                 edgeWidth: 1.5
             };
-            console.log(data);
-
-            ucnkTreeView.createGenerator(fakeMixins)(
+            ucnkTreeView.generate(
                 data,
                 'cs',
                 'default',

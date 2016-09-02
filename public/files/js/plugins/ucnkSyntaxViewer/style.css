@@ -25,15 +25,20 @@
 
 .sentence {
     padding: 0.6em;
+    line-height: 1.4em;
 }
 
 .sentence span {
-    padding: 0 0.1em;
+    padding: 0.1em 0.1em;
 }
 
 .sentence span.focused {
-    background-color: #009EE0;
-    color: #FFF;
+    background-color: RGBA(0, 158, 224, 0.4);
+}
+
+.sentence span.kwic {
+    font-weight: bold;
+    color: #E2007A;
 }
 
 table.node-detail {

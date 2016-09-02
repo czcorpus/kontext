@@ -353,21 +353,23 @@ class ManateeBackend(SearchBackend):
         """
         self._conf = ManateeBackendConf(conf)
 
-    def _load_raw_sent(self, corpus, canonical_corpus_id, token_id, tree_attrs):
+    def _load_raw_sent(self, corpus, canonical_corpus_id, token_id, kwic_len, tree_attrs):
         """
         Retrieve a sentence via Manatee
         Args:
             corpus (manatee.Corpus): a corpus instance
             canonical_corpus_id (str): canonical corpus ID
             token_id (int): token number/id
+            kwic_len (int): number of tokens in KWIC
             tree_attrs (list of str): a list of positional attributes required by tree nodes/edges
 
-        Returns (str):
-            a string-encoded sentence and required attribute metadata
+        Returns (dict):
+            data: a list of strings (Manatee raw format)
+            kwic_pos: a tuple (first_kwic_idx, kwic_length)
         """
         encoding = corpus.get_conf('ENCODING')
         sentence_struct = self._conf.get_sentence_struct(canonical_corpus_id)
-        conc = manatee.Concordance(corpus, '[#%d]' % token_id, 1, -1)
+        conc = manatee.Concordance(corpus, ' '.join('[#%d]' % k for k in range(token_id, token_id + kwic_len)), 1, -1)
         conc.sync()
         kl = manatee.KWICLines(corpus, conc.RS(True, 0, 1),
                                '-1:%s' % sentence_struct,
@@ -375,8 +377,11 @@ class ManateeBackend(SearchBackend):
                                ','.join(tree_attrs),
                                ','.join(tree_attrs), '', '')
         if kl.nextline():
-            return [import_string(s, from_encoding=encoding)
-                    for s in kl.get_left() + kl.get_kwic() + kl.get_right()]
+            left_tk = kl.get_left()
+            kwic_tk = kl.get_kwic()
+            return dict(data=[import_string(s, from_encoding=encoding)
+                              for s in left_tk + kwic_tk + kl.get_right()],
+                        kwic_pos=(len(left_tk) / 4, len(kwic_tk) / 4))
 
     @staticmethod
     def _parse_raw_sent(in_data, tree_attrs, empty_val_placeholders):
@@ -462,14 +467,14 @@ class ManateeBackend(SearchBackend):
             data[i][parent_attr] = abs_parent if abs_parent is not None else 0
             self._process_attr_refs(data, i, attr_refs)
 
-    def get_data(self, corpus, canonical_corpus_id, token_id):
+    def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
         tree_configs = self._conf.get_trees(canonical_corpus_id)
         tree_list = []
         tree_id_list = self._conf.get_tree_display_list(canonical_corpus_id)
         for tree in tree_id_list:
             conf = tree_configs[tree]
-            raw_data = self._load_raw_sent(corpus, canonical_corpus_id, token_id, conf.all_attrs)
-            parsed_data = self._parse_raw_sent(raw_data, conf.all_attrs,
+            raw_data = self._load_raw_sent(corpus, canonical_corpus_id, token_id, kwic_len, conf.all_attrs)
+            parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
                                                self._conf.get_empty_value_placeholders(canonical_corpus_id))
             if conf.root_node:
                 parsed_data = [conf.root_node] + parsed_data

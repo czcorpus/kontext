@@ -36,14 +36,42 @@ element syntax_viewer {
 
 import plugins
 import plugins.default_syntax_viewer as dsv
+import plugins.default_syntax_viewer.manatee_backend as mbk
 
 
-class UcnkManateeBackend(dsv.ManateeBackend):
+class UcnkTreeTemplate(mbk.TreexTemplate):
+
+    def __init__(self, tree_id, tree_data, kwic_pos, conf):
+        super(UcnkTreeTemplate, self).__init__([tree_id], [tree_data], conf)
+        self._kwic_pos = range(kwic_pos[0], kwic_pos[0] + kwic_pos[1])
+
+    def export(self):
+        ans = super(UcnkTreeTemplate, self).export()
+        ans[0]['kwicPosition'] = self._kwic_pos
+        return ans
+
+
+class UcnkManateeBackend(mbk.ManateeBackend):
     def __init__(self, conf):
         super(UcnkManateeBackend, self).__init__(conf)
 
     def import_parent_val(self, v):
         return int(v.split('|')[0])
+
+    def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
+        tree_configs = self._conf.get_trees(canonical_corpus_id)
+        tree_id = self._conf.get_tree_display_list(canonical_corpus_id)[0]
+        conf = tree_configs[tree_id]
+        raw_data = self._load_raw_sent(corpus, canonical_corpus_id, token_id, kwic_len, conf.all_attrs)
+        parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
+                                           self._conf.get_empty_value_placeholders(canonical_corpus_id))
+        if conf.root_node:
+            parsed_data = [conf.root_node] + parsed_data
+        self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs)
+        tb = mbk.TreeBuilder()
+        tree_data = tb.process(conf, parsed_data)
+        template = UcnkTreeTemplate(tree_id, tree_data, raw_data['kwic_pos'], tree_configs)
+        return template.export(), mbk.TreeNodeEncoder
 
 
 @plugins.inject('auth')

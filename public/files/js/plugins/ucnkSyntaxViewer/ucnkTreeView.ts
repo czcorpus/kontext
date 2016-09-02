@@ -60,6 +60,7 @@ export namespace SourceData {
     export interface Data {
         zones:{[ident:string]:Zone};
         desc:Desc;
+        kwicPosition:Array<number>; // position within desc
     }
 
 }
@@ -81,12 +82,12 @@ export interface Options {
     nodeColor?:string;
 }
 
-export interface Label {
+interface Label {
     color:string; // CSS format color
     value:string;
 }
 
-export interface TreeNode {
+interface TreeNode {
     id:string;
     hint:string;
     labels:Array<Label>;
@@ -99,15 +100,33 @@ export interface TreeNode {
 
 type TreeNodeMap = {[ident:string]:TreeNode};
 
-
-export interface Edge {
+/**
+ * Tree graph edge
+ */
+interface Edge {
     x1:number;
     y1:number;
     x2:number;
     y2:number;
 }
 
+/**
+ * Linear sentence token
+ */
+interface Token {
+    id:string;
+    value:string;
+    isKwic:boolean;
+}
 
+
+type Sentence = Array<Token>;
+
+/**
+ * Internal parameters of the drawing. Some values are
+ * affected by the Options passed to the respective drawing
+ * function.
+ */
 class DrawingParams {
     maxWidth:number;
     maxHeight:number;
@@ -135,7 +154,9 @@ class DrawingParams {
     }
 }
 
-
+/**
+ *
+ */
 class TreeGenerator {
 
     private params:DrawingParams;
@@ -180,7 +201,7 @@ class TreeGenerator {
 
     generate(data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement):void {
         const nodes = data[0].zones[zone].trees[tree].nodes;
-        const tokens = data[0].desc;
+        const tokens:Sentence = this.importSentence(data[0]);
 
         const nodeMap = this.generateNodeMap(nodes);
         this.calcViewSize(tokens, nodeMap);
@@ -189,12 +210,22 @@ class TreeGenerator {
         this.d3Draw(tokens, nodeMap, edges, target);
     }
 
+    private importSentence(data:SourceData.Data):Sentence {
+        return data.desc.map((item, i) => {
+            return {
+                id: item[1],
+                value: item[0],
+                isKwic: data.kwicPosition.indexOf(i - 1) > -1 // testing (i - 1) because data.desc[0] == '#' character
+            }
+        });
+    }
+
     /**
      * Calculate all the required drawing parameters
      * (widht/height if set to auto, y-step, x-step)
      */
-    private calcViewSize(tokens:SourceData.Desc, nodeMap:TreeNodeMap):void {
-        const totalNumLetters = tokens.reduce((prev, curr) => prev + curr[0].length, 0);
+    private calcViewSize(tokens:Sentence, nodeMap:TreeNodeMap):void {
+        const totalNumLetters = tokens.reduce((prev, curr) => prev + curr.value.length, 0);
         const maxDepth = Object.keys(nodeMap).map(k => nodeMap[k].depth).reduce((p, c) => c > p ? c : p, 0);
 
         if (!this.params.width) {
@@ -213,19 +244,19 @@ class TreeGenerator {
      * The algorithm tries to optimize distances slightly to save some
      * space.
      */
-    private calculateWordSteps(tokens:SourceData.Desc, nodeMap:TreeNodeMap):Array<number> {
+    private calculateWordSteps(tokens:Sentence, nodeMap:TreeNodeMap):Array<number> {
         const baseStep = 5; // each step is a sum of this value and some calculated one
         const availWidth = this.params.getAvailWidth() - tokens.length * baseStep;
         const tmp = [];
 
         for (let i = 0; i < tokens.length; i += 1) {
             if (i + 1 < tokens.length
-                    && (nodeMap[tokens[i + 1][1]].depth < nodeMap[tokens[i][1]].depth
-                    || nodeMap[tokens[i + 1][1]].depth - 1 === nodeMap[tokens[i][1]].depth)) {
-                tmp.push(tokens[i][0].length * 0.05);
+                    && (nodeMap[tokens[i + 1].id].depth < nodeMap[tokens[i].id].depth
+                    || nodeMap[tokens[i + 1].id].depth - 1 === nodeMap[tokens[i].id].depth)) {
+                tmp.push(tokens[i].value.length * 0.05);
 
             } else {
-                tmp.push(tokens[i][0].length * 0.12);
+                tmp.push(tokens[i].value.length * 0.12);
             }
         }
         const totalWeightedLetters = tmp.reduce((prev, curr) => prev + curr, 0);
@@ -272,9 +303,9 @@ class TreeGenerator {
         return ans;
     }
 
-    private generateNodeCoords(desc:SourceData.Desc, nodeMap:TreeNodeMap) {
-        desc.forEach((item, i) => {
-            const node = nodeMap[item[1]];
+    private generateNodeCoords(tokens:Sentence, nodeMap:TreeNodeMap) {
+        tokens.forEach((item, i) => {
+            const node = nodeMap[item.id];
             node.x = this.params.paddingLeft + this.params.cmlWordSteps[i];
             node.y = this.params.paddingTop + node.depth * this.params.depthStep;
         });
@@ -295,39 +326,40 @@ class TreeGenerator {
         return `<span class="label" ${inlineCss}>${label.value}</span>`;
     }
 
-    private renderLinearSentence(tokens:SourceData.Desc, target:d3.Selection<SourceData.Token>):void {
+    private renderLinearSentence(tokens:Sentence, target:d3.Selection<SourceData.Token>):void {
        target
             .selectAll('span')
             .data(tokens)
             .enter()
             .append('span')
-            .attr('class', 'token')
-            .text(d => d[0])
+            .classed('token', true)
+            .classed('kwic', d => d.isKwic)
+            .text(d => d.value)
             .on('mouseover', (datum, i, values) => {
                 d3.select(values[i])
                     .classed('focused', true);
-                d3.select(this.sent2NodeActionMap[datum[1]]).classed('focused', true);
+                d3.select(this.sent2NodeActionMap[datum.id]).classed('focused', true);
             })
             .on('mouseout', (datum, i, values) => {
                 d3.select(values[i])
                     .classed('focused', false);
-                d3.select(this.sent2NodeActionMap[datum[1]]).classed('focused', false);
+                d3.select(this.sent2NodeActionMap[datum.id]).classed('focused', false);
             });
 
         target
             .selectAll('span.token')
             .each((d, i, nodes) => {
-                this.node2SentActionMap[d[1]] = nodes[i];
+                this.node2SentActionMap[d.id] = nodes[i];
             });
     }
 
 
-    private renderNodeDiv(nodeMap:TreeNodeMap, target:d3.Selection<any>, group:d3.Selection<SourceData.Token>) {
+    private renderNodeDiv(nodeMap:TreeNodeMap, target:d3.Selection<any>, group:d3.Selection<Token>) {
         const foreignObj = group.append('foreignObject');
 
         foreignObj
             .attr('x', (d, i) => this.params.paddingLeft + this.params.cmlWordSteps[i])
-            .attr('y', d => this.params.paddingTop + nodeMap[d[1]].depth * this.params.depthStep)
+            .attr('y', d => this.params.paddingTop + nodeMap[d.id].depth * this.params.depthStep)
             .attr('transform', (d, i) => `translate(-10, 0)`)
             .attr('width', 100)
             .attr('height', 40);
@@ -342,29 +374,29 @@ class TreeGenerator {
             .append('xhtml:div')
             .classed('token-node', true)
             .attr('title', this.mixins.translate('ucnkSyntaxViewer__click_to_see_details'))
-            .html(d => `${d[0]}<br />${this.generateLabelSpan(nodeMap[d[1]].labels[1])}`);
+            .html(d => `${d.value}<br />${this.generateLabelSpan(nodeMap[d.id].labels[1])}`);
 
         div.each((d, i, items) => {
-            this.sent2NodeActionMap[d[1]] = items[i];
+            this.sent2NodeActionMap[d.id] = items[i];
         });
 
         div
             .on('mouseover', (datum, i, elements) => {
                 d3.select(elements[i]).classed('focused', true);
-                d3.select(this.node2SentActionMap[datum[1]]).classed('focused', true);
+                d3.select(this.node2SentActionMap[datum.id]).classed('focused', true);
             })
             .on('mouseout', (datum, i, elements) => {
                 d3.select(elements[i]).classed('focused', false);
-                d3.select(this.node2SentActionMap[datum[1]]).classed('focused', false);
+                d3.select(this.node2SentActionMap[datum.id]).classed('focused', false);
             })
             .on('click', (datum, i, elements) => {
                 target.selectAll('table').remove();
-                if (!this.detailedId || this.detailedId !== datum[1]) {
+                if (!this.detailedId || this.detailedId !== datum.id) {
                     const table = target
                         .append('xhtml:table')
                         .classed('node-detail', true)
-                        .style('left', `${nodeMap[datum[1]].x}px`)
-                        .style('top', `${nodeMap[datum[1]].y + 100}px`);
+                        .style('left', `${nodeMap[datum.id].x}px`)
+                        .style('top', `${nodeMap[datum.id].y + 100}px`);
 
                     const tbody = table.append('tbody');
 
@@ -386,7 +418,7 @@ class TreeGenerator {
                         .attr('alt', this.mixins.translate('global__close'))
                         .attr('title', this.mixins.translate('global__close'));
 
-                    const data = nodeMap[datum[1]].data;
+                    const data = nodeMap[datum.id].data;
                     for (let k in data) {
                         const tr = tbody.append('tr');
                         tr
@@ -396,7 +428,7 @@ class TreeGenerator {
                             .append('td')
                             .text(data[k]);
                     }
-                    this.detailedId = datum[1];
+                    this.detailedId = datum.id;
 
                 } else {
                     this.detailedId = null;
@@ -404,7 +436,7 @@ class TreeGenerator {
             });
     }
 
-    private d3Draw(tokens:SourceData.Desc, nodeMap:TreeNodeMap, edges:Array<Edge>, target:HTMLElement):void {
+    private d3Draw(tokens:Sentence, nodeMap:TreeNodeMap, edges:Array<Edge>, target:HTMLElement):void {
         const wrapper = d3.select(target);
 
         const sentDiv = wrapper
@@ -437,8 +469,8 @@ class TreeGenerator {
             .append('g');
         group
             .append('ellipse')
-            .attr('cx', (d, i) => nodeMap[d[1]].x)
-            .attr('cy', (d) => nodeMap[d[1]].y)
+            .attr('cx', (d, i) => nodeMap[d.id].x)
+            .attr('cy', (d) => nodeMap[d.id].y)
             .attr('ry', 3)
             .attr('rx', 3)
             .attr('fill', this.params.nodeFill)
@@ -451,25 +483,41 @@ class TreeGenerator {
 }
 
 
-export function createGenerator(mixins:any) {
+export interface TreeGeneratorFn {
+    (data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement, options:Options):void;
+}
+
+
+/**
+ * This function is intended for the use in
+ * KonText environment where mixins is just
+ * a bunch of functions used mainly by
+ * React classes to translate messages,
+ * format numbers and dates, generate links etc.
+ */
+export function createGenerator(mixins:any):TreeGeneratorFn {
     return (data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement, options:Options) => {
         const gen = new TreeGenerator(options, mixins);
         gen.generate(data, zone, tree, target);
     }
 }
 
-
-export function generate(data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement, options:Options) {
-    var fakeMixins = {
-        translate : function (x, v) { return x; },
-        createStaticUrl : function (x) { return x; },
+/**
+ * This function is used mainly for testing outside
+ * the KonText environment.
+ */
+export function generate(data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement,
+        options:Options) {
+    const mixins = {
+        translate : function (x, v) { return x.replace(/[_-]/g, ' '); },
+        createStaticUrl : function (x) { return '../../../' + x; },
         createActionLink : function (x) { return x; },
         getConf : function (k) { return null; },
         formatNumber: function (v) { return v; },
         formatDate: function (v) { return v; },
         getLayoutViews: function () { return null}
     }
-    const gen = new TreeGenerator(options, fakeMixins);
+    const gen = new TreeGenerator(options, mixins);
     gen.generate(data, zone, tree, target);
 }
 

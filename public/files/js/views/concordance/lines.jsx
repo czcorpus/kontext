@@ -470,9 +470,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             if (this.props.data.hasFocus) {
                 htmlClasses.push('active');
             }
-            // note: "data-toknum" below is used by non-react widgets
+            // NOTE: attributes "data-toknum" and "data-kwiclen" below
+            // are used by non-react widgets (e.g. syntax viewer plug-in)
             return (
-                <tr className={htmlClasses.join(' ')} data-toknum={primaryLang.tokenNumber}>
+                <tr className={htmlClasses.join(' ')} data-toknum={primaryLang.tokenNumber} data-kwiclen={this.props.data.kwicLength}>
                     <td className="line-num">{this.props.showLineNumbers ? this.props.data.lineNumber + 1 : null}</td>
                     <TdLineSelection
                         kwicLength={this.props.data.kwicLength}
