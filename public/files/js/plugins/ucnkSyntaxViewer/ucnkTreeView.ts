@@ -150,6 +150,8 @@ class DrawingParams {
     cmlWordSteps:Array<number>; // cummulative x positions of words/nodes
     nodeStrokeColor:string = '#E2007A';
     nodeFill:string = '#E2007A';
+    nodeWidth:number = 3;
+    nodeHeight:number = 3;
     edgeColor:string = '#009EE0';
     edgeWidth:number = 2;
 
@@ -177,6 +179,21 @@ class TreeGenerator {
     private sent2NodeActionMap:{[ident:string]:HTMLElement} = {};
 
     private node2SentActionMap:{[ident:string]:HTMLElement} = {};
+
+    private static HORIZONTAL_SPACING_COEFF = 0.05;
+
+    private static VERTICAL_SPACING_COEFF = 0.12;
+
+    private static DYNAMIC_VERTICAL_SPACING = 60;
+
+    private static TYPICAL_SENTENCE_SIZE = 120;
+
+    private static NODE_DIV_WIDTH = 100;
+
+    private static NODE_DIV_HEIGHT = 40;
+
+    private static DETAIL_DIV_VERT_OFFSET = 100;
+
 
     constructor(options:Options, mixins:any) {
         this.mixins = mixins;
@@ -238,10 +255,10 @@ class TreeGenerator {
         const maxDepth = Object.keys(nodeMap).map(k => nodeMap[k].depth).reduce((p, c) => c > p ? c : p, 0);
 
         if (!this.params.width) {
-            this.params.width = Math.min(totalNumLetters / 120, 1) * this.params.maxWidth;
+            this.params.width = Math.min(totalNumLetters / TreeGenerator.TYPICAL_SENTENCE_SIZE, 1) * this.params.maxWidth;
         }
         if (!this.params.height) {
-            this.params.height = 80 * maxDepth;
+            this.params.height = TreeGenerator.DYNAMIC_VERTICAL_SPACING * maxDepth;
         }
         this.params.depthStep = (this.params.height - this.params.paddingTop - this.params.paddingBottom) / maxDepth;
         this.params.cmlWordSteps = this.calculateWordSteps(tokens, nodeMap);
@@ -262,10 +279,10 @@ class TreeGenerator {
             if (i + 1 < tokens.length
                     && (nodeMap[tokens[i + 1].id].depth < nodeMap[tokens[i].id].depth
                     || nodeMap[tokens[i + 1].id].depth - 1 === nodeMap[tokens[i].id].depth)) {
-                tmp.push(tokens[i].value.length * 0.05);
+                tmp.push(tokens[i].value.length * TreeGenerator.HORIZONTAL_SPACING_COEFF);
 
             } else {
-                tmp.push(tokens[i].value.length * 0.12);
+                tmp.push(tokens[i].value.length * TreeGenerator.VERTICAL_SPACING_COEFF);
             }
         }
         const totalWeightedLetters = tmp.reduce((prev, curr) => prev + curr, 0);
@@ -370,8 +387,8 @@ class TreeGenerator {
             .attr('x', (d, i) => this.params.paddingLeft + this.params.cmlWordSteps[i])
             .attr('y', d => this.params.paddingTop + nodeMap[d.id].depth * this.params.depthStep)
             .attr('transform', (d, i) => `translate(-10, 0)`)
-            .attr('width', 100)
-            .attr('height', 40);
+            .attr('width', TreeGenerator.NODE_DIV_WIDTH)
+            .attr('height', TreeGenerator.NODE_DIV_HEIGHT);
 
         const body = foreignObj
             .append("xhtml:body")
@@ -405,7 +422,7 @@ class TreeGenerator {
                         .append('xhtml:table')
                         .classed('node-detail', true)
                         .style('left', `${nodeMap[datum.id].x}px`)
-                        .style('top', `${nodeMap[datum.id].y + 100}px`);
+                        .style('top', `${nodeMap[datum.id].y + TreeGenerator.DETAIL_DIV_VERT_OFFSET}px`);
 
                     const tbody = table.append('tbody');
 
@@ -506,8 +523,8 @@ class TreeGenerator {
             .append('ellipse')
             .attr('cx', (d, i) => nodeMap[d.id].x)
             .attr('cy', (d) => nodeMap[d.id].y)
-            .attr('ry', 3)
-            .attr('rx', 3)
+            .attr('ry', this.params.nodeWidth)
+            .attr('rx', this.params.nodeHeight)
             .attr('fill', this.params.nodeFill)
             .attr('stroke', this.params.nodeStrokeColor)
             .attr('stroke-width', '2');
