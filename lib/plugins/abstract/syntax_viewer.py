@@ -58,7 +58,10 @@ class SearchBackend(object):
         Returns (list of int):
             numeric value representation
         """
-        return [int(v)] if v.isdigit() else []
+        try:
+            return [int(v)]
+        except ValueError:
+            return []
 
     def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
         """
