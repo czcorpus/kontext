@@ -185,9 +185,9 @@ class TreeGenerator {
 
     private node2SentActionMap:{[ident:string]:HTMLElement} = {};
 
-    private static HORIZONTAL_SPACING_COEFF = 0.05;
+    private static HORIZONTAL_SPACING_COMPACT = 0.05;
 
-    private static VERTICAL_SPACING_COEFF = 0.12;
+    private static HORIZONTAL_SPACING_DEFAULT = 0.12;
 
     private static DYNAMIC_VERTICAL_SPACING = 60;
 
@@ -286,10 +286,10 @@ class TreeGenerator {
             if (i + 1 < tokens.length
                     && (nodeMap[tokens[i + 1].id].depth < nodeMap[tokens[i].id].depth
                     || nodeMap[tokens[i + 1].id].depth - 1 === nodeMap[tokens[i].id].depth)) {
-                tmp.push(tokens[i].value.length * TreeGenerator.HORIZONTAL_SPACING_COEFF);
+                tmp.push(tokens[i].value.length * TreeGenerator.HORIZONTAL_SPACING_COMPACT);
 
             } else {
-                tmp.push(tokens[i].value.length * TreeGenerator.VERTICAL_SPACING_COEFF);
+                tmp.push(tokens[i].value.length * TreeGenerator.HORIZONTAL_SPACING_DEFAULT);
             }
         }
         const totalWeightedLetters = tmp.reduce((prev, curr) => prev + curr, 0);
@@ -456,7 +456,7 @@ class TreeGenerator {
                         .attr('title', this.mixins.translate('global__close'));
 
                     const data = nodeMap[datum.id].data;
-                    Object.keys(data).forEach(k => {
+                    Object.keys(data).filter(k => k !== 'id').forEach(k => {
                         const tr = tbody.append('tr');
                         tr
                             .append('th')
