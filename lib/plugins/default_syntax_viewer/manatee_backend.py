@@ -407,7 +407,7 @@ class ManateeBackend(SearchBackend):
 
     def _get_abs_reference(self, curr_idx, item, ref_attr):
         """
-        Transform a relative parent reference as defined in original nodes
+        Transform relative parents references as defined in original nodes
         into an sentence-absolute representation (e.g. 5th element referring
         to '-2' translates into reference to '3').
         Args:
@@ -415,14 +415,14 @@ class ManateeBackend(SearchBackend):
             item (dict): processed node
             ref_attr (str): a node attribute used to refer to node's parent
 
-        Returns (int):
+        Returns (list of int):
             sentence-absolute position of the parent or None if nothing found
         """
         if item[ref_attr]:
-            rel_parent = self.import_parent_val(item[ref_attr])
-            return curr_idx + rel_parent if rel_parent != 0 else None
+            rel_parents = self.import_parent_values(item[ref_attr])
+            return [curr_idx + rp for rp in rel_parents if rp != 0]
         else:
-            return None
+            return []
 
     def _process_attr_refs(self, data, curr_idx, attr_refs):
         """
@@ -439,14 +439,13 @@ class ManateeBackend(SearchBackend):
             attr_refs (dict of str:list): configured indirect values
 
         """
-        for ident, items in attr_refs.items():
-            abs_ref = self._get_abs_reference(curr_idx, data[curr_idx], ident)
-            if abs_ref is None:
-                data[curr_idx][ident] = None
-            else:
+        for ident, keys in attr_refs.items():
+            abs_refs = self._get_abs_reference(curr_idx, data[curr_idx], ident)
+            data[curr_idx][ident] = []
+            for abs_ref in abs_refs:
                 ref_item = data[abs_ref]
-                data[curr_idx][ident] = '%s (%s)' % (data[curr_idx][ident],
-                                                     ', '.join(map(lambda ar: ref_item[ar], items)))
+                ref_label = ' '.join(map(lambda k: ref_item[k], keys))
+                data[curr_idx][ident].append((abs_ref, ref_label))
 
     def _decode_tree_data(self, data, parent_attr, attr_refs):
         """
@@ -456,7 +455,8 @@ class ManateeBackend(SearchBackend):
             attr_refs (dict of str:list of str): indirect values
         """
         for i in range(1, len(data)):
-            abs_parent = self._get_abs_reference(i, data[i], parent_attr)
+            abs_parents = self._get_abs_reference(i, data[i], parent_attr)
+            abs_parent = abs_parents[0] if len(abs_parents) > 0 else None
             # Please note that referring to the 0-th node
             # means 'out of range' error too because our 0-th node
             # here is just an auxiliary root element which is referred

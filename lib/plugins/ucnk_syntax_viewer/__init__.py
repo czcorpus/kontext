@@ -55,8 +55,8 @@ class UcnkManateeBackend(mbk.ManateeBackend):
     def __init__(self, conf):
         super(UcnkManateeBackend, self).__init__(conf)
 
-    def import_parent_val(self, v):
-        return int(v.split('|')[0])
+    def import_parent_values(self, v):
+        return [int(x) for x in v.split('|') if x != '']
 
     def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
         tree_configs = self._conf.get_trees(canonical_corpus_id)
