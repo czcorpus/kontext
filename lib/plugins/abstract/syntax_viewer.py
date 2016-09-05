@@ -43,18 +43,22 @@ class MaximumContextExceeded(Exception):
 
 class SearchBackend(object):
 
-    def import_parent_val(self, v):
+    def import_parent_values(self, v):
         """
+        Returns a list of possible parents encoded in a string. Please
+        note that due to generality we must assume multiple parents
+        even if it does not make sense in a single tree.
+
         Override this method in case your data is encoded
         somehow (i.e. there is more than just number expected there).
 
         Args:
-            v: encoded parent value
+            v (str): one or more parent values encoded in a single string
 
-        Returns (int):
+        Returns (list of int):
             numeric value representation
         """
-        return int(v)
+        return [int(v)] if v.isdigit() else []
 
     def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
         """

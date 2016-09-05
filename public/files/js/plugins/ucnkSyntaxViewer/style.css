@@ -72,3 +72,12 @@ table.node-detail td.controls a {
 table.node-detail td.controls a img {
     width: 1em;
 }
+
+table.node-detail td a.detail-ref {
+    color: #009EE0;
+    text-decoration: none;
+}
+
+table.node-detail td a.detail-ref:hover {
+    text-decoration: underline;
+}
