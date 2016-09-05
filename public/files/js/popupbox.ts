@@ -43,20 +43,21 @@ export interface Position {
 
 export interface Options {
     top?:string;
-    width?: number|string;
-    height?: number|string;
-    fontSize?: string;
-    timeout?: number;
-    type?: string;
-    closeIcon?: boolean;
-    onClose?: (e: Event) => void;
-    beforeOpen?: (e: Event) => void;
-    onShow?: (obj:JQuery) => void;
-    onError?: (obj:JQuery) => void;
-    domId?: string;
-    htmlClass?: string;
-    calculatePosition?: boolean;
-    movable?: boolean;
+    width?:number|string;
+    height?:number|string;
+    fontSize?:string;
+    timeout?:number;
+    type?:string;
+    closeIcon?:boolean;
+    onClose?:(e:Event) => void;
+    afterClose?:(e:Event) => void;
+    beforeOpen?:(e:Event) => void;
+    onShow?:(obj:JQuery) => void;
+    onError?:(obj:JQuery) => void;
+    domId?:string;
+    htmlClass?:string;
+    calculatePosition?:boolean;
+    movable?:boolean;
 }
 
 export interface Finalize {
@@ -133,6 +134,8 @@ export class TooltipBox implements Legacy.IPopupBox {
     private timeout:number = 25000;
 
     private onClose:(TooltipBox) => void;
+
+    private afterClose:(TooltipBox) => void;
 
     private onShow:(TooltipBox) => void;
 
@@ -224,6 +227,9 @@ export class TooltipBox implements Legacy.IPopupBox {
 
             if (this.timer) {
                 clearInterval(this.timer);
+            }
+            if (typeof this.afterClose === 'function') {
+                this.afterClose.call(this);
             }
         }
     }
@@ -348,6 +354,7 @@ export class TooltipBox implements Legacy.IPopupBox {
         this.expandLeft = fetchOption('expandLeft', false);
         this.timeout = fetchOption('timeout', this.timeout);
         this.onClose = fetchOption('onClose', null);
+        this.afterClose = fetchOption('afterClose', null);
         this.onShow = fetchOption('onShow', null);
         this.onError = function () {
             let customErrorHandler = fetchOption('onError', null);
@@ -444,6 +451,10 @@ export class TooltipBox implements Legacy.IPopupBox {
     }
 }
 
+export function open(contents:TooltipBoxContent, position:Position, options:Options):TooltipBox {
+    return openAt($('body').get(0), contents, position, options);
+}
+
 /**
  * Immediately opens a pop-up box. Because it is not bound to any element in this
  * case, a position and a size information of 'virtual' anchoring element must be always specified.
@@ -453,10 +464,10 @@ export class TooltipBox implements Legacy.IPopupBox {
  * @param options
  * @return {TooltipBox} box
  */
-export function open(contents:TooltipBoxContent, position:Position, options:Options) {
+export function openAt(where:HTMLElement, contents:TooltipBoxContent, position:Position, options:Options):TooltipBox {
     let box;
     let windowClickHandler;
-    let whereElm = $('body');
+
     let beforeOpen = fetchOptionFunc(options)('beforeOpen', null);
     let beforeOpenValue = null;
 
@@ -467,7 +478,7 @@ export function open(contents:TooltipBoxContent, position:Position, options:Opti
     }
 
     box = new TooltipBox(position, beforeOpenValue, null);
-    box.open(whereElm, contents, options);
+    box.open(where, contents, options);
 
     windowClickHandler = function (event) {
         if (event.target !== box.rootElm) {

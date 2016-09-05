@@ -22,7 +22,7 @@
 
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');
-import popupbox = require('../../popupbox');
+import {openAt as openPopupBox, TooltipBox} from '../../popupbox';
 import {createGenerator} from './ucnkTreeView';
 
 
@@ -30,12 +30,14 @@ class SyntaxTreeViewer {
 
     private pluginApi:Kontext.PluginApi;
 
+    private popupBox
+
     constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
     }
 
-    private createRenderFunction(tokenId:string, kwicLength:number):(box:popupbox.TooltipBox, finalize:()=>void)=>void {
-        return (box:popupbox.TooltipBox, finalize:()=>void) => {
+    private createRenderFunction(tokenId:string, kwicLength:number):(box:TooltipBox, finalize:()=>void)=>void {
+        return (box:TooltipBox, finalize:()=>void) => {
             let ajaxAnim = this.pluginApi.ajaxAnim();
             $('body').append(ajaxAnim);
 
@@ -54,8 +56,11 @@ class SyntaxTreeViewer {
                     $(ajaxAnim).remove();
                     if (!data['contains_errors']) {
                         let treexFrame = window.document.createElement('div');
+                        $(treexFrame).css('width', '90%');
                         $(box.getContentElement()).append(treexFrame);
                         finalize();
+                        box.setCss('left', '50%');
+                        box.setCss('top', '50%');
                         const generator = createGenerator(this.pluginApi.exportMixins()[0]);
                         generator(data, 'cs', 'default', treexFrame, {
                             width: null, // = auto
@@ -94,17 +99,30 @@ class SyntaxTreeViewer {
             })
             .on('mouseout', () => {
                 $(button).attr('src', baseImg);
+            })
+            .on('click', () => {
+                if (this.popupBox) {
+                    this.popupBox.close();
+                }
+                const overlay = window.document.createElement('div');
+                $(overlay).attr('id', 'modal-overlay');
+                $('body').append(overlay);
+                this.popupBox = openPopupBox(
+                    overlay,
+                    this.createRenderFunction(tokenId, kwicLength),
+                    {left: 0, top: 0},
+                    {
+                        type: 'plain',
+                        calculatePosition: false,
+                        closeIcon: true,
+                        timeout: null,
+                        htmlClass: 'syntax-tree',
+                        afterClose: () => {
+                            $(overlay).remove();
+                        }
+                    }
+                );
             });
-        popupbox.bind(
-            button,
-            this.createRenderFunction(tokenId, kwicLength),
-            {
-                type: 'plain',
-                closeIcon: true,
-                movable: true,
-                timeout: null
-            }
-        );
         return button;
     }
 

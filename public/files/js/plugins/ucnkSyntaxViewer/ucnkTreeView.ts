@@ -137,6 +137,11 @@ type Sentence = Array<Token>;
  * function.
  */
 class DrawingParams {
+
+    private static FALLBACK_WIDTH = 1000;
+
+    private static FALLBACK_HEIGHT = 600;
+
     maxWidth:number;
     maxHeight:number;
     width:number;
@@ -156,8 +161,8 @@ class DrawingParams {
     edgeWidth:number = 2;
 
     constructor() {
-        this.maxWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-        this.maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        this.maxWidth = document.documentElement.clientWidth || DrawingParams.FALLBACK_WIDTH;
+        this.maxHeight = document.documentElement.clientHeight || DrawingParams.FALLBACK_HEIGHT;
     }
 
     getAvailWidth():number {
@@ -192,7 +197,9 @@ class TreeGenerator {
 
     private static NODE_DIV_HEIGHT = 40;
 
-    private static DETAIL_DIV_VERT_OFFSET = 100;
+    private static DETAIL_DIV_VERT_OFFSET = 80;
+
+    private static DETAIL_DIV_HORIZ_OFFSET = -10;
 
 
     constructor(options:Options, mixins:any) {
@@ -379,6 +386,10 @@ class TreeGenerator {
             });
     }
 
+    private handleDetailClick(target:d3.Selection<Token>):void {
+
+    }
+
 
     private renderNodeDiv(nodeMap:TreeNodeMap, target:d3.Selection<any>, group:d3.Selection<Token>) {
         const foreignObj = group.append('foreignObject');
@@ -421,7 +432,7 @@ class TreeGenerator {
                     const table = target
                         .append('xhtml:table')
                         .classed('node-detail', true)
-                        .style('left', `${nodeMap[datum.id].x}px`)
+                        .style('left', `${nodeMap[datum.id].x + TreeGenerator.DETAIL_DIV_HORIZ_OFFSET}px`)
                         .style('top', `${nodeMap[datum.id].y + TreeGenerator.DETAIL_DIV_VERT_OFFSET}px`);
 
                     const tbody = table.append('tbody');
@@ -445,18 +456,15 @@ class TreeGenerator {
                         .attr('title', this.mixins.translate('global__close'));
 
                     const data = nodeMap[datum.id].data;
-                    let k;       // must be outside the block because of ES5
-                    let refData; // dtto
-                    let td;      // dtto
-                    for (k in data) {
+                    Object.keys(data).forEach(k => {
                         const tr = tbody.append('tr');
                         tr
                             .append('th')
                             .text(k + ':');
-                        td = tr.append('td')
+                        const td = tr.append('td')
                         if (data[k] !== null && typeof data[k] === 'object') {
                             (<ReferencedValues>data[k]).forEach((item, i) => {
-                                refData = group.filter((_, j) => j === item[0]).datum();
+                                const refData = group.filter((_, j) => j === item[0]).datum();
                                 if (refData) {
                                     if (i > 0) {
                                         td.append('span').text(', ');
@@ -479,7 +487,7 @@ class TreeGenerator {
                         } else if (typeof data[k] === 'string') {
                             td.text(<string>data[k]);
                         }
-                    }
+                    });
                     this.detailedId = datum.id;
 
                 } else {
