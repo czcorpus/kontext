@@ -135,7 +135,7 @@ class Subcorpus(Kontext):
                     plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
                                                             corpname=self.args.corpname,
                                                             subcname=subcname,
-                                                            cql=full_cql.split('[]')[-1])
+                                                            cql=full_cql.strip().split('[]', 1)[-1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',

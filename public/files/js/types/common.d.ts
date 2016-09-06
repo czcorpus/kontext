@@ -87,7 +87,7 @@ declare module Kontext {
         showMessage(type:string, message:string, onClose?:()=>void); // TODO type: MsgType vs string
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
-        formatDate(d:Date):string;
+        formatDate(d:Date, timeFormat?:number):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         registerReset(fn:Function);
         userIsAnonymous():boolean;
@@ -236,7 +236,7 @@ declare module Kontext {
         createActionLink(path:string):string;
         createStaticUrl(path:string):string;
         formatNumber(value:number):string;
-        formatDate(d:Date):string;
+        formatDate(d:Date, timeFormat?:number):string;
         getLayoutViews():Kontext.LayoutViews;
     }
 
