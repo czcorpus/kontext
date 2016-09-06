@@ -180,8 +180,8 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     }
 
     private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {
-        let attrObj = this.textTypesStore.getAttribute(this.bibliographyAttribute);
-        let newBibData = filterData[this.bibliographyAttribute];
+        const attrObj = this.textTypesStore.getAttribute(this.bibliographyAttribute);
+        const newBibData = filterData[this.bibliographyAttribute];
 
         // set the data iff server data are full-fledget (i.e. including unique 'ident')
         if (newBibData.length > 0 && !!newBibData[0].ident) {
@@ -193,9 +193,8 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 return this.loadBibInfo(this.bibliographyIds.get(idx)).then(
                     (serverData:ServerBibData) => {
                         if (!serverData.contains_errors) {
-                            let bibData:Immutable.Map<string, any> = Immutable.Map<string, any>(serverData.bib_data);
                             this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
-                                idx, bibData);
+                                    idx, Immutable.OrderedMap<string, any>(serverData.bib_data));
 
                         } else {
                             throw new Error(serverData.error);
