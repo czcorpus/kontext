@@ -22,22 +22,22 @@
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import util = require('../util');
-import tplDocument = require('../tpl/document');
-import RSVP = require('vendor/rsvp');
-
+import {SimplePageStore} from '../util';
+import {PageModel} from '../tpl/document';
+import * as RSVP from 'vendor/rsvp';
+import * as Immutable from 'vendor/immutable';
 
 /**
  */
-export class UserInfo extends util.SimplePageStore implements Kontext.UserInfoStore {
+export class UserInfo extends SimplePageStore implements Kontext.UserInfoStore {
 
-    private layoutModel:tplDocument.PageModel;
+    private layoutModel:PageModel;
 
     private userData:Kontext.UserCredentials;
 
-    constructor(layoutModel:tplDocument.PageModel, dispatcher:Dispatcher.Dispatcher<any>) {
+    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>) {
         super(dispatcher);
-        let self = this;
+        const self = this;
         this.layoutModel = layoutModel;
         this.userData = null;
 
@@ -53,9 +53,9 @@ export class UserInfo extends util.SimplePageStore implements Kontext.UserInfoSt
                         function (err) {
                             console.log('error: ', err); // TODO
                         }
-                    )
-                    break;
-                }
+                    );
+                break;
+            }
         });
     }
 

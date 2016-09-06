@@ -78,7 +78,7 @@ export class SubcorpListStore extends SimplePageStore {
     constructor(dispatcher:Dispatcher.Dispatcher<any>, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
-            unfinished:Array<AjaxResponse.UnfinishedSubcorp>) {
+            unfinished:Array<Kontext.AsyncTaskInfo>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.importLines(data);
@@ -266,7 +266,7 @@ export class SubcorpListStore extends SimplePageStore {
         }));
     }
 
-    private importUnfinished(data:Array<AjaxResponse.UnfinishedSubcorp>):void {
+    private importUnfinished(data:Array<Kontext.AsyncTaskInfo>):void {
         this.unfinished = Immutable.List<UnfinishedSubcorp>(data.map<UnfinishedSubcorp>(item => {
             return {
                 ident: item.ident,

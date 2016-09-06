@@ -52,7 +52,7 @@ import {ViewOptionsStore} from '../stores/viewOptions';
 import translations = require('translations');
 import IntlMessageFormat = require('vendor/intl-messageformat');
 import Immutable = require('vendor/immutable');
-import asyncTask = require('../asyncTask');
+import {AsyncTaskChecker} from '../stores/asyncTask';
 import userSettings = require('../userSettings');
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -154,7 +154,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     private translations:{[key:string]:string};
 
-    private asyncTaskChecker:asyncTask.AsyncTaskChecker;
+    private asyncTaskChecker:AsyncTaskChecker;
 
     /**
      *
@@ -173,7 +173,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
         this.viewOptionsStore = new ViewOptionsStore(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
-        this.asyncTaskChecker = new asyncTask.AsyncTaskChecker(this.pluginApi(),
+        this.asyncTaskChecker = new AsyncTaskChecker(this.dispatcher, this.pluginApi(),
                 this.getConf<any>('asyncTasks') || []);
     }
 
@@ -186,7 +186,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             messageStore: this.messageStore,
             queryHintStore: this.queryHintStore,
             userInfoStore: this.userInfoStore,
-            viewOptionsStore: this.viewOptionsStore
+            viewOptionsStore: this.viewOptionsStore,
+            asyncTaskInfoStore: this.asyncTaskChecker
         };
     }
 
@@ -839,7 +840,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     private initMainMenu():void {
-        const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this);
+        const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this, this.getStores().asyncTaskInfoStore);
         const menuData = this.getConf<any>('menuData');
         this.renderReactComponent(
             menuViews.MainMenu,
@@ -905,9 +906,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 applicationBar.create(this.pluginApi());
                 footerBar.create(this.pluginApi());
 
-                $.each(this.initCallbacks, function (i, fn:()=>void) {
-                    fn();
-                });
+                this.initCallbacks.forEach(fn => fn());
 
                 this.registerCoreEvents();
 

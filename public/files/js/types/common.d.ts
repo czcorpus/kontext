@@ -183,6 +183,24 @@ declare module Kontext {
         getCredentials():UserCredentials;
     }
 
+    export interface IAsyncTaskStore extends PageStore {
+
+        registerTask(task:Kontext.AsyncTaskInfo):void;
+
+        getAsyncTasks():Immutable.List<Kontext.AsyncTaskInfo>;
+
+        getNumRunningTasks():number;
+
+        getNumFinishedTasks():number;
+
+        init():void;
+
+        /**
+         * Add an external callback
+         */
+        addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void;
+    }
+
     /**
      * A store managing system messages presented to a user
      */
@@ -245,7 +263,8 @@ declare module Kontext {
         messageStore:MessagePageStore,
         queryHintStore:IQueryHintStore,
         userInfoStore:UserInfoStore,
-        viewOptionsStore:ViewOptions.IViewOptionsStore
+        viewOptionsStore:ViewOptions.IViewOptionsStore,
+        asyncTaskInfoStore:IAsyncTaskStore
     }
 
     export interface AjaxOptions {

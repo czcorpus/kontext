@@ -21,7 +21,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, concArgHandler) {
+export function init(dispatcher, mixins, concArgHandler, asyncTaskStore) {
 
     // ----------------------------- <ConcDependentItem /> --------------------------
 
@@ -174,27 +174,105 @@ export function init(dispatcher, mixins, concArgHandler) {
                 </li>
             );
         }
-
     });
+
+    // ----------------------------- <LiInboxNotificator /> --------------------------
+
+    const LiInboxNotificator = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            if (this.props.numFinished > 0) {
+                return (
+                    <li>
+                        <a title={this.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished})}
+                                onClick={this.props.clickHandler}>{'\uD83D\uDD82'}</a>
+                    </li>
+                );
+
+            } else {
+                return null;
+            }
+        }
+    });
+
+    // ----------------------------- <LiAsyncTaskNotificator /> --------------------------
+
+    const LiAsyncTaskNotificator = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            if (this.props.numRunning > 0) {
+                return (
+                    <li>
+                        <a title={this.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning})}
+                                onClick={this.props.clickHandler}>{'\u231B'}</a>
+                    </li>
+                );
+
+            } else {
+                return null;
+            }
+        }
+    })
 
     // ----------------------------- <MainMenu /> --------------------------
 
     const MainMenu = React.createClass({
 
+        mixins : mixins,
+
         getInitialState : function () {
-            return {currFocus: null};
+            return {
+                currFocus: null,
+                numRunningTasks: asyncTaskStore.getNumRunningTasks(),
+                numFinishedTasks: asyncTaskStore.getNumFinishedTasks()
+            };
         },
 
         _handleHoverChange : function (ident, enable) {
             if (!enable) {
-                this.setState({currFocus: null});
+                this.setState({
+                    currFocus: null,
+                    numRunningTasks: this.state.numRunningTasks,
+                    numFinishedTasks: this.state.numFinishedTasks
+                });
 
             } else {
-                this.setState({currFocus: ident});
+                this.setState({
+                    currFocus: ident,
+                    numRunningTasks: this.state.numRunningTasks,
+                    numFinishedTasks: this.state.numFinishedTasks
+                });
             }
         },
 
+        _handleTaskListClick : function (type) {
+            dispatcher.dispatch({
+                actionType: 'INBOX_MESSAGE_LIST',
+                props: {
+                    type: type
+                }
+            });
+        },
 
+        _storeChangeListener : function (store, action) {
+            this.setState({
+                currFocus: this.state.currFocus,
+                numRunningTasks: asyncTaskStore.getNumRunningTasks(),
+                numFinishedTasks: asyncTaskStore.getNumFinishedTasks()
+            });
+        },
+
+        componentDidMount : function () {
+            asyncTaskStore.addChangeListener(this._storeChangeListener);
+        },
+
+        componentWillUnmount : function () {
+            asyncTaskStore.removeChangeListener(this._storeChangeListener);
+        },
 
         render : function () {
             return (
@@ -209,6 +287,10 @@ export function init(dispatcher, mixins, concArgHandler) {
                                     handleMouseOver={mouseOverHandler}
                                     handleMouseOut={mouseOutHandler} />;
                     })}
+                    <LiAsyncTaskNotificator numRunning={this.state.numRunningTasks}
+                            clickHandler={this._handleTaskListClick.bind(this, 'running')} />
+                    <LiInboxNotificator numFinished={this.state.numFinishedTasks}
+                            clickHandler={this._handleTaskListClick.bind(this, 'finished')} />
                 </ul>
             );
         }
