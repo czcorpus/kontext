@@ -215,8 +215,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             formatNumber(value:number):string {
                 return self.formatNumber(value);
             },
-            formatDate(d:Date):string {
-                return self.formatDate(d);
+            formatDate(d:Date, timeFormat:number=0):string {
+                return self.formatDate(d, timeFormat);
             },
             getLayoutViews():Kontext.LayoutViews {
                 return self.layoutViews;
@@ -698,9 +698,22 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return format.format(v);
     }
 
-    formatDate(d:Date):string {
-        let format:any = new Intl.DateTimeFormat(this.conf['uiLang']);
-        return format.format(d);
+    /**
+     * @param d a Date object
+     * @param timeFormat 0 = no time, 1 = hours + minutes, 2 = hours + minutes + seconds
+     *  (hours, minutes and seconds are always in 2-digit format)
+     */
+    formatDate(d:Date, timeFormat:number=0):string {
+        const opts = {year: 'numeric', month: '2-digit', day: '2-digit'};
+
+        if (timeFormat > 0) {
+            opts['hour'] = '2-digit';
+            opts['minute'] = '2-digit';
+        }
+        if (timeFormat === 2) {
+            opts['second'] = '2-digit';
+        }
+        return new Intl.DateTimeFormat(this.conf['uiLang'], opts).format(d);
     }
 
     /**
@@ -957,8 +970,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.formatNumber(v);
     }
 
-    formatDate(v) {
-        return this.pageModel.formatDate(v);
+    formatDate(d:Date, timeFormat:number=0):string {
+        return this.pageModel.formatDate(d, timeFormat);
     }
 
     applySelectAll(elm, context) {

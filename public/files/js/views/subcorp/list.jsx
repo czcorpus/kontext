@@ -100,7 +100,7 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                         ? this.formatNumber(this.props.item.size)
                         : '-'}
                     </td>
-                    <td className="num">{this.formatDate(this.props.item.created)}</td>
+                    <td>{this.formatDate(this.props.item.created, 1)}</td>
                     <td className="action-link">
                         {this.props.item.cql
                             ? <a onClick={this._handleActionClick}
