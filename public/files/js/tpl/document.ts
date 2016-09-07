@@ -854,7 +854,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.corpusInfoStore, this.layoutViews.PopupBox);
         this.renderReactComponent(
             overviewViews.OverviewArea,
-            window.document.getElementById('overivew-area-mount'),
+            window.document.getElementById('overview-area-mount'),
             {}
         );
 
