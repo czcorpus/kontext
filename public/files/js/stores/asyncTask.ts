@@ -27,8 +27,7 @@ import {SimplePageStore} from '../util';
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
-    num_remaining?: number;
-    data?:Array<Kontext.AsyncTaskInfo>;
+    data:Array<Kontext.AsyncTaskInfo>;
     contains_errors: boolean;
 }
 
@@ -73,21 +72,20 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
-                case 'INBOX_MESSAGE_LIST':
-                    const finished = self.getFinishedTasks();
-                    const info = finished.map((item) => self.createTaskDesc(item)).join(', ');
-                    self.pageModel.showMessage(
-                        'mail',
-                        self.pageModel.translate('global__these_task_are_finished') + ': ' + info,
-                        () => {
-                            self.deleteTaskInfo(finished.map(item => item.ident).toArray()).then(
-                                (data) => {
-                                    self.init();
-                                },
-                                (err) => {
-                                    self.pageModel.showMessage('error', err);
-                                }
-                            )
+                case 'INBOX_CLEAR_FINISHED_TASKS':
+                    self.deleteFinishedTaskInfo().then(
+                        (data) => {
+                            if (!data.contains_errors) {
+                                self.updateMessageList(data.data);
+
+                            } else {
+                                throw new Error(data.messages[0]);
+                            }
+                            self.notifyChangeListeners();
+                        },
+                        (err) => {
+                            self.notifyChangeListeners();
+                            self.pageModel.showMessage('error', err);
                         }
                     );
                 break;
@@ -117,7 +115,7 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
     }
 
     getNumRunningTasks():number {
-        return this.asyncTasks.filter(item => this.taskIsActive(item)).size;
+        return this.asyncTasks.filter(this.taskIsActive).size;
     }
 
     getNumFinishedTasks():number {
@@ -133,11 +131,12 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
         );
     }
 
-    private deleteTaskInfo(taskIds:Array<string>):RSVP.Promise<AsyncTaskResponse> {
+    private deleteFinishedTaskInfo():RSVP.Promise<AsyncTaskResponse> {
+        const finishedTasksIds = this.asyncTasks.filter(this.taskIsFinished).map(item => item.ident).toArray();
         return this.pageModel.ajax(
             'DELETE',
             this.pageModel.createActionUrl('remove_task_info'),
-            {'tasks': taskIds},
+            {'tasks': finishedTasksIds},
             {contentType : 'application/x-www-form-urlencoded'}
         );
     }

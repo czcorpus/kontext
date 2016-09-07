@@ -840,7 +840,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     private initMainMenu():void {
-        const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this, this.getStores().asyncTaskInfoStore);
+        const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this,
+                this.getStores().asyncTaskInfoStore, this.layoutViews);
         const menuData = this.getConf<any>('menuData');
         this.renderReactComponent(
             menuViews.MainMenu,

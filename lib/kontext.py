@@ -1283,7 +1283,7 @@ class Kontext(Controller):
     def remove_task_info(self, request):
         task_ids = request.form.getlist('tasks')
         self._set_async_tasks(filter(lambda x: x.ident not in task_ids, self.get_async_tasks()))
-        return {'num_remaining': len(self.get_async_tasks())}
+        return self.check_tasks_status(request)
 
 
 class PluginApi(object):

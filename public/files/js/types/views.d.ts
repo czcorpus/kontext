@@ -123,7 +123,8 @@ declare module "views/menu" {
     }
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
-            concArgHandler:Kontext.IConcArgsHandler, asyncTaskStore:Kontext.IAsyncTaskStore):MainMenuViews;
+            concArgHandler:Kontext.IConcArgsHandler, asyncTaskStore:Kontext.IAsyncTaskStore,
+            layoutViews:Kontext.LayoutViews):MainMenuViews;
 }
 
 
