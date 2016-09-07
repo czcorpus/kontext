@@ -1,7 +1,7 @@
 @import "shared.less";
 
 #modal-overlay {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
     width: 100%;
@@ -191,4 +191,37 @@ table.envelope.locked .define-range a.locked:hover {
     border-color: @color-light-grey;
     border-style: solid;
     font-size: 80%;
+}
+#modal-overlay .tooltip-box.async-task-list {
+    min-width: 70%;
+    font-size: 0.8em;
+
+    table {
+        border-spacing: 0;
+
+        td, th {
+            text-align: left;
+            padding: 0.3em 0.7em 0.3em 0.8em;
+            border-color: @color-default-green;
+            border-width: 0 1pt 0 0;
+            border-style: solid;
+        }
+
+        th {
+            color: @color-default-text;
+            background-color: @color-default-green;
+            font-weight: bold;
+            padding-top: 1em;
+            padding-bottom: 0.5em;
+        }
+
+        tr:nth-child(odd) {
+            background-color: @color-light-green;
+        }
+    }
+
+    div.options {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
 }
