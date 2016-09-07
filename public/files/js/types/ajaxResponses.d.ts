@@ -61,27 +61,17 @@ declare module AjaxResponse {
         name:string;
     }
 
-    export interface UnfinishedSubcorp {
-        ident:string;
-        label:string;
-        status:string;
-        category:string;
-        args:{[k:string]:string};
-        created:number;
-        error:string;
-    }
-
     export interface SubcorpList extends Kontext.AjaxResponse {
         SubcorpList:Array<any>; // TODO - do we need this?
         subcorp_list:Array<ServerSubcorpListItem>;
         filter:{[k:string]:any};
         sort_key:{name:string; reverse:boolean};
         related_corpora:Array<string>,
-        unfinished_subc:Array<UnfinishedSubcorp>;
+        unfinished_subc:Array<Kontext.AsyncTaskInfo>;
     }
 
     export interface CreateSubcorpus extends Kontext.AjaxResponse {
-        unfinished_subc:Array<UnfinishedSubcorp>;
+        unfinished_subc:Array<Kontext.AsyncTaskInfo>;
     }
 
 }

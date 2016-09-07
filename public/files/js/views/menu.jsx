@@ -21,7 +21,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, concArgHandler) {
+export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutViews) {
 
     // ----------------------------- <ConcDependentItem /> --------------------------
 
@@ -174,27 +174,172 @@ export function init(dispatcher, mixins, concArgHandler) {
                 </li>
             );
         }
-
     });
+
+    // ----------------------------- <AsyncTaskList /> --------------------------
+
+    const AsyncTaskList = React.createClass({
+
+        mixins : mixins,
+
+        getInitialState : function () {
+            return {removeFinishedOnSubmit: true};
+        },
+
+        _handleButtonClick : function (evt) {
+            if (this.state.removeFinishedOnSubmit) {
+                dispatcher.dispatch({
+                    actionType: 'INBOX_CLEAR_FINISHED_TASKS',
+                    props: {}
+                });
+            }
+            this.props.closeClickHandler(evt);
+        },
+
+        _handleCheckboxClick : function () {
+            this.setState({removeFinishedOnSubmit: !this.state.removeFinishedOnSubmit});
+        },
+
+        render : function () {
+            return (
+                <layoutViews.ModalOverlay>
+                    <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="async-task-list">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>{this.translate('global__task_category')}</th>
+                                    <th>{this.translate('global__task_label')}</th>
+                                    <th>{this.translate('global__task_created')}</th>
+                                    <th>{this.translate('global__task_status')}</th>
+                                </tr>
+                                {this.props.items.map(item => (
+                                    <tr key={item.ident}>
+                                        <td>{item.category}</td>
+                                        <td>{item.label}</td>
+                                        <td>{this.formatDate(new Date(item.created * 1000), 2)}</td>
+                                        <td>{item.status}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div>
+                            <div className="options">
+                                <label>
+                                    <input type="checkbox" onChange={this._handleCheckboxClick}
+                                            checked={this.state.removeFinishedOnSubmit} />
+                                    {this.translate('global__remove_finished_tasks_info')}
+                                </label>
+                            </div>
+                            <button type="button" className="default-button"
+                                onClick={this._handleButtonClick}>{this.translate('global__close')}</button>
+                        </div>
+                    </layoutViews.PopupBox>
+                </layoutViews.ModalOverlay>
+            );
+        }
+    });
+
+    // ----------------------------- <LiAsyncTaskNotificator /> --------------------------
+
+    const LiAsyncTaskNotificator = React.createClass({
+
+        mixins : mixins,
+
+        _handleCloseClick : function () {
+            this.setState({taskList: null});
+        },
+
+        _handleViewListClick : function () {
+            this.setState({
+                taskList: asyncTaskStore.getAsyncTasks()
+            });
+        },
+
+        getInitialState : function () {
+            return {
+                taskList: null
+            };
+        },
+
+        _renderHourglass : function () {
+            if (this.props.numRunning > 0) {
+                return <a title={this.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning})}>{'\u231B'}</a>;
+
+            } else {
+                return null;
+            }
+        },
+
+        _renderEnvelope : function () {
+            if (this.props.numFinished > 0) {
+                return <a title={this.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished})}>{'\uD83D\uDD82'}</a>;
+
+            } else {
+                return null;
+            }
+        },
+
+        render : function () {
+            if (this.props.numFinished > 0 || this.props.numRunning > 0) {
+                return (
+                    <li className="notifications">
+                        <span onClick={this._handleViewListClick}>
+                            {this._renderHourglass()}
+                            {'\u00A0'}
+                            {this._renderEnvelope()}
+                        </span>
+                        {this.state.taskList !== null ?
+                            <AsyncTaskList items={this.state.taskList} closeClickHandler={this._handleCloseClick} />
+                            : null}
+                    </li>
+                );
+
+            } else {
+                return null;
+            }
+        }
+    });
+
+
 
     // ----------------------------- <MainMenu /> --------------------------
 
     const MainMenu = React.createClass({
 
+        mixins : mixins,
+
         getInitialState : function () {
-            return {currFocus: null};
+            return {
+                currFocus: null,
+                numRunningTasks: asyncTaskStore.getNumRunningTasks(),
+                numFinishedTasks: asyncTaskStore.getNumFinishedTasks()
+            };
         },
 
         _handleHoverChange : function (ident, enable) {
             if (!enable) {
-                this.setState({currFocus: null});
+                this.setState(React.addons.update(this.state, {currFocus: {$set: null}}));
 
             } else {
-                this.setState({currFocus: ident});
+                this.setState(React.addons.update(this.state, {currFocus: {$set: ident}}));
             }
         },
 
+        _storeChangeListener : function (store, action) {
+            this.setState({
+                currFocus: this.state.currFocus,
+                numRunningTasks: asyncTaskStore.getNumRunningTasks(),
+                numFinishedTasks: asyncTaskStore.getNumFinishedTasks()
+            });
+        },
 
+        componentDidMount : function () {
+            asyncTaskStore.addChangeListener(this._storeChangeListener);
+        },
+
+        componentWillUnmount : function () {
+            asyncTaskStore.removeChangeListener(this._storeChangeListener);
+        },
 
         render : function () {
             return (
@@ -209,6 +354,8 @@ export function init(dispatcher, mixins, concArgHandler) {
                                     handleMouseOver={mouseOverHandler}
                                     handleMouseOut={mouseOutHandler} />;
                     })}
+                    <LiAsyncTaskNotificator numRunning={this.state.numRunningTasks}
+                        numFinished={this.state.numFinishedTasks} />
                 </ul>
             );
         }
