@@ -207,7 +207,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             getConf(k:string):any {
                 return self.getConf(k);
             },
-            createActionLink(path:string, args?:Array<Array<string>>):string {
+            createActionLink(path:string, args?:Array<[string,string]>):string {
                 return self.createActionUrl(path, args);
             },
             createStaticUrl(path:string):string {
@@ -966,7 +966,7 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.createStaticUrl(path);
     }
 
-    createActionUrl(path:string, args?:Array<Array<string>>) {
+    createActionUrl(path:string, args?:Array<[string,string]>) {
         return this.pageModel.createActionUrl(path, args);
     }
 
