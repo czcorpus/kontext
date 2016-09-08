@@ -15,7 +15,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-'corparch' plug-in interfaces
+This module contains classes representing a corpus and a list/set
+of corpora as Manatee-independent database-like records. Any
+corpus search/listing/overviewing is based on these classes.
+Especially the 'corparch' and 'live_attributes' plug-ins
+use them quite a lot.
+
+These classes are storage-independent which means that
+a concrete format of stored corpora information is up to
+a concrete 'corparch' plug-in (default_corparch uses XML)
+
+Please note that many of the attributes defined here are
+tightly related to respective corpora registry files where
+all the attributes etc. are defined.
 """
 
 import json
@@ -43,6 +55,7 @@ class CorpusMetadata(DictLike):
         self.label_attr = None
         self.avg_label_attr_len = None
         self.id_attr = None
+        self.sort_attrs = False
         self.desc = {}
         self.keywords = {}
         self.interval_attrs = []

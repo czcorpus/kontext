@@ -21,6 +21,7 @@ interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 
 Required config.xml/plugins entries (RelaxNG compact format):
+------------------------------------------------------------
 
 element corparch {
     element module { "default_corparch" }
@@ -44,6 +45,76 @@ element corparch {
         attribute extension-by { "default" }
         xsd:integer
     }
+}
+
+
+Corplist.xml entries:
+--------------------
+
+### Keywords
+
+element keywords {
+    element keyword {
+        attribute ident {
+            text  # an internal identifier of the keywords (referenced by corpus/keywords/item)
+        }
+        element label {
+            attribute lang {
+                text  # a 2-char identifier (cs, en, us, pl,...)
+            }
+            text  # a translated representation of the label
+        }+
+    }*
+}?
+
+### Corpus
+
+element corpus {
+    attribute web {
+        text
+    }
+    attribute sentence_struct {
+        text  # a structural attribute specifying a sentence (used to switch between kwic and sentence view mode)
+    }
+    attribute ident {
+        text  # a corpus identifier (case insensitive)
+    }
+    attribute tagset {
+        text  #  an optional positional tagset identifier (used by tag-builder widget)
+    }?
+    element metadata {
+        element featured {
+            empty  # if present then the corpus is added to the "Featured corpora list"
+        }?
+        element database {
+            text  # path to a sqlite3 database file containing text types values (= values of structural attrs.)
+        }?
+        element id_attr {
+            text  # an attribute used to identify a bibliography item (e.g.: doc.id, opus.id,...)
+        }?
+        element label_attr {
+            text  # an attribute used to represent a bibliography item (e.g.: doc.title, opus.label,...)
+        }?
+        element sort_attrs {
+            empty  # if present then the bibliography item attributes are sorted alphabetically (e.g.: doc.author,..., doc.translator)
+        }?
+    }?
+    element keywords {
+        element item {
+            text  # an internal identifier of a keyword
+        }*
+    }?
+    element reference {
+        element default {
+            text
+        }
+        element article {
+            text  # a respective scientific paper representing the corpus
+        }?
+        element other_bibliography {
+            text  # a web address leading to more information
+        }?
+    }?
 }
 
 """
@@ -273,6 +344,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     defined in XML format
     """
 
+    SORT_ATTRS_KEY = 'sort_attrs'
+
     FEATURED_KEY = 'featured'
 
     GROUP_DUPLICATES_KEY = 'group_duplicates'
@@ -491,6 +564,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)
             ans.metadata.label_attr = getattr(meta_elm.find('label_attr'), 'text', None)
             ans.metadata.id_attr = getattr(meta_elm.find('id_attr'), 'text', None)
+            ans.metadata.sort_attrs = True if meta_elm.find(self.SORT_ATTRS_KEY) is not None else False
             ans.metadata.desc = self._parse_meta_desc(meta_elm)
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
