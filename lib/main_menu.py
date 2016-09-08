@@ -226,10 +226,29 @@ class ConcMenuItem(HideOnCustomCondItem):
     Specifies an action based on the current
     concordance arguments.
     """
+
+    def __init__(self, label, action):
+        super(ConcMenuItem, self).__init__(label, action)
+        self._q = []
+
     def create(self, out_data):
         ans = super(ConcMenuItem, self).create(out_data)
         ans['currConc'] = True
+        ans['q'] = self._q
         return ans
+
+    def add_query_modifiers(self, *args):
+        """
+        This adds one or more specially handled 'q' arguments
+        which are expected to be appended to the existing
+        ones (as opposed to add_args).
+
+        If you want to rewrite an existing 'q' argument
+        by new value(s) then just use
+        add_args(('q', 'some_value'),...).
+        """
+        self._q += [('q', a) for a in args]
+        return self
 
 
 class KwicSenModeSwitchItem(ConcMenuItem):
@@ -338,7 +357,10 @@ class MenuGenerator(object):
 
         self.sorting = ConcMenuItem(_('Sorting'), 'sort').mark_indirect()
 
-        self.shuffle = ConcMenuItem(_('Shuffle'), 'view')
+        self.shuffle = (
+            ConcMenuItem(_('Shuffle'), 'view')
+            .add_query_modifiers('f')
+        )
 
         self.sample = ConcMenuItem(_('Sample'), 'reduce_form').mark_indirect()
 

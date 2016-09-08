@@ -797,24 +797,37 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.conf['currentArgs'] = tmp.items();
     }
 
-    exportConcArgs(args:Array<Array<any>>|{[key:string]:any}):string {
+    /**
+     * @param overwriteArgs a list of arguments whose values overwrite the current ones
+     * @param appendArgs a list of arguments which will be appended to the existing ones
+     */
+    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
         const tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
-        let impArgs:Array<Array<string>> = [];
 
-        if (Object.prototype.toString.call(args) !== '[object Array]') {
-            for (let p in args) {
-                if (args.hasOwnProperty(p)) {
-                    impArgs.push([p, args[p]]);
+        function importArgs(args:Kontext.MultiDictSrc):Array<[string,string]> {
+            if (!args) {
+                return [];
+
+            } else if (Object.prototype.toString.call(args) !== '[object Array]') {
+                const impArgs:Array<[string,string]> = [];
+                for (let p in args) {
+                    if (args.hasOwnProperty(p)) {
+                        impArgs.push([p, args[p]]);
+                    }
                 }
-            }
+                return impArgs;
 
-        } else {
-            impArgs = <Array<Array<string>>>args;
+            } else {
+                return <Array<[string,string]>>args;
+            }
         }
-        impArgs.forEach(item => {
+
+        const overwriteArgs2 = importArgs(overwriteArgs);
+        overwriteArgs2.forEach(item => {
             tmp.replace(item[0], []);
         });
-        impArgs.forEach(item => {
+
+        overwriteArgs2.concat(importArgs(appendArgs)).forEach(item => {
             tmp.add(item[0], item[1]);
         });
         return this.encodeURLParameters(tmp);
