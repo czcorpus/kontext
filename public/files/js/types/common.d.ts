@@ -27,6 +27,12 @@
  */
 declare module Kontext {
 
+    /**
+     * Represents possible sources for MultiDict
+     * (either a list of 2-tuples or a dict).
+     */
+    export type MultiDictSrc = Array<[string,any]>|{[key:string]:any};
+
     export interface UserCredentials {
         context_limit:number;
         sketches:boolean;

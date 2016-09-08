@@ -31,7 +31,7 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
 
         _createLink : function () {
             return this.createActionLink(this.props.data.action + '?' +
-                    concArgHandler.exportConcArgs(this.props.data.args));
+                    concArgHandler.exportConcArgs(this.props.data.args, this.props.data.q));
         },
 
         render : function () {
