@@ -71,13 +71,11 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
  * @param pluginApi
  * @param options A configuration for the widget
  */
-export function create(selectElm:HTMLElement, pluginApi:Kontext.QueryPagePluginApi,
+export function create(selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.QueryPagePluginApi,
                        options:CorpusArchive.Options):CorpusArchive.Widget {
-    var corplist:widget.Corplist,
-        data:Array<common.CorplistItemUcnk>;
-
-    data = widget.fetchDataFromSelect(selectElm);
-    corplist = new widget.Corplist(options, data, pluginApi, $(selectElm).closest('form').get(0));
+    const data:Array<common.CorplistItemUcnk> = widget.fetchDataFromSelect(selectElm);
+    const corplist:widget.Corplist = new widget.Corplist(targetAction, $(selectElm).closest('form').get(0),
+            data, pluginApi, options);
     corplist.bind(selectElm);
     return corplist;
 }

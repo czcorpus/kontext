@@ -112,17 +112,7 @@ interface SearchResponse {
 /**
  *
  */
-export interface Options {
-
-    /**
-     * form's action attribute; if omitted then form's current one is used
-     */
-    formTarget?:string;
-
-    /**
-     * GET or POST; if omitted then form's current method is used
-     */
-    submitMethod?:string;
+export interface Options extends CorpusArchive.Options {
 
     /**
      * Handles click on favorite/featured/searched item.
@@ -224,10 +214,9 @@ class WidgetMenu {
      *
      */
     reset():void {
-        const self = this;
-        this.menuWrapper.find('a').each(function () {
-            $(this).removeClass('current');
-            self.getTabByIdent($(this).data('func')).hide();
+        this.menuWrapper.find('a').each((_, elm) => {
+            $(elm).removeClass('current');
+            this.getTabByIdent($(elm).data('func')).hide();
         });
     }
 
@@ -289,10 +278,8 @@ class WidgetMenu {
         });
 
         function eventListener(e:JQueryEventObject) {
-            let cycle;
-
             if (!self.blockingTimeout && self.widget.isVisible()) {
-                cycle = [WidgetMenu.MY_ITEMS_WIDGET_ID, WidgetMenu.SEARCH_WIDGET_ID];
+                const cycle = [WidgetMenu.MY_ITEMS_WIDGET_ID, WidgetMenu.SEARCH_WIDGET_ID];
                 if (e.keyCode == WidgetMenu.TAB_KEY) {
                     self.setCurrent(cycle[(cycle.indexOf(self.currentBoxId) + 1) % 2]);
                     e.preventDefault();
@@ -377,9 +364,9 @@ class SearchTab implements WidgetTab {
      *
      */
     private getTagQuery():string {
-        let ans = [];
+        const ans = [];
 
-        for (var p in this.selectedTags) {
+        for (let p in this.selectedTags) {
             if (this.selectedTags.hasOwnProperty(p)) {
                 ans.push(this.tagPrefix + p);
             }
@@ -393,7 +380,7 @@ class SearchTab implements WidgetTab {
      * @param skipId
      */
     private resetTagSelection(skipId?:Array<string>|string):void {
-        let toReset = [];
+        const toReset = [];
         let skipIds:Array<string>;
 
         if (typeof skipId === 'string') {
@@ -405,7 +392,6 @@ class SearchTab implements WidgetTab {
         } else {
             skipIds = [];
         }
-
         for (let p in this.selectedTags) {
             if (this.selectedTags.hasOwnProperty(p)
                 && this.selectedTags[p]
@@ -455,14 +441,13 @@ class SearchTab implements WidgetTab {
      */
     private createResetLink():HTMLElement {
         const link = window.document.createElement('a');
-        const self = this;
         const overlay = window.document.createElement('span');
 
         $(link)
             .addClass('keyword')
             .addClass('reset')
             .on('click', () => {
-                self.resetTagSelection();
+                this.resetTagSelection();
             });
         $(overlay)
             .addClass('overlay')
@@ -481,7 +466,7 @@ class SearchTab implements WidgetTab {
         $(this.wrapper).append(div);
         $(div).addClass('labels');
         $(div).append(this.createResetLink());
-        $.each(this.pluginApi.getConf('pluginData')['corparch']['corpora_labels'], function (i, item) {
+        this.pluginApi.getConf<Array<[string,string,string]>>('pluginData')['corparch']['corpora_labels'].forEach(item => {
             const link = window.document.createElement('a');
             const overlay = window.document.createElement('span');
 
@@ -655,6 +640,8 @@ class FavoritesTab implements WidgetTab {
 
     pageModel:Kontext.PluginApi;
 
+    targetAction:string;
+
     widgetWrapper:HTMLElement;
 
     tablesWrapper:HTMLElement;
@@ -678,12 +665,13 @@ class FavoritesTab implements WidgetTab {
     /**
      *
      */
-    constructor(pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItemUcnk>,
+    constructor(targetAction:string, pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItemUcnk>,
                 dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick,
                 customListFilter?:(item:common.CorplistItemUcnk)=>boolean) {
         const self = this;
         this.editMode = false;
         this.onListChange = [];
+        this.targetAction = targetAction;
         this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
         this.dataFav = dataFav ? dataFav : [];
@@ -766,7 +754,7 @@ class FavoritesTab implements WidgetTab {
      * @returns {string}
      */
     generateItemUrl(itemData):string {
-        const rootPath = this.pageModel.createActionUrl('first_form');
+        const rootPath = this.pageModel.createActionUrl(this.targetAction);
         const params = ['corpname=' + itemData.corpus_id];
 
         if (itemData.type === commonDefault.CorplistItemType.SUBCORPUS) {
@@ -833,7 +821,7 @@ class FavoritesTab implements WidgetTab {
         this.editMode = false;
 
         if (!this.pageModel.getConf('anonymousUser')) {
-            $.each(this.dataFav, (i, item) => {
+            this.dataFav.forEach(item => {
                 if (self.customListFilter(item)) {
                     jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
                         + ' title="' + item.description + '"'
@@ -885,11 +873,10 @@ class FavoritesTab implements WidgetTab {
         }
 
         if (this.dataFeat.length > 0) {
-            $.each(this.dataFeat, function (i, item:FeaturedItem) {
+            this.dataFeat.forEach((item:FeaturedItem) => {
                 $(self.wrapperFeat).append('<tr class="data-item"><td>'
                     + '<a class="featured-item"'
-                    + ' href="' + self.pageModel.createActionUrl(
-                            self.pageModel.getConf<string>('currentAction'))
+                    + ' href="' + self.pageModel.createActionUrl(this.targetAction)
                     + '?corpname=' + item.id + '"'
                     + ' data-id="' + item.id + '"'
                     + ' title="' + item.description + '"'
@@ -1034,8 +1021,7 @@ class StarComponent {
      * @param trigger
      */
     onFavTabListChange = (trigger:FavoritesTab) => {
-        const curr = this.extractItemFromPage();
-        if (!trigger.containsItem(curr)) {
+        if (!trigger.containsItem(this.extractItemFromPage())) {
             this.starSwitch.setStarState(false);
         }
     };
@@ -1298,6 +1284,8 @@ export class Corplist implements CorpusArchive.Widget {
 
     private parentForm:HTMLElement;
 
+    private targetAction:string;
+
     private starImg:HTMLElement;
 
     private mainMenu:WidgetMenu;
@@ -1322,8 +1310,9 @@ export class Corplist implements CorpusArchive.Widget {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<common.CorplistItemUcnk>,
-            pageModel:Kontext.QueryPagePluginApi, parentForm:HTMLElement) {
+    constructor(targetAction:string, parentForm:HTMLElement, data:Array<common.CorplistItemUcnk>,
+            pageModel:Kontext.QueryPagePluginApi, options:Options) {
+        this.targetAction = targetAction;
         this.options = options;
         this.data = data;
         this.pageModel = pageModel;
@@ -1337,19 +1326,10 @@ export class Corplist implements CorpusArchive.Widget {
 
         function defaultHandleClick(corpusId:string, corpusName:string) {
             this.setCurrentValue(corpusId, corpusName);
-            if (this.options.formTarget) {
-                $(this.parentForm)
-                    .attr('action', this.options.formTarget)
-                    .data('disable-prevalidation', true);
-
-            } else {
-                $(this.parentForm)
-                    .attr('action', 'first_form')
-                    .data('disable-prevalidation', true);
-            }
-            if (this.options.submitMethod) {
-                $(this.parentForm).attr('method', this.options.submitMethod);
-            }
+            $(this.parentForm)
+                .attr('action', this.pageModel.createActionUrl(this.targetAction))
+                .data('disable-prevalidation', true);
+            $(this.parentForm).attr('method', 'GET');
             $(this.parentForm).submit();
         }
 
@@ -1488,12 +1468,10 @@ export class Corplist implements CorpusArchive.Widget {
         // search func
         this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onSrchItemClick);
         this.searchBox.init();
-
-        this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
+        this.favoritesBox = new FavoritesTab(this.targetAction, this.pageModel, this.widgetWrapper, this.data,
             this.pageModel.getConf('pluginData')['corparch']['featured'], this.onFavItemClick,
             this.options.favoriteItemsFilter);
         this.favoritesBox.init();
-
         this.footerElm = window.document.createElement('div');
         $(this.footerElm).addClass('footer');
         $(this.widgetWrapper).append(this.footerElm);

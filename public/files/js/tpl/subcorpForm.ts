@@ -70,7 +70,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
         this.extendedApi = extendedApi(pageModel, this);
         let subcForm = $('#subcorp-form');
         let corplist = corplistComponent.create(subcForm.find('select[name="corpname"]').get(0),
-                this.extendedApi, {formTarget: 'subcorp_form', submitMethod: 'GET', editable: false});
+                'subcorpus/subcorp_form', this.extendedApi, {editable: false});
         this.corplistComponent = corplistComponent;
         this.viewComponents = viewComponents;
         this.subcorpFormStore = subcorpFormStore;

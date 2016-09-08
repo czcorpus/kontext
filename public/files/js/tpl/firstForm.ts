@@ -232,8 +232,9 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
     private initCorplistComponent():void {
         this.corplistComponent = corplistComponent.create(
             $('form[action="first"] select[name="corpname"]').get(0),
+            'first_form',
             this.extendedApi,
-            {formTarget: 'first_form', submitMethod: 'GET'}
+            {}
         );
     }
 
