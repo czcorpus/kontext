@@ -324,7 +324,11 @@ class LiveAttributes(AbstractLiveAttributes):
     def get_bibliography(self, corpus, item_id):
         db = self.db(vanilla_corpname(corpus.corpname))
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
-        col_map = OrderedDict([(x[1], x[0]) for x in sorted(col_rows, key=lambda v: v[1])])
+
+        corpus_info = self.corparch.get_corpus_info(corpus.corpname)
+        if corpus_info.metadata.sort_attrs:
+            col_rows = sorted(col_rows, key=lambda v: v[1])   # here we accept default collator as attr IDs are ASCII
+        col_map = OrderedDict([(x[1], x[0]) for x in col_rows])
         if 'corpus_id' in col_map:
             ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? AND corpus_id = ? LIMIT 1',
                                    (item_id, vanilla_corpname(corpus.corpname))).fetchone()
