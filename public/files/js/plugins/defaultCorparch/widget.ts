@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -110,16 +112,6 @@ interface SearchResponse {
  *
  */
 export interface Options extends CorpusArchive.Options {
-
-    /**
-     * form's action attribute; if omitted then form's current one is used
-     */
-    formTarget?:string;
-
-    /**
-     * GET or POST; if omitted then form's current method is used
-     */
-    submitMethod?:string;
 
     /**
      * Handles click on favorite/featured/searched item.
@@ -468,13 +460,13 @@ class SearchTab implements WidgetTab {
      *
      */
     private initLabels():void {
-        let div = window.document.createElement('div');
+        const div = window.document.createElement('div');
         const self = this;
 
         $(this.wrapper).append(div);
         $(div).addClass('labels');
         $(div).append(this.createResetLink());
-        $.each(this.pluginApi.getConf('pluginData')['corparch']['corpora_labels'], function (i, item) {
+        this.pluginApi.getConf<Array<[string,string,string]>>('pluginData')['corparch']['corpora_labels'].forEach(item => {
             const link = window.document.createElement('a');
             const overlay = window.document.createElement('span');
 
@@ -510,7 +502,7 @@ class SearchTab implements WidgetTab {
                 return response.rows;
             }
         };
-        let bhOptions:Bloodhound.BloodhoundOptions<string> = {
+        const bhOptions:Bloodhound.BloodhoundOptions<string> = {
             datumTokenizer: function(d) {
                 return Bloodhound.tokenizers.whitespace(d.name);
             },
@@ -520,7 +512,7 @@ class SearchTab implements WidgetTab {
         this.bloodhound = new Bloodhound(bhOptions);
         this.bloodhound.initialize();
 
-        let options:Twitter.Typeahead.Options = {
+        const options:Twitter.Typeahead.Options = {
             name: 'corplist',
             hint: true,
             highlight: true,
@@ -637,6 +629,8 @@ class FavoritesTab implements WidgetTab {
 
     pageModel:Kontext.QueryPagePluginApi;
 
+    targetAction:string;
+
     widgetWrapper:HTMLElement;
 
     tablesWrapper:HTMLElement;
@@ -660,12 +654,13 @@ class FavoritesTab implements WidgetTab {
     /**
      *
      */
-    constructor(pageModel:Kontext.QueryPagePluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItem>,
-                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick,
+    constructor(targetAction:string, pageModel:Kontext.QueryPagePluginApi, widgetWrapper:HTMLElement,
+                dataFav:Array<common.CorplistItem>, dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick,
                 customListFilter?:(item:common.CorplistItem)=>boolean) {
         const self = this;
         this.editMode = false;
         this.onListChange = [];
+        this.targetAction = targetAction;
         this.pageModel = pageModel;
         this.widgetWrapper = widgetWrapper;
         this.dataFav = dataFav ? dataFav : [];
@@ -748,7 +743,7 @@ class FavoritesTab implements WidgetTab {
      * @returns {string}
      */
     generateItemUrl(itemData):string {
-        const rootPath = this.pageModel.createActionUrl('first_form');
+        const rootPath = this.pageModel.createActionUrl(this.targetAction);
         const params = ['corpname=' + itemData.corpus_id];
 
         if (itemData.type === common.CorplistItemType.SUBCORPUS) {
@@ -815,7 +810,7 @@ class FavoritesTab implements WidgetTab {
         this.editMode = false;
 
         if (!this.pageModel.getConf('anonymousUser')) {
-            $.each(this.dataFav, function (i, item) {
+            this.dataFav.forEach(item => {
                 if (self.customListFilter(item)) {
                     jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
                         + ' title="' + item.description + '"'
@@ -867,11 +862,10 @@ class FavoritesTab implements WidgetTab {
         }
 
         if (this.dataFeat.length > 0) {
-            $.each(this.dataFeat, function (i, item:FeaturedItem) {
+            this.dataFeat.forEach((item:FeaturedItem) => {
                 $(self.wrapperFeat).append('<tr class="data-item"><td>'
                     + '<a class="featured-item"'
-                    + ' href="' + self.pageModel.createActionUrl(
-                            self.pageModel.getConf<string>('currentAction'))
+                    + ' href="' + self.pageModel.createActionUrl(this.targetAction)
                     + '?corpname=' + item.id + '"'
                     + ' data-id="' + item.id + '"'
                     + ' title="' + item.description + '"'
@@ -1274,6 +1268,8 @@ export class Corplist implements CorpusArchive.Widget {
 
     private parentForm:HTMLElement;
 
+    private targetAction:string;
+
     private starImg:HTMLElement;
 
     private mainMenu:WidgetMenu;
@@ -1298,8 +1294,9 @@ export class Corplist implements CorpusArchive.Widget {
      *
      * @param options
      */
-    constructor(options:Options, data:Array<common.CorplistItem>, pageModel:Kontext.QueryPagePluginApi,
-                parentForm:HTMLElement) {
+    constructor(targetAction:string, parentForm:HTMLElement, data:Array<common.CorplistItem>,
+            pageModel:Kontext.QueryPagePluginApi, options:Options) {
+        this.targetAction = targetAction;
         this.options = options;
         this.data = data;
         this.pageModel = pageModel;
@@ -1313,19 +1310,10 @@ export class Corplist implements CorpusArchive.Widget {
 
         function defaultHandleClick(corpusId:string, corpusName:string) {
             this.setCurrentValue(corpusId, corpusName);
-            if (this.options.formTarget) {
-                $(this.parentForm)
-                    .attr('action', this.options.formTarget)
-                    .data('disable-prevalidation', true);
-
-            } else {
-                $(this.parentForm)
-                    .attr('action', 'first_form')
-                    .data('disable-prevalidation', true);
-            }
-            if (this.options.submitMethod) {
-                $(this.parentForm).attr('method', this.options.submitMethod);
-            }
+            $(this.parentForm)
+                .attr('action', this.pageModel.createActionUrl(this.targetAction))
+                .data('disable-prevalidation', true);
+            $(this.parentForm).attr('method', 'GET');
             $(this.parentForm).submit();
         }
 
@@ -1457,7 +1445,7 @@ export class Corplist implements CorpusArchive.Widget {
         this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onSrchItemClick);
         this.searchBox.init();
 
-        this.favoritesBox = new FavoritesTab(this.pageModel, this.widgetWrapper, this.data,
+        this.favoritesBox = new FavoritesTab(this.targetAction, this.pageModel, this.widgetWrapper, this.data,
             this.pageModel.getConf('pluginData')['corparch']['featured'], this.onFavItemClick,
             this.options.favoriteItemsFilter);
         this.favoritesBox.init();

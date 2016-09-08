@@ -736,18 +736,33 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
     }
 
+    /**
+     * Create a URL for a static resource (e.g. img/close-icon.svg)
+     */
     createStaticUrl(path):string {
-        let staticPath = this.conf['staticUrl'];
-
+        if (typeof path !== 'string') {
+            throw new Error(`Cannot create static url. Invalid path: ${path}`);
+        }
         if (path.indexOf('/') === 0) {
             path = path.substr(1);
         }
-        return staticPath + path;
+        return this.getConf<string>('staticUrl') + path;
     }
 
-    createActionUrl(path:string, args?:Array<Array<string>>):string {
+    /**
+     * Create an URL from path suffix. E.g. passing
+     * subcorpus/list will produce http://installed.domain/subcorpus/list.
+     *
+     * @path path suffix
+     * @args arguments to be appended to the URL as parameters
+     */
+    createActionUrl(path:string, args?:Array<[string,string]>):string {
         const staticPath = this.conf['rootPath'];
         let urlArgs = '';
+
+        if (typeof path !== 'string') {
+            throw new Error(`Cannot create action url. Invalid path: ${path}`);
+        }
 
         if (args !== undefined) {
             urlArgs = args.map(item => {

@@ -58,7 +58,7 @@ declare module 'plugins/footerBar/init' {
 }
 
 declare module "plugins/corparch/init" {
-    export function create(target:HTMLElement, pluginApi:Kontext.QueryPagePluginApi,
+    export function create(target:HTMLElement, targetAction:string, pluginApi:Kontext.QueryPagePluginApi,
         conf:CorpusArchive.Options);
 
     export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage;
