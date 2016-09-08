@@ -41,7 +41,7 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                     <td className="processing">
                         {this.translate('global__processing')}
                     </td>
-                    <td className="num">{this.formatDate(this.props.item.created)}</td>
+                    <td className="num">{this.formatDate(this.props.item.created, 1)}</td>
                     <td />
                 </tr>
             );
