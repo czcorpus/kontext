@@ -414,7 +414,7 @@ class MenuGenerator(object):
         )
 
         self.view_global = (
-            MenuItemInternal(_('General view options'), 'options/viewopts')
+            ConcMenuItem(_('General view options'), 'options/viewopts')
             .mark_indirect()
         )
 
