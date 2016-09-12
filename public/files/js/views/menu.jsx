@@ -214,10 +214,10 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
                                 </tr>
                                 {this.props.items.map(item => (
                                     <tr key={item.ident}>
-                                        <td>{item.category}</td>
+                                        <td>{this.translate(`task__type_${item.category}`)}</td>
                                         <td>{item.label}</td>
                                         <td>{this.formatDate(new Date(item.created * 1000), 2)}</td>
-                                        <td>{item.status}</td>
+                                        <td>{this.translate(`task__status_${item.status}`)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -272,7 +272,7 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
 
         _renderEnvelope : function () {
             if (this.props.numFinished > 0) {
-                return <a title={this.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished})}>{'\uD83D\uDD82'}</a>;
+                return <a title={this.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished})}>{'\u2709'}</a>;
 
             } else {
                 return null;
