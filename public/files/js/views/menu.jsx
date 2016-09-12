@@ -217,7 +217,12 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
                                         <td>{this.translate(`task__type_${item.category}`)}</td>
                                         <td>{item.label}</td>
                                         <td>{this.formatDate(new Date(item.created * 1000), 2)}</td>
-                                        <td>{this.translate(`task__status_${item.status}`)}</td>
+                                        <td className="status">
+                                            {this.translate(`task__status_${item.status}`)}
+                                            {item.status === 'FAILURE' ?
+                                                <img src={this.createStaticUrl('img/error-icon.svg')} alt={item.status} />
+                                                : null }
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
