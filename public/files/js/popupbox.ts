@@ -151,6 +151,8 @@ export class TooltipBox implements Legacy.IPopupBox {
 
     private suppressKeys:boolean = false;
 
+    private escKeyHandler;
+
 
     constructor(anchorPosition, beforeOpenVal, triggerElm) {
         this.anchorPosition = anchorPosition;
@@ -230,6 +232,9 @@ export class TooltipBox implements Legacy.IPopupBox {
             }
             if (typeof this.afterClose === 'function') {
                 this.afterClose.call(this);
+            }
+            if (typeof this.escKeyHandler === 'function') {
+                $(window.document.documentElement).off('keyup', this.escKeyHandler);
             }
         }
     }
@@ -339,17 +344,15 @@ export class TooltipBox implements Legacy.IPopupBox {
      *
      */
     open(whereElement:HTMLElement|JQuery, contents:TooltipBoxContent, options:Options):void {
-        let opts = options || {};
-        let fetchOption = fetchOptionFunc(opts);
-        let jqWhereElement = $(whereElement);
-        let fontSize = fetchOption('fontSize', 'inherit');
-        let closeClickHandler;
-        let escKeyHandler;
-        let self = this;
-        let msgType = fetchOption('type', 'info');
-        let boxId = fetchOption('domId', null);
-        let boxClass = fetchOption('htmlClass', null);
-        let calculatePosition = fetchOption('calculatePosition', true);
+        const opts = options || {};
+        const fetchOption = fetchOptionFunc(opts);
+        const jqWhereElement = $(whereElement);
+        const fontSize = fetchOption('fontSize', 'inherit');
+        const self = this;
+        const msgType = fetchOption('type', 'info');
+        const boxId = fetchOption('domId', null);
+        const boxClass = fetchOption('htmlClass', null);
+        const calculatePosition = fetchOption('calculatePosition', true);
 
         this.expandLeft = fetchOption('expandLeft', false);
         this.timeout = fetchOption('timeout', this.timeout);
@@ -421,7 +424,7 @@ export class TooltipBox implements Legacy.IPopupBox {
         }
         $(this.rootElm).css('font-size', fontSize);
 
-        closeClickHandler = function (event) {
+        const closeClickHandler = function (event) {
             if (event) {
                 $(event.target).off('click', closeClickHandler);
             }
@@ -429,15 +432,15 @@ export class TooltipBox implements Legacy.IPopupBox {
             TooltipBox.prototype.close.call(self);
         };
 
-        escKeyHandler = function (event) {
+        this.escKeyHandler = (event) => {
             if (!self.suppressKeys) {
                 if (event.keyCode === 27) {
                     self.close();
-                    $(window.document).off('keyup', escKeyHandler);
+                    $(window.document.documentElement).off('keyup', this.escKeyHandler);
                 }
             }
         };
-        $(window.document).on('keyup', escKeyHandler);
+        $(window.document.documentElement).on('keyup', this.escKeyHandler);
 
         if (this.timeout) {
             this.timer = setInterval(closeClickHandler, this.timeout);
