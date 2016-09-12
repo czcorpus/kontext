@@ -30,13 +30,41 @@ class SyntaxTreeViewer {
 
     private pluginApi:Kontext.PluginApi;
 
-    private popupBox
+    private popupBox:TooltipBox;
+
+    private resizeHandler:()=>void;
 
     constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
     }
 
     private createRenderFunction(tokenId:string, kwicLength:number):(box:TooltipBox, finalize:()=>void)=>void {
+        const renderTree = (box:TooltipBox, finalize:()=>void, data:any):void => {
+            const parentElm = box.getContentElement();
+            const treexFrame = window.document.createElement('div');
+            $(treexFrame).css('width', '90%');
+
+            parentElm.appendChild(treexFrame);
+            finalize();
+            box.setCss('left', '50%');
+            box.setCss('top', '50%');
+            createGenerator(this.pluginApi.exportMixins()[0]).call(
+                null,
+                data,
+                'cs',
+                'default',
+                treexFrame,
+                {
+                    width: null, // = auto
+                    height: null, // = auto
+                    paddingTop: 20,
+                    paddingBottom: 50,
+                    paddingLeft: 20,
+                    paddingRight: 20
+                }
+            );
+        }
+
         return (box:TooltipBox, finalize:()=>void) => {
             let ajaxAnim = this.pluginApi.ajaxAnim();
             $('body').append(ajaxAnim);
@@ -55,21 +83,7 @@ class SyntaxTreeViewer {
                 (data:any) => {
                     $(ajaxAnim).remove();
                     if (!data['contains_errors']) {
-                        let treexFrame = window.document.createElement('div');
-                        $(treexFrame).css('width', '90%');
-                        $(box.getContentElement()).append(treexFrame);
-                        finalize();
-                        box.setCss('left', '50%');
-                        box.setCss('top', '50%');
-                        const generator = createGenerator(this.pluginApi.exportMixins()[0]);
-                        generator(data, 'cs', 'default', treexFrame, {
-                            width: null, // = auto
-                            height: null, // = auto
-                            paddingTop: 20,
-                            paddingBottom: 50,
-                            paddingLeft: 20,
-                            paddingRight: 20
-                        });
+                        renderTree(box, finalize, data);
 
                     } else {
                         finalize();
@@ -91,6 +105,44 @@ class SyntaxTreeViewer {
         const baseImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon.svg');
         const overImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon_s.svg');
         const button = window.document.createElement('img');
+        const showSyntaxTree = () => {
+            if (this.popupBox) {
+                this.popupBox.close();
+            }
+            const overlay = window.document.createElement('div');
+            $(overlay).attr('id', 'modal-overlay');
+            $('body').append(overlay);
+
+            this.popupBox = openPopupBox(
+                overlay,
+                this.createRenderFunction(tokenId, kwicLength),
+                {left: 0, top: 0},
+                {
+                    type: 'plain',
+                    calculatePosition: false,
+                    closeIcon: true,
+                    timeout: null,
+                    htmlClass: 'syntax-tree',
+                    afterClose: () => {
+                        $(overlay).remove();
+                        window.removeEventListener('resize', this.resizeHandler);
+                    }
+                }
+            );
+            let timer = null;
+            this.resizeHandler = () => {
+                if (timer !== null) {
+                    window.clearTimeout(timer);
+                }
+                timer = window.setTimeout(() => {
+                    this.popupBox.close();
+                    showSyntaxTree();
+
+                }, 500);
+            }
+            window.addEventListener('resize', this.resizeHandler);
+        }
+
         $(button)
             .attr('src', baseImg)
             .attr('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'))
@@ -100,29 +152,7 @@ class SyntaxTreeViewer {
             .on('mouseout', () => {
                 $(button).attr('src', baseImg);
             })
-            .on('click', () => {
-                if (this.popupBox) {
-                    this.popupBox.close();
-                }
-                const overlay = window.document.createElement('div');
-                $(overlay).attr('id', 'modal-overlay');
-                $('body').append(overlay);
-                this.popupBox = openPopupBox(
-                    overlay,
-                    this.createRenderFunction(tokenId, kwicLength),
-                    {left: 0, top: 0},
-                    {
-                        type: 'plain',
-                        calculatePosition: false,
-                        closeIcon: true,
-                        timeout: null,
-                        htmlClass: 'syntax-tree',
-                        afterClose: () => {
-                            $(overlay).remove();
-                        }
-                    }
-                );
-            });
+            .on('click', showSyntaxTree);
         return button;
     }
 

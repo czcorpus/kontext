@@ -189,11 +189,9 @@ class TreeGenerator {
 
     private static HORIZONTAL_SPACING_DEFAULT = 0.12;
 
-    private static DYNAMIC_VERTICAL_SPACING = 60;
+    private static DYNAMIC_VERTICAL_SPACING = 40;
 
-    private static TYPICAL_SENTENCE_SIZE = 120;
-
-    private static NODE_DIV_WIDTH = 100;
+    private static NODE_DIV_WIDTH = 80;
 
     private static NODE_DIV_HEIGHT = 40;
 
@@ -207,6 +205,7 @@ class TreeGenerator {
         this.params = new DrawingParams();
         this.params.width = options.width;
         this.params.height = options.height;
+
         if (options.paddingLeft !== undefined) {
             this.params.paddingLeft = options.paddingLeft;
         }
@@ -262,10 +261,12 @@ class TreeGenerator {
         const maxDepth = Object.keys(nodeMap).map(k => nodeMap[k].depth).reduce((p, c) => c > p ? c : p, 0);
 
         if (!this.params.width) {
-            this.params.width = Math.min(totalNumLetters / TreeGenerator.TYPICAL_SENTENCE_SIZE, 1) * this.params.maxWidth;
+            this.params.width = Math.min(this.params.maxWidth, tokens.length * TreeGenerator.NODE_DIV_WIDTH);
         }
         if (!this.params.height) {
-            this.params.height = TreeGenerator.DYNAMIC_VERTICAL_SPACING * maxDepth;
+            this.params.height = (maxDepth + 1) * TreeGenerator.NODE_DIV_HEIGHT +
+                    TreeGenerator.DYNAMIC_VERTICAL_SPACING * maxDepth;
+
         }
         this.params.depthStep = (this.params.height - this.params.paddingTop - this.params.paddingBottom) / maxDepth;
         this.params.cmlWordSteps = this.calculateWordSteps(tokens, nodeMap);
@@ -410,7 +411,7 @@ class TreeGenerator {
         const div = body
             .append('xhtml:div')
             .classed('token-node', true)
-            .attr('title', this.mixins.translate('ucnkSyntaxViewer__click_to_see_details'))
+            .attr('title', d => `${d.value} (${this.mixins.translate('ucnkSyntaxViewer__click_to_see_details')})`)
             .html(d => `${d.value}<br />${this.generateLabelSpan(nodeMap[d.id].labels[1])}`);
 
         div.each((d, i, items) => {
@@ -556,7 +557,8 @@ export interface TreeGeneratorFn {
  * format numbers and dates, generate links etc.
  */
 export function createGenerator(mixins:any):TreeGeneratorFn {
-    return (data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement, options:Options) => {
+    return (data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement,
+            options:Options) => {
         const gen = new TreeGenerator(options, mixins);
         gen.generate(data, zone, tree, target);
     }
