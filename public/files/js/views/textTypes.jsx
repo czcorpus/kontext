@@ -235,6 +235,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
         _mkHandleClick : function (idx) {
             return (evt) => {
+                this.setState({isWaiting: true});
                 dispatcher.dispatch({
                     actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
                     props: {
@@ -245,8 +246,30 @@ export function init(dispatcher, mixins, textTypesStore) {
             }
         },
 
+        getInitialState : function () {
+            return {isWaiting: false};
+        },
+
+        _storeChangeHandler : function (store, action) {
+            this.setState({
+                isWaiting: this.props.containsExtendedInfo ? false : this.state.isWaiting
+            });
+        },
+
+        componentDidMount : function () {
+            textTypesStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            textTypesStore.removeChangeListener(this._storeChangeHandler);
+        },
+
         render : function () {
-            if (this.props.numGrouped < 2) {
+            if (this.state.isWaiting) {
+                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={this.translate('global__loading')} />;
+
+            } else if (this.props.numGrouped < 2) {
                 return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
 
             } else {
@@ -278,9 +301,12 @@ export function init(dispatcher, mixins, textTypesStore) {
                                         itemIsLocked={item.locked}
                                             /></td>
                                 <td className="num">{item.availItems ? this.formatNumber(item.availItems) : ''}</td>
-                                <td>
-                                {hasExtendedInfo
-                                    ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} /> : null }
+                                <td className="extended-info">
+                                {hasExtendedInfo ?
+                                    <BibInfoButton idx={i} attrName={this.props.attrObj.name}
+                                            numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
+                                    : null
+                                }
                                 </td>
                             </tr>
                         );
