@@ -12,7 +12,7 @@
         "ucnkLA__subcorp_consider_aligned_corpora": "Include only texts found also in the corpora selected here.",
         "ucnkLA__refine_selection_btn": "refine selection",
         "ucnkLA__reset_selection_btn": "reset selection",
-        "ucnkLA__start_writing_for_suggestions": "Start writing for suggestions"
+        "ucnkLA__start_writing_for_suggestions": "Start writing\u2026"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -27,6 +27,6 @@
         "ucnkLA__subcorp_consider_aligned_corpora": "Zahrnout pouze texty, které se vyskytují také ve všech zde označených korpusech",
         "ucnkLA__refine_selection_btn": "zúžit výběr",
         "ucnkLA__reset_selection_btn": "zrušit výběr",
-        "ucnkLA__start_writing_for_suggestions": "Začněte psát, abyste získali vyhovující položky"
+        "ucnkLA__start_writing_for_suggestions": "Začněte psát\u2026"
 	}
 }
