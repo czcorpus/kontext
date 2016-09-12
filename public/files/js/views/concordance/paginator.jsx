@@ -220,7 +220,7 @@ export function init(dispatcher, mixins, lineStore) {
                 <div className="bonito-pagination-core">
                     <span className="curr-page">{this._renderCurrentPage(numPages)}</span>
                     {'\u00A0/\u00A0'}
-                    <span className="numofpages" title={numPages}>{numPages}</span>
+                    <span className="numofpages">{this.formatNumber(numPages)}</span>
                 </div>
             );
         }
