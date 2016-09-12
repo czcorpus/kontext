@@ -251,9 +251,9 @@ export function init(dispatcher, mixins, textTypesStore) {
         },
 
         _storeChangeHandler : function (store, action) {
-            this.setState({
-                isWaiting: this.props.containsExtendedInfo ? false : this.state.isWaiting
-            });
+            if (this.state.isWaiting && this.props.containsExtendedInfo) {
+                this.setState({isWaiting: false});
+            }
         },
 
         componentDidMount : function () {
@@ -501,7 +501,9 @@ export function init(dispatcher, mixins, textTypesStore) {
                         </td>
                         <td>
                             {hasExtendedInfo
-                                ? <ExtendedInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} />
+                                ? <ExtendedInfoButton idx={i} attrName={this.props.attrObj.name}
+                                        numGrouped={item.numGrouped}
+                                        containsExtendedInfo={!!item.extendedInfo} />
                                 : null }
                         </td>
                     </tr>
