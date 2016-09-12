@@ -25,7 +25,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <RangeSelector /> --------------------------
 
-    let RangeSelector = React.createClass({
+    const RangeSelector = React.createClass({
 
         mixins : mixins,
 
@@ -147,7 +147,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <CheckboxItem /> --------------------------
 
-    let CheckBoxItem = React.createClass({
+    const CheckBoxItem = React.createClass({
 
         _clickHandler : function () {
             dispatcher.dispatch({
@@ -186,7 +186,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <FullListContainer /> --------------------------
 
-    let ExtendedInfoBox = React.createClass({
+    const ExtendedInfoBox = React.createClass({
 
         mixins : mixins,
 
@@ -227,14 +227,15 @@ export function init(dispatcher, mixins, textTypesStore) {
         }
     });
 
-    // ----------------------------- <BibInfoButton /> ------------------------------
+    // ----------------------------- <ExtendedInfoButton /> ------------------------------
 
-    let BibInfoButton = React.createClass({
+    const ExtendedInfoButton = React.createClass({
 
         mixins : mixins,
 
         _mkHandleClick : function (idx) {
             return (evt) => {
+                this.setState({isWaiting: true});
                 dispatcher.dispatch({
                     actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
                     props: {
@@ -245,8 +246,30 @@ export function init(dispatcher, mixins, textTypesStore) {
             }
         },
 
+        getInitialState : function () {
+            return {isWaiting: false};
+        },
+
+        _storeChangeHandler : function (store, action) {
+            this.setState({
+                isWaiting: this.props.containsExtendedInfo ? false : this.state.isWaiting
+            });
+        },
+
+        componentDidMount : function () {
+            textTypesStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            textTypesStore.removeChangeListener(this._storeChangeHandler);
+        },
+
         render : function () {
-            if (this.props.numGrouped < 2) {
+            if (this.state.isWaiting) {
+                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={this.translate('global__loading')} />;
+
+            } else if (this.props.numGrouped < 2) {
                 return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
 
             } else {
@@ -258,7 +281,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <FullListContainer /> --------------------------
 
-    let FullListContainer = React.createClass({
+    const FullListContainer = React.createClass({
 
         mixins : mixins,
 
@@ -278,9 +301,12 @@ export function init(dispatcher, mixins, textTypesStore) {
                                         itemIsLocked={item.locked}
                                             /></td>
                                 <td className="num">{item.availItems ? this.formatNumber(item.availItems) : ''}</td>
-                                <td>
-                                {hasExtendedInfo
-                                    ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} /> : null }
+                                <td className="extended-info">
+                                {hasExtendedInfo ?
+                                    <ExtendedInfoButton idx={i} attrName={this.props.attrObj.name}
+                                            numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
+                                    : null
+                                }
                                 </td>
                             </tr>
                         );
@@ -305,7 +331,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <AutoCompleteBox /> --------------------------
 
-    let AutoCompleteBox = React.createClass({
+    const AutoCompleteBox = React.createClass({
 
         _outsideClick : false,
 
@@ -378,7 +404,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <RawInputContainer /> --------------------------
 
-    let RawInputContainer = React.createClass({
+    const RawInputContainer = React.createClass({
 
         throttlingTimer : null,
 
@@ -444,7 +470,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <RawInputMultiValueContainer /> --------------------------
 
-    let RawInputMultiValueContainer = React.createClass({
+    const RawInputMultiValueContainer = React.createClass({
 
         _handleAutoCompleteHintClick : function (item) { // typeof item = TextTypes.AutoCompleteItem
             dispatcher.dispatch({
@@ -475,7 +501,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                         </td>
                         <td>
                             {hasExtendedInfo
-                                ? <BibInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} />
+                                ? <ExtendedInfoButton idx={i} attrName={this.props.attrObj.name} numGrouped={item.numGrouped} />
                                 : null }
                         </td>
                     </tr>
@@ -503,7 +529,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <ValueSelector /> --------------------------
 
-    let ValueSelector = React.createClass({
+    const ValueSelector = React.createClass({
 
         render : function () {
             return (
@@ -523,7 +549,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <TableTextTypeAttribute /> --------------------------
 
-    let TableTextTypeAttribute = React.createClass({
+    const TableTextTypeAttribute = React.createClass({
 
         mixins : mixins,
 
@@ -673,7 +699,7 @@ export function init(dispatcher, mixins, textTypesStore) {
 
     // ----------------------------- <TextTypesPanel /> --------------------------
 
-    let TextTypesPanel = React.createClass({
+    const TextTypesPanel = React.createClass({
         mixins: mixins,
 
         _storeChangeHandler : function (store, action) {
