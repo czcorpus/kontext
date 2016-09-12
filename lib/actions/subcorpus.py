@@ -273,7 +273,6 @@ class Subcorpus(Kontext):
             full_list = sorted(full_list, key=lambda x: x[sort_key], reverse=rev)
         else:
             full_list = l10n.sort(full_list, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
-
         unfinished_corpora = filter(lambda at: not at.is_finished(),
                                     self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
         ans = {

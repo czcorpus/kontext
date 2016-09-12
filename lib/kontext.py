@@ -156,7 +156,7 @@ class AsyncTaskStatus(object):
         self.error = error
 
     def is_finished(self):
-        return self.status in ('FAILED', 'SUCCESS')
+        return self.status in ('FAILURE', 'SUCCESS')
 
     @staticmethod
     def from_dict(data):
@@ -239,9 +239,9 @@ class Kontext(Controller):
         default is None - in such case no information is stored
         """
         import datetime
-        
+
         logged_values = settings.get('logging', 'values', ())
-        log_data = {} 
+        log_data = {}
 
         params = {}
         if self.environ.get('QUERY_STRING'):
