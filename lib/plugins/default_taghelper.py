@@ -43,6 +43,7 @@ import os
 import re
 import json
 import time
+from collections import defaultdict
 from lxml import etree
 
 from translation import ugettext as _
@@ -182,7 +183,7 @@ class TagVariantLoader(object):
     manual cache clean-up.
     """
 
-    spec_char_replacements = (
+    SPEC_CHAR_REPLACEMENTS = (
         ('-', r'.'),
         ('*', r'\*'),
         ('^', r'\^'),
@@ -231,7 +232,7 @@ class TagVariantLoader(object):
         }
         """
         path = '%s/initial-values.%s.json' % (self.cache_dir, self.lang)
-        char_replac_tab = dict(self.__class__.spec_char_replacements)
+        char_replac_tab = dict(self.SPEC_CHAR_REPLACEMENTS)
         tagset = self._taghelper.load_tag_descriptions(self.tagset_name, self.lang)
         item_sequences = tuple([tuple([item[0] for item in position]) for position in tagset['values']])
 
@@ -256,7 +257,7 @@ class TagVariantLoader(object):
             for line in self.variants_file:
                 line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
                 for i in range(tagset['num_pos']):
-                    value = ''.join(map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, line[i]))
+                    value = ''.join(map(lambda x: char_replac_tab.get(x, x), line[i]))
                     if line[i] == '-':
                         ans[i].add(('-', ''))
                     elif i < len(tagset['values']):
@@ -296,7 +297,7 @@ class TagVariantLoader(object):
         tagset = self._taghelper.load_tag_descriptions(self.tagset_name, self.lang)
         item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in tagset['values']])
         required_pattern = required_pattern.replace('-', '.')
-        char_replac_tab = dict(self.__class__.spec_char_replacements)
+        char_replac_tab = dict(self.__class__.SPEC_CHAR_REPLACEMENTS)
         patt = re.compile(required_pattern)
         matching_tags = []
         for line in self.variants_file:
@@ -304,18 +305,17 @@ class TagVariantLoader(object):
             if patt.match(line):
                 matching_tags.append(line)
 
-        ans = {}
+        ans = defaultdict(lambda: set())
+        tag_elms = re.findall(r'\\[\*\?\^\.!]|\[[^\]]+\]|[^-]|-', required_pattern)
+        translation_tables = [dict(tagset['values'][i]) for i in range(len(tag_elms))]
+
         for item in matching_tags:
-            tag_elms = re.findall(r'\\[\*\?\^\.!]|\[[^\]]+\]|[^-]|-', required_pattern)
             for i in range(len(tag_elms)):
                 value = ''.join(map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, item[i]))
-                translation_table = dict(tagset['values'][i])
-                if i not in ans:
-                    ans[i] = set()
                 if item[i] == '-':
                     ans[i].add(('-', ''))
-                elif item[i] in translation_table:
-                    ans[i].add((value, '%s - %s' % (item[i], translation_table[item[i]])))
+                elif item[i] in translation_tables[i]:
+                    ans[i].add((value, '%s - %s' % (item[i], translation_tables[i][item[i]])))
                 else:
                     ans[i].add((value, '%s - %s' % (item[i], item[i])))
 
@@ -323,12 +323,9 @@ class TagVariantLoader(object):
             i = int(key)
             used_keys = [x[0] for x in ans[key]]
             if '-' in used_keys:
+                # in only '-' is available it actaually means there is no need to choose anything
                 if len(used_keys) == 1:
                     ans[key] = ()
-                elif len(used_keys) == 2:
-                    ans[key].remove(('-', ''))
-            elif len(used_keys) > 1:
-                ans[key].add(('-', ''))
             cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
                 if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
             ans[key] = sorted(ans[key], cmp=cmp_by_seq) if ans[key] is not None else None
