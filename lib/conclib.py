@@ -385,10 +385,8 @@ def get_full_ref(corp, pos):
 
 
 def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx=40,
-                       addattrs=None, structs='', detail_ctx_incr=60):
+                       attrs=None, structs='', detail_ctx_incr=60):
     data = {}
-    if addattrs is None:
-        addattrs = []
     corpus_encoding = corp.get_conf('ENCODING')
     wrapdetail = corp.get_conf('WRAPDETAIL')
     if wrapdetail:
@@ -413,8 +411,8 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
             detail_right_ctx = maxdetail
     if detail_left_ctx > pos:
         detail_left_ctx = pos
-    attrs = ','.join(['word'] + addattrs)
-    cr = manatee.CorpRegion(corp, attrs, structs)
+    query_attrs = 'word' if attrs is None else ','.join(attrs)
+    cr = manatee.CorpRegion(corp, query_attrs, structs)
     region_left = tokens2strclass(cr.region(pos - detail_left_ctx, pos))
     region_kwic = tokens2strclass(cr.region(pos, pos + hitlen))
     region_right = tokens2strclass(cr.region(pos + hitlen,
