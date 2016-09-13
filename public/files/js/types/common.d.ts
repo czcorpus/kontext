@@ -330,6 +330,14 @@ declare module Kontext {
         replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
         setOnPopState(fn:(event:{state: any})=>void):void;
     }
+
+    /**
+     * A filter used on 'My subcorpora' page
+     */
+    export interface SubcListFilter {
+        show_deleted:boolean;
+        corpname:string;
+    }
 }
 
 

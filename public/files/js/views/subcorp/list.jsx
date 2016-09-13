@@ -342,6 +342,12 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                         <button type="button" className="default-button"
                             onClick={this._handleSubmit}>{this.translate('subcform__create_subcorpus')}</button>
                     </div>
+                    <p>
+                        (<img src={this.createStaticUrl('img/warning-icon.svg')}
+                                alt={this.translate('global__warning')}
+                                style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
+                        {this.translate('subclist__reuse_query_warn')})
+                    </p>
                 </FormActionTemplate>
             );
         }
