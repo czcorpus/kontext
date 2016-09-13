@@ -275,14 +275,14 @@ class Subcorpus(Kontext):
             full_list = l10n.sort(full_list, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
         unfinished_corpora = filter(lambda at: not at.is_finished(),
                                     self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
-        ans = {
-            'SubcorpList': [],   # this is used by subcorpus SELECT element; no need for that here
-            'subcorp_list': full_list,
-            'sort_key': dict(name=sort_key, reverse=rev),
-            'filter': filter_args,
-            'unfinished_subc': [uc.to_dict() for uc in unfinished_corpora],
-            'related_corpora': sorted(related_corpora)
-        }
+        ans = dict(
+            SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
+            subcorp_list=full_list,
+            sort_key=dict(name=sort_key, reverse=rev),
+            filter=filter_args,
+            unfinished_subc=[uc.to_dict() for uc in unfinished_corpora],
+            related_corpora=sorted(related_corpora)
+        )
         return ans
 
     @exposed(access_level=1, return_type='json', legacy=True)

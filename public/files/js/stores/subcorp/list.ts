@@ -55,12 +55,6 @@ export interface SortKey {
     reverse:boolean;
 }
 
-export interface ListFilter {
-    show_deleted:boolean;
-    corpname:string;
-}
-
-
 export class SubcorpListStore extends SimplePageStore {
 
     private layoutModel:PageModel;
@@ -73,19 +67,20 @@ export class SubcorpListStore extends SimplePageStore {
 
     private sortKey:SortKey;
 
-    private filter:ListFilter;
+    private filter:Kontext.SubcListFilter;
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
-            unfinished:Array<Kontext.AsyncTaskInfo>) {
+            unfinished:Array<Kontext.AsyncTaskInfo>,
+            initialFilter:Kontext.SubcListFilter) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.importLines(data);
         this.importUnfinished(unfinished);
         this.relatedCorpora = Immutable.List<string>(relatedCorpora);
         this.sortKey = sortKey;
-        this.filter = {show_deleted: false, corpname: ''};
+        this.filter = initialFilter || {show_deleted: false, corpname: ''};
 
         this.layoutModel.addOnAsyncTaskUpdate((itemList) => {
             if (itemList.filter(item => item.category == 'subcorpus').size > 0) {
@@ -135,7 +130,7 @@ export class SubcorpListStore extends SimplePageStore {
                     );
                 break;
                 case 'SUBCORP_LIST_UPDATE_FILTER':
-                    self.filterItems(<ListFilter>payload.props).then(
+                    self.filterItems(<Kontext.SubcListFilter>payload.props).then(
                         (data) => {
                             self.notifyChangeListeners();
                         },
@@ -333,7 +328,7 @@ export class SubcorpListStore extends SimplePageStore {
         );
     }
 
-    private mergeFilter(currArgs:{[key:string]:string}, filter:ListFilter):void {
+    private mergeFilter(currArgs:{[key:string]:string}, filter:Kontext.SubcListFilter):void {
         function exportVal(v) {
             if (typeof v === 'boolean') {
                 return v ? '1' : '0';
@@ -351,7 +346,7 @@ export class SubcorpListStore extends SimplePageStore {
         return this.filterItems(this.filter);
     }
 
-    private filterItems(filter:ListFilter):RSVP.Promise<any> {
+    private filterItems(filter:Kontext.SubcListFilter):RSVP.Promise<any> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.sortKey.reverse ? '-' : '') + this.sortKey.name,
