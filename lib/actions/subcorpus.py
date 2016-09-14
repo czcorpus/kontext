@@ -258,6 +258,8 @@ class Subcorpus(Kontext):
         if filter_args['corpname']:
             data = filter(lambda item: not filter_args['corpname'] or item['corpname'] == filter_args['corpname'],
                           data)
+        elif filter_args['corpname'] is None:
+            filter_args['corpname'] = ''  # JS code requires non-null value
 
         if plugins.has_plugin('subc_restore'):
             try:
