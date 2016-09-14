@@ -381,16 +381,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
 
         let body;
-        if (typeof args === 'object') {
+
+        if (args instanceof util.MultiDict) {
+            body = this.encodeURLParameters(args);
+
+        } else if (typeof args === 'object') {
             if (options.contentType === 'application/json') {
                 body = JSON.stringify(args);
 
             } else {
                 body = encodeArgs(args);
             }
-
-        } else if (args instanceof util.MultiDict) {
-            body = this.encodeURLParameters(args);
 
         } else if (typeof args === 'string') {
             body = args;
