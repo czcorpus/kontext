@@ -71,7 +71,22 @@ export namespace SourceData {
         desc:Desc;
         kwicPosition:Array<number>; // position within desc
     }
+}
 
+/**
+ * Specifies a function which is joined to size
+ * calculation chain in case calculated size of
+ * syntax viewer frame is bigger then its maxWidth
+ * or maxHeight size.
+ *
+ * It allows user to modify viewer's parent elements
+ * to be able to handle such overflow. User may
+ * or may not modify the original size passed as
+ * arguments. But in any case user must return
+ * valid width and height.
+ */
+export interface OverflowHandler {
+    (width:number, height:number):[number,number];
 }
 
 /**
@@ -89,6 +104,7 @@ export interface Options {
     edgeWidth?:number;
     edgeColor?:string;
     nodeColor?:string;
+    onOverflow?:OverflowHandler;
 }
 
 interface Label {
@@ -185,6 +201,8 @@ class TreeGenerator {
 
     private node2SentActionMap:{[ident:string]:HTMLElement} = {};
 
+    private onOverflow:OverflowHandler;
+
     private static HORIZONTAL_SPACING_COMPACT = 0.05;
 
     private static HORIZONTAL_SPACING_DEFAULT = 0.12;
@@ -198,6 +216,8 @@ class TreeGenerator {
     private static DETAIL_DIV_VERT_OFFSET = 80;
 
     private static DETAIL_DIV_HORIZ_OFFSET = -10;
+
+    private static DETAIL_DIV_MIN_HEIGHT = 100;
 
 
     constructor(options:Options, mixins:any) {
@@ -227,6 +247,9 @@ class TreeGenerator {
         if (options.nodeColor !== undefined) {
             this.params.nodeFill = options.nodeColor;
             this.params.nodeStrokeColor = options.nodeColor;
+        }
+        if (typeof options.onOverflow === 'function') {
+            this.onOverflow = options.onOverflow;
         }
     }
 
@@ -265,10 +288,13 @@ class TreeGenerator {
         }
         if (!this.params.height) {
             this.params.height = (maxDepth + 1) * TreeGenerator.NODE_DIV_HEIGHT +
-                    TreeGenerator.DYNAMIC_VERTICAL_SPACING * maxDepth;
-
+                    TreeGenerator.DYNAMIC_VERTICAL_SPACING * maxDepth + TreeGenerator.DETAIL_DIV_MIN_HEIGHT;
         }
-        this.params.depthStep = (this.params.height - this.params.paddingTop - this.params.paddingBottom) / maxDepth;
+        if (this.params.height > this.params.maxHeight && typeof this.onOverflow === 'function') {
+            [this.params.width, this.params.height] = this.onOverflow(this.params.width, this.params.height);
+        }
+        this.params.depthStep = (this.params.height - this.params.paddingTop - this.params.paddingBottom -
+                TreeGenerator.DETAIL_DIV_MIN_HEIGHT) / maxDepth;
         this.params.cmlWordSteps = this.calculateWordSteps(tokens, nodeMap);
     }
 

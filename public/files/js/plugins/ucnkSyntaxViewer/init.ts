@@ -38,7 +38,8 @@ class SyntaxTreeViewer {
         this.pluginApi = pluginApi;
     }
 
-    private createRenderFunction(tokenId:string, kwicLength:number):(box:TooltipBox, finalize:()=>void)=>void {
+    private createRenderFunction(tokenId:string, kwicLength:number,
+            overlayElm:HTMLElement):(box:TooltipBox, finalize:()=>void)=>void {
         const renderTree = (box:TooltipBox, finalize:()=>void, data:any):void => {
             const parentElm = box.getContentElement();
             const treexFrame = window.document.createElement('div');
@@ -46,8 +47,9 @@ class SyntaxTreeViewer {
 
             parentElm.appendChild(treexFrame);
             finalize();
-            box.setCss('left', '50%');
-            box.setCss('top', '50%');
+            box
+                .setCss('left', '50%')
+                .setCss('top', '50%');
             createGenerator(this.pluginApi.exportMixins()[0]).call(
                 null,
                 data,
@@ -60,7 +62,16 @@ class SyntaxTreeViewer {
                     paddingTop: 20,
                     paddingBottom: 50,
                     paddingLeft: 20,
-                    paddingRight: 20
+                    paddingRight: 20,
+                    onOverflow: (width:number, height:number) => {
+                        $(overlayElm).css('position', 'absolute');
+                        box
+                            .setCss('maxHeight', 'none')
+                            .setCss('transform', 'none')
+                            .setCss('top', 0)
+                            .setCss('left', 0);
+                        return [width, height];
+                    }
                 }
             );
         }
@@ -115,7 +126,7 @@ class SyntaxTreeViewer {
 
             this.popupBox = openPopupBox(
                 overlay,
-                this.createRenderFunction(tokenId, kwicLength),
+                this.createRenderFunction(tokenId, kwicLength, overlay),
                 {left: 0, top: 0},
                 {
                     type: 'plain',
