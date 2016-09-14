@@ -208,8 +208,9 @@ export class TooltipBox implements Legacy.IPopupBox {
      * Sets a CSS property of wrapping HTML Element
      *
      */
-    setCss(name:string, value:any):void {
+    setCss(name:string, value:any):TooltipBox {
         $(this.rootElm).css(name, value);
+        return this;
     }
 
     /**
