@@ -20,8 +20,8 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import $ = require('jquery');
-import RSVP = require('vendor/rsvp');
+import * as $ from 'jquery';
+import * as RSVP from 'vendor/rsvp';
 
 
 /**
@@ -39,20 +39,21 @@ export class AppBar implements Kontext.Plugin {
      *
      */
     toolbarReloader = () => {
-        var self = this,
-            promise = $.ajax(this.pluginApi.createActionUrl('user/ajax_get_toolbar'),
-                {dataType : 'html'});
+        this.pluginApi.ajax<string>(
+            'GET',
+            this.pluginApi.createActionUrl('user/ajax_get_toolbar'),
+            {}
 
-        promise.done(function(data, textStatus, jqXHR) {
-            $('#common-bar').html(data);
-        });
-
-        promise.fail(function(jqXHR, textStatus, errorThrown) {
-             self.pluginApi.showMessage("error", errorThrown); // TODO
+        ).then(
+            (data) => {
+                $('#common-bar').html(data);
+            },
+            (err) => {
+                this.pluginApi.showMessage('error', err);
         });
     };
 
-    init(): void {
+    init():void {
         $('#cnc-toolbar-user').find('a').each(function () {
             let href = $(this).attr('href');
             let hrefElms = href.split('?');

@@ -74,4 +74,32 @@ declare module AjaxResponse {
         unfinished_subc:Array<Kontext.AsyncTaskInfo>;
     }
 
+    export interface ConcStatus extends Kontext.AjaxResponse {
+        end:any; // TODO
+        relconcsize:number;
+        concsize:number;
+        finished:boolean;
+        fullsize:number;
+    }
+
+
+    export interface QueryHistoryItem {
+        corpname:string;
+        humanCorpname:string;
+        created:[string,string]; // date string and time string
+        details:string;
+        query:string;
+        query_form_url:string;
+        query_type:string;
+        query_type_translated:string;
+        subcorpname:string;
+        params:{[key:string]:any}
+    }
+
+    export interface QueryHistory extends Kontext.AjaxResponse {
+        data:Array<QueryHistoryItem>;
+        limit:number;
+        offset:number;
+    }
+
 }

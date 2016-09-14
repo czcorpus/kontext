@@ -23,18 +23,17 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/soundmanager.d.ts" />
 /// <reference path="../../ts/declarations/d3.d.ts" />
-/// <reference path="../../ts/declarations/jquery-plugins.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
 import win = require('win');
 import $ = require('jquery');
-import jqueryPeriodic = require('vendor/jquery.periodic');
 import documentModule = require('./document');
 import popupBox = require('../popupbox');
 import conclines = require('../conclines');
@@ -49,64 +48,15 @@ import applicationBar = require('plugins/applicationBar/init');
 import RSVP = require('vendor/rsvp');
 import {ConcDetail} from '../detail';
 declare var Modernizr:Modernizr.ModernizrStatic;
-declare var jqueryPeriodic:any;
-
-// TODO this is an experimental touch event handler.
-// Default behavior of the 'view' component should be observed carefully first.
-class TouchHandler {
-
-    startX = null;
-    startY = null;
-    currX = null;
-    currY = null;
-    area = null;
-
-    private _getPos;
-
-    constructor() {
-        this._getPos = function (evt) {
-            let touch = evt.originalEvent.changedTouches[0];
-            if (touch) {
-                return [touch.clientX, touch.clientY];
-
-            } else {
-                return [null, null];
-            }
-        }
-    }
-
-    attachTouchEvents(area, fn):void {
-        let pos;
-        let self = this;
-        let deltaX = 0;
-
-        this.area = area;
-
-        $(area).on('touchstart', function (evt) {
-            pos = self._getPos(evt);
-            this.startX = pos.clientX;
-            this.startY = pos.clientY;
-            this.currX = this.startX;
-            this.currY = this.startY;
-        });
-        $(area).on('touchmove', function (evt) {
-            pos = self._getPos(evt);
-            deltaX = pos[0] - this.currX;
-            fn(deltaX);
-            this.currX = pos[0];
-            this.currY = pos[1];
-            evt.preventDefault();
-        });
-        $(area).on('touchend', function (evt) {
-            pos = self._getPos(evt);
-            this.startX = null;
-            this.startY = null;
-        });
-    }
-}
 
 
 export class ViewPage {
+
+    private static CHECK_CONC_DELAY = 700;
+
+    private static CHECK_CONC_DECAY = 1.1;
+
+    private static CHECK_CONC_MAX_ATTEMPTS = 500;
 
     private layoutModel:documentModule.PageModel;
 
@@ -118,8 +68,6 @@ export class ViewPage {
 
     private concViews:any; // TODO
 
-    private touchHandler:TouchHandler;
-
     private lastGroupStats:any; // group stats cache
 
     private concDetail:ConcDetail;
@@ -130,7 +78,6 @@ export class ViewPage {
         this.lineSelectionStore = lineSelectionStore;
         this.lineViewStore = lineViewStore;
         this.hasLockedGroups = hasLockedGroups;
-        this.touchHandler = new TouchHandler();
         this.concDetail = new ConcDetail(layoutModel.pluginApi());
     }
 
@@ -463,67 +410,62 @@ export class ViewPage {
      *
      */
     reloadHits():void {
-        const self = this;
-        let freq = 500;
-        /*
-         * Checks periodically for the current state of a concordance calculation
-         */
-        jqueryPeriodic({ period: freq, decay: 1.2, max_period: 60000 }, function () {
-            $.ajax('get_cached_conc_sizes?' + self.layoutModel.getConf('q')
-                    + '&' + self.layoutModel.getConf('globals'),
-            {
-                type: 'POST',
-                periodic: this,
-                success: function (data) {
-                    var num2Str;
+        const loop = (idx:number, delay:number, decay:number) => {
+            window.setTimeout(() => {
+                this.layoutModel.ajax(
+                    'GET',
+                    this.layoutModel.createActionUrl('get_cached_conc_sizes'),
+                    this.layoutModel.getConcArgs()
 
-                    num2Str = function (n) {
-                        return self.layoutModel.formatNumber(n);
-                    };
-
-                    if (data.end) {
-                        freq = 5;
-                    }
-
-                    $('#result-info span.ipm').html(num2Str(data.relconcsize.toFixed(2)));
-                    self.layoutModel.dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES',
-                        props: {
-                            availPages: Math.ceil(data.concsize / self.layoutModel.getConf<number>('numLines'))
+                ).then(
+                    (data:AjaxResponse.ConcStatus) => {
+                        if (data.end) { // TODO what is this for?
+                            delay = 5;
                         }
-                    });
-                    if (!data.finished) {
-                        if (data.fullsize > 0) {
-                            self.layoutModel.dispatcher.dispatch({
+
+                        $('#result-info span.ipm').html(this.layoutModel.formatNumber(data.relconcsize));
+                        this.layoutModel.dispatcher.dispatch({
+                            actionType: 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES',
+                            props: {
+                                availPages: Math.ceil(data.concsize / this.layoutModel.getConf<number>('numLines'))
+                            }
+                        });
+                        if (!data.finished) {
+                            if (data.fullsize > 0) {
+                                this.layoutModel.dispatcher.dispatch({
+                                    actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+                                    props: {
+                                        finished: false,
+                                        concsize: data.concsize,
+                                        fullsize: data.fullsize
+                                    }
+                                });
+                            }
+                            if (idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
+                                loop(idx + 1, delay * decay, decay);
+                            }
+
+                        } else {
+                            this.layoutModel.dispatcher.dispatch({
                                 actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
                                 props: {
-                                    finished: false,
+                                    finished: true,
                                     concsize: data.concsize,
                                     fullsize: data.fullsize
                                 }
                             });
+                            /* We are unable to update ARF on the fly which means we
+                            * have to reload the page after all the server calculations are finished.
+                            */
+                            //win.location.reload();
                         }
-
-                    } else {
-                        win.setTimeout(this.periodic.cancel, 1000);
-                        self.layoutModel.dispatcher.dispatch({
-                            actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
-                            props: {
-                                finished: true,
-                                concsize: data.concsize,
-                                fullsize: data.fullsize
-                            }
-                        });
-                        /* We are unable to update ARF on the fly which means we
-                         * have to reload the page after all the server calculations are finished.
-                         */
-                        //win.location.reload();
                     }
-                },
-                dataType: 'json'
-            });
-        });
-    };
+                );
+
+            }, delay);
+        }
+        loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
+    }
 
     /**
      * Ensures that view's URL is always reusable (which is not always

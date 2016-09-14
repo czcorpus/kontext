@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,16 +20,17 @@
 
 /// <reference path="../types/common.d.ts" />
 
-import document = require('tpl/document');
-import $ = require('jquery');
-import popupBox = require('popupbox');
+import {PageModel} from './document';
+import * as $ from 'jquery';
+import {bind as bindPopupBox} from '../popupbox';
+import {MultiDict} from '../util';
 
 /**
  *
  */
 export class WordlistPage {
 
-    private pageModel:document.PageModel;
+    private pageModel:PageModel;
 
     private checkIntervalId:number;
 
@@ -39,7 +42,7 @@ export class WordlistPage {
 
     static MAX_NUM_NO_CHANGE = 20;
 
-    constructor(pageModel:document.PageModel) {
+    constructor(pageModel:PageModel) {
         this.pageModel = pageModel;
     }
 
@@ -52,48 +55,48 @@ export class WordlistPage {
     }
 
     private checkStatus():void {
-        let self = this;
-        let args = {
-            'corpname': this.pageModel.getConf('corpname'),
-            'usesubcorp': this.pageModel.getConf('subcorpname'),
-            'attrname': this.pageModel.getConf('attrname'),
-            'worker_tasks': this.pageModel.getConf('workerTasks')
-        };
-        let prom:JQueryXHR = $.ajax(this.pageModel.createActionUrl('wordlist_process'), {
-            data: args,
-            dataType: 'json',
-            traditional: true
+        const args = new MultiDict([
+            ['corpname', this.pageModel.getConf<string>('corpname')],
+            ['usesubcorp', this.pageModel.getConf<string>('subcorpname')],
+            ['attrname', this.pageModel.getConf<string>('attrname')]
+        ]);
+        this.pageModel.getConf<Array<string>>('WorkerTasks').forEach(taskId => {
+            args.add('worker_tasks', taskId);
         });
+        this.pageModel.ajax(
+            'GET',
+            this.pageModel.createActionUrl('wordlist_process'),
+            args
 
-        prom.then(
-            function (data) {
+        ).then(
+            (data:Kontext.AjaxResponse) => {
                 if (data.contains_errors) {
-                    self.stopWithError();
+                    this.stopWithError();
 
                 } else {
-                    $('#processbar').css('width', data.status + '%');
-                    if (data.status === 100) {
-                        self.stopWatching(); // just for sure
-                        window.location.href = self.pageModel.getConf<string>('reloadUrl');
+                    $('#processbar').css('width', data['status'] + '%');
+                    if (data['status'] === 100) {
+                        this.stopWatching(); // just for sure
+                        window.location.href = this.pageModel.getConf<string>('reloadUrl');
 
-                    } else if (self.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
-                        self.stopWithError();
+                    } else if (this.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
+                        this.stopWithError();
 
-                    } else if (data.status === self.lastStatus) {
-                        self.numNoChange += 1;
+                    } else if (data['status'] === this.lastStatus) {
+                        this.numNoChange += 1;
                     }
-                    self.lastStatus = data.status;
+                    this.lastStatus = data['status'];
                 }
             },
-            function (err) {
-                self.stopWithError();
+            (err) => {
+                this.stopWithError();
             }
         );
     }
 
     startWatching():void {
         this.numNoChange = 0;
-        this.checkIntervalId = setInterval(this.checkStatus.bind(this), 2000);
+        this.checkIntervalId = window.setInterval(this.checkStatus.bind(this), 2000);
     }
 
     stopWatching():void {
@@ -101,19 +104,23 @@ export class WordlistPage {
     }
 
     setupContextHelp(message):void {
-        popupBox.bind($('#progress_message a.context-help'), message, {width: 'nice'});
+        bindPopupBox($('#progress_message a.context-help'), message, {width: 'nice'});
     }
 
     init():void {
-        this.setupContextHelp(this.pageModel.translate('global__wl_calc_info'));
+        this.pageModel.init().then(
+            (data) => {
+                this.setupContextHelp(this.pageModel.translate('global__wl_calc_info'));
+                if (this.pageModel.getConf<boolean>('IsUnfinished')) {
+                    this.startWatching();
+                }
+            }
+        );
     }
 }
 
 
-export function init(conf:Kontext.Conf):WordlistPage {
-    let layoutModel:document.PageModel = new document.PageModel(conf);
-    layoutModel.init();
-    let page:WordlistPage = new WordlistPage(layoutModel);
+export function init(conf:Kontext.Conf):void {
+    const page:WordlistPage = new WordlistPage(new PageModel(conf));
     page.init();
-    return page;
 }

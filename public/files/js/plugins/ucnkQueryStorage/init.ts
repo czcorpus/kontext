@@ -356,24 +356,28 @@ export class QueryHistory {
             this.inputElm.blur();  // These two lines prevent Firefox from deleting
             this.inputElm.focus(); // the input after ESC is hit (probably a bug).
 
-            let prom = $.ajax(self.pluginApi.getConf('rootPath') + 'user/ajax_query_history?corpname=' + self.pluginApi.getConf('corpname'), {
-                dataType : 'json'
-            });
+            this.pluginApi.ajax(
+                'GET',
+                this.pluginApi.createActionUrl('user/ajax_query_history'),
+                {corpname: this.pluginApi.getConf('corpname')},
+                {contentType : 'application/x-www-form-urlencoded'}
 
-            prom.done(function (data) {
-                    if (data.hasOwnProperty('error')) {
-                        self.pluginApi.showMessage("error", data.error);
+            ).then(
+                (data:Kontext.AjaxResponse) => {
+                    if (data.contains_errors) {
+                        this.pluginApi.showMessage('error', data.messages[0]);
 
                     } else {
                         if (!this.boxElm) {
-                            self.render();
+                            this.render();
                         }
-                        self.showData(data.data);
+                        self.showData(data['data']);
                     }
-            });
-            prom.fail(function (err) {
-                self.pluginApi.showMessage("error", err.statusText);
-            });
+                },
+                (err) => {
+                    this.pluginApi.showMessage("error", err.statusText);
+                }
+            );
 
         } else { // data are already loaded - let's just reuse it
             if (!this.boxElm) {
@@ -426,7 +430,7 @@ export class QueryHistory {
             this.data = data;
         }
         tbl.empty();
-        $.each(this.data, function (i, v:QueryHistoryRecord) {
+        this.data.forEach((v:QueryHistoryRecord, i:number) => {
             let listItem = $(window.document.createElement('li'));
             listItem.attr('data-rownum', i);
             listItem.attr('data-corpname', v.corpname);
@@ -458,7 +462,7 @@ export class QueryHistory {
     /**
      * Closes history widget.
      */
-    close(): void {
+    close():void {
         this.inputElm.off('keydown.queryStoragePluginMoveSelection');
         $(window.document).off('click.closeHistoryWidget');
         this.highlightedRow = 0;
@@ -472,14 +476,14 @@ export class QueryHistory {
     /**
      * @return ??
      */
-    isActive(): boolean {
+    isActive():boolean {
         return this.boxElm !== null;
     }
 
     /**
      * @return
      */
-    inputHasFocus(): boolean {
+    inputHasFocus():boolean {
         return this.inputElm.is(':focus');
     }
 
@@ -487,7 +491,7 @@ export class QueryHistory {
      *
      * @returns {val|*|val}
      */
-    getCurrentSubcorpname(): string {
+    getCurrentSubcorpname():string {
         return $('#subcorp-selector').val();
     }
 
@@ -495,7 +499,7 @@ export class QueryHistory {
      *
      * @returns ??
      */
-    getWrappingElement(): JQuery {
+    getWrappingElement():JQuery {
         return this.parentElm;
     }
 
@@ -520,9 +524,11 @@ export class QueryStoragePlugin implements Plugins.IQueryStorage {
      */
     addTriggerButton(plugin:QueryHistory):void {
         if (plugin) {
-            let liElm = $('<li></li>');
-            let aElm = $('<a class="history"></a>');
-            aElm.css('text-transform', 'lowercase');
+            let liElm = $(window.document.createElement('li'));
+            let aElm = $(window.document.createElement('a'));
+            aElm
+                .addClass('history')
+                .css('text-transform', 'lowercase');
             plugin.getWrappingElement().find('.query-toolbox').append(liElm);
             plugin.triggerButton = aElm;
             liElm.append(aElm);
