@@ -1163,7 +1163,7 @@ class Actions(Kontext):
         """
         p_attrs = self.args.attrs.split(',')
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]  # prefer 'word' but allow other attr if word is off
-        data = self.call_function(conclib.get_detail_context, (self.corp, pos), attrs=attrs)
+        data = self.call_function(conclib.get_detail_context, (self._corp(), pos), attrs=attrs)
         data['allow_left_expand'] = int(getattr(self.args, 'detail_left_ctx', 0)) < \
                 int(data['maxdetail'])
         data['allow_right_expand'] = int(getattr(self.args, 'detail_right_ctx', 0)) < \
