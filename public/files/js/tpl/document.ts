@@ -340,13 +340,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     /**
      * JQuery-independent AJAX call.
      *
+     * Notes:
+     * - default contentType is 'application/x-www-form-urlencoded; charset=UTF-8'
+     * - default accept is 'application/json'
+     *
      * @param method A HTTP method (GET, POST, PUT,...)
      * @param url A URL of the resource
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
     ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
-        if (!options) {
+        if (options === undefined) {
             options = {};
         }
         if (!options.accept) {
@@ -357,13 +361,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
 
         function encodeArgs(obj) {
-            let ans = [];
-            let p;
+            const ans = [];
+            let p; // ES5 issue
             for (p in obj) {
                 if (obj.hasOwnProperty(p)) {
-                    let val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
+                    const val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
                     if (Object.prototype.toString.apply(val) === '[object Array]') {
-                        ans = ans.concat(val.map((item) => encodeURIComponent(p) + '=' + encodeURIComponent(item)));
+                        val.forEach(item => {
+                            ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(item));
+                        });
 
                     } else {
                         ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(val));
@@ -722,11 +728,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * note: must preserve 'this'
      */
     createSmallAjaxLoader:()=>JQuery = () => {
-        return $('<img src="' + this.createStaticUrl('img/ajax-loader.gif') + '" '
-            + 'alt="' + this.translate('global__loading') + '" '
-            + 'title="' + this.translate('global__loading') + '" '
-            + 'style="width: 24px; height: 24px" />');
-    };
+        const elm = window.document.createElement('img');
+        return $(elm)
+            .attr('src', this.createStaticUrl('img/ajax-loader-bar.gif'))
+            .attr('alt', this.translate('global__loading'))
+            .attr('title', this.translate('global__loading'))
+            .css({width: '16px', height: '11px'});
+    }
 
     /**
      *

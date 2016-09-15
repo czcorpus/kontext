@@ -18,15 +18,16 @@
 
 /// <reference path="../types/common.d.ts" />
 
-import document = require('tpl/document');
+import {PageModel} from './document';
 import $ = require('jquery');
+import {MultiDict} from '../util';
 
 /**
  *
  */
 export class CollPage {
 
-    private pageModel:document.PageModel;
+    private pageModel:PageModel;
 
     private checkIntervalId:number;
 
@@ -36,7 +37,7 @@ export class CollPage {
 
     static MAX_NUM_NO_CHANGE = 20;
 
-    constructor(pageModel:document.PageModel) {
+    constructor(pageModel:PageModel) {
         this.pageModel = pageModel;
     }
 
@@ -49,41 +50,42 @@ export class CollPage {
     }
 
     private checkStatus():void {
-        let self = this;
-        let args = {
-            'corpname': this.pageModel.getConf('corpname'),
-            'usesubcorp': this.pageModel.getConf('subcorpname'),
-            'attrname': this.pageModel.getConf('attrname'),
-            'worker_tasks': this.pageModel.getConf('workerTasks')
-        };
-        let prom:JQueryXHR = $.ajax(this.pageModel.createActionUrl('wordlist_process'), {
-            data: args,
-            dataType: 'json',
-            traditional: true
+        const args = new MultiDict([
+            ['corpname', this.pageModel.getConf<string>('corpname')],
+            ['usesubcorp', this.pageModel.getConf<string>('subcorpname')],
+            ['attrname', this.pageModel.getConf<string>('attrname')]
+        ]);
+        this.pageModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
+            args.add('worker_tasks', taskId);
         });
+        this.pageModel.ajax(
+            'GET',
+            this.pageModel.createActionUrl('wordlist_process'),
+            args,
+            {contentType : 'application/x-www-form-urlencoded'}
 
-        prom.then(
-            function (data) {
+        ).then(
+            (data:Kontext.AjaxResponse) => {
                 if (data.contains_errors) {
-                    self.stopWithError();
+                    this.stopWithError();
 
                 } else {
-                    $('#processbar').css('width', data.status + '%');
-                    if (data.status === 100) {
-                        self.stopWatching(); // just for sure
-                        self.pageModel.reload();
+                    $('#processbar').css('width', data['status'] + '%');
+                    if (data['status'] === 100) {
+                        this.stopWatching(); // just for sure
+                        this.pageModel.reload();
 
-                    } else if (self.numNoChange >= CollPage.MAX_NUM_NO_CHANGE) {
-                        self.stopWithError();
+                    } else if (this.numNoChange >= CollPage.MAX_NUM_NO_CHANGE) {
+                        this.stopWithError();
 
-                    } else if (data.status === self.lastStatus) {
-                        self.numNoChange += 1;
+                    } else if (data['status'] === this.lastStatus) {
+                        this.numNoChange += 1;
                     }
-                    self.lastStatus = data.status;
+                    this.lastStatus = data['status'];
                 }
             },
-            function (err) {
-                self.stopWithError();
+            (err) => {
+                this.stopWithError();
             }
         );
     }
@@ -100,7 +102,7 @@ export class CollPage {
 
 
 export function init(conf:Kontext.Conf) {
-    let layoutModel = new document.PageModel(conf);
+    let layoutModel = new PageModel(conf);
     layoutModel.init();
     return new CollPage(layoutModel);
 }

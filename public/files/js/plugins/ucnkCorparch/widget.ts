@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins/corparch.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
@@ -298,7 +302,7 @@ class WidgetMenu {
             self.blockingTimeout = null;
         });
         $(window).on('focus', () => {
-            self.blockingTimeout = setTimeout(function () {
+            self.blockingTimeout = setTimeout(() => {
                 clearTimeout(self.blockingTimeout);
                 self.blockingTimeout = null;
             }, 300);
@@ -761,9 +765,9 @@ class FavoritesTab implements WidgetTab {
             params.push('usesubcorp=' + itemData.subcorpus_id);
         }
         if (itemData.type === commonDefault.CorplistItemType.ALIGNED_CORPORA) {
-            for (var i = 0; i < itemData.corpora.length; i++) {
-                params.push('sel_aligned=' + itemData.corpora[i].corpus_id);
-            }
+            itemData.corpora.forEach(item => {
+                params.push(`sel_aligned=${item.corpus_id}`);
+            });
         }
         return rootPath + '?' + params.join('&');
     }
@@ -773,40 +777,47 @@ class FavoritesTab implements WidgetTab {
      * @param itemId
      */
     private removeFromList(itemId:string) {
-        const self = this;
-        const prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
-            {method: 'POST', data: {id: itemId}, dataType: 'json'});
+        this.pageModel.ajax<Kontext.AjaxResponse>(
+            'POST',
+            this.pageModel.createActionUrl('user/unset_favorite_item'),
+            {id: itemId},
+            {contentType : 'application/x-www-form-urlencoded'}
 
-        prom.then(
-            function (data) {
-                if (!data.error) {
-                    self.pageModel.showMessage('info', self.pageModel.translate('defaultCorparch__item_removed_from_fav'));
-                    return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
+        ).then(
+            (data) => {
+                if (!data.contains_errors) {
+                    this.pageModel.showMessage('info', this.pageModel.translate('defaultCorparch__item_removed_from_fav'));
+                    return this.pageModel.ajax(
+                        'GET',
+                        this.pageModel.createActionUrl('user/get_favorite_corpora'),
+                        {},
+                        {contentType : 'application/x-www-form-urlencoded'}
+                    );
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_remove_fav'));
-                    throw new Error(data.error);
+                    this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_remove_fav'));
+                    throw new Error(data.messages[0]);
                 }
 
             },
-            function (err) {
-                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_remove_fav'));
+            (err) => {
+                this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_remove_fav'));
             }
         ).then(
-            function (favItems) {
+            (favItems:any) => { // TODO !!!
                 if (favItems && !favItems.error) {
-                    self.reinit(favItems);
-                    $.each(self.onListChange, function (i, fn:(trigger:FavoritesTab)=>void) {
-                        fn.call(self, self);
+                    this.reinit(favItems);
+                    this.onListChange.forEach((fn:(trigger:FavoritesTab)=>void) => {
+                        fn.call(this, this);
                     });
 
                 } else {
-                    self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+                    this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
                     throw new Error(favItems.error);
                 }
             },
             function (err) {
-                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+                this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
             }
         );
     }
@@ -1062,8 +1073,7 @@ class StarComponent {
      * @param flag
      */
     setFavorite(flag:commonDefault.Favorite) {
-        const self = this;
-        let prom:JQueryXHR;
+        let prom:RSVP.Promise<any>; // TODO type
         let newItem:common.CorplistItemUcnk;
         let message:string;
         let postDispatch:(data:any)=>void;
@@ -1071,58 +1081,67 @@ class StarComponent {
 
         if (flag === commonDefault.Favorite.FAVORITE) {
             newItem = this.extractItemFromPage(flag);
-            prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/set_favorite_item',
-                {method: 'POST', data: newItem, dataType: 'json'});
-            message = self.pageModel.translate('defaultCorparch__item_added_to_fav');
-            postDispatch = function (data) {
-                self.starSwitch.setItemId(data.id);
-            };
-            updateStar = () => self.starSwitch.setStarState(true);
+            prom = this.pageModel.ajax(
+                'POST',
+                this.pageModel.createActionUrl('user/set_favorite_item'),
+                newItem,
+                {contentType : 'application/x-www-form-urlencoded'}
+            );
+            message = this.pageModel.translate('defaultCorparch__item_added_to_fav');
+            postDispatch = (data) => this.starSwitch.setItemId(data.id);
+            updateStar = () => this.starSwitch.setStarState(true);
 
         } else {
-            prom = $.ajax(this.pageModel.getConf('rootPath') + 'user/unset_favorite_item',
-                {method: 'POST', data: {id: self.starSwitch.getItemId()}, dataType: 'json'});
-            message = self.pageModel.translate('defaultCorparch__item_removed_from_fav');
-            postDispatch = function (data) {
-                self.starSwitch.setItemId(null);
-            };
-            updateStar = () => self.starSwitch.setStarState(false);
+            prom = this.pageModel.ajax(
+                'POST',
+                this.pageModel.createActionUrl('user/unset_favorite_item'),
+                {id: this.starSwitch.getItemId()},
+                {contentType : 'application/x-www-form-urlencoded'}
+            );
+            message = this.pageModel.translate('defaultCorparch__item_removed_from_fav');
+            postDispatch = (data) => this.starSwitch.setItemId(null);
+            updateStar = () => this.starSwitch.setStarState(false);
         }
 
-        prom.then(
-            function (data) {
-                if (!data.error) {
-                    self.pageModel.showMessage('info', message);
+        prom.then<Array<common.CorplistItemUcnk>>(
+            (data:Kontext.AjaxResponse) => {
+                if (!data.contains_errors) {
+                    this.pageModel.showMessage('info', message);
                     postDispatch(data);
                     updateStar();
 
                 } else {
-                    if (data.error_code) {
-                        self.pageModel.showMessage('error', self.pageModel.translate(data.error_code, data.error_args || {}));
+                    if (data['error_code']) {
+                        this.pageModel.showMessage('error', this.pageModel.translate(data['error_code'], data['error_args'] || {}));
 
                     } else {
-                        self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                        this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_update_item'));
                     }
                 }
-                return $.ajax(self.pageModel.getConf('rootPath') + 'user/get_favorite_corpora');
+                return this.pageModel.ajax<Array<common.CorplistItemUcnk>>(
+                    'GET',
+                    this.pageModel.createActionUrl('user/get_favorite_corpora'),
+                    {},
+                    {contentType : 'application/x-www-form-urlencoded'}
+                );
             },
-            function (err, textStatus) {
-                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_update_item'));
-                throw new Error(textStatus);
+            (err) => {
+                this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_update_item'));
+                throw new Error(err);
             }
         ).then(
-            function (favItems) {
+            (favItems:Array<common.CorplistItemUcnk>) => {
                 if (favItems) {
-                    if (!favItems.error) {
-                        self.favoriteItemsTab.reinit(favItems);
+                    if (!favItems['error']) { // currently, this cannot happen - an array is returned (i.e. custom attributes at all)
+                        this.favoriteItemsTab.reinit(favItems);
 
                     } else {
-                        self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+                        this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
                     }
                 }
             },
-            function (err) {
-                self.pageModel.showMessage('error', self.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
+            (err) => {
+                this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
             }
         );
     }

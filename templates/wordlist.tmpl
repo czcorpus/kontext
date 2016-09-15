@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #import urllib
 
 #from translation import ugettext as _
+#from templating.filters import *
 #from cmpltmpl.document import document
 
 #extends document
@@ -47,10 +48,9 @@ $_("Word list")#slurp
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.attrname = "$wlattr";
     conf.reloadUrl = "$reload_url";
+    conf.IsUnfinished = #if $processing is not None#true#else#false#end if#;
+    conf.WorkerTasks = #filter $Jsonize#$tasks#end filter#;
     var page = pageSelf.init(conf);
-    #if $processing is not None
-    page.startWatching();
-    #end if
 });
 #end def
 

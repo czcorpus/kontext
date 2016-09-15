@@ -349,9 +349,7 @@ class Actions(Kontext):
             'finished': cs["finished"],
             'concsize': cs["concsize"],
             'relconcsize': cs["relconcsize"],
-            'fullsize': cs["fullsize"],
-            'thousandsSeparator': u'%s' % l10n.number_formatting('thousandSeparator'),
-            'decimalSeparator': u'%s' % l10n.number_formatting('decimalSeparator')
+            'fullsize': cs["fullsize"]
         }
 
     def get_conc_sizes(self, conc):
@@ -1342,6 +1340,7 @@ class Actions(Kontext):
             self._add_save_menu_item('XML', 'savewl', params, save_format='xml')
             self._add_save_menu_item('TXT', 'savewl', params, save_format='text')
             # custom save is solved in templates because of compatibility issues
+            result['tasks'] = []
             return result
 
         except corplib.MissingSubCorpFreqFile as e:
