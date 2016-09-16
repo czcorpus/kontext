@@ -20,8 +20,8 @@
 
 /// <reference path="../common.d.ts" />
 /// <reference path="./liveAttributes.d.ts" />
+/// <reference path="./subcmixer.d.ts" />
 /// <reference path="./corparch.ts" />
-
 
 /*
 This module contains "fake" plugin modules representing
@@ -79,4 +79,18 @@ declare module "plugins/taghelper/init" {
 
 declare module "plugins/syntaxViewer/init" {
     export function create(pluginApi:Kontext.PluginApi):void;
+}
+
+
+declare module "plugins/subcmixer/init" {
+
+    export function getViews(
+        dispatcher:Dispatcher.Dispatcher<any>,
+        mixins:any,
+        layoutViews:any,
+        subcmixerStore:Subcmixer.ISubcMixerStore
+    ):Subcmixer.SubcMixerViews
+
+    export function create(pluginApi:Kontext.PluginApi,
+            textTypesStore:TextTypes.ITextTypesStore):Subcmixer.ISubcMixerStore;
 }

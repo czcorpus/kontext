@@ -17,7 +17,7 @@
 import json
 import sqlite3
 
-from plugins.abstract.subcmixer import AbstractSubMixer
+from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
 import plugins
 from plugins import PluginException
@@ -96,7 +96,7 @@ class SubcMixerException(PluginException):
     pass
 
 
-class SubcMixer(AbstractSubMixer):
+class SubcMixer(AbstractSubcMixer):
 
     CORPUS_MAX_SIZE = 500000000  # TODO
 

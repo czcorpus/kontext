@@ -37,6 +37,7 @@ import layoutModule = require('./document');
 import queryInput = require('../queryInput');
 import queryStorage = require('plugins/queryStorage/init');
 import liveAttributes = require('plugins/liveAttributes/init');
+import subcMixer = require('plugins/subcmixer/init');
 import conclines = require('../conclines');
 import Immutable = require('vendor/immutable');
 import userSettings = require('../userSettings');
@@ -395,8 +396,29 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
                 }
-                let liveAttrsViews = liveAttributes.getViews(this.layoutModel.dispatcher,
-                        this.layoutModel.exportMixins(), this.textTypesStore, liveAttrsStore);
+                let subcmixerViews;
+                if (this.layoutModel.getConf<boolean>('HasSubcmixer')) {
+                    const subcmixerStore = subcMixer.create(this.layoutModel.pluginApi(), this.textTypesStore);
+                    subcmixerViews = subcMixer.getViews(
+                        this.layoutModel.dispatcher,
+                        this.layoutModel.exportMixins(),
+                        this.layoutModel.layoutViews,
+                        subcmixerStore
+                    );
+
+                } else {
+                    subcmixerViews = {
+                        SubcMixer: null,
+                        TriggerBtn: null
+                    };
+                }
+                let liveAttrsViews = liveAttributes.getViews(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.exportMixins(),
+                    subcmixerViews,
+                    this.textTypesStore,
+                    liveAttrsStore
+                );
                 this.layoutModel.renderReactComponent(
                     ttViewComponents.TextTypesPanel,
                     $('#specify-query-metainformation div.contents').get(0),

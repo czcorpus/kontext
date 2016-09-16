@@ -21,6 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../types/plugins/liveAttributes.d.ts" />
+/// <reference path="../../types/plugins/subcmixer.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 
@@ -29,12 +30,17 @@ import liveAttrsStore = require('./store');
 import RSVP = require('vendor/rsvp');
 import common = require('./common');
 import {init as viewInit} from './view';
+import {create as createSubcMixer} from 'plugins/subcmixer/init';
 
 
+export function getViews(
+        dispatcher:Dispatcher.Dispatcher<any>,
+        mixins:any,
+        subcMixerViews:Subcmixer.SubcMixerViews,
+        textTypesStore:TextTypes.ITextTypesStore,
+        liveAttrsStore:any):LiveAttributesInit.LiveAttrsViews {
 
-export function getViews(dispatcher:Dispatcher.Dispatcher<any>,
-        mixins:Kontext.ComponentCoreMixins, ...stores:any[]):{[name:string]:any} {
-    return viewInit(dispatcher, mixins, stores[0], stores[1]);
+    return viewInit(dispatcher, mixins, subcMixerViews, textTypesStore, liveAttrsStore);
 }
 
 

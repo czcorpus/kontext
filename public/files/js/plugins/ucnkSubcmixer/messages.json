@@ -1,0 +1,16 @@
+{
+  "en-US": {
+    "ucnk_subcm__widget_header": "Shares of selected text types in the resulting subcorpus",
+    "ucnk_subcm__any_share": "any share",
+    "ucnk_subcm__set_shares": "Mix documents to match custom text type proportions",
+    "ucnk_subcm__calculate": "Calculate",
+    "ucnk_subcm__calc_warn": "The calculation is going to run in background because of its computational demands. In the meantime you can use KonText without any restrictions. Once the result is available, a message containing a link to this page will appear."
+  },
+  "cs-CZ": {
+	  "ucnk_subcm__widget_header": "Podíly vybraných typů textu na výsledném korpusu",
+    "ucnk_subcm__any_share": "libovolný podíl",
+    "ucnk_subcm__set_shares": "Namíchat dokumenty v určených poměrech typů textu",
+    "ucnk_subcm__calculate": "Vypočítat",
+    "ucnk_subcm__calc_warn": "Výpočet proběhne kvůli vyšší náročnosti na pozadí. Mezitím můžete používat KonText bez omezení a jakmile bude výsledek k dispozici, dostanete zprávu o ukončení výpočtu s odkazem na tuto stránku."
+  }
+}

@@ -18,11 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/plugins/subcmixer.d.ts" />
+
 export interface LiveAttributesViews {
     LiveAttrsView:any;
     LiveAttrsCustomTT:any;
 }
 
-export function init(dispatcher:any, mixins:any, textTypesStore:any,
-        liveAttrsStore:any):LiveAttributesViews;
+export function init(
+    dispatcher:any,
+    mixins:any,
+    subcMixerViews:Subcmixer.SubcMixerViews,
+    textTypesStore:any,
+    liveAttrsStore:any
+):LiveAttributesViews;
 

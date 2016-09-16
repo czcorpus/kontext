@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,17 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
-import widget = require('./widget');
-
-/**
- *
- */
-export function create(targetElm:HTMLElement, pluginApi:Kontext.PluginApi):widget.SubcMixerWidget {
-    var subcMixer:widget.SubcMixerWidget = new widget.SubcMixerWidget(pluginApi);
-
-    subcMixer.create(targetElm, pluginApi.getConf('subcmixerFormData')['text_types']);
-    return subcMixer;
+export interface ISubcMixerViews {
+    SubcMixer: React.ReactClass;
+    TriggerBtn: React.ReactClass;
 }
+
+export function init(dispatcher:any, mixins:any, subcmixerStore:any, PopupBox:React.ReactClass):ISubcMixerViews;
