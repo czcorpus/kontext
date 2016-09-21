@@ -10,7 +10,7 @@
         grunt.loadNpmTasks('grunt-contrib-copy');
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-ts');
-        grunt.loadNpmTasks('grunt-requirejs');
+        grunt.loadNpmTasks('grunt-contrib-requirejs');
         grunt.loadNpmTasks('grunt-babel');
 
         grunt.initConfig({
@@ -59,10 +59,8 @@
                         '!public/files/js/min/vendor',
                         'public/files/js/min/vendor/bloodhound.js',
                         'public/files/js/min/vendor/immutable.min.js',
-                        'public/files/js/min/vendor/jquery.periodic.js',
                         'public/files/js/min/vendor/qunit.js',
                         'public/files/js/min/vendor/virtual-keyboard.js',
-                        'public/files/js/min/vendor/jscrollpane.min.js',
                         'public/files/js/min/vendor/react.dev.js',
                         'public/files/js/min/vendor/rsvp-ajax.js',
                         'public/files/js/min/vendor/cookies.js',
@@ -75,7 +73,6 @@
                         'public/files/js/min/vendor/soundmanager2.min.js',
                         'public/files/js/min/vendor/Dispatcher.js',
                         'public/files/js/min/vendor/jquery.min.js',
-                        'public/files/js/min/vendor/multi-slider',
                         'public/files/js/min/vendor/react.min.js',
                         'public/files/js/min/vendor/typeahead.js',
                         '!public/files/js/min/tpl',
@@ -95,8 +92,7 @@
                                 "public/files/css/kontext.less",
                                 "public/files/css/view.less",
                                 "public/files/css/widgets.less",
-                                "public/files/css/keyboard.css",
-                                "public/files/css/jscrollpane.css"
+                                "public/files/css/keyboard.css"
                             ];
                             return ans.concat(kontext.getCustomStyles('./conf/config.xml', './public/files/js/plugins'));
                         }())
@@ -231,9 +227,6 @@
                         baseUrl: ".",
                         dir: "public/files/js/min",
                         shim: {
-                            'vendor/jscrollpane': {
-                                deps: ['jquery']
-                            },
                             'typeahead': {
                                 deps: ['jquery']
                             }
@@ -250,11 +243,6 @@
                         appDir: "public/files/js/optimized",
                         baseUrl: ".",
                         dir: "public/files/js/min",
-                        shim: {
-                            'vendor/jscrollpane': {
-                                deps: ['jquery']
-                            }
-                        },
                         wrapShim: true,
                         optimize: 'none',
                         paths: kontext.loadModulePathMap('./conf/config.xml', './public/files/js/plugins', false),

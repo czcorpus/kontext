@@ -25,8 +25,9 @@
  */
 
 /// <reference path="../ts/declarations/jquery.d.ts" />
+/// <reference path="./types/common.d.ts" />
 
-import $ = require('jquery');
+import * as $ from 'jquery';
 
 
 export interface PopupBoxMixins {
@@ -408,7 +409,7 @@ export class TooltipBox implements Legacy.IPopupBox {
             });
 
         } else {
-            $(this.contentElm).append(<JQuery>contents);
+            $(this.contentElm).append(contents);
             if (this.jqCloseIcon) {
                 $(this.headerElm).append(this.jqCloseIcon);
             }
