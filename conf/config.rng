@@ -266,6 +266,16 @@
                             <text />
                         </element>
                     </optional>
+                    <element name="use_conc_toolbar">
+                        <a:documentation>If true then a special toolbar allowing easier setting of
+                        common concordance view options is shown</a:documentation>
+                        <choice>
+                            <value>0</value>
+                            <value>1</value>
+                            <value>false</value>
+                            <value>true</value>
+                        </choice>
+                    </element>
                 </interleave>
             </element>
             <optional>
@@ -394,6 +404,18 @@
                     <element name="multilevel_freq_dist_max_levels">
                         <a:documentation>Multilevel frequency distribution - max. number of levels</a:documentation>
                         <data type="integer" />
+                    </element>
+                    <element name="right_interval_char">
+                        <a:documentation>A character used to denote a left interval (e.g. -10)</a:documentation>
+                        <text />
+                    </element>
+                    <element name="left_interval_char">
+                        <a:documentation>A character used to denote a left interval (e.g. +10)</a:documentation>
+                        <text />
+                    </element>
+                    <element name="interval_char">
+                        <a:documentation>A character used to denote a left interval (e.g. +/-10)</a:documentation>
+                        <text />
                     </element>
                 </interleave>
             </element>

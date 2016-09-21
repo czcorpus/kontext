@@ -127,6 +127,12 @@ export interface ViewConfiguration {
      */
     ContainsWithin:boolean;
 
+    /**
+     * If true then a concordance toolbar providing
+     * some useful options is shown.
+     */
+    ShowConcToolbar:boolean;
+
     onReady?:()=>void;
 
     onPageUpdate?:()=>void;

@@ -978,8 +978,6 @@ class Kontext(Controller):
         result['files_path'] = self._files_path
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
-        # TODO testing app state by looking at the message type may not be the best way
-        result['display_closed_conc'] = len(self.args.q) > 0 and result.get('message', [None])[0] != 'error'
 
         global_var_val = self._get_attrs(ConcArgsMapping)
         result['globals'] = self.urlencode(global_var_val)

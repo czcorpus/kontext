@@ -394,7 +394,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
     // ------------------------- <ConcToolbar /> ---------------------------
 
 
-    const ConcToolbar = React.createClass({
+    const ConcToolbarWrapper = React.createClass({
 
         getInitialState : function () {
             return {
@@ -426,8 +426,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                             numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                             onChartFrameReady={this.props.onChartFrameReady}
                             canSendMail={this.props.canSendMail} />
-                    <ConcOptions usesMouseoverAttrs={this.props.usesMouseoverAttrs}
-                            onViewOptionsClick={this.props.onViewOptionsClick} />
+                    {this.props.showConcToolbar ?
+                        <ConcOptions usesMouseoverAttrs={this.props.usesMouseoverAttrs}
+                                onViewOptionsClick={this.props.onViewOptionsClick} />
+                        : null}
                 </div>
             );
         }
@@ -514,9 +516,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                                 isUnfinishedCalculation={this.state.isUnfinishedCalculation}
                                 />
                         </div>
-                        <ConcToolbar numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
+                        <ConcToolbarWrapper numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendMail={this.props.canSendMail}
+                                showConcToolbar={this.props.ShowConcToolbar}
                                 onViewOptionsClick={this._toggleViewOptions}
                                 usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
                     </div>
