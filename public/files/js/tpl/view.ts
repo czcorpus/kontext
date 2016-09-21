@@ -558,7 +558,8 @@ export function init(conf):ViewPage {
         concSummary: concSummaryProps,
         Unfinished: layoutModel.getConf<boolean>('Unfinished'),
         canSendEmail: layoutModel.getConf<boolean>('can_send_mail'),
-        ContainsWithin: layoutModel.getConf<boolean>('ContainsWithin')
+        ContainsWithin: layoutModel.getConf<boolean>('ContainsWithin'),
+        ShowConcToolbar: layoutModel.getConf<boolean>('ShowConcToolbar')
     };
     let lineViewStore = new ConcLineStore(
             layoutModel,

@@ -30,15 +30,15 @@ import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
 export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfoStore,
         viewOptionsStore, layoutViews) {
 
-    let lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
-    let paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
-    let linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
-    let viewOptionsViews = structsAttrsViewInit(dispatcher, mixins, viewOptionsStore);
+    const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
+    const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
+    const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
+    const viewOptionsViews = structsAttrsViewInit(dispatcher, mixins, viewOptionsStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
 
-    let LineSelectionMenu = React.createClass({
+    const LineSelectionMenu = React.createClass({
 
         _renderContents : function () {
             if (this.props.numItemsInLockedGroups > 0) {
@@ -77,7 +77,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
 
     // ------------------------- <LineSelectionOps /> ---------------------------
 
-    let LineSelectionOps = React.createClass({
+    const LineSelectionOps = React.createClass({
 
         mixins : mixins,
 
@@ -92,29 +92,25 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
 
         _selectMenuTriggerHandler : function () {
             this.setState({
-                menuVisible: true,
-                currViewAttrs: lineStore.getViewAttrs()
+                menuVisible: true
             });
         },
 
         _closeMenuHandler : function () {
             this.setState({
-                menuVisible: false,
-                currViewAttrs: lineStore.getViewAttrs()
+                menuVisible: false
             });
         },
 
         _storeChangeHandler : function () {
             this.setState({
-                menuVisible: false, // <- data of lines changed => no need for menu
-                currViewAttrs: lineStore.getViewAttrs()
+                menuVisible: false // <- data of lines changed => no need for menu
             });
         },
 
         getInitialState : function () {
             return {
-                menuVisible: false,
-                currViewAttrs: lineStore.getViewAttrs()
+                menuVisible: false
             };
         },
 
@@ -166,26 +162,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             }
         },
 
-        _renderMouseOverInfo : function () {
-            let mouseoverImg;
-            let mouseoverAlt;
-            if (this.props.usesMouseoverAttrs) {
-                mouseoverImg = 'img/mouseover-available.svg';
-                mouseoverAlt = this.translate('options__attribs_are_on_mouseover_{attrs}',
-                        {attrs: this.state.currViewAttrs.slice(1).join('/')});;
-
-            } else {
-                mouseoverImg = 'img/mouseover-not-available.svg';
-                mouseoverAlt = this.translate('options__attribs_are_not_mouseover');
-            }
-            return <img key="bubb" className="mouseover-available"
-                            src={this.createStaticUrl(mouseoverImg)} alt={mouseoverAlt} title={mouseoverAlt} />;
-        },
-
         render : function () {
             const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionStore.getMode();
             return (
-                <div className="conc-toolbar">
+                <div className="lines-selection-controls">
                     {this.translate('concview__line_sel')}:{'\u00A0'}
                     {/* TODO remove id */}
                     <select id="selection-mode-switch"
@@ -203,11 +183,6 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendMail={this.props.canSendMail} />
                         :  null}
-                    <span className="separ">|</span>
-                    {this._renderMouseOverInfo()}
-                    <a onClick={this.props.onViewOptionsClick}>
-                        {this.translate('concview__change_display_settings')}
-                    </a>
                 </div>
             );
         }
@@ -217,7 +192,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
 
     // ------------------------- <ConcSummary /> ---------------------------
 
-    let ConcSummary = React.createClass({
+    const ConcSummary = React.createClass({
 
         mixins : mixins,
 
@@ -361,11 +336,65 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         }
     });
 
+    // ------------------------- <ConcOptions /> ---------------------------
+
+    const ConcOptions = React.createClass({
+
+        mixins : mixins,
+
+        _storeChangeHandler : function () {
+            this.setState({currViewAttrs: lineStore.getViewAttrs()});
+        },
+
+        getInitialState : function () {
+            return {
+                currViewAttrs: lineStore.getViewAttrs()
+            };
+        },
+
+        componentDidMount : function () {
+            lineStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            lineStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        _renderMouseOverInfo : function () {
+            let mouseoverImg;
+            let mouseoverAlt;
+            if (this.props.usesMouseoverAttrs) {
+                mouseoverImg = 'img/mouseover-available.svg';
+                mouseoverAlt = this.translate('options__attribs_are_on_mouseover_{attrs}',
+                        {attrs: this.state.currViewAttrs.slice(1).join('/')});;
+
+            } else {
+                mouseoverImg = 'img/mouseover-not-available.svg';
+                mouseoverAlt = this.translate('options__attribs_are_not_mouseover');
+            }
+            return <img key="bubb" className="mouseover-available"
+                            src={this.createStaticUrl(mouseoverImg)} alt={mouseoverAlt} title={mouseoverAlt} />;
+        },
+
+        render : function () {
+            return (
+                <div className="conc-toolbar">
+                    <span className="separ">|</span>
+                    {this._renderMouseOverInfo()}
+                    <a onClick={this.props.onViewOptionsClick}>
+                        {this.translate('concview__change_display_settings')}
+                    </a>
+                </div>
+            );
+        }
+
+    });
+
 
     // ------------------------- <ConcToolbar /> ---------------------------
 
 
-    let ConcToolbar = React.createClass({
+    const ConcToolbarWrapper = React.createClass({
 
         getInitialState : function () {
             return {
@@ -390,20 +419,26 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         },
 
         render : function () {
-            return <LineSelectionOps
+            return (
+                <div className="toolbar-level">
+                    <LineSelectionOps
                             numSelected={this.state.numSelected}
                             numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                             onChartFrameReady={this.props.onChartFrameReady}
-                            onViewOptionsClick={this.props.onViewOptionsClick}
-                            canSendMail={this.props.canSendMail}
-                            usesMouseoverAttrs={this.props.usesMouseoverAttrs} />;
+                            canSendMail={this.props.canSendMail} />
+                    {this.props.showConcToolbar ?
+                        <ConcOptions usesMouseoverAttrs={this.props.usesMouseoverAttrs}
+                                onViewOptionsClick={this.props.onViewOptionsClick} />
+                        : null}
+                </div>
+            );
         }
     });
 
 
     // ------------------------- <ConcordanceView /> ---------------------------
 
-    let ConcordanceView = React.createClass({
+    const ConcordanceView = React.createClass({
 
         _toggleViewOptions : function () {
             this.setState(React.addons.update(this.state,
@@ -481,13 +516,12 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                                 isUnfinishedCalculation={this.state.isUnfinishedCalculation}
                                 />
                         </div>
-                        <div className="toolbar-level">
-                            <ConcToolbar numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
-                                    onChartFrameReady={this.props.onChartFrameReady}
-                                    canSendMail={this.props.canSendMail}
-                                    onViewOptionsClick={this._toggleViewOptions}
-                                    usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
-                        </div>
+                        <ConcToolbarWrapper numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
+                                onChartFrameReady={this.props.onChartFrameReady}
+                                canSendMail={this.props.canSendMail}
+                                showConcToolbar={this.props.ShowConcToolbar}
+                                onViewOptionsClick={this._toggleViewOptions}
+                                usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
                     </div>
                     <div id="conclines-wrapper">
                         <linesViews.ConcLines {...this.props} />

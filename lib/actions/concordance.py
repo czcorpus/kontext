@@ -310,6 +310,7 @@ class Actions(Kontext):
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         out['aligned_corpora'] = self.args.sel_aligned
         out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
+        out['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
 
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
         if not out['finished'] and self.args.async and self.args.save and not out['sampled_size']:
