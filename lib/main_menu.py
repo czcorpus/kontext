@@ -46,23 +46,20 @@ class MainMenuItemId(object):
         else:
             return self.name
 
-    def matches(self, s):
+    def matches(self, item_id):
         """
-        Tests whether a provided template menu identifier
-        (based on convention main_menu_item:submenu_item)
-        matches this one.
+        Tests whether self matches provided item_id.
 
-        arguments:
-        s -- (sub)menu item string identifier or another MainMenuItemId instance
+        By matching we mean:
+        1) both items are without sub-items and of a same name
+        2) both have sub-items and the called instance's items
+           are subset of item_id's ones
+
+        Args:
+        item_id (MainMenuItemId): (sub)menu item identifier
         """
-        if isinstance(s, MainMenuItemId):
-            return self.name == s.name and self.items == s.items
-        else:
-            s2 = s.split(':')
-            if len(s2) == 2:
-                return self.name == s2[0] and s2[1] in self.items
-            else:
-                return self.name == s2[0] and len(self.items) == 0
+        return self.name == item_id.name and (len(self.items) > 0 and set(self.items).issubset(item_id.items) or
+                                              len(self.items) == 0 and len(item_id.items) == 0)
 
 
 class MainMenu(object):
@@ -124,10 +121,17 @@ class AbstractMenuItem(object):
     A general menu item without specified
     action/URL
     """
-    def __init__(self, label):
+    def __init__(self, ident, label):
+        """
+        Args:
+            ident (MainMenuItemId): menu item identifier
+            label (str): menu label presented to a user
+        """
+        self._ident = ident
         self._label = label
         self._args = []
         self._indirect = False
+        self._corpus_dependent = False
 
     def add_args(self, *args):
         """
@@ -151,10 +155,41 @@ class AbstractMenuItem(object):
         self._indirect = True
         return self
 
+    def mark_corpus_dependent(self):
+        """
+        If set then the item will be disabled
+        as long as an action does not use a corpus
+        instance (e.g. corpora list).
+        """
+        self._corpus_dependent = True
+        return self
+
+    @property
+    def ident(self):
+        """
+        Returns (MainMenuItemId): this item identifier
+        """
+        return self._ident
+
+    @property
+    def corpus_dependent(self):
+        """
+        Returns (bool): True if the item makes sense only if there is a 'current corpus'
+        """
+        return self._corpus_dependent
+
     def create(self, out_data):
         """
+        Export menu item.
+
         Each menu item should implement its
         own way of exporting its data.
+
+        Args:
+             out_data(dict): a dictionary used to produce output template
+                             (and thus containing any data we can possibly need)
+
+        Returns (dict): a dict-encoded menu item (must be JSON-exportable)
         """
         raise NotImplementedError()
 
@@ -166,8 +201,8 @@ class MenuItemInternal(AbstractMenuItem):
     'corpora/corplist').
     """
 
-    def __init__(self, label, action):
-        super(MenuItemInternal, self).__init__(label)
+    def __init__(self, ident, label, action):
+        super(MenuItemInternal, self).__init__(ident, label)
         self._action = action
 
     def create(self, out_data):
@@ -186,8 +221,8 @@ class MenuItemExternal(AbstractMenuItem):
     leading out of the application.
     """
 
-    def __init__(self, label, url):
-        super(MenuItemExternal, self).__init__(label)
+    def __init__(self, ident, label, url):
+        super(MenuItemExternal, self).__init__(ident, label)
         self._url = url
 
     def create(self, out_data):
@@ -206,8 +241,8 @@ class HideOnCustomCondItem(MenuItemInternal):
     with custom function specifying its activation
     based on output data.
     """
-    def __init__(self, label, action):
-        super(HideOnCustomCondItem, self).__init__(label, action)
+    def __init__(self, ident, label, action):
+        super(HideOnCustomCondItem, self).__init__(ident, label, action)
         self._fn = lambda x: True
 
     def enable_if(self, fn):
@@ -227,8 +262,8 @@ class ConcMenuItem(HideOnCustomCondItem):
     concordance arguments.
     """
 
-    def __init__(self, label, action):
-        super(ConcMenuItem, self).__init__(label, action)
+    def __init__(self, ident, label, action):
+        super(ConcMenuItem, self).__init__(ident, label, action)
         self._q = []
 
     def create(self, out_data):
@@ -258,7 +293,7 @@ class KwicSenModeSwitchItem(ConcMenuItem):
     """
 
     def __init__(self):
-        super(KwicSenModeSwitchItem, self).__init__('Kwic/Sentence', 'view')
+        super(KwicSenModeSwitchItem, self).__init__(MainMenu.VIEW('kwic-sentence'), 'Kwic/Sentence', 'view')
 
     def create(self, out_data):
         if not out_data['align']:
@@ -287,8 +322,8 @@ class EventTriggeringItem(HideOnCustomCondItem):
     Please note that 'args' are converted into a dict which means
     that keys with multiple values are not supported.
     """
-    def __init__(self, label, message):
-        super(EventTriggeringItem, self).__init__(label, None)
+    def __init__(self, ident, label, message):
+        super(EventTriggeringItem, self).__init__(ident, label, None)
         self._message = message
 
     def create(self, out_data):
@@ -307,7 +342,7 @@ class MenuGenerator(object):
         # -------------------------- menu-new-query -------------------------------------
 
         self.new_query = (
-            MenuItemInternal(_('Enter new query'), 'first_form')
+            MenuItemInternal(MainMenu.NEW_QUERY('new-query'), _('Enter new query'), 'first_form')
             .add_args(
                 ('corpname', self._args['corpname']),
                 ('usecubcorp', self._args['usesubcorp']),
@@ -316,13 +351,13 @@ class MenuGenerator(object):
         )
 
         self.recent_queries = (
-            MenuItemInternal(_('Recent queries'), 'user/query_history')
+            MenuItemInternal(MainMenu.NEW_QUERY('recent-queries'), _('Recent queries'), 'user/query_history')
             .add_args(
                 ('corpname', self._args['corpname']))
             .mark_indirect()
         )
 
-        self.word_list = MenuItemInternal(_('Word List'), 'wordlist_form').add_args(
+        self.word_list = MenuItemInternal(MainMenu.NEW_QUERY('word-list'), _('Word List'), 'wordlist_form').add_args(
             ('corpname', self._args['corpname']),
             ('include_nonwords', 1)
         ).mark_indirect()
@@ -330,17 +365,17 @@ class MenuGenerator(object):
         # ---------------------------- menu-corpora -------------------------------------
 
         self.avail_corpora = (
-            MenuItemInternal(_('Available corpora'), 'corpora/corplist')
+            MenuItemInternal(MainMenu.CORPORA('avail-corpora'), _('Available corpora'), 'corpora/corplist')
             .mark_indirect()
         )
 
         self.my_subcorpora = (
-            MenuItemInternal(_('My subcorpora'), 'subcorpus/subcorp_list')
+            MenuItemInternal(MainMenu.CORPORA('my-subcorpora'), _('My subcorpora'), 'subcorpus/subcorp_list')
             .mark_indirect()
         )
 
         self.create_subcorpus = (
-            MenuItemInternal(_('Create new subcorpus'), 'subcorpus/subcorp_form')
+            MenuItemInternal(MainMenu.CORPORA('create-subcorpus'), _('Create new subcorpus'), 'subcorpus/subcorp_form')
             .add_args(
                 ('corpname', self._args['corpname']))
             .mark_indirect()
@@ -353,21 +388,28 @@ class MenuGenerator(object):
 
         # ----------------------------- menu-concordance --------------------------------
 
-        self.curr_conc = ConcMenuItem(_('Current concordance'), 'view')
+        self.curr_conc = (
+            ConcMenuItem(MainMenu.CONCORDANCE('current-concordance'), _('Current concordance'), 'view')
+        )
 
-        self.sorting = ConcMenuItem(_('Sorting'), 'sort').mark_indirect()
+        self.sorting = (
+            ConcMenuItem(MainMenu.CONCORDANCE('sorting'), _('Sorting'), 'sort').mark_indirect()
+        )
 
         self.shuffle = (
-            ConcMenuItem(_('Shuffle'), 'view')
+            ConcMenuItem(MainMenu.CONCORDANCE('shuffle'), _('Shuffle'), 'view')
             .add_query_modifiers('f')
         )
 
-        self.sample = ConcMenuItem(_('Sample'), 'reduce_form').mark_indirect()
+        self.sample = ConcMenuItem(MainMenu.CONCORDANCE('sample'), _('Sample'), 'reduce_form').mark_indirect()
 
-        self.query_overview = EventTriggeringItem(_('Query overview'), 'OVERVIEW_SHOW_QUERY_INFO')
+        self.query_overview = (
+            EventTriggeringItem(MainMenu.CONCORDANCE('query-overview'), _
+                                ('Query overview'), 'OVERVIEW_SHOW_QUERY_INFO')
+        )
 
         self.query_undo = (
-            HideOnCustomCondItem(_('Undo'), 'view')
+            HideOnCustomCondItem(MainMenu.CONCORDANCE('undo'), _('Undo'), 'view')
             .add_args(
                 ('q', self._args['undo_q']))
             .enable_if(lambda d: len(d.get('undo_q', [])) > 0)
@@ -376,13 +418,13 @@ class MenuGenerator(object):
         # ------------------------------------ menu-filter ------------------------------
 
         self.filter_pos = (
-            ConcMenuItem(_('Positive'), 'filter_form')
+            ConcMenuItem(MainMenu.FILTER('positive'), _('Positive'), 'filter_form')
             .add_args(('pnfilter', 'p'))
             .mark_indirect()
         )
 
         self.filter_neg = (
-            ConcMenuItem(_('Negative'), 'filter_form')
+            ConcMenuItem(MainMenu.FILTER('negative'), _('Negative'), 'filter_form')
             .add_args(('pnfilter', 'n'))
             .mark_indirect()
         )
@@ -390,7 +432,7 @@ class MenuGenerator(object):
         # ----------------------------------- menu-frequency ----------------------------
 
         self.freq_lemmas = (
-            ConcMenuItem(_('Lemmas'), 'freqs')
+            ConcMenuItem(MainMenu.FREQUENCY('lemmas'), _('Lemmas'), 'freqs')
             .add_args(
                 ('fcrit', 'lemma/e 0~0>0'),
                 ('ml', 0))
@@ -398,14 +440,14 @@ class MenuGenerator(object):
         )
 
         self.freq_node_forms = (
-            ConcMenuItem(_('Node forms'), 'freqs')
+            ConcMenuItem(MainMenu.FREQUENCY('node-forms'), _('Node forms'), 'freqs')
             .add_args(
                 ('fcrit', 'word/e 0~0>0'),
                 ('ml', 0))
         )
 
         self.freq_doc_ids = (
-            ConcMenuItem(_('Doc IDs'), 'freqs')
+            ConcMenuItem(MainMenu.FREQUENCY('doc-ids'), _('Doc IDs'), 'freqs')
             .add_args(
                 ('fcrit', self._args['fcrit_shortref']),
                 ('ml', 0))
@@ -414,50 +456,53 @@ class MenuGenerator(object):
         )
 
         self.freq_text_types = (
-            ConcMenuItem(_('Text Types'), 'freqs')
+            ConcMenuItem(MainMenu.FREQUENCY('text-types'), _('Text Types'), 'freqs')
             .add_args(*self._args.get('ttcrit', []))
             .add_args(('ml', 0))
             .enable_if(lambda d: bool(d['ttcrit']))
         )
 
-        self.freq_custom = ConcMenuItem(_('Custom'), 'freq').mark_indirect()
+        self.freq_custom = ConcMenuItem(MainMenu.FREQUENCY('custom'), _('Custom'), 'freq').mark_indirect()
 
         # -------------------------------- menu-collocations ----------------------------
 
-        self.colloc_custom = ConcMenuItem(_('Custom'), 'coll').mark_indirect()
+        self.colloc_custom = ConcMenuItem(MainMenu.COLLOCATIONS('custom'), _('Custom'), 'coll').mark_indirect()
 
         # -------------------------------- menu-view ------------------------------------
 
         self.view_mode_switch = KwicSenModeSwitchItem()
 
         self.view_structs_attrs = (
-            ConcMenuItem(_('Attributes, structures and references'), 'options/viewattrs')
+            ConcMenuItem(MainMenu.VIEW('structs-attrs'), _('Attributes, structures and references'), 'options/viewattrs')
+            .mark_corpus_dependent()
             .mark_indirect()
         )
 
         self.view_global = (
-            ConcMenuItem(_('General view options'), 'options/viewopts')
+            ConcMenuItem(MainMenu.VIEW('global-options'), _('General view options'), 'options/viewopts')
             .mark_indirect()
         )
 
         # -------------------------------- menu-help ------------------------------------
 
         self.how_to_cite_corpus = (
-            EventTriggeringItem('global__how_to_cite_corpus', 'OVERVIEW_SHOW_CITATION_INFO')
+            EventTriggeringItem(MainMenu.HELP('how-to-cite'), 'global__how_to_cite_corpus', 'OVERVIEW_SHOW_CITATION_INFO')
             .add_args(('corpusId', self._args['corpname']))
             .enable_if(lambda d: d['uses_corp_instance'])
+            .mark_corpus_dependent()
         )
 
         # -------------------------------------------------------------------------------
 
-    def generate(self, disabled_items, save_items, ui_lang):
+    def generate(self, disabled_items, save_items, corpus_dependent, ui_lang):
         """
         Generate menu items based on current
         action and user state.
 
-        arguments:
+        Args:
 
-        disabled_items -- a list of
+        disabled_items (list of MainMenuItemId): a list of items
+        save
         """
 
         def custom_menu_items(section):
@@ -466,14 +511,24 @@ class MenuGenerator(object):
                 plugins.get('menu_items').get_items(section.name, lang=ui_lang)
             )
 
-        def is_disabled(ident):
+        def is_disabled(menu_item):
+            if isinstance(menu_item, MainMenuItemId):
+                item_id = menu_item
+                item = None
+            elif isinstance(menu_item, AbstractMenuItem):
+                item_id = menu_item.ident
+                item = menu_item
+            else:
+                raise ValueError()
+            if corpus_dependent is False and item is not None and item.corpus_dependent is True:
+                return True
             for item in disabled_items:
-                if item.matches(ident):
+                if item_id.matches(item):
                     return True
             return False
 
         def exp(*args):
-            return [item.filter_empty_args().create(self._args) for item in args]
+            return [item.filter_empty_args().create(self._args) for item in args if not is_disabled(item)]
 
         items = [
             (MainMenu.NEW_QUERY.name, dict(

@@ -667,7 +667,8 @@ class Kontext(Controller):
                 params.append(('saveformat', save_format))
             else:
                 raise ValueError('Unsupported argument type: %s' % type(params))
-        self.save_menu.append(ConcMenuItem(label, action).add_args(*params))
+        item_id = '%s-%s' % (action.replace('/', '_'), save_format)
+        self.save_menu.append(ConcMenuItem(MainMenu.SAVE(item_id), label, action).add_args(*params))
 
     def _save_query(self, query, query_type):
         if plugins.has_plugin('query_storage'):
@@ -1094,6 +1095,7 @@ class Kontext(Controller):
         # main menu
         menu_items = MenuGenerator(result, self.args).generate(disabled_items=self.disabled_menu_items,
                                                                save_items=self.save_menu,
+                                                               corpus_dependent=result['uses_corp_instance'],
                                                                ui_lang=self.ui_lang)
         result['menu_data'] = menu_items
         # We will also generate a simplified static menu which is rewritten

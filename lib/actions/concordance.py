@@ -322,7 +322,8 @@ class Actions(Kontext):
     @exposed()
     def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
-                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.VIEW('kwic-sentence'))
         out = {}
         if self.get_http_method() == 'GET':
             self._store_checked_text_types(request.args, out)
@@ -1240,7 +1241,7 @@ class Actions(Kontext):
                  ref_usesubcorp='', paginate=True):
         """
         """
-        self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'viewattrs'),
+        self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
                                     MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
 
