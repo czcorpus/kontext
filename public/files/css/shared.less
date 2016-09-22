@@ -32,6 +32,8 @@
 
 @color-light-grey: #dadada;
 
+@color-link-dark: #02a;
+
 // misc.
 
 @border-radius-default: 5px;
@@ -78,4 +80,40 @@
   margin-right: 0.2em;
   margin-bottom: 0.5em;
   white-space: nowrap;
+}
+
+.plus-button() {
+    background-color: @color-logo-blue;
+    border-color: @color-logo-blue;
+    color: #eeeeee;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15pt;
+    text-decoration: none;
+    padding: 0 0.8em;
+    -moz-box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
+    -webkit-box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
+    box-shadow: 0px 1px 2px rgba(000, 000, 000, 0.5), inset 0px 0px 2px rgba(255, 255, 255, 0.2);
+}
+
+@keyframes blink {
+    0% {
+        color: @color-logo-pink;
+    }
+    50% {
+        color: @color-bg-light-blue;
+    }
+    100% {
+        color: @color-logo-pink;
+    }
+}
+
+@keyframes bg-blink {
+    0% {
+        background-position: left bottom;
+    }
+    100% {
+        background-position: right bottom;
+    }
 }
