@@ -122,9 +122,6 @@ class RequestArgsProxy(object):
         return tmp if len(tmp) > 1 else tmp[0]
 
 
-TextTypeCollector.EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder')
-
-
 class AsyncTaskStatus(object):
     """
     Keeps information about background tasks which are visible to a user
@@ -985,8 +982,6 @@ class Kontext(Controller):
         result['Globals'] = templating.StateGlobals(global_var_val)
         result['Globals'].set('q', [q for q in result.get('Q')])
         result['human_corpname'] = None
-
-        result['empty_attr_value_placeholder'] = TextTypeCollector.EMPTY_VAL_PLACEHOLDER
 
         if self.args.maincorp:
             thecorp = corplib.open_corpus(self.args.maincorp)

@@ -17,6 +17,7 @@
         box-shadow: 3px 3px 4px #444;
     }
 }
+
 .tooltip-box {
     z-index: 1000;
     position: absolute;
@@ -28,21 +29,26 @@
     color: #444444;
     text-align: left;
     white-space: normal;
+
     .header {
         padding-bottom: 0.4em;
     }
+
     h3 {
         margin-top: 0;
     }
+
     img.info-icon {
         margin-right: 1em;
         padding-bottom: 0.2em;
         display: inline-block;
         width: 1.4em;
     }
+
     > div > p {
         margin: 0.4em 0;
     }
+
     a.close-link {
         display: block;
         position: absolute;
@@ -57,9 +63,11 @@
         background-repeat: no-repeat;
         background-position: 0.1em 0.1em;
     }
+
     a.close-link:hover {
         background-image: url(../img/close-icon_s.svg);
     }
+
     div.movable {
         position: absolute;
         left: 0.4em;
@@ -72,11 +80,13 @@
         background-repeat: no-repeat;
         cursor: move;
     }
+
     .ajax-loader {
         display: block;
         margin: 1em auto;
     }
 }
+
 .tooltip-box.metadata-detail {
     ul {
         margin: 0;
@@ -99,63 +109,74 @@
             padding-left: 1.6em;
         }
     }
-
 }
+
 .tooltip-box.hidden {
     display: none;
 }
+
 .tooltip-box.centered {
     left: 19%;
     right: 19%;
 }
-a.abbr-like {
-    text-decoration: none;
-}
-a.abbr-like:hover {
-    text-decoration: underline;
-}
+
 #tag-widget {
     margin-top: 10px;
     overflow: auto;
     max-height: 500px;
 }
 
-table.envelope .range-selector {
-    padding: 5px 8px 5px 12px;
+table.envelope {
+
+    .range-selector {
+        padding: 5px 8px 5px 12px;
+
+        div {
+            padding: 0.3em 0;
+        }
+
+        h3 {
+            margin: 1em 0;
+        }
+
+        label.date {
+            font-weight: bold;
+        }
+
+        div.interval-switch select {
+            display: iinline-block;
+            vertical-align: middle;
+        }
+
+        div.interval-switch .label {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .confirm-range {
+            margin-top: 1em;
+        }
+    }
+
+    .define-range {
+        color: @color-logo-blue;
+        text-align: center;
+    }
 }
-.range-selector div {
-    padding: 0.3em 0;
-}
-.range-selector h3 {
-    margin: 1em 0;
-}
-.range-selector label.date {
-    font-weight: bold;
-}
-.range-selector div.interval-switch select {
-    display: iinline-block;
-    vertical-align: middle;
-}
-.range-selector div.interval-switch .label {
-    display: inline-block;
-    vertical-align: middle;
-}
-.range-selector .confirm-range {
-    margin-top: 1em;
-}
-table.envelope .define-range {
-    color: @color-logo-blue;
-    text-align: center;
-}
-table.envelope.locked .define-range a {
-    color: @color-light-text;
-}
-table.envelope.locked .define-range a.locked,
-table.envelope.locked .define-range a.locked:hover {
-    color: @color-light-text;
-    text-decoration: line-through;
-    cursor: default;
-    background-color: transparent;
+
+
+table.envelope.locked .define-range {
+    a {
+        color: @color-light-text;
+    }
+
+    a.locked,
+    a.locked:hover {
+        color: @color-light-text;
+        text-decoration: line-through;
+        cursor: default;
+        background-color: transparent;
+    }
 }
 
 // ---------------- typeahead plugin --------------------
@@ -167,31 +188,33 @@ table.envelope.locked .define-range a.locked:hover {
     width: 100%;
     box-sizing: border-box;
     box-shadow: @portal-box-shadow;
+
+    .tt-suggestion span.num {
+        font-size: 80%;
+    }
+
+    .tt-suggestion {
+        margin: 0;
+        padding-bottom: 4pt;
+        .ping-dot-item;
+        cursor: pointer;
+        font-size: 13pt;
+        text-align: left;
+    }
+
+    .tt-suggestion:hover {
+        background-color: #FFF9ED;
+    }
+
+    .hint {
+        padding-top: 3pt;
+        border-width: 1pt 0 0 0;
+        border-color: @color-light-grey;
+        border-style: solid;
+        font-size: 80%;
+    }
 }
-.tt-menu .tt-suggestion span.num {
-    font-size: 80%;
-}
-.tt-menu .tt-suggestion {
-    margin: 0;
-    padding-bottom: 4pt;
-    .ping-dot-item;
-    cursor: pointer;
-    font-size: 13pt;
-    text-align: left;
-}
-.tt-menu .tt-suggestion:hover {
-    background-color: #FFF9ED;
-}
-.tt-dropdown-menu {
-    position: inherit !important;
-}
-.tt-menu .hint {
-    padding-top: 3pt;
-    border-width: 1pt 0 0 0;
-    border-color: @color-light-grey;
-    border-style: solid;
-    font-size: 80%;
-}
+
 #modal-overlay .tooltip-box.async-task-list {
     min-width: 70%;
     font-size: 0.8em;

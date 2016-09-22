@@ -151,7 +151,6 @@ define('conf', [], function () {
     var conf = {};
     conf.page = {};
     conf.activePlugins = #filter $Jsonize#$active_plugins#end filter#;
-    conf.menuAutoHideInterval = 1500;
     conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 5000);
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_url";
@@ -161,10 +160,8 @@ define('conf', [], function () {
     conf.baseAttr = "${base_attr}";
     conf.currentAction = "$current_action";
     conf.humanCorpname = "$human_corpname";
-    conf.session_cookie_name = "$session_cookie_name";
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
-    conf.emptyAttrValuePlaceholder = "$empty_attr_value_placeholder";
     conf.bibConf = $bib_conf.to_json();
     conf.stateParams = "$join_params($q, $globals)";
     conf.currentArgs = $Globals.to_json();

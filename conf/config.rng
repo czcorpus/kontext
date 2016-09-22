@@ -388,14 +388,6 @@
                         are stored.</a:documentation>
                         <text />
                     </element>
-                    <element name="use_db_whitelist">
-                        <choice>
-                            <value>0</value>
-                            <value>1</value>
-                            <value>false</value>
-                            <value>true</value>
-                        </choice>
-                    </element>
                     <element name="empty_attr_value_placeholder">
                         <a:documentation>A placeholder used to represent empty value in text type
                         attribute values</a:documentation>
