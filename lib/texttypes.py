@@ -146,7 +146,7 @@ class CachedStructNormsCalc(StructNormsCalc):
 
 class TextTypeCollector(object):
 
-    EMPTY_VAL_PLACEHOLDER = '-'
+    EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder', '-')
 
     def __init__(self, corpus, src_obj):
         """
