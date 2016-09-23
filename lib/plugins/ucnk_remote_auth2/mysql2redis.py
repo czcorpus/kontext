@@ -116,29 +116,17 @@ class Export(object):
         self._version = version
         self._default_corpora = default_corpora if default_corpora is not None else ()
 
-    def get_user_corpora(self, username):
+    def get_user_corpora(self, user_id):
         """
         Returns a list of corpora the user has access to.
 
         arguments:
-        username -- user's username (i.e. no ID here!)
+        user_id -- database user ID
         """
         cursor = self._mysql.cursor()
-        cursor.execute("""SELECT corpora.name, limited FROM (
-            SELECT ucr.corpus_id AS corpus_id, ucr.limited AS limited
-            FROM user_corpus_relation AS ucr JOIN user AS u1 ON ucr.user_id = u1.id AND u1.user = %s
-            UNION
-            SELECT r2.corpora AS corpus_id, r2.limited AS limited
-            FROM user AS u2
-            JOIN relation AS r2 on r2.corplist = u2.corplist AND u2.user = %s) AS ucn
-            JOIN corpora on corpora.id = ucn.corpus_id ORDER BY corpora.name""", (username, username))
-        rows = cursor.fetchall()
-        ans = []
-        for row in rows:
-            if row[1]:
-                ans.append('omezeni/%s' % row[0])
-            else:
-                ans.append(row[0])
+        cursor.execute('CALL user_corpus_proc(%s)', (user_id,))
+        # stored procedure returns: user_id, corpus_id, limited, name
+        ans = [row[3] for row in cursor.fetchall()]
         if len(ans) == 0:
             ans = self._default_corpora
         return ans
@@ -176,7 +164,7 @@ class Export(object):
         for row in rows:
             user_data = create_user_dict(colmap, row)
             if self._version == 1:
-                user_data['corpora'] = self.get_user_corpora(row[colmap['user']])
+                user_data['corpora'] = self.get_user_corpora(row[colmap['id']])
             elif self._version == 2:
                 user_data['corpora'] = self.get_user_individual_corpora(row[colmap['id']])
                 user_data['corplist'] = corplists.get(row[colmap['corplist']], None)
