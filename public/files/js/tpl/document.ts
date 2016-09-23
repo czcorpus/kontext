@@ -45,7 +45,7 @@ import React = require('vendor/react');
 import ReactDOM = require('vendor/react-dom');
 import RSVP = require('vendor/rsvp');
 import rsvpAjax = require('vendor/rsvp-ajax');
-import util = require('../util');
+import {MultiDict, History, NullHistory} from '../util';
 import * as docStores from '../stores/common/layout';
 import userStores = require('../stores/userStores');
 import {ViewOptionsStore} from '../stores/viewOptions';
@@ -95,6 +95,11 @@ function getLocalStorage():Storage {
         new NullStorage();
     }
 }
+
+/**
+ * Possible types for PageModel's ajax method request args
+ */
+export type AjaxArgs = MultiDict|{[key:string]:any}|string;
 
 /**
  *
@@ -166,7 +171,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.initCallbacks = [];
         this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
-        this.history = Modernizr.history ? new util.History(this) : new util.NullHistory();
+        this.history = Modernizr.history ? new History(this) : new NullHistory();
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
@@ -349,7 +354,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param args Parameters to be passed along with request
      * @param options Additional settings
      */
-    ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
+    ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
         if (options === undefined) {
             options = {};
         }
@@ -360,6 +365,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             options.contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
         }
 
+        function exportValue(v) {
+            return v === null || v === undefined ? '' : encodeURIComponent(v);
+        }
+
         function encodeArgs(obj) {
             const ans = [];
             let p; // ES5 issue
@@ -368,11 +377,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     const val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
                     if (Object.prototype.toString.apply(val) === '[object Array]') {
                         val.forEach(item => {
-                            ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(item));
+                            ans.push(encodeURIComponent(p) + '=' + exportValue(item));
                         });
 
                     } else {
-                        ans.push(encodeURIComponent(p) + '=' + encodeURIComponent(val));
+                        ans.push(encodeURIComponent(p) + '=' + exportValue(val));
                     }
                 }
             }
@@ -388,7 +397,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
         let body;
 
-        if (args instanceof util.MultiDict) {
+        if (args instanceof MultiDict) {
             body = this.encodeURLParameters(args);
 
         } else if (typeof args === 'object') {
@@ -789,10 +798,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param params
      * @returns {string}
      */
-    encodeURLParameters(params:util.MultiDict):string {
-        let ans = [];
+    encodeURLParameters(params:MultiDict):string {
+        function exportValue(v) {
+            return v === null || v === undefined ? '' : encodeURIComponent(v);
+        }
         return params.items().map((item) => {
-            return encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]);
+            return encodeURIComponent(item[0]) + '=' + exportValue(item[1]);
         }).join('&');
     }
 
@@ -805,18 +816,18 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * are preserved.
      * Output format: [[k1, v1_1], [k1, v1_2], ...., [kn, vn_1], ..., [kn, vn_m]]
      */
-    getConcArgs():util.MultiDict {
-        return new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+    getConcArgs():MultiDict {
+        return new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
     }
 
     setConcArg(name:string, value:any) {
-        let tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
         tmp.set(name, value);
         this.conf['currentArgs'] = tmp.items();
     }
 
     replaceConcArg(name:string, values:Array<string>):void {
-        let tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
         tmp.replace(name, values);
         this.conf['currentArgs'] = tmp.items();
     }
@@ -826,7 +837,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param appendArgs a list of arguments which will be appended to the existing ones
      */
     exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
-        const tmp = new util.MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        const tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
 
         function importArgs(args:Kontext.MultiDictSrc):Array<[string,string]> {
             if (!args) {
@@ -1064,7 +1075,7 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.hasPlugin(name);
     }
 
-    getConcArgs():util.MultiDict {
+    getConcArgs():MultiDict {
         return this.pageModel.getConcArgs();
     }
 }
