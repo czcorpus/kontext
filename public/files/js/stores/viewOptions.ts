@@ -44,6 +44,8 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private fixedAttr:string;
 
+    private showConcToolbar:boolean;
+
     private referenceList:Immutable.List<ViewOptions.RefsDesc>;
 
     private selectAllReferences:boolean = false;
@@ -345,6 +347,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
         this.attrVmode = data.AttrVmode;
         this.attrAllpos = this.attrVmode !== 'mouseover' ? data.AttrAllpos : 'all';
         this.hasLoadedData = true;
+        this.showConcToolbar = data.ShowConcToolbar;
     }
 
     loadData():RSVP.Promise<ViewOptions.PageData> {
@@ -367,7 +370,8 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                     CurrStructAttrs: data['curr_structattrs'],
                     AvailRefs: data['Availrefs'],
                     AttrAllpos: data['attr_allpos'],
-                    AttrVmode: data['attr_vmode']
+                    AttrVmode: data['attr_vmode'],
+                    ShowConcToolbar: data['use_conc_toolbar']
                 }
                 this.initFromPageData(imported);
                 return imported;
@@ -414,6 +418,10 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     getAttrsAllpos():string {
         return this.attrAllpos;
+    }
+
+    getShowConcToolbar():boolean {
+        return this.showConcToolbar;
     }
 
 }

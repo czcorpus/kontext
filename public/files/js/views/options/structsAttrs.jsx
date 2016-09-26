@@ -130,7 +130,7 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                             <option value="visible">{this.translate('options__vmode_switch_visible')}</option>
                             <option value="mouseover">{this.translate('options__vmode_switch_mouseover')}</option>
                         </select>
-                        {this._renderVmodeInfoIcon()}
+                        {this.props.showConcToolbar ? this._renderVmodeInfoIcon() : null}
                     </div>
                     <div>
                         <select name="allpos"
@@ -181,7 +181,8 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                     </ul>
                     <SelectAll onChange={this._handleSelectAll} isSelected={this.props.hasSelectAll} />
                     <hr />
-                    <AttributesTweaks attrsVmode={this.props.attrsVmode} attrsAllpos={this.props.attrsAllpos} />
+                    <AttributesTweaks attrsVmode={this.props.attrsVmode} attrsAllpos={this.props.attrsAllpos}
+                            showConcToolbar={this.props.showConcToolbar} />
                 </fieldset>
             );
         }
@@ -406,7 +407,8 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                 hasSellectAllRefs: viewOptionsStore.getSelectAllReferences(),
                 hasLoadedData: viewOptionsStore.isLoaded(),
                 attrsVmode: viewOptionsStore.getAttrsVmode(),
-                attrsAllpos: viewOptionsStore.getAttrsAllpos()
+                attrsAllpos: viewOptionsStore.getAttrsAllpos(),
+                showConcToolbar: viewOptionsStore.getShowConcToolbar()
             };
         },
 
@@ -449,7 +451,7 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                         {this.props.isSubmitMode ? this._renderStateInputs() : null}
                         <FieldsetAttributes fixedAttr={this.state.fixedAttr} attrList={this.state.attrList}
                                 hasSelectAll={this.state.hasSelectAllAttrs} attrsAllpos={this.state.attrsAllpos}
-                                attrsVmode={this.state.attrsVmode} />
+                                attrsVmode={this.state.attrsVmode} showConcToolbar={this.state.showConcToolbar} />
                         <FieldsetStructures availStructs={this.state.availStructs} structAttrs={this.state.structAttrs} />
                         <FieldsetMetainformation availRefs={this.state.availRefs}
                                 hasSelectAll={this.state.hasSellectAllRefs} />
