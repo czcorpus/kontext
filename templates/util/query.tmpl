@@ -210,13 +210,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             </div>
 
             #if not $suff
+            #set $AttrListTmp = $getVar('AttrList', [])
+            #set $ForcedAttr = $getVar('force_cql_default_attr', None)
             <div class="query-options">
                 $_("Default attribute"):
+                #if not $ForcedAttr
                 <select name="default_attr$suff">
-                    #for $a in $getVar('AttrList', ())
+                    #for $a in $AttrListTmp
                     <option value="$a.n" #if $a.n == $getVar('default_attr' + $suff, '')#selected="selected" #end if#>$a.n</option>
                     #end for
                 </select>
+                #else
+                <select disabled="disabled" title="$_('The implicit attribute cannot be changed here.')">
+                    <option>${ForcedAttr}</option>
+                </select>
+                <input type="hidden" name="default_attr$suff" value="${ForcedAttr}" />
+                #end if
 
                 #if $tagsetdoc
                 <a target="_blank" href="$tagsetdoc">$_("Tagset summary")</a>

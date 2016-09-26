@@ -708,6 +708,7 @@ class Actions(Kontext):
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
+        out['force_cql_default_attr'] = 'word'  # beucause filter form does not support custom implicit attrs
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
