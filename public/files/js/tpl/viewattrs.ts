@@ -74,7 +74,8 @@ class ViewAttrsPage {
             AvailStructs: this.layoutModel.getConf<Array<{sel:string; label:string; n:string}>>('Availstructs'),
             StructAttrs: this.layoutModel.getConf<{[attr:string]:Array<string>}>('StructAttrs'),
             CurrStructAttrs: this.layoutModel.getConf<Array<string>>('CurrStructAttrs'),
-            AvailRefs: this.layoutModel.getConf<Array<{n:string; label:string; sel:string}>>('AvailRefs')
+            AvailRefs: this.layoutModel.getConf<Array<{n:string; label:string; sel:string}>>('AvailRefs'),
+            ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar')
         };
         this.layoutModel.getStores().viewOptionsStore.initFromPageData(storeData);
 
