@@ -118,9 +118,9 @@ class KwicLinesArgs(object):
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
-        for k, v in self.__dict__:
+        for k, v in self.__dict__.items():
             setattr(ans, k, v)
-        for k, v in kw:
+        for k, v in kw.items():
             setattr(ans, k, v)
         return ans
 
