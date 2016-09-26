@@ -1080,6 +1080,8 @@ class Kontext(Controller):
 
         result['can_send_mail'] = bool(settings.get('mailing'))
 
+        result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
+
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)
         result['plugin_data'] = {}

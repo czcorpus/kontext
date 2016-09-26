@@ -58,7 +58,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.NumLinesInGroups = $num_lines_in_groups;
     conf.LinesGroupsNumbers = #filter $Jsonize#$lines_groups_numbers#end filter#;
     conf.ContainsWithin = #filter $Jsonize#$getVar('query_contains_within', False)#end filter#;
-    conf.ShowConcToolbar = #filter $Jsonize#$use_conc_toolbar#end filter#;
 
     #if $running_calc
     conf.numLines = $len($Lines);
