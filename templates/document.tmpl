@@ -185,6 +185,7 @@ define('conf', [], function () {
     conf.ttIntervalChars = #filter $Jsonize#$getVar('interval_chars', [])#end filter#;
     conf.menuData = #filter $Jsonize#$menu_data#end filter#;
     conf.asyncTasks = #filter $Jsonize#$async_tasks#end filter#;
+    conf.ShowConcToolbar = #filter $Jsonize#$use_conc_toolbar#end filter#;
 
     return conf;
 });

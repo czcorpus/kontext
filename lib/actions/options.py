@@ -11,12 +11,12 @@
 # GNU General Public License for more details.
 
 
+import settings
 from controller import exposed
 from kontext import Kontext, MainMenu
 from translation import ugettext as _
 import plugins
 import corplib
-
 
 class Options(Kontext):
 
@@ -111,6 +111,7 @@ class Options(Kontext):
         out['curr_structattrs'] = self.args.structattrs
         out['query_overview'] = self.concdesc_json().get('Desc', [])
         out['CurrentAttrs'] = self.args.attrs.split(',')
+        out['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
         return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True, http_method='POST')
