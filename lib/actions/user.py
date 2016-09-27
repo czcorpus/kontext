@@ -175,8 +175,7 @@ class User(Kontext):
             'size_info': l10n.simplify_num(corp_size),
             'type': request.form['type']
         }
-
-        aligned_corpnames = request.form.getlist('corpora[]')
+        aligned_corpnames = request.form.getlist('corpora')
         for ac in aligned_corpnames:
             data['corpora'].append({
                 'name': ac,  # TODO fetch real name??
