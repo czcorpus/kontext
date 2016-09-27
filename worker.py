@@ -251,6 +251,7 @@ class FreqsTask(app.Task):
         if self.cache_data:
             with open(self.cache_path, 'wb') as f:
                 cPickle.dump(self.cache_data, f)
+                self.cache_data = None
 
 
 @app.task(base=FreqsTask)
@@ -261,6 +262,8 @@ def calculate_freqs(args):
     trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
     if max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
         calculate_freqs.cache_data = ans
+    else:
+        calculate_freqs.cache_data = None
     return ans
 
 
