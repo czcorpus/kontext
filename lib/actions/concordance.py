@@ -49,6 +49,7 @@ class Actions(Kontext):
 
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
     SAVECOLL_MAX_LINES = 1000000
+    FREQ_QUICK_SAVE_MAX_LINES = 10000
 
     """
     This class specifies all the actions KonText offers to a user via HTTP
@@ -927,6 +928,24 @@ class Actions(Kontext):
                 {'Word': [{'n': 'no correction'}], 'freq': freq,
                  'pfilter': pfilter, 'nfilter': corr_nfilter,
                  'norel': 1, 'fbar': 0})
+
+        params = [
+            ('from_line', 1),
+            ('to_line', self.FREQ_QUICK_SAVE_MAX_LINES),
+            ('ml', self.args.ml),
+            ('flimit', self.args.flimit),
+            ('fcrit', self.args.fcrit),
+            ('freq_sort', self.args.freq_sort),
+            ('fpage', self.args.fpage),
+            ('ftt_include_empty', self.args.ftt_include_empty)
+        ]
+        self._add_save_menu_item('CSV', 'savefreq', params, save_format='csv')
+        self._add_save_menu_item('XLSX', 'savefreq', params, save_format='xlsx')
+        self._add_save_menu_item('XML', 'savefreq', params, save_format='xml')
+        self._add_save_menu_item('TXT', 'savefreq', params, save_format='text')
+        params = params[:1] + params[2:]
+        self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', params)
+
         return result
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
