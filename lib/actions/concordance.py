@@ -1629,17 +1629,17 @@ class Actions(Kontext):
         Access rights are per-corpus (i.e. if a user has a permission to
         access corpus 'X' then all related audio files are accessible).
         """
-        path = '%s/%s/%s' % (settings.get('corpora', 'speech_files_path'), self.args.corpname, chunk)
-
-        if os.path.exists(path) and not os.path.isdir(path):
-            with open(path, 'r') as f:
-                file_size = os.path.getsize(path)
+        path = os.path.join(settings.get('corpora', 'speech_files_path'), self.args.corpname, chunk)
+        rpath = os.path.realpath(path)
+        if os.path.isfile(rpath) and rpath.startswith(settings.get('corpora', 'speech_files_path')):
+            with open(rpath, 'r') as f:
+                file_size = os.path.getsize(rpath)
                 self._headers['Content-Type'] = 'audio/mpeg'
                 self._headers['Content-Length'] = '%s' % file_size
                 self._headers['Accept-Ranges'] = 'none'
                 if self.environ.get('HTTP_RANGE', None):
                     self._headers['Content-Range'] = 'bytes 0-%s/%s' % (
-                        os.path.getsize(path) - 1, os.path.getsize(path))
+                        os.path.getsize(rpath) - 1, os.path.getsize(rpath))
                 return f.read()
         else:
             self._set_not_found()
