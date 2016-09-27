@@ -1247,7 +1247,7 @@ class Actions(Kontext):
             cache_file = open(filename, 'w')
             cache_file.write(wlfile)
             cache_file.close()
-            wlwords = [w.strip() for w in wlfile.split('\n')]
+            wlwords = [w.strip().decode('utf-8') for w in wlfile.split('\n')]
         if wlcache:  # read from a cache file
             filename = os.path.join(wl_cache_dir, wlcache)
             cache_file = open(filename)
@@ -1380,16 +1380,16 @@ class Actions(Kontext):
     def _make_wl_query(self):
         qparts = []
         if self.args.wlpat:
-            qparts.append('%s="%s"' % (self.args.wlattr, self.args.wlpat))
+            qparts.append(u'%s="%s"' % (self.args.wlattr, self.args.wlpat))
         if not self.args.include_nonwords:
-            qparts.append('%s!="%s"' % (self.args.wlattr,
+            qparts.append(u'%s!="%s"' % (self.args.wlattr,
                                         self.corp.get_conf('NONWORDRE')))
         if self.args.wlwords:
-            qq = ['%s=="%s"' % (self.args.wlattr, w.strip()) for w in self.args.wlwords]
+            qq = [u'%s=="%s"' % (self.args.wlattr, w.strip()) for w in self.args.wlwords]
             qparts.append('(' + '|'.join(qq) + ')')
         for w in self.args.blacklist:
-            qparts.append('%s!=="%s"' % (self.args.wlattr, w.strip()))
-        self.args.q = ['q[' + '&'.join(qparts) + ']']
+            qparts.append(u'%s!=="%s"' % (self.args.wlattr, w.strip()))
+        self.args.q = [u'q[' + '&'.join(qparts) + ']']
 
     @exposed(template='freqs.tmpl', legacy=True)
     def struct_wordlist(self):
