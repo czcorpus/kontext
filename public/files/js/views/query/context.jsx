@@ -118,7 +118,7 @@ export function init(dispatcher, mixins) {
                     <tbody>
                         <TRWindowSelector options={this.props.posWindowSizes} />
                         <tr>
-                            <th valign="top" align="left">
+                            <th>
                                 {this.translate('query__pos_filter')}:<br />
                                 <span className="note">({this.translate('query__use_ctrl_click_for')})</span>
                             </th>
@@ -129,7 +129,7 @@ export function init(dispatcher, mixins) {
                                     })}
                                 </select>
                             </td>
-                            <td valign="top">
+                            <td>
                                 <AllAnyNoneSelector inputName="fc_pos_type" />
                                 {'\u00A0'}
                                 {this.translate('query__of_these_items')}.
@@ -158,7 +158,7 @@ export function init(dispatcher, mixins) {
                         lemmaWindowSizes={this.props.lemmaWindowSizes} />
 
                     <h3>{this.translate('query__pos_filter')}</h3>
-                    {this.props.WPoSList && this.props.WPoSList.length > 0
+                    {this.props.wPoSList && this.props.wPoSList.length > 0
                         ? <PoSFilter posWindowSizes={this.props.posWindowSizes} wPoSList={this.props.wPoSList}/>
                         : null}
                 </div>
