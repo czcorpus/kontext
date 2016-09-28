@@ -2,15 +2,11 @@
 <!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Vrstva_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="23.336px" height="29.816px" viewBox="0 0 23.336 29.816" enable-background="new 0 0 23.336 29.816" xml:space="preserve">
+	 width="9.248px" height="8.1px" viewBox="-0.574 0.574 9.248 8.1" enable-background="new -0.574 0.574 9.248 8.1"
+	 xml:space="preserve">
 <g>
-	<path fill="#009DDF" d="M20.727,3.331H7.545c-1.104,0-2,0.896-2,2s0.896,2,2,2h13.181c1.104,0,2-0.896,2-2
-		S21.831,3.331,20.727,3.331"/>
-	<path fill="#009DDF" d="M19.336,5.331v22.482c0,1.104,0.896,2,2,2s2-0.896,2-2V5.331c0-1.104-0.896-2-2-2
-		S19.336,4.227,19.336,5.331"/>
-	<polyline fill="#009DDF" points="21.329,25.816 7.32,25.816 7.32,29.816 21.329,29.816 	"/>
-	<polyline fill="#009DDF" points="14.869,19.731 7.357,19.731 7.357,21.731 14.869,21.731 	"/>
-	<polyline fill="#009DDF" points="14.869,14.063 7.357,14.063 7.357,16.063 14.869,16.063 	"/>
-	<polygon fill="#009DDF" points="12.656,0 0,5.789 12.656,11.579 	"/>
+	<path fill="#009EE0" d="M8.436,7.492L4.838,2.074h3.085c0.414,0,0.75-0.336,0.75-0.75s-0.336-0.75-0.75-0.75H0.176
+		c-0.414,0-0.75,0.336-0.75,0.75s0.336,0.75,0.75,0.75h3.083l-3.597,5.418c-0.784,1.182,0.634,1.182,0.634,1.182h7.507
+		C9.22,8.674,8.436,7.492,8.436,7.492z"/>
 </g>
 </svg>
