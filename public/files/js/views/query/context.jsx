@@ -114,29 +114,32 @@ export function init(dispatcher, mixins) {
 
         render : function () {
             return (
-                <table className="form">
-                    <tbody>
-                        <TRWindowSelector options={this.props.posWindowSizes} />
-                        <tr>
-                            <th>
-                                {this.translate('query__pos_filter')}:<br />
-                                <span className="note">({this.translate('query__use_ctrl_click_for')})</span>
-                            </th>
-                            <td>
-                                <select title={this.translate('query__select_one_or_more_pos_tags')} multiple="multiple" size="4" name="fc_pos">
-                                    {this.props.wPoSList.map((item, i) => {
-                                        return <option key={i} value={item.v}>{item.n}</option>;
-                                    })}
-                                </select>
-                            </td>
-                            <td>
-                                <AllAnyNoneSelector inputName="fc_pos_type" />
-                                {'\u00A0'}
-                                {this.translate('query__of_these_items')}.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <h3>{this.translate('query__pos_filter')}</h3>
+                    <table className="form">
+                        <tbody>
+                            <TRWindowSelector options={this.props.posWindowSizes} />
+                            <tr>
+                                <th>
+                                    {this.translate('query__pos_filter')}:<br />
+                                    <span className="note">({this.translate('query__use_ctrl_click_for')})</span>
+                                </th>
+                                <td>
+                                    <select title={this.translate('query__select_one_or_more_pos_tags')} multiple="multiple" size="4" name="fc_pos">
+                                        {this.props.wPoSList.map((item, i) => {
+                                            return <option key={i} value={item.v}>{item.n}</option>;
+                                        })}
+                                    </select>
+                                </td>
+                                <td>
+                                    <AllAnyNoneSelector inputName="fc_pos_type" />
+                                    {'\u00A0'}
+                                    {this.translate('query__of_these_items')}.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             );
         }
     });
@@ -156,8 +159,6 @@ export function init(dispatcher, mixins) {
                     </h3>
                     <LemmaFilter hasLemmaAttr={this.props.hasLemmaAttr}
                         lemmaWindowSizes={this.props.lemmaWindowSizes} />
-
-                    <h3>{this.translate('query__pos_filter')}</h3>
                     {this.props.wPoSList && this.props.wPoSList.length > 0
                         ? <PoSFilter posWindowSizes={this.props.posWindowSizes} wPoSList={this.props.wPoSList}/>
                         : null}
