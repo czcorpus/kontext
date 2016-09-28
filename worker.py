@@ -217,6 +217,7 @@ class CollsTask(app.Task):
         if self.cache_data:
             with open(self.cache_path, 'wb') as f:
                 cPickle.dump(self.cache_data, f)
+                self.cache_data = None
 
 
 @app.task(base=CollsTask)
@@ -231,6 +232,8 @@ def calculate_colls(coll_args):
     trigger_cache_limit = settings.get_int('corpora', 'colls_cache_min_lines', 10)
     if not ans['processing'] and len(ans['data']['Items']) >= trigger_cache_limit:
         calculate_colls.cache_data = ans['data']
+    else:
+        calculate_colls.cache_data = None
     return ans
 
 
