@@ -934,7 +934,7 @@ class Actions(Kontext):
             ('to_line', self.FREQ_QUICK_SAVE_MAX_LINES),
             ('ml', self.args.ml),
             ('flimit', self.args.flimit),
-            ('fcrit', self.args.fcrit),
+            ('fcrit', fcrit),  # cannot use self.args.fcrit as freqs() is also called directly by other actions
             ('freq_sort', self.args.freq_sort),
             ('fpage', self.args.fpage),
             ('ftt_include_empty', self.args.ftt_include_empty)
