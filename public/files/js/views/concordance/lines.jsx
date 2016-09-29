@@ -372,14 +372,14 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             return ans.join(' ');
         },
 
-        _renderTextKwicMode : function (corpname, corpusOutput, kwicActionArgs) {
+        _renderTextKwicMode : function (corpname, corpusOutput) {
             let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             return [
                 <td key="lc" className={this._exportTextElmClass(corpname, 'lc')}>
                     {corpusOutput.left.map(this._renderLeftChunk)}
                 </td>,
                 <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
-                        onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
+                        onClick={this._handleKwicClick.bind(this, corpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
                 </td>,
@@ -389,11 +389,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             ];
         },
 
-        _renderTextParMode : function (corpname, corpusOutput, kwicActionArgs) {
+        _renderTextParMode : function (corpname, corpusOutput) {
             let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             return [
                 <td key="par" className={this._exportTextElmClass(corpname, 'par')}
-                        onClick={this._handleKwicClick.bind(this, this.props.baseCorpname,
+                        onClick={this._handleKwicClick.bind(this, corpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.left.map(this._renderLeftChunk)}
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
@@ -402,37 +402,27 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             ]
         },
 
-        _createKwicActionArgs : function (corpusOutput) {
-            let wideCtxGlobals = this.props.wideCtxGlobals || [];
-            return 'pos=' + corpusOutput.tokenNumber + '&hitlen=' + // TODO !!
-                        '&corpname=' + this.props.baseCorpname +
-                        '&' + wideCtxGlobals.map(item => item[0] + '=' + encodeURIComponent(item[1])).join('&');
-        },
-
-        _createRefActionLink : function (corpusOutput) {
-            return this.createActionLink('fullref') + '?pos=' + corpusOutput.tokenNumber +
-                    '&corpname=' + this.props.baseCorpname;
+        _createRefActionLink : function (corpusOutput, corpname) {
+            return this.createActionLink('fullref', [['pos', corpusOutput.tokenNumber], ['corpname', corpname]]);
         },
 
         _renderText : function (corpusOutput, corpusIdx) {
-            let corpname = this.props.cols[corpusIdx].n;
-            let refActionLink = this._createRefActionLink(corpusOutput);
-            let kwicActionArgs = this._createKwicActionArgs(corpusOutput);
+            const corpname = this.props.cols[corpusIdx].n;
+            const refActionLink = this._createRefActionLink(corpusOutput, corpname);
 
-            let ans = [
+            const ans = [
                 <td key="ref" className="ref" title={this.translate('concview__click_for_details')}
-                        onClick={this._handleRefsClick.bind(this, this.props.baseCorpname,
+                        onClick={this._handleRefsClick.bind(this, corpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.ref}
                 </td>
             ];
             if (this.props.viewMode === 'kwic') {
-                ans = ans.concat(this._renderTextKwicMode(corpname, corpusOutput, kwicActionArgs));
+                return ans.concat(this._renderTextKwicMode(corpname, corpusOutput));
 
             } else {
-                ans = ans.concat(this._renderTextParMode(corpname, corpusOutput, kwicActionArgs));
+                return ans.concat(this._renderTextParMode(corpname, corpusOutput));
             }
-            return ans;
         },
 
         _handleRefsClick : function (corpusId, tokenNumber, lineIdx) {
