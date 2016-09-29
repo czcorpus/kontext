@@ -177,7 +177,6 @@ def calculate_colls(coll_args):
         ans = dict(data=collocs, processing=None)
     result = dict(
         Head=ans['data']['Head'],
-        cmaxitems=10000,  # this is used for quick-save
         attrname=coll_args.cattr,
         processing=ans['processing'],
         collstart=collstart,

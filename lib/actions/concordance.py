@@ -50,6 +50,7 @@ class Actions(Kontext):
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
     SAVECOLL_MAX_LINES = 1000000
     FREQ_QUICK_SAVE_MAX_LINES = 10000
+    COLLS_QUICK_SAVE_MAX_LINES = 10000
 
     """
     This class specifies all the actions KonText offers to a user via HTTP
@@ -1105,6 +1106,25 @@ class Actions(Kontext):
         args.num_lines = num_lines
         args.citemsperpage = self.args.citemsperpage
         args.collpage = self.args.collpage
+
+        save_args = [
+            ('cmaxitems', self.COLLS_QUICK_SAVE_MAX_LINES),
+            ('cattr', self.args.cattr),
+            ('cfromw', self.args.cfromw),
+            ('ctow', self.args.ctow),
+            ('cminfreq', self.args.cminfreq),
+            ('cminbgr', self.args.cminbgr),
+            ('cbgrfns', self.args.cbgrfns),
+            ('csortfn', self.args.csortfn),
+            ('collpage', self.args.collpage)
+        ]
+        self._add_save_menu_item('CSV', 'savecoll', save_args, save_format='csv')
+        self._add_save_menu_item('XLSX', 'savecoll', save_args, save_format='xlsx')
+        self._add_save_menu_item('XML', 'savecoll', save_args, save_format='xml')
+        self._add_save_menu_item('TXT', 'savecoll', save_args, save_format='text')
+        save_args = save_args[1:]
+        self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_args)
+
         return coll_calc.calculate_colls(args)
 
     @exposed(access_level=1, legacy=True)
