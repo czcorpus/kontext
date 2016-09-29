@@ -38,20 +38,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 $_("Collocations")#slurp
 #end def
 
-#def custom_save
-#if $processing is None
-    #filter WebSafe
-    #set $common_save_args = [('cattr', $cattr), ('cfromw', $cfromw), ('ctow', $ctow), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cmaxitems', $cmaxitems), ('cbgrfns', $cbgrfns), ('csortfn', $csortfn), ('collpage', $collpage)]
-
-    <li class="separ"><a title="$_("Save Frequency list to a CSV file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'csv')], $common_save_args)}">CSV</a></li>
-    <li class="separ"><a title="$_("Save Frequency list to an XLSX file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'xlsx')], $common_save_args)}">XLSX</a></li>
-    <li class="separ"><a title="$_("Save Frequency list to an XML file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'xml')], $common_save_args)}">XML</a></li>
-    <li class="separ"><a title="$_("Save Frequency list to a TXT file")" href="savecoll?${$join_params($q, $globals, [('saveformat', 'text')], $common_save_args)}">TXT</a></li>
-    <li><a title="$_("Save Frequency list with custom parameters")" href="savecoll_form?${$join_params($q, $globals, $common_save_args)}">$_("Custom")&#8230;</a></li>
-    #end filter
-#end if
-#end def
-
 
 #def main
 <section>
