@@ -52,6 +52,11 @@ class SQLite3Ops(object):
         cursor.execute(sql, args)
         return cursor
 
+    def executemany(self, sql, args_rows):
+        cursor = self._db.cursor()
+        cursor.executemany(sql, args_rows)
+        return cursor
+
     def commit(self):
         self._db.commit()
 
@@ -83,15 +88,6 @@ class Archiver(object):
         self._errors = []
         self._persist_level_key = persist_level_key
         self._key_alphabet = key_alphabet
-
-    def _archive_item(self, key, data):
-        prefix = 'concordance:'
-        if key.startswith(prefix):
-            key = key[len(prefix):]
-        self._to_db.execute('INSERT INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
-                            (key, data, int(time.time()), 0))
-        self._to_db.commit()
-        logging.getLogger(__name__).debug('archived %s => %s' % (key, data))
 
     def time_based_prefix(self, interval):
         """
@@ -128,6 +124,11 @@ class Archiver(object):
             return self._ttl_range[0] <= item_ttl <= self._ttl_range[1]
 
     def _process_chunk(self, data_keys, dry_run):
+        rows = []
+        del_keys = []
+        curr_time = time.time()
+        prefix = 'concordance:'
+
         for key in data_keys:
             self._num_processed += 1
             ttl = self._from_db.ttl(key)
@@ -135,13 +136,20 @@ class Archiver(object):
             if self._is_new_type(data):
                 self._num_new_type += 1
             if self._is_archivable(data, item_ttl=ttl):
-                try:
-                    if not dry_run:
-                        self._archive_item(key, json.dumps(data))
-                        self._from_db.delete(key)
-                    self._num_archived += 1
-                except Exception as e:
-                    self._errors.append(e)
+                if key.startswith(prefix):
+                    del_keys.append(key)
+                rows.append((key[len(prefix):], json.dumps(data), curr_time, 0))
+                self._num_archived += 1
+        if len(rows) > 0:
+            try:
+                if not dry_run:
+                    self._to_db.executemany(
+                        'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)', rows)
+                    for k in del_keys:
+                        self._from_db.delete(k)
+                logging.getLogger(__name__).debug('archived block of %s items' % (len(rows),))
+            except Exception as e:
+                self._errors.append(e)
 
     def run(self, key_prefix, cron_interval, dry_run):
         """
@@ -167,6 +175,8 @@ class Archiver(object):
         while cursor > 0:
             cursor, data = self._from_db.scan(cursor=cursor, match=match_prefix, count=self._count)
             self._process_chunk(data, dry_run)
+        if not dry_run:
+            self._to_db.commit()
 
         return {
             'num_processed': self._num_processed,
@@ -214,6 +224,7 @@ def run(conf, key_prefix, cron_interval, dry_run, persist_level_key, key_alphabe
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
+    sys.path.insert(0, os.path.realpath('%s/../../../scripts/' % os.path.dirname(os.path.realpath(__file__))))
     import autoconf
     import initializer
     settings = autoconf.settings

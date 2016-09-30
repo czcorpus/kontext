@@ -138,7 +138,6 @@ class CacheCleanup(CacheFiles):
         to_del = {}
         for corpus_id, corpus_cache_files in cache_files.items():  # processing corpus by corpus
             real_file_hashes = set()  # to be able to compare cache map with actual files
-            cache_key = self._entry_key_gen(corpus_id)
             for cache_entry in corpus_cache_files:
                 num_processed += 1
                 item_key = os.path.basename(cache_entry[0]).rsplit('.conc')[0]
@@ -146,6 +145,7 @@ class CacheCleanup(CacheFiles):
                 if self._ttl < cache_entry[1] / 60.:
                     to_del[item_key] = cache_entry[0]
 
+            cache_key = self._entry_key_gen(corpus_id)
             cache_map = self._db.hash_get_all(cache_key)
             if cache_map:
                 try:
@@ -168,7 +168,10 @@ class CacheCleanup(CacheFiles):
                 logging.getLogger().error('Cache map [%s] not found' % cache_key)
                 for item_hash, unbound_file in to_del.items():
                     if not dry_run:
-                        os.unlink(unbound_file)
+                        try:
+                            os.unlink(unbound_file)
+                        except OSError as ex:
+                            logging.getLogger().warning('Failed to remove file %s: %s' % (unbound_file, ex))
                     logging.getLogger().warn('deleted unbound cache file: %s' % unbound_file)
 
         ans = {'type': 'summary', 'processed': num_processed, 'deleted': num_deleted}
