@@ -122,7 +122,7 @@ requirejs.config({
         #if $app_bar_js
         #for $item in $app_bar_js.deps
         #if 'shim' in $item
-        ,'$item.module' : { deps: #filter $Jsonize# $item.shim.deps #end filter# }
+        ,'$item.module' : { deps: $to_json($item.shim.deps) }
         #end if
         #end for
         #end if
@@ -150,7 +150,7 @@ define('win', [], function () { return window; });
 define('conf', [], function () {
     var conf = {};
     conf.page = {};
-    conf.activePlugins = #filter $Jsonize#$active_plugins#end filter#;
+    conf.activePlugins = $to_json($active_plugins);
     conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 5000);
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_url";
@@ -172,9 +172,9 @@ define('conf', [], function () {
     #if $varExists('aligned_corpora')
     conf.alignedCorpora = [ #filter $Join#${aligned_corpora, mask='"%s"'}#end filter# ];
     #end if
-    conf.availableAlignedCorpora = #filter $Jsonize#$getVar('Aligned', [])#end filter#;
-    conf.pluginData = #filter $Jsonize#$plugin_data#end filter#;
-    conf.notifications = #filter $Jsonize#$messages#end filter#;
+    conf.availableAlignedCorpora = $to_json($getVar('Aligned', []));
+    conf.pluginData = $to_json($plugin_data);
+    conf.notifications = $to_json($messages);
     conf.queryHints = [
         "$_('You can use the \\u0022down arrow\\u0022 key to view recent queries')",
         "$_('In CQL mode you can use Shift+ENTER to enter a new line')"
@@ -182,10 +182,10 @@ define('conf', [], function () {
     conf.queryTypesHints = {
         iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
     };
-    conf.ttIntervalChars = #filter $Jsonize#$getVar('interval_chars', [])#end filter#;
-    conf.menuData = #filter $Jsonize#$menu_data#end filter#;
-    conf.asyncTasks = #filter $Jsonize#$async_tasks#end filter#;
-    conf.ShowConcToolbar = #filter $Jsonize#$use_conc_toolbar#end filter#;
+    conf.ttIntervalChars = $to_json($getVar('interval_chars', []));
+    conf.menuData = $to_json($menu_data);
+    conf.asyncTasks = $to_json($async_tasks);
+    conf.ShowConcToolbar = $to_json($use_conc_toolbar);
 
     return conf;
 });

@@ -402,13 +402,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             ]
         },
 
-        _createRefActionLink : function (corpusOutput, corpname) {
-            return this.createActionLink('fullref', [['pos', corpusOutput.tokenNumber], ['corpname', corpname]]);
-        },
-
         _renderText : function (corpusOutput, corpusIdx) {
             const corpname = this.props.cols[corpusIdx].n;
-            const refActionLink = this._createRefActionLink(corpusOutput, corpname);
 
             const ans = [
                 <td key="ref" className="ref" title={this.translate('concview__click_for_details')}
@@ -426,25 +421,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _handleRefsClick : function (corpusId, tokenNumber, lineIdx) {
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SHOW_REF_DETAIL',
-                props: {
-                    corpusId: corpusId,
-                    tokenNumber: tokenNumber,
-                    lineIdx: lineIdx
-                }
-            });
+            this.props.refsDetailClickHandler(corpusId, tokenNumber, lineIdx);
         },
 
         _handleKwicClick : function (corpusId, tokenNumber, lineIdx) {
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
-                props: {
-                    corpusId: corpusId,
-                    tokenNumber: tokenNumber,
-                    lineIdx: lineIdx
-                }
-            });
+            this.props.concDetailClickHandler(corpusId, tokenNumber, lineIdx);
         },
 
         shouldComponentUpdate : function (nextProps, nextState) {
@@ -454,9 +435,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         render : function () {
-            let primaryLang = this.props.data.languages.first();
-            let alignedCorpora = this.props.data.languages.rest();
-            let htmlClasses = [];
+            const primaryLang = this.props.data.languages.first();
+            const alignedCorpora = this.props.data.languages.rest();
+            const htmlClasses = [];
             if (this.props.data.hasFocus) {
                 htmlClasses.push('active');
             }
@@ -545,7 +526,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          showLineNumbers={this.props.ShowLineNumbers}
                          lineSelMode={this.state.lineSelMode}
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}
-                         audioPlayerIsVisible={this.state.audioPlayerIsVisible} />;
+                         audioPlayerIsVisible={this.state.audioPlayerIsVisible}
+                         concDetailClickHandler={this.props.concDetailClickHandler}
+                         refsDetailClickHandler={this.props.refsDetailClickHandler} />;
         },
 
         render : function () {

@@ -27,9 +27,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
-    pageSelf.init(conf,
-        #filter $Jsonize#$corplist_params#end filter#,
-        #filter $Jsonize#$corplist_data#end filter#);
+    pageSelf.init(
+        conf,
+        $to_json($corplist_params),
+        $to_json($corplist_data)
+    );
 });
 #end def
 

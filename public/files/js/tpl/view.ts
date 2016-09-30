@@ -37,17 +37,24 @@ import $ = require('jquery');
 import documentModule = require('./document');
 import popupBox = require('../popupbox');
 import conclines = require('../conclines');
-import {init as concViewsInit} from 'views/concordance/main';
-import lineSelStores = require('../stores/concordance/lineSelection');
+import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
+import {LineSelectionStore} from '../stores/concordance/lineSelection';
+import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
 import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary} from '../stores/concordance/lines';
-import SoundManager = require('SoundManager');
+import * as SoundManager from 'SoundManager';
 import * as d3 from 'vendor/d3';
-import syntaxViewer = require('plugins/syntaxViewer/init');
-import userSettings = require('../userSettings');
-import applicationBar = require('plugins/applicationBar/init');
-import RSVP = require('vendor/rsvp');
-import {ConcDetail} from '../detail';
+import * as syntaxViewer from 'plugins/syntaxViewer/init';
+import {UserSettings} from '../userSettings';
+import * as applicationBar from 'plugins/applicationBar/init';
+import * as RSVP from 'vendor/rsvp';
 declare var Modernizr:Modernizr.ModernizrStatic;
+
+export class ViewPageStores {
+    lineSelectionStore:LineSelectionStore;
+    lineViewStore:ConcLineStore;
+    concDetailStore:ConcDetailStore;
+    refsDetailStore:RefsDetailStore;
+}
 
 
 export class ViewPage {
@@ -60,9 +67,13 @@ export class ViewPage {
 
     private layoutModel:documentModule.PageModel;
 
-    private lineSelectionStore:lineSelStores.LineSelectionStore;
+    private lineSelectionStore:LineSelectionStore;
 
     private lineViewStore:ConcLineStore;
+
+    private concDetailStore:ConcDetailStore;
+
+    private refsDetailstore:RefsDetailStore;
 
     private hasLockedGroups:boolean;
 
@@ -70,15 +81,13 @@ export class ViewPage {
 
     private lastGroupStats:any; // group stats cache
 
-    private concDetail:ConcDetail;
-
-    constructor(layoutModel:documentModule.PageModel, lineSelectionStore:lineSelStores.LineSelectionStore,
-            lineViewStore:ConcLineStore, hasLockedGroups:boolean) {
+    constructor(layoutModel:documentModule.PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.lineSelectionStore = lineSelectionStore;
-        this.lineViewStore = lineViewStore;
+        this.lineSelectionStore = stores.lineSelectionStore;
+        this.lineViewStore = stores.lineViewStore;
+        this.concDetailStore = stores.concDetailStore;
+        this.refsDetailstore = stores.refsDetailStore;
         this.hasLockedGroups = hasLockedGroups;
-        this.concDetail = new ConcDetail(layoutModel.pluginApi());
     }
 
 
@@ -286,7 +295,7 @@ export class ViewPage {
         let x;
         let x1;
         let x2;
-        let rgx = /(\d+)(\d{3})/;
+        const rgx = /(\d+)(\d{3})/;
 
         nStr += '';
         x = nStr.split('.');
@@ -314,60 +323,6 @@ export class ViewPage {
                 });
             }
         });
-
-        this.lineViewStore.bindExternalRefsDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
-            this.concDetail.showRefDetail(
-                this.layoutModel.createActionUrl('fullref'),
-                {corpname: corpusId, pos: tokenNum},
-                () => {
-                    // TODO
-                    // here we're doing a dirty hack to glue
-                    // the old code in detail.js with newer Flux store
-                    this.lineViewStore.setLineFocus(lineIdx, true);
-                    this.lineViewStore.notifyChangeListeners();
-                },
-                () => {
-                    this.lineViewStore.setLineFocus(lineIdx, false);
-                    this.lineViewStore.notifyChangeListeners();
-                    // TODO dtto
-                },
-                (error) => {
-                    // TODO dtto
-                    this.lineViewStore.setLineFocus(lineIdx, false);
-                    this.lineViewStore.notifyChangeListeners();
-                    this.layoutModel.showMessage('error', error);
-                }
-            );
-        });
-
-        this.lineViewStore.bindExternalKwicDetailFn((corpusId:string, tokenNum:number, lineIdx:number) => {
-            let args = this.layoutModel.getConcArgs().toDict();
-            args['corpname'] = corpusId; // just for sure (is should be already in args)
-            args['pos'] = String(tokenNum);
-            this.concDetail.showDetail(
-                this.layoutModel.createActionUrl('widectx'),
-                args,
-                (popupBox) => {
-                    // TODO
-                    // here we're doing a dirty hack to glue
-                    // the old code in detail.js with newer Flux store
-                    this.lineViewStore.setLineFocus(lineIdx, true);
-                    this.viewDetailDoneCallback(popupBox);
-                    this.lineViewStore.notifyChangeListeners();
-                },
-                () => {
-                    this.lineViewStore.setLineFocus(lineIdx, false);
-                    this.lineViewStore.notifyChangeListeners();
-                    // TODO dtto
-                },
-                (error) => {
-                    // TODO dtto
-                    this.lineViewStore.setLineFocus(lineIdx, false);
-                    this.lineViewStore.notifyChangeListeners();
-                    this.layoutModel.showMessage('error', error);
-                }
-            );
-        });
     }
 
     renderLines(props:ViewConfiguration):RSVP.Promise<any> {
@@ -383,27 +338,6 @@ export class ViewPage {
             }
         });
         return ans;
-    }
-
-    viewDetailDoneCallback(boxInst):void {
-        let self = this;
-        $('a.expand-link').each(function () {
-            $(this).one('click', function (event) {
-                self.concDetail.showDetail(
-                    self.layoutModel.createActionUrl($(this).data('action')),
-                    $(this).data('params'),
-                    // Expand link, when clicked, must bind the same event handler
-                    // for the new expand link. That's why this 'callback recursion' is present.
-                    self.viewDetailDoneCallback.bind(self),
-                    () => {},
-                    (err) => {
-                        self.layoutModel.showMessage('error', err);
-                    }
-                );
-                event.preventDefault();
-            });
-        });
-        this.layoutModel.mouseOverImages(boxInst.getRootElement());
     }
 
     /**
@@ -486,7 +420,7 @@ export class ViewPage {
 
     private updateLocalAlignedCorpora():void {
         let serverSideAlignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
-        this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
+        this.layoutModel.userSettings.set(UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
     init(lineViewProps:ViewConfiguration):RSVP.Promise<any> {
@@ -504,11 +438,13 @@ export class ViewPage {
             	this.concViews = concViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
+                    this.layoutModel.layoutViews,
                     this.lineViewStore,
                     this.lineSelectionStore,
+                    this.concDetailStore,
+                    this.refsDetailstore,
                     this.layoutModel.getStores().userInfoStore,
-                    this.layoutModel.getStores().viewOptionsStore,
-                    this.layoutModel.layoutViews
+                    this.layoutModel.getStores().viewOptionsStore
                 );
 
                 return this.renderLines(lineViewProps);
@@ -559,26 +495,39 @@ export function init(conf):ViewPage {
         Unfinished: layoutModel.getConf<boolean>('Unfinished'),
         canSendEmail: layoutModel.getConf<boolean>('can_send_mail'),
         ContainsWithin: layoutModel.getConf<boolean>('ContainsWithin'),
-        ShowConcToolbar: layoutModel.getConf<boolean>('ShowConcToolbar')
+        ShowConcToolbar: layoutModel.getConf<boolean>('ShowConcToolbar'),
+        SpeechStruct: layoutModel.getConf<string>('SpeechStruct'),
+        StructCtx: layoutModel.getConf<string>('StructCtx')
     };
-    let lineViewStore = new ConcLineStore(
+    const stores = new ViewPageStores();
+    stores.lineViewStore = new ConcLineStore(
             layoutModel,
             layoutModel.dispatcher,
             lineViewProps,
             layoutModel.getConf<Array<ServerLineData>>('Lines')
     );
-    let lineSelectionStore = new lineSelStores.LineSelectionStore(
+    stores.lineSelectionStore = new LineSelectionStore(
             layoutModel,
             layoutModel.dispatcher,
-            lineViewStore,
+            stores.lineViewStore,
             conclines.openStorage(()=>{}),
             'simple'
     );
-    let pageModel = new ViewPage(
-            layoutModel,
-            lineSelectionStore,
-            lineViewStore,
-            layoutModel.getConf<number>('NumLinesInGroups') > 0
+    stores.concDetailStore = new ConcDetailStore(
+        layoutModel,
+        layoutModel.dispatcher,
+        stores.lineViewStore,
+        lineViewProps.StructCtx
+    );
+    stores.refsDetailStore = new RefsDetailStore(
+        layoutModel,
+        layoutModel.dispatcher,
+        stores.lineViewStore
+    );
+    const pageModel = new ViewPage(
+        layoutModel,
+        stores,
+        layoutModel.getConf<number>('NumLinesInGroups') > 0
     );
     pageModel.init(lineViewProps).then(
         () => {},

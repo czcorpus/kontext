@@ -423,15 +423,13 @@ def get_detail_context(corp, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx
         if not seg['class']:
             seg['class'] = 'coll'
     data['content'] = region_left + region_kwic + region_right
-    refbase = 'pos=%i&' % pos
+    refbase = [('pos', pos)]
     if hitlen != 1:
-        refbase += 'hitlen=%i&' % hitlen
-    data['leftlink'] = refbase + ('detail_left_ctx=%i&detail_right_ctx=%i'
-                                  % (detail_left_ctx + detail_ctx_incr,
-                                     detail_right_ctx))
-    data['rightlink'] = refbase + ('detail_left_ctx=%i&detail_right_ctx=%i'
-                                   % (detail_left_ctx,
-                                      detail_right_ctx + detail_ctx_incr))
+        refbase.append(('hitlen', hitlen))
+    data['expand_left_args'] = dict(refbase + [('detail_left_ctx', detail_left_ctx + detail_ctx_incr),
+                                    ('detail_right_ctx', detail_right_ctx)])
+    data['expand_right_args'] = dict(refbase + [('detail_left_ctx', detail_left_ctx),
+                                     ('detail_right_ctx', detail_right_ctx + detail_ctx_incr)])
     data['righttoleft'] = corp.get_conf('RIGHTTOLEFT')
     data['pos'] = pos
     data['maxdetail'] = maxdetail

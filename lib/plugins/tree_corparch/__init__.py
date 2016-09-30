@@ -77,6 +77,7 @@ class CorptreeParser(object):
         ans.sentence_struct = elm.attrib['sentence_struct'] if 'sentence_struct' in elm.attrib else None
         ans.tagset = elm.attrib.get('tagset', None)
         ans.speech_segment = elm.attrib.get('speech_segment', None)
+        ans.speech_struct = elm.attrib.get('speech_struct', None)
         ans.bib_struct = elm.attrib.get('bib_struct', None)
         ans.collator_locale = elm.attrib.get('collator_locale', 'en_US')
         ans.sample_size = elm.attrib.get('sample_size', -1)

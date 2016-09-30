@@ -102,4 +102,14 @@ declare module AjaxResponse {
         offset:number;
     }
 
+    export interface WideCtx extends Kontext.AjaxResponse {
+        content:Array<{class:string; str:string}>;
+        expand_left_args:{pos:number; hitlen:number; detail_left_ctx:number; detail_right_ctx:number};
+        expand_right_args:{pos:number; hitlen:number; detail_left_ctx:number; detail_right_ctx:number};
+    }
+
+    export interface FullRef extends Kontext.AjaxResponse {
+        Refs:Array<{name:string; val:string}>;
+    }
+
 }

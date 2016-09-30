@@ -545,6 +545,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.sentence_struct = sentence_struct
         ans.tagset = node.attrib.get('tagset', None)
         ans.speech_segment = node.attrib.get('speech_segment', None)
+        ans.speech_struct = node.attrib.get('speech_struct', None)
         ans.bib_struct = node.attrib.get('bib_struct', None)
         ans.collator_locale = node.attrib.get('collator_locale', 'en_US')
         ans.sample_size = node.attrib.get('sample_size', -1)

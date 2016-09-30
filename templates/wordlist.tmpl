@@ -49,7 +49,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.attrname = "$wlattr";
     conf.reloadUrl = "$reload_url";
     conf.IsUnfinished = #if $processing is not None#true#else#false#end if#;
-    conf.WorkerTasks = #filter $Jsonize#$tasks#end filter#;
+    conf.WorkerTasks = $to_json($tasks);
     var page = pageSelf.init(conf);
 });
 #end def

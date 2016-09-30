@@ -40,24 +40,26 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
     conf.concLineMaxGroupNum = $conc_line_max_group_num;
-    conf.WideCtxGlobals = #filter $Jsonize#$widectx_globals#end filter#;
-    conf.CorporaColumns = #filter $Jsonize#${CorporaColumns}#end filter#;
-    conf.KWICCorps = #filter $Jsonize#$KWICCorps#end filter#;
+    conf.WideCtxGlobals = $to_json($widectx_globals);
+    conf.CorporaColumns = $to_json($CorporaColumns);
+    conf.KWICCorps = $to_json($KWICCorps);
     conf.ViewMode = '${viewmode}';
     conf.ShowLineNumbers = #if $line_numbers#true#else#false#end if#;
-    conf.Pagination = #filter $Jsonize#$pagination#end filter#;
+    conf.Pagination = $to_json($pagination);
     conf.FromPage = #if $fromp#$fromp#else#0#end if#;
-    conf.Lines = #filter $Jsonize#$Lines#end filter#;
-    conf.SortIdx = #filter $Jsonize#$Sort_idx#end filter#;
+    conf.Lines = $to_json($Lines);
+    conf.SortIdx = $to_json($Sort_idx);
     conf.ConcSize = $concsize;
     conf.FullSize = $fullsize;
     conf.SampledSize = $sampled_size;
     conf.ResultIpm = $result_relative_freq;
     conf.ResultArf = #if $result_arf#$result_arf#else#null#end if#;
-    conf.ResultShuffled = #filter $Jsonize#$result_shuffled#end filter#;
+    conf.ResultShuffled = $to_json($result_shuffled);
     conf.NumLinesInGroups = $num_lines_in_groups;
-    conf.LinesGroupsNumbers = #filter $Jsonize#$lines_groups_numbers#end filter#;
-    conf.ContainsWithin = #filter $Jsonize#$getVar('query_contains_within', False)#end filter#;
+    conf.LinesGroupsNumbers = $to_json($lines_groups_numbers);
+    conf.ContainsWithin = $to_json($getVar('query_contains_within', False));
+    conf.SpeechStruct = $to_json($speech_struct);
+    conf.StructCtx = $to_json($struct_ctx);
 
     #if $running_calc
     conf.numLines = $len($Lines);

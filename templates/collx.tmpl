@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.attrname = "$attrname";
-    conf.workerTasks = #filter $Jsonize#$getVar('tasks', [])#end filter#;
+    conf.workerTasks = $to_json($getVar('tasks', []));
     var page = pageSelf.init(conf);
     #if $processing is not None
     page.startWatching();

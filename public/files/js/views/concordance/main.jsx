@@ -25,15 +25,17 @@ import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
 import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
+import {init as concDetailViewsInit} from 'views/concordance/detail';
 
 
-export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfoStore,
-        viewOptionsStore, layoutViews) {
+export function init(dispatcher, mixins, layoutViews, lineStore, lineSelectionStore, concDetailStore,
+        refsDetailStore, userInfoStore, viewOptionsStore) {
 
     const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
     const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
     const viewOptionsViews = structsAttrsViewInit(dispatcher, mixins, viewOptionsStore);
+    const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -453,6 +455,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
         getInitialState : function () {
             return {
                 viewOptionsVisible: false,
+                concDetailData : null,
+                refsDetailData: null,
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
                 concSummary: lineStore.getConcSummary()
@@ -485,6 +489,36 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             }
         },
 
+        _handleDetailCloseClick : function () {
+            this.setState(React.addons.update(this.state, {concDetailData: {$set: null}}));
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_RESET_DETAIL',
+                props: {}
+            });
+        },
+
+        _detailClickHandler : function (corpusId, tokenNumber, lineIdx) {
+            this.setState(React.addons.update(this.state, {
+                concDetailData: {$set: {corpusId: corpusId, tokenNumber: tokenNumber, lineIdx: lineIdx}},
+                refsDetailData: {$set: null}
+            }));
+        },
+
+        _handleRefsDetailCloseClick : function () {
+            this.setState(React.addons.update(this.state, {refsDetailData: {$set: null}}));
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_REF_RESET_DETAIL',
+                props: {}
+            });
+        },
+
+        _refsDetailClickHandler : function (corpusId, tokenNumber, lineIdx) {
+            this.setState(React.addons.update(this.state, {
+                concDetailData: {$set: null},
+                refsDetailData: {$set: {corpusId: corpusId, tokenNumber: tokenNumber, lineIdx: lineIdx}}
+            }));
+        },
+
         _lineStoreChangeHandler : function (store, action) {
             this.setState({
                 viewOptionsVisible: false,
@@ -508,6 +542,22 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
             return (
                 <div>
                     {this.state.viewOptionsVisible ? this._renderViewOptions() : null }
+                    {this.state.concDetailData ?
+                        <concDetailViews.ConcDetail
+                            closeClickHandler={this._handleDetailCloseClick}
+                            corpusId={this.state.concDetailData.corpusId}
+                            tokenNumber={this.state.concDetailData.tokenNumber}
+                            lineIdx={this.state.concDetailData.lineIdx} />
+                        : null
+                    }
+                    {this.state.refsDetailData ?
+                        <concDetailViews.RefDetail
+                            closeClickHandler={this._handleRefsDetailCloseClick}
+                            corpusId={this.state.refsDetailData.corpusId}
+                            tokenNumber={this.state.refsDetailData.tokenNumber}
+                            lineIdx={this.state.refsDetailData.lineIdx} />
+                        : null
+                    }
                     <div id="conc-top-bar">
                         <div className="info-level">
                             <paginationViews.Paginator {...this.props} />
@@ -524,7 +574,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore, userInfo
                                 usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
                     </div>
                     <div id="conclines-wrapper">
-                        <linesViews.ConcLines {...this.props} />
+                        <linesViews.ConcLines {...this.props}
+                            concDetailClickHandler={this._detailClickHandler}
+                            refsDetailClickHandler={this._refsDetailClickHandler} />
                     </div>
                     <div id="conc-bottom-bar">
                         <div className="info-level">
