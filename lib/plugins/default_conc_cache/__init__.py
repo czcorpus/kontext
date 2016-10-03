@@ -57,7 +57,7 @@ def _uniqname(subchash, query):
     """
     if subchash is None:
         subchash = ''
-    return hashlib.md5('#'.join([q.encode('utf-8') for q in query]) + subchash).hexdigest()
+    return hashlib.md5('#'.join([q.encode('utf-8') for q in query]) + subchash.encode('utf-8')).hexdigest()
 
 
 class CacheMapping(AbstractConcCache):
