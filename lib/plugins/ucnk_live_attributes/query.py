@@ -71,7 +71,7 @@ class AttrArgs(object):
             cnf_item = []
             if type(values) is list or type(values) is tuple:
                 for value in values:
-                    if value[0] != '@':
+                    if len(value) == 0 or value[0] != '@':
                         cnf_item.append('%s.%s %s ?' % (item_prefix, key, cmp_operator(value)))
                         sql_values.append(self.import_value(value))
                     else:
