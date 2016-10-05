@@ -809,7 +809,6 @@ class Kontext(Controller):
         """
         result['corpname'] = self.args.corpname
         result['align'] = self.args.align
-        result['struct_ctx'] = corpus_get_conf(maincorp, 'STRUCTCTX')
         result['corp_doc'] = corpus_get_conf(maincorp, 'DOCUMENTATION')
         result['human_corpname'] = self._human_readable_corpname()
 
@@ -1056,6 +1055,7 @@ class Kontext(Controller):
         result['format_number'] = partial(format_number)
         result['join_params'] = templating.join_params
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
+        result['to_json'] = lambda obj: json.dumps(obj)
         result['camelize'] = l10n.camelize
         result['update_params'] = templating.update_params
         result['jsonize_user_item'] = user_items.to_json
@@ -1127,13 +1127,19 @@ class Kontext(Controller):
         else:
             return ''
 
-    def _has_configured_speech(self):
+    def get_speech_segment(self):
         """
-        Tests whether the current corpus contains structural attributes compatible which are
-        interpreted as ones containing speech data reference.
+        Returns a speech segment (= structural attribute, e.g. 'sp.audio')
+        if the current corpus has one configured.
+
+        Returns:
+            str: segment name if speech_segment is configured in 'corpora.xml' and it actually exists; else None
         """
         speech_struct = plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment')
-        return speech_struct in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(',')
+        if speech_struct in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(','):
+            return tuple(speech_struct.split('.'))
+        else:
+            return None
 
     @staticmethod
     def _validate_range(actual_range, max_range):

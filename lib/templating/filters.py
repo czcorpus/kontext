@@ -89,11 +89,6 @@ class Shortener(Filter):
         return '%s%s' % (s, suff)
 
 
-class Jsonize(Filter):
-    def filter(self, val, **kw):
-        return json.dumps(val)
-
-
 class Join(Filter):
     def filter(self, val, **kw):
         separ = kw.get('separator', ', ')

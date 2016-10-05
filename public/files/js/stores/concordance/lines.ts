@@ -133,6 +133,17 @@ export interface ViewConfiguration {
      */
     ShowConcToolbar:boolean;
 
+    /**
+     * A structure representing a speech. If null then the corpus
+     * is not considered to be spoken.
+     */
+    SpeechStruct:string;
+
+    /**
+     * A structure used to show whole document. It is optional (null is ok).
+     */
+    StructCtx:string;
+
     onReady?:()=>void;
 
     onPageUpdate?:()=>void;
@@ -339,17 +350,11 @@ export class ConcLineStore extends SimplePageStore {
 
     private currentPage:number;
 
-    private focusedLine:number;
-
     private numItemsInLockedGroups:number;
 
     private unfinishedCalculation:boolean;
 
     private concSummary:ConcSummary;
-
-    private externalRefsDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
-
-    private externalKwicDetailFn:(corpusId:string, tokenNum:number, lineIdx:number)=>void;
 
     private containsWithin:boolean;
 
@@ -432,18 +437,6 @@ export class ConcLineStore extends SimplePageStore {
                 case 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES':
                     self.pagination.lastPage = payload.props['availPages'];
                     self.notifyChangeListeners();
-                break;
-                case 'CONCORDANCE_SHOW_REF_DETAIL':
-                    if (typeof self.externalRefsDetailFn === 'function') {
-                        self.externalRefsDetailFn(payload.props['corpusId'],
-                                payload.props['tokenNumber'], payload.props['lineIdx']);
-                    }
-                break;
-                case 'CONCORDANCE_SHOW_KWIC_DETAIL':
-                    if (typeof self.externalKwicDetailFn === 'function') {
-                        self.externalKwicDetailFn(payload.props['corpusId'],
-                                payload.props['tokenNumber'], payload.props['lineIdx']);
-                    }
                 break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
                     self.unfinishedCalculation = !payload.props['finished'];
@@ -554,7 +547,7 @@ export class ConcLineStore extends SimplePageStore {
     }
 
     private createAudioLink(textChunk:TextChunk):string {
-        let tmp = textChunk.openLink || textChunk.closeLink;
+        const tmp = textChunk.openLink || textChunk.closeLink;
         if (tmp) {
             return this.layoutModel.createActionUrl('audio?corpname=' +
                     this.baseCorpname + '&' + 'chunk='+encodeURIComponent(tmp.speechPath));
@@ -645,19 +638,36 @@ export class ConcLineStore extends SimplePageStore {
         return this.currentPage;
     }
 
-    bindExternalRefsDetailFn(fn:(corpusId:string, tokenNum:number, lineIdx:number)=>void):void {
-        this.externalRefsDetailFn = fn;
-    }
-
-    bindExternalKwicDetailFn(fn:(corpusId:string, tokenNum:number, lineIdx:number)=>void):void {
-        this.externalKwicDetailFn = fn;
-    }
-
     setLineFocus(lineIdx:number, focus:boolean) {
-        this.lines.forEach(item => {
-            item.hasFocus = false;
-        });
-        this.lines.get(lineIdx).hasFocus = focus; // TODO mutability issues
+        this.lines = this.lines.map(item => {
+            if (item.hasFocus) {
+                return {
+                    hasFocus: false,
+                    kwicLength: item.kwicLength,
+                    languages: item.languages,
+                    lineGroup: item.lineGroup,
+                    lineNumber: item.lineNumber
+                };
+
+            } else {
+                return item;
+            }
+        }).toList();
+
+        if (focus === true) {
+            const oldLine = this.lines.get(lineIdx);
+            if (oldLine) {
+                const idx = this.lines.indexOf(oldLine);
+                const newVal:Line = {
+                    hasFocus: focus,
+                    kwicLength: oldLine.kwicLength,
+                    languages: oldLine.languages,
+                    lineGroup: oldLine.lineGroup,
+                    lineNumber: oldLine.lineNumber
+                };
+                this.lines = this.lines.set(idx, newVal);
+            }
+        }
     }
 
     isUnfinishedCalculation():boolean {

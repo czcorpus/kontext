@@ -27,15 +27,15 @@ $_("View")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (viewAttrs, conf) {
-    conf.AttrList = #filter $Jsonize#$AttrList#end filter#;
-    conf.FixedAttr = "${fixed_attr}";
-    conf.CurrentAttrs = #filter $Jsonize#$CurrentAttrs#end filter#;
-    conf.Availstructs = #filter $Jsonize#$Availstructs#end filter#;
-    conf.StructAttrs = #filter $Jsonize#$structattrs#end filter#;
-    conf.CurrStructAttrs = #filter $Jsonize#$curr_structattrs#end filter#;
-    conf.AvailRefs = #filter $Jsonize#$Availrefs#end filter#;
-    conf.AttrAllpos = "${attr_allpos}";
-    conf.AttrVmode = "${attr_vmode}";
+    conf.AttrList = $to_json($AttrList);
+    conf.FixedAttr = $to_json($fixed_attr);
+    conf.CurrentAttrs = $to_json($CurrentAttrs);
+    conf.Availstructs = $to_json($Availstructs);
+    conf.StructAttrs = $to_json($structattrs);
+    conf.CurrStructAttrs = $to_json($curr_structattrs);
+    conf.AvailRefs = $to_json($Availrefs);
+    conf.AttrAllpos = $to_json($attr_allpos);
+    conf.AttrVmode = $to_json($attr_vmode);
     viewAttrs.init(conf);
 });
 #end def

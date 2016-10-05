@@ -66,10 +66,17 @@ declare module "views/concordance/main" {
         ConcordanceView:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
-            lineStore:any, lineSelectionStore:any, userInfoStore:any,
-            viewOptionsStore:ViewOptions.IViewOptionsStore,
-            layoutViews:Kontext.LayoutViews):ConcordanceView;
+    export function init(
+        dispatcher:Dispatcher.Dispatcher<any>,
+        mixins:any,
+        layoutViews:Kontext.LayoutViews,
+        lineStore:Kontext.PageStore,
+        lineSelectionStore:Kontext.PageStore,
+        concDetailStore:Kontext.PageStore,
+        refsDetailStore:Kontext.PageStore,
+        userInfoStore:Kontext.PageStore,
+        viewOptionsStore:ViewOptions.IViewOptionsStore
+    ):ConcordanceView;
 }
 
 declare module "views/concordance/detail" {
@@ -78,7 +85,8 @@ declare module "views/concordance/detail" {
         RefDetail: React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any):RefDetail;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any, layoutViews:any,
+            concDetailStore:Kontext.PageStore):RefDetail;
 }
 
 

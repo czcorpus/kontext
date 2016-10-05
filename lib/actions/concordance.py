@@ -312,6 +312,9 @@ class Actions(Kontext):
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         out['aligned_corpora'] = self.args.sel_aligned
         out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
+        out['speech_segment'] = self.get_speech_segment()
+        out['speech_struct'] = corpus_info.speech_struct
+        out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
         if not out['finished'] and self.args.async and self.args.save and not out['sampled_size']:
@@ -1189,7 +1192,7 @@ class Actions(Kontext):
             raise UserActionException('Unknown format: %s' % (saveformat,))
         return out_data
 
-    @exposed(access_level=1, template='widectx.tmpl', legacy=True)
+    @exposed(access_level=1, legacy=True, return_type='json')
     def structctx(self, pos=0, struct='doc'):
         """
         display a hit in a context of a structure"
@@ -1200,7 +1203,6 @@ class Actions(Kontext):
         self.args.detail_left_ctx = pos - beg
         self.args.detail_right_ctx = end - pos - 1
         result = self.widectx(pos)
-        result['no_display_links'] = True
         return result
 
     @exposed(access_level=0, legacy=True)
@@ -1211,10 +1213,10 @@ class Actions(Kontext):
         p_attrs = self.args.attrs.split(',')
         attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]  # prefer 'word' but allow other attr if word is off
         data = self.call_function(conclib.get_detail_context, (self.corp, pos), attrs=attrs)
-        data['allow_left_expand'] = int(getattr(self.args, 'detail_left_ctx', 0)) < \
-                int(data['maxdetail'])
-        data['allow_right_expand'] = int(getattr(self.args, 'detail_right_ctx', 0)) < \
-                int(data['maxdetail'])
+        if int(getattr(self.args, 'detail_left_ctx', 0)) >= int(data['maxdetail']):
+            data['expand_left_args'] = None
+        if int(getattr(self.args, 'detail_right_ctx', 0)) >= int(data['maxdetail']):
+            data['expand_right_args'] = None
         data['widectx_globals'] = self._get_attrs(WidectxArgsMapping,
                                                   dict(structs=self._get_struct_opts()))
         return data

@@ -28,12 +28,12 @@ $_("Create Subcorpus")#slurp
 #def bodyonload
 
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
-    conf.subcmixerFormData = #filter $Jsonize#$subcmixer_form_data#end filter#;
-    conf.structsAndAttrs = #filter $Jsonize#$structs_and_attrs#end filter#;
-    conf.currentWithinJson = #if $within_json#$within_json#else#''#end if#;
+    conf.subcmixerFormData = $to_json($subcmixer_form_data);
+    conf.structsAndAttrs = $to_json($structs_and_attrs);
+    conf.currentWithinJson = $within_json;
     conf.textTypesData = $text_types_data;
-    conf.CheckedSca = #filter $Jsonize#$checked_sca#end filter#;
-    conf.HasSubcmixer = #filter $Jsonize#$has_subcmixer#end filter#;
+    conf.CheckedSca = $to_json($checked_sca);
+    conf.HasSubcmixer = $to_json($has_subcmixer);
     pageSelf.init(conf);
 });
 
