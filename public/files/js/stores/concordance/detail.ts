@@ -157,6 +157,9 @@ export class ConcDetailStore extends SimplePageStore {
 
         const args = this.layoutModel.getConcArgs().toDict();
         args['corpname'] = corpusId; // just for sure (is should be already in args)
+        // we must delete 'usesubcorp' as the server API does not need it
+        // and in case of an aligned corpus it even produces an error
+        delete args['usesubcorp'];
         args['pos'] = String(tokenNum);
         args['format'] = 'json'
 
