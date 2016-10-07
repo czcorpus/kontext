@@ -281,7 +281,7 @@
 
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
-        grunt.registerTask('production', ['clean:all', 'less', 'exec:cql_gramar',
+        grunt.registerTask('production', ['clean:all', 'less', 'exec:cql_grammar',
                 'ts:production', 'babel', 'copy:dummyCompile',
                 'uglify:compiled', 'copy:preMinified',
                 'translations:production', 'requirejs:production',
