@@ -80,8 +80,11 @@
                 }
             },
             exec: {
-                compile_html_templates: {
+                tmpl: {
                     cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'T=$(echo {}); T=${T#./templates/}; cheetah compile --odir cmpltmpl --idir templates "$T"\' \\;'
+                },
+                cql_grammar: {
+                    cmd: './node_modules/pegjs/bin/pegjs --format amd --allowed-start-rules Query,RegExpRaw -o public/files/js/cqlParser/parser.js public/files/js/cqlParser/cql.pegjs'
                 }
             },
             "less": {
@@ -266,25 +269,25 @@
         });
 
         // generates development-ready project (i.e. no minimizations/optimizations)
-        grunt.registerTask('devel', ['clean:all', 'less:devel',
+        grunt.registerTask('devel', ['clean:all', 'less:devel', 'exec:cql_grammar',
                 'ts:devel', 'babel', 'copy:dummyCompile', 'copy:devel',
-                'requirejs:vendor', 'translations:devel', 'clean:cleanup', 'exec']);
+                'requirejs:vendor', 'translations:devel', 'clean:cleanup', 'exec:tmpl']);
 
         // regenerates JavaScript files for development-ready project (i.e. no min./optimizations
         // and no Cheetah templates compiled)
-        grunt.registerTask('develjs', ['clean:jsKeepVendor', 'less:devel',
+        grunt.registerTask('develjs', ['clean:jsKeepVendor', 'less:devel', 'exec:cql_grammar',
                 'ts:devel', 'babel', 'copy:dummyCompile',
                 'copy:dummyOptimize', 'translations:devel', 'clean:cleanup']);
 
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
-        grunt.registerTask('production', ['clean:all', 'less',
+        grunt.registerTask('production', ['clean:all', 'less', 'exec:cql_gramar',
                 'ts:production', 'babel', 'copy:dummyCompile',
                 'uglify:compiled', 'copy:preMinified',
                 'translations:production', 'requirejs:production',
-                'clean:production', 'exec']);
+                'clean:production', 'exec:cql_grammar']);
 
         // just compiles Cheetah templates
-        grunt.registerTask('templates', ['clean:templates', 'exec:compile_html_templates']);
+        grunt.registerTask('templates', ['clean:templates', 'exec:tmpl']);
     };
 }(module));
