@@ -285,7 +285,7 @@
                 'ts:production', 'babel', 'copy:dummyCompile',
                 'uglify:compiled', 'copy:preMinified',
                 'translations:production', 'requirejs:production',
-                'clean:production', 'exec:cql_grammar']);
+                'clean:production', 'exec:tmpl']);
 
         // just compiles Cheetah templates
         grunt.registerTask('templates', ['clean:templates', 'exec:tmpl']);
