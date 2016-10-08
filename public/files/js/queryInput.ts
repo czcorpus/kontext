@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
- * Copyright (c) 2003-2009  Pavel Rychly
+ * Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,6 +24,7 @@
 /// <reference path="../ts/declarations/virtual-keyboard.d.ts" />
 /// <reference path="../ts/declarations/cookies.d.ts" />
 /// <reference path="../ts/declarations/rsvp.d.ts" />
+/// <reference path="../ts/declarations/cqlParser.d.ts" />
 
 import * as $ from 'jquery';
 import cookies = require('vendor/cookies');
@@ -33,7 +35,7 @@ import * as virtKeyboard from 'vendor/virtual-keyboard';
 import * as RSVP from 'vendor/rsvp';
 import {PageModel, PluginApi} from './tpl/document';
 import {UserSettings} from './userSettings';
-
+import {parse as parseQuery} from 'cqlParser/parser';
 
 class CustomApi extends PluginApi implements Kontext.QueryPagePluginApi {
 
@@ -583,8 +585,37 @@ export class QueryFormTweaks {
     isPossibleQueryTypeMismatch(inputElm, queryTypeElm):boolean {
         const query = $(inputElm).val().trim();
         const queryType = $(queryTypeElm).find('option:selected').data('type');
-        const looksLikeCql = !!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query));
-        return !!(queryType === 'iquery' && looksLikeCql || queryType === 'cql' && !looksLikeCql);
+        let parseFn;
+        switch (queryType) {
+            case 'iquery':
+                parseFn = () => {
+                    if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
+                        throw new Error();
+                    }
+                }
+            break;
+            case 'lemma':
+            case 'phrase':
+            case 'word':
+                parseFn = parseQuery.bind(null, query, {startRule: 'RegExpRaw'});
+            break;
+            case 'cql':
+                parseFn = parseQuery.bind(null, query + ';');
+            break;
+            default:
+                parseFn = () => {};
+        }
+
+        let mismatch;
+        try {
+            parseFn();
+            mismatch = false;
+
+        } catch (e) {
+            mismatch = true;
+            console.log(e);
+        }
+        return mismatch;
     }
 
     /**
