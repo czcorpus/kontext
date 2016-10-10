@@ -49,6 +49,8 @@ class MainMenuItemId(object):
     def matches(self, item_id):
         """
         Tests whether self matches provided item_id.
+        Please note that the operation is not commutative
+        (see 2) below)
 
         By matching we mean:
         1) both items are without sub-items and of a same name
