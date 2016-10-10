@@ -26,40 +26,43 @@ class MainMenuTest(unittest.TestCase):
         """
         """
         m = MainMenu.NEW_QUERY()
-        self.assertTrue(m.matches('menu-new-query'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-new-query')))
 
         m = MainMenu.VIEW()
-        self.assertTrue(m.matches('menu-view'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-view')))
 
         m = MainMenu.SAVE()
-        self.assertTrue(m.matches('menu-save'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-save')))
 
         m = MainMenu.CORPORA()
-        self.assertTrue(m.matches('menu-corpora'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-corpora')))
 
         m = MainMenu.CONCORDANCE()
-        self.assertTrue(m.matches('menu-concordance'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-concordance')))
 
         m = MainMenu.FILTER()
-        self.assertTrue(m.matches('menu-filter'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-filter')))
 
         m = MainMenu.FREQUENCY()
-        self.assertTrue(m.matches('menu-frequency'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-frequency')))
 
         m = MainMenu.COLLOCATIONS()
-        self.assertTrue(m.matches('menu-collocations'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-collocations')))
 
         m = MainMenu.HELP()
-        self.assertTrue(m.matches('menu-help'))
+        self.assertTrue(m.matches(MainMenuItemId('menu-help')))
 
     def test_menu_item_init_and_match(self):
         m = MainMenuItemId('menu-frequency')('foo', 'bar')
-        self.assertTrue(m.matches('menu-frequency:foo'))
-        self.assertTrue(m.matches('menu-frequency:bar'))
+        self.assertTrue(MainMenuItemId('menu-frequency')('foo').matches(m))
+        self.assertFalse(m.matches(MainMenuItemId('menu-frequency')('foo')))
+        self.assertTrue(MainMenuItemId('menu-frequency')('bar').matches(m))
+        self.assertFalse(m.matches(MainMenuItemId('menu-frequency')('bar')))
 
-        self.assertFalse(m.matches('menu-frequency'))  # 'm' does not represent whole menu block
-        self.assertFalse(m.matches('menu-frequency:'))  # format strictness
-        self.assertFalse(m.matches('menu-frequency:xxx'))  # non-existing sub-menu
+        self.assertFalse(m.matches(MainMenuItemId('menu-frequency')))  # 'm' does not represent whole menu block
+        self.assertFalse(MainMenuItemId('menu-frequency').matches(m))
+        self.assertFalse(MainMenuItemId('menu-frequency')('xxx').matches(m))  # non-existing sub-menu
+        self.assertFalse(m.matches(MainMenuItemId('menu-frequency')('xxx')))
 
     def test_item_name(self):
         m = MainMenuItemId('menu-frequency')('foo')
