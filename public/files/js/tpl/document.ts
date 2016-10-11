@@ -951,10 +951,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.initNotifications();
                 this.asyncTaskChecker.init();
 
-                // init plug-ins
-                applicationBar.create(this.pluginApi());
-                footerBar.create(this.pluginApi());
-
                 this.initCallbacks.forEach(fn => fn());
 
                 this.registerCoreEvents();
@@ -964,7 +960,16 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             } catch (e) {
                 reject(e);
             }
-        });
+
+        }).then(
+            () => {
+                applicationBar.create(this.pluginApi());
+            }
+        ).then(
+            () => {
+                footerBar.create(this.pluginApi());
+            }
+        );
     }
 }
 
