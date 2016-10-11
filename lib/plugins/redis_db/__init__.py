@@ -43,7 +43,7 @@ import json
 
 import redis
 
-from abstract.general_storage import KeyValueStorage
+from plugins.abstract.general_storage import KeyValueStorage
 
 
 class RedisDb(KeyValueStorage):
