@@ -187,7 +187,7 @@ declare module Kontext {
     /**
      * A store managing access to a user information
      */
-    export interface UserInfoStore extends PageStore {
+    export interface IUserInfoStore extends PageStore {
         getCredentials():UserCredentials;
     }
 
@@ -270,7 +270,7 @@ declare module Kontext {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,
         queryHintStore:IQueryHintStore,
-        userInfoStore:UserInfoStore,
+        userInfoStore:IUserInfoStore,
         viewOptionsStore:ViewOptions.IViewOptionsStore,
         asyncTaskInfoStore:IAsyncTaskStore
     }

@@ -70,12 +70,7 @@ declare module "views/concordance/main" {
         dispatcher:Dispatcher.Dispatcher<any>,
         mixins:any,
         layoutViews:Kontext.LayoutViews,
-        lineStore:Kontext.PageStore,
-        lineSelectionStore:Kontext.PageStore,
-        concDetailStore:Kontext.PageStore,
-        refsDetailStore:Kontext.PageStore,
-        userInfoStore:Kontext.PageStore,
-        viewOptionsStore:ViewOptions.IViewOptionsStore
+        stores:any
     ):ConcordanceView;
 }
 
@@ -164,7 +159,7 @@ declare module "views/options/structsAttrs" {
     }
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>,
-            mixins:any, viewOptionsStore:ViewOptions.IViewOptionsStore):StructsAndAttrsViews;
+            mixins:any, viewOptionsStore:any):StructsAndAttrsViews;
 }
 
 

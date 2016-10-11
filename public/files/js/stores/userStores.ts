@@ -29,7 +29,7 @@ import * as Immutable from 'vendor/immutable';
 
 /**
  */
-export class UserInfo extends SimplePageStore implements Kontext.UserInfoStore {
+export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore {
 
     private layoutModel:PageModel;
 

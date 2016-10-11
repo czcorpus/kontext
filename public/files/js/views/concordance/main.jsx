@@ -28,8 +28,14 @@ import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
 import {init as concDetailViewsInit} from 'views/concordance/detail';
 
 
-export function init(dispatcher, mixins, layoutViews, lineStore, lineSelectionStore, concDetailStore,
-        refsDetailStore, userInfoStore, viewOptionsStore) {
+export function init(dispatcher, mixins, layoutViews, stores) {
+
+    const lineSelectionStore = stores.lineSelectionStore;
+    const lineStore = stores.lineViewStore;
+    const concDetailStore = stores.concDetailStore;
+    const refsDetailStore = stores.refsDetailStore;
+    const userInfoStore = stores.userInfoStore;
+    const viewOptionsStore = stores.viewOptionsStore;
 
     const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
