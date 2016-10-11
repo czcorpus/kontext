@@ -178,9 +178,19 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
     // ------------------------- <ConcDetail /> ---------------------------
 
-    const ConcDetail = React.createClass({
+    const ConcDetailMenu = React.createClass({
+        // speechStruct
+        render : function () {
+            return (
+                <ul className="view-mode">
+                    <li><a>default view</a></li>
+                    <li><a>view as speeches</a></li>
+                </ul>
+            );
+        }
+    });
 
-        mixins : mixins,
+    // ------------------------- <DefaultView /> ---------------------------
 
         getInitialState : function () {
             return {
@@ -239,9 +249,10 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         _expandClickHandler : function (position) {
             this.setState({
                 data: this.state.data,
-                waitingFor : position === 'left' ? 2 : 3, // TODO test 'right' properly
+                waitingFor : position,
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight()
+                hasExpandRight: concDetailStore.hasExpandRight(),
+                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument()
             });
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_EXPAND_KWIC_DETAIL',
@@ -254,11 +265,98 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         _storeChangeHandler : function (store, action) {
             this.setState({
                 data: concDetailStore.getConcDetail(),
-                waitingFor: 0,
+                waitingFor: null,
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
                 hasExpandRight: concDetailStore.hasExpandRight(),
                 canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument()
             });
+        },
+
+        _handleDisplayWholeDocumentClick : function () {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
+                props: {}
+            });
+        },
+
+        getInitialState : function () {
+            return {
+                data: concDetailStore.getConcDetail(),
+                hasExpandLeft: concDetailStore.hasExpandLeft(),
+                hasExpandRight: concDetailStore.hasExpandRight(),
+                canDisplayWholeDocument: false
+            }
+        },
+
+        componentDidMount : function () {
+            concDetailStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            concDetailStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        render : function () {
+            return(
+                <div>
+                    {this.state.hasExpandLeft ?
+                                <ExpandConcDetail position="left" waitingFor={this.state.waitingFor}
+                                        clickHandler={this._expandClickHandler.bind(this, 'left')}
+                                        waitingKey="left" />
+                                : null
+                    }
+                    {(this.state.data || []).map((item, i) => {
+                        return (
+                            <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>
+                        );
+                    })}
+                    {this.state.hasExpandRight ?
+                        <ExpandConcDetail position="right" waitingFor={this.state.waitingFor}
+                                clickHandler={this._expandClickHandler.bind(this, 'right')}
+                                waitingKey="right" />
+                        : null
+                    }
+                    {this.state.canDisplayWholeDocument ?
+                        <div className="footer">
+                            <a id="ctx-link"
+                                onClick={this._handleDisplayWholeDocumentClick}>display whole document</a>
+                        </div>
+                        : null
+                    }
+                </div>
+            );
+        }
+    });
+
+    // ------------------------- <ConcDetail /> ---------------------------
+
+    const ConcDetail = React.createClass({
+
+        mixins : mixins,
+
+        getInitialState : function () {
+            return {
+                isWaiting: true
+            };
+        },
+
+        _renderContents : function () {
+            if (this.state.isWaiting) {
+                return <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />;
+
+            } else {
+                return (
+                    <div>
+                        <ConcDetailMenu />
+                        <DefaultView corpusId={this.props.corpusId} tokenNumber={this.props.tokenNumber}
+                                lineIdx={this.props.lineIdx} />
+                    </div>
+                );
+            }
+        },
+
+        _storeChangeHandler : function () {
+            this.setState({isWaiting: false});
         },
 
         componentDidMount : function () {
