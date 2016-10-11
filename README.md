@@ -1,5 +1,7 @@
 ![KonText](https://kontext.korpus.cz/files/themes/default/kontext-logo.png)
 
+![Build status](https://travis-ci.org/czcorpus/kontext.svg?branch=master)
+
 Introduction
 ------------
 
