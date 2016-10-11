@@ -33,6 +33,7 @@
 
     .info-level {
         padding: 0.4em 1em;
+        display: inline-block;
     }
 }
 
@@ -245,6 +246,26 @@ i.coll {
     .ajax-loader {
         display: block;
         margin: 1em auto;
+    }
+
+    ul.view-mode {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+            margin: 0;
+            padding: 0;
+            display: inline-block;
+        }
+
+        li:after {
+            content: " | ";
+        }
+
+        li:last-child:after {
+            content: "";
+        }
     }
 }
 

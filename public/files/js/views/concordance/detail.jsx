@@ -162,6 +162,20 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
     });
 
+    // ------------------------- <ConcDetailMenu /> ---------------------------
+
+    const ConcDetailMenu = React.createClass({
+        // speechStruct
+        render : function () {
+            return (
+                <ul className="view-mode">
+                    <li><a>default view</a></li>
+                    <li><a>view as speeches</a></li>
+                </ul>
+            );
+        }
+    });
+
     // ------------------------- <ConcDetail /> ---------------------------
 
     const ConcDetail = React.createClass({
@@ -185,6 +199,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             } else {
                 return (
                     <div>
+                        <ConcDetailMenu />
                         {this.state.hasExpandLeft ?
                             <ExpandConcDetail position="left" waitingFor={this.state.waitingFor}
                                     clickHandler={this._expandClickHandler.bind(this, 'left')}

@@ -505,7 +505,12 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
         _detailClickHandler : function (corpusId, tokenNumber, lineIdx) {
             this.setState(React.addons.update(this.state, {
-                concDetailData: {$set: {corpusId: corpusId, tokenNumber: tokenNumber, lineIdx: lineIdx}},
+                concDetailData: {$set: {
+                    corpusId: corpusId,
+                    tokenNumber: tokenNumber,
+                    lineIdx: lineIdx,
+                    speechStruct: this.props.baseCorpname === corpusId ? this.props.SpeechStruct : null
+                }},
                 refsDetailData: {$set: null}
             }));
         },
@@ -553,7 +558,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                             closeClickHandler={this._handleDetailCloseClick}
                             corpusId={this.state.concDetailData.corpusId}
                             tokenNumber={this.state.concDetailData.tokenNumber}
-                            lineIdx={this.state.concDetailData.lineIdx} />
+                            lineIdx={this.state.concDetailData.lineIdx}
+                            speechStruct={this.state.concDetailData.speechStruct} />
                         : null
                     }
                     {this.state.refsDetailData ?
