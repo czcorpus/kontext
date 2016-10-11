@@ -1,4 +1,13 @@
+sudo: required
 language: python
 python:
-  - "2.6"
   - "2.7"
+env:
+  - PYTHONPATH=./tests/mocks
+before_install:
+  - sudo apt-get install libxml2-dev libxslt-dev python-dev
+install:
+  - pip install -r requirements.txt
+script:
+  - python tests/runtests.py
+
