@@ -19,18 +19,41 @@
  */
 
 /// <reference path="../../types/ajaxResponses.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 import {SimplePageStore} from '../../util';
 import {PageModel} from '../../tpl/document';
 import {ConcLineStore} from './lines';
+import {AudioPlayer} from './media';
+import * as Immutable from 'vendor/immutable';
 
 /**
  *
  */
 export type ConcDetailText = Array<{str:string; class:string}>;
 
+/**
+ *
+ */
+export interface Speech {
+    text:ConcDetailText;
+    speakerId:string;
+    segments:Immutable.List<string>;
+    colorCode:string;
+    metadata:Immutable.Map<string, string>;
+}
+
+export type SpeechLines = Array<Speech>;
+
 
 type ExpandArgs = [number, number];
+
+
+export interface SpeechOptions {
+    speakerIdAttr:[string, string];
+    speechSegment:[string, string];
+    speechAttrs:Array<string>;
+}
 
 /**
  * A store providing access to a detailed/extended kwic information.
@@ -57,20 +80,61 @@ export class ConcDetailStore extends SimplePageStore {
 
     private structCtx:string;
 
+    private speakerIdAttr:[string, string];
 
-    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>, linesStore:ConcLineStore, structCtx:string) {
+    private speechSegment:[string, string];
+
+    private speechAttrs:Array<string>;
+
+    private audioPlayer:AudioPlayer;
+
+    private speakerColors:Immutable.List<string>;
+
+    /**
+     * Speaker colors attachments must survive context expansion.
+     * Otherwise it would confusing if e.g. green speaker '01'
+     * changed into red one after a context expasion due to
+     * some new incoming or outcoming users.
+     */
+    private speakerColorsAttachments:Immutable.Map<string,string>;
+
+
+    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>, linesStore:ConcLineStore, structCtx:string,
+            speechOpts:SpeechOptions, speakerColors:Array<string>) {
         super(dispatcher);
         const self = this;
         this.layoutModel = layoutModel;
         this.linesStore = linesStore;
         this.structCtx = structCtx;
+        this.speakerIdAttr = speechOpts.speakerIdAttr;
+        this.speechSegment = speechOpts.speechSegment;
+        this.speechAttrs = speechOpts.speechAttrs;
         this.lineIdx = null;
         this.wholeDocumentLoaded = false;
+        this.speakerColors = Immutable.List<string>(speakerColors);
+        this.speakerColorsAttachments = Immutable.Map<string, string>();
+        this.audioPlayer = new AudioPlayer(
+            this.layoutModel.createStaticUrl('misc/soundmanager2/'),
+            () => {
+                this.notifyChangeListeners();
+            },
+            () => {}, // TODO
+            () => {
+                this.audioPlayer.stop();
+                this.layoutModel.showMessage('error',
+                        this.layoutModel.translate('concview__failed_to_play_audio'));
+            }
+        );
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'CONCORDANCE_EXPAND_KWIC_DETAIL':
-                    self.loadConcDetail(self.corpusId, self.tokenNum, self.lineIdx, payload.props['position']).then(
+                    self.loadConcDetail(
+                            self.corpusId,
+                            self.tokenNum,
+                            self.lineIdx,
+                            [],
+                            payload.props['position']).then(
                         () => {
                             self.linesStore.setLineFocus(self.lineIdx, true);
                             self.linesStore.notifyChangeListeners();
@@ -82,7 +146,11 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
-                    self.loadConcDetail(payload.props['corpusId'], payload.props['tokenNumber'], payload.props['lineIdx']).then(
+                    self.loadConcDetail(
+                            payload.props['corpusId'],
+                            payload.props['tokenNumber'],
+                            payload.props['lineIdx'],
+                            []).then(
                         () => {
                             self.linesStore.setLineFocus(payload.props['lineIdx'], true);
                             self.linesStore.notifyChangeListeners();
@@ -103,6 +171,38 @@ export class ConcDetailStore extends SimplePageStore {
                         }
                     );
                 break;
+                case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
+                    self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
+                    self.loadSpeechDetail(
+                            payload.props['corpusId'],
+                            payload.props['tokenNumber'],
+                            payload.props['lineIdx']).then(
+                        () => {
+                            self.linesStore.setLineFocus(payload.props['lineIdx'], true);
+                            self.linesStore.notifyChangeListeners();
+                            self.notifyChangeListeners();
+                        },
+                        (err) => {
+                            self.layoutModel.showMessage('error', err);
+                        }
+                    );
+                break;
+                case 'CONCORDANCE_EXPAND_SPEECH_DETAIL':
+                    self.loadSpeechDetail(
+                            self.corpusId,
+                            self.tokenNum,
+                            self.lineIdx,
+                            payload.props['position']).then(
+                        () => {
+                            self.linesStore.setLineFocus(payload.props['lineIdx'], true);
+                            self.linesStore.notifyChangeListeners();
+                            self.notifyChangeListeners();
+                        },
+                        (err) => {
+                            self.layoutModel.showMessage('error', err);
+                        }
+                    );
+                break;
                 case 'CONCORDANCE_RESET_DETAIL':
                     if (self.lineIdx !== null) {
                         self.linesStore.setLineFocus(self.lineIdx, false);
@@ -110,9 +210,17 @@ export class ConcDetailStore extends SimplePageStore {
                         self.corpusId = null;
                         self.tokenNum = null;
                         self.wholeDocumentLoaded = false;
+                        self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
                         self.notifyChangeListeners();
                         self.linesStore.notifyChangeListeners();
                     }
+                break;
+                case 'CONCORDANCE_PLAY_SPEECH':
+                    self.audioPlayer.start(
+                        (<Immutable.List<string>>payload.props['segments']).map(item => {
+                            return self.layoutModel.createActionUrl(`audio?corpname=${self.corpusId}&chunk=${item}`);
+                        }).toArray()
+                    );
                 break;
             }
         });
@@ -120,6 +228,79 @@ export class ConcDetailStore extends SimplePageStore {
 
     getConcDetail():ConcDetailText {
         return this.concDetail;
+    }
+
+    getSpeechesDetail():SpeechLines {
+        const ans:SpeechLines = [];
+        const self = this;
+        let spkId = null;
+
+        function parseTag(name:string, s:string):{[key:string]:string} {
+            const srch = new RegExp(`<${name}(\\s+.*)>`).exec(s);
+            if (srch) {
+                const ans:{[key:string]:string} = {};
+                srch[1].trim().split(/\s+/)
+                    .map(item => new RegExp('([a-zA-Z0-9_]+)=([^\\s^>]+)').exec(item))
+                    .filter(item => !!item)
+                    .forEach(item => {
+                        ans[item[1]] = item[2];
+                    });
+                return ans;
+            }
+            return null;
+        }
+
+        function createNewSpeech(speakerId:string, colorCode:string, metadata:{[attr:string]:string}):Speech {
+            const importedMetadata = Immutable.Map<string, string>(metadata)
+                    .filter((val, attr) => attr !== self.speechSegment[1] && attr !== self.speakerIdAttr[1])
+                    .toMap();
+            return {
+                text: [],
+                speakerId: speakerId,
+                segments: Immutable.List<string>(),
+                metadata: importedMetadata,
+                colorCode: colorCode
+            };
+        }
+
+        let currSpeech:Speech = createNewSpeech('\u2026', 'transparent', {});
+
+        this.concDetail.forEach((item, i) => {
+            if (item.class === 'strc') {
+                const attrs = parseTag(this.speakerIdAttr[0], item.str);
+                if (attrs !== null && attrs[this.speakerIdAttr[1]] !== currSpeech.speakerId) {
+                        ans.push(currSpeech);
+                        const newSpeakerId = attrs[this.speakerIdAttr[1]];
+                        if (!this.speakerColorsAttachments.has(newSpeakerId)) {
+                            this.speakerColorsAttachments = this.speakerColorsAttachments.set(
+                                newSpeakerId, this.speakerColors.get(this.speakerColorsAttachments.size)
+                            )
+                        }
+                        currSpeech = createNewSpeech(
+                            newSpeakerId,
+                            this.speakerColorsAttachments.get(newSpeakerId),
+                            attrs
+                        );
+
+                }
+                if (item.str.indexOf(`<${this.speechSegment[0]}`) > -1) {
+                    const attrs = parseTag(this.speechSegment[0], item.str);
+                    if (attrs) {
+                        currSpeech.segments = currSpeech.segments.push(attrs[this.speechSegment[1]]);
+                    }
+                }
+
+            } else {
+                currSpeech.text.push({
+                    str: item.str,
+                    class: item.class
+                });
+            }
+        });
+        if (currSpeech.text.length > 0) {
+            ans.push(currSpeech);
+        }
+        return ans;
     }
 
     private loadWholeDocument():RSVP.Promise<any> {
@@ -149,7 +330,13 @@ export class ConcDetailStore extends SimplePageStore {
         );
     }
 
-    private loadConcDetail(corpusId:string, tokenNum:number, lineIdx:number, expand?:string):RSVP.Promise<any> {
+    private loadSpeechDetail(corpusId:string, tokenNum:number, lineIdx:number, expand?:string):RSVP.Promise<any> {
+        const args = this.speechAttrs.map(x => `${this.speakerIdAttr[0]}.${x}`)
+                .concat([this.speechSegment.join('.')]);
+        return this.loadConcDetail(corpusId, tokenNum, lineIdx, args, expand);
+    }
+
+    private loadConcDetail(corpusId:string, tokenNum:number, lineIdx:number, structs:Array<string>, expand?:string):RSVP.Promise<any> {
         this.corpusId = corpusId;
         this.tokenNum = tokenNum;
         this.lineIdx = lineIdx;
@@ -162,6 +349,10 @@ export class ConcDetailStore extends SimplePageStore {
         delete args['usesubcorp'];
         args['pos'] = String(tokenNum);
         args['format'] = 'json'
+
+        if (structs) {
+            args['structs'] = (args['structs'] || '').split(',').concat(structs).join(',');
+        }
 
         if (expand === 'left') {
             args['detail_left_ctx'] = String(this.expandLeftArgs[0]);

@@ -49,6 +49,7 @@ import * as applicationBar from 'plugins/applicationBar/init';
 import * as RSVP from 'vendor/rsvp';
 import {UserInfo} from '../stores/userStores';
 import {ViewOptionsStore} from '../stores/viewOptions';
+
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 export class ViewPageStores {
@@ -486,7 +487,10 @@ export function init(conf):ViewPage {
         canSendEmail: layoutModel.getConf<boolean>('can_send_mail'),
         ContainsWithin: layoutModel.getConf<boolean>('ContainsWithin'),
         ShowConcToolbar: layoutModel.getConf<boolean>('ShowConcToolbar'),
-        SpeechStruct: layoutModel.getConf<string>('SpeechStruct'),
+        SpeakerIdAttr: layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
+        SpeakerColors: d3.schemeCategory20,
+        SpeechSegment: layoutModel.getConf<[string, string]>('SpeechSegment'),
+        SpeechAttrs: layoutModel.getConf<Array<string>>('SpeechAttrs'),
         StructCtx: layoutModel.getConf<string>('StructCtx')
     };
     const stores = new ViewPageStores();
@@ -509,7 +513,13 @@ export function init(conf):ViewPage {
         layoutModel,
         layoutModel.dispatcher,
         stores.lineViewStore,
-        lineViewProps.StructCtx
+        lineViewProps.StructCtx,
+        {
+            speakerIdAttr: lineViewProps.SpeakerIdAttr,
+            speechSegment: lineViewProps.SpeechSegment,
+            speechAttrs: lineViewProps.SpeechAttrs
+        },
+        lineViewProps.SpeakerColors
     );
     stores.refsDetailStore = new RefsDetailStore(
         layoutModel,

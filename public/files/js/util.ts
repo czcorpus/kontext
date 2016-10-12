@@ -160,7 +160,10 @@ export class MultiDict implements Kontext.IMultiDict {
         this._data[key].push(value);
     }
 
-    items():Array<Array<string>> {
+    /**
+     * Return a list of key-value pairs.
+     */
+    items():Array<[string, string]> {
         let ans = [];
         for (let p in this._data) {
             if (this._data.hasOwnProperty(p)) {
@@ -174,13 +177,14 @@ export class MultiDict implements Kontext.IMultiDict {
 
     /**
      * Return a copy of internal dictionary holding last
-     * value of each key.
+     * value of each key. If you expect keys with multiple
+     * values you should use items() instead.
      */
     toDict():{[key:string]:string} {
         let ans:{[key:string]:string} = {};
-        for (let k in this._data) {
-            if (this._data.hasOwnProperty(k)) {
-                ans[k] = this._data[k];
+        for (let k in this) {
+            if (this.hasOwnProperty(k)) {
+                ans[k] = this[k];
             }
         }
         return ans;

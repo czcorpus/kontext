@@ -41,7 +41,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
     const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
     const viewOptionsViews = structsAttrsViewInit(dispatcher, mixins, viewOptionsStore);
-    const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore);
+    const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -509,7 +509,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     corpusId: corpusId,
                     tokenNumber: tokenNumber,
                     lineIdx: lineIdx,
-                    speechStruct: this.props.baseCorpname === corpusId ? this.props.SpeechStruct : null
+                    speakerIdAttr: this.props.baseCorpname === corpusId ? this.props.SpeakerIdAttr : null
                 }},
                 refsDetailData: {$set: null}
             }));
@@ -559,7 +559,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                             corpusId={this.state.concDetailData.corpusId}
                             tokenNumber={this.state.concDetailData.tokenNumber}
                             lineIdx={this.state.concDetailData.lineIdx}
-                            speechStruct={this.state.concDetailData.speechStruct} />
+                            speakerIdAttr={this.state.concDetailData.speakerIdAttr}
+                            speakerColors={this.props.SpeakerColors} />
                         : null
                     }
                     {this.state.refsDetailData ?
