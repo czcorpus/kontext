@@ -192,6 +192,10 @@ export function init(dispatcher, mixins, viewOptionsStore) {
 
     let StructAttrList = React.createClass({
 
+        _checkboxHandler : function (value) {
+            this.props.handleClick(value);
+        },
+
         render : function () {
             return (
                 <ul>
@@ -199,8 +203,8 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                         return (
                             <li key={i}>
                                 <label>
-                                    <input type="checkbox" name="structattrs" value={item.n}
-                                        checked={item.selected} onChange={this.props.handleClick} />
+                                    <input type="checkbox" name="structattrs" value={`${this.props.struct}.${item.n}`}
+                                        checked={item.selected} onChange={this._checkboxHandler.bind(this, item.n)} />
                                     {item.n}
                                 </label>
                             </li>
@@ -227,12 +231,12 @@ export function init(dispatcher, mixins, viewOptionsStore) {
             });
         },
 
-        _handleStructAttrClick : function (structIdent, event) {
+        _handleStructAttrClick : function (structIdent, attrIdent) {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
                 props: {
                     structIdent: structIdent,
-                    structAttrIdent: event.target.value
+                    structAttrIdent: attrIdent
                 }
             });
         },
@@ -250,7 +254,8 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                                                 checked={item.selected} onChange={this._handleStructClick} />
                                         {'<' + item.n + '>'}
                                     </label>
-                                    <StructAttrList items={this.props.structAttrs.get(item.n) || []}
+                                    <StructAttrList struct={item.n}
+                                            items={this.props.structAttrs.get(item.n) || []}
                                             handleClick={this._handleStructAttrClick.bind(this, item.n)} />
                                 </li>
                             );
