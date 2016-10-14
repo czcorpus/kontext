@@ -47,6 +47,9 @@ import * as syntaxViewer from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import * as RSVP from 'vendor/rsvp';
+import {UserInfo} from '../stores/userStores';
+import {ViewOptionsStore} from '../stores/viewOptions';
+
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 export class ViewPageStores {
@@ -54,6 +57,8 @@ export class ViewPageStores {
     lineViewStore:ConcLineStore;
     concDetailStore:ConcDetailStore;
     refsDetailStore:RefsDetailStore;
+    userInfoStore:Kontext.IUserInfoStore;
+    viewOptionsStore:ViewOptions.IViewOptionsStore;
 }
 
 
@@ -67,13 +72,7 @@ export class ViewPage {
 
     private layoutModel:documentModule.PageModel;
 
-    private lineSelectionStore:LineSelectionStore;
-
-    private lineViewStore:ConcLineStore;
-
-    private concDetailStore:ConcDetailStore;
-
-    private refsDetailstore:RefsDetailStore;
+    private stores:ViewPageStores;
 
     private hasLockedGroups:boolean;
 
@@ -83,10 +82,7 @@ export class ViewPage {
 
     constructor(layoutModel:documentModule.PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.lineSelectionStore = stores.lineSelectionStore;
-        this.lineViewStore = stores.lineViewStore;
-        this.concDetailStore = stores.concDetailStore;
-        this.refsDetailstore = stores.refsDetailStore;
+        this.stores = stores;
         this.hasLockedGroups = hasLockedGroups;
     }
 
@@ -234,7 +230,7 @@ export class ViewPage {
     private onBeforeUnloadAsk():any {
         let self = this;
         $(win).on('beforeunload.alert_unsaved', function (event:any) {
-            if (self.lineSelectionStore.size() > 0) {
+            if (self.stores.lineSelectionStore.size() > 0) {
                 event.returnValue = self.translate('global__are_you_sure_to_leave');
                 return event.returnValue;
             }
@@ -412,7 +408,7 @@ export class ViewPage {
             this.layoutModel.getConcArgs(),
             {
                 pagination: true,
-                pageNum: this.lineViewStore.getCurrentPage()
+                pageNum: this.stores.lineViewStore.getCurrentPage()
             },
             window.document.title
         );
@@ -439,12 +435,7 @@ export class ViewPage {
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     this.layoutModel.layoutViews,
-                    this.lineViewStore,
-                    this.lineSelectionStore,
-                    this.concDetailStore,
-                    this.refsDetailstore,
-                    this.layoutModel.getStores().userInfoStore,
-                    this.layoutModel.getStores().viewOptionsStore
+                    this.stores
                 );
 
                 return this.renderLines(lineViewProps);
@@ -496,10 +487,15 @@ export function init(conf):ViewPage {
         canSendEmail: layoutModel.getConf<boolean>('can_send_mail'),
         ContainsWithin: layoutModel.getConf<boolean>('ContainsWithin'),
         ShowConcToolbar: layoutModel.getConf<boolean>('ShowConcToolbar'),
-        SpeechStruct: layoutModel.getConf<string>('SpeechStruct'),
+        SpeakerIdAttr: layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
+        SpeakerColors: d3.schemeCategory20,
+        SpeechSegment: layoutModel.getConf<[string, string]>('SpeechSegment'),
+        SpeechAttrs: layoutModel.getConf<Array<string>>('SpeechAttrs'),
         StructCtx: layoutModel.getConf<string>('StructCtx')
     };
     const stores = new ViewPageStores();
+    stores.userInfoStore = layoutModel.getStores().userInfoStore;
+    stores.viewOptionsStore = layoutModel.getStores().viewOptionsStore;
     stores.lineViewStore = new ConcLineStore(
             layoutModel,
             layoutModel.dispatcher,
@@ -517,7 +513,13 @@ export function init(conf):ViewPage {
         layoutModel,
         layoutModel.dispatcher,
         stores.lineViewStore,
-        lineViewProps.StructCtx
+        lineViewProps.StructCtx,
+        {
+            speakerIdAttr: lineViewProps.SpeakerIdAttr,
+            speechSegment: lineViewProps.SpeechSegment,
+            speechAttrs: lineViewProps.SpeechAttrs
+        },
+        lineViewProps.SpeakerColors
     );
     stores.refsDetailStore = new RefsDetailStore(
         layoutModel,

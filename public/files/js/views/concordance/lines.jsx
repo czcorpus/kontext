@@ -22,77 +22,12 @@
 
 import React from 'vendor/react';
 
+import {init as initMediaViews} from './media';
+
 
 export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
-    // ------------------------- <ConcColsHeading /> ---------------------------
-
-    let AudioPlayer = React.createClass({
-
-        _handleControlClick : function (action) {
-            this.setState({activeButton: action});
-            dispatcher.dispatch({
-                actionType: 'AUDIO_PLAYER_CLICK_CONTROL',
-                props: {
-                    action: action
-                }
-            });
-        },
-
-        _handleLineStoreChange : function () {
-            this.setState({
-                activeButton: lineStore.getAudioPlayerStatus()
-            });
-        },
-
-        componentDidMount : function () {
-            lineStore.addChangeListener(this._handleLineStoreChange);
-        },
-
-        componentWillUnmount : function () {
-            lineStore.removeChangeListener(this._handleLineStoreChange);
-        },
-
-        getInitialState : function () {
-            return {
-                activeButton: lineStore.getAudioPlayerStatus()
-            };
-        },
-
-        _autoSetHtmlClass : function (buttonId) {
-            const ans = [];
-            switch (buttonId) {
-                case 'play':
-                    ans.push('img-button-play');
-                    if (this.state.activeButton === 'play') {
-                        ans.push('img-button-play-active');
-                    }
-                break;
-                case 'pause':
-                    ans.push('img-button-pause');
-                    if (this.state.activeButton === 'pause') {
-                        ans.push('img-button-pause-active');
-                    }
-                break;
-                case 'stop':
-                    ans.push('img-button-stop');
-                break;
-            }
-            return ans.join(' ');
-        },
-
-        render : function () {
-            return (
-                <div id="audio-wrapper">
-                    <div className="audio-controls">
-                        <a onClick={this._handleControlClick.bind(this, 'play')} className={this._autoSetHtmlClass('play')}></a>
-                        <a onClick={this._handleControlClick.bind(this, 'pause')} className={this._autoSetHtmlClass('pause')}></a>
-                        <a onClick={this._handleControlClick.bind(this, 'stop')} className={this._autoSetHtmlClass('stop')}></a>
-                    </div>
-                </div>
-            );
-        }
-    });
+    const mediaViews = initMediaViews(dispatcher, mixins, lineStore);
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
@@ -155,7 +90,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 return (
                     <span>
                         <a className="speech-link" onClick={this._handleClick}>{this._getChar()}</a>
-                        <AudioPlayer />
+                        <mediaViews.AudioPlayer />
                     </span>
                 );
 

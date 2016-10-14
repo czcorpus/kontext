@@ -28,14 +28,20 @@ import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
 import {init as concDetailViewsInit} from 'views/concordance/detail';
 
 
-export function init(dispatcher, mixins, layoutViews, lineStore, lineSelectionStore, concDetailStore,
-        refsDetailStore, userInfoStore, viewOptionsStore) {
+export function init(dispatcher, mixins, layoutViews, stores) {
+
+    const lineSelectionStore = stores.lineSelectionStore;
+    const lineStore = stores.lineViewStore;
+    const concDetailStore = stores.concDetailStore;
+    const refsDetailStore = stores.refsDetailStore;
+    const userInfoStore = stores.userInfoStore;
+    const viewOptionsStore = stores.viewOptionsStore;
 
     const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
     const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
     const viewOptionsViews = structsAttrsViewInit(dispatcher, mixins, viewOptionsStore);
-    const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore);
+    const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -499,7 +505,12 @@ export function init(dispatcher, mixins, layoutViews, lineStore, lineSelectionSt
 
         _detailClickHandler : function (corpusId, tokenNumber, lineIdx) {
             this.setState(React.addons.update(this.state, {
-                concDetailData: {$set: {corpusId: corpusId, tokenNumber: tokenNumber, lineIdx: lineIdx}},
+                concDetailData: {$set: {
+                    corpusId: corpusId,
+                    tokenNumber: tokenNumber,
+                    lineIdx: lineIdx,
+                    speakerIdAttr: this.props.baseCorpname === corpusId ? this.props.SpeakerIdAttr : null
+                }},
                 refsDetailData: {$set: null}
             }));
         },
@@ -547,7 +558,9 @@ export function init(dispatcher, mixins, layoutViews, lineStore, lineSelectionSt
                             closeClickHandler={this._handleDetailCloseClick}
                             corpusId={this.state.concDetailData.corpusId}
                             tokenNumber={this.state.concDetailData.tokenNumber}
-                            lineIdx={this.state.concDetailData.lineIdx} />
+                            lineIdx={this.state.concDetailData.lineIdx}
+                            speakerIdAttr={this.state.concDetailData.speakerIdAttr}
+                            speakerColors={this.props.SpeakerColors} />
                         : null
                     }
                     {this.state.refsDetailData ?

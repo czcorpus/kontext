@@ -24,14 +24,14 @@
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/modernizr.d.ts" />
-/// <reference path="../../../ts/declarations/soundmanager.d.ts" />
+
 
 import {SimplePageStore, MultiDict} from '../../util';
 import {PageModel} from '../../tpl/document';
-import Immutable = require('vendor/immutable');
+import * as Immutable from 'vendor/immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
-import SoundManager = require('SoundManager');
-import RSVP = require('vendor/rsvp');
+import * as RSVP from 'vendor/rsvp';
+import {AudioPlayer} from './media';
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 export interface ServerTextChunk {
@@ -134,10 +134,24 @@ export interface ViewConfiguration {
     ShowConcToolbar:boolean;
 
     /**
-     * A structure representing a speech. If null then the corpus
-     * is not considered to be spoken.
+     * A structural attribute identifying a speaker (e.g. 'sp.num').
+     * If null then the corpus is not considered to be spoken.
      */
-    SpeechStruct:string;
+    SpeakerIdAttr:[string, string];
+
+    /**
+     * A list of structural attributes containing
+     * speech metadata. Used in speech detail mode.
+     */
+    SpeechAttrs:Array<string>;
+
+    /**
+     * A structural attribute referring to an audio chunk
+     * representing a speech segment.
+     */
+    SpeechSegment:[string, string];
+
+    SpeakerColors:Array<string>;
 
     /**
      * A structure used to show whole document. It is optional (null is ok).
@@ -203,119 +217,6 @@ function importData(data:Array<ServerLineData>):Immutable.List<Line> {
     return Immutable.List(ans);
 }
 
-
-/**
- *
- */
-class AudioPlayer {
-
-    static PLAYER_STATUS_STOPPED = 0;
-
-    static PLAYER_STATUS_PAUSED = 1;
-
-    static PLAYER_STATUS_PLAYING = 2;
-
-    private soundManager:SoundManager.SoundManager;
-
-    private status:number;
-
-    private playSessionId:string = 'kontext-playback';
-
-    private itemsToPlay:Immutable.List<string>;
-
-    private onStop:()=>void;
-
-    private onPlay:()=>void;
-
-    private onError:()=>void;
-
-    constructor(sm2FilesURL:string, onPlay:()=>void, onStop:()=>void, onError:()=>void) {
-        this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
-        this.soundManager = SoundManager.getInstance();
-        this.soundManager.ontimeout = function (status) {
-            console.error(status); // TODO
-        }
-        this.soundManager.setup({
-            url: sm2FilesURL,
-            flashVersion: 9,
-            debugMode : false,
-            preferFlash : false
-        });
-        this.itemsToPlay = Immutable.List([]);
-        this.onPlay = onPlay;
-        this.onStop = onStop;
-        this.onError = onError;
-    }
-
-    start(itemsToPlay?:Array<string>):void {
-        const self = this;
-
-        if (itemsToPlay) {
-            this.itemsToPlay = this.itemsToPlay.concat(Immutable.List<string>(itemsToPlay)).toList();
-        }
-        let sound = this.soundManager.createSound({
-            id: this.playSessionId,
-            url: this.itemsToPlay.first(),
-            autoLoad: true,
-            autoPlay: false,
-            volume: 100,
-            onload: (bSuccess) => {
-                if (!bSuccess) {
-                    self.onError();
-                }
-            },
-            onplay: function () {
-                self.status = AudioPlayer.PLAYER_STATUS_PLAYING;
-                self.onPlay();
-            },
-            onfinish: function () {
-                self.status = AudioPlayer.PLAYER_STATUS_STOPPED;
-                self.soundManager.destroySound(self.playSessionId);
-                if (self.itemsToPlay.size > 0) {
-                    self.soundManager.destroySound(self.playSessionId); // TODO do we need this (again)?
-                    self.start();
-
-                } else {
-                    self.onStop();
-                }
-            }
-        });
-        this.itemsToPlay = this.itemsToPlay.shift();
-        sound.play();
-    }
-
-    play():void {
-        if (this.status === AudioPlayer.PLAYER_STATUS_STOPPED) {
-            this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
-
-        } else if (this.status === AudioPlayer.PLAYER_STATUS_PAUSED) {
-            this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
-        }
-    }
-
-    pause():void {
-        if (this.status === AudioPlayer.PLAYER_STATUS_PAUSED) {
-            this.soundManager.play(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
-
-        } else if (this.status === AudioPlayer.PLAYER_STATUS_PLAYING) {
-            this.soundManager.pause(this.playSessionId);
-            this.status = AudioPlayer.PLAYER_STATUS_PAUSED;
-        }
-    }
-
-    stop():void {
-        this.soundManager.stop(this.playSessionId);
-        this.soundManager.destroySound(this.playSessionId);
-        this.itemsToPlay = this.itemsToPlay.clear();
-    }
-
-    getStatus():number {
-        return this.status;
-    }
-}
 
 /**
  *
