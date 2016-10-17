@@ -594,8 +594,10 @@ export class QueryFormTweaks {
                     }
                 }
             break;
-            case 'lemma':
             case 'phrase':
+                parseFn = parseQuery.bind(null, query, {startRule: 'PhraseQuery'});
+            break;
+            case 'lemma':
             case 'word':
                 parseFn = parseQuery.bind(null, query, {startRule: 'RegExpRaw'});
             break;
