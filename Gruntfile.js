@@ -84,7 +84,7 @@
                     cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'T=$(echo {}); T=${T#./templates/}; cheetah compile --odir cmpltmpl --idir templates "$T"\' \\;'
                 },
                 cql_grammar: {
-                    cmd: 'mkdir -p public/files/js/compiled/cqlParser; ./node_modules/pegjs/bin/pegjs --format amd --allowed-start-rules Query,RegExpRaw -o public/files/js/compiled/cqlParser/parser.js scripts/build/cql.pegjs'
+                    cmd: 'mkdir -p public/files/js/compiled/cqlParser; ./node_modules/pegjs/bin/pegjs --format amd --allowed-start-rules Query,RegExpRaw,PhraseQuery -o public/files/js/compiled/cqlParser/parser.js scripts/build/cql.pegjs'
                 }
             },
             "less": {
