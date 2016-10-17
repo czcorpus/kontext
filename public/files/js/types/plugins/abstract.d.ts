@@ -51,6 +51,7 @@ declare module 'plugins/applicationBar/init' {
 
 declare module "plugins/applicationBar/toolbar" {
     export function openLoginDialog():void;
+     export function init():void;
 }
 
 declare module 'plugins/footerBar/init' {

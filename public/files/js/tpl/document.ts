@@ -964,7 +964,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             } catch (e) {
                 reject(e);
             }
-        });
+        }).then(
+            () => {
+                applicationBar.create(this.pluginApi());
+            }
+        ).then(
+            () => {
+                footerBar.create(this.pluginApi());
+            }
+        );
     }
 }
 

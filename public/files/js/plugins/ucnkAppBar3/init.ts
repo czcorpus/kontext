@@ -67,7 +67,8 @@ export class AppBarPlugin implements Kontext.Plugin {
 
 export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
     return new RSVP.Promise((resolve:(ans:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
-        let appBarStore = new AppBarStore(pluginApi.dispatcher());
+        toolbar.init();
+        const appBarStore = new AppBarStore(pluginApi.dispatcher());
         resolve(new AppBarPlugin(appBarStore));
     });
 }
