@@ -31,6 +31,10 @@ from l10n import import_string
 import plugins
 
 
+class ConcCalculationControlException(Exception):
+    pass
+
+
 def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     ctxs = [{'n': _('%iL') % -c, 'ctx': '%i<0' % c} for c in range(-
                                                                    max_ctx, 0)]
@@ -63,7 +67,7 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     """
     hard_limit = 3000  # num iterations (time = hard_limit / 10)
     i = 1
-    while _is_conc_alive(pidfile, minsize) and i < hard_limit:
+    while _min_conc_unfinished(pidfile, minsize) and i < hard_limit:
         time.sleep(i * 0.1)
         i += 1
     if not os.path.isfile(cachefile):
@@ -75,13 +79,19 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
         raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
 
 
-def _is_conc_alive(pidfile, minsize):
+def _min_conc_unfinished(pidfile, minsize):
+    """
+    Return True if a specific concordance calculation
+    has not reached a minimal viewable size yet.
+    Otherwise it returns False (= we can show a partial
+    result).
+    """
     if pidfile is not None and os.path.exists(os.path.realpath(pidfile)):
         with open(pidfile, 'r') as f:
             data = cPickle.load(f)
             # TODO: still not bullet-proof solution
             if data.get('error', None):
-                raise Exception(data['error'])
+                raise ConcCalculationControlException(data['error'])
             elif math.ceil(data['last_check'] + data['curr_wait']) < math.floor(time.time()):
                 return False
             elif data.get('minsize') == -1:
@@ -127,6 +137,12 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     else:
         srch_from = len(q)
 
+    def del_silent(path):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
     ans = (0, None)
     for i in range(srch_from, 0, -1):
         cachefile = cache_map.cache_file_path(subchash, q[:i])
@@ -146,18 +162,15 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
                 if qq.startswith('x-'):
                     conccorp = manatee.Corpus(qq[2:])
                     break
-            conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
-            if not _is_conc_alive(pidfile, minsize) and not conc.finished():
-                # unfinished and dead concordance
+            conc = None
+            try:
+                if not _min_conc_unfinished(pidfile, minsize):
+                    conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
+            except ConcCalculationControlException as ex:
+                logging.getLogger(__name__).error('Failed to join unfinished calculation: {0}'.format(ex))
                 cache_map.del_entry(subchash, q)
-                try:
-                    os.remove(cachefile)
-                except OSError:
-                    pass
-                try:
-                    os.remove(pidfile)
-                except OSError:
-                    pass
+                del_silent(cachefile)
+                del_silent(pidfile)
                 continue
             ans = (i, conc)
             break
