@@ -313,8 +313,8 @@ class Actions(Kontext):
         out['aligned_corpora'] = self.args.sel_aligned
         out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
         out['speech_segment'] = self.get_speech_segment()
-        out['speaker_id_attr'] = corpus_info.speaker_id_attr.split('.')
-        speaker_struct = corpus_info.speaker_id_attr.split('.')[0]
+        out['speaker_id_attr'] = corpus_info.speaker_id_attr.split('.') if corpus_info.speaker_id_attr else None
+        speaker_struct = corpus_info.speaker_id_attr.split('.')[0] if corpus_info.speaker_id_attr else None
         out['speech_attrs'] = map(lambda x: x[1],
                                   filter(lambda x: x[0] == speaker_struct,
                                           map(lambda x: x.split('.'), self.corp.get_conf('STRUCTATTRLIST').split(','))))
