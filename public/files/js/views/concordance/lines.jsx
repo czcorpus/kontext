@@ -313,9 +313,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             return ans;
         },
 
-        _renderKwicChunk : function (prevClosed, hasKwic, item, i, itemList) {
-            let ans = [];
-            let mouseover = (item.mouseover || []).join(', ');
+        _renderKwicChunk : function (prevBlockClosed, hasKwic, item, i, itemList) {
+            const ans = [];
+            const mouseover = (item.mouseover || []).join(', ');
+            const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
             if (prevClosed && item.openLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                         chunks={[prevClosed, item]} />);
@@ -336,9 +337,10 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             return ans;
         },
 
-        _renderRightChunk : function (prevClosed, item, i, itemList) {
-            let ans = [];
-            let mouseover = (item.mouseover || []).join(', ');
+        _renderRightChunk : function (prevBlockClosed, item, i, itemList) {
+            const ans = [];
+            const mouseover = (item.mouseover || []).join(', ');
+            const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
             if (prevClosed && item.openLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[prevClosed, item]} />);
