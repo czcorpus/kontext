@@ -40,9 +40,12 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _handleLineStoreChange : function () {
-            this.setState({
-                activeButton: lineStore.getAudioPlayerStatus()
-            });
+            const playerStatus = lineStore.getAudioPlayerStatus();
+            if (playerStatus !== 'stop') {
+                this.setState({
+                    activeButton: playerStatus
+                });
+            }
         },
 
         componentDidMount : function () {
