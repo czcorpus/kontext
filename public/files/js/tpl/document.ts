@@ -65,7 +65,7 @@ class NullStorage implements Storage {
         return null
     }
 
-    getItem(key:string):string|null {
+    getItem(key:string):string {
         return null;
     }
 
