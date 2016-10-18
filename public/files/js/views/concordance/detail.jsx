@@ -113,7 +113,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render: function () {
             return (
-                <layoutViews.ModalOverlay>
+                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
                     <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail">
                         {this._renderContents()}
                     </layoutViews.PopupBox>
@@ -566,7 +566,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay>
+                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
                     <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail">
                     {this.state.isWaiting ?
                         <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />

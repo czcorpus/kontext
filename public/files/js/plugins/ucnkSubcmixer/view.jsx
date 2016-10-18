@@ -95,7 +95,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay>
+                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
                     <layoutViews.PopupBox customClass="subcmixer-widget"
                             onCloseClick={this.props.closeClickHandler}>
                         <div>

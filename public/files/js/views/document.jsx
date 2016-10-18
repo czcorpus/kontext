@@ -29,6 +29,23 @@ export function init(dispatcher, mixins, storeProvider) {
     // ------------------------------ <ModalOverlay /> -----------------------------
 
     let ModalOverlay = React.createClass({
+
+        mixins : mixins,
+
+        _keyPressHandler : function (evt) {
+            if (evt.keyCode === 27 && typeof this.props.onCloseKey === 'function') {
+                this.props.onCloseKey();
+            }
+        },
+
+        componentDidMount : function () {
+            this.addGlobalKeyEventHandler(this._keyPressHandler);
+        },
+
+        componentWillUnmount : function () {
+            this.removeGlobalKeyEventHandler(this._keyPressHandler);
+        },
+
         render : function () {
             return (
                 <div id="modal-overlay">

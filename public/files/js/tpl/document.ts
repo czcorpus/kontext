@@ -60,11 +60,13 @@ declare var Modernizr:Modernizr.ModernizrStatic;
  *
  */
 class NullStorage implements Storage {
+
     key(idx:number):string {
         return null
     }
 
-    getItem(key:string) {
+    getItem(key:string):string|null {
+        return null;
     }
 
     setItem(key:string, value:string) {
@@ -162,6 +164,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     private asyncTaskChecker:AsyncTaskChecker;
 
     /**
+     * This is intended for React components to make them able register key
+     * events (e.g. the 'ESC' key).
+     */
+    private globalKeyHandlers:Immutable.List<(evt:Event)=>void>;
+
+    /**
      *
      * @param conf
      */
@@ -180,6 +188,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.translations = translations[this.conf['uiLang']] || {};
         this.asyncTaskChecker = new AsyncTaskChecker(this.dispatcher, this.pluginApi(),
                 this.getConf<any>('asyncTasks') || []);
+        this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
     }
 
     /**
@@ -226,6 +235,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             },
             getLayoutViews():Kontext.LayoutViews {
                 return self.layoutViews;
+            },
+            addGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
+                self.addGlobalKeyEventHandler(fn);
+            },
+            removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
+                self.removeGlobalKeyEventHandler(fn);
             }
         };
         return mixins ? mixins.concat([componentTools]) : [componentTools];
@@ -272,6 +287,23 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             if (newValue === '1') {
                 selectAllElm.checked = false;
             }
+        }
+    }
+
+    /**
+     * Adds a window-registered key event handler.
+     */
+    addGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
+        this.globalKeyHandlers = this.globalKeyHandlers.push(fn);
+    }
+
+    /**
+     * Removes a window-registered key event handler.
+     */
+    removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
+        const srchIdx:number = this.globalKeyHandlers.indexOf(fn);
+        if (srchIdx > -1) {
+            this.globalKeyHandlers = this.globalKeyHandlers.remove(srchIdx);
         }
     }
 
@@ -939,6 +971,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     this.exportMixins(),
                     this.getStores()
                 );
+
+                window.onkeydown = (evt) => {
+                    this.globalKeyHandlers.forEach(fn => fn(evt));
+                }
 
                 this.userSettings.init();
                 this.initMainMenu();

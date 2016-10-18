@@ -463,7 +463,7 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay>
+                <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} customClass="subcorp-actions">
                         <div>
                             <h3>{this.translate('subclist__backup_of_{subcname}', {subcname: this.state.data.name})}</h3>
