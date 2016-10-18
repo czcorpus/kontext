@@ -264,6 +264,8 @@ declare module Kontext {
         formatNumber(value:number):string;
         formatDate(d:Date, timeFormat?:number):string;
         getLayoutViews():Kontext.LayoutViews;
+        addGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
+        removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
     }
 
     export interface LayoutStores {

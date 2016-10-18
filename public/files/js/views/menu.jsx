@@ -202,7 +202,7 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay>
+                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
                     <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="async-task-list">
                         <table>
                             <tbody>
