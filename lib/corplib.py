@@ -18,7 +18,6 @@
 
 import os.path
 import glob
-from types import UnicodeType
 from hashlib import md5
 from datetime import datetime
 import logging
@@ -28,7 +27,6 @@ from l10n import import_string, export_string
 import manatee
 from functools import partial
 from translation import ugettext as _
-import freq_calc
 
 
 def manatee_version():
@@ -143,7 +141,11 @@ class CorpusManager(object):
         return manatee.findPosAttr(corpname.split(':', 1)[0], attrname)
 
     def corpconf_pairs(self, corp, label):
-        if type(corp) is UnicodeType:
+        """
+        Returns:
+             dict: label->value pairs
+        """
+        if type(corp) is basestring:
             corp = self.get_Corpus(corp)
         val = import_string(corp.get_conf(label), from_encoding=corp.get_conf('ENCODING'))
         if len(val) > 2:
