@@ -277,9 +277,10 @@ if __name__ == '__main__':
                         help='a port the server listens on (default is %s)' % DEFAULT_PORT)
     parser.add_argument('--address', dest='address', action=None, default=DEFAULT_ADDR,
                         help='an address the server listens on (default is %s)' % DEFAULT_ADDR)
+    parser.add_argument('--use-reloader', action='store_true', default=False,
+                        help='Set embedded web server to watch for source code changes and reload itself if needed')
     args = parser.parse_args()
-
     application = SharedDataMiddleware(application, {
         '/files':  os.path.join(os.path.dirname(__file__), 'files')
     })
-    run_simple(args.address, int(args.port_num), application, use_debugger=True, use_reloader=True)
+    run_simple(args.address, int(args.port_num), application, use_debugger=True, use_reloader=args.use_reloader)
