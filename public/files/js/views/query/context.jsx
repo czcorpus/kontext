@@ -30,7 +30,7 @@ export function init(dispatcher, mixins) {
 
     // ------------------------------- <AllAnyNoneSelector /> ---------------------
 
-    let AllAnyNoneSelector = React.createClass({
+    const AllAnyNoneSelector = React.createClass({
 
         mixins : mixins,
 
@@ -47,7 +47,7 @@ export function init(dispatcher, mixins) {
 
     // ------------------------------- <TRWindowSelector /> ---------------------
 
-    let TRWindowSelector = React.createClass({
+    const TRWindowSelector = React.createClass({
 
         mixins : mixins,
 
@@ -56,13 +56,13 @@ export function init(dispatcher, mixins) {
                 <tr>
                     <th>{this.translate('query__window')}:</th>
                     <td>
-                        <select name="fc_lemword_window_type">
+                        <select name={`${this.props.namePrefix}_window_type`}>
                             <option value="left">{this.translate('query__left')}</option>
                             <option value="right">{this.translate('query__right')}</option>
                             <option value="both">{this.translate('query__both')}</option>
                         </select>
                         {'\u00A0'}
-                        <select name="fc_lemword_wsize" default={this.props.defaultOption}>
+                        <select name={`${this.props.namePrefix}_wsize`} default={this.props.defaultOption}>
                             {this.props.options.map((item) => {
                                 return <option key={item}>{item}</option>
                             })}
@@ -75,9 +75,25 @@ export function init(dispatcher, mixins) {
         }
     });
 
+    // ------------------------------- <TRLemmaWindowSelector /> ---------------------
+
+    const TRLemmaWindowSelector = React.createClass({
+        render : function () {
+            return <TRWindowSelector {...this.props} namePrefix="fc_lemword" />;
+        }
+    });
+
+    // ------------------------------- <TRPosWindowSelector /> ---------------------
+
+    const TRPosWindowSelector = React.createClass({
+        render : function () {
+            return <TRWindowSelector {...this.props} namePrefix="fc_pos" />;
+        }
+    });
+
     // ------------------------------- <LemmaFilter /> ---------------------
 
-    let LemmaFilter = React.createClass({
+    const LemmaFilter = React.createClass({
 
         mixins : mixins,
 
@@ -85,7 +101,7 @@ export function init(dispatcher, mixins) {
             return (
                 <table className="form">
                     <tbody>
-                        <TRWindowSelector options={this.props.lemmaWindowSizes} />
+                        <TRLemmaWindowSelector options={this.props.lemmaWindowSizes} />
                         <tr>
                             <th>
                             {this.props.hasLemmaAttr
@@ -109,7 +125,7 @@ export function init(dispatcher, mixins) {
 
     // ------------------------------- <PoSFilter /> ---------------------
 
-    let PoSFilter = React.createClass({
+    const PoSFilter = React.createClass({
         mixins : mixins,
 
         render : function () {
@@ -118,7 +134,7 @@ export function init(dispatcher, mixins) {
                     <h3>{this.translate('query__pos_filter')}</h3>
                     <table className="form">
                         <tbody>
-                            <TRWindowSelector options={this.props.posWindowSizes} />
+                            <TRPosWindowSelector options={this.props.posWindowSizes} />
                             <tr>
                                 <th>
                                     {this.translate('query__pos_filter')}:<br />
@@ -127,7 +143,7 @@ export function init(dispatcher, mixins) {
                                 <td>
                                     <select title={this.translate('query__select_one_or_more_pos_tags')} multiple="multiple" size="4" name="fc_pos">
                                         {this.props.wPoSList.map((item, i) => {
-                                            return <option key={i} value={item.v}>{item.n}</option>;
+                                            return <option key={i} value={item.n}>{item.n}</option>;
                                         })}
                                     </select>
                                 </td>
@@ -146,7 +162,7 @@ export function init(dispatcher, mixins) {
 
     // ------------------------------- <SpecifyContextForm /> ---------------------
 
-    let SpecifyContextForm = React.createClass({
+    const SpecifyContextForm = React.createClass({
 
         mixins : mixins,
 
