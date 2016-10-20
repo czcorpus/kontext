@@ -1159,7 +1159,6 @@ class Actions(Kontext):
             to_line = Actions.SAVECOLL_MAX_LINES
         else:
             to_line = int(to_line)
-        logging.getLogger(__name__).debug('from: %s, to: %s' % (from_line, to_line))
         num_lines = to_line - from_line + 1
         err = self._validate_range((from_line, to_line), (1, None))
         if err is not None:
