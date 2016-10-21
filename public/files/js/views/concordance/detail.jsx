@@ -286,12 +286,35 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         mixins : mixins,
 
         _handleExpandClick : function (position) {
+            this.setState({
+                isWaiting: true
+            });
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
                 props: {
                     position: position
                 }
             });
+        },
+
+        componentDidMount : function () {
+            concDetailStore.addChangeListener(this._handleStoreChange);
+        },
+
+        componentWillUnmount : function () {
+            concDetailStore.removeChangeListener(this._handleStoreChange);
+        },
+
+        _handleStoreChange : function () {
+            this.setState({
+                isWaiting: false
+            });
+        },
+
+        getInitialState : function () {
+            return {
+                isWaiting: false
+            };
         },
 
         _ifTopThenElseIfBottom : function (val1, val2) {
@@ -331,14 +354,19 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         },
 
         render : function () {
-            return (
-                <a onClick={this._handleExpandClick.bind(this, this._mapPosition())}
-                        title={this._createTitle()}>
-                    <img src={this._createImgPath()} alt={this._createImgAlt()} />
-                </a>
-            );
+            if (this.state.isWaiting) {
+                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />;
+
+            } else {
+                return (
+                    <a onClick={this._handleExpandClick.bind(this, this._mapPosition())}
+                            title={this._createTitle()}>
+                        <img src={this._createImgPath()} alt={this._createImgAlt()} />
+                    </a>
+                );
+            }
         }
-    })
+    });
 
     // ------------------------- <SpeechView /> ---------------------------
 
@@ -437,7 +465,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         }
     });
 
-    // ------------------------- <ConcDetailMenu /> ---------------------------
+    // ------------------------- <MenuLink /> ---------------------------
 
     const MenuLink = React.createClass({
 
@@ -472,23 +500,25 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         },
 
         render : function () {
-            return (
-                <ul className="view-mode">
-                    <li className={this.props.mode === 'default' ? 'current' : null}>
-                        <MenuLink clickHandler={this._handleMenuClick.bind(this, 'default')}
-                            label={this.translate('concview__detail_default_mode_menu')}
-                            active={this.props.mode === 'default'} />
-                    </li>
-                    {this.props.speakerIdAttr ?
+            if (this.props.speakerIdAttr) {
+                return (
+                    <ul className="view-mode">
+                        <li className={this.props.mode === 'default' ? 'current' : null}>
+                            <MenuLink clickHandler={this._handleMenuClick.bind(this, 'default')}
+                                label={this.translate('concview__detail_default_mode_menu')}
+                                active={this.props.mode === 'default'} />
+                        </li>
                         <li className={this.props.mode === 'speech' ? 'current' : null}>
                             <MenuLink clickHandler={this._handleMenuClick.bind(this, 'speech')}
                                 label={this.translate('concview__detail_speeches_mode_menu')}
                                 active={this.props.mode === 'speech'} />
                         </li>
-                        : null
-                    }
-                </ul>
-            );
+                    </ul>
+                );
+
+            } else {
+                return <div className="view-mode" />;
+            }
         }
     });
 
@@ -566,7 +596,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
+                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler} isScrollable={true}>
                     <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail">
                     {this.state.isWaiting ?
                         <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />

@@ -225,6 +225,14 @@ i.coll {
     height: auto;
 }
 
+
+#modal-overlay .tooltip-box.conc-detail {
+    margin-top: 10%;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, 0);
+}
+
 .conc-detail {
 
     .footer {
@@ -248,11 +256,14 @@ i.coll {
         margin: 1em auto;
     }
 
-    ul.view-mode {
-        list-style-type: none;
+    .view-mode {
         margin: 0;
         padding: 0;
         text-align: center;
+    }
+
+    ul.view-mode {
+        list-style-type: none;
 
         li {
             margin: 0 0 0.7em 0;
@@ -304,6 +315,14 @@ i.coll {
 
     div.speech:not(:first-of-type) {
         margin-top: 0.4em;
+    }
+
+    a.expand:first-child {
+        margin-right: 0.4em;
+    }
+
+    a.expand:last-child {
+        margin-left: 0.2em;
     }
 
     p.expand {
@@ -557,14 +576,6 @@ a.speech-link:hover {
     tr.active {
         background-color: #8AC3DA;
     }
-}
-
-
-.expand-link img {
-  display: inline-block;
-  vertical-align: middle;
-  margin: 0 5px;
-  width: 0.7em;
 }
 
 .jump-to {
