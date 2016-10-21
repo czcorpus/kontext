@@ -500,7 +500,6 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         },
 
         render : function () {
-            console.log('render conc detail: ',this.props.speakerIdAttr);
             if (this.props.speakerIdAttr) {
                 return (
                     <ul className="view-mode">
