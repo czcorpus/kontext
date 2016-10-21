@@ -47,8 +47,12 @@ export function init(dispatcher, mixins, storeProvider) {
         },
 
         render : function () {
+            const style = {};
+            if (this.props.isScrollable) {
+                style['overflow'] = 'auto';
+            }
             return (
-                <div id="modal-overlay">
+                <div id="modal-overlay" style={style}>
                     {this.props.children}
                 </div>
             );

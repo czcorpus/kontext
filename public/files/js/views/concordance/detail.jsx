@@ -596,7 +596,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
+                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler} isScrollable={true}>
                     <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail">
                     {this.state.isWaiting ?
                         <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
