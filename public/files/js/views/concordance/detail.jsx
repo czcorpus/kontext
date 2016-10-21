@@ -286,12 +286,35 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         mixins : mixins,
 
         _handleExpandClick : function (position) {
+            this.setState({
+                isWaiting: true
+            });
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
                 props: {
                     position: position
                 }
             });
+        },
+
+        componentDidMount : function () {
+            concDetailStore.addChangeListener(this._handleStoreChange);
+        },
+
+        componentWillUnmount : function () {
+            concDetailStore.removeChangeListener(this._handleStoreChange);
+        },
+
+        _handleStoreChange : function () {
+            this.setState({
+                isWaiting: false
+            });
+        },
+
+        getInitialState : function () {
+            return {
+                isWaiting: false
+            };
         },
 
         _ifTopThenElseIfBottom : function (val1, val2) {
@@ -331,14 +354,19 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         },
 
         render : function () {
-            return (
-                <a onClick={this._handleExpandClick.bind(this, this._mapPosition())}
-                        title={this._createTitle()}>
-                    <img src={this._createImgPath()} alt={this._createImgAlt()} />
-                </a>
-            );
+            if (this.state.isWaiting) {
+                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />;
+
+            } else {
+                return (
+                    <a onClick={this._handleExpandClick.bind(this, this._mapPosition())}
+                            title={this._createTitle()}>
+                        <img src={this._createImgPath()} alt={this._createImgAlt()} />
+                    </a>
+                );
+            }
         }
-    })
+    });
 
     // ------------------------- <SpeechView /> ---------------------------
 
