@@ -437,7 +437,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         }
     });
 
-    // ------------------------- <ConcDetailMenu /> ---------------------------
+    // ------------------------- <MenuLink /> ---------------------------
 
     const MenuLink = React.createClass({
 
@@ -472,23 +472,26 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         },
 
         render : function () {
-            return (
-                <ul className="view-mode">
-                    <li className={this.props.mode === 'default' ? 'current' : null}>
-                        <MenuLink clickHandler={this._handleMenuClick.bind(this, 'default')}
-                            label={this.translate('concview__detail_default_mode_menu')}
-                            active={this.props.mode === 'default'} />
-                    </li>
-                    {this.props.speakerIdAttr ?
+            console.log('render conc detail: ',this.props.speakerIdAttr);
+            if (this.props.speakerIdAttr) {
+                return (
+                    <ul className="view-mode">
+                        <li className={this.props.mode === 'default' ? 'current' : null}>
+                            <MenuLink clickHandler={this._handleMenuClick.bind(this, 'default')}
+                                label={this.translate('concview__detail_default_mode_menu')}
+                                active={this.props.mode === 'default'} />
+                        </li>
                         <li className={this.props.mode === 'speech' ? 'current' : null}>
                             <MenuLink clickHandler={this._handleMenuClick.bind(this, 'speech')}
                                 label={this.translate('concview__detail_speeches_mode_menu')}
                                 active={this.props.mode === 'speech'} />
                         </li>
-                        : null
-                    }
-                </ul>
-            );
+                    </ul>
+                );
+
+            } else {
+                return <div className="view-mode" />;
+            }
         }
     });
 
