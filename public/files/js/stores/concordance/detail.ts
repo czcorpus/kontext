@@ -194,7 +194,7 @@ export class ConcDetailStore extends SimplePageStore {
                             self.lineIdx,
                             payload.props['position']).then(
                         () => {
-                            self.linesStore.setLineFocus(payload.props['lineIdx'], true);
+                            self.linesStore.setLineFocus(self.lineIdx, true);
                             self.linesStore.notifyChangeListeners();
                             self.notifyChangeListeners();
                         },
