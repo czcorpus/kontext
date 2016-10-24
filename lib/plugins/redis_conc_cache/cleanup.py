@@ -77,7 +77,8 @@ class CacheFiles(object):
                 continue
             for cache_file in os.listdir(corp_full_path):
                 cache_full_path = '%s/%s' % (corp_full_path, cache_file)
-                ans[corpus_dir].append(
+                corpus_key = corpus_dir if not self._subdir else '%s/%s' % (self._subdir, corpus_dir)
+                ans[corpus_key].append(
                     (cache_full_path,
                      self._curr_time - os.path.getmtime(cache_full_path),
                      os.path.getsize(cache_full_path))
