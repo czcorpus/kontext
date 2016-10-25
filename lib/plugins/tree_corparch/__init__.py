@@ -78,6 +78,7 @@ class CorptreeParser(object):
         ans.tagset = elm.attrib.get('tagset', None)
         ans.speech_segment = elm.attrib.get('speech_segment', None)
         ans.speaker_id_attr = elm.attrib.get('speaker_id_attr', None)
+        ans.overlap_flag_attr = node.attrib.get('overlap_flag_attr', None)
         ans.bib_struct = elm.attrib.get('bib_struct', None)
         ans.collator_locale = elm.attrib.get('collator_locale', 'en_US')
         ans.sample_size = elm.attrib.get('sample_size', -1)

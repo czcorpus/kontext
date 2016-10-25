@@ -314,6 +314,7 @@ class Actions(Kontext):
         out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
         out['speech_segment'] = self.get_speech_segment()
         out['speaker_id_attr'] = corpus_info.speaker_id_attr.split('.') if corpus_info.speaker_id_attr else None
+        out['overlap_flag_attr'] = corpus_info.overlap_flag_attr.split('.') if corpus_info.overlap_flag_attr else None
         speaker_struct = corpus_info.speaker_id_attr.split('.')[0] if corpus_info.speaker_id_attr else None
         out['speech_attrs'] = map(lambda x: x[1],
                                   filter(lambda x: x[0] == speaker_struct,

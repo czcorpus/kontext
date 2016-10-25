@@ -59,6 +59,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.LinesGroupsNumbers = $to_json($lines_groups_numbers);
     conf.ContainsWithin = $to_json($getVar('query_contains_within', False));
     conf.SpeakerIdAttr = $to_json($speaker_id_attr);
+    conf.OverlapFlagAttr = $to_json($overlap_flag_attr);
     conf.SpeechAttrs = $to_json($speech_attrs);
     conf.SpeechSegment = $to_json($speech_segment);
     conf.StructCtx = $to_json($struct_ctx);
