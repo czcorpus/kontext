@@ -87,7 +87,8 @@ class CorpusInfo(DictLike):
         self.tagset = None
         self.speech_segment = None
         self.speaker_id_attr = None
-        self.overlap_flag_attr = None
+        self.speech_overlap_attr = None
+        self.speech_overlap_val = None
         self.bib_struct = None
         self.sample_size = -1
         self.collator_locale = 'en_US'  # this does not apply for Manatee functions

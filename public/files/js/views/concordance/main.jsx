@@ -509,7 +509,9 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     corpusId: corpusId,
                     tokenNumber: tokenNumber,
                     lineIdx: lineIdx,
-                    speakerIdAttr: this.props.baseCorpname === corpusId ? this.props.SpeakerIdAttr : null
+                    speakerIdAttr: this.props.baseCorpname === corpusId ? this.props.SpeakerIdAttr : null,
+                    speechOverlapAttr: this.props.baseCorpname === corpusId ? this.props.SpeechOverlapAttr : null,
+                    speechOverlapVal: this.props.baseCorpname === corpusId ? this.props.SpeechOverlapVal : null
                 }},
                 refsDetailData: {$set: null}
             }));
@@ -560,6 +562,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                             tokenNumber={this.state.concDetailData.tokenNumber}
                             lineIdx={this.state.concDetailData.lineIdx}
                             speakerIdAttr={this.state.concDetailData.speakerIdAttr}
+                            speechOverlapAttr={this.state.concDetailData.speechOverlapAttr}
+                            speechOverlapVal={this.state.concDetailData.speechOverlapVal}
                             speakerColors={this.props.SpeakerColors} />
                         : null
                     }
