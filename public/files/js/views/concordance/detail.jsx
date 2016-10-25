@@ -415,12 +415,17 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         },
 
         _renderTokens : function () {
+            const overlapVal = this.props.speechOverlapVal;
             return (this.state.data || []).map((item, i) => {
+                const overlap = item.metadata.get(this.props.speechOverlapAttr[1]);
                 return (
                     <div key={`speech-${i}`} className="speech">
                         <strong className="speaker" title={this._exportMetadata(item.metadata)}
                                 style={{backgroundColor: item.colorCode, color: this._calcTextColorFromBg(item.colorCode)}}>
                             {item.speakerId}
+                            {overlap === overlapVal ?
+                                <img src={this.createStaticUrl('img/speech-overlap.svg')} className="overlap" />
+                                : null}
                         </strong>{'\u00A0'}
                         {this._renderSpeech(item.text, i)}
                         {'\u00A0'}
@@ -590,7 +595,9 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 lineIdx={this.props.lineIdx} />;
                 case 'speech':
                     return <SpeechView corpusId={this.props.corpusId} tokenNumber={this.props.tokenNumber}
-                                lineIdx={this.props.lineIdx} speakerColors={this.props.speakerColors} />;
+                                lineIdx={this.props.lineIdx} speakerColors={this.props.speakerColors}
+                                speechOverlapAttr={this.props.speechOverlapAttr}
+                                speechOverlapVal={this.props.speechOverlapVal} />;
             }
         },
 

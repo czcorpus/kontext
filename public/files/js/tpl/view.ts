@@ -459,9 +459,9 @@ export class ViewPage {
 }
 
 export function init(conf):ViewPage {
-    let layoutModel = new documentModule.PageModel(conf);
+    const layoutModel = new documentModule.PageModel(conf);
 
-    let concSummaryProps:ConcSummary = {
+    const concSummaryProps:ConcSummary = {
         concSize: layoutModel.getConf<number>('ConcSize'),
         fullSize: layoutModel.getConf<number>('FullSize'),
         sampledSize: layoutModel.getConf<number>('SampledSize'),
@@ -469,7 +469,7 @@ export function init(conf):ViewPage {
         arf: layoutModel.getConf<number>('ResultArf'),
         isShuffled: layoutModel.getConf<boolean>('ResultShuffled')
     };
-    let lineViewProps:ViewConfiguration = {
+    const lineViewProps:ViewConfiguration = {
         ViewMode: layoutModel.getConf<string>('ViewMode'),
         ShowLineNumbers: layoutModel.getConf<boolean>('ShowLineNumbers'),
         KWICCorps: layoutModel.getConf<Array<string>>('KWICCorps'),
@@ -490,6 +490,8 @@ export function init(conf):ViewPage {
         SpeakerIdAttr: layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
         SpeakerColors: d3.schemeCategory20,
         SpeechSegment: layoutModel.getConf<[string, string]>('SpeechSegment'),
+        SpeechOverlapAttr: layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
+        SpeechOverlapVal: layoutModel.getConf<string>('SpeechOverlapVal'),
         SpeechAttrs: layoutModel.getConf<Array<string>>('SpeechAttrs'),
         StructCtx: layoutModel.getConf<string>('StructCtx')
     };

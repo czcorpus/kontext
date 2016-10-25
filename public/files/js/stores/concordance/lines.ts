@@ -140,6 +140,17 @@ export interface ViewConfiguration {
     SpeakerIdAttr:[string, string];
 
     /**
+     * A structural attribute specifying whether there is
+     * an overlap between speeches.
+     */
+    SpeechOverlapAttr:[string, string];
+
+    /**
+     * A value denoting 'true' in case of SpeechOverlapAttr
+     */
+    SpeechOverlapVal:string;
+
+    /**
      * A list of structural attributes containing
      * speech metadata. Used in speech detail mode.
      */
