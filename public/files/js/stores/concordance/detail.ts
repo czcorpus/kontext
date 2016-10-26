@@ -60,6 +60,8 @@ export interface SpeechOptions {
     speakerIdAttr:[string, string];
     speechSegment:[string, string];
     speechAttrs:Array<string>;
+    speechOverlapAttr:[string, string];
+    speechOverlapVal:string;
 }
 
 /**
@@ -87,9 +89,7 @@ export class ConcDetailStore extends SimplePageStore {
 
     private structCtx:string;
 
-    private speakerIdAttr:[string, string];
-
-    private speechSegment:[string, string];
+    private speechOpts:SpeechOptions;
 
     private speechAttrs:Array<string>;
 
@@ -113,8 +113,7 @@ export class ConcDetailStore extends SimplePageStore {
         this.layoutModel = layoutModel;
         this.linesStore = linesStore;
         this.structCtx = structCtx;
-        this.speakerIdAttr = speechOpts.speakerIdAttr;
-        this.speechSegment = speechOpts.speechSegment;
+        this.speechOpts = speechOpts;
         this.speechAttrs = speechOpts.speechAttrs;
         this.lineIdx = null;
         this.wholeDocumentLoaded = false;
@@ -238,7 +237,6 @@ export class ConcDetailStore extends SimplePageStore {
     }
 
     getSpeechesDetail():SpeechLines {
-        const ans:SpeechLines = [];
         const self = this;
         let spkId = null;
 
@@ -259,7 +257,8 @@ export class ConcDetailStore extends SimplePageStore {
 
         function createNewSpeech(speakerId:string, colorCode:string, metadata:{[attr:string]:string}):Speech {
             const importedMetadata = Immutable.Map<string, string>(metadata)
-                    .filter((val, attr) => attr !== self.speechSegment[1] && attr !== self.speakerIdAttr[1])
+                    .filter((val, attr) => attr !== self.speechOpts.speechSegment[1] &&
+                                attr !== self.speechOpts.speakerIdAttr[1])
                     .toMap();
             return {
                 text: [],
@@ -270,30 +269,60 @@ export class ConcDetailStore extends SimplePageStore {
             };
         }
 
-        let currSpeech:Speech = createNewSpeech('\u2026', 'transparent', {});
+        function isOverlap(s1:Speech, s2:Speech):boolean {
+            if (s1 && s2) {
+                const flag1 = s1.metadata.get(self.speechOpts.speechOverlapAttr[1]);
+                const flag2 = s2.metadata.get(self.speechOpts.speechOverlapAttr[1]);
+                if (flag1 === flag2
+                        && flag2 === self.speechOpts.speechOverlapVal
+                        && s1.segments.get(0) === s2.segments.get(0)) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        function mergeOverlaps(speeches:Array<Speech>):SpeechLines {
+            const ans:SpeechLines = [];
+            let prevSpeech:Speech = null;
+            speeches.forEach((item, i) => {
+                if (isOverlap(prevSpeech, item)) {
+                    ans[ans.length - 1].push(item);
+
+                } else {
+                    ans.push([item]);
+                }
+                prevSpeech = item;
+            });
+            return ans;
+        }
+
+        let currSpeech:Speech = createNewSpeech('\u2026', 'transparent', {});
+        let prevSpeech:Speech = null;
+        const tmp:Array<Speech> = [];
         this.concDetail.forEach((item, i) => {
             if (item.class === 'strc') {
-                const attrs = parseTag(this.speakerIdAttr[0], item.str);
-                if (attrs !== null && attrs[this.speakerIdAttr[1]]) {
-                        ans.push([currSpeech]);
-                        const newSpeakerId = attrs[this.speakerIdAttr[1]];
+                const attrs = parseTag(this.speechOpts.speakerIdAttr[0], item.str);
+                if (attrs !== null && attrs[this.speechOpts.speakerIdAttr[1]]) {
+                        tmp.push(currSpeech);
+                        const newSpeakerId = attrs[this.speechOpts.speakerIdAttr[1]];
                         if (!this.speakerColorsAttachments.has(newSpeakerId)) {
                             this.speakerColorsAttachments = this.speakerColorsAttachments.set(
                                 newSpeakerId, this.speakerColors.get(this.speakerColorsAttachments.size)
                             )
                         }
+                        prevSpeech = currSpeech;
                         currSpeech = createNewSpeech(
                             newSpeakerId,
                             this.speakerColorsAttachments.get(newSpeakerId),
                             attrs
                         );
-
+                        isOverlap(prevSpeech, currSpeech);
                 }
-                if (item.str.indexOf(`<${this.speechSegment[0]}`) > -1) {
-                    const attrs = parseTag(this.speechSegment[0], item.str);
+                if (item.str.indexOf(`<${this.speechOpts.speechSegment[0]}`) > -1) {
+                    const attrs = parseTag(this.speechOpts.speechSegment[0], item.str);
                     if (attrs) {
-                        currSpeech.segments = currSpeech.segments.push(attrs[this.speechSegment[1]]);
+                        currSpeech.segments = currSpeech.segments.push(attrs[this.speechOpts.speechSegment[1]]);
                     }
                 }
 
@@ -305,9 +334,9 @@ export class ConcDetailStore extends SimplePageStore {
             }
         });
         if (currSpeech.text.length > 0) {
-            ans.push([currSpeech]);
+            tmp.push(currSpeech);
         }
-        return ans;
+        return mergeOverlaps(tmp);
     }
 
     private loadWholeDocument():RSVP.Promise<any> {
@@ -338,8 +367,8 @@ export class ConcDetailStore extends SimplePageStore {
     }
 
     private loadSpeechDetail(corpusId:string, tokenNum:number, lineIdx:number, expand?:string):RSVP.Promise<any> {
-        const args = this.speechAttrs.map(x => `${this.speakerIdAttr[0]}.${x}`)
-                .concat([this.speechSegment.join('.')]);
+        const args = this.speechAttrs.map(x => `${this.speechOpts.speakerIdAttr[0]}.${x}`)
+                .concat([this.speechOpts.speechSegment.join('.')]);
         return this.loadConcDetail(corpusId, tokenNum, lineIdx, args, expand);
     }
 

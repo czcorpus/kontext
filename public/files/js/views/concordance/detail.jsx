@@ -269,8 +269,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <span>
-                [<img className="play-audio" src={this.createStaticUrl('img/audio.svg')}
+                <span className="play-audio">
+                [<img src={this.createStaticUrl('img/audio.svg')}
                                 onClick={this.props.handleClick}
                                 alt={this.translate('concview__play_audio')}
                                 title={this.translate('concview__click_to_play_audio')} />]
@@ -382,12 +382,6 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             }
         },
 
-        _renderSpeech : function (data, key) {
-            return data.map((item, i) => {
-                return <span key={`${key}-${i}`} className={item.class ? item.class : null}>{item.str + ' '}</span>;
-            })
-        },
-
         _handlePlayClick : function (segments) {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_PLAY_SPEECH',
@@ -414,18 +408,41 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return lum > 128 ? '#010101' : '#DDDDDD';
         },
 
+        _renderSpeech : function (data, key) {
+            return data.map((item, i) => {
+                return <span key={`${key}-${i}`} className={item.class ? item.class : null}>{item.str + ' '}</span>;
+            })
+        },
+
+        _renderSpeakerLabel : function (speaker) {
+            return (
+                <strong className="speaker" title={this._exportMetadata(speaker.metadata)}
+                        style={{backgroundColor: speaker.colorCode, color: this._calcTextColorFromBg(speaker.colorCode)}}>
+                    {speaker.speakerId}
+                </strong>
+            );
+        },
+
+        _renderOverlappingSpeakersLabel : function (speakers) {
+            const ans = [];
+            speakers.forEach((speaker, i) => {
+                if (i > 0) {
+                    ans.push(<span className="plus">+</span>);
+                }
+                ans.push(<strong className="overlapping-speaker" title={this._exportMetadata(speaker.metadata)}
+                        style={{backgroundColor: speaker.colorCode, color: this._calcTextColorFromBg(speaker.colorCode)}}>
+                    {speaker.speakerId}
+                </strong>);
+            });
+            return ans;
+        },
+
         _renderSingleSpeech : function (item, idx) {
             const overlap = item.metadata.get(this.props.speechOverlapAttr[1]);
             const overlapVal = this.props.speechOverlapVal;
             return (
                 <div key={`speech-${idx}`} className="speech">
-                    <strong className="speaker" title={this._exportMetadata(item.metadata)}
-                            style={{backgroundColor: item.colorCode, color: this._calcTextColorFromBg(item.colorCode)}}>
-                        {item.speakerId}
-                        {overlap === overlapVal ?
-                            <img src={this.createStaticUrl('img/speech-overlap.svg')} className="overlap" />
-                            : null}
-                    </strong>{'\u00A0'}
+                    {this._renderSpeakerLabel(item)}
                     {this._renderSpeech(item.text, idx)}
                     {'\u00A0'}
                     <PlaybackButton handleClick={this._handlePlayClick.bind(this, item.segments)} />
@@ -433,13 +450,21 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 );
         },
 
-        _renderOverlappingSpeeches : function () {
-
+        _renderOverlappingSpeeches : function (items, idx) {
+            return (
+                <div key={`speech-${idx}`} className="speech">
+                    {this._renderOverlappingSpeakersLabel(items)}
+                    <div className="overlapping-block">
+                        {items.map((item, i) => <div className={i > 0 ? 'other': null}>{this._renderSpeech(item.text, idx)}</div>)}
+                    </div>
+                    {'\u00A0'}
+                    <PlaybackButton handleClick={this._handlePlayClick.bind(this, items[0].segments)} />
+                </div>
+            );
         },
 
         _renderTokens : function () {
             return (this.state.data || []).map((item, i) => {
-                console.log('item: ', item);
                 if (item.length === 1) {
                     return this._renderSingleSpeech(item[0], i);
 
