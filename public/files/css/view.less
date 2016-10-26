@@ -297,19 +297,58 @@ i.coll {
     div.speech {
         line-height: 1.2em;
 
-        .speaker {
-            padding: 0.1em 0.7em;
-            margin-right: 0.4em;
+        .speaker,
+        .overlapping-speaker {
             border: 1px solid @color-light-text;
             border-radius: @input-border-radius;
             display: inline-block;
+        }
+
+        .speaker {
+            padding: 0.1em 0.7em;
+            margin-right: 0.7em;
             width: 3em;
         }
 
-        .play-audio {
-            cursor: pointer;
-            width: 1.4em;
+        .overlapping-block {
+            display: inline-block;
             vertical-align: middle;
+
+            .other {
+                font-style: italic;
+            }
+        }
+
+        .overlapping-speaker {
+            padding: 0.3em 0.3em;
+            margin-right: 0.1em;
+            vertical-align: middle;
+        }
+
+        .overlapping-speaker:not(:first-of-type) {
+            margin-left: 0.1em;
+        }
+
+        .overlapping-speaker:last-of-type {
+            margin-right: 0.7em;
+        }
+
+        .plus {
+            font-weight: bold;
+            font-size: 110%;
+        }
+
+        .play-audio {
+            display: inline-block;
+            cursor: pointer;
+            vertical-align: middle;
+            margin-left: 0.7em;
+
+            img {
+                width: 1.4em;
+                display: inline-block;
+                vertical-align: middle;
+            }
         }
 
         .overlap {

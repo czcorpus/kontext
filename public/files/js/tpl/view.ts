@@ -519,7 +519,9 @@ export function init(conf):ViewPage {
         {
             speakerIdAttr: lineViewProps.SpeakerIdAttr,
             speechSegment: lineViewProps.SpeechSegment,
-            speechAttrs: lineViewProps.SpeechAttrs
+            speechAttrs: lineViewProps.SpeechAttrs,
+            speechOverlapAttr: lineViewProps.SpeechOverlapAttr,
+            speechOverlapVal: lineViewProps.SpeechOverlapVal
         },
         lineViewProps.SpeakerColors
     );
