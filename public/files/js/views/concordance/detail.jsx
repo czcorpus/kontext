@@ -414,24 +414,41 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return lum > 128 ? '#010101' : '#DDDDDD';
         },
 
-        _renderTokens : function () {
+        _renderSingleSpeech : function (item, idx) {
+            const overlap = item.metadata.get(this.props.speechOverlapAttr[1]);
             const overlapVal = this.props.speechOverlapVal;
-            return (this.state.data || []).map((item, i) => {
-                const overlap = item.metadata.get(this.props.speechOverlapAttr[1]);
-                return (
-                    <div key={`speech-${i}`} className="speech">
-                        <strong className="speaker" title={this._exportMetadata(item.metadata)}
-                                style={{backgroundColor: item.colorCode, color: this._calcTextColorFromBg(item.colorCode)}}>
-                            {item.speakerId}
-                            {overlap === overlapVal ?
-                                <img src={this.createStaticUrl('img/speech-overlap.svg')} className="overlap" />
-                                : null}
-                        </strong>{'\u00A0'}
-                        {this._renderSpeech(item.text, i)}
-                        {'\u00A0'}
-                        <PlaybackButton handleClick={this._handlePlayClick.bind(this, item.segments)} />
-                    </div>
+            return (
+                <div key={`speech-${idx}`} className="speech">
+                    <strong className="speaker" title={this._exportMetadata(item.metadata)}
+                            style={{backgroundColor: item.colorCode, color: this._calcTextColorFromBg(item.colorCode)}}>
+                        {item.speakerId}
+                        {overlap === overlapVal ?
+                            <img src={this.createStaticUrl('img/speech-overlap.svg')} className="overlap" />
+                            : null}
+                    </strong>{'\u00A0'}
+                    {this._renderSpeech(item.text, idx)}
+                    {'\u00A0'}
+                    <PlaybackButton handleClick={this._handlePlayClick.bind(this, item.segments)} />
+                </div>
                 );
+        },
+
+        _renderOverlappingSpeeches : function () {
+
+        },
+
+        _renderTokens : function () {
+            return (this.state.data || []).map((item, i) => {
+                console.log('item: ', item);
+                if (item.length === 1) {
+                    return this._renderSingleSpeech(item[0], i);
+
+                } else if (item.length > 1) {
+                    return this._renderOverlappingSpeeches(item, i);
+
+                } else {
+                    return null;
+                }
             });
         },
 

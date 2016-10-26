@@ -43,7 +43,14 @@ export interface Speech {
     metadata:Immutable.Map<string, string>;
 }
 
-export type SpeechLines = Array<Speech>;
+/**
+ * Note: A single speech line contains an array of
+ * simultaneous speeches (i.e. if two people speak
+ * at the same time then the array contains two items).
+ */
+export type SpeechLine = Array<Speech>;
+
+export type SpeechLines = Array<SpeechLine>;
 
 
 type ExpandArgs = [number, number];
@@ -269,7 +276,7 @@ export class ConcDetailStore extends SimplePageStore {
             if (item.class === 'strc') {
                 const attrs = parseTag(this.speakerIdAttr[0], item.str);
                 if (attrs !== null && attrs[this.speakerIdAttr[1]]) {
-                        ans.push(currSpeech);
+                        ans.push([currSpeech]);
                         const newSpeakerId = attrs[this.speakerIdAttr[1]];
                         if (!this.speakerColorsAttachments.has(newSpeakerId)) {
                             this.speakerColorsAttachments = this.speakerColorsAttachments.set(
@@ -298,7 +305,7 @@ export class ConcDetailStore extends SimplePageStore {
             }
         });
         if (currSpeech.text.length > 0) {
-            ans.push(currSpeech);
+            ans.push([currSpeech]);
         }
         return ans;
     }
