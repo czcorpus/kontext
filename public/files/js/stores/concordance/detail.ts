@@ -268,7 +268,7 @@ export class ConcDetailStore extends SimplePageStore {
         this.concDetail.forEach((item, i) => {
             if (item.class === 'strc') {
                 const attrs = parseTag(this.speakerIdAttr[0], item.str);
-                if (attrs !== null && attrs[this.speakerIdAttr[1]] !== currSpeech.speakerId) {
+                if (attrs !== null && attrs[this.speakerIdAttr[1]]) {
                         ans.push(currSpeech);
                         const newSpeakerId = attrs[this.speakerIdAttr[1]];
                         if (!this.speakerColorsAttachments.has(newSpeakerId)) {
