@@ -75,9 +75,9 @@ export class ConcDetailStore extends SimplePageStore {
 
     private concDetail:ConcDetailText;
 
-    private expandLeftArgs:ExpandArgs;
+    private expandLeftArgs:Immutable.List<ExpandArgs>;
 
-    private expandRightArgs:ExpandArgs;
+    private expandRightArgs:Immutable.List<ExpandArgs>;
 
     private corpusId:string;
 
@@ -119,6 +119,8 @@ export class ConcDetailStore extends SimplePageStore {
         this.wholeDocumentLoaded = false;
         this.speakerColors = Immutable.List<string>(speakerColors);
         this.speakerColorsAttachments = Immutable.Map<string, string>();
+        this.expandLeftArgs = Immutable.List<ExpandArgs>();
+        this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -156,7 +158,8 @@ export class ConcDetailStore extends SimplePageStore {
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
                             payload.props['lineIdx'],
-                            []).then(
+                            [],
+                            self.expandLeftArgs.size > 1 && self.expandRightArgs.size > 1 ? 'reload' : null).then(
                         () => {
                             self.linesStore.setLineFocus(payload.props['lineIdx'], true);
                             self.linesStore.notifyChangeListeners();
@@ -182,7 +185,8 @@ export class ConcDetailStore extends SimplePageStore {
                     self.loadSpeechDetail(
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
-                            payload.props['lineIdx']).then(
+                            payload.props['lineIdx'],
+                            self.expandLeftArgs.size > 1 && self.expandRightArgs.size > 1 ? 'reload' : null).then(
                         () => {
                             self.linesStore.setLineFocus(payload.props['lineIdx'], true);
                             self.linesStore.notifyChangeListeners();
@@ -216,6 +220,8 @@ export class ConcDetailStore extends SimplePageStore {
                         self.corpusId = null;
                         self.tokenNum = null;
                         self.wholeDocumentLoaded = false;
+                        self.expandLeftArgs = self.expandLeftArgs.clear();
+                        self.expandRightArgs = self.expandRightArgs.clear();
                         self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
                         self.notifyChangeListeners();
                         self.linesStore.notifyChangeListeners();
@@ -356,8 +362,8 @@ export class ConcDetailStore extends SimplePageStore {
                 if (!data.contains_errors) {
                     this.concDetail = data.content;
                     this.wholeDocumentLoaded = true;
-                    this.expandLeftArgs = null;
-                    this.expandRightArgs = null;
+                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    this.expandRightArgs = Immutable.List<ExpandArgs>();
 
                 } else {
                     throw new Error(data.messages[0]);
@@ -391,12 +397,22 @@ export class ConcDetailStore extends SimplePageStore {
         }
 
         if (expand === 'left') {
-            args['detail_left_ctx'] = String(this.expandLeftArgs[0]);
-            args['detail_right_ctx'] = String(this.expandLeftArgs[1]);
+            args['detail_left_ctx'] = String(this.expandLeftArgs.get(-1)[0]);
+            args['detail_right_ctx'] = String(this.expandLeftArgs.get(-1)[1]);
 
         } else if (expand === 'right') {
-            args['detail_left_ctx'] = String(this.expandRightArgs[0]);
-            args['detail_right_ctx'] = String(this.expandRightArgs[1]);
+            args['detail_left_ctx'] = String(this.expandRightArgs.get(-1)[0]);
+            args['detail_right_ctx'] = String(this.expandRightArgs.get(-1)[1]);
+
+
+        } else if (expand === 'reload' && this.expandLeftArgs.size > 1
+                && this.expandRightArgs.size > 1) {
+            // Please note that the following lines do not contain any 'left - right'
+            // mismatch as we have to fetch the 'current' state, not the 'next' one and such
+            // info is always on the other side of expansion (expand-left contains
+            // also current right and vice versa)
+            args['detail_left_ctx'] = String(this.expandRightArgs.get(-1)[0]);
+            args['detail_right_ctx'] = String(this.expandLeftArgs.get(-1)[1]);
         }
 
         return this.layoutModel.ajax<AjaxResponse.WideCtx>(
@@ -410,20 +426,20 @@ export class ConcDetailStore extends SimplePageStore {
                 if (!data.contains_errors) {
                     this.concDetail = data.content;
                     if (data.expand_left_args) {
-                        this.expandLeftArgs = [
+                        this.expandLeftArgs = this.expandLeftArgs.push([
                             data.expand_left_args.detail_left_ctx, data.expand_left_args.detail_right_ctx
-                        ];
+                        ]);
 
                     } else {
-                        this.expandLeftArgs = null;
+                        this.expandLeftArgs = this.expandLeftArgs.push(null);
                     }
                     if (data.expand_right_args) {
-                        this.expandRightArgs = [
+                        this.expandRightArgs = this.expandRightArgs.push([
                             data.expand_right_args.detail_left_ctx, data.expand_right_args.detail_right_ctx
-                        ];
+                        ]);
 
                     } else {
-                        this.expandRightArgs = null;
+                        this.expandRightArgs = this.expandRightArgs.push(null);
                     }
 
                 } else {
@@ -434,11 +450,11 @@ export class ConcDetailStore extends SimplePageStore {
     }
 
     hasExpandLeft():boolean {
-        return !!this.expandLeftArgs;
+        return !!this.expandLeftArgs.get(-1);
     }
 
     hasExpandRight():boolean {
-        return !!this.expandRightArgs;
+        return !!this.expandRightArgs.get(-1);
     }
 
     canDisplayWholeDocument():boolean {
