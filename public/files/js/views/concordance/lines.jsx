@@ -47,7 +47,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
             return [
                 <td key={'ref:' + corpInfo.n}>{/* matches reference column */}</td>,
-                <td key={corpInfo.n} className="concordance-col-heading" colSpan={colSpan} align="center">
+                <td key={corpInfo.n} className="concordance-col-heading" colSpan={colSpan}>
                     <a className="select-primary-lang" onClick={this._handleSetMainCorpClick.bind(this, corpInfo.n)}>{corpInfo.label}</a>
                 </td>
             ];
