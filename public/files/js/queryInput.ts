@@ -423,7 +423,6 @@ export class QueryFormTweaks {
 
         $(formElm).find('input[name="sel_aligned"]').each(function () {
             let corpn = $(this).data('corpus'); // beware - corp may contain special characters colliding with jQuery
-            let queryType;
 
             // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
             if (!$(this).val()) {
@@ -437,13 +436,15 @@ export class QueryFormTweaks {
                 });
 
             } else {
-                queryType = $(this).parent().find('[id="queryselector_' + corpn + '"]').val();
-                queryType = queryType.substring(0, queryType.length - 3);
-                $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
-                    if (!$(this).hasClass(queryType + '-input')) {
-                        $(this).attr('disabled', stateStr);
-                    }
-                });
+                const querySelector = $(this).parent().find('[id="queryselector_' + corpn + '"]');
+                if (querySelector.length > 0) {
+                    const queryType = querySelector.val().substring(0, querySelector.val() - 3);
+                    $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
+                        if (!$(this).hasClass(queryType + '-input')) {
+                            $(this).attr('disabled', stateStr);
+                        }
+                    });
+                }
             }
         });
         // now let's disable unused corpora completely
@@ -491,12 +492,11 @@ export class QueryFormTweaks {
      *
      */
     fixFormSubmit():void {
-        let self = this;
         // remove empty and unused parameters from URL before form submit
         $(this.formElm).submit(() => { // run before submit
-            this.setAlignedCorporaFieldsDisabledState(self.formElm, true);
+            this.setAlignedCorporaFieldsDisabledState(this.formElm, true);
             $(window).on('unload', () => {
-                this.setAlignedCorporaFieldsDisabledState(self.formElm, false);
+                this.setAlignedCorporaFieldsDisabledState(this.formElm, false);
             });
         });
     }
