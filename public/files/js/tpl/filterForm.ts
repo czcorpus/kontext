@@ -145,10 +145,7 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
     }
 }
 
-/**
- * This module contains functionality related directly to the filter_form.tmpl template
- *
- */
+
 export function init(conf:Kontext.Conf) {
 
     let layoutModel = new documentModule.PageModel(conf);
@@ -160,13 +157,13 @@ export function init(conf:Kontext.Conf) {
             queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi,
                     layoutModel.userSettings, $('#mainform').get(0));
             queryFormTweaks.bindQueryFieldsetsEvents();
-            queryFormTweaks.bindBeforeSubmitActions($('input.submit')),
-            queryFormTweaks.updateToggleableFieldsets(),
-            queryFormTweaks.textareaSubmitOverride(),
-            queryFormTweaks.textareaHints(),
-            queryFormTweaks.initQuerySwitching(),
-            queryFormTweaks.fixFormSubmit(),
-            queryFormTweaks.bindQueryHelpers(),
+            queryFormTweaks.bindBeforeSubmitActions($('input.submit'));
+            queryFormTweaks.updateToggleableFieldsets();
+            queryFormTweaks.textareaSubmitOverride();
+            queryFormTweaks.textareaHints();
+            queryFormTweaks.initQuerySwitching();
+            queryFormTweaks.fixFormSubmit();
+            queryFormTweaks.bindQueryHelpers();
             corpusSetupHandler.createTTViews();
             return queryStorage.create(extendedApi);
     }).then(
