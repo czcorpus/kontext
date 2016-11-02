@@ -470,17 +470,20 @@ export class ConcLineStore extends SimplePageStore {
 
     private changeMainCorpus(corpusId:string) {
         let args:MultiDict = this.layoutModel.getConcArgs();
+        let link;
+
         if (this.hasKwic(corpusId)) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');
             args.add('q', 'x-' + corpusId);
+            link = this.layoutModel.createActionUrl('view') + '?' + this.layoutModel.encodeURLParameters(args);
 
         } else {
             args.set('maincorp', corpusId);
             args.set('within', 1);
+            link = this.layoutModel.createActionUrl('filter_form') + '?' + this.layoutModel.encodeURLParameters(args);
         }
-        let link = this.layoutModel.createActionUrl('view') + '?' + this.layoutModel.encodeURLParameters(args);
-        window.location.href = link; // TODO
+        window.location.href = link; // TODO (should go through a router of some kind)
     }
 
     private playAudio(lineIdx:number, chunks:Array<TextChunk>) {
