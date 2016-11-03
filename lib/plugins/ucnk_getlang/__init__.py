@@ -26,7 +26,7 @@ element getlang {
 import os
 import Cookie
 
-from ..abstract.getlang import AbstractGetLang
+from plugins.abstract.getlang import AbstractGetLang
 
 
 class GetLang(AbstractGetLang):
@@ -43,6 +43,18 @@ class GetLang(AbstractGetLang):
     def __init__(self, cookie_name, fallback_lang='en_US'):
         self.cookie_name = cookie_name
         self.fallback_lang = fallback_lang
+        self._translations = self.fetch_translations()
+
+    @staticmethod
+    def fetch_translations():
+        ans = {}
+        root_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'locale')
+        for item in os.listdir(root_dir):
+            c = item.split('_')[0]
+            if c not in ans:
+                ans[c] = []
+            ans[c].append(item)
+        return ans
 
     def fetch_current_language(self, source):
         """
@@ -55,23 +67,12 @@ class GetLang(AbstractGetLang):
         underscore-separated ISO 639 language code and ISO 3166 country code
         of the detected language or an empty string in case no value was found
         """
-        def fetch_translations():
-            ans = {}
-            root_dir = '%s/../../../locale' % os.path.dirname(__file__)
-            for item in os.listdir(root_dir):
-                c = item.split('_')[0]
-                if c not in ans:
-                    ans[c] = []
-                ans[c].append(item)
-            return ans
-
         if not isinstance(source, Cookie.BaseCookie):
             raise TypeError('%s plugin expects Cookie.BaseCookie instance as a source' % __file__)
         if self.cookie_name in source:
             code = source[self.cookie_name].value
             if '_' not in code:
-                avail_trans = fetch_translations()
-                code = avail_trans.get(code, (None,))[0]
+                code = self._translations.get(code, (None,))[0]
             return code
         return None
 
