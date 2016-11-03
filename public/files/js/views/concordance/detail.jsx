@@ -363,9 +363,9 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
     }
 
     function calcTextColorFromBg(bgColor) {
-        const color = bgColor ? bgColor : [0, 0, 0, 1];
+        const color = bgColor ? bgColor : [255, 255, 255, 1];
         const lum = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2];
-        return lum > 128 ? [1, 1, 1, 1] : [221, 221, 221, 1];
+        return lum > 128 ? [1, 1, 1, 1] : [231, 231, 231, 1];
     }
 
     function renderSpeech(data, key) {
