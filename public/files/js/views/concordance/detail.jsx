@@ -29,6 +29,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
     const mediaViews = initMediaViews(dispatcher, mixins, lineStore);
 
+
     // ------------------------- <RefLine /> ---------------------------
 
     const RefLine = React.createClass({
@@ -261,24 +262,6 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         }
     });
 
-    // ------------------------- <PlaybackButton /> ---------------------------
-
-    const PlaybackButton = React.createClass({
-
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <span className="play-audio">
-                [<img src={this.createStaticUrl('img/audio.svg')}
-                                onClick={this.props.handleClick}
-                                alt={this.translate('concview__play_audio')}
-                                title={this.translate('concview__click_to_play_audio')} />]
-                </span>
-            );
-        }
-    });
-
     // ------------------------- <ExpandSpeechesButton /> ---------------------------
 
     const ExpandSpeechesButton = React.createClass({
@@ -368,6 +351,116 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         }
     });
 
+    // ----------------------------------------------------------------------
+
+    function exportMetadata(data) {
+        if (data.size > 0) {
+            return data.map((val, attr) => `${attr}: ${val}`).join(', ');
+
+        } else {
+            return mixins[0].translate('concview__no_speech_metadata_available');
+        }
+    }
+
+    function calcTextColorFromBg(bgColor) {
+        const color = bgColor ? bgColor : [0, 0, 0, 1];
+        const lum = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2];
+        return lum > 128 ? [1, 1, 1, 1] : [221, 221, 221, 1];
+    }
+
+    function renderSpeech(data, key) {
+        return data.map((item, i) => {
+            return <span key={`${key}-${i}`} className={item.class ? item.class : null}>{item.str + ' '}</span>;
+        });
+    }
+
+    function color2str(c) {
+        return c !== null ? `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})` : 'transparent';
+    }
+
+    // ------------------------- <SpeechText /> ---------------------------
+
+    const SpeechText = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            return (
+                <div className="speech-text" onClick={this.props.handleClick}
+                        title={this.translate('concview__click_to_play_audio')}>
+                    <span style={{color: this.props.bulletColor}}>{'\u25cf\u00a0'}</span>
+                    {this.props.data.map((item, i) => {
+                        return <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>;
+                    })}
+                </div>
+            );
+        }
+    });
+
+    // ------------------------- <TRSingleSpeech /> ---------------------------
+
+    const TRSingleSpeech = React.createClass({
+
+        render : function () {
+            const style = {
+                backgroundColor: color2str(this.props.speech.colorCode),
+                color: color2str(calcTextColorFromBg(this.props.speech.colorCode))
+            };
+            return (
+                <tr key={`speech-${this.props.idx}`} className="speech">
+                    <th>
+                        <strong className="speaker" title={exportMetadata(this.props.speech.metadata)}
+                                style={style}>
+                            {this.props.speech.speakerId}
+                        </strong>
+                    </th>
+                    <td className="text">
+                        <SpeechText data={this.props.speech.text} key={this.props.idx}
+                                bulletColor={color2str(this.props.speech.colorCode)}
+                                handleClick={this.props.handlePlayClick} />
+                    </td>
+                </tr>
+            );
+        }
+    });
+
+    // ------------------------- <TROverlappingSpeeches /> ---------------------------
+
+    const TROverlappingSpeeches = React.createClass({
+
+        _renderOverlappingSpeakersLabel : function () {
+            const ans = [];
+            this.props.speeches.forEach((speech, i) => {
+                if (i > 0) {
+                    ans.push(<span key={`p-${this.props.idx}:${i}`} className="plus">{'\u00a0'}+{'\u00a0'}</span>);
+                }
+                const css = {
+                    backgroundColor: color2str(speech.colorCode),
+                    color: color2str(calcTextColorFromBg(speech.colorCode))
+                };
+                ans.push(<strong key={`${this.props.idx}:${i}`} className="speaker"
+                                title={exportMetadata(speech.metadata)}
+                                style={css}>{speech.speakerId}</strong>);
+            });
+            return ans;
+        },
+
+        render : function () {
+            return (
+                <tr key={`speech-${this.props.idx}`} className="speech">
+                    <th>
+                        {this._renderOverlappingSpeakersLabel(this.props.speeches)}
+                    </th>
+                    <td className="text overlapping-block">
+                        {this.props.speeches.map((speech, i) => <SpeechText data={speech.text}
+                                    key={`${this.props.idx}:${i}`} bulletColor={color2str(speech.colorCode)}
+                                    handleClick={this.props.handlePlayClick} />)}
+                    </td>
+                </tr>
+            );
+        }
+    });
+
     // ------------------------- <SpeechView /> ---------------------------
 
     const SpeechView = React.createClass({
@@ -391,92 +484,6 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             });
         },
 
-        _exportMetadata : function (data) {
-            if (data.size > 0) {
-                return data.map((val, attr) => `${attr}: ${val}`).join(', ');
-
-            } else {
-                return this.translate('concview__no_speech_metadata_available');
-            }
-        },
-
-        _calcTextColorFromBg : function (bgColor) {
-            const color = bgColor.indexOf('#') === 0 ? bgColor : '#000000';
-            const lum = 0.2126 * parseInt(color.substr(1, 2), 16) +
-                0.7152 * parseInt(color.substr(3,2), 16) +
-                0.0722 * parseInt(color.substr(5, 2), 16);
-            return lum > 128 ? '#010101' : '#DDDDDD';
-        },
-
-        _renderSpeech : function (data, key) {
-            return data.map((item, i) => {
-                return <span key={`${key}-${i}`} className={item.class ? item.class : null}>{item.str + ' '}</span>;
-            })
-        },
-
-        _renderSpeakerLabel : function (speaker) {
-            return (
-                <strong className="speaker" title={this._exportMetadata(speaker.metadata)}
-                        style={{backgroundColor: speaker.colorCode, color: this._calcTextColorFromBg(speaker.colorCode)}}>
-                    {speaker.speakerId}
-                </strong>
-            );
-        },
-
-        _renderOverlappingSpeakersLabel : function (speakers) {
-            const ans = [];
-            speakers.forEach((speaker, i) => {
-                if (i > 0) {
-                    ans.push(<span className="plus">+</span>);
-                }
-                ans.push(<strong className="overlapping-speaker" title={this._exportMetadata(speaker.metadata)}
-                        style={{backgroundColor: speaker.colorCode, color: this._calcTextColorFromBg(speaker.colorCode)}}>
-                    {speaker.speakerId}
-                </strong>);
-            });
-            return ans;
-        },
-
-        _renderSingleSpeech : function (item, idx) {
-            const overlap = item.metadata.get(this.props.speechOverlapAttr[1]);
-            const overlapVal = this.props.speechOverlapVal;
-            return (
-                <div key={`speech-${idx}`} className="speech">
-                    {this._renderSpeakerLabel(item)}
-                    {this._renderSpeech(item.text, idx)}
-                    {'\u00A0'}
-                    <PlaybackButton handleClick={this._handlePlayClick.bind(this, item.segments)} />
-                </div>
-                );
-        },
-
-        _renderOverlappingSpeeches : function (items, idx) {
-            return (
-                <div key={`speech-${idx}`} className="speech">
-                    {this._renderOverlappingSpeakersLabel(items)}
-                    <div className="overlapping-block">
-                        {items.map((item, i) => <div className={i > 0 ? 'other': null}>{this._renderSpeech(item.text, idx)}</div>)}
-                    </div>
-                    {'\u00A0'}
-                    <PlaybackButton handleClick={this._handlePlayClick.bind(this, items[0].segments)} />
-                </div>
-            );
-        },
-
-        _renderTokens : function () {
-            return (this.state.data || []).map((item, i) => {
-                if (item.length === 1) {
-                    return this._renderSingleSpeech(item[0], i);
-
-                } else if (item.length > 1) {
-                    return this._renderOverlappingSpeeches(item, i);
-
-                } else {
-                    return null;
-                }
-            });
-        },
-
         _storeChangeHandler : function () {
             this.setState({
                 data: concDetailStore.getSpeechesDetail(),
@@ -493,20 +500,53 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             concDetailStore.removeChangeListener(this._storeChangeHandler);
         },
 
+        _renderSpeechLines : function () {
+            return (this.state.data || []).map((item, i) => {
+                if (item.length === 1) {
+                    return <TRSingleSpeech
+                                key={`sp-line-${i}`}use_conc_toolbar
+                                speech={item[0]}
+                                idx={i}
+                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments)} />;
+
+                } else if (item.length > 1) {
+                    return <TROverlappingSpeeches
+                                key={`sp-line-${i}`}
+                                speeches={item}
+                                idx={i}
+                                speechOverlapVal={this.props.speechOverlapVal}
+                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments)} />;
+
+                } else {
+                    return null;
+                }
+            });
+        },
+
         render : function () {
             return (
                 <div>
-                    <p className="expand">
-                    {this.state.hasExpandLeft ?
-                        <ExpandSpeechesButton position="top" />
-                        : null}
-                    </p>
-                    {this._renderTokens()}
-                    <p className="expand">
-                        {this.state.hasExpandRight ?
-                            <ExpandSpeechesButton position="bottom" />
-                            : null}
-                    </p>
+                    <table className="speeches">
+                        <tbody>
+                            <tr className="expand">
+                                <th>
+                                    {this.state.hasExpandLeft ?
+                                        <ExpandSpeechesButton position="top" />
+                                    : null}
+                                </th>
+                                <td />
+                            </tr>
+                            {this._renderSpeechLines()}
+                            <tr className="expand">
+                                <th>
+                                    {this.state.hasExpandRight ?
+                                        <ExpandSpeechesButton position="bottom" />
+                                    : null}
+                                </th>
+                                <td />
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             );
         }
@@ -637,7 +677,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 lineIdx={this.props.lineIdx} />;
                 case 'speech':
                     return <SpeechView corpusId={this.props.corpusId} tokenNumber={this.props.tokenNumber}
-                                lineIdx={this.props.lineIdx} speakerColors={this.props.speakerColors}
+                                lineIdx={this.props.lineIdx}
                                 speechOverlapAttr={this.props.speechOverlapAttr}
                                 speechOverlapVal={this.props.speechOverlapVal} />;
             }

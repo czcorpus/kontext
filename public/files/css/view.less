@@ -294,103 +294,84 @@ i.coll {
         }
     }
 
-    div.speech {
-        line-height: 1.2em;
+    table.speeches {
 
-        .speaker,
-        .overlapping-speaker {
-            border: 1px solid @color-light-text;
-            border-radius: @input-border-radius;
-            display: inline-block;
-        }
+        border-spacing: 0 0.9em;
 
-        .speaker {
-            padding: 0.1em 0.7em;
-            margin-right: 0.7em;
-            width: 3em;
-        }
+        tr.speech {
+            line-height: 1.2em;
 
-        .overlapping-block {
-            display: inline-block;
-            vertical-align: middle;
-
-            .other {
-                font-style: italic;
-            }
-        }
-
-        .overlapping-speaker {
-            padding: 0.3em 0.3em;
-            margin-right: 0.1em;
-            vertical-align: middle;
-        }
-
-        .overlapping-speaker:not(:first-of-type) {
-            margin-left: 0.1em;
-        }
-
-        .overlapping-speaker:last-of-type {
-            margin-right: 0.7em;
-        }
-
-        .plus {
-            font-weight: bold;
-            font-size: 110%;
-        }
-
-        .play-audio {
-            display: inline-block;
-            cursor: pointer;
-            vertical-align: middle;
-            margin-left: 0.7em;
-
-            img {
-                width: 1.4em;
-                display: inline-block;
+            th {
+                font-weight: normal;
+                text-align: right;
+                white-space: nowrap;
                 vertical-align: middle;
             }
+
+            td {
+                vertical-align: middle;
+            }
+
+            .speaker {
+                border: 1px solid @color-light-text;
+                border-radius: @input-border-radius;
+                display: inline-block;
+                vertical-align: middle;
+                font-size: 0.8em;
+                font-weight: normal;
+                padding: 0.05em 0.7em;
+            }
+
+            .speech-text {
+                display: block;
+                margin-left: 1em;
+            }
+
+            .speech-text:hover {
+                text-decoration: underline;
+                cursor: pointer;
+            }
+
+            .plus {
+                font-weight: bold;
+                font-size: 110%;
+            }
+
+            .play-audio {
+                float: left;
+                cursor: pointer;
+                vertical-align: middle;
+                margin-left: 0.7em;
+
+                img {
+                    width: 1.4em;
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
+
+            .overlap {
+                float: right;
+                width: 1em;
+            }
         }
 
-        .overlap {
-            float: right;
-            width: 1em;
+        tr.expand {
+
+            th {
+                text-align: right;
+                padding-right: 0.2em;
+
+                a {
+                    width: 3em;
+                    display: inline-block;
+
+                    img {
+                        width: 1.4em;
+                    }
+                }
+            }
         }
-    }
-
-    div.speech:not(:first-of-type) {
-        margin-top: 0.4em;
-    }
-
-    a.expand:first-child {
-        margin-right: 0.4em;
-    }
-
-    a.expand:last-child {
-        margin-left: 0.2em;
-    }
-
-    p.expand {
-        padding: 0;
-        margin: 0;
-
-        a {
-            padding: 0.1em 0.7em;
-            margin-right: 0.4em;
-            display: inline-block;
-            width: 3em;
-        }
-
-        a img {
-            width: 1.4em;
-        }
-    }
-
-    p.expand:first-child {
-        margin-bottom: 0.4em;
-    }
-
-    p.expand:last-child {
-        margin-top: 0.4em;
     }
 }
 

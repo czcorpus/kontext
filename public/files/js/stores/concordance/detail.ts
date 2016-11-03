@@ -32,6 +32,9 @@ import * as Immutable from 'vendor/immutable';
  */
 export type ConcDetailText = Array<{str:string; class:string}>;
 
+
+export type RGBColor = [number, number, number, number];
+
 /**
  *
  */
@@ -39,7 +42,7 @@ export interface Speech {
     text:ConcDetailText;
     speakerId:string;
     segments:Immutable.List<string>;
-    colorCode:string;
+    colorCode:RGBColor;
     metadata:Immutable.Map<string, string>;
 }
 
@@ -64,10 +67,41 @@ export interface SpeechOptions {
     speechOverlapVal:string;
 }
 
+function importColor(color:string, opacity:number):RGBColor {
+    const fromHex = pos => parseInt(color.substr(2 * pos + 1, 2), 16);
+    if (color.substr(0, 1) === '#') {
+        return [
+            fromHex(0),
+            fromHex(1),
+            fromHex(2),
+            parseFloat(opacity.toFixed(1))
+        ];
+
+    } else if (color.toLowerCase().indexOf('rgb') === 0) {
+        const srch = /rgb\((\d+),\s*(\d+),\s*(\d+)\s*(,\s*[\d\.]+)*\)/i.exec(color);
+        if (srch) {
+            return [
+                parseInt(srch[1]),
+                parseInt(srch[2]),
+                parseInt(srch[3]),
+                parseFloat(opacity.toFixed(1))
+            ];
+
+        } else {
+            throw new Error('Cannot import color ' + color);
+        }
+
+    } else {
+        throw new Error('Cannot import color ' + color);
+    }
+}
+
 /**
  * A store providing access to a detailed/extended kwic information.
  */
 export class ConcDetailStore extends SimplePageStore {
+
+    private static SPK_LABEL_OPACITY:number = 0.7;
 
     private layoutModel:PageModel;
 
@@ -95,7 +129,7 @@ export class ConcDetailStore extends SimplePageStore {
 
     private audioPlayer:AudioPlayer;
 
-    private speakerColors:Immutable.List<string>;
+    private speakerColors:Immutable.List<RGBColor>;
 
     /**
      * Speaker colors attachments must survive context expansion.
@@ -103,7 +137,7 @@ export class ConcDetailStore extends SimplePageStore {
      * changed into red one after a context expasion due to
      * some new incoming or outcoming users.
      */
-    private speakerColorsAttachments:Immutable.Map<string,string>;
+    private speakerColorsAttachments:Immutable.Map<string, RGBColor>;
 
 
     constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>, linesStore:ConcLineStore, structCtx:string,
@@ -117,8 +151,8 @@ export class ConcDetailStore extends SimplePageStore {
         this.speechAttrs = speechOpts.speechAttrs;
         this.lineIdx = null;
         this.wholeDocumentLoaded = false;
-        this.speakerColors = Immutable.List<string>(speakerColors);
-        this.speakerColorsAttachments = Immutable.Map<string, string>();
+        this.speakerColors = Immutable.List<RGBColor>(speakerColors.map(item => importColor(item, ConcDetailStore.SPK_LABEL_OPACITY)));
+        this.speakerColorsAttachments = Immutable.Map<string, RGBColor>();
         this.expandLeftArgs = Immutable.List<ExpandArgs>();
         this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.audioPlayer = new AudioPlayer(
@@ -261,7 +295,7 @@ export class ConcDetailStore extends SimplePageStore {
             return null;
         }
 
-        function createNewSpeech(speakerId:string, colorCode:string, metadata:{[attr:string]:string}):Speech {
+        function createNewSpeech(speakerId:string, colorCode:RGBColor, metadata:{[attr:string]:string}):Speech {
             const importedMetadata = Immutable.Map<string, string>(metadata)
                     .filter((val, attr) => attr !== self.speechOpts.speechSegment[1] &&
                                 attr !== self.speechOpts.speakerIdAttr[1])
@@ -303,7 +337,7 @@ export class ConcDetailStore extends SimplePageStore {
             return ans;
         }
 
-        let currSpeech:Speech = createNewSpeech('\u2026', 'transparent', {});
+        let currSpeech:Speech = createNewSpeech('\u2026', null, {});
         let prevSpeech:Speech = null;
         const tmp:Array<Speech> = [];
         this.concDetail.forEach((item, i) => {
