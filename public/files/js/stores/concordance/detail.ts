@@ -101,7 +101,7 @@ function importColor(color:string, opacity:number):RGBColor {
  */
 export class ConcDetailStore extends SimplePageStore {
 
-    private static SPK_LABEL_OPACITY:number = 0.7;
+    private static SPK_LABEL_OPACITY:number = 0.8;
 
     private layoutModel:PageModel;
 
@@ -328,6 +328,17 @@ export class ConcDetailStore extends SimplePageStore {
             speeches.forEach((item, i) => {
                 if (isOverlap(prevSpeech, item)) {
                     ans[ans.length - 1].push(item);
+                    ans[ans.length - 1] = ans[ans.length - 1].sort((s1, s2) => {
+                        if (s1.speakerId > s2.speakerId) {
+                            return 1;
+
+                        } else if (s1.speakerId < s2.speakerId) {
+                            return -1;
+
+                        } else {
+                            return 0;
+                        }
+                    });
 
                 } else {
                     ans.push([item]);
@@ -357,7 +368,6 @@ export class ConcDetailStore extends SimplePageStore {
                             this.speakerColorsAttachments.get(newSpeakerId),
                             attrs
                         );
-                        isOverlap(prevSpeech, currSpeech);
                 }
                 if (item.str.indexOf(`<${this.speechOpts.speechSegment[0]}`) > -1) {
                     const attrs = parseTag(this.speechOpts.speechSegment[0], item.str);
