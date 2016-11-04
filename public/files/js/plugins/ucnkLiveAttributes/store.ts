@@ -345,7 +345,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                     ans[k] = data[k].map((v) => {
                         return {
                             ident: v[1],
-                            v: v[0],
+                            v: v[2], // [0] contains shortened version - cannot use here
                             lock: false,
                             availItems: v[4],
                             numGrouped: parseInt(v[3])
