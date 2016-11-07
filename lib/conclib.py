@@ -92,7 +92,7 @@ def _min_conc_unfinished(pidfile, minsize):
             # TODO: still not bullet-proof solution
             if data.get('error', None):
                 raise ConcCalculationControlException(data['error'])
-            elif math.ceil(data['last_check'] + data['curr_wait']) < math.floor(time.time()):
+            elif math.ceil(data['last_upd'] + data['curr_wait']) < math.floor(time.time()):
                 return False
             elif data.get('minsize') == -1:
                 if data.get('finished') == 1:  # whole conc

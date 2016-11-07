@@ -76,7 +76,7 @@ class GeneralWorker(object):
             cPickle.dump(
                 {
                     'pid': os.getpid(),
-                    'last_check': int(time.time()),
+                    'last_upd': int(time.time()),
                     # in case we check status before any calculation (represented by the
                     # BackgroundCalc class) starts (the calculation updates curr_wait as it
                     # runs), we want to be sure the limit is big enough for BackgroundCalc to
