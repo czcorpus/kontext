@@ -53,8 +53,8 @@ class NotifierFactory(concworker.InitialNotifierFactory):
 
 
 class TaskRegistration(concworker.GeneralWorker):
-    def __init__(self):
-        super(TaskRegistration, self).__init__()
+    def __init__(self, task_id):
+        super(TaskRegistration, self).__init__(task_id=task_id)
 
     def __call__(self, corpus_name, subc_name, subchash, query, samplesize):
         corpus_manager = CorpusManager()
@@ -67,10 +67,10 @@ class TaskRegistration(concworker.GeneralWorker):
 
 class CeleryCalculation(concworker.GeneralWorker):
 
-    def __init__(self):
+    def __init__(self, task_id):
         """
         """
-        super(CeleryCalculation, self).__init__()
+        super(CeleryCalculation, self).__init__(task_id=task_id)
 
     def __call__(self, initial_args, subc_dir, corpus_name, subc_name, subchash, query, samplesize):
         """
@@ -106,7 +106,8 @@ class CeleryCalculation(concworker.GeneralWorker):
                     self._update_pidfile(initial_args['pidfile'], last_upd=int(time.time()),
                                          curr_wait=sleeptime, finished=sizes['finished'],
                                          concsize=sizes['concsize'], fullsize=sizes['fullsize'],
-                                         relconcsize=sizes['relconcsize'])
+                                         relconcsize=sizes['relconcsize'],
+                                         task_id=self._task_id)
                 tmp_cachefile = initial_args['cachefile'] + '.tmp'
                 conc.save(tmp_cachefile)  # whole
                 os.rename(tmp_cachefile, initial_args['cachefile'])

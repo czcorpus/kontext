@@ -163,8 +163,8 @@ class CustomTasks(object):
 
 # ----------------------------- CONCORDANCE -----------------------------------
 
-@app.task
-def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize):
+@app.task(bind=True)
+def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -179,15 +179,15 @@ def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize):
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
-    reg_fn = wcelery.TaskRegistration()
+    reg_fn = wcelery.TaskRegistration(task_id=self.request.id)
     initial_args = reg_fn(corpus_id, subc_name, subchash, query, samplesize)
     if not initial_args.get('stored_pidfile'):   # we are first trying to calc this
         conc_calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
     return initial_args
 
 
-@app.task(ignore_result=True)  # TODO ignore? what about errors?
-def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
+@app.task(bind=True, ignore_result=True)  # TODO ignore? what about errors?
+def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     """
     Perform actual concordance calculation.
     This is called automatically by the 'register()' function above.
@@ -201,7 +201,7 @@ def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, quer
     query -- a query tuple
     samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
     """
-    task = wcelery.CeleryCalculation()
+    task = wcelery.CeleryCalculation(task_id=self.request.id)
     subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
     return task(initial_args, subc_path, corpus_name, subc_name, subchash, query, samplesize)
 

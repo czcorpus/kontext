@@ -48,7 +48,7 @@ def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
     return ctxs
 
 
-def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
+def _wait_for_conc(cachefile, cache_map, pidfile, minsize):
     """
     Called by webserver process (i.e. not by the background worker).
     Waits in a loop until a minimal acceptable cached concordance occurs
@@ -57,9 +57,6 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     accepted).
 
     arguments:
-    corp -- a manatee.Corpus instance
-    q -- a query tuple
-    subchash -- a subcorpus name transformed into a cache key entry
     cachefile -- concordance cache file path
     cache_map -- a CacheMapping instance
     pidfile -- a running worker information file path
@@ -70,13 +67,8 @@ def _wait_for_conc(corp, q, subchash, cachefile, cache_map, pidfile, minsize):
     while _min_conc_unfinished(pidfile, minsize) and i < hard_limit:
         time.sleep(i * 0.1)
         i += 1
-    if not os.path.isfile(cachefile):
-        if i >= hard_limit:
-            logging.getLogger(__name__).warning(
-                'Hardcoded limit %01.2f sec. for intermediate concordance exceeded.' %
-                (hard_limit / 10.))
-        cache_map.del_full_entry(subchash, q)
-        raise Exception('Failed to calculate the concordance. Missing cache file: %s' % cachefile)
+    if not os.path.isfile(cachefile) and i >= hard_limit:
+        raise ConcCalculationControlException('Hard limit for intermediate concordance exceeded.')
 
 
 def _min_conc_unfinished(pidfile, minsize):
@@ -85,6 +77,9 @@ def _min_conc_unfinished(pidfile, minsize):
     has not reached a minimal viewable size yet.
     Otherwise it returns False (= we can show a partial
     result).
+
+    In case the calculation finished due to an error
+    the function throws an Exception.
     """
     if pidfile is not None and os.path.exists(os.path.realpath(pidfile)):
         with open(pidfile, 'r') as f:
@@ -93,7 +88,7 @@ def _min_conc_unfinished(pidfile, minsize):
             if data.get('error', None):
                 raise ConcCalculationControlException(data['error'])
             elif math.ceil(data['last_upd'] + data['curr_wait']) < math.floor(time.time()):
-                return False
+                raise ConcCalculationControlException('Wait limit for initial data exceeded')
             elif data.get('minsize') == -1:
                 if data.get('finished') == 1:  # whole conc
                     return False
@@ -121,6 +116,29 @@ def _contains_shuffle_seq(q_ops):
     return False
 
 
+def _cancel_async_task(cache_map, cachefile, pidfile, subchash, q):
+    backend, conf = settings.get_full('global', 'calc_backend')
+    if backend == 'multiprocessing':
+        logging.getLogger(__name__).warning('Unable to cancel async task in multiprocessing mode')
+    elif backend == 'celery' and pidfile:
+        import task
+        data = cPickle.load(open(pidfile, 'rb'))
+        task_id = data.get('task_id', None)
+        if task_id:
+            app = task.get_celery_app(conf['conf'])
+            app.control.revoke(task_id, terminate=True, signal='SIGKILL')
+    cache_map.del_entry(subchash, q)
+    _del_silent(cachefile)
+    _del_silent(pidfile)
+
+
+def _del_silent(path):
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
 def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     """
     Loads a concordance from cache
@@ -137,25 +155,15 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
     else:
         srch_from = len(q)
 
-    def del_silent(path):
-        try:
-            os.remove(path)
-        except OSError:
-            pass
-
     ans = (0, None)
     for i in range(srch_from, 0, -1):
         cachefile = cache_map.cache_file_path(subchash, q[:i])
         if cachefile:
             pidfile = cache_map.get_stored_pidfile(subchash, q[:i])
-            _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
-                           cache_map=cache_map, pidfile=pidfile, minsize=minsize)
-            if not os.path.exists(cachefile):  # broken cache
-                cache_map.del_entry(subchash, q)
-                try:
-                    os.remove(pidfile)
-                except OSError:
-                    pass
+            try:
+                _wait_for_conc(cachefile=cachefile, cache_map=cache_map, pidfile=pidfile, minsize=minsize)
+            except ConcCalculationControlException as ex:
+                _cancel_async_task(cache_map, cachefile, pidfile, subchash, q[:i])
                 continue
             conccorp = corp
             for qq in reversed(q[:i]):  # find the right main corp, if aligned
@@ -168,9 +176,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
                     conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
             except ConcCalculationControlException as ex:
                 logging.getLogger(__name__).error('Failed to join unfinished calculation: {0}'.format(ex))
-                cache_map.del_entry(subchash, q)
-                del_silent(cachefile)
-                del_silent(pidfile)
+                _cancel_async_task(cache_map, cachefile, pidfile, subchash, q[:i])
                 continue
             ans = (i, conc)
             break
@@ -204,15 +210,14 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
         raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
     cachefile, pidfile = receiver.receive()
+    cache_map = plugins.get('conc_cache').get_mapping(corp)
     try:
-        _wait_for_conc(corp=corp, q=q, subchash=subchash, cachefile=cachefile,
-                       cache_map=plugins.get('conc_cache').get_mapping(corp), pidfile=pidfile, minsize=minsize)
+        _wait_for_conc(cachefile=cachefile, cache_map=cache_map, pidfile=pidfile, minsize=minsize)
         if not os.path.exists(cachefile):
             raise RuntimeError('Concordance cache file [%s] not created. PID file: %s' %
                                (cachefile, pidfile))
     except Exception as e:
-        if os.path.exists(pidfile):
-            os.remove(pidfile)
+        _cancel_async_task(cache_map, cachefile, pidfile, subchash, q)
         raise e
     return PyConc(corp, 'l', cachefile)
 
@@ -281,8 +286,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
             cache_map = plugins.get('conc_cache').get_mapping(corp)
             cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:act + 1], conc.size())
             if stored_pidfile:
-                _wait_for_conc(corp=corp, q=q[:act + 1], subchash=subchash, cachefile=cachefile,
-                               cache_map=cache_map, pidfile=stored_pidfile, minsize=-1)
+                _wait_for_conc(cachefile=cachefile, cache_map=cache_map, pidfile=stored_pidfile, minsize=-1)
             else:
                 conc.save(cachefile)
     return conc

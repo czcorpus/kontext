@@ -56,9 +56,10 @@ class InitialNotifierFactory(object):
 
 class GeneralWorker(object):
 
-    def __init__(self):
+    def __init__(self, task_id=None):
         self._cache_factory = plugins.get('conc_cache')
         self._lock_factory = plugins.get('locking')
+        self._task_id = task_id
 
     @staticmethod
     def _update_pidfile(file_path, **kwargs):
@@ -68,13 +69,13 @@ class GeneralWorker(object):
         with open(file_path, 'w') as pf:
             cPickle.dump(data, pf)
 
-    @staticmethod
-    def _create_pid_file():
+    def _create_pid_file(self):
         pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
                                                   uuid.uuid1()))
         with open(pidfile, 'wb') as pf:
             cPickle.dump(
                 {
+                    'task_id': self._task_id,
                     'pid': os.getpid(),
                     'last_upd': int(time.time()),
                     # in case we check status before any calculation (represented by the
