@@ -1322,12 +1322,15 @@ export class Corplist implements CorpusArchive.Widget {
         this.onShow = this.options.onShow ? this.options.onShow : null;
 
         function defaultHandleClick(corpusId:string, corpusName:string) {
+            const form = $(this.parentForm);
             this.setCurrentValue(corpusId, corpusName);
-            $(this.parentForm)
+            form.find('select[name="usesubcorp"]')
+                .val('');
+            form
                 .attr('action', this.pageModel.createActionUrl(this.targetAction))
-                .data('disable-prevalidation', true);
-            $(this.parentForm).attr('method', 'GET');
-            $(this.parentForm).submit();
+                .data('disable-prevalidation', true)
+                .attr('method', 'GET')
+                .submit();
         }
 
         this.onSrchItemClick = (corpusId:string, corpusName:string) => {
