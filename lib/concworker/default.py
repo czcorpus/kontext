@@ -90,7 +90,7 @@ class BackgroundCalc(GeneralWorker):
                     time.sleep(sleeptime)
                     sleeptime += 0.1
                     sizes = self.get_cached_conc_sizes(corpus, query, cachefile)
-                    self._update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime,
+                    self._update_pidfile(pidfile, last_upd=int(time.time()), curr_wait=sleeptime,
                                          finished=sizes['finished'], concsize=sizes['concsize'],
                                          fullsize=sizes['fullsize'], relconcsize=sizes['relconcsize'])
                 tmp_cachefile = cachefile + '.tmp'
@@ -106,4 +106,4 @@ class BackgroundCalc(GeneralWorker):
             import traceback
             logging.getLogger(__name__).error('Background calculation error: %s' % e)
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
-            self._update_pidfile(pidfile, last_check=int(time.time()), curr_wait=sleeptime, error=str(e))
+            self._update_pidfile(pidfile, last_upd=int(time.time()), curr_wait=sleeptime, error=str(e))

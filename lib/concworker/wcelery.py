@@ -53,8 +53,8 @@ class NotifierFactory(concworker.InitialNotifierFactory):
 
 
 class TaskRegistration(concworker.GeneralWorker):
-    def __init__(self):
-        super(TaskRegistration, self).__init__()
+    def __init__(self, task_id):
+        super(TaskRegistration, self).__init__(task_id=task_id)
 
     def __call__(self, corpus_name, subc_name, subchash, query, samplesize):
         corpus_manager = CorpusManager()
@@ -67,10 +67,10 @@ class TaskRegistration(concworker.GeneralWorker):
 
 class CeleryCalculation(concworker.GeneralWorker):
 
-    def __init__(self):
+    def __init__(self, task_id):
         """
         """
-        super(CeleryCalculation, self).__init__()
+        super(CeleryCalculation, self).__init__(task_id=task_id)
 
     def __call__(self, initial_args, subc_dir, corpus_name, subc_name, subchash, query, samplesize):
         """
@@ -103,10 +103,11 @@ class CeleryCalculation(concworker.GeneralWorker):
                     time.sleep(sleeptime)
                     sleeptime += 0.1
                     sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
-                    self._update_pidfile(initial_args['pidfile'], last_check=int(time.time()),
+                    self._update_pidfile(initial_args['pidfile'], last_upd=int(time.time()),
                                          curr_wait=sleeptime, finished=sizes['finished'],
                                          concsize=sizes['concsize'], fullsize=sizes['fullsize'],
-                                         relconcsize=sizes['relconcsize'])
+                                         relconcsize=sizes['relconcsize'],
+                                         task_id=self._task_id)
                 tmp_cachefile = initial_args['cachefile'] + '.tmp'
                 conc.save(tmp_cachefile)  # whole
                 os.rename(tmp_cachefile, initial_args['cachefile'])
@@ -120,7 +121,7 @@ class CeleryCalculation(concworker.GeneralWorker):
             import traceback
             logging.getLogger(__name__).error('Background calculation error: %s' % e)
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
-            self._update_pidfile(initial_args['pidfile'], last_check=int(time.time()), curr_wait=sleeptime, error=str(e))
+            self._update_pidfile(initial_args['pidfile'], last_upd=int(time.time()), curr_wait=sleeptime, error=str(e))
 
 
 
