@@ -107,7 +107,7 @@ export class QueryFormTweaks {
         this.pluginApi = pluginApi;
         this.userSettings = userSettings;
         this.formElm = formElm;
-        this.maxEncodedParamsLength = 1500;userSettings
+        this.maxEncodedParamsLength = 1500;
     }
 
     bindQueryStorageDetach(fn:(elm:HTMLElement)=>void) {
@@ -419,10 +419,10 @@ export class QueryFormTweaks {
      * @param state
      */
     setAlignedCorporaFieldsDisabledState(formElm, state):void {
-        let stateStr = state.toString();
+        const stateStr = state.toString();
 
         $(formElm).find('input[name="sel_aligned"]').each(function () {
-            let corpn = $(this).data('corpus'); // beware - corp may contain special characters colliding with jQuery
+            const corpn = $(this).data('corpus'); // beware - corp may contain special characters colliding with jQuery
 
             // non empty value of 'sel_aligned' (hidden) input indicates that the respective corpus is active
             if (!$(this).val()) {
@@ -438,7 +438,7 @@ export class QueryFormTweaks {
             } else {
                 const querySelector = $(this).parent().find('[id="queryselector_' + corpn + '"]');
                 if (querySelector.length > 0) {
-                    const queryType = querySelector.val().substring(0, querySelector.val() - 3);
+                    const queryType = querySelector.val().substring(0, querySelector.val().length - 3);
                     $('[id="qnode_' + corpn + '"]').find('input[type="text"]').each(function () {
                         if (!$(this).hasClass(queryType + '-input')) {
                             $(this).attr('disabled', stateStr);
