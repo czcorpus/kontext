@@ -198,7 +198,6 @@
             'vendor/typeahead',
             'vendor/bloodhound',
             'vendor/intl-messageformat',
-            'vendor/virtual-keyboard',
             'vendor/d3'
         ];
         if (isProduction) {

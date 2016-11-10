@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2013 Institute of the Czech National Corpus
- * Copyright (c) 2003-2009  Pavel Rychly
+ * Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,69 +18,48 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/**
- * This module contains functionality related directly to the first_form.tmpl template
- *
- */
-
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../types/plugins/corparch.ts" />
-/// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import win = require('win');
 import $ = require('jquery');
-import corplistComponent = require('plugins/corparch/init');
-import layoutModule = require('./document');
-import queryInput = require('../queryInput');
-import queryStorage = require('plugins/queryStorage/init');
-import liveAttributes = require('plugins/liveAttributes/init');
-import subcMixer = require('plugins/subcmixer/init');
-import conclines = require('../conclines');
-import Immutable = require('vendor/immutable');
-import userSettings = require('../userSettings');
-import textTypesStore = require('../stores/textTypes/attrValues');
-import RSVP = require('vendor/rsvp');
-import util = require('../util');
-import {init as ttViewsInit} from 'views/textTypes';
-import {init as contextViewsInit} from 'views/query/context';
-
-declare var Modernizr:Modernizr.ModernizrStatic;
+import * as corplistComponent from 'plugins/corparch/init';
+import {PageModel} from './document';
+import * as liveAttributes from 'plugins/liveAttributes/init';
+import * as subcMixer from 'plugins/subcmixer/init';
+import {ConcLinesStorage, openStorage} from '../conclines';
+import * as Immutable from 'vendor/immutable';
+import {TextTypesStore} from '../stores/textTypes/attrValues';
+import {QueryFormProperties, QueryStore, QueryHintStore, WithinBuilderStore, VirtualKeyboardStore} from '../stores/query';
+import tagHelperPlugin from 'plugins/taghelper/init';
+import queryStoragePlugin from 'plugins/queryStorage/init';
+import * as RSVP from 'vendor/rsvp';
+import {init as queryFormInit} from 'views/query/main';
 
 
-export class FirstFormPage implements Kontext.CorpusSetupHandler {
+export class FirstFormPage implements Kontext.QuerySetupHandler {
 
-    private clStorage:conclines.ConcLinesStorage;
+    private clStorage:ConcLinesStorage;
 
     private corplistComponent:CorpusArchive.Widget;
 
-    private layoutModel:layoutModule.PageModel;
+    private layoutModel:PageModel;
 
-    private extendedApi:Kontext.QueryPagePluginApi;
+    private queryStore:QueryStore;
 
-    private onAddParallelCorpActions:Array<(corpname:string)=>void>;
+    private textTypesStore:TextTypesStore;
 
-    private onRemoveParallelCorpActions:Array<(corpname:string)=>void>;
+    private queryHintStore:QueryHintStore;
 
-    private onBeforeRemoveParallelCorpActions:Array<(corpname:string)=>void>;
+    private withinBuilderStore:WithinBuilderStore;
 
-    private onSubcorpChangeActions:Array<(corpname:string)=>void>;
+    private virtualKeyboardStore:VirtualKeyboardStore;
 
-    private alignedCorpora:Array<string>;
-
-    private textTypesStore:textTypesStore.TextTypesStore;
-
-    constructor(layoutModel:layoutModule.PageModel, clStorage:conclines.ConcLinesStorage) {
+    constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
         this.layoutModel = layoutModel;
-        this.onAddParallelCorpActions = [];
-        this.onRemoveParallelCorpActions = [];
-        this.onBeforeRemoveParallelCorpActions = [];
-        this.onSubcorpChangeActions = [];
-        this.alignedCorpora = [];
-        this.extendedApi = queryInput.extendedApi(this.layoutModel, this);
     }
 
     getConf<T>(name:string):T {
@@ -99,7 +79,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
      * @param fn:(corpname:string)=>void
      */
     registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onAddParallelCorpActions.push(fn);
+        this.queryStore.registerOnAddParallelCorpAction(fn);
     }
 
     /**
@@ -111,7 +91,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
      * @param fn:(corpname:string)=>void
      */
     registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onRemoveParallelCorpActions.push(fn);
+        this.queryStore.registerOnRemoveParallelCorpAction(fn);
     }
 
     /**
@@ -122,7 +102,7 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
      * @param fn
      */
     registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onBeforeRemoveParallelCorpActions.push(fn);
+        this.queryStore.registerOnBeforeRemoveParallelCorpAction(fn);
     }
 
     /**
@@ -134,264 +114,39 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
      * @param fn:(subcname:string)=>void
      */
     registerOnSubcorpChangeAction(fn:(corpname:string)=>void):void {
-        this.onSubcorpChangeActions.push(fn);
-    }
-
-    /**
-     *
-     */
-    getActiveParallelCorpora():Array<string> {
-        return this.alignedCorpora;
-    }
-
-    /**
-     * @param {string} corpusName
-     */
-    addActiveParallelCorpus(corpusName):void {
-        if (corpusName && $.inArray(corpusName, this.alignedCorpora) === -1) {
-            this.alignedCorpora.push(corpusName);
-        }
-        if ($('div.parallel-corp-lang:visible').length > 0) {
-            $('#default-view-mode').remove();
-            $('#mainform').append('<input id="default-view-mode" type="hidden" name="viewmode" value="align" />');
-        }
-        this.onAddParallelCorpActions.forEach((fn) => {
-            fn.call(this, corpusName);
-        });
-    }
-
-    /**
-     * @param {string} corpusName
-     */
-    removeActiveParallelCorpus(corpusName):void {
-        this.onBeforeRemoveParallelCorpActions.forEach((fn) => {
-            fn.call(this, corpusName);
-        });
-        if ($.inArray(corpusName, this.alignedCorpora) >= 0) {
-                this.alignedCorpora.splice($.inArray(corpusName, this.alignedCorpora), 1);
-        }
-        if ($('div.parallel-corp-lang:visible').length === 0) {
-            $('#default-view-mode').remove();
-        }
-        this.onRemoveParallelCorpActions.forEach((fn) => {
-            fn.call(this, corpusName);
-        });
-    }
-
-    /**
-     * Creates function (i.e. you must call it first to be able to use it)
-     * to handle the "add language" action.
-     *
-     * @param {QueryFormTweaks} queryFormTweaks
-     * @param {string} [forcedCorpusId] optional parameter to force corpus to be added (otherwise
-     * it is chosen based on "#add-searched-lang-widget select" select box value). It is useful
-     * in case you want to call the handler manually.
-     * @return {function} handler function
-     */
-    createAddLanguageClickHandler(queryFormTweaks:queryInput.QueryFormTweaks,
-            forcedCorpusId?:string):()=>void {
-        let self = this;
-
-        return function () {
-            let jqAddLangWidget = $('#add-searched-lang-widget');
-            let jqSelect = jqAddLangWidget.find('select');
-            let corpusId = forcedCorpusId || jqSelect.val();
-
-            if (corpusId) {
-                let searchedLangWidgetOpt = jqAddLangWidget.find('select option[value="' + corpusId + '"]');
-                let jqHiddenStatus = $('[id="qnode_' + corpusId + '"] input[name="sel_aligned"]');
-                let jqNewLangNode = $('[id="qnode_' + corpusId + '"]');
-
-                if (jqNewLangNode.length > 0) {
-                    jqNewLangNode.show();
-                    self.addActiveParallelCorpus(corpusId);
-                    searchedLangWidgetOpt.prop('disabled', true); // TODO attr changed to prop - check this out
-
-
-                    jqHiddenStatus.val(jqHiddenStatus.data('corpus'));
-                    jqNewLangNode.find('a.close-button').on('click', function () {
-                        $('[id="qnode_' + corpusId + '"]').hide();
-                        jqHiddenStatus.val('');
-                        self.removeActiveParallelCorpus(corpusId);
-                        searchedLangWidgetOpt.removeAttr('disabled');
-                        self.layoutModel.resetPlugins();
-                    });
-
-                    queryFormTweaks.initVirtualKeyboard(jqNewLangNode.find('table.form .query-area .spec-chars').get(0));
-
-                    if (!$.support.cssFloat) {
-                        // refresh content in IE < 9
-                        $('#content').css('overflow', 'visible').css('overflow', 'auto');
-                    }
-                }
-               self.layoutModel.resetPlugins();
-               jqSelect.prop('selectedIndex', 0);
-            }
-        };
+        this.queryStore.registerOnSubcorpChangeAction(fn);
     }
 
     private initCorplistComponent():void {
         this.corplistComponent = corplistComponent.create(
-            $('form[action="first"] select[name="corpname"]').get(0),
+            window.document.getElementById('corparch-mount'),
             'first_form',
-            this.extendedApi,
+            this.layoutModel.pluginApi(),
+            this,
             {}
         );
     }
 
-    private initQuerySelector(queryFormTweaks):void {
-        // initial query selector setting (just like when user changes it manually)
-        queryFormTweaks.cmdSwitchQuery($('#queryselector').get(0), this.layoutModel.getConf('queryTypesHints'));
-    }
-
-    /**
-     *
-     */
-    private bindParallelCorporaCheckBoxes(queryFormTweaks):void {
-        $('#add-searched-lang-widget').find('select')
-            .prepend('<option value="" disabled="disabled">-- ' +
-                this.layoutModel.translate('global__add_aligned_corpus') +
-                ' --</option>')
-            .prop('selectedIndex', 0)
-            .on('change', this.createAddLanguageClickHandler(queryFormTweaks));
-
-        $('input[name="sel_aligned"]').each(function () {
-            if ($(this).val()) {
-                $('select[name="pcq_pos_neg_' + $(this).data('corpus') + '"],[id="qtable_' + $(this).data('corpus') + '"]').show();
-            }
-        });
-    }
-
-    private makePrimaryButtons():void {
-        let self = this;
-        let queryForm = $('#mainform');
-
-        queryForm.find('.make-primary').on('click', function (evt) {
-            let linkElm = evt.currentTarget;
-            let jqCurrPrimaryCorpInput = queryForm.find('input[type="hidden"][name="corpname"]');
-            let newPrimary = $(linkElm).attr('data-corpus-id');
-            let urlArgs;
-
-            self.removeActiveParallelCorpus(newPrimary);
-            self.addActiveParallelCorpus(jqCurrPrimaryCorpInput.attr('value'));
-
-            urlArgs = self.layoutModel.getConcArgs();
-            urlArgs.set('corpname', newPrimary);
-
-            let currAligned = self.layoutModel.userSettings.get<Array<string>>(userSettings.UserSettings.ALIGNED_CORPORA_KEY) || [];
-            let idxActive = currAligned.indexOf(newPrimary);
-            if (idxActive > -1) {
-                currAligned[idxActive] = self.layoutModel.getConf<string>('corpname');
-                self.layoutModel.userSettings.set(
-                        userSettings.UserSettings.ALIGNED_CORPORA_KEY, currAligned);
-            }
-            window.location.href = self.layoutModel.createActionUrl(
-                    'first_form?' + self.layoutModel.encodeURLParameters(urlArgs));
-        });
-    }
-
-    /**
-     *
-     */
-    private registerSubcorpChange():void {
-        let self = this;
-        $('#subcorp-selector').on('change', function (e) {
-            // following code must be always the last action performed on the event
-            self.onSubcorpChangeActions.forEach((fn) => {
-                fn.call(self, $(e.currentTarget).val());
-            });
-        });
-    }
-
-    private registerAlignedCorpChange():void {
-        function findActiveAlignedCorpora() {
-            let ans = [];
-            $('#mainform').find('fieldset.parallel .parallel-corp-lang:visible').each((i, elm) => {
-                ans.push($(elm).attr('data-corpus-id'));
-            });
-            return ans;
-        }
-        let key = userSettings.UserSettings.ALIGNED_CORPORA_KEY;
-
-        this.registerOnAddParallelCorpAction((corpname:string) => {
-            this.layoutModel.userSettings.set(key, findActiveAlignedCorpora());
-        });
-
-        this.registerOnRemoveParallelCorpAction((corpname:string) => {
-            this.layoutModel.userSettings.set(key, findActiveAlignedCorpora());
-        });
-    }
-
-    private updateStateOnError():void {
-        let notifications:Array<any> = this.layoutModel.getConf<Array<any>>('notifications') || [];
-        if (Modernizr.history && notifications.length > 0) {
-            let args:string = Immutable.Map({
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
-                sel_aligned: this.layoutModel.getConf<Array<string>>('alignedCorpora'),
-            })
-            .filter((v:any, k) => typeof v === 'string'
-                    || v !== null && ('length' in v) && v.length > 0)
-            .map((v, k) => {
-                if (typeof v === 'object') {
-                    return Immutable.List(v).map(v2 => k + '=' + v2).join('&');
-
-                } else {
-                    return k + '=' + v;
-                }
-            }).join('&');
-            window.history.replaceState(
-                {},
-                window.document.title,
-                this.layoutModel.createActionUrl('first_form') + '?' + args
-            );
-            window.onunload = () => {
-                $('#mainform').find('input[type="text"], textarea').val('');
-            };
-        }
-    }
-
-    private restoreAlignedCorpora(queryFormTweaks:queryInput.QueryFormTweaks):void {
-        let localAlignedCorpora = this.layoutModel.userSettings.get<Array<string>>(
-                userSettings.UserSettings.ALIGNED_CORPORA_KEY);
-
-        if (localAlignedCorpora !== undefined) {
-            this.alignedCorpora = localAlignedCorpora;
-
-        } else {
-            this.alignedCorpora = this.layoutModel.getConf<Array<string>>('alignedCorpora').slice();
-            this.layoutModel.userSettings.set(userSettings.UserSettings.ALIGNED_CORPORA_KEY, this.alignedCorpora);
-        }
-        this.alignedCorpora.forEach((item) => {
-            this.createAddLanguageClickHandler(queryFormTweaks, item)();
-        });
-    }
-
-    createTTViews(conf:Kontext.Conf):RSVP.Promise<any> {
+    createTTViews():RSVP.Promise<{[key:string]:any}> {
         let textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.textTypesStore = new textTypesStore.TextTypesStore(
+        this.textTypesStore = new TextTypesStore(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData,
                 this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
-        let ttViewComponents = ttViewsInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this.textTypesStore
-        );
 
         let liveAttrsProm;
         let ttTextInputCallback;
         if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(this.extendedApi, this.textTypesStore, textTypesData['bib_attr']);
+            liveAttrsProm = liveAttributes.create(this.layoutModel.pluginApi(), this.textTypesStore, textTypesData['bib_attr']);
 
         } else {
             liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
                 fulfill(null);
             });
         }
-        let ttProm = liveAttrsProm.then(
+        return liveAttrsProm.then(
             (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
@@ -419,77 +174,88 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                     this.textTypesStore,
                     liveAttrsStore
                 );
-                this.layoutModel.renderReactComponent(
-                    ttViewComponents.TextTypesPanel,
-                    $('#specify-query-metainformation div.contents').get(0),
-                    {
-                        liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-                        liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-                        attributes: this.textTypesStore.getAttributes()
-                    }
-                );
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        );
-        return ttProm.then(
-            (v) => {
-                let contextViewComponents = contextViewsInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins()
-                );
-                this.layoutModel.renderReactComponent(
-                    contextViewComponents.SpecifyContextForm,
-                    $('#specify-context div.contents').get(0),
-                    {
-                        lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
-                        posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
-                        hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
-                        wPoSList: this.layoutModel.getConf<any>('Wposlist')
-                    }
-                );
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
+                return {
+                    liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
+                    liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+                    attributes: this.textTypesStore.getAttributes()
+                }
             }
         );
     }
 
-    init(conf:Kontext.Conf):void {
-        let queryFormTweaks = queryInput.init(this.layoutModel, this, this.layoutModel.userSettings,
-                $('#mainform').get(0));
-        this.layoutModel.init().then(() => {
-            this.initQuerySelector(queryFormTweaks);
-            queryFormTweaks.bindBeforeSubmitActions($('#make-concordance-button'));
-            queryFormTweaks.bindQueryFieldsetsEvents();
-            this.createTTViews(conf);
-            this.bindParallelCorporaCheckBoxes(queryFormTweaks);
-            this.restoreAlignedCorpora(queryFormTweaks);
-            this.initCorplistComponent();
-            this.makePrimaryButtons();
-            this.registerSubcorpChange();
-            this.registerAlignedCorpChange();
-            queryFormTweaks.textareaSubmitOverride();
-            queryFormTweaks.textareaHints();
-            queryFormTweaks.initQuerySwitching();
-            queryFormTweaks.fixFormSubmit();
-            queryFormTweaks.bindQueryHelpers();
-            this.updateStateOnError();
-            queryFormTweaks.updateToggleableFieldsets();
-            return queryStorage.create(this.layoutModel.pluginApi());
-        }).then(
-            (plugin) => {
-                queryFormTweaks.bindQueryStorageDetach(plugin.detach.bind(plugin));
-                queryFormTweaks.bindQueryStorageReset(plugin.reset.bind(plugin));
-                let prom = new RSVP.Promise<Kontext.Plugin>(
-                    (resolve:(v:Kontext.Plugin)=>void, reject:(err:any)=>void) => {
-                        resolve(plugin);
-                });
-                return prom;
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
+    private attachQueryForm(properties:{[key:string]:any}):void {
+        const formCorpora = [this.layoutModel.getConf<string>('corpname')];
+        this.queryStore = new QueryStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
+                corpora: [this.layoutModel.getConf<string>('corpname')].concat(
+                    this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                queryTypes: this.layoutModel.getConf<{[corpname:string]:string}>('QueryTypes'),
+                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
+                tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
+                shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
+                lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
+                defaultAttr: this.layoutModel.getConf<string>('DefaultAttr'),
+                forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
+                attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+                tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),
+                lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+                posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+                hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
+                wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
+                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
+            }
+        );
+        const queryFormComponents = queryFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.queryStore,
+            this.textTypesStore,
+            this.queryHintStore,
+            this.withinBuilderStore,
+            this.virtualKeyboardStore
+        );
+        this.layoutModel.renderReactComponent(
+            queryFormComponents.QueryForm,
+            window.document.getElementById('query-form-mount'),
+            properties
+        );
+    }
+
+    init():void {
+        this.layoutModel.init().then(
+            () => {
+                this.queryHintStore = new QueryHintStore(
+                    this.layoutModel.dispatcher, this.layoutModel.getConf<Array<string>>('queryHints'));
+                this.withinBuilderStore = new WithinBuilderStore(
+                    this.layoutModel.dispatcher, this.layoutModel);
+                this.virtualKeyboardStore = new VirtualKeyboardStore(
+                    this.layoutModel.dispatcher, this.layoutModel);
+            }
+        ).then(
+            () => {
+                tagHelperPlugin.create(this.layoutModel.pluginApi());
+            }
+        ).then(
+            () => {
+                queryStoragePlugin.create(this.layoutModel.pluginApi());
+            }
+        ).then(
+            () => {
+                return this.createTTViews();
+            }
+        ).then(
+            (props) => {
+                props['tagHelperViews'] = tagHelperPlugin.getViews();
+                props['queryStorageViews'] = queryStoragePlugin.getViews();
+                props['allowCorpusSelection'] = true;
+                this.attachQueryForm(props);
+                this.initCorplistComponent(); // non-React world here
             }
         );
     }
@@ -497,13 +263,13 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
 
 
 export function init(conf:Kontext.Conf):FirstFormPage {
-    let layoutModel = new layoutModule.PageModel(conf);
-    let clStorage:conclines.ConcLinesStorage = conclines.openStorage((err) => {
+    let layoutModel = new PageModel(conf);
+    let clStorage:ConcLinesStorage = openStorage((err) => {
         layoutModel.showMessage('error', err);
     });
     clStorage.clear();
     let pageModel = new FirstFormPage(layoutModel, clStorage);
-    pageModel.init(conf);
+    pageModel.init();
 
     layoutModel.mouseOverImages();
     return pageModel;

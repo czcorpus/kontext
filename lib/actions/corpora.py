@@ -89,7 +89,7 @@ class Corpora(Kontext):
         return ans
 
     @exposed(return_type='json', legacy=True)
-    def ajax_get_structs_details(self):
+    def ajax_get_structattrs_details(self):
         """
         Provides a map (struct_name=>[list of attributes]). This is used
         by 'insert within' widget.
@@ -100,7 +100,7 @@ class Corpora(Kontext):
             if item != speech_segment:
                 k, v = item.split('.')
                 ans[k].append(v)
-        return dict((k, v) for k, v in ans.items() if len(v) > 0)
+        return dict(structattrs=dict((k, v) for k, v in ans.items() if len(v) > 0))
 
     @exposed(return_type='json', legacy=True)
     def bibliography(self, id=''):

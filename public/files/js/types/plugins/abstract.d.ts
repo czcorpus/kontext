@@ -59,8 +59,8 @@ declare module 'plugins/footerBar/init' {
 }
 
 declare module "plugins/corparch/init" {
-    export function create(target:HTMLElement, targetAction:string, pluginApi:Kontext.QueryPagePluginApi,
-        conf:CorpusArchive.Options);
+    export function create(target:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
+        querySetupHandler:Kontext.QuerySetupHandler, conf:CorpusArchive.Options);
 
     export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage;
 }
@@ -70,12 +70,13 @@ declare module "plugins/liveAttributes/init" {
 }
 
 declare module "plugins/queryStorage/init" {
-    export function create(pluginApi:Kontext.PluginApi):Plugins.IQueryStorage;
+    const pluginObject:Kontext.PluginObject<Kontext.PageStore>;
+    export default pluginObject;
 }
 
 declare module "plugins/taghelper/init" {
-    export function create(pluginApi:Kontext.PluginApi,
-            insertCallback:(value:string)=>void, widgetId:number):(box:Legacy.IPopupBox, finalize:()=>void)=>void;
+    const pluginObject:Kontext.PluginObject<Kontext.PageStore>;
+    export default pluginObject;
 }
 
 declare module "plugins/syntaxViewer/init" {

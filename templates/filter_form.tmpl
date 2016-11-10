@@ -1,5 +1,7 @@
 #*
-Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -16,21 +18,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
+#encoding UTF-8
 #from translation import ugettext as _
-#from cmpltmpl.util.query import query
-#from templating.filters import *
-#extends query
+#from cmpltmpl.document import document
+#extends document
 
 #def title
 $_("Concordance: Filter form")#slurp
-#end def
-
-#def left_submenu_expert
-  <li><strong>$_("Expert options:")</strong>
-    <ul class="submenu">
-      <li><a id="text-type-el-link">$_("Text Types")</a></li>
-    </ul>
-  </li>
 #end def
 
 #def bodyonload
@@ -39,6 +33,16 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, con
     conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
     conf.Wposlist = $to_json($Wposlist);
     conf.CheckedSca = $to_json($checked_sca);
+    conf.QueryTypes = $to_json($query_types);
+    conf.SubcorpList = $to_json([]);
+    conf.CurrentSubcorp = $to_json($usesubcorp);
+    conf.TagBuilderSupport = $to_json($tag_builder_support);
+    conf.ShuffleConcByDefault = $to_json($shuffle);
+    conf.Lposlist = $to_json($Lposlist);
+    conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
+    conf.DefaultAttr = $to_json($default_attr);
+    conf.AttrList = $to_json($getVar('AttrList', []));
+    conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
     filterForm.init(conf);
 });
 
@@ -46,67 +50,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, con
 
 #def main
 <section>
-    #filter WebSafe
     <h2>$_("Concordance Filter")</h2>
-    <form id="mainform" action="filter">
-        <input type="hidden" name="within" value="$within" />
-        #filter None
-        $input_hidden
-        #end filter
-
-        <table class="form primary-language">
-        #if $within
-        <input type="hidden" name="pnfilter" value="p"/>
-        #else ## ordinary filter
-        <tbody>
-        <tr class="required">
-          <th>$_("Filter"):</th>
-            <td><label><input type="radio" name="pnfilter" value="p"
-            #if $pnfilter == 'p'
-              checked="checked"
-            #end if
-            /> $_("positive")</label>
-            <label><input type="radio" name="pnfilter" value="n"
-            #if $pnfilter == 'n'
-              checked="checked"
-            #end if
-            /> $_("negative")</label></td></tr>
-
-        <tr>
-          <th>$_("Selected token"):</th>
-            <td><label><input type="radio" name="filfl" value="f"
-            #if $filfl == 'f'
-              checked="checked"
-            #end if
-            /> $_("first")</label>
-            <label><input type="radio" name="filfl" value="l"
-            #if $filfl == 'l'
-              checked="checked"
-            #end if
-            />  $_("last")</label></td></tr>
-        <tr><th>$_("Search Span"):</th>
-            <td>
-            $_("from") <input type="text" name="filfpos" size="4" value="$filfpos" data-ignore-reset="1" />
-            $_("to") <input type="text" name="filtpos" size="4" value="$filtpos" data-ignore-reset="1" />
-            <input type="checkbox" name="inclkwic" value="True" checked="checked" /> $_("include KWIC")
-            </td>
-        </tr>
-        </tbody>
-        #end if
-        #filter None
-        $query_node
-        #end filter
-        </table>
-
-        #filter None
-        $specify_context_form()
-        $specify_meta_form()
-        #end filter
-
-        <div class="buttons">
-          <input class="submit default-button" type="submit" value="$_("Filter Concordance")" />
-        </div>
-    </form>
-    #end filter
+    <div id="query-form-mount"></div>
 </section>
 #end def

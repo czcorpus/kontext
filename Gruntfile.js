@@ -60,7 +60,6 @@
                         'public/files/js/min/vendor/bloodhound.js',
                         'public/files/js/min/vendor/immutable.min.js',
                         'public/files/js/min/vendor/qunit.js',
-                        'public/files/js/min/vendor/virtual-keyboard.js',
                         'public/files/js/min/vendor/react.dev.js',
                         'public/files/js/min/vendor/rsvp-ajax.js',
                         'public/files/js/min/vendor/cookies.js',

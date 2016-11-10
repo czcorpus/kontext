@@ -1,5 +1,7 @@
 #*
-Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -18,9 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #encoding UTF-8
 #from translation import ugettext as _
-#from cmpltmpl.util.query import query
-#from templating.filters import *
-#extends query
+#from cmpltmpl.document import document
+#extends document
 
 #def title
 $_("Concordance - First query form")#slurp
@@ -32,93 +33,26 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf
     conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
     conf.Wposlist = $to_json($Wposlist);
     conf.CheckedSca = $to_json($checked_sca);
+    conf.QueryTypes = $to_json($query_types);
+    conf.SubcorpList = $to_json($SubcorpList);
+    conf.CurrentSubcorp = $to_json($usesubcorp);
+    conf.TagBuilderSupport = $to_json($tag_builder_support);
+    conf.ShuffleConcByDefault = $to_json($shuffle);
+    conf.Lposlist = $to_json($Lposlist);
+    conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
+    conf.DefaultAttr = $to_json($default_attr);
+    conf.AttrList = $to_json($getVar('AttrList', []));
+    conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
+    conf.InputLanguages = $to_json($input_languages);
     firstForm.init(conf);
 });
 #end def
 
-#def left_submenu_help
-#end def
-
-
-
-#def left_submenu_expert
-    #if $varExists('user_menu') and $supports_password_change
-    <li>
-        <hr />
-        <strong>$_('User'):</strong>
-        <ul class="submenu">
-            <li><a href="user_password_form">$_('Password change')</a></li>
-        </ul>
-    </li>
-    #end if
-#end def
 
 #def main
-#filter WebSafe
 <section>
     <h2>$_('Search in the corpus')</h2>
-    <form id="mainform" action="first">
-    #if $shuffle
-        <input type="hidden" name="shuffle" value="1" />
-    #end if
-    <table class="form primary-language">
-    #filter None
-      $corp_sel_node
-      $query_node
-    </table>
-
-    #end filter
-    #if $corp_doc
-      <table><tr><td><a href="$corp_doc" target="blank">corpus documentation</a></td></tr></table>
-    #end if
-
-    #filter None
-    #if $Aligned
-    <fieldset class="parallel">
-        <legend>$_('Aligned corpora')</legend>
-
-        #set $sel_aln = $align.split(',')
-        #for $a in $Aligned
-        <div id="qnode_$a.n" class="parallel-corp-lang" data-corpus-id="$a.n" style="display: none">
-            <div class="heading">
-                <a class="make-primary" data-corpus-id="$a.n" title="$_('make corpus primary')"><img class="over-img"
-                                                                                src="${files_path}/img/make-main.svg"
-                                                                               data-alt-img="${files_path}/img/make-main_s.svg"
-                                                                               alt="$_('make corpus primary')"
-                                                                               /></a>
-                <h3>$a.label</h3>
-                <a class="close-button" title="$_('Remove the language')"><img
-                        class="over-img" src="${files_path}/img/close-icon.svg" data-alt-img="${files_path}/img/close-icon_s.svg"
-                        alt="close icon" /></a>
-            </div>
-            <input type="hidden" name="sel_aligned" value="#if $a.n in $sel_aln#1#end if#" data-corpus="$a.n" />
-            <table class="form">$query_node('_'+$a.n)</table>
-        </div>
-        #end for
-
-        <div id="add-searched-lang-widget">
-            <select>
-                #for $a in $Aligned
-                <option value="$a.n">$a.label</option>
-                #end for
-            </select>
-        </div>
-
-    </fieldset>
-    #end if
-    #end filter
-
-    #filter None
-    $specify_context_form()
-
-    $specify_meta_form()
-    #end filter
-
-    <div class="buttons">
-    <input id="make-concordance-button" class="submit default-button" type="submit" value="$_("Search")" />
-    </div>
-    </form>
-    #end filter
+    <div id="query-form-mount"></div>
 </section>
 
 #end def

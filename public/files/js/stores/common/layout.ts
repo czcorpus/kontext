@@ -24,47 +24,6 @@
 import {SimplePageStore, MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
 
-
-/**
- *
- */
-export class QueryHintStore extends SimplePageStore implements Kontext.IQueryHintStore {
-
-    private hints:Array<string>;
-
-    private currentHint:number;
-
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, hints:Array<string>) {
-        super(dispatcher);
-        var self = this;
-        this.hints = hints ? hints : [];
-        this.currentHint = this.randomIndex();
-
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-            switch (payload.actionType) {
-                case 'NEXT_QUERY_HINT':
-                    self.setNextHint();
-                    self.notifyChangeListeners();
-                    break;
-            }
-        });
-    }
-
-    randomIndex():number {
-        return Math.round((Math.random() * (this.hints.length - 1)))|0;
-    }
-
-    setNextHint():void {
-        this.currentHint = (this.currentHint + 1) % this.hints.length;
-    }
-
-    getHint():string {
-        return this.hints[this.currentHint];
-    }
-
-}
-
-
 /**
  *
  */

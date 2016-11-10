@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,17 +20,4 @@
 
 /// <reference path="../../types/common.d.ts" />
 
-module CorpusArchive {
-
-    export interface Options {
-    }
-
-    export interface Widget {
-    }
-
-    export interface Module {
-        create(selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-                       options:CorpusArchive.Options):CorpusArchive.Widget;
-    }
-
-}
+export function init(dispatcher, mixins, queryStorageStore):Kontext.MultipleViews;

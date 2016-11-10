@@ -21,21 +21,23 @@
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import documentModule = require('./document');
-import queryInput = require('../queryInput');
-import queryStorage = require('plugins/queryStorage/init');
-import liveAttributes = require('plugins/liveAttributes/init');
-import subcMixer = require('plugins/subcmixer/init');
-import textTypesStore = require('../stores/textTypes/attrValues');
-import RSVP = require('vendor/rsvp');
+import {PageModel} from './document';
+import queryStoragePlugin from 'plugins/queryStorage/init';
+import * as liveAttributes from 'plugins/liveAttributes/init';
+import * as subcMixer from 'plugins/subcmixer/init';
+import {TextTypesStore} from '../stores/textTypes/attrValues';
+import {QueryFormProperties, QueryStore, QueryHintStore, WithinBuilderStore, VirtualKeyboardStore} from '../stores/query';
+import * as RSVP from 'vendor/rsvp';
 import {init as ttViewsInit} from 'views/textTypes';
 import {init as contextViewsInit} from 'views/query/context';
+import {init as queryFormInit} from 'views/query/main';
+import tagHelperPlugin from 'plugins/taghelper/init';
 
 /**
  * Corpus handling actions are not used here on the "filter" page but
  * the ExtendedApi class needs them anyway.
  */
-class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
+class CorpusSetupHandler implements Kontext.QuerySetupHandler {
 
     registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {}
 
@@ -44,43 +46,49 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
     registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
 
     registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
-
-    private layoutModel:documentModule.PageModel;
-
-    private textTypesStore:textTypesStore.TextTypesStore;
-
-    private extendedApi:Kontext.QueryPagePluginApi;
+}
 
 
-    constructor(layoutModel:documentModule.PageModel) {
+export class FilterFormpage {
+
+    private layoutModel:PageModel;
+
+    private querySetupHandler:Kontext.QuerySetupHandler;
+
+    private textTypesStore:TextTypesStore;
+
+    private queryStore:QueryStore;
+
+    private queryHintStore:QueryHintStore;
+
+    private withinBuilderStore:WithinBuilderStore;
+
+    private virtualKeyboardStore:VirtualKeyboardStore;
+
+    constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.extendedApi = queryInput.extendedApi(this.layoutModel, this);
     }
 
-
-    createTTViews():RSVP.Promise<any> {
+    createTTViews():RSVP.Promise<{[key:string]:any}> {
         let textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.textTypesStore = new textTypesStore.TextTypesStore(
+        this.textTypesStore = new TextTypesStore(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData,
                 this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
-        let ttViewComponents = ttViewsInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this.textTypesStore
-        );
+
         let liveAttrsProm;
+        let ttTextInputCallback;
         if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(this.extendedApi, this.textTypesStore, textTypesData['bib_attr']);
+            liveAttrsProm = liveAttributes.create(this.layoutModel.pluginApi(), this.textTypesStore, textTypesData['bib_attr']);
 
         } else {
             liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
                 fulfill(null);
             });
         }
-        let ttProm = liveAttrsProm.then(
+        return liveAttrsProm.then(
             (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
@@ -105,80 +113,97 @@ class CorpusSetupHandler implements Kontext.CorpusSetupHandler {
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     subcmixerViews,
-                    this.textTypesStore, liveAttrsStore);
-                this.layoutModel.renderReactComponent(
-                    ttViewComponents.TextTypesPanel,
-                    $('#specify-query-metainformation div.contents').get(0),
-                    {
-                        liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
-                        liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
-                        attributes: this.textTypesStore.getAttributes(),
-                        alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora')
-                    }
+                    this.textTypesStore,
+                    liveAttrsStore
                 );
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
+                return {
+                    liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
+                    liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
+                    attributes: this.textTypesStore.getAttributes()
+                }
             }
         );
-        return ttProm.then(
-            (v) => {
-                let contextViewComponents = contextViewsInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins()
-                );
-                this.layoutModel.renderReactComponent(
-                    contextViewComponents.SpecifyContextForm,
-                    $('#specify-context div.contents').get(0),
-                    {
-                        lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
-                        posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
-                        hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
-                        wPoSList: this.layoutModel.getConf<any>('Wposlist')
-                    }
-                );
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
+    }
+
+    private attachQueryForm(properties:{[key:string]:any}):void {
+        this.queryStore = new QueryStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
+                corpora: [this.layoutModel.getConf<string>('corpname')].concat(
+                        this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                queryTypes: this.layoutModel.getConf<{[corpname:string]:string}>('QueryTypes'),
+                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
+                tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
+                shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
+                lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
+                defaultAttr: this.layoutModel.getConf<string>('DefaultAttr'),
+                forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
+                attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+                tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),
+                lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+                posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+                hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
+                wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
+                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
+            }
+        );
+        const queryFormComponents = queryFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.queryStore,
+            this.textTypesStore,
+            this.queryHintStore,
+            this.withinBuilderStore,
+            this.virtualKeyboardStore
+        );
+        this.layoutModel.renderReactComponent(
+            queryFormComponents.QueryForm,
+            window.document.getElementById('query-form-mount'),
+            properties
+        );
+    }
+
+    init():void {
+        this.layoutModel.init().then(
+            () => {
+                this.queryHintStore = new QueryHintStore(
+                    this.layoutModel.dispatcher, this.layoutModel.getConf<Array<string>>('queryHints'));
+                this.withinBuilderStore = new WithinBuilderStore(
+                    this.layoutModel.dispatcher, this.layoutModel);
+                this.virtualKeyboardStore = new VirtualKeyboardStore(
+                    this.layoutModel.dispatcher, this.layoutModel);
+            }
+        ).then(
+            () => {
+                tagHelperPlugin.create(this.layoutModel.pluginApi());
+            }
+        ).then(
+            () => {
+                queryStoragePlugin.create(this.layoutModel.pluginApi());
+            }
+        ).then(
+            () => {
+                return this.createTTViews();
+            }
+        ).then(
+            (props) => {
+                props['tagHelperViews'] = tagHelperPlugin.getViews();
+                props['queryStorageViews'] = queryStoragePlugin.getViews();
+                props['allowCorpusSelection'] = false;
+                this.attachQueryForm(props);
             }
         );
     }
 }
 
-
-export function init(conf:Kontext.Conf) {
-
-    let layoutModel = new documentModule.PageModel(conf);
-    let queryFormTweaks;
-    layoutModel.init().then(() => {
-            let corpusSetupHandler = new CorpusSetupHandler(layoutModel);
-            let extendedApi = queryInput.extendedApi(layoutModel, corpusSetupHandler);
-
-            queryFormTweaks = new queryInput.QueryFormTweaks(extendedApi,
-                    layoutModel.userSettings, $('#mainform').get(0));
-            queryFormTweaks.bindQueryFieldsetsEvents();
-            queryFormTweaks.bindBeforeSubmitActions($('input.submit'));
-            queryFormTweaks.updateToggleableFieldsets();
-            queryFormTweaks.textareaSubmitOverride();
-            queryFormTweaks.textareaHints();
-            queryFormTweaks.initQuerySwitching();
-            queryFormTweaks.fixFormSubmit();
-            queryFormTweaks.bindQueryHelpers();
-            corpusSetupHandler.createTTViews();
-            return queryStorage.create(extendedApi);
-    }).then(
-        (plugin) => {
-            queryFormTweaks.bindQueryStorageDetach(plugin.detach.bind(plugin));
-            queryFormTweaks.bindQueryStorageReset(plugin.reset.bind(plugin));
-            let prom = new RSVP.Promise<Kontext.Plugin>(
-                (resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                    resolve(plugin);
-                }
-            );
-            return prom;
-        },
-        (err) => {
-            layoutModel.showMessage('error', err);
-        }
-    );
+export function init(conf:Kontext.Conf):void {
+    const layoutModel = new PageModel(conf);
+    const pageModel = new FilterFormpage(layoutModel);
+    pageModel.init();
 }
+

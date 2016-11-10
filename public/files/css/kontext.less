@@ -498,6 +498,18 @@ a#logo-wrapper {
     }
 }
 
+#mainform .query-area {
+    .simple-input {
+        width: 30em;
+        padding: 0.2em 0.3em;
+    }
+}
+
+#mainform .tagset-summary {
+    display: inline-block;
+    margin-left: 0.7em;
+}
+
 #processbar {
     background-color: @color-logo-blue-opaque;
     height: 100%;
@@ -737,12 +749,9 @@ a#logo-wrapper {
     }
 }
 
-#within-builder-modal {
-    height: 120px;
-
-    .inputs {
-        margin-top: 15px;
-        text-align: center;
+.within-widget {
+    input {
+        width: 20em;
     }
 }
 
@@ -773,8 +782,7 @@ section > .bonito-pagination form {
 }
 
 .bonito-pagination-core,
-.desc,
-ul.query-toolbox li {
+.desc {
     display: inline-block;
 }
 
@@ -913,17 +921,6 @@ div.starred > img {
 
 fieldset.inactive {
     border-color: #DEDEDE;
-}
-
-#mainform input.cql-input,
-#mainform input.iquery-input,
-#mainform input.lemma-input,
-#mainform input.phrase-input,
-#mainform input.word-input,
-#mainform input.char-input {
-    font-family: @monospace-font-family;
-    padding: 6px 2px 2px 2px;
-    width: 35em;
 }
 
 #mainform fieldset.settings-group {
@@ -1326,45 +1323,52 @@ table.query {
     }
 }
 
-ul.query-toolbox {
-    list-style-type: none;
-    margin: 0;
-    padding: 2pt 0;
-    background-color: @color-section-bg;
-    color: @color-light-text;
+.query-toolbox {
 
-    li:before {
-        content: " | ";
-    }
-
-    li:first-child:before {
-        content: none;
-    }
-
-    li a,
-    li .hint {
-        font-size: 75%;
-    }
-
-    li .hint strong {
-        font-size: 100%;
-        font-weight: normal;
-        padding: 0;
-        border: 1px solid @color-light-grey;
-        border-style: @border-radius-default;
-    }
-
-    li a {
-        background-color: transparent;
-        color: @color-logo-blue;
-        padding: 2px 5px;
-        text-decoration: none;
+    > ul {
+        list-style-type: none;
         margin: 0;
-    }
+        padding: 2pt 0;
+        background-color: @color-section-bg;
+        color: @color-light-text;
 
-    li a:hover {
-        color: @color-logo-blue;
-        text-decoration: underline;
+        li {
+            display: inline-block;
+        }
+
+        li:before {
+            content: " | ";
+        }
+
+        li:first-child:before {
+            content: none;
+        }
+
+        li a,
+        li .hint {
+            font-size: 75%;
+        }
+
+        li .hint strong {
+            font-size: 100%;
+            font-weight: normal;
+            padding: 0;
+            border: 1px solid @color-light-grey;
+            border-style: @border-radius-default;
+        }
+
+        li a {
+            background-color: transparent;
+            color: @color-logo-blue;
+            padding: 2px 5px;
+            text-decoration: none;
+            margin: 0;
+        }
+
+        li a:hover {
+            color: @color-logo-blue;
+            text-decoration: underline;
+        }
     }
 }
 
@@ -2097,17 +2101,6 @@ section.corplist {
         padding: 1em 0 1em 0;
     }
 
-    #mainform input.cql-input,
-    #mainform input.iquery-input,
-    #mainform input.lemma-input,
-    #mainform input.phrase-input,
-    #mainform input.word-input,
-    #mainform input.char-input {
-        font-family: @monospace-font-family;
-        padding: 6px 2px 2px 2px;
-        width: auto;
-    }
-
     #menu-level-1 > li {
         display: block;
     }
@@ -2248,6 +2241,63 @@ p.boxed-par {
         img.ajax-loader {
             display: inline-block;
             margin: 0 2em;
+        }
+    }
+}
+
+
+.virtual-keyboard-buttons {
+
+    .layout-selection {
+        display: block;
+        margin-bottom: 0.7em;
+
+        h3 {
+            display: inline-block;
+            margin-right: 0.7em;
+        }
+
+    }
+
+    .key-row {
+
+        display: block;
+        margin-bottom: 0.3em;
+        font-size: 1.7em;
+
+        .dummy, a {
+            display: inline-block;
+            margin-left: 0.2em;
+            text-align: center;
+            border-radius: @input-border-radius;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .spec {
+            font-weight: bold;
+            padding-left: 0.3em;
+            padding-right: 0.3em;
+            background-color: @color-logo-blue;
+        }
+
+        .spec.active {
+            background-color: @color-logo-pink;
+        }
+
+        .dummy {
+            background-color: @color-light-text;
+            color: @color-light-green;
+            opacity: 0.4;
+            padding-left: 0.3em;
+            padding-right: 0.3em;
+            cursor: default;
+        }
+
+        a {
+            width: 1.3em;
+            background-color: @color-logo-blue-opaque;
+            color: #fefefe;
         }
     }
 }

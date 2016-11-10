@@ -70,50 +70,42 @@ export class TagHelperStore extends util.SimplePageStore {
 
     private data:Immutable.List<PositionOptions>;
 
-    private widgetId:number;
-
-    constructor(pluginApi:Kontext.PluginApi, widgetId:number) {
+    constructor(pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
-        var self = this;
+        const self = this;
         this.pluginApi = pluginApi;
-        this.widgetId = widgetId;
         this.data = Immutable.List<PositionOptions>();
 
         TagHelperStore.DispatchToken = this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
-                if (self.widgetId === payload.props['widgetId']) {
-                    switch (payload.actionType) {
-                        case 'TAGHELPER_GET_INITIAL_DATA':
-                            self.loadInitialData();
-                            break;
-                        case 'TAGHELPER_CHECKBOX_CHANGED':
-                            self.updateSelectedItem(payload.props['position'], payload.props['value'],
-                                    payload.props['checked']);
-                            self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
-                            self.notifyChangeListeners('TAGHELPER_WAITING_FOR_SERVER');
-                            self.updateData(payload.props['position']).then(
-                                (data) => {
-                                    if (!data['containsErrors']) {
-                                        self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
+                switch (payload.actionType) {
+                    case 'TAGHELPER_GET_INITIAL_DATA':
+                        self.loadInitialData();
+                        break;
+                    case 'TAGHELPER_CHECKBOX_CHANGED':
+                        self.updateSelectedItem(payload.props['position'], payload.props['value'],
+                                payload.props['checked']);
+                        self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
+                        self.notifyChangeListeners('TAGHELPER_WAITING_FOR_SERVER');
+                        self.updateData(payload.props['position']).then(
+                            (data) => {
+                                if (!data['containsErrors']) {
+                                    self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
 
-                                    } else {
-                                        self.pluginApi.showMessage('error', data['messages'].join(', '));
-                                    }
-                                },
-                                (err) => {
-                                    self.pluginApi.showMessage('error', err);
+                                } else {
+                                    self.pluginApi.showMessage('error', data['messages'].join(', '));
                                 }
-                            );
-                            break;
-                        case 'TAGHELPER_RESET':
-                            self.resetSelections();
-                            self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
-                            self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
-                            break;
-                        case 'TAGHELPER_INSERT_TAG':
-                            self.notifyChangeListeners('TAGHELPER_INSERT_TAG_ACKOWLEDGED');
-                            break;
-                    }
+                            },
+                            (err) => {
+                                self.pluginApi.showMessage('error', err);
+                            }
+                        );
+                        break;
+                    case 'TAGHELPER_RESET':
+                        self.resetSelections();
+                        self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
+                        self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
+                        break;
                 }
             }
         );
@@ -158,8 +150,15 @@ export class TagHelperStore extends util.SimplePageStore {
         }));
     }
 
-    private hasSelectedItems(opt:PositionOptions):boolean {
+    private hasSelectedItemsAt(opt:PositionOptions):boolean {
         return opt.values.some((item:PositionValue) => item.selected === true);
+    }
+
+    private hasSelectedItems():boolean {
+        return this.data
+            .flatMap(item => item.values
+            .map(subitem => subitem.selected))
+            .find(x => x === true) !== undefined;
     }
 
     /**
@@ -173,7 +172,7 @@ export class TagHelperStore extends util.SimplePageStore {
         this.data = this.data.map((item:PositionOptions, i:number) => {
             let newItem:PositionOptions;
 
-            if (!item.locked && this.hasSelectedItems(item) && i !== triggerRow) {
+            if (!item.locked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
                 newItem = {
                     label: item.label,
                     values: item.values,
@@ -231,8 +230,8 @@ export class TagHelperStore extends util.SimplePageStore {
      * (.e.g. 2nd position (gender), F value (feminine))
      */
     private updateSelectedItem(position:number, value:string, checked:boolean):void {
-        let oldPos = this.data.get(position);
-        let newPos:PositionOptions = {
+        const oldPos = this.data.get(position);
+        const newPos:PositionOptions = {
             label: oldPos.label,
             values: oldPos.values.map((item:PositionValue) => {
                 return {
@@ -287,11 +286,17 @@ export class TagHelperStore extends util.SimplePageStore {
                 return '.';
             }
         }
-        return this.data.map<string>((item:PositionOptions) => {
-            return exportPosition(item.values
-                    .filter((s:PositionValue) => s.selected)
-                        .map<string>((s:PositionValue) => s.id));
-        }).join('');
+        if (this.hasSelectedItems()) {
+            return this.data.map<string>((item:PositionOptions) => {
+                return exportPosition(item.values
+                            .filter((s:PositionValue) => s.selected)
+                            .map<string>((s:PositionValue) => s.id)
+                );
+            }).join('');
+
+        } else {
+            return '.*';
+        }
     }
 
     exportCurrentPattern():string {

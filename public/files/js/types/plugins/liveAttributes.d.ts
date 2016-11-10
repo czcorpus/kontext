@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,7 +36,7 @@ declare module LiveAttributesInit {
         getTextInputPlaceholder():string; // a text displayed in a respective text field
     }
 
-    export function create(pluginApi:Kontext.QueryPagePluginApi,
+    export function create(pluginApi:Kontext.PluginApi,
                      textTypesStore:TextTypes.ITextTypesStore,
                      bibAttr:string):RSVP.Promise<AttrValueTextInputListener>;
 
