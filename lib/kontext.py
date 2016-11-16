@@ -651,8 +651,17 @@ class Kontext(Controller):
         """
         Adds information needed by extended version of text type (and other attributes) selection in a query
         """
-        tpl_out['metadata_desc'] = plugins.get('corparch').get_corpus_info(
-            self.args.corpname, language=self.ui_lang)['metadata']['desc']
+        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname, language=self.ui_lang)
+        tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
+        tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
+
+    def _attach_query_types(self, tpl_out):
+        def import_qs(qs):
+            return qs[:-3] if qs is not None else None
+        tpl_out['query_types'] = {self.args.corpname: import_qs(self.args.queryselector)}
+        if self.corp.get_conf('ALIGNED'):
+            for al in self.corp.get_conf('ALIGNED').split(','):
+                tpl_out['query_types'][al] = import_qs(getattr(self.args, 'queryselector_{0}'.format(al), None))
 
     def _add_save_menu_item(self, label, action, params, save_format=None):
         params = copy.copy(params)
@@ -755,6 +764,7 @@ class Kontext(Controller):
                 exp_data['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 exp_data['has_lemmaattr_' + al] = 'lempos' in attrlist \
                     or 'lemma' in attrlist
+                exp_data['input_languages'][al] = plugins.get('corparch').get_corpus_info(al).collator_locale
 
     def self_encoding(self):
         enc = corpus_get_conf(self.corp, 'ENCODING')
@@ -809,7 +819,6 @@ class Kontext(Controller):
         """
         result['corpname'] = self.args.corpname
         result['align'] = self.args.align
-        result['corp_doc'] = corpus_get_conf(maincorp, 'DOCUMENTATION')
         result['human_corpname'] = self._human_readable_corpname()
 
         result['corp_description'] = maincorp.get_info()

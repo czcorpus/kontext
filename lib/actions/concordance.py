@@ -80,7 +80,7 @@ class Actions(Kontext):
             return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
 
         tpl_out['tag_builder_support'] = {
-            '': tag_support(self.args.corpname)
+            self.args.corpname: tag_support(self.args.corpname)
         }
         tpl_out['user_menu'] = True
         if 'Aligned' in tpl_out:
@@ -341,8 +341,10 @@ class Actions(Kontext):
             self._store_checked_text_types(request.form, out)
         self._restore_aligned_forms()
 
+        out['input_languages'] = {}
         self._attach_aligned_corpora_info(out)
         self._attach_tag_builder(out)
+        self._attach_query_types(out)
         out['user_menu'] = True
         out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
         tt_data = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)  # TODO deprecated
@@ -714,6 +716,7 @@ class Actions(Kontext):
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
+        self._attach_query_types(out)
         tt = get_tt(self.corp, self.ui_lang)
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         out['Normslist'] = tt_data['Normslist']

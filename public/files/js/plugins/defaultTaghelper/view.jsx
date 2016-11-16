@@ -23,7 +23,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
-    let TagDisplay = React.createClass({
+    const TagDisplay = React.createClass({
 
         mixins: mixins,
 
@@ -52,7 +52,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
     // ------------------------------ <TagButtons /> ----------------------------
 
-    let TagButtons = React.createClass({
+    const TagButtons = React.createClass({
 
         mixins: mixins,
 
@@ -60,14 +60,25 @@ export function init(dispatcher, mixins, tagHelperStore) {
             if (evt.target.value === 'reset') {
                 dispatcher.dispatch({
                     actionType: 'TAGHELPER_RESET',
-                    props: {widgetId:this.props.widgetId}
+                    props: {}
                 });
 
             } else if (evt.target.value === 'insert') {
                 dispatcher.dispatch({
-                    actionType: 'TAGHELPER_INSERT_TAG',
-                    props: {widgetId:this.props.widgetId}
+                    actionType: 'QUERY_INPUT_APPEND_QUERY',
+                    props: {
+                        query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`,
+                        corpname: this.props.corpname,
+                        prependSpace: true
+                    }
                 });
+                dispatcher.dispatch({
+                    actionType: 'TAGHELPER_RESET',
+                    props: {}
+                });
+                if (typeof this.props.onInsert === 'function') {
+                    this.props.onInsert();
+                }
             }
         },
 
@@ -87,7 +98,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
     // ------------------------------ <ValueLine /> ----------------------------
 
-    let ValueLine = React.createClass({
+    const ValueLine = React.createClass({
 
         mixins: mixins,
 
@@ -96,7 +107,6 @@ export function init(dispatcher, mixins, tagHelperStore) {
             dispatcher.dispatch({
                 actionType: 'TAGHELPER_CHECKBOX_CHANGED',
                 props: {
-                    widgetId: this.props.widgetId,
                     position: this.props.lineIdx,
                     value: this.props.data['id'],
                     checked: evt.target.checked
@@ -135,14 +145,14 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
     // ------------------------------ <ValueList /> ----------------------------
 
-    let ValueList = React.createClass({
+    const ValueList = React.createClass({
 
         mixins: mixins,
 
         _renderChildren : function () {
             return this.props.positionValues.map((item, i) => item.available
                 ? <ValueLine key={i} data={item} lineIdx={this.props.lineIdx} sublineIdx={i}
-                                isLocked={this.props.isLocked} widgetId={this.props.widgetId} />
+                                isLocked={this.props.isLocked} />
                 : null);
         },
 
@@ -179,7 +189,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
     // ------------------------------ <PositionLine /> ----------------------------
 
-    let PositionLine = React.createClass({
+    const PositionLine = React.createClass({
 
         mixins: mixins,
 
@@ -208,8 +218,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
                     {this.props.isActive ?
                     <ValueList positionValues={this._getAvailableChildren()}
                                 isLocked={this.props.position['locked']}
-                                lineIdx={this.props.lineIdx}
-                                widgetId={this.props.widgetId} /> : null }
+                                lineIdx={this.props.lineIdx} /> : null }
                 </li>
             );
         }
@@ -217,7 +226,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
     // ------------------------------ <PositionList /> ----------------------------
 
-    let PositionList = React.createClass({
+    const PositionList = React.createClass({
 
         mixins: mixins,
 
@@ -239,8 +248,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
                     {this.props.positions.map(
                         (item, i) => <PositionLine key={this._mkid(i)} position={item}
                                                     lineIdx={i} clickHandler={this._lineClickHandler}
-                                                    isActive={i === this.state.activeRow}
-                                                    widgetId={this.props.widgetId} />)}
+                                                    isActive={i === this.state.activeRow} />)}
                 </ul>
             );
         }
@@ -248,16 +256,12 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    let TagBuilder = React.createClass({
+    const TagBuilder = React.createClass({
 
         mixins: mixins,
 
         _changeListener : function (store, action) {
-            if (action === 'TAGHELPER_INSERT_TAG_ACKOWLEDGED' &&
-                    typeof this.props.insertCallback === 'function') {
-                this.props.insertCallback(store.exportCurrentPattern());
-
-            } else if (action === 'TAGHELPER_WAITING_FOR_SERVER') {
+            if (action === 'TAGHELPER_WAITING_FOR_SERVER') {
                 this.setState(React.addons.update(this.state, {
                     isWaiting: {$set: true}
                 }));
@@ -278,7 +282,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
                 isWaiting: true,
                 positions: [],
                 stateId: '',
-                tagValue: this.props.initialTagValue
+                tagValue: tagHelperStore.exportCurrentPattern()
             }; // state id is used to generate proper React item keys
         },
 
@@ -290,7 +294,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
             }
             dispatcher.dispatch({
                 actionType: 'TAGHELPER_GET_INITIAL_DATA',
-                props: {widgetId: this.props.widgetId}
+                props: {}
             });
         },
 
@@ -314,16 +318,16 @@ export function init(dispatcher, mixins, tagHelperStore) {
                 }
                 <div className="tag-header">
                     <TagDisplay tagValue={this.state.tagValue} />
-                    <TagButtons widgetId={this.props.widgetId} />
+                    <TagButtons corpname={this.props.corpname}
+                                onInsert={this.props.onInsert} />
                 </div>
                 <PositionList positions={this.state.positions}
-                                stateId={this.state.stateId}
-                                widgetId={this.props.widgetId} />
+                                stateId={this.state.stateId} />
             </div>;
         }
     });
 
     return {
         TagBuilder: TagBuilder
-    }
+    };
 }

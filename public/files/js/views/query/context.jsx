@@ -175,7 +175,7 @@ export function init(dispatcher, mixins) {
                     </h3>
                     <LemmaFilter hasLemmaAttr={this.props.hasLemmaAttr}
                         lemmaWindowSizes={this.props.lemmaWindowSizes} />
-                    {this.props.wPoSList && this.props.wPoSList.length > 0
+                    {this.props.wPoSList && this.props.wPoSList.size > 0
                         ? <PoSFilter posWindowSizes={this.props.posWindowSizes} wPoSList={this.props.wPoSList}/>
                         : null}
                 </div>

@@ -52,53 +52,6 @@ interface SubcorpusInfo {
     extended_info:SubcorpusExtendedInfo
 }
 
-/**
- * This is an extended version of PluginApi as required by corparch plug-ins.
- * But in this case most of added methods are useless...
- *
- * @todo current version of KonText does not use corpus selection widget
- * here on the 'subcorp_list' page which makes this class useless
- * @deprecated
- */
-class ExtendedApi extends PluginApi implements Kontext.QueryPagePluginApi {
-
-    pluginApi:Kontext.PluginApi;
-
-    queryFieldsetToggleEvents:Array<(elm:HTMLElement)=>void>;
-
-    queryFieldsetReadyEvents:Array<(elm:HTMLElement)=>void>;
-
-    constructor(model:PageModel) {
-        super(model);
-        this.queryFieldsetToggleEvents = [];
-        this.queryFieldsetReadyEvents = [];
-    }
-
-    bindFieldsetToggleEvent(fn:(elm:HTMLElement)=>void) {
-        this.queryFieldsetToggleEvents.push(fn);
-    }
-
-    bindFieldsetReadyEvent(fn:(elm:HTMLElement)=>void) {
-        this.queryFieldsetReadyEvents.push(fn);
-    }
-
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void) {}
-
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void) {}
-
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
-
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
-
-    applyOnQueryFieldsetToggleEvents(elm:HTMLElement) {
-        this.queryFieldsetReadyEvents.forEach((fn)=>fn(elm));
-    }
-
-    applyOnQueryFieldsetReadyEvents(elm:HTMLElement) {
-        this.queryFieldsetReadyEvents.forEach((fn)=>fn(elm));
-    }
-}
-
 
 class SubcorpListPage {
 

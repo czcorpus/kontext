@@ -150,8 +150,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private messageStore:docStores.MessageStore;
 
-    private queryHintStore:docStores.QueryHintStore;
-
     private userInfoStore:userStores.UserInfo;
 
     private viewOptionsStore:ViewOptionsStore;
@@ -182,7 +180,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.history = Modernizr.history ? new History(this) : new NullHistory();
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
-        this.queryHintStore = new docStores.QueryHintStore(this.dispatcher, conf['queryHints']);
         this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
         this.viewOptionsStore = new ViewOptionsStore(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
@@ -198,7 +195,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return {
             corpusInfoStore: this.corpusInfoStore,
             messageStore: this.messageStore,
-            queryHintStore: this.queryHintStore,
             userInfoStore: this.userInfoStore,
             viewOptionsStore: this.viewOptionsStore,
             asyncTaskInfoStore: this.asyncTaskChecker
@@ -487,32 +483,40 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     showMessage = (msgType:string, message:any, onClose?:()=>void) => {
         let timeout;
+        let outMsg;
 
         if (msgType === 'error') {
+            if (this.getConf<boolean>('isDebug')) {
+                console.error(message);
+            }
             if (message instanceof XMLHttpRequest) {
-                const respText = (<XMLHttpRequest>message).responseText;
-                try {
-                    let respObj = JSON.parse(respText);
-                    if (respObj['contains_errors'] && respObj['messages']) {
-                        message = respObj['messages'].map(x => x[1]).join(', ');
+                if (message.statusText && message.status >= 400) {
+                    outMsg = `${message.status}: ${message.statusText}`;
 
-                    } else {
-                        message = this.translate('global__unknown_error');
+                } else {
+                    const respText = (<XMLHttpRequest>message).responseText;
+                    try {
+                        let respObj = JSON.parse(respText);
+                        if (respObj['contains_errors'] && respObj['messages']) {
+                            outMsg = respObj['messages'].map(x => x[1]).join(', ');
+
+                        } else {
+                            outMsg = this.translate('global__unknown_error');
+                        }
+
+                    } catch (e) {
+                        outMsg = String(respText).substr(100);
                     }
-
-                } catch (e) {
-                    message = String(respText).substr(100);
                 }
 
             } else if (typeof message === 'object') {
-                message = message['message']; // TODO this should not be used any more
+                outMsg = (message['messages'] || ['Unknown error'])[0];
+
+            } else {
+                outMsg = String(message);
             }
         }
-
-        if (typeof message === 'object' && msgType === 'error') {
-            message = message['message'];
-        }
-        this.messageStore.addMessage(msgType, message, onClose);
+        this.messageStore.addMessage(msgType, outMsg, onClose);
     };
 
     /**

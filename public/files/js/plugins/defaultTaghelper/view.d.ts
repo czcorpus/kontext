@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-export class TagHelperViews {
-    TagBuilder:any;
-}
+/// <reference path="../../types/common.d.ts" />
 
 
-export function init(dispatcher, mixins, tagHelperStore):TagHelperViews;
+export function init(dispatcher, mixins, tagHelperStore):Kontext.MultipleViews;

@@ -109,16 +109,18 @@ export class MultiDict implements Kontext.IMultiDict {
 
     private _data:any;
 
-    constructor(data:Array<Array<string>>) {
+    constructor(data?:Array<Array<string>>) {
         this._data = {};
-        for (let i = 0; i < data.length; i += 1) {
-            let k = data[i][0];
-            let v = data[i][1];
-            if (this._data[k] === undefined) {
-                this._data[k] = [];
+        if (data !== undefined) {
+            for (let i = 0; i < data.length; i += 1) {
+                let k = data[i][0];
+                let v = data[i][1];
+                if (this._data[k] === undefined) {
+                    this._data[k] = [];
+                }
+                this._data[k].push(v);
+                this[k] = v;
             }
-            this._data[k].push(v);
-            this[k] = v;
         }
     }
 

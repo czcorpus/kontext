@@ -112,4 +112,8 @@ declare module AjaxResponse {
         Refs:Array<{name:string; val:string}>;
     }
 
+    export interface WithinBuilderData extends Kontext.AjaxResponse {
+        structattrs:{[attr:string]:Array<string>};
+    }
+
 }

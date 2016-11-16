@@ -17,35 +17,44 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="./view.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import stores = require('./stores');
+import {TagHelperStore} from './stores';
 import {init as viewInit} from './view';
 import {TooltipBox} from '../../popupbox';
+import * as RSVP from 'vendor/rsvp';
 
 
-export function create(pluginApi:Kontext.PluginApi,
-        insertCallback:(value:string)=>void, widgetId:number):(box:TooltipBox, finalize:()=>void)=>void {
 
-    let tagHelperStore = new stores.TagHelperStore(pluginApi, widgetId);
+export class TagHelperPlugin implements Kontext.PluginObject<TagHelperStore> {
 
-    return function (box:TooltipBox, finalize:()=>void) {
-        let contentElm = window.document.createElement('div');
-        box.getRootElement().appendChild(contentElm);
-        pluginApi.renderReactComponent(
-            viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(), tagHelperStore).TagBuilder,
-            contentElm,
-            {
-                widgetId: widgetId,
-                doneCallback: () => {
-                    finalize();
-                },
-                insertCallback: (v:string) => {
-                    insertCallback(v);
-                    box.close()
-                },
-                initialTagValue: '.*'
-            }
+    private pluginApi:Kontext.PluginApi;
+
+    private store:TagHelperStore;
+
+    private views:Kontext.MultipleViews;
+
+    constructor() {
+    }
+
+    getViews():Kontext.MultipleViews {
+        return this.views;
+    }
+
+
+    create(pluginApi:Kontext.PluginApi):RSVP.Promise<TagHelperStore> {
+        this.pluginApi = pluginApi;
+        this.store = new TagHelperStore(pluginApi);
+        this.views = viewInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.exportMixins(),
+            this.store
         );
-    };
+
+        return new RSVP.Promise<TagHelperStore>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
+            resolve(this.store);
+        });
+    }
 }
+
+export default new TagHelperPlugin();

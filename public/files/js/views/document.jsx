@@ -71,7 +71,7 @@ export function init(dispatcher, mixins, storeProvider) {
      * onReady -- a custom action to be performed once the component is mounted
      *            (signature: onReady(DOMNode) )
      */
-    let PopupBox = React.createClass({
+    const PopupBox = React.createClass({
 
         mixins: mixins,
 
@@ -258,47 +258,6 @@ export function init(dispatcher, mixins, storeProvider) {
         }
     });
 
-    // -------------------------------------------------------------------
-
-    let QueryHints = React.createClass({
-
-        mixins: mixins,
-
-        _changeListener : function (store) {
-            this.setState({hintText: store.getHint()});
-        },
-
-        getInitialState : function () {
-            return {hintText: this.props.hintText};
-        },
-
-        componentDidMount : function () {
-            storeProvider.queryHintStore.addChangeListener(this._changeListener);
-        },
-
-        componentWillUnmount : function () {
-            storeProvider.queryHintStore.removeChangeListener(this._changeListener);
-        },
-
-        _clickHandler : function () {
-            dispatcher.dispatch({
-                actionType: 'NEXT_QUERY_HINT',
-                props: {}
-            });
-        },
-
-        render: function () {
-            return (
-                <div>
-                    <span className="hint">{this.state.hintText}</span>
-                    <span className="next-hint">
-                        (<a onClick={this._clickHandler}>{this.translate('global__next_tip')}</a>)
-                    </span>
-                </div>
-            );
-        }
-    });
-
 
     // ------------------------------------------------------------------------------------
 
@@ -306,7 +265,6 @@ export function init(dispatcher, mixins, storeProvider) {
         ModalOverlay: ModalOverlay,
         PopupBox: PopupBox,
         InlineHelp: InlineHelp,
-        Messages: Messages,
-        QueryHints: QueryHints
+        Messages: Messages
     };
 }

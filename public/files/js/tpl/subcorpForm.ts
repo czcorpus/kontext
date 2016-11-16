@@ -31,7 +31,6 @@ import {PageModel} from './document';
 import * as popupBox from '../popupbox';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
 import * as subcorpFormStoreModule from '../stores/subcorp/form';
-import {extendedApi} from '../queryInput';
 import * as liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer = require('plugins/subcmixer/init');
 import {UserSettings} from '../userSettings';
@@ -44,7 +43,7 @@ import corplistComponent = require('plugins/corparch/init');
 /**
  * This model contains functionality related to the subcorp_form.tmpl template
  */
-export class SubcorpForm implements Kontext.CorpusSetupHandler {
+export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     private layoutModel:PageModel;
 
@@ -54,29 +53,26 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
 
     private subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore;
 
-    private extendedApi:Kontext.QueryPagePluginApi;
-
     private textTypesStore:TextTypesStore;
 
     constructor(pageModel:PageModel, viewComponents,
             subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
         this.layoutModel = pageModel;
-        this.extendedApi = extendedApi(pageModel, this);
         let subcForm = $('#subcorp-form');
         let corplist = corplistComponent.create(subcForm.find('select[name="corpname"]').get(0),
-                'subcorpus/subcorp_form', this.extendedApi, {editable: false});
+                'subcorpus/subcorp_form', this.layoutModel.pluginApi(), this, {editable: false});
         this.corplistComponent = corplistComponent;
         this.viewComponents = viewComponents;
         this.subcorpFormStore = subcorpFormStore;
     }
 
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {}
+
+    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
 
     registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
 
-    registerOnSubcorpChangeAction(fn:(corpname:string)=>void):void {}
-
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
+    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
 
     formChangeCorpus(item:JQueryEventObject):void {
         let formAncestor;
@@ -200,7 +196,7 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
         );
         let liveAttrsProm;
         if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(this.extendedApi, this.textTypesStore, textTypesData['bib_attr']);
+            liveAttrsProm = liveAttributes.create(this.layoutModel.pluginApi(), this.textTypesStore, textTypesData['bib_attr']);
 
         } else {
             liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {

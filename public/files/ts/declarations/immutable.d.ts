@@ -173,6 +173,8 @@ declare module Immutable {
      */
     push(...values: T[]): List<T>;
 
+    insert(index:number, value:T):List<T>;
+
     /**
      * Returns a new List with a size ones less than this List, excluding
      * the last index in this List.

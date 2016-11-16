@@ -179,7 +179,7 @@ class WidgetMenu {
 
     funcMap:{[name:string]: WidgetTab};
 
-    pageModel:Kontext.QueryPagePluginApi;
+    pageModel:Kontext.PluginApi;
 
     currentBoxId:string;
 
@@ -196,7 +196,7 @@ class WidgetMenu {
      *
      * @param widget
      */
-    constructor(widget:Corplist, pageModel:Kontext.QueryPagePluginApi) {
+    constructor(widget:Corplist, pageModel:Kontext.PluginApi) {
         this.widget = widget;
         this.pageModel = pageModel;
         this.menuWrapper = $('<div class="menu"></div>');
@@ -344,7 +344,7 @@ class SearchTab implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:Kontext.QueryPagePluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistSrchItemClick) {
+    constructor(pluginApi:Kontext.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistSrchItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
@@ -992,7 +992,9 @@ class StarComponent {
 
     private favoriteItemsTab:FavoritesTab;
 
-    private pageModel:Kontext.QueryPagePluginApi;
+    private pageModel:Kontext.PluginApi;
+
+    private querySetupHandler:Kontext.QuerySetupHandler;
 
     private starSwitch:StarSwitch;
 
@@ -1042,9 +1044,11 @@ class StarComponent {
      * @param favoriteItemsTab
      * @param pageModel
      */
-    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.QueryPagePluginApi, editable:boolean) {
+    constructor(favoriteItemsTab:FavoritesTab, pageModel:Kontext.PluginApi, querySetupHandler:Kontext.QuerySetupHandler,
+            editable:boolean) {
         this.favoriteItemsTab = favoriteItemsTab;
         this.pageModel = pageModel;
+        this.querySetupHandler = querySetupHandler;
         this.starImg = window.document.createElement('img');
 
         const currItem:common.CorplistItemUcnk = this.extractItemFromPage();
@@ -1258,9 +1262,9 @@ class StarComponent {
                     self.setFavorite(commonDefault.Favorite.NOT_FAVORITE);
                 }
             });
-            this.pageModel.registerOnSubcorpChangeAction(this.onSubcorpChange);
-            this.pageModel.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
-            this.pageModel.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
+            this.querySetupHandler.registerOnSubcorpChangeAction(this.onSubcorpChange);
+            this.querySetupHandler.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
+            this.querySetupHandler.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
             this.favoriteItemsTab.registerChangeListener(this.onFavTabListChange);
         }
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(this.extractItemFromPage()));
@@ -1289,7 +1293,9 @@ export class Corplist implements CorpusArchive.Widget {
 
     private data:Array<common.CorplistItemUcnk>;
 
-    private pageModel:Kontext.QueryPagePluginApi;
+    private pageModel:Kontext.PluginApi;
+
+    private querySetupHandler:Kontext.QuerySetupHandler;
 
     private visible:Visibility;
 
@@ -1330,11 +1336,12 @@ export class Corplist implements CorpusArchive.Widget {
      * @param options
      */
     constructor(targetAction:string, parentForm:HTMLElement, data:Array<common.CorplistItemUcnk>,
-            pageModel:Kontext.QueryPagePluginApi, options:Options) {
+            pageModel:Kontext.PluginApi, querySetupHandler:Kontext.QuerySetupHandler, options:Options) {
         this.targetAction = targetAction;
         this.options = options;
         this.data = data;
         this.pageModel = pageModel;
+        this.querySetupHandler = querySetupHandler;
         this.parentForm = parentForm;
         this.currCorpIdent = pageModel.getConf<string>('corpname');
         this.currCorpname = pageModel.getConf<string>('humanCorpname');
@@ -1509,7 +1516,10 @@ export class Corplist implements CorpusArchive.Widget {
         $(this.triggerButton).on('click', this.onButtonClick);
 
         if (!this.options.disableStarComponent) {
-            this.starComponent = new StarComponent(this.favoritesBox, this.pageModel,
+            this.starComponent = new StarComponent(
+                this.favoritesBox,
+                this.pageModel,
+                this.querySetupHandler,
                 this.options.editable !== undefined ? this.options.editable : true);
             this.starComponent.init();
         }

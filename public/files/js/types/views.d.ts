@@ -131,6 +131,34 @@ declare module "views/menu" {
 }
 
 
+declare module "views/query/main" {
+
+    export interface QueryFormViews {
+        QueryForm:React.ReactClass;
+    }
+
+    export function init(
+            dispatcher:Dispatcher.Dispatcher<any>,
+            mixins:any,
+            layoutViews:Kontext.LayoutViews,
+            queryStore:any,
+            textTypesStore:any,
+            queryHintStore:any,
+            withinBuilderStore:any,
+            virtualKeyboardStore:any):QueryFormViews;
+}
+
+
+declare module "views/query/aligned" {
+
+    export interface AlignedQueryFormViews {
+        AlignedCorpora:React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins, queryStore:any):AlignedQueryFormViews;
+}
+
+
 declare module "views/query/context" {
 
     export interface QueryContextViews {

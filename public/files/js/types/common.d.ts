@@ -112,7 +112,7 @@ declare module Kontext {
         getConcArgs():IMultiDict;
     }
 
-    export interface CorpusSetupHandler {
+    export interface QuerySetupHandler {
 
         registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void;
 
@@ -124,43 +124,20 @@ declare module Kontext {
     }
 
     /**
-     * This contains extensions required by pages which contain query input form
-     */
-    export interface QueryPagePluginApi extends PluginApi, CorpusSetupHandler {
-        /**
-         * Adds a callback which is fired after user changes visibility
-         * of advanced settings fieldsets on the query page (= "Specify context",
-         * "Specify query according to the meta-information").
-         *
-         * Initial setup of these fieldsets is not included here
-         * (see bindFieldsetReadyEvent()).
-         */
-        bindFieldsetToggleEvent(callback:(fieldset:HTMLElement) => void);
-
-        /**
-         * Adds a callback which is fired after the advanced settings fieldsets on
-         * the query page (= "Specify context", "Specify query according to the
-         * meta-information") are initialized.
-         */
-        bindFieldsetReadyEvent(callback:(fieldset:HTMLElement) => void);
-
-        registerOnSubcorpChangeAction(fn:(subcname:string)=>void);
-
-        registerOnAddParallelCorpAction(fn:(corpname:string)=>void);
-
-        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void);
-
-        applyOnQueryFieldsetToggleEvents(elm:HTMLElement);
-
-        applyOnQueryFieldsetReadyEvents(elm:HTMLElement);
-
-    }
-
-    /**
      * General specification of a plug-in object.
      */
     export interface Plugin {
         init(api:PluginApi):void;
+    }
+
+    export type MultipleViews = {[key:string]:React.ReactClass};
+
+    /**
+     * Flux+React compatible plug-ins
+     */
+    export interface PluginObject<T> {
+        getViews():MultipleViews;
+        create(pluginApi:Kontext.PluginApi):RSVP.Promise<T>;
     }
 
     /**
@@ -217,13 +194,6 @@ declare module Kontext {
     }
 
     /**
-     * A store managing miscellaneous application usage hints
-     */
-    export interface IQueryHintStore extends PageStore {
-        getHint():string;
-    }
-
-    /**
      *
      */
     export interface StoreListener {
@@ -250,7 +220,6 @@ declare module Kontext {
         PopupBox:React.ReactClass;
         InlineHelp:React.ReactClass;
         Messages:React.ReactClass;
-        QueryHints:React.ReactClass;
     }
 
     /**
@@ -271,7 +240,6 @@ declare module Kontext {
     export interface LayoutStores {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,
-        queryHintStore:IQueryHintStore,
         userInfoStore:IUserInfoStore,
         viewOptionsStore:ViewOptions.IViewOptionsStore,
         asyncTaskInfoStore:IAsyncTaskStore
@@ -422,17 +390,6 @@ declare module Customized {
         createForm(targetElm:HTMLElement, properties:any):void;
 
         createList(targetElm:HTMLElement, properties:any):void;
-    }
-}
-
-/**
- * Required plug-in interfaces
- */
-declare module Plugins {
-
-    export interface IQueryStorage extends Kontext.Plugin {
-        detach(elm:HTMLElement):void;
-        reset():void;
     }
 }
 
@@ -765,7 +722,6 @@ declare module "win" {
  *
  */
 declare module "queryInput" {
-    export function cmdSwitchQuery(event:any, conf:any); // TODO types
     export function bindQueryHelpers(formElm:string|HTMLElement|JQuery, api:Kontext.PluginApi);
 }
 

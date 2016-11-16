@@ -25,79 +25,10 @@ import * as $ from 'jquery';
 import {create as createCorparch} from 'plugins/corparch/init';
 import {bind as bindPopupBox} from '../popupbox';
 
-
 /**
  *
  */
-class CustomApi extends PluginApi implements Kontext.QueryPagePluginApi {
-
-    pluginApi:Kontext.PluginApi;
-
-    queryFieldsetToggleEvents:Array<(elm:HTMLElement)=>void>;
-
-    queryFieldsetReadyEvents:Array<(elm:HTMLElement)=>void>;
-
-    corpusSetupHandler:Kontext.CorpusSetupHandler;
-
-    constructor(model:PageModel, corpusSetupHandler:Kontext.CorpusSetupHandler) {
-        super(model);
-        this.corpusSetupHandler = corpusSetupHandler;
-        this.queryFieldsetToggleEvents = [];
-        this.queryFieldsetReadyEvents = [];
-    }
-
-    bindFieldsetToggleEvent(fn:(elm:HTMLElement)=>void) {
-        this.queryFieldsetToggleEvents.push(fn);
-    }
-
-    bindFieldsetReadyEvent(fn:(elm:HTMLElement)=>void) {
-        this.queryFieldsetReadyEvents.push(fn);
-    }
-
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void) {
-        this.corpusSetupHandler.registerOnSubcorpChangeAction(fn);
-    }
-
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void) {
-        this.corpusSetupHandler.registerOnAddParallelCorpAction(fn);
-    }
-
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {
-        this.corpusSetupHandler.registerOnBeforeRemoveParallelCorpAction(fn);
-    }
-
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void) {
-        this.corpusSetupHandler.registerOnRemoveParallelCorpAction(fn);
-    }
-
-    applyOnQueryFieldsetToggleEvents(elm:HTMLElement) {
-        this.queryFieldsetReadyEvents.forEach((fn)=>fn(elm));
-    }
-
-    applyOnQueryFieldsetReadyEvents(elm:HTMLElement) {
-        this.queryFieldsetReadyEvents.forEach((fn)=>fn(elm));
-    }
-}
-
-/**
- *
- */
-class DummyCorpusSetupHandler implements Kontext.CorpusSetupHandler {
-
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {}
-
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
-
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
-
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
-}
-
-
-/**
- *
- */
-class WordlistFormPage {
+class WordlistFormPage implements Kontext.QuerySetupHandler {
 
     private layoutModel:PageModel
 
@@ -107,6 +38,24 @@ class WordlistFormPage {
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
+    }
+
+    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
+
+    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
+
+    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+
+    /**
+     * Registers a callback which is invoked after the subcorpus
+     * selection element is changed. It guarantees that all the
+     * firstForm's internal actions are performed before this
+     * externally registered ones.
+     *
+     * @param fn:(subcname:string)=>void
+     */
+    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {
+        this.onSubcorpChangeActions.push(fn);
     }
 
 
@@ -205,18 +154,6 @@ class WordlistFormPage {
         });
     }
 
-    /**
-     * Registers a callback which is invoked after the subcorpus
-     * selection element is changed. It guarantees that all the
-     * firstForm's internal actions are performed before this
-     * externally registered ones.
-     *
-     * @param fn:(subcname:string)=>void
-     */
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {
-        this.onSubcorpChangeActions.push(fn);
-    }
-
 
     registerSubcorpChange():void {
         $('#subcorp-selector').on('change', (e) => {
@@ -278,11 +215,12 @@ class WordlistFormPage {
             (d) => {
                 this.bindStaticElements();
                 this.corplistComponent = createCorparch(
-                    $('form[id="wordlist_form"] select[name="corpname"]').get(0),
-                    'wordlist_form',
-                    new CustomApi(this.layoutModel, new DummyCorpusSetupHandler()),
-                    {formTarget: 'wordlist_form', submitMethod: 'GET'}
-                );
+                        $('form[id="wordlist_form"] select[name="corpname"]').get(0),
+                        'wordlist_form',
+                        this.layoutModel.pluginApi(),
+                        this,
+                        {formTarget: 'wordlist_form', submitMethod: 'GET'}
+                ),
                 this.registerSubcorpChange();
                 this.initOutputTypeForms();
             }

@@ -44,7 +44,7 @@ export function getViews(
 }
 
 
-export function create(pluginApi:Kontext.QueryPagePluginApi,
+export function create(pluginApi:Kontext.PluginApi,
                      textTypesStore:TextTypes.ITextTypesStore, bibAttr:string):RSVP.Promise<Kontext.PageStore> {
     return new RSVP.Promise(function (resolve, reject) {
         try {
