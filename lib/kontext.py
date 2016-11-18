@@ -719,6 +719,12 @@ class Kontext(Controller):
         # in this phase we should have some non-empty corpus selected
         # but we do not know whether user has access to it
 
+        # 1) reload permissions in case of no access and if available
+        auth = plugins.get('auth')
+        if cn not in corp_list and isinstance(auth, plugins.abstract.auth.AbstractRemoteAuth):
+            auth.refresh_user_permissions(self._plugin_api)
+            corp_list = auth.permitted_corpora(self._session_get('user', 'id'))
+        # 2) try alternative corpus configuration (e.g. with restricted access)
         # automatic restricted/unrestricted corpus name selection
         # according to user rights
         canonical_name = self._canonical_corpname(cn)
