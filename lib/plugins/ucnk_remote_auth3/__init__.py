@@ -62,13 +62,31 @@ element auth {
         attribute extension-by { "ucnk" }
         xsd:integer  # number of seconds to wait for the response
     }
+    element sync_host {
+        attribute extension-by { "ucnk" }
+        text # hostname of a remote MySQL server
+    }
+    element sync_db {
+        attribute extension-by { "ucnk" }
+        text # database name
+    }
+    element sync_user {
+        attribute extension-by { "ucnk" }
+        text # database username
+    }
+    element sync_passwd {
+        attribute extension-by { "ucnk" }
+        text # database password
+    }
+
 }
 """
 
 import urllib
 import httplib
 import json
-
+import logging
+import MySQLdb
 
 from plugins.abstract.auth import AbstractRemoteAuth
 from plugins import inject
@@ -93,6 +111,17 @@ class AuthConf(object):
         self.toolbar_server_timeout = int(conf.get('plugins', 'auth')['ucnk:toolbar_server_timeout'])
 
 
+class SyncDbConf(object):
+    def __init__(self, conf):
+        self.host = conf.get('plugins', 'auth')['ucnk:sync_host']
+        self.db = conf.get('plugins', 'auth')['ucnk:sync_db']
+        self.user = conf.get('plugins', 'auth')['ucnk:sync_user']
+        self.passwd = conf.get('plugins', 'auth')['ucnk:sync_passwd']
+
+    def __repr__(self):
+        return self.__dict__.__repr__()
+
+
 class CentralAuth(AbstractRemoteAuth):
     """
     A custom authentication class for the Institute of the Czech National Corpus
@@ -112,6 +141,7 @@ class CentralAuth(AbstractRemoteAuth):
         self._toolbar_conf = ToolbarConf(conf)
         self._auth_conf = auth_conf
         self._conf = conf
+        self._sync_conf = SyncDbConf(conf)
 
     @staticmethod
     def _mk_user_key(user_id):
@@ -170,6 +200,8 @@ class CentralAuth(AbstractRemoteAuth):
                     'fullname': u'%s %s' % (response_obj['user'].get('firstName'),
                                             response_obj['user'].get('surname'))  # TODO API unknown
                 }
+                # reload available corpora from remote server
+                self.refresh_user_permissions(plugin_api)
             else:  # logout => clear current user's session data and set new credentials
                 plugin_api.session.clear()
                 plugin_api.session['user'] = self.anonymous_user()
@@ -192,6 +224,21 @@ class CentralAuth(AbstractRemoteAuth):
             corpora.append(IMPLICIT_CORPUS)
         return dict([(self.canonical_corpname(c), c) for c in corpora])
 
+    def refresh_user_permissions(self, plugin_api):
+        src_db = MySQLdb.connect(host=self._sync_conf.host, user=self._sync_conf.user,
+                                 passwd=self._sync_conf.passwd, db=self._sync_conf.db)
+        user_id = plugin_api.session.get('user', {'id': None})['id']
+        cursor = src_db.cursor()
+        cursor.execute('CALL user_corpus_proc(%s)', (user_id,))
+        # stored procedure returns: user_id, corpus_id, limited, name
+        ans = [row[3] for row in cursor.fetchall()]
+        if len(ans) > 0:
+            self._db.set(self._mk_list_key(user_id), ans)
+        else:
+            logging.getLogger(__name__).error(
+                'Failed to synchronize corpora for user {0}: empty list. Keeping user\'s current list.'.format(user_id))
+        src_db.close()
+
     def get_user_info(self, user_id):
         user_key = self._mk_user_key(user_id)
         info = self._db.get(user_key)
@@ -211,17 +258,6 @@ class CentralAuth(AbstractRemoteAuth):
     def get_logout_url(self, return_url=None):
         return self._auth_conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
 
-    def export_tasks(self):
-        """
-        Export tasks for Celery worker(s)
-        """
-        import syncdb
-
-        def sync_user_db(interval, dry_run, sync_conf, sync_version):
-            with open(sync_conf, 'rb') as f:
-                conf = json.loads(f)
-            return syncdb.run(conf=conf, interval=interval, dry_run=dry_run, version=sync_version)
-        return sync_user_db,
 
 
 @inject('db', 'sessions')
