@@ -414,8 +414,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
             return (
                 <label>
                     {this.translate('query__match_case')}:{'\u00a0'}
-                    <input type="checkbox" name="qmcase" value={this.props.matchCaseValue}
-                        onClick={this._handleCheckbox} />
+                    <input type="checkbox" name="qmcase" value="1" checked={this.props.matchCaseValue}
+                        onChange={this._handleCheckbox} />
                 </label>
             );
         }
@@ -430,7 +430,10 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
         _handleSelectChange : function (evt) {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SET_DEFAULT_ATTR',
-                props: {value: evt.target.value}
+                props: {
+                    corpname: this.props.corpname,
+                    value: evt.target.value
+                }
             });
         },
 
@@ -545,7 +548,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                             {this.translate('query__default_attr') + ':\u00a0'}
                             <DefaultAttrSelector defaultAttr={this.props.defaultAttr}
                                     forcedAttr={this.props.forcedAttr}
-                                    attrList={this.props.attrList} />{'\u00a0'}
+                                    attrList={this.props.attrList}
+                                    corpname={this.props.corpname} />{'\u00a0'}
                             {this.props.tagsetDocUrl ?
                                 <a className="tagset-summary" target="_blank" href={this.props.tagsetDocUrl}>
                                     {this.translate('query__tagset_summary')}

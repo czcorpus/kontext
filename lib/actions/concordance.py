@@ -102,7 +102,7 @@ class Actions(Kontext):
         subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
-        if 'SubcorpList' not in out or out['SubcorpList'] is None:
+        if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []
         out['SubcorpList'].extend(subcorp_list)
 
@@ -344,7 +344,7 @@ class Actions(Kontext):
         out['input_languages'] = {}
         self._attach_aligned_corpora_info(out)
         self._attach_tag_builder(out)
-        self._attach_query_types(out)
+        self._export_query_info(out)
         out['user_menu'] = True
         out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
         tt_data = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)  # TODO deprecated
@@ -716,7 +716,7 @@ class Actions(Kontext):
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_tag_builder(out)
         self._attach_query_metadata(out)
-        self._attach_query_types(out)
+        self._export_query_info(out)
         tt = get_tt(self.corp, self.ui_lang)
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         out['Normslist'] = tt_data['Normslist']

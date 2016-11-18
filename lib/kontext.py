@@ -276,7 +276,7 @@ class Kontext(Controller):
 
     def _setup_user_paths(self, user_file_id):
         if not self.user_is_anonymous():
-            self.subcpath.append('%s/%s' % (settings.get('corpora', 'users_subcpath'), user_file_id))
+            self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), user_file_id)]
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
 
     def _user_has_persistent_settings(self):
@@ -655,13 +655,29 @@ class Kontext(Controller):
         tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
         tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
 
-    def _attach_query_types(self, tpl_out):
+    def _export_query_info(self, tpl_out):
         def import_qs(qs):
             return qs[:-3] if qs is not None else None
-        tpl_out['query_types'] = {self.args.corpname: import_qs(self.args.queryselector)}
+
+        qtype = import_qs(self.args.queryselector)
+        qinfo = dict(
+            query_types={self.args.corpname: qtype},
+            queries={self.args.corpname: getattr(self.args, qtype, None)},
+            pcq_pos_neg_values={self.args.corpname: getattr(self.args, 'pcq_pos_neg', None)},
+            lpos_values={self.args.corpname: getattr(self.args, 'lpos', None)},
+            qmcase_values={self.args.corpname: bool(getattr(self.args, 'qmcase', False))},
+            default_attr_values={self.args.corpname: getattr(self.args, 'default_attr', 'word')}
+        )
         if self.corp.get_conf('ALIGNED'):
             for al in self.corp.get_conf('ALIGNED').split(','):
-                tpl_out['query_types'][al] = import_qs(getattr(self.args, 'queryselector_{0}'.format(al), None))
+                qtype = import_qs(getattr(self.args, 'queryselector_{0}'.format(al), None))
+                qinfo['query_types'][al] = qtype
+                qinfo['queries'][al] = getattr(self.args, qtype + '_' + al, None) if qtype is not None else None
+                qinfo['pcq_pos_neg_values'][al] = getattr(self.args, 'pcq_pos_neg_' + al, None)
+                qinfo['lpos_values'][al] = getattr(self.args, 'lpos_' + al, None)
+                qinfo['qmcase_values'][al] = bool(getattr(self.args, 'qmcase_' + al, False))
+                qinfo['default_attr_values'][al] = getattr(self.args, 'default_attr_' + al, 'word')
+        tpl_out['query_info'] = qinfo
 
     def _add_save_menu_item(self, label, action, params, save_format=None):
         params = copy.copy(params)
