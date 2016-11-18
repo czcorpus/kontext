@@ -190,12 +190,13 @@ class CentralAuth(AbstractRemoteAuth):
         if 'id' not in response_obj['user']:
             response_obj['user']['id'] = self._anonymous_id
 
-        if curr_user_id != response_obj['user']['id']:
+        remote_user_id = int(response_obj['user']['id'])
+        if curr_user_id != remote_user_id:
             plugin_api.refresh_session_id()
-            if response_obj['user']['id'] != self._anonymous_id:
+            if remote_user_id != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)
                 plugin_api.session['user'] = {
-                    'id': int(response_obj['user']['id']),
+                    'id': remote_user_id,
                     'user': response_obj['user'].get('user'),  # TODO API unknown
                     'fullname': u'%s %s' % (response_obj['user'].get('firstName'),
                                             response_obj['user'].get('surname'))  # TODO API unknown

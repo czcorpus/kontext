@@ -104,8 +104,9 @@ class Export(object):
     Object for exporting user data from MySQL/MariaDB
     """
 
-    def __init__(self, mysqldb, default_corpora=None):
+    def __init__(self, mysqldb, version, default_corpora=None):
         self._mysql = mysqldb
+        self._version = version
         self._default_corpora = default_corpora if default_corpora is not None else ()
 
     def get_user_corpora(self, user_id):
@@ -123,6 +124,19 @@ class Export(object):
             ans = self._default_corpora
         return ans
 
+    def get_user_individual_corpora(self, user_id):
+        cursor = self._mysql.cursor()
+        cursor.execute("SELECT c.name, ucr.limited FROM user_corpus_relation ucr " +
+                       "JOIN corpora c ON ucr.corpus_id = c.id WHERE ucr.user_id = %s", user_id)
+        rows = cursor.fetchall()
+        ans = []
+        for row in rows:
+            if row[1]:
+                ans.append('omezeni/%s' % row[0])
+            else:
+                ans.append(row[0])
+        return ans
+
     def run(self, conf, user_id=None):
         """
         Performs the export
@@ -138,10 +152,15 @@ class Export(object):
             cursor.execute(('%s WHERE id = %%s' % sql), (user_id,))
         rows = cursor.fetchall()
         colmap = get_user_cols(as_map=True)
+        corplists = dict((int(k), v) for k, v in conf.get('corplists', {}).items())
         ans = []
         for row in rows:
             user_data = create_user_dict(colmap, row)
-            user_data['corpora'] = self.get_user_corpora(row[colmap['id']])
+            if self._version == 1:
+                user_data['corpora'] = self.get_user_corpora(row[colmap['id']])
+            elif self._version == 2:
+                user_data['corpora'] = self.get_user_individual_corpora(row[colmap['id']])
+                user_data['corplist'] = corplists.get(row[colmap['corplist']], None)
             ans.append(user_data)
         return ans
 
@@ -199,6 +218,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Synchronize data from mysql db to redis')
     parser.add_argument('conf_file', metavar='CONF_FILE', help='operation configuration in JSON')
     parser.add_argument('-u', '--user', type=int, help='update only this user (otherwise, all the users are updated)')
+    parser.add_argument('-v', '--version', type=int, default=1, help='export version (default is 1)')
     parser.add_argument('-d', '--dry-run', action='store_true', help='allows running without affecting storage data')
     args = parser.parse_args()
 
@@ -210,7 +230,9 @@ if __name__ == '__main__':
                                   charset=conf['mysql'].get('charset', 'latin1'),
                                   use_unicode=conf['mysql'].get('use_unicode', False))
 
-    export_obj = Export(mysqldb=mysql_conn, default_corpora=conf.get('default_corpora', None))
+    print('Export/import mode: version %d' % (args.version,))
+    export_obj = Export(mysqldb=mysql_conn, version=args.version,
+                        default_corpora=conf.get('default_corpora', None))
     ans = export_obj.run(conf, args.user)
     print('Finished loading source data')
     redis_conf = dict(host=conf['redis']['hostname'], port=conf['redis']['port'], db_id=conf['redis']['id'])
