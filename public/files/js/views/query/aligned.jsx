@@ -145,7 +145,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 lposValue={this.props.lposValues.get(item)}
                                 matchCaseValue={this.props.matchCaseValues.get(item)}
                                 forcedAttr={this.props.forcedAttr}
-                                defaultAttr={this.props.defaultAttr}
+                                defaultAttr={this.props.defaultAttrValues.get(item)}
                                 attrList={this.props.attrList}
                                 tagsetDocUrl={this.props.tagsetDocUrl}
                                 pcqPosNegValue={this.props.pcqPosNegValues.get(item)}

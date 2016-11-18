@@ -137,7 +137,7 @@ export function init(
                 lposValues: queryStore.getLposValues(),
                 matchCaseValues: queryStore.getMatchCaseValues(),
                 forcedAttr: queryStore.getForcedAttr(),
-                defaultAttr: queryStore.getDefaultAttr(),
+                defaultAttrValues: queryStore.getDefaultAttrValues(),
                 attrList: queryStore.getAttrList(),
                 tagsetDocUrl: queryStore.getTagsetDocUrl(),
                 pcqPosNegValues: queryStore.getPcqPosNegValues(),
@@ -165,7 +165,7 @@ export function init(
                 lposValues: queryStore.getLposValues(),
                 matchCaseValues: queryStore.getMatchCaseValues(),
                 forcedAttr: queryStore.getForcedAttr(),
-                defaultAttr: queryStore.getDefaultAttr(),
+                defaultAttrValues: queryStore.getDefaultAttrValues(),
                 attrList: queryStore.getAttrList(),
                 tagsetDocUrl: queryStore.getTagsetDocUrl(),
                 pcqPosNegValues: queryStore.getPcqPosNegValues(),
@@ -246,7 +246,7 @@ export function init(
                                 lposValue={this.state.lposValues.get(primaryCorpname)}
                                 matchCaseValue={this.state.matchCaseValues.get(primaryCorpname)}
                                 forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttr}
+                                defaultAttr={this.state.defaultAttrValues.get(primaryCorpname)}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
                                 tagHelperViews={this.props.tagHelperViews}
@@ -265,7 +265,7 @@ export function init(
                                 lposValues={this.state.lposValues}
                                 matchCaseValues={this.state.matchCaseValues}
                                 forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttr}
+                                defaultAttrValues={this.state.defaultAttrValues}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
                                 pcqPosNegValues={this.state.pcqPosNegValues}

@@ -38,12 +38,16 @@ export interface QueryFormProperties {
     availableAlignedCorpora:Array<{n:string; label:string}>;
     subcorpList:Array<string>;
     currentSubcorp:string;
-    queryTypes:{[corpname:string]:string};
+    currQueryTypes:{[corpname:string]:string};
+    currQueries:{[corpname:string]:string};  // current queries values (e.g. when restoring a form state)
+    currPcqPosNegValues:{[corpname:string]:string};
+    currDefaultAttrValues:{[corpname:string]:string};
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
     lposlist:Array<{v:string; n:string}>;
+    currLposValues:{[corpname:string]:string};
+    currQmcaseValues:{[corpname:string]:boolean};
     forcedAttr:string;
-    defaultAttr:string;
     attrList:Array<{n:string; label:string}>;
     tagsetDocUrl:string;
     // context form props
@@ -87,7 +91,7 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
 
     private forcedAttr:string;
 
-    private defaultAttr:string;
+    private defaultAttrValues:Immutable.Map<string, string>;
 
     private attrList:Immutable.List<{n:string; label:string}>;
 
@@ -123,21 +127,21 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
         this.pageModel = pageModel;
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<{n:string; label:string}>(props.availableAlignedCorpora);
-        this.queryTypes = Immutable.Map<string, string>(props.queryTypes).map((v, k) => v ? v : 'iquery').toMap();
+        this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes).map((v, k) => v ? v : 'iquery').toMap();
         this.subcorpList = Immutable.List<string>(props.subcorpList);
         this.currentSubcorp = props.currentSubcorp;
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.shuffleConcByDefault = props.shuffleConcByDefault;
-        this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, '']));
+        this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || '']));
         this.currentArgs = Immutable.List<[string, any]>(props.currentArgs);
         this.lposlist = Immutable.List<{v:string; n:string}>(props.lposlist);
-        this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, '']));
-        this.matchCaseValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, false]));
+        this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || '']));
+        this.matchCaseValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false]));
         this.forcedAttr = props.forcedAttr;
-        this.defaultAttr = props.defaultAttr;
+        this.defaultAttrValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word']));
         this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
         this.tagsetDocUrl = props.tagsetDocUrl;
-        this.pcqPosNegValues = Immutable.Map<string, string>(this.corpora.map(item => [item, 'pos']));
+        this.pcqPosNegValues = Immutable.Map<string, string>(this.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
         this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
         this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
         this.hasLemmaAttr = props.hasLemmaAttr;
@@ -180,7 +184,7 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_DEFAULT_ATTR':
-                    self.defaultAttr = payload.props['value'];
+                    self.defaultAttrValues = self.defaultAttrValues.set(payload.props['corpname'], payload.props['value']);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
@@ -205,10 +209,7 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
                     const errors = self.corpora.map(corpname => {
                         return self.isPossibleQueryTypeMismatch(corpname);
                     }).filter(err => !!err);
-                    if (errors.size > 0) {
-                        self.pageModel.showMessage('error', self.pageModel.translate('global__query_type_mismatch'));
-
-                    } else {
+                    if (errors.size === 0 || window.confirm(self.pageModel.translate('global__query_type_mismatch'))) {
                         self.submitQuery();
                     }
                 break;
@@ -270,8 +271,6 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
             args.replace('viewmode', ['align']);
         }
 
-        args.add('default_attr', this.defaultAttr);
-
         function createArgname(name, corpname) {
             return corpname !== primaryCorpus ? name + '_' + corpname : name;
         }
@@ -286,7 +285,8 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
             if (this.matchCaseValues.get(corpname)) {
                 args.add(createArgname('qmcase', corpname), this.matchCaseValues.get(corpname) ? '1' : '0');
             }
-            args.add(createArgname('pcq_pos_neg', corpname), this.pcqPosNegValues.get(corpname));
+            args.replace(createArgname('pcq_pos_neg', corpname), [this.pcqPosNegValues.get(corpname)]);
+            args.add(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
         });
 
         return args;
@@ -382,8 +382,8 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
         return this.forcedAttr;
     }
 
-    getDefaultAttr():string {
-        return this.defaultAttr;
+    getDefaultAttrValues():Immutable.Map<string, string> {
+        return this.defaultAttrValues;
     }
 
     getAttrList():Immutable.List<{n:string; label:string}> {
