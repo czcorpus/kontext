@@ -188,6 +188,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         this.queryStore = new QueryStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
+            this.textTypesStore,
             {
                 currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
                 corpora: [this.layoutModel.getConf<string>('corpname')].concat(

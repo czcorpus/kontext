@@ -119,12 +119,17 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
 
     private onRemoveParallelCorpAction:Immutable.List<(corpname:string)=>void>;
 
+    // ----- other stores
+
+    private textTypesStore:TextTypesStore;
+
     // ----------------------
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:QueryFormProperties) {
+    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore, props:QueryFormProperties) {
         super(dispatcher);
         const self = this;
         this.pageModel = pageModel;
+        this.textTypesStore = textTypesStore;
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<{n:string; label:string}>(props.availableAlignedCorpora);
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes).map((v, k) => v ? v : 'iquery').toMap();
@@ -289,6 +294,12 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
             args.add(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
         });
 
+        const ttData = this.textTypesStore.exportSelections(false);
+        for (let k in ttData) {
+            if (ttData.hasOwnProperty(k)) {
+                args.replace('sca_' + k, ttData[k]);
+            }
+        }
         return args;
     }
 
