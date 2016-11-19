@@ -1914,7 +1914,7 @@ msgid "Negative filter (excluding KWIC)"
 msgstr "Negativní filtr (bez KWIC)"
 
 msgid "Positive filter (excluding KWIC)"
-msgstr "Pozitivní filter (bez KWIC)"
+msgstr "Pozitivní filtr (bez KWIC)"
 
 msgid "Switch KWIC"
 msgstr "Přepnout KWIC"

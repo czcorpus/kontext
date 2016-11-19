@@ -27,12 +27,13 @@ import {init as ttViewsInit} from '../textTypes';
 
 
 export function init(
-    dispatcher, mixins, layoutViews, queryStore, textTypesStore, queryHintStore, withinBuilderStore, virtualKeyboardStore) {
+        dispatcher, mixins, layoutViews, queryStore, textTypesStore, queryHintStore,
+        withinBuilderStore, virtualKeyboardStore, queryContextStore) {
 
     const inputViews = inputInit(
         dispatcher, mixins, layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
     const alignedViews = alignedInit(dispatcher, mixins, layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
-    const contextViews = contextInit(dispatcher, mixins);
+    const contextViews = contextInit(dispatcher, mixins, queryContextStore);
     const ttViews = ttViewsInit(dispatcher, mixins, textTypesStore);
 
     // ------------------- <TRCorpusField /> -----------------------------

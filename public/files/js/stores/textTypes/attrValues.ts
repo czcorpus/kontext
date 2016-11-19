@@ -131,8 +131,8 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                 ).toList());
         this.pluginApi = pluginApi;
         this.rangeSelector = new rangeSelector.RangeSelector(pluginApi, this);
-        this.metaInfo = Immutable.Map({});
-        this.extendedInfoCallbacks = Immutable.Map({});
+        this.metaInfo = Immutable.Map<string, TextTypes.AttrSummary>();
+        this.extendedInfoCallbacks = Immutable.Map<string, (idx:number)=>RSVP.Promise<any>>();
         this.textInputPlaceholder = null;
         const self = this;
 

@@ -26,7 +26,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins) {
+export function init(dispatcher, mixins, queryContextStore) {
 
     // ------------------------------- <AllAnyNoneSelector /> ---------------------
 
@@ -34,9 +34,20 @@ export function init(dispatcher, mixins) {
 
         mixins : mixins,
 
+        _changeHandler : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                props: {
+                    name: this.props.inputName,
+                    value: evt.target.value
+                }
+            });
+        },
+
         render : function () {
             return (
-                <select name={this.props.inputName}>
+                <select name={this.props.inputName} value={this.props.value}
+                        onChange={this._changeHandler}>
                     <option value="all">{this.translate('query__aan_selector_all')}</option>
                     <option value="any">{this.translate('query__aan_selector_any')}</option>
                     <option value="none">{this.translate('query__aan_selector_none')}</option>
@@ -51,18 +62,32 @@ export function init(dispatcher, mixins) {
 
         mixins : mixins,
 
+        _changeHandler : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                props : {
+                    name: evt.target.name,
+                    value: evt.target.value
+                }
+            });
+        },
+
         render : function () {
             return (
                 <tr>
                     <th>{this.translate('query__window')}:</th>
                     <td>
-                        <select name={`${this.props.namePrefix}_window_type`}>
+                        <select name={`${this.props.namePrefix}_window_type`}
+                                value={this.props.windowTypeSelector}
+                                onChange={this._changeHandler}>
                             <option value="left">{this.translate('query__left')}</option>
                             <option value="right">{this.translate('query__right')}</option>
                             <option value="both">{this.translate('query__both')}</option>
                         </select>
                         {'\u00A0'}
-                        <select name={`${this.props.namePrefix}_wsize`} default={this.props.defaultOption}>
+                        <select name={`${this.props.namePrefix}_wsize`}
+                                value={this.props.windowSizeSelector}
+                                onChange={this._changeHandler}>
                             {this.props.options.map((item) => {
                                 return <option key={item}>{item}</option>
                             })}
@@ -79,7 +104,11 @@ export function init(dispatcher, mixins) {
 
     const TRLemmaWindowSelector = React.createClass({
         render : function () {
-            return <TRWindowSelector {...this.props} namePrefix="fc_lemword" />;
+            return <TRWindowSelector
+                        options={this.props.options}
+                        namePrefix="fc_lemword"
+                        windowTypeSelector={this.props.fc_lemword_window_type}
+                        windowSizeSelector={this.props.fc_lemword_wsize} />;
         }
     });
 
@@ -87,7 +116,11 @@ export function init(dispatcher, mixins) {
 
     const TRPosWindowSelector = React.createClass({
         render : function () {
-            return <TRWindowSelector {...this.props} namePrefix="fc_pos" />;
+            return <TRWindowSelector
+                        options={this.props.options}
+                        namePrefix="fc_pos"
+                        windowTypeSelector={this.props.fc_pos_window_type}
+                        windowSizeSelector={this.props.fc_pos_wsize} />;
         }
     });
 
@@ -97,11 +130,23 @@ export function init(dispatcher, mixins) {
 
         mixins : mixins,
 
+        _handleInputChange : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                props: {
+                    name: evt.target.name,
+                    value: evt.target.value
+                }
+            });
+        },
+
         render : function () {
             return (
                 <table className="form">
                     <tbody>
-                        <TRLemmaWindowSelector options={this.props.lemmaWindowSizes} />
+                        <TRLemmaWindowSelector options={this.props.lemmaWindowSizes}
+                            fc_lemword_window_type={this.props.fc_lemword_window_type}
+                            fc_lemword_wsize={this.props.fc_lemword_wsize} />
                         <tr>
                             <th>
                             {this.props.hasLemmaAttr
@@ -110,9 +155,10 @@ export function init(dispatcher, mixins) {
                             }
                             </th>
                             <td>
-                                <input type="text" className="fc_lemword" name="fc_lemword" />
+                                <input type="text" className="fc_lemword" name="fc_lemword" value={this.props.fc_lemword}
+                                        onChange={this._handleInputChange} />
                                 {'\u00A0'}
-                                <AllAnyNoneSelector inputName="fc_lemword_type" />
+                                <AllAnyNoneSelector inputName="fc_lemword_type" value={this.props.fc_lemword_type} />
                                 {'\u00A0'}
                                 {this.translate('query__of_these_items')}.
                             </td>
@@ -128,27 +174,56 @@ export function init(dispatcher, mixins) {
     const PoSFilter = React.createClass({
         mixins : mixins,
 
+        _handleInputChange : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                props: {
+                    name: evt.target.name,
+                    value: evt.target.value
+                }
+            });
+        },
+
+        _handleMultiSelectChange : function (evt) {
+            const values = Array.prototype
+                .filter.call(evt.target.options, item => item.selected)
+                .map(item => item.value);
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM',
+                props: {
+                    name: evt.target.name,
+                    value: values
+                }
+            });
+        },
+
         render : function () {
             return (
                 <div>
                     <h3>{this.translate('query__pos_filter')}</h3>
                     <table className="form">
                         <tbody>
-                            <TRPosWindowSelector options={this.props.posWindowSizes} />
+                            <TRPosWindowSelector options={this.props.posWindowSizes}
+                                fc_pos_window_type={this.props.fc_pos_window_type}
+                                fc_pos_wsize={this.props.fc_pos_wsize} />
                             <tr>
                                 <th>
                                     {this.translate('query__pos_filter')}:<br />
                                     <span className="note">({this.translate('query__use_ctrl_click_for')})</span>
                                 </th>
                                 <td>
-                                    <select title={this.translate('query__select_one_or_more_pos_tags')} multiple="multiple" size="4" name="fc_pos">
+                                    <select title={this.translate('query__select_one_or_more_pos_tags')}
+                                            multiple="multiple"
+                                            size="4"
+                                            name="fc_pos" value={this.props.fc_pos}
+                                            onChange={this._handleMultiSelectChange}>
                                         {this.props.wPoSList.map((item, i) => {
                                             return <option key={i} value={item.n}>{item.n}</option>;
                                         })}
                                     </select>
                                 </td>
                                 <td>
-                                    <AllAnyNoneSelector inputName="fc_pos_type" />
+                                    <AllAnyNoneSelector inputName="fc_pos_type" value={this.props.fc_pos_type} />
                                     {'\u00A0'}
                                     {this.translate('query__of_these_items')}.
                                 </td>
@@ -166,6 +241,24 @@ export function init(dispatcher, mixins) {
 
         mixins : mixins,
 
+        getInitialState : function () {
+            return {
+                data: queryContextStore.getData()
+            }
+        },
+
+        _handleStoreChange : function () {
+            this.setState({data: queryContextStore.getData()});
+        },
+
+        componentDidMount : function () {
+            queryContextStore.addChangeListener(this._handleStoreChange);
+        },
+
+        componentWillUnmount : function () {
+            queryContextStore.removeChangeListener(this._handleStoreChange);
+        },
+
         render : function () {
             return (
                 <div>
@@ -173,10 +266,24 @@ export function init(dispatcher, mixins) {
                         ? this.translate('query__lemma_filter')
                         : this.translate('query__word_form_filter')}
                     </h3>
-                    <LemmaFilter hasLemmaAttr={this.props.hasLemmaAttr}
-                        lemmaWindowSizes={this.props.lemmaWindowSizes} />
+                    <LemmaFilter
+                        hasLemmaAttr={this.props.hasLemmaAttr}
+                        lemmaWindowSizes={this.props.lemmaWindowSizes}
+                        fc_lemword_window_type={this.state.data.fc_lemword_window_type}
+                        fc_lemword_window_type={this.state.data.fc_lemword_window_type}
+                        fc_lemword_wsize={this.state.data.fc_lemword_wsize}
+                        fc_lemword={this.state.data.fc_lemword}
+                        fc_lemword_type={this.state.data.fc_lemword_type}
+                         />
                     {this.props.wPoSList && this.props.wPoSList.size > 0
-                        ? <PoSFilter posWindowSizes={this.props.posWindowSizes} wPoSList={this.props.wPoSList}/>
+                        ? <PoSFilter
+                                posWindowSizes={this.props.posWindowSizes}
+                                wPoSList={this.props.wPoSList}
+                                fc_pos_window_type={this.state.data.fc_pos_window_type}
+                                fc_pos_wsize={this.state.data.fc_pos_wsize}
+                                fc_pos={this.state.data.fc_pos}
+                                fc_pos_type={this.state.data.fc_pos_type}
+                                />
                         : null}
                 </div>
             );

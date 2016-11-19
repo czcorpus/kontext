@@ -18,18 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../types/ajaxResponses.d.ts" />
-/// <reference path="../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../ts/declarations/cqlParser.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/ajaxResponses.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../../ts/declarations/cqlParser.d.ts" />
 
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore} from '../util';
-import {PageModel} from '../tpl/document';
-import {MultiDict} from '../util';
+import {SimplePageStore} from '../../util';
+import {PageModel} from '../../tpl/document';
+import {MultiDict} from '../../util';
 import {parse as parseQuery} from 'cqlParser/parser';
-import {TextTypesStore} from './textTypes/attrValues';
+import {TextTypesStore} from '../textTypes/attrValues';
+import {QueryContextStore} from './context';
 
 
 export interface QueryFormProperties {
@@ -119,12 +120,21 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
 
     private onRemoveParallelCorpAction:Immutable.List<(corpname:string)=>void>;
 
+    // ----- other stores
+
+    private textTypesStore:TextTypesStore;
+
+    private queryContextStore:QueryContextStore;
+
     // ----------------------
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:QueryFormProperties) {
+    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
+            queryContextStore:QueryContextStore, props:QueryFormProperties) {
         super(dispatcher);
         const self = this;
         this.pageModel = pageModel;
+        this.textTypesStore = textTypesStore;
+        this.queryContextStore = queryContextStore;
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<{n:string; label:string}>(props.availableAlignedCorpora);
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes).map((v, k) => v ? v : 'iquery').toMap();
@@ -289,6 +299,24 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
             args.add(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
         });
 
+        // query context
+        const contextArgs = this.queryContextStore.exportForm();
+        for (let k in contextArgs) {
+            if (Object.prototype.toString.call(contextArgs[k]) === '[object Array]') {
+                args.replace(k, contextArgs[k]);
+
+            } else {
+                args.replace(k, [contextArgs[k]]);
+            }
+        }
+
+        // text types
+        const ttData = this.textTypesStore.exportSelections(false);
+        for (let k in ttData) {
+            if (ttData.hasOwnProperty(k)) {
+                args.replace('sca_' + k, ttData[k]);
+            }
+        }
         return args;
     }
 
@@ -497,189 +525,5 @@ export class QueryHintStore extends SimplePageStore {
 
     getHint():string {
         return this.hints[this.currentHint];
-    }
-}
-
-
-/**
- *
- */
-export class WithinBuilderStore extends SimplePageStore {
-
-    private pageModel:PageModel;
-
-    private data:Immutable.List<[string, string]>;
-
-    private query:string;
-
-    private currAttrIdx:number;
-
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, pageModel:PageModel) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.data = Immutable.List<[string, string]>();
-        this.query = '';
-        this.currAttrIdx = 0;
-        const self = this;
-
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-            switch (payload.actionType) {
-                case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
-                    self.loadAttrs().then(
-                        () => {
-                            self.notifyChangeListeners();
-                        },
-                        (err) => {
-                            console.error(err);
-                            self.pageModel.showMessage('error', err);
-                        }
-                    );
-                break;
-                case 'QUERY_INPUT_SET_WITHIN_VALUE':
-                    self.query = payload.props['value'];
-                    self.notifyChangeListeners();
-                break;
-                case 'QUERY_INPUT_SET_WITHIN_ATTR':
-                    self.currAttrIdx = payload.props['idx'];
-                    self.notifyChangeListeners();
-                break;
-            }
-        });
-    }
-
-    private loadAttrs():RSVP.Promise<any> {
-        return this.pageModel.ajax<AjaxResponse.WithinBuilderData>(
-            'GET',
-            this.pageModel.createActionUrl('corpora/ajax_get_structattrs_details'),
-            {
-                corpname: this.pageModel.getConf<string>('corpname')
-            },
-            {contentType : 'application/x-www-form-urlencoded'}
-
-        ).then(
-            (data) => {
-                this.data = this.data.clear();
-                if (data.contains_errors) {
-                    throw new Error(data.messages[0]);
-
-                } else {
-                    for (let attr in data.structattrs) {
-                        if (data.structattrs.hasOwnProperty(attr)) {
-                            data.structattrs[attr].forEach(item => {
-                                this.data = this.data.push([attr, item]);
-                            });
-                        }
-                    }
-                    this.currAttrIdx = 0;
-                }
-            }
-        );
-    }
-
-    getData():Immutable.List<[string, string]> {
-        return this.data;
-    }
-
-    getQuery():string {
-        return this.query;
-    }
-
-    getCurrAttrIdx():number {
-        return this.currAttrIdx;
-    }
-
-    exportQuery():string {
-        return this.data.size > 0 ?
-            `within <${this.data.get(this.currAttrIdx).join(' ')}="${this.query}" />`
-            : '';
-    }
-}
-
-
-export type VirtualKeys = Array<Array<[string, string]>>;
-
-export interface VirtualKeyboardLayout {
-    codes:Array<string>;
-    label:string;
-    name:string;
-    keys:VirtualKeys;
-}
-
-export type VirtualKeyboardLayouts = Array<VirtualKeyboardLayout>;
-
-
-export class VirtualKeyboardStore extends SimplePageStore {
-
-    private pageModel:PageModel;
-
-    private layouts:VirtualKeyboardLayouts;
-
-    private currLayout:number;
-
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, pageModel:PageModel) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.currLayout = 0;
-        const self = this;
-
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-
-            switch (payload.actionType) {
-                case 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT':
-                    self.currLayout = payload.props['idx'];
-                    self.notifyChangeListeners();
-                break;
-                case 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS':
-                    self.pageModel.ajax<VirtualKeyboardLayouts>(
-                        'GET',
-                        self.pageModel.createStaticUrl('misc/kb-layouts.json'),
-                        {}
-                    ).then(
-                        (data) => {
-                            self.layouts = data;
-                            self.currLayout = self.findMatchingKeyboard(payload.props['inputLanguage']);
-                            self.notifyChangeListeners();
-                        },
-                        (err) => {
-                            self.pageModel.showMessage('error', err);
-                        }
-                    );
-                break;
-            }
-        });
-    }
-
-    private findMatchingKeyboard(lang:string):number {
-        const ans = [];
-        const walkThru = (fn:(item:string)=>boolean) => {
-            for (let i = 0; i < this.layouts.length; i += 1) {
-                for (let code of this.layouts[i].codes || ['en_US']) {
-                    if (fn((code || '').replace('-', '_').toLowerCase())) {
-                        ans.push(i);
-                    }
-                }
-            }
-        };
-        const normLang = lang.toLowerCase();
-        walkThru(item => item === normLang);
-        walkThru(item => item.substr(0, 2) === normLang.substr(0, 2));
-        if (ans.length > 0) {
-            return ans[0];
-
-        } else {
-            throw new Error('Unable to find matching keyboard layout');
-        }
-    }
-
-    getLayoutNames():Array<[string, string]> {
-        return this.layouts.map<[string, string]>(item => [item.name, item.label]);
-    }
-
-    getCurrentLayout():VirtualKeyboardLayout {
-        return this.layouts[this.currLayout];
-    }
-
-    getCurrentLayoutIdx():number {
-        return this.currLayout;
     }
 }
