@@ -33,7 +33,8 @@ import * as subcMixer from 'plugins/subcmixer/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'vendor/immutable';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
-import {QueryFormProperties, QueryStore, QueryHintStore, WithinBuilderStore, VirtualKeyboardStore} from '../stores/query';
+import {QueryFormProperties, QueryStore, QueryHintStore, WithinBuilderStore, VirtualKeyboardStore} from '../stores/query/main';
+import {QueryContextStore} from '../stores/query/context';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as RSVP from 'vendor/rsvp';
@@ -57,6 +58,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     private withinBuilderStore:WithinBuilderStore;
 
     private virtualKeyboardStore:VirtualKeyboardStore;
+
+    private queryContextStore:QueryContextStore;
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
         this.layoutModel = layoutModel;
@@ -189,6 +192,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.textTypesStore,
+            this.queryContextStore,
             {
                 currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
                 corpora: [this.layoutModel.getConf<string>('corpname')].concat(
@@ -223,7 +227,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             this.textTypesStore,
             this.queryHintStore,
             this.withinBuilderStore,
-            this.virtualKeyboardStore
+            this.virtualKeyboardStore,
+            this.queryContextStore
         );
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
@@ -241,6 +246,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                     this.layoutModel.dispatcher, this.layoutModel);
                 this.virtualKeyboardStore = new VirtualKeyboardStore(
                     this.layoutModel.dispatcher, this.layoutModel);
+                this.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
             }
         ).then(
             () => {

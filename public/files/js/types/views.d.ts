@@ -145,7 +145,8 @@ declare module "views/query/main" {
             textTypesStore:any,
             queryHintStore:any,
             withinBuilderStore:any,
-            virtualKeyboardStore:any):QueryFormViews;
+            virtualKeyboardStore:any,
+            queryContextStore:any):QueryFormViews;
 }
 
 

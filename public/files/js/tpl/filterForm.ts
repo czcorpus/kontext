@@ -26,7 +26,8 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as liveAttributes from 'plugins/liveAttributes/init';
 import * as subcMixer from 'plugins/subcmixer/init';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
-import {QueryFormProperties, QueryStore, QueryHintStore, WithinBuilderStore, VirtualKeyboardStore} from '../stores/query';
+import {QueryFormProperties, QueryStore, QueryHintStore, WithinBuilderStore, VirtualKeyboardStore} from '../stores/query/main';
+import {QueryContextStore} from '../stores/query/context';
 import * as RSVP from 'vendor/rsvp';
 import {init as ttViewsInit} from 'views/textTypes';
 import {init as contextViewsInit} from 'views/query/context';
@@ -64,6 +65,8 @@ export class FilterFormpage {
     private withinBuilderStore:WithinBuilderStore;
 
     private virtualKeyboardStore:VirtualKeyboardStore;
+
+    private queryContextStore:QueryContextStore;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -130,6 +133,7 @@ export class FilterFormpage {
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.textTypesStore,
+            this.queryContextStore,
             {
                 currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
                 corpora: [this.layoutModel.getConf<string>('corpname')].concat(
@@ -164,7 +168,8 @@ export class FilterFormpage {
             this.textTypesStore,
             this.queryHintStore,
             this.withinBuilderStore,
-            this.virtualKeyboardStore
+            this.virtualKeyboardStore,
+            this.queryContextStore
         );
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
@@ -182,6 +187,7 @@ export class FilterFormpage {
                     this.layoutModel.dispatcher, this.layoutModel);
                 this.virtualKeyboardStore = new VirtualKeyboardStore(
                     this.layoutModel.dispatcher, this.layoutModel);
+                this.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
             }
         ).then(
             () => {

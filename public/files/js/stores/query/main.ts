@@ -18,18 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../types/ajaxResponses.d.ts" />
-/// <reference path="../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../ts/declarations/cqlParser.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/ajaxResponses.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../../ts/declarations/cqlParser.d.ts" />
 
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore} from '../util';
-import {PageModel} from '../tpl/document';
-import {MultiDict} from '../util';
+import {SimplePageStore} from '../../util';
+import {PageModel} from '../../tpl/document';
+import {MultiDict} from '../../util';
 import {parse as parseQuery} from 'cqlParser/parser';
-import {TextTypesStore} from './textTypes/attrValues';
+import {TextTypesStore} from '../textTypes/attrValues';
+import {QueryContextStore} from './context';
 
 
 export interface QueryFormProperties {
@@ -123,13 +124,17 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
 
     private textTypesStore:TextTypesStore;
 
+    private queryContextStore:QueryContextStore;
+
     // ----------------------
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore, props:QueryFormProperties) {
+    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
+            queryContextStore:QueryContextStore, props:QueryFormProperties) {
         super(dispatcher);
         const self = this;
         this.pageModel = pageModel;
         this.textTypesStore = textTypesStore;
+        this.queryContextStore = queryContextStore;
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<{n:string; label:string}>(props.availableAlignedCorpora);
         this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes).map((v, k) => v ? v : 'iquery').toMap();
@@ -294,6 +299,18 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
             args.add(createArgname('default_attr', corpname), this.defaultAttrValues.get(corpname));
         });
 
+        // query context
+        const contextArgs = this.queryContextStore.exportForm();
+        for (let k in contextArgs) {
+            if (Object.prototype.toString.call(contextArgs[k]) === '[object Array]') {
+                args.replace(k, contextArgs[k]);
+
+            } else {
+                args.replace(k, [contextArgs[k]]);
+            }
+        }
+
+        // text types
         const ttData = this.textTypesStore.exportSelections(false);
         for (let k in ttData) {
             if (ttData.hasOwnProperty(k)) {
