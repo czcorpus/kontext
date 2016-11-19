@@ -58,7 +58,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                         <a className="make-primary" title={this.translate('query__make_corpus_primary')}
                                 onClick={this._handleMakeMainClick}>
                             <img src={this.createStaticUrl('img/make-main.svg')}
-                                alt={this.translate('make corpus primary')} />
+                                alt={this.translate('query__make_corpus_primary')} />
                         </a>
                         <h3>{this.props.label}</h3>
                         <a className="close-button" title={this.translate('query__remove_corpus')}
