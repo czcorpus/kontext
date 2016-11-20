@@ -829,6 +829,22 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.conf['rootPath'] + path + (urlArgs ? '?' + urlArgs : '');
     }
 
+    changeLocationViaPost(path:string, args?:Array<[string,string]>):void {
+        const body = window.document.getElementsByTagName('body')[0];
+        const form = window.document.createElement('form');
+        form.setAttribute('method', 'post');
+        form.setAttribute('action', path);
+        body.appendChild(form);
+        (args || []).forEach(item => {
+            const input = window.document.createElement('input');
+            input.setAttribute('type', 'hidden');
+            input.setAttribute('name', item[0]);
+            input.setAttribute('value', item[1]);
+            form.appendChild(input);
+        });
+        form.submit();
+    }
+
     /**
      *
      * @param params

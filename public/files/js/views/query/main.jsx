@@ -216,18 +216,16 @@ export function init(
 
         componentDidMount : function () {
             queryStore.addChangeListener(this._storeChangeHandler);
-            this.addGlobalKeyEventHandler(this._keyEventHandler);
         },
 
         componentWillUnmount : function () {
             queryStore.removeChangeListener(this._storeChangeHandler);
-            this.removeGlobalKeyEventHandler(this._keyEventHandler);
         },
 
         render : function () {
             const primaryCorpname = this.state.corpora.get(0);
             return (
-                <form id="mainform">
+                <form id="mainform"  onKeyDown={this._keyEventHandler}>
                     {this.state.shuffleConcByDefault ? <input type="hidden" name="shuffle" value="1" /> : null}
                     <table className="form primary-language">
                         <tbody>
