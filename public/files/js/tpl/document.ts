@@ -808,25 +808,25 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * subcorpus/list will produce http://installed.domain/subcorpus/list.
      *
      * @path path suffix
-     * @args arguments to be appended to the URL as parameters
+     * @args arguments to be appended to the URL as parameters.
+     * Undefined/null/empty string values and their respective names
+     * are left out.
      */
     createActionUrl(path:string, args?:Array<[string,string]>):string {
-        const staticPath = this.conf['rootPath'];
-        let urlArgs = '';
-
         if (typeof path !== 'string') {
             throw new Error(`Cannot create action url. Invalid path: ${path}`);
         }
-
+        let urlArgs = '';
         if (args !== undefined) {
-            urlArgs = args.map(item => {
-                return encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]);
-            }).join('&');
+            urlArgs = args
+                .filter(item => item[1] !== null && item[1] !== undefined && item[1] !== '')
+                .map(item => encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]))
+                .join('&');
         }
         if (path.indexOf('/') === 0) {
             path = path.substr(1);
         }
-        return staticPath + path + (urlArgs ? '?' + urlArgs : '');
+        return this.conf['rootPath'] + path + (urlArgs ? '?' + urlArgs : '');
     }
 
     /**
