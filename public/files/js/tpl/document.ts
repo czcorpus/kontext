@@ -829,7 +829,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.conf['rootPath'] + path + (urlArgs ? '?' + urlArgs : '');
     }
 
-    changeLocationViaPost(path:string, args?:Array<[string,string]>):void {
+    setLocationPost(path:string, args?:Array<[string,string]>):void {
         const body = window.document.getElementsByTagName('body')[0];
         const form = window.document.createElement('form');
         form.setAttribute('method', 'post');
@@ -843,6 +843,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             form.appendChild(input);
         });
         form.submit();
+        window.onbeforeunload = () => {
+            body.removeChild(form);
+        };
     }
 
     /**
