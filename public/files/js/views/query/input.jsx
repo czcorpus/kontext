@@ -510,10 +510,12 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 case 'word':
                 case 'char':
                     return <input className="simple-input" type="text"
+                                ref={item => item && !this.state.historyVisible ? item.focus() : null}
                                 onChange={this._handleInputChange} value={this.state.query}
                                 onKeyDown={this._inputArrowKeyHandler} />;
                 case 'cql':
                     return <textarea className="cql-input" rows="2" cols="60" name="cql"
+                                ref={item => item && !this.state.historyVisible ? item.focus() : null}
                                 onChange={this._handleInputChange} value={this.state.query}
                                 onKeyDown={this._inputArrowKeyHandler} />;
             }

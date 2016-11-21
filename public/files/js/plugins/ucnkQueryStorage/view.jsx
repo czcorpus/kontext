@@ -52,6 +52,8 @@ export function init(dispatcher, mixins, queryStorageStore) {
                         query: historyItem.query
                     }
                 });
+                evt.preventDefault();
+                evt.stopPropagation();
 
             } else if (evt.keyCode === 27) { // ESC key
                 this.props.onCloseTrigger();
@@ -77,7 +79,6 @@ export function init(dispatcher, mixins, queryStorageStore) {
         },
 
         componentDidMount : function () {
-            this.addGlobalKeyEventHandler(this._keyPressHandler);
             queryStorageStore.addChangeListener(this._handleStoreChange);
             dispatcher.dispatch({
                 actionType: 'QUERY_STORAGE_LOAD_HISTORY',
@@ -86,7 +87,6 @@ export function init(dispatcher, mixins, queryStorageStore) {
         },
 
         componentWillUnmount : function () {
-            this.removeGlobalKeyEventHandler(this._keyPressHandler);
             queryStorageStore.removeChangeListener(this._handleStoreChange);
         },
 
@@ -116,7 +116,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
 
         render : function () {
             return (
-                <ol className="rows">
+                <ol className="rows" onKeyDown={this._keyPressHandler} tabIndex={0} ref={item => item ? item.focus() : null}>
                     {this.state.data.map((item, i) => {
                         return (
                             <li key={i} title={item.created} className={i === this.state.currentItem ? 'selected' : null}

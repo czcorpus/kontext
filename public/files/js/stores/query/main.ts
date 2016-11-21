@@ -321,8 +321,14 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
     }
 
     private submitQuery():void {
-        // TODO - allow POST in case of a large query
-        window.location.href = this.pageModel.createActionUrl('first', this.createSubmitArgs().items());
+        const args = this.createSubmitArgs().items();
+        const url = this.pageModel.createActionUrl('first', args);
+        if (url.length < 2048) {
+            window.location.href = url;
+
+        } else {
+            this.pageModel.setLocationPost('first', args);
+        }
     }
 
     registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {
