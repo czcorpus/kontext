@@ -120,6 +120,8 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
 
     private bibliographyIds:Immutable.List<string>;
 
+    private updateListeners:Immutable.List<()=>void>;
+
     constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<any>,
             textTypesStore:TextTypes.ITextTypesStore, bibAttr:string) {
         super(dispatcher);
@@ -138,14 +140,16 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                                 locked: false
                             };
                         }));
-        this.bibliographyIds = Immutable.List([]);
+        this.bibliographyIds = Immutable.List<string>();
         this.initialAlignedCorpora = this.alignedCorpora;
+        this.updateListeners = Immutable.List<()=>void>();
         textTypesStore.setTextInputPlaceholder(this.getTextInputPlaceholder());
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
                     self.processRefine().then(
                         (v) => {
+                            self.updateListeners.forEach(item => item());
                             self.textTypesStore.notifyChangeListeners('$TT_VALUES_FILTERED');
                             self.notifyChangeListeners('$LIVE_ATTRIBUTES_REFINE_DONE');
                         },
@@ -167,11 +171,13 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                         };
                         self.alignedCorpora = self.alignedCorpora.set(idx, newItem);
                     }
+                    self.updateListeners.forEach(item => item());
                     self.notifyChangeListeners('$LIVE_ATTRIBUTES_VALUE_CHECKBOX_CLICKED');
                 break;
                 case 'LIVE_ATTRIBUTES_RESET_CLICKED':
                     self.textTypesStore.reset();
                     self.reset();
+                    self.updateListeners.forEach(item => item());
                     self.textTypesStore.notifyChangeListeners('VALUES_RESET');
                     self.notifyChangeListeners('$LIVE_ATTRIBUTES_VALUES_RESET');
                 break;
@@ -309,6 +315,18 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
                 }))
             };
             this.selectionSteps = this.selectionSteps.push(newStep);
+        }
+    }
+
+    addUpdateListener(fn:()=>void):void {
+        this.updateListeners = this.updateListeners.push(fn);
+    }
+
+
+    removeUpdateListener(fn:()=>void):void {
+        const idx = this.updateListeners.indexOf(fn);
+        if (idx > -1) {
+            this.updateListeners = this.updateListeners.remove(idx);
         }
     }
 

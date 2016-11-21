@@ -110,7 +110,7 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                         </div>
                     );
                 })}
-                {this.props.items.length > 0 && subcMixerViews.TriggerBtn ? <subcMixerViews.TriggerBtn /> : null}
+                {this.props.items.length > 0 && subcMixerViews.Widget ? <subcMixerViews.Widget /> : null}
                 {this.props.isLoading ? this._renderLoading(this.props.items.length + 1) : null}
                 </div>
             );

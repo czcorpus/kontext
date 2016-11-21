@@ -1,4 +1,7 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Martin Stepan <martin.stepan@ff.cuni.cz>,
+#                    Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,8 +20,6 @@
 import numpy as np
 import copy
 
-__author__ = 'Martin Stepan <martin.stepan@ff.cuni.cz>, Tomas Machalek <tomas.machalek@gmail.com>'
-
 
 class CategoryTreeNode(object):
     def __init__(self, node_id, parent_id, requested_ratio, metadata_condition):
@@ -31,8 +32,33 @@ class CategoryTreeNode(object):
         self.children = []
 
 
+class ExpressionJoin(object):
+
+    def __init__(self, operator):
+        self.items = []
+        self.operator = operator
+
+    def add(self, item):
+        self.items.append(item)
+
+    def negate(self):
+        expr = ExpressionJoin('AND' if self.operator == 'OR' else 'OR')
+        for item in self.items:
+            expr.add(item.negate())
+        return expr
+
+    def __iter__(self):
+        return self.items.__iter__()
+
+    def __unicode__(self):
+        return (u' %s ' % self.operator).join(u'%s' % item for item in self.items)
+
+    def __repr__(self):
+        return self.__unicode__().encode('utf-8')
+
+
 class CategoryExpression(object):
-    OPERATORS = {'==': '<>', '<>': '==', '<=': '>=', '>=': '<='}
+    OPERATORS = {u'==': u'<>', u'<>': u'==', u'<=': u'>=', u'>=': u'<='}
 
     @staticmethod
     def create(args):
@@ -41,17 +67,22 @@ class CategoryExpression(object):
         return None
 
     def negate(self):
-        self.op = CategoryExpression.OPERATORS[self.op]
-        return self
+        return CategoryExpression(self.attr, CategoryExpression.OPERATORS[self.op], self.value)
 
     def __init__(self, attr, op, value):
-        self.attr = attr
+        self.attr = attr.replace('.', '_')
         if op not in CategoryExpression.OPERATORS:
             raise Exception('Invalid operator: %s' % op)
         self.op = op
         self.value = value
 
     def __repr__(self):
+        return self.__unicode__().encode('utf-8')
+
+    def __iter__(self):
+        return [self].__iter__()
+
+    def __unicode__(self):
         return u"%s %s '%s'" % (self.attr, self.op, self.value)
 
 
@@ -86,23 +117,20 @@ class CategoryTree(object):
 
     def _add_virtual_cats(self):
         updated_list = copy.deepcopy(self.category_list)
-        cats_updated = [0] * self.num_categories
+        cats_updated = [False] * self.num_categories
         for cat in self.category_list:
             par_id = cat[1]
             if par_id > 0:
                 i = 0
-                mdcstr = ''
+                mdc = ExpressionJoin('AND')
                 for other_cat in self.category_list:
                     if other_cat[1] == par_id and par_id > 0:
                         cond = other_cat[3].negate()
-                        if i > 0:
-                            mdcstr += ' AND '
-
-                        mdcstr += str(cond)
+                        mdc.add(cond)
                         i += 1
-                if cats_updated[par_id] != 1:
-                    updated_list.append([self.num_categories, par_id, 0, mdcstr])
-                    cats_updated[par_id] = 1
+                if not cats_updated[par_id]:
+                    updated_list.append([self.num_categories, par_id, 0, mdc])
+                    cats_updated[par_id] = True
                     self.num_categories += 1
                     self.category_list = updated_list
 
@@ -134,6 +162,7 @@ class CategoryTree(object):
         children_size = sum(sizes)
         data_size = min(children_size, parent_size)
         required_sizes = [0] * num_g
+        max_sizes = None
         while True:
             for i in range(0, num_g):
                 required_sizes[i] = data_size * ratios[i]
@@ -154,10 +183,8 @@ class CategoryTree(object):
             matrix_m[num_g, ilr] = 1
             b = np.zeros((num_g + 1))
             b[num_g] = sizes[ilr]
-
             max_sizes = np.linalg.lstsq(matrix_m, b)[0]
             data_size = sum(max_sizes)
-
         return max_sizes
 
     def compute_sizes(self, node):
@@ -203,8 +230,8 @@ class CategoryTree(object):
         arguments:
         mc -- A list of metadata sql conditions that determines if texts belongs to this category
         """
-        args = [expr.value for expr in mc] + [self._db.corpus_id]
-        sql_items = [u'%s %s ?' % (expr.attr, expr.op) for expr in mc]
+        args = [expr.value for subl in mc for expr in subl] + [self._db.corpus_id]
+        sql_items = [u'%s %s ?' % (expr.attr, expr.op) for subl in mc for expr in subl]
         self._db.execute(u'SELECT SUM(%s) FROM item WHERE %s AND corpus_id = ?' % (
             self._db.count_col, ' AND '.join(sql_items),), args)
         size = self._db.fetchone()[0]

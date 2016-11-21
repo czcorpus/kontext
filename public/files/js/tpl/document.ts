@@ -509,6 +509,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     }
                 }
 
+            } else if (message instanceof Error) {
+                outMsg = message.message;
+
             } else if (typeof message === 'object') {
                 outMsg = (message['messages'] || ['Unknown error'])[0];
 

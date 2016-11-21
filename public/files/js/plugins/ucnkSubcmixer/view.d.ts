@@ -21,8 +21,7 @@
 /// <reference path="../../../ts/declarations/react.d.ts" />
 
 export interface ISubcMixerViews {
-    SubcMixer: React.ReactClass;
-    TriggerBtn: React.ReactClass;
+    Widget: React.ReactClass;
 }
 
 export function init(dispatcher:any, mixins:any, subcmixerStore:any, PopupBox:React.ReactClass):ISubcMixerViews;

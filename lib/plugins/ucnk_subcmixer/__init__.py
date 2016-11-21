@@ -1,4 +1,5 @@
 # Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,6 +17,7 @@
 
 import json
 import sqlite3
+from collections import defaultdict
 
 from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
@@ -27,19 +29,25 @@ from controller import exposed
 import actions.subcorpus
 import corplib
 
-__author__ = 'Tomas Machalek <tomas.machalek@gmail.com>'
-
 
 @exposed(return_type='json', acess_level=1)
 def subcmixer_run_calc(ctrl, request):
     try:
-        subc_path = ctrl.prepare_subc_path(request.args['corpname'], request.form['subcname'])
-        stats = plugins.get('subcmixer').process(subc_path, ctrl.corp, request.args['corpname'],
-                                                 json.loads(request.form['expression']))
-        return {'status': 'OK', 'stats': stats}
+        return plugins.get('subcmixer').process(ctrl.corp, request.form['corpname'],
+                                                json.loads(request.form['expression']))
     except Exception as e:
         ctrl.add_system_message('error', unicode(e))
         return {}
+
+@exposed(return_type='json', access_level=1)
+def subcmixer_create_subcorpus(ctrl, request):
+    subc_path = ctrl.prepare_subc_path(request.form['corpname'], request.form['subcname'])
+    structs = request.form['structs'].split(',')[0]
+    opus_ids = request.form['ids'].split(',')
+    id_attr = request.form['idAttr'].split('.')
+    result = corplib.create_subcorpus(subc_path, ctrl.corp, id_attr[0], '|'.join('%s="%s"' % (id_attr[1], x) for x in opus_ids))
+    return dict(status=result)
+
 
 
 class Database(object):
@@ -110,9 +118,9 @@ class SubcMixer(AbstractSubcMixer):
 
     def _calculate_real_sizes(self, cat_tree, sizes, total_size):
         expressions = [item[3] for item in cat_tree.category_list if item[3]]
-        ans = {}
+        ans = dict(attrs=[], total=total_size)
         for i, expression in enumerate(expressions):
-            ans[unicode(expression)] = float(sizes[i]) / float(total_size)
+            ans['attrs'].append((unicode(expression), float(sizes[i]) / float(total_size),))
         return ans
 
     def _get_opus_ids(self, db, db_ids):
@@ -123,30 +131,68 @@ class SubcMixer(AbstractSubcMixer):
     def _create_subcorpus(self, subc_path, corpus, corpus_info, atom_ids):
         structattr = corpus_info.metadata.id_attr.split('.')
         query = '(%s)' % '|'.join(map(lambda x: '%s="%s"' % (structattr[1], x), atom_ids))
-        corplib.create_subcorpus(subc_path, corpus, structattr[0], query)
+        #corplib.create_subcorpus(subc_path, corpus, structattr[0], query)
 
-    def process(self, subc_path, corpus, corpname, conditions):
+    def _import_task_args(self, args):
+        """
+        generate IDs and parent IDs for
+        passed conditions
+        """
+        ans = []
+        ans.append([[0, None, 1, None]])
+
+        grouped = defaultdict(lambda: [])
+        for item in args:
+            grouped[item['attrName']].append(item)
+
+        counter = 1
+        for expressions in grouped.values():
+            tmp = []
+            for pg in ans[-1]:
+                for item in expressions:
+                    tmp.append([
+                        counter,
+                        pg[0],
+                        float(item['ratio']) / 100.,
+                        CategoryExpression(item['attrName'], '==', item['attrValue'])])
+                    counter += 1
+            ans.append(tmp)
+        ret = []
+        for item in ans:
+            for subitem in item:
+                ret.append(subitem)
+        return ret
+
+    def process(self, corpus, corpname, args):
+        used_structs = set(item['attrName'].split('.')[0] for item in args)
+        if len(used_structs) > 1:
+            raise SubcMixerException('Subcorpora based on more than a single structure are not supported at the moment.')
         corpus_info = self._corparch.get_corpus_info(corpname)
         db = Database(corpus_info.metadata.database, corpus_info.id,
                       corpus_info.metadata.id_attr)
-        conditions = [[c['id'], c['parentId'], c['ratio'], CategoryExpression.create(c['expr'])]
-                      for c in conditions]
+        conditions = self._import_task_args(args)
         cat_tree = CategoryTree(conditions, db, 'item', SubcMixer.CORPUS_MAX_SIZE)
         mm = MetadataModel(db, cat_tree)
         corpus_items = mm.solve()
+        total_size = sum(s for s in corpus_items.category_sizes)
+
         if corpus_items.size_assembled > 0:
             variables = map(lambda item: item[0],
                             filter(lambda item: item[1] > 0,
                                    [x for x in enumerate(corpus_items.variables, 1)]))
-            self._create_subcorpus(subc_path, corpus, corpus_info, self._get_opus_ids(db, variables))
-            return self._calculate_real_sizes(cat_tree, corpus_items.category_sizes, corpus_items.size_assembled)
+            opus_ids = self._get_opus_ids(db, variables)
+            ans = {}
+            ans.update(self._calculate_real_sizes(cat_tree, corpus_items.category_sizes, corpus_items.size_assembled))
+            ans['ids'] = opus_ids,
+            ans['structs'] = list(used_structs)
+            return ans
 
         else:
             raise SubcMixerException('Corpus composition failed. '
                                      'One of the provided conditions generates no data.')
 
     def export_actions(self):
-        return {actions.subcorpus.Subcorpus: [subcmixer_run_calc]}
+        return {actions.subcorpus.Subcorpus: [subcmixer_run_calc, subcmixer_create_subcorpus]}
 
 
 @inject('corparch')

@@ -1,16 +1,20 @@
 {
   "en-US": {
     "ucnk_subcm__widget_header": "Shares of selected text types in the resulting subcorpus",
-    "ucnk_subcm__any_share": "any share",
+    "ucnk_subcm__ratios_cannot_over_100_{struct_name}": "Ratios in {struct_name} cannot exceed 100%",
+    "ucnk_subcm__invalid_value": "Invalid value",
     "ucnk_subcm__set_shares": "Mix documents to match custom text type proportions",
-    "ucnk_subcm__calculate": "Calculate",
-    "ucnk_subcm__calc_warn": "The calculation is going to run in background because of its computational demands. In the meantime you can use KonText without any restrictions. Once the result is available, a message containing a link to this page will appear."
+    "ucnk_subcm__calculate": "Find a matching selection",
+    "ucnk_subcm__create_subc": "Create a subcorpus",
+    "ucnk_subcm__new_subc_name": "New subcorpus name"
   },
   "cs-CZ": {
 	  "ucnk_subcm__widget_header": "Podíly vybraných typů textu na výsledném korpusu",
-    "ucnk_subcm__any_share": "libovolný podíl",
+    "ucnk_subcm__ratios_cannot_over_100_{struct_name}": "Podíly v {struct_name} nemohou překročit 100%",
+    "ucnk_subcm__invalid_value": "Neplatná hodnota",
     "ucnk_subcm__set_shares": "Namíchat dokumenty v určených poměrech typů textu",
-    "ucnk_subcm__calculate": "Vypočítat",
-    "ucnk_subcm__calc_warn": "Výpočet proběhne kvůli vyšší náročnosti na pozadí. Mezitím můžete používat KonText bez omezení a jakmile bude výsledek k dispozici, dostanete zprávu o ukončení výpočtu s odkazem na tuto stránku."
+    "ucnk_subcm__calculate": "Najít odpovídající výběr",
+    "ucnk_subcm__create_subc": "Vytvořit subkorpus",
+    "ucnk_subcm__new_subc_name": "Název nového subkorpusu"
   }
 }

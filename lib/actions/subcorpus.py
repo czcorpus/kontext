@@ -190,6 +190,7 @@ class Subcorpus(Kontext):
         else:
             out['subcmixer_form_data'] = {}
         self._attach_aligned_corpora_info(out)
+        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
         out.update({
             'Normslist': tt_sel['Normslist'],
             'text_types_data': json.dumps(tt_sel),
@@ -197,7 +198,8 @@ class Subcorpus(Kontext):
             'method': method,
             'within_json': within_json,
             'subcname': subcname,
-            'subcnorm': subcnorm
+            'subcnorm': subcnorm,
+            'id_attr': corpus_info.metadata.id_attr
         })
         return out
 

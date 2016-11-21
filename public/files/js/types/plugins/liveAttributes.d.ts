@@ -34,6 +34,8 @@ declare module LiveAttributesInit {
     export interface AttrValueTextInputListener extends Kontext.PageStore {
         getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any>;
         getTextInputPlaceholder():string; // a text displayed in a respective text field
+        addUpdateListener(fn:()=>void):void;
+        removeUpdateListener(fn:()=>void):void;
     }
 
     export function create(pluginApi:Kontext.PluginApi,
