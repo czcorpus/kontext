@@ -74,16 +74,14 @@ export function init(dispatcher, mixins, subcorpFormStore) {
     // ---------------------------------------------------------------------------------------
 
     function createLineChangeHandler(attrName, rowId, transform) {
-        let self = this;
-        return function (evt) {
-            let props = {
+        return (evt) => {
+            const props = {
                 row: rowId,
-                negated: self.props.lineData.negated,
-                structureName: self.props.lineData.structureName,
-                attributeCql: self.props.lineData.attributeCql
+                negated: this.props.lineData.negated,
+                structureName: this.props.lineData.structureName,
+                attributeCql: this.props.lineData.attributeCql
             };
             props[attrName] = typeof transform === 'function' ? transform(evt.target.value) : evt.target.value;
-
             dispatcher.dispatch({
                 actionType: 'LINE_UPDATED',
                 props: props
@@ -134,7 +132,6 @@ export function init(dispatcher, mixins, subcorpFormStore) {
         },
 
         render : function () {
-            let self = this;
             return (
                 <tr>
                     <td>
@@ -142,20 +139,20 @@ export function init(dispatcher, mixins, subcorpFormStore) {
                                             (v)=>({'within': false, '!within': true})[v])}
                                         withinType={this.props.lineData.negated ? '!within' : 'within'} />
                         {'\u00a0'}
-                        <select onChange={createLineChangeHandler.call(self, 'structureName', this.props.rowIdx)}
+                        <select onChange={createLineChangeHandler.call(this, 'structureName', this.props.rowIdx)}
                             defaultValue={this.props.lineData.structureName}>
                         {
                             Object.keys(this.props.structsAndAttrs).map(
                                 (item) => <option key={item}
                                                     value={item}
-                                                    title={self._getStructHint(item)}>{item}</option>
+                                                    title={this._getStructHint(item)}>{item}</option>
                             )
                         }
                         </select>
                     </td>
                     <td>
                         <input type="text" defaultValue={this.props.lineData.attributeCql}
-                                onChange={createLineChangeHandler.call(self, 'attributeCql', this.props.rowIdx)}
+                                onChange={createLineChangeHandler.call(this, 'attributeCql', this.props.rowIdx)}
                                 style={{width: '30em'}} />
                     </td>
                     <td>
