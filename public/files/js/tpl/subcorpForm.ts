@@ -104,10 +104,9 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
     subcCreationVariantSwitch(value:string):void {
         let widgetMap = {
             'raw': '#subc-within-row',
-            'gui': '#subcorp-text-type-selection',
-            'mixer': '#subc-mixer-row'
+            'gui': '#subcorp-text-type-selection'
         };
-        let jqSubmitBtn = $('#subcorp-form').find('input[type=submit]');
+        let jqSubmitBtn = $('#subcorp-form').find('button[type="submit"]');
         for (let p in widgetMap) {
             if (widgetMap.hasOwnProperty(p)) {
                 $(widgetMap[p]).hide();
