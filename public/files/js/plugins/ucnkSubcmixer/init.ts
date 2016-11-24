@@ -171,7 +171,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             if (!sums.hasOwnProperty(item.attrName)) {
                 sums[item.attrName] = 0;
             }
-            sums[item.attrName] += item.ratio;
+            sums[item.attrName] += parseFloat(item.ratio || '0');
         });
         const errors = [];
         for (let k in sums) {
