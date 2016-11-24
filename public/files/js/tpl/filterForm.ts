@@ -24,7 +24,6 @@
 import {PageModel} from './document';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as liveAttributes from 'plugins/liveAttributes/init';
-import * as subcMixer from 'plugins/subcmixer/init';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
@@ -98,22 +97,10 @@ export class FilterFormpage {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
                 }
-                let subcmixerViews;
-                if (this.layoutModel.getConf<boolean>('HasSubcmixer')) {
-                    const subcmixerStore = subcMixer.create(this.layoutModel.pluginApi(), this.textTypesStore);
-                    subcmixerViews = subcMixer.getViews(
-                        this.layoutModel.dispatcher,
-                        this.layoutModel.exportMixins(),
-                        this.layoutModel.layoutViews,
-                        subcmixerStore
-                    );
-
-                } else {
-                    subcmixerViews = {
-                        SubcMixer: null,
-                        TriggerBtn: null
-                    };
-                }
+                const subcmixerViews = {
+                    SubcMixer: null,
+                    Widget: null
+                };
                 let liveAttrsViews = liveAttributes.getViews(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),

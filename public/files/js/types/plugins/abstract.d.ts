@@ -94,5 +94,7 @@ declare module "plugins/subcmixer/init" {
     ):Subcmixer.SubcMixerViews
 
     export function create(pluginApi:Kontext.PluginApi,
-            textTypesStore:TextTypes.ITextTypesStore):Subcmixer.ISubcMixerStore;
+            textTypesStore:TextTypes.ITextTypesStore,
+            getCurrentSubcnameFn:()=>string,
+            corpusIdAttr:string):Subcmixer.ISubcMixerStore;
 }

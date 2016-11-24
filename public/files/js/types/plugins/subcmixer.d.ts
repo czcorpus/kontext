@@ -22,12 +22,11 @@
 declare module Subcmixer {
 
     export interface ISubcMixerStore {
-        // TODO
+        refreshData():void;
     }
 
     export interface SubcMixerViews {
-        SubcMixer:React.ReactClass;
-        TriggerBtn:React.ReactClass;
+        Widget:React.ReactClass;
     }
 
 }

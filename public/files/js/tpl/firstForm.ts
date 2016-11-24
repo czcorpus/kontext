@@ -29,7 +29,6 @@ import $ = require('jquery');
 import * as corplistComponent from 'plugins/corparch/init';
 import {PageModel} from './document';
 import * as liveAttributes from 'plugins/liveAttributes/init';
-import * as subcMixer from 'plugins/subcmixer/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'vendor/immutable';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
@@ -156,22 +155,9 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
                 }
-                let subcmixerViews;
-                if (this.layoutModel.getConf<boolean>('HasSubcmixer')) {
-                    const subcmixerStore = subcMixer.create(this.layoutModel.pluginApi(), this.textTypesStore);
-                    subcmixerViews = subcMixer.getViews(
-                        this.layoutModel.dispatcher,
-                        this.layoutModel.exportMixins(),
-                        this.layoutModel.layoutViews,
-                        subcmixerStore
-                    );
-
-                } else {
-                    subcmixerViews = {
-                        SubcMixer: null,
-                        TriggerBtn: null
-                    };
-                }
+                const subcmixerViews = {
+                    Widget: null
+                };
                 let liveAttrsViews = liveAttributes.getViews(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),

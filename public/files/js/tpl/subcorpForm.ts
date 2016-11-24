@@ -208,8 +208,15 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
                 }
                 let subcmixerViews;
-                if (this.layoutModel.getConf<boolean>('HasSubcmixer')) {
-                    const subcmixerStore = subcMixer.create(this.layoutModel.pluginApi(), this.textTypesStore);
+                if (this.layoutModel.getConf<boolean>('HasSubcmixer')
+                        && this.layoutModel.getConf<string>('CorpusIdAttr')) {
+                    const subcmixerStore = subcMixer.create(
+                        this.layoutModel.pluginApi(),
+                        this.textTypesStore,
+                        () => $('#subcname').val(),
+                        this.layoutModel.getConf<string>('CorpusIdAttr')
+                    );
+                    liveAttrsStore.addUpdateListener(subcmixerStore.refreshData.bind(subcmixerStore));
                     subcmixerViews = subcMixer.getViews(
                         this.layoutModel.dispatcher,
                         this.layoutModel.exportMixins(),
@@ -219,8 +226,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
                 } else {
                     subcmixerViews = {
-                        SubcMixer: null,
-                        TriggerBtn: null
+                        Widget: null
                     };
                 }
                 let liveAttrsViews = liveAttributes.getViews(

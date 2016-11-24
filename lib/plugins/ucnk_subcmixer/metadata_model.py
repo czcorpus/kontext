@@ -1,5 +1,6 @@
 # Copyright (c) 2015 Institute of the Czech National Corpus
-#
+# Copyright (c) 2015 Martin Stepan <martin.stepan@ff.cuni.cz>,
+#                    Tomas Machalek <tomas.machalek@gmail.com>
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; version 2
@@ -16,8 +17,6 @@
 
 import numpy as np
 import pulp
-
-__author__ = 'Martin Stepan <martin.stepan@ff.cuni.cz>'
 
 
 class CorpusComposition(object):
@@ -46,8 +45,10 @@ class MetadataModel:
     """
 
     def __init__(self, meta_db, category_tree):
+        import logging
         self._db = meta_db
         self.c_tree = category_tree
+
         self._db.execute('SELECT COUNT(*) FROM %s WHERE corpus_id = ?' % self.c_tree.table_name,
                          (self._db.corpus_id,))
         self.num_texts = self._db.fetchone()[0]
@@ -66,8 +67,8 @@ class MetadataModel:
         :param node: currently processed node of the categoryTree
         """
         if node.metadata_condition is not None:
-            sql_items = [u'%s %s ?' % (mc.attr, mc.op) for mc in node.metadata_condition]
-            sql_args = [mc.value for mc in node.metadata_condition] + [self._db.corpus_id]
+            sql_items = [u'%s %s ?' % (mc.attr, mc.op) for subl in node.metadata_condition for mc in subl]
+            sql_args = [mc.value for subl in node.metadata_condition for mc in subl] + [self._db.corpus_id]
             for row in self._db.execute(u'SELECT id, %s FROM %s WHERE %s AND corpus_id = ? ' % (
                     self._db.count_col, self.c_tree.table_name, u' AND '.join(sql_items)), sql_args):
                 self.A[node.node_id - 1][row[0] - 1] = row[1]
