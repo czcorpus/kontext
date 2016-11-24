@@ -1,6 +1,6 @@
-# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2013 Martin Stepan <martin.stepan@ff.cuni.cz>,
+# Copyright (c) 2015 Martin Stepan <martin.stepan@ff.cuni.cz>,
 #                    Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -173,18 +173,10 @@ class CategoryTree(object):
             if lowest_reserve > -0.001:
                 max_sizes = required_sizes
                 break
-
-            matrix_m = np.zeros((num_g + 1, num_g))
-            for i in range(0, num_g):
-                row = (np.ones((1, num_g)) * -ratios[i])[0]
-                row[i] = 1 - ratios[i]
-                matrix_m[i] = row
-
-            matrix_m[num_g, ilr] = 1
-            b = np.zeros((num_g + 1))
-            b[num_g] = sizes[ilr]
-            max_sizes = np.linalg.lstsq(matrix_m, b)[0]
-            data_size = sum(max_sizes)
+            data_size = sizes[ilr] / float(ratios[ilr])
+            for i in range(num_g):
+                if i != ilr:
+                    sizes[i] = data_size * ratios[i]
         return max_sizes
 
     def compute_sizes(self, node):
