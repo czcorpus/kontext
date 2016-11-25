@@ -137,18 +137,21 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 return (
                     <div>
                         <p>
+                            {this.translate('ucnk_subc__subc_found_{size}', {size: this.formatNumber(this.props.totalSize)})}
+                        </p>
+                        <p>
                             <label>
                                 {this.translate('ucnk_subcm__new_subc_name')}:{'\u00a0'}
                                 <input type="text" value={this.props.currentSubcname}
                                         onChange={this._handleSubcnameInputChange} />
                             </label>
                         </p>
-                        <p>
+                        <div>
                             <button className="default-button" type="button"
                                     onClick={this._handleCreateSubcorpClick}>
                                 {this.translate('ucnk_subcm__create_subc')}
                             </button>
-                        </p>
+                        </div>
                     </div>
                 );
 
@@ -214,6 +217,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                             <Controls isWaiting={this.state.isWaiting}
                                     setWaitingFn={this._setWaiting}
                                     hasResults={!!this.props.currentResults}
+                                    totalSize={this.props.currentResults ? this.props.currentResults['total'] : null}
                                     currentSubcname={this.props.currentSubcname} />
                         </div>
                     </layoutViews.PopupBox>

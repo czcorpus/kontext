@@ -111,29 +111,22 @@ class SubcMixer(AbstractSubcMixer):
     def __init__(self, corparch):
         self._corparch = corparch
 
-    def form_data(self, plugin_api):
-        return {
-            'text_types': plugin_api.text_types
-        }
-
-    def _calculate_real_sizes(self, cat_tree, sizes, total_size):
+    @staticmethod
+    def _calculate_real_sizes(cat_tree, sizes, total_size):
         expressions = [item[3] for item in cat_tree.category_list if item[3]]
         ans = dict(attrs=[], total=total_size)
         for i, expression in enumerate(expressions):
             ans['attrs'].append((unicode(expression), float(sizes[i]) / float(total_size),))
         return ans
 
-    def _get_opus_ids(self, db, db_ids):
+    @staticmethod
+    def _get_opus_ids(db, db_ids):
         db.execute('SELECT %s FROM item WHERE id IN (%s) AND corpus_id = ?' % (
             db.id_attr, ', '.join([str(x) for x in db_ids])), (db.corpus_id,))
         return map(lambda x: x[0], db.fetchall())
 
-    def _create_subcorpus(self, subc_path, corpus, corpus_info, atom_ids):
-        structattr = corpus_info.metadata.id_attr.split('.')
-        query = '(%s)' % '|'.join(map(lambda x: '%s="%s"' % (structattr[1], x), atom_ids))
-        #corplib.create_subcorpus(subc_path, corpus, structattr[0], query)
-
-    def _import_task_args(self, args):
+    @staticmethod
+    def _import_task_args(args):
         """
         generate IDs and parent IDs for
         passed conditions
@@ -174,7 +167,6 @@ class SubcMixer(AbstractSubcMixer):
         cat_tree = CategoryTree(conditions, db, 'item', SubcMixer.CORPUS_MAX_SIZE)
         mm = MetadataModel(db, cat_tree)
         corpus_items = mm.solve()
-        total_size = sum(s for s in corpus_items.category_sizes)
 
         if corpus_items.size_assembled > 0:
             variables = map(lambda item: item[0],

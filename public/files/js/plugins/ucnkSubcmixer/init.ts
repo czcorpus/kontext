@@ -138,7 +138,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             return Math.abs(v - userRatio) < SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
         }
         return Immutable.List<[string, number, boolean]>(
-            data.map((item, i) => {
+            data.slice(0, this.shares.size).map((item, i) => {
                 return [item[0], item[1] * 100, evalDist(item[1], i)];
             })
         );
@@ -245,11 +245,20 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     }
 
     refreshData():void {
-        this.shares = this.getSelectedValues().map<SubcMixerExpression>((item, _, arr) => {
+        const selectedValues = this.getSelectedValues();
+        const numValsPerGroup = selectedValues
+            .reduce(
+                (prev:Immutable.Map<string, number>, curr:TextTypeAttrAndVal) => {
+                    const ans = prev.has(curr.attr.name) ? prev : prev.set(curr.attr.name, 0);
+                    return ans.set(curr.attr.name, ans.get(curr.attr.name) + 1);
+                },
+                Immutable.Map<string, number>()
+            );
+        this.shares = selectedValues.map<SubcMixerExpression>((item, _, arr) => {
             return {
                 attrName: item.attr.name,
                 attrValue: item.val.value,
-                ratio: (100 / arr.size).toFixed(1)
+                ratio: (100 / numValsPerGroup.get(item.attr.name)).toFixed(1)
             }
         }).toList();
     }
