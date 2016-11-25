@@ -1,9 +1,29 @@
 @import '../../../css/shared.less';
 
 .live-attributes {
-    >* {
-        vertical-align: middle;
+
+    ul.controls {
+        list-style-type: none;
+        margin: 0 0 1em 0;
+        padding: 0;
+
+        li {
+            margin: 0;
+            padding: 0;
+            display: inline-block;
+            vertical-align: middle;
+
+            a.util-button {
+                display: inline-block;
+                vertical-align: middle;
+            }
+        }
+
+        li:not(:last-of-type) {
+            margin-right: 0.7em;
+        }
     }
+
     div.steps {
         margin: 0.7em 0 0.7em 0;
         text-align: left;

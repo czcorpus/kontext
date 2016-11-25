@@ -28,7 +28,6 @@ $_("Create Subcorpus")#slurp
 #def bodyonload
 
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
-    conf.subcmixerFormData = $to_json($subcmixer_form_data);
     conf.structsAndAttrs = $to_json($structs_and_attrs);
     conf.currentWithinJson = $within_json;
     conf.textTypesData = $text_types_data;

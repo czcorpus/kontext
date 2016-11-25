@@ -106,6 +106,10 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                     this.currentSubcname = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
+                case 'UCNK_SUBCMIXER_CLEAR_RESULT':
+                    this.currentCalculationResult = null;
+                    this.notifyChangeListeners();
+                break;
                 case 'UCNK_SUBCMIXER_SUBMIT_TASK':
                     this.submitTask().then(
                         () => {
@@ -138,13 +142,18 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             return Math.abs(v - userRatio) < SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
         }
         return Immutable.List<[string, number, boolean]>(
-            data.map((item, i) => {
+            data.slice(0, this.shares.size).map((item, i) => {
                 return [item[0], item[1] * 100, evalDist(item[1], i)];
             })
         );
     }
 
     private submitCreateSubcorpus():RSVP.Promise<any> {
+        if (!this.currentSubcname) {
+            return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                reject(new Error(this.pluginApi.translate('ucnk_subc__missing_subc_name')));
+            });
+        }
         const args = {};
         args['corpname'] = this.pluginApi.getConf<string>('corpname');
         args['subcname'] = this.currentSubcname;
@@ -178,7 +187,8 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             if (sums[k] > 100) {
                 return new RSVP.Promise<any>((resolve:(v)=>void, reject:(e:any)=>void) => {
                     reject(new Error(this.pluginApi.translate(
-                        'ucnk_subcm__ratios_cannot_over_100_{struct_name}', {struct_name: k})));
+                        'ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}',
+                        {struct_name: k, over_val: this.pluginApi.formatNumber(sums[k] - 100)})));
                 });
             }
         }
@@ -245,11 +255,20 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     }
 
     refreshData():void {
-        this.shares = this.getSelectedValues().map<SubcMixerExpression>((item, _, arr) => {
+        const selectedValues = this.getSelectedValues();
+        const numValsPerGroup = selectedValues
+            .reduce(
+                (prev:Immutable.Map<string, number>, curr:TextTypeAttrAndVal) => {
+                    const ans = prev.has(curr.attr.name) ? prev : prev.set(curr.attr.name, 0);
+                    return ans.set(curr.attr.name, ans.get(curr.attr.name) + 1);
+                },
+                Immutable.Map<string, number>()
+            );
+        this.shares = selectedValues.map<SubcMixerExpression>((item, _, arr) => {
             return {
                 attrName: item.attr.name,
                 attrValue: item.val.value,
-                ratio: (100 / arr.size).toFixed(1)
+                ratio: (100 / numValsPerGroup.get(item.attr.name)).toFixed(1)
             }
         }).toList();
     }
@@ -260,6 +279,10 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     getCurrentSubcname():string {
         return this.currentSubcname;
+    }
+
+    getUsedAttributes():Immutable.Set<string> {
+        return Immutable.Set<string>(this.shares.map(item => item.attrName));
     }
 }
 

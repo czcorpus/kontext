@@ -484,7 +484,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     showMessage = (msgType:string, message:any, onClose?:()=>void) => {
         let timeout;
         let outMsg;
-
         if (msgType === 'error') {
             if (this.getConf<boolean>('isDebug')) {
                 console.error(message);
@@ -510,7 +509,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 }
 
             } else if (message instanceof Error) {
-                outMsg = message.message;
+                outMsg = message.message || this.translate('global__unknown_error');
 
             } else if (typeof message === 'object') {
                 outMsg = (message['messages'] || ['Unknown error'])[0];

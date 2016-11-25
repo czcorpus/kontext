@@ -185,10 +185,6 @@ class Subcorpus(Kontext):
         else:
             out['checked_sca'] = {}
 
-        if plugins.has_plugin('subcmixer'):
-            out['subcmixer_form_data'] = plugins.get('subcmixer').form_data(self._plugin_api)
-        else:
-            out['subcmixer_form_data'] = {}
         self._attach_aligned_corpora_info(out)
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
         out.update({
