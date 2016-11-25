@@ -106,6 +106,10 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                     this.currentSubcname = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
+                case 'UCNK_SUBCMIXER_CLEAR_RESULT':
+                    this.currentCalculationResult = null;
+                    this.notifyChangeListeners();
+                break;
                 case 'UCNK_SUBCMIXER_SUBMIT_TASK':
                     this.submitTask().then(
                         () => {
@@ -145,6 +149,11 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     }
 
     private submitCreateSubcorpus():RSVP.Promise<any> {
+        if (!this.currentSubcname) {
+            return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                reject(new Error(this.pluginApi.translate('ucnk_subc__missing_subc_name')));
+            });
+        }
         const args = {};
         args['corpname'] = this.pluginApi.getConf<string>('corpname');
         args['subcname'] = this.currentSubcname;
@@ -178,7 +187,8 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             if (sums[k] > 100) {
                 return new RSVP.Promise<any>((resolve:(v)=>void, reject:(e:any)=>void) => {
                     reject(new Error(this.pluginApi.translate(
-                        'ucnk_subcm__ratios_cannot_over_100_{struct_name}', {struct_name: k})));
+                        'ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}',
+                        {struct_name: k, over_val: this.pluginApi.formatNumber(sums[k] - 100)})));
                 });
             }
         }
@@ -269,6 +279,10 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     getCurrentSubcname():string {
         return this.currentSubcname;
+    }
+
+    getUsedAttributes():Immutable.Set<string> {
+        return Immutable.Set<string>(this.shares.map(item => item.attrName));
     }
 }
 

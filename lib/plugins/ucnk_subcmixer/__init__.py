@@ -39,15 +39,19 @@ def subcmixer_run_calc(ctrl, request):
         ctrl.add_system_message('error', unicode(e))
         return {}
 
+
 @exposed(return_type='json', access_level=1)
 def subcmixer_create_subcorpus(ctrl, request):
-    subc_path = ctrl.prepare_subc_path(request.form['corpname'], request.form['subcname'])
-    structs = request.form['structs'].split(',')[0]
-    opus_ids = request.form['ids'].split(',')
-    id_attr = request.form['idAttr'].split('.')
-    result = corplib.create_subcorpus(subc_path, ctrl.corp, id_attr[0], '|'.join('%s="%s"' % (id_attr[1], x) for x in opus_ids))
-    return dict(status=result)
-
+    if not request.form['subcname']:
+        ctrl.add_system_message('error', 'Missing subcorpus name')
+        return {}
+    else:
+        subc_path = ctrl.prepare_subc_path(request.form['corpname'], request.form['subcname'])
+        opus_ids = request.form['ids'].split(',')
+        id_attr = request.form['idAttr'].split('.')
+        result = corplib.create_subcorpus(subc_path, ctrl.corp, id_attr[0],
+                                          '|'.join('%s="%s"' % (id_attr[1], x) for x in opus_ids))
+        return dict(status=result)
 
 
 class Database(object):

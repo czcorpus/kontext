@@ -157,10 +157,20 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
 
             } else {
                 return (
-                    <button className="default-button" type="button"
-                            onClick={this._handleCalculateCategoriesClick}>
-                        {this.translate('ucnk_subcm__calculate')}
-                    </button>
+                    <div>
+                        {this.props.usedAttributes.size > 1 ?
+                            (<p className="attr-warning">
+                                <img className="warning" src={this.createStaticUrl('img/warning-icon.svg')}
+                                        alt={this.translate('global__warning_icon')} />
+                                {this.translate('ucnk_subc__multiple_attrs_mixing_warning{attrs}',
+                                    {attrs: this.props.usedAttributes.toArray().join(', ')})}
+                            </p>)
+                            : null}
+                        <button className="default-button" type="button"
+                                onClick={this._handleCalculateCategoriesClick}>
+                            {this.translate('ucnk_subcm__calculate')}
+                        </button>
+                    </div>
                 );
             }
         },
@@ -218,7 +228,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                                     setWaitingFn={this._setWaiting}
                                     hasResults={!!this.props.currentResults}
                                     totalSize={this.props.currentResults ? this.props.currentResults['total'] : null}
-                                    currentSubcname={this.props.currentSubcname} />
+                                    currentSubcname={this.props.currentSubcname}
+                                    usedAttributes={this.props.usedAttributes} />
                         </div>
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
@@ -237,16 +248,22 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 useWidget: true,
                 selectedValues: subcMixerStore.getShares(),
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
-                currentSubcname: subcMixerStore.getCurrentSubcname()
+                currentSubcname: subcMixerStore.getCurrentSubcname(),
+                usedAttributes: subcMixerStore.getUsedAttributes()
             });
         },
 
         _handleCloseWidget : function () {
+            dispatcher.dispatch({
+                actionType: 'UCNK_SUBCMIXER_CLEAR_RESULT',
+                props: {}
+            });
             this.setState({
                 useWidget: false,
                 selectedValues: null,
                 currentResults: null,
-                currentSubcname: null
+                currentSubcname: null,
+                usedAttributes: null
             });
         },
 
@@ -255,7 +272,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 useWidget: false,
                 selectedValues: subcMixerStore.getShares(),
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
-                currentSubcname: subcMixerStore.getCurrentSubcname()
+                currentSubcname: subcMixerStore.getCurrentSubcname(),
+                usedAttributes: subcMixerStore.getUsedAttributes()
             };
         },
 
@@ -264,7 +282,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 useWidget: this.state.useWidget,
                 selectedValues: subcMixerStore.getShares(),
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
-                currentSubcname: subcMixerStore.getCurrentSubcname()
+                currentSubcname: subcMixerStore.getCurrentSubcname(),
+                usedAttributes: subcMixerStore.getUsedAttributes()
             });
         },
 
@@ -278,25 +297,18 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
 
         render : function () {
             return (
-                <div className="mixer-trigger step-block">
-                    <table className="step">
-                        <tbody>
-                            <tr>
-                                <td className="num">?</td>
-                                <td>
-                                    <a className="trigger" title={this.translate('ucnk_subcm__set_shares')}
-                                            onClick={this._handleTrigger}>
-                                        <img src={this.createStaticUrl('js/plugins/ucnkSubcmixer/mixer.svg')} />
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div className="mixer-trigger">
+                    <a className="trigger util-button" title={this.translate('ucnk_subcm__set_shares')}
+                            onClick={this._handleTrigger}>
+                        {this.translate('ucnk_subcm__define_proportions')}
+
+                    </a>
                     {this.state.useWidget ?
                         <SubcMixer closeClickHandler={this._handleCloseWidget}
                                 selectedValues={this.state.selectedValues}
                                 currentResults={this.state.currentResults}
-                                currentSubcname={this.state.currentSubcname} />
+                                currentSubcname={this.state.currentSubcname}
+                                usedAttributes={this.state.usedAttributes} />
                         : null}
                 </div>
             );

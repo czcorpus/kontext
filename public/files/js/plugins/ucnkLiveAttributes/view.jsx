@@ -110,7 +110,6 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                         </div>
                     );
                 })}
-                {this.props.items.length > 0 && subcMixerViews.Widget ? <subcMixerViews.Widget /> : null}
                 {this.props.isLoading ? this._renderLoading(this.props.items.length + 1) : null}
                 </div>
             );
@@ -163,11 +162,18 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
         render : function () {
             return (
                 <div className="live-attributes">
-                    <div className="controls">
-                        <a className="util-button" onClick={this._mkClickHandler('refine')}>{this.translate('ucnkLA__refine_selection_btn')}</a>
-                        {'\u00a0'}
-                        <a className="util-button" onClick={this._mkClickHandler('reset')}>{this.translate('ucnkLA__reset_selection_btn')}</a>
-                    </div>
+                    <ul className="controls">
+                        <li>
+                            <a className="util-button" onClick={this._mkClickHandler('refine')}>{this.translate('ucnkLA__refine_selection_btn')}</a>
+                        </li>
+                        <li>
+                            <a className="util-button cancel" onClick={this._mkClickHandler('reset')}>{this.translate('ucnkLA__reset_selection_btn')}</a>
+                        </li>
+                        {this.state.selectionSteps.length > 0 && subcMixerViews.Widget ?
+                            <li><subcMixerViews.Widget /></li>
+                            : null
+                        }
+                    </ul>
                     <SelectionSteps items={this.state.selectionSteps} isLoading={this.state.isLoading} />
                 </div>
             );
