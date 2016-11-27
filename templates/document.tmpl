@@ -111,18 +111,18 @@ requirejs.config({
     #if $deployment_id#urlArgs: 'v=$deployment_id',#end if#
     shim : {
         #if $qunit_test
-        ,'vendor/QUnit' : {
+        'vendor/QUnit' : {
             exports : 'QUnit',
             init: function() {
                 QUnit.config.autoload = false;
                 QUnit.config.autostart = false;
-            }
+            },
         }
         #end if
         #if $app_bar_js
         #for $item in $app_bar_js.deps
         #if 'shim' in $item
-        ,'$item.module' : { deps: $to_json($item.shim.deps) }
+        '$item.module' : { deps: $to_json($item.shim.deps) },
         #end if
         #end for
         #end if
