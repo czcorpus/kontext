@@ -122,7 +122,7 @@ requirejs.config({
         #if $app_bar_js
         #for $item in $app_bar_js.deps
         #if 'shim' in $item
-        ,'$item.module' : { deps: #filter $Jsonize# $item.shim.deps #end filter# }
+        '$item.module' : { deps: #filter $Jsonize# $item.shim.deps #end filter# },
         #end if
         #end for
         #end if
