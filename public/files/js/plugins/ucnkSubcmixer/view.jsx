@@ -42,10 +42,16 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
         _renderEvalResult : function () {
             if (this.props.result) {
                 if (this.props.result[2] === true) {
-                    return <span className="checked">{'\u2713'}</span>;
+                    return (
+                        <span className="checked" title={this.translate('ucnk_subc__condition_fulfilled')}>
+                            {'\u2713'}
+                        </span>
+                    );
 
                 } else {
-                    return <span className="crossed" title={this.props.result[1].toFixed(2)}>!</span>;
+                    return <span className="crossed" title={this.translate(
+                            'ucnk_subc__condition_failed_{actual_val}',
+                            {actual_val: this.props.result[1].toFixed(2)})}>{'\u2717'}</span>;
                 }
 
             } else {
@@ -63,9 +69,10 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                     </td>
                     <td>
                         <span>
-                            <input type="text" style={{width: '3em'}}
-                                value={this.props.ratio}
-                                onChange={this._handleRatioValueChange} />
+                            <input type="text" className={'num' + (this.props.hasResults ? ' disabled' : '')}
+                                    style={{width: '3em'}} value={this.props.ratio}
+                                    disabled={this.props.hasResults ? true : false}
+                                    onChange={this._handleRatioValueChange} />
                             <strong>%</strong>
                         </span>
                     </td>
@@ -89,11 +96,124 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                     <tbody>
                         {this.props.items.map((item, i) => (
                             <ValueShare key={i} rowId={i + 1} attrName={item.attrName}
+                                    hasResults={this.props.hasResults}
                                     attrValue={item.attrValue} ratio={item.ratio}
                                     result={this.props.currentResults ? this.props.currentResults['attrs'].get(i) : null} />
                         ))}
                     </tbody>
                 </table>
+            );
+        }
+    });
+
+    // ------------ <ReenterArgsButton /> -------------------------------------
+
+    const ReenterArgsButton = React.createClass({
+
+        mixins : mixins,
+
+        _handleUpdateParamsButton : function () {
+            dispatcher.dispatch({
+                actionType: 'UCNK_SUBCMIXER_CLEAR_RESULT',
+                props: {}
+            });
+        },
+
+        render : function () {
+            return (
+                <button className="default-button" type="button"
+                        style={this.props.css}
+                        onClick={this._handleUpdateParamsButton}>
+                    {this.translate('ucnk_subc__modify_params_btn') + '\u2026'}
+                </button>
+            );
+        }
+
+    });
+
+    // ------------ <ResultsControls /> -------------------------------------
+
+    const ResultsControls = React.createClass({
+
+        mixins : mixins,
+
+        _handleCreateSubcorpClick : function () {
+            dispatcher.dispatch({
+                actionType: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
+                props: {}
+            });
+        },
+
+        _handleSubcnameInputChange : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'UCNK_SUBCMIXER_SET_SUBCNAME',
+                props: {
+                    value: evt.target.value
+                }
+            });
+        },
+
+        _renderDesc : function () {
+            if (this.props.numErrors === 0) {
+                return (
+                    <span>
+                        <img className="icon"
+                                src={this.createStaticUrl('img/info-icon.svg')}
+                                alt={this.translate('global__info_icon')} />
+                        {this.translate('ucnk_subc__subc_found_{size}',
+                            {size: this.formatNumber(this.props.totalSize)})}
+                    </span>
+                );
+
+            } else if (this.props.numErrors === this.props.numConditions) {
+                return (
+                    <span>
+                        <img className="icon"
+                                src={this.createStaticUrl('img/error-icon.svg')}
+                                alt={this.translate('global__error_icon')} />
+                        {this.translate('ucnk_subc__subc_not_found')}
+                    </span>
+                );
+
+            } else {
+                return this.translate('ucnk_subc__subc_found_with_errors{size}{num_errors}',
+                        {size: this.formatNumber(this.props.totalSize),
+                        num_errors: this.props.numErrors});
+            }
+        },
+
+        _renderControls : function () {
+            if (this.props.numErrors < this.props.numConditions) {
+                return (
+                    <div>
+                        <p>
+                            <label>
+                                {this.translate('ucnk_subcm__new_subc_name')}:{'\u00a0'}
+                                <input type="text" value={this.props.currentSubcname}
+                                        onChange={this._handleSubcnameInputChange} />
+                            </label>
+                        </p>
+                        <button className="default-button" type="button"
+                                onClick={this._handleCreateSubcorpClick}>
+                            {this.translate('ucnk_subcm__create_subc')}
+                        </button>
+                        <ReenterArgsButton css={{display: 'inline-block', marginLeft: '0.7em'}} />
+                    </div>
+                );
+
+            } else {
+                return <div><ReenterArgsButton /></div>;
+            }
+        },
+
+        render : function () {
+            return (
+                <div>
+                    <p className="desc">
+                        {this._renderDesc()}
+                    </p>
+                    {this._renderControls()}
+                </div>
             );
         }
     });
@@ -112,48 +232,17 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
             });
         },
 
-        _handleCreateSubcorpClick : function () {
-            dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
-                props: {}
-            });
-        },
-
-        _handleSubcnameInputChange : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_SET_SUBCNAME',
-                props: {
-                    value: evt.target.value
-                }
-            });
-        },
-
         _renderButtons : function () {
             if (this.props.isWaiting) {
                 return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
                                             alt={this.translate('global__calculating')} />;
 
             } else if (this.props.hasResults) {
-                return (
-                    <div>
-                        <p>
-                            {this.translate('ucnk_subc__subc_found_{size}', {size: this.formatNumber(this.props.totalSize)})}
-                        </p>
-                        <p>
-                            <label>
-                                {this.translate('ucnk_subcm__new_subc_name')}:{'\u00a0'}
-                                <input type="text" value={this.props.currentSubcname}
-                                        onChange={this._handleSubcnameInputChange} />
-                            </label>
-                        </p>
-                        <div>
-                            <button className="default-button" type="button"
-                                    onClick={this._handleCreateSubcorpClick}>
-                                {this.translate('ucnk_subcm__create_subc')}
-                            </button>
-                        </div>
-                    </div>
-                );
+                return <ResultsControls
+                            totalSize={this.props.totalSize}
+                            numErrors={this.props.numErrors}
+                            numConditions={this.props.numConditions}
+                            currentSubcname={this.props.currentSubcname} />;
 
             } else {
                 return (
@@ -223,11 +312,14 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                         <div>
                             <h3>{this.translate('ucnk_subcm__widget_header')}</h3>
                             <ValuesTable items={this.props.selectedValues}
-                                    currentResults={this.props.currentResults} />
+                                    currentResults={this.props.currentResults}
+                                    hasResults={!!this.props.currentResults} />
                             <Controls isWaiting={this.state.isWaiting}
                                     setWaitingFn={this._setWaiting}
                                     hasResults={!!this.props.currentResults}
                                     totalSize={this.props.currentResults ? this.props.currentResults['total'] : null}
+                                    numErrors={this.props.numErrors}
+                                    numConditions={this.props.selectedValues.size}
                                     currentSubcname={this.props.currentSubcname}
                                     usedAttributes={this.props.usedAttributes} />
                         </div>
@@ -262,6 +354,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 useWidget: false,
                 selectedValues: null,
                 currentResults: null,
+                numErrors: 0,
                 currentSubcname: null,
                 usedAttributes: null
             });
@@ -272,6 +365,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 useWidget: false,
                 selectedValues: subcMixerStore.getShares(),
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
+                numErrors: subcMixerStore.getNumOfErrors(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
                 usedAttributes: subcMixerStore.getUsedAttributes()
             };
@@ -282,6 +376,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 useWidget: this.state.useWidget,
                 selectedValues: subcMixerStore.getShares(),
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
+                numErrors: subcMixerStore.getNumOfErrors(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
                 usedAttributes: subcMixerStore.getUsedAttributes()
             });
@@ -307,6 +402,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                         <SubcMixer closeClickHandler={this._handleCloseWidget}
                                 selectedValues={this.state.selectedValues}
                                 currentResults={this.state.currentResults}
+                                numErrors={this.state.numErrors}
                                 currentSubcname={this.state.currentSubcname}
                                 usedAttributes={this.state.usedAttributes} />
                         : null}

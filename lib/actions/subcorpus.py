@@ -164,7 +164,11 @@ class Subcorpus(Kontext):
         """
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         method = request.form.get('method', 'gui')
-        within_json = request.form.get('within_json', 'null')
+        within_json = request.form.get('within_json', None)
+        if within_json:
+            within_data = json.loads(within_json)
+        else:
+            within_data = []
         subcname = request.form.get('subcname', None)
         subcnorm = request.args.get('subcnorm', 'tokens')
 
@@ -192,7 +196,7 @@ class Subcorpus(Kontext):
             'text_types_data': json.dumps(tt_sel),
             'structs_and_attrs': structs_and_attrs,
             'method': method,
-            'within_json': within_json,
+            'within_data': within_data,
             'subcname': subcname,
             'subcnorm': subcnorm,
             'id_attr': corpus_info.metadata.id_attr
