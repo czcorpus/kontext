@@ -484,7 +484,7 @@ class Controller(object):
     def _validate_http_method(self, action_metadata):
         if 'http_method' in action_metadata and (self.get_http_method().lower() !=
                                                  action_metadata['http_method'].lower()):
-            raise UserActionException(_('Incorrect HTTP method used'), code=500)
+            raise UserActionException(_('Unknown action'), code=404)
 
     def _pre_action_validate(self):
         """

@@ -29,7 +29,7 @@ $_("Create Subcorpus")#slurp
 
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.structsAndAttrs = $to_json($structs_and_attrs);
-    conf.currentWithinJson = $within_json;
+    conf.currentWithinJson = $to_json($within_data);
     conf.textTypesData = $text_types_data;
     conf.CheckedSca = $to_json($checked_sca);
     conf.HasSubcmixer = $to_json($has_subcmixer);

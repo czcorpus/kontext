@@ -8,9 +8,14 @@
     "ucnk_subcm__calculate": "Find a matching selection",
     "ucnk_subcm__create_subc": "Create a subcorpus",
     "ucnk_subcm__new_subc_name": "New subcorpus name",
-    "ucnk_subc__subc_found_{size}": "Required subcorpus found. Calculated size: {size} tokens",
+    "ucnk_subc__subc_found_{size}": "Required subcorpus found. Calculated size: {size} tokens.",
+    "ucnk_subc__subc_found_with_errors{size}{num_errors}": "Found a similar corpus with {num_errors, plural, one{# unfulfilled condition} other{# unfulfilled conditions}}. Calculated size: {size} tokens.",
+    "ucnk_subc__subc_not_found": "Unable to found a suitable subcorpus - all the conditions failed.",
     "ucnk_subc__missing_subc_name": "A subcorpus name is missing",
-    "ucnk_subc__multiple_attrs_mixing_warning{attrs}": "Please note that using more than one structural attribute (currently: {attrs}) can easily lead to an unsolvable task specification."
+    "ucnk_subc__multiple_attrs_mixing_warning{attrs}": "Please note that using more than one structural attribute (currently: {attrs}) can easily lead to an unsolvable task specification.",
+    "ucnk_subc__condition_fulfilled": "Condition fulfilled",
+    "ucnk_subc__condition_failed_{actual_val}": "Condition failed (calculated proportion: {actual_val}%)",
+    "ucnk_subc__modify_params_btn": "Change parameters"
   },
   "cs-CZ": {
     "ucnk_subcm__define_proportions": "Vlastní poměry typů textu",
@@ -22,7 +27,12 @@
     "ucnk_subcm__create_subc": "Vytvořit subkorpus",
     "ucnk_subcm__new_subc_name": "Název nového subkorpusu",
     "ucnk_subc__subc_found_{size}": "Požadovaný subkorpus nalezen. Velikost: {size} tokenů.",
+    "ucnk_subc__subc_found_with_errors{size}{num_errors}": "Nalezen podobný korpus s {num_errors, plural, one{# nesplněnou podmínkou} other{# nesplněnými podmínkami}}. Velikost: {size} tokenů.",
+    "ucnk_subc__subc_not_found": "Nepodařilo se najít vhodný subkorpus - všechny podmínky selhaly.",
     "ucnk_subc__missing_subc_name": "Chybí název subkorpusu",
-    "ucnk_subc__multiple_attrs_mixing_warning{attrs}": "Berte prosím na vědomí, že použití více než jednoho strukturního atributu (aktuálně: {attrs}) může snadno vést k zadání, která nejsou splnitelná."
+    "ucnk_subc__multiple_attrs_mixing_warning{attrs}": "Berte prosím na vědomí, že použití více než jednoho strukturního atributu (aktuálně: {attrs}) může snadno vést k zadání, která nejsou splnitelná.",
+    "ucnk_subc__condition_fulfilled": "Podmínka splněna",
+    "ucnk_subc__condition_failed_{actual_val}": "Podmínka nesplněna (vypočtený podíl: {actual_val}%)",
+    "ucnk_subc__modify_params_btn": "Změnit parametry"
   }
 }

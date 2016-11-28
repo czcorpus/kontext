@@ -61,7 +61,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     static DispatchToken:string;
 
-    static CATEGORY_SIZE_ERROR_TOLERANCE = 0.5;
+    static CATEGORY_SIZE_ERROR_TOLERANCE = 0.005; // from values 0..1
 
     pluginApi:Kontext.PluginApi;
 
@@ -283,6 +283,13 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     getUsedAttributes():Immutable.Set<string> {
         return Immutable.Set<string>(this.shares.map(item => item.attrName));
+    }
+
+    getNumOfErrors():number {
+        if (this.currentCalculationResult) {
+            return this.currentCalculationResult.attrs.reduce((prev, curr) => prev + (!curr[2] ? 1 : 0), 0);
+        }
+        return 0;
     }
 }
 
