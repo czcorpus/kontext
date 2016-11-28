@@ -112,6 +112,8 @@ class CategoryTree(object):
                                           self.category_list[0][2], self.category_list[0][3])
         self._db = meta_db
         self._add_virtual_cats()
+        import logging
+        logging.getLogger(name=__name__).debug('category list: %s' % (self.category_list,))
         self._build()
         self.initialize_bounds()
 
