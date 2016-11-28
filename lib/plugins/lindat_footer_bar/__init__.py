@@ -30,25 +30,28 @@ from plugins.abstract.footer_bar import AbstractFootbar
 
 class FootBar(AbstractFootbar):
 
-    def __init__(self):
-        self._resource_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), 'resources'))
+    def __init__(self, templates=None):
+        self._templates = templates if type(templates) is dict else {}
 
-    def _get_resource_path(self, filename):
-        return os.path.join(self._resource_dir, filename)
-
-    def get_contents(self, plugin_api, return_url=None):
-        if 'cs_CZ' == plugin_api.user_lang:
-            input_file = self._get_resource_path('cs/footer.html')
+    def get_template(self, lang):
+        if lang in self._templates:
+            return self._templates[lang]
         else:
-            input_file = self._get_resource_path('footer.html')
-        with open(input_file, mode='rb') as fin:
+            return self._templates['en_US']
+
+    def get_contents(self, plugin_api, return_url):
+        tpl_path = self.get_template(plugin_api.user_lang)
+        with open(tpl_path, mode='rb') as fin:
             return fin.read().decode('utf-8')
 
-    def get_css_url(self):
-        return None
+    def get_fallback_content(self):
+        return ''
 
 
-def create_instance(conf):
-    return FootBar()
-
-
+def create_instance(settings):
+    plugin_conf = settings.get('plugins', 'footer_bar')
+    templates = {
+        'cs_CZ': plugin_conf['lindat:template_cs'],
+        'en_US': plugin_conf['lindat:template_en']
+    }
+    return FootBar(templates=templates)
