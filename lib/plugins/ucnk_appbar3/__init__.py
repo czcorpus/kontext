@@ -52,10 +52,14 @@ class ApplicationBar3(AbstractApplicationBar):
         return self._process_scripts(toolbar_obj.get('scripts', {}))
 
     def get_contents(self, plugin_api, return_url):
-        return plugin_api.get_shared('toolbar').get('html')
+        toolbar_obj = plugin_api.get_shared('toolbar')
+        if toolbar_obj:
+            return toolbar_obj.get('html')
+        else:
+            return self.get_fallback_content()
 
     def get_fallback_content(self):
-        return '<div class="appbar-loading-msg" data-reload-toolbar="1"><span>loading toolbar...</span></div>'
+        return '<div class="cnc-toolbar"><span>toolbar not loaded...</span></div>'
 
 
 def create_instance(settings):
