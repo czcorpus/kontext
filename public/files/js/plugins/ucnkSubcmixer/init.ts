@@ -63,7 +63,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     static DispatchToken:string;
 
-    static CATEGORY_SIZE_ERROR_TOLERANCE = 0.005; // from values 0..1
+    static CATEGORY_SIZE_ERROR_TOLERANCE = 0.5; // in %
 
     pluginApi:Kontext.PluginApi;
 
@@ -78,6 +78,8 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     private corpusIdAttr:string;
 
     textTypesStore:TextTypes.ITextTypesStore;
+
+    private errorTolerance:number = SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
@@ -134,6 +136,17 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                         }
                     )
                 break;
+                case 'UCNK_SUBCMIXER_SET_ERROR_TOLERANCE':
+                    const val = parseFloat(payload.props['value']);
+                    if (!isNaN(val) && val > 0 && val <= 100) {
+                        this.errorTolerance = val;
+
+                    } else {
+                        this.pluginApi.showMessage('error',
+                                this.pluginApi.translate('ucnk_subcm__invalid_value'));
+                    }
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
@@ -141,7 +154,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     private importResults(data:Array<[string, number]>):Immutable.List<[string, number, boolean]> {
         const evalDist = (v, idx) => {
             const userRatio = parseFloat(this.shares.get(idx).ratio) / 100;
-            return Math.abs(v - userRatio) < SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
+            return Math.abs(v - userRatio) < this.errorTolerance / 100;
         }
         return Immutable.List<[string, number, boolean]>(
             data.slice(0, this.shares.size).map((item, i) => {
@@ -306,6 +319,10 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             return this.currentCalculationResult.attrs.reduce((prev, curr) => prev + (!curr[2] ? 1 : 0), 0);
         }
         return 0;
+    }
+
+    getErrorTolerance():number {
+        return this.errorTolerance;
     }
 }
 
