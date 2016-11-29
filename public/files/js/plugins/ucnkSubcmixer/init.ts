@@ -29,15 +29,17 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
 
-export interface TextTypeAttrAndVal {
-    attr: TextTypes.AttributeSelection;
-    val: TextTypes.AttributeValue;
+export interface TextTypeAttrVal {
+    attrName:string;
+    attrValue:string;
+    isSelected:boolean;
 }
 
 export interface SubcMixerExpression {
     attrName:string;
     attrValue:string;
     ratio:string;
+    zeroFixed:boolean;
 }
 
 export interface CalculationResponse extends Kontext.AjaxResponse {
@@ -61,7 +63,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     static DispatchToken:string;
 
-    static CATEGORY_SIZE_ERROR_TOLERANCE = 0.005; // from values 0..1
+    static CATEGORY_SIZE_ERROR_TOLERANCE = 0.5; // in %
 
     pluginApi:Kontext.PluginApi;
 
@@ -76,6 +78,8 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     private corpusIdAttr:string;
 
     textTypesStore:TextTypes.ITextTypesStore;
+
+    private errorTolerance:number = SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
@@ -132,6 +136,17 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                         }
                     )
                 break;
+                case 'UCNK_SUBCMIXER_SET_ERROR_TOLERANCE':
+                    const val = parseFloat(payload.props['value']);
+                    if (!isNaN(val) && val > 0 && val <= 100) {
+                        this.errorTolerance = val;
+
+                    } else {
+                        this.pluginApi.showMessage('error',
+                                this.pluginApi.translate('ucnk_subcm__invalid_value'));
+                    }
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
@@ -139,7 +154,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     private importResults(data:Array<[string, number]>):Immutable.List<[string, number, boolean]> {
         const evalDist = (v, idx) => {
             const userRatio = parseFloat(this.shares.get(idx).ratio) / 100;
-            return Math.abs(v - userRatio) < SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
+            return Math.abs(v - userRatio) < this.errorTolerance / 100;
         }
         return Immutable.List<[string, number, boolean]>(
             data.slice(0, this.shares.size).map((item, i) => {
@@ -223,25 +238,37 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
         );
     }
 
-    private getSelectedValues():Immutable.List<TextTypeAttrAndVal> {
+    private getAvailableValues():Immutable.List<TextTypeAttrVal> {
         return Immutable.List(this.textTypesStore.getAttributes())
             .filter(item => item.hasUserChanges())
-            .flatMap(item => item.getValues().map(subItem => {
-                return {attr: item, val: subItem};
-            }))
-            .filter(item => item.val.selected)
+            .flatMap(item => {
+                const tmp = this.textTypesStore.getAttribute(item.name)
+                        .getValues()
+                        .filter(item => item.selected)
+                        .map(item => item.value);
+                return this.textTypesStore.getInitialAvailableValues(item.name)
+                    .map(subItem => {
+                        return {
+                            attrName: item.name,
+                            attrValue: subItem.value,
+                            isSelected: tmp.contains(subItem.value)
+                        };
+                    });
+            })
             .toList();
     }
 
     private updateRatio(attrName:string, attrValue:string, ratio:string):void {
         if (!isNaN(parseFloat(ratio)) || ratio.lastIndexOf('.') === ratio.length - 1) {
-            const idx = this.shares.findIndex(item => item.attrName === attrName && item.attrValue === attrValue);
+            const idx = this.shares.findIndex(item => item.attrName === attrName
+                    && item.attrValue === attrValue && item.zeroFixed === false);
             if (idx > -1) {
                 const curr = this.shares.get(idx);
                 this.shares = this.shares.set(idx, {
                     attrName: curr.attrName,
                     attrValue: curr.attrValue,
-                    ratio: ratio
+                    ratio: ratio,
+                    zeroFixed: curr.zeroFixed
                 });
             }
 
@@ -251,24 +278,26 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     }
 
     getShares():Immutable.List<SubcMixerExpression> {
-        return this.shares;
+        return this.shares.filter(item => item.zeroFixed === false).toList();
     }
 
     refreshData():void {
-        const selectedValues = this.getSelectedValues();
-        const numValsPerGroup = selectedValues
+        const availableValues = this.getAvailableValues();
+        const numValsPerGroup = availableValues
+            .filter(item => item.isSelected)
             .reduce(
-                (prev:Immutable.Map<string, number>, curr:TextTypeAttrAndVal) => {
-                    const ans = prev.has(curr.attr.name) ? prev : prev.set(curr.attr.name, 0);
-                    return ans.set(curr.attr.name, ans.get(curr.attr.name) + 1);
+                (prev:Immutable.Map<string, number>, curr:TextTypeAttrVal) => {
+                    const ans = prev.has(curr.attrName) ? prev : prev.set(curr.attrName, 0);
+                    return ans.set(curr.attrName, ans.get(curr.attrName) + 1);
                 },
                 Immutable.Map<string, number>()
             );
-        this.shares = selectedValues.map<SubcMixerExpression>((item, _, arr) => {
+        this.shares = availableValues.map<SubcMixerExpression>((item, _, arr) => {
             return {
-                attrName: item.attr.name,
-                attrValue: item.val.value,
-                ratio: (100 / numValsPerGroup.get(item.attr.name)).toFixed(1)
+                attrName: item.attrName,
+                attrValue: item.attrValue,
+                ratio: item.isSelected ? (100 / numValsPerGroup.get(item.attrName)).toFixed(1) : '0',
+                zeroFixed: !item.isSelected
             }
         }).toList();
     }
@@ -290,6 +319,10 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             return this.currentCalculationResult.attrs.reduce((prev, curr) => prev + (!curr[2] ? 1 : 0), 0);
         }
         return 0;
+    }
+
+    getErrorTolerance():number {
+        return this.errorTolerance;
     }
 }
 

@@ -398,6 +398,14 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return this.attributes.toArray();
     }
 
+    getInitialAvailableValues(attrName:string):Immutable.List<TextTypes.AttributeValue> {
+        const idx = this.initialAttributes.findIndex(item => item.name === attrName);
+        if (idx > -1) {
+            return this.initialAttributes.get(idx).getValues().map(item => item).toList();
+        }
+        return Immutable.List<TextTypes.AttributeValue>();
+    }
+
     exportSelections(lockedOnesOnly:boolean):{[attr:string]:any} {
         const ans = {};
         this.attributes.forEach((attrSel:TextTypes.AttributeSelection) => {

@@ -41,17 +41,23 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
 
         _renderEvalResult : function () {
             if (this.props.result) {
+                const actualVal = this.props.result[1].toFixed(2);
                 if (this.props.result[2] === true) {
                     return (
-                        <span className="checked" title={this.translate('ucnk_subc__condition_fulfilled')}>
+                        <span className="checked"
+                            title={this.translate('ucnk_subc__condition_fulfilled_{actual_val}',
+                                {actual_val: actualVal})}>
                             {'\u2713'}
                         </span>
                     );
 
                 } else {
-                    return <span className="crossed" title={this.translate(
+                    return (
+                        <span className="crossed" title={this.translate(
                             'ucnk_subc__condition_failed_{actual_val}',
-                            {actual_val: this.props.result[1].toFixed(2)})}>{'\u2717'}</span>;
+                            {actual_val: actualVal})}>{'\u2717'}
+                        </span>
+                    );
                 }
 
             } else {
@@ -300,11 +306,19 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
             });
         },
 
+        _handleErrorToleranceChange : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'UCNK_SUBCMIXER_SET_ERROR_TOLERANCE',
+                props: {value: evt.target.value}
+            });
+        },
+
         componentWillUnmount : function () {
             subcMixerStore.removeChangeListener(this._handleStoreChange);
         },
 
         render : function () {
+            const hasResults = !!this.props.currentResults;
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
                     <layoutViews.PopupBox customClass="subcmixer-widget"
@@ -313,7 +327,17 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                             <h3>{this.translate('ucnk_subcm__widget_header')}</h3>
                             <ValuesTable items={this.props.selectedValues}
                                     currentResults={this.props.currentResults}
-                                    hasResults={!!this.props.currentResults} />
+                                    hasResults={hasResults} />
+                            <div className="error-tolerance-block">
+                                <label>{this.translate('ucnk_subc__error_tolerance')}
+                                :{'\u00a0\u00B1'}
+                                <input type="text" value={this.props.errorTolerance}
+                                        onChange={this._handleErrorToleranceChange} style={{width: '2em'}}
+                                        className={'num' + (hasResults ? ' disabled' : '')}
+                                        disabled={hasResults ? true : false} />
+                                %
+                                </label>
+                            </div>
                             <Controls isWaiting={this.state.isWaiting}
                                     setWaitingFn={this._setWaiting}
                                     hasResults={!!this.props.currentResults}
@@ -341,7 +365,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 selectedValues: subcMixerStore.getShares(),
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
-                usedAttributes: subcMixerStore.getUsedAttributes()
+                usedAttributes: subcMixerStore.getUsedAttributes(),
+                errorTolerance: subcMixerStore.getErrorTolerance()
             });
         },
 
@@ -356,7 +381,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 currentResults: null,
                 numErrors: 0,
                 currentSubcname: null,
-                usedAttributes: null
+                usedAttributes: null,
+                errorTolerance: null
             });
         },
 
@@ -367,7 +393,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
                 numErrors: subcMixerStore.getNumOfErrors(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
-                usedAttributes: subcMixerStore.getUsedAttributes()
+                usedAttributes: subcMixerStore.getUsedAttributes(),
+                errorTolerance: subcMixerStore.getErrorTolerance()
             };
         },
 
@@ -378,7 +405,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
                 numErrors: subcMixerStore.getNumOfErrors(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
-                usedAttributes: subcMixerStore.getUsedAttributes()
+                usedAttributes: subcMixerStore.getUsedAttributes(),
+                errorTolerance: subcMixerStore.getErrorTolerance()
             });
         },
 
@@ -404,7 +432,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                                 currentResults={this.state.currentResults}
                                 numErrors={this.state.numErrors}
                                 currentSubcname={this.state.currentSubcname}
-                                usedAttributes={this.state.usedAttributes} />
+                                usedAttributes={this.state.usedAttributes}
+                                errorTolerance={this.state.errorTolerance} />
                         : null}
                 </div>
             );

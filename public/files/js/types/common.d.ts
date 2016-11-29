@@ -598,6 +598,12 @@ declare module TextTypes {
         getAttributes():Array<AttributeSelection>;
 
         /**
+         * Get all available values of a specific attribute before
+         * any filters were applied.
+         */
+        getInitialAvailableValues(attrName:string):Immutable.List<TextTypes.AttributeValue>;
+
+        /**
          * Export checkbox selections (e.g. for ajax requests)
          */
         exportSelections(lockedOnesOnly:boolean):{[attr:string]:any};
