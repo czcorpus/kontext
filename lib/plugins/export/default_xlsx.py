@@ -25,7 +25,11 @@ from StringIO import StringIO
 
 from openpyxl import Workbook
 from openpyxl.compat import range
-from openpyxl.cell import get_column_letter
+try:
+    from openpyxl.utils import get_column_letter
+except ImportError:
+    # older versions of openpyxl
+    from openpyxl.cell import get_column_letter
 
 from . import AbstractExport, lang_row_to_list, ExportPluginException
 from translation import ugettext as _
