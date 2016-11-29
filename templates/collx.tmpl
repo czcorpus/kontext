@@ -57,7 +57,7 @@ $_("Collocations")#slurp
 
         #block collx_navigation($navid="next")
 
-        #set $allhref = 'collx?' + $join_params($q, $globals, [('cattr', $cattr), ('cbgrfns', $cbgrfns), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw), ('ctow', $ctow), ('csortfn', $csortfn)])
+        #set $allhref = 'collx?' + $join_params($q, $globals, [('cbgrfns', $cb) for $cb in $cbgrfns], [('cattr', $cattr), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw), ('ctow', $ctow), ('csortfn', $csortfn)])
         #if $collpage > 1 or not $lastpage
             <div class="bonito-pagination">
                 <form action="collx">
@@ -74,7 +74,9 @@ $_("Collocations")#slurp
                             $input_hidden
                             #end filter
                             <input type="hidden" name="cattr" value='$cattr' />
-                            <input type="hidden" name="cbgrfns" value='$cbgrfns' />
+                            #for $cb in $cbgrfns
+                            <input type="hidden" name="cbgrfns" value="$cb" />
+                            #end for
                             <input type="hidden" name="cminfreq" value='$cminfreq' />
                             <input type="hidden" name="cminbgr" value='$cminbgr' />
                             <input type="hidden" name="cfromw" value='$cfromw' />

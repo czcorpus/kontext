@@ -42,7 +42,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (savecollForm, c
         $input_hidden
         #end filter
         <input type="hidden" name="cattr" value="$cattr" />
-        <input type="hidden" name="cbgrfns" value="$cbgrfns" />
+        #for $cb in $cbgrfns
+        <input type="hidden" name="cbgrfns" value="$cb" />
+        #end for
         <input type="hidden" name="cminfreq" value="$cminfreq" />
         <input type="hidden" name="cminbgr" value="$cminbgr" />
         <input type="hidden" name="cfromw" value="$cfromw" />
