@@ -1080,7 +1080,6 @@ class Actions(Kontext):
         """
         list collocations
         """
-        self.args.cbgrfns = ''.join(self.args.cbgrfns)
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
         if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
             self.args.csortfn = self.args.cbgrfnscbgrfns[0]
@@ -1097,7 +1096,7 @@ class Actions(Kontext):
         args.samplesize = 0  # TODO (check also freqs)
         args.cattr = self.args.cattr
         args.csortfn = self.args.csortfn
-        args.cbgrfns = self.args.cbgrfns
+        args.cbgrfns = ''.join(self.args.cbgrfns)
         args.cfromw = self.args.cfromw
         args.ctow = self.args.ctow
         args.cminbgr = self.args.cminbgr
@@ -1114,16 +1113,16 @@ class Actions(Kontext):
             ('ctow', self.args.ctow),
             ('cminfreq', self.args.cminfreq),
             ('cminbgr', self.args.cminbgr),
-            ('cbgrfns', self.args.cbgrfns),
             ('csortfn', self.args.csortfn),
             ('collpage', self.args.collpage)
         ]
+        save_args += [('cbgrfns', item) for item in self.args.cbgrfns]
         self._add_save_menu_item('CSV', 'savecoll', save_args, save_format='csv')
         self._add_save_menu_item('XLSX', 'savecoll', save_args, save_format='xlsx')
         self._add_save_menu_item('XML', 'savecoll', save_args, save_format='xml')
         self._add_save_menu_item('TXT', 'savecoll', save_args, save_format='text')
         save_args = save_args[1:]
-        self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_args)
+        self._add_save_menu_item('%s...' % _('Custom'), 'savecoll_form', save_args)
 
         return coll_calc.calculate_colls(args)
 
@@ -1135,12 +1134,11 @@ class Actions(Kontext):
 
         if to_line == '':
             to_line = ''
-        return {
-            'from_line': from_line,
-            'to_line': to_line,
-            'saveformat': saveformat,
-            'save_max_lines': Actions.SAVECOLL_MAX_LINES
-        }
+        return dict(
+            from_line=from_line,
+            to_line=to_line,
+            saveformat=saveformat,
+            save_max_lines=Actions.SAVECOLL_MAX_LINES)
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
     def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):
