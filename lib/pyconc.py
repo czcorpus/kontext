@@ -249,13 +249,9 @@ class PyConc(manatee.Concordance):
         # because of "hard to explain" metrics they lead to
         if rel_mode == 0:
             norms2_dict = self.get_attr_values_sizes(crit)
-            norms = [norms2_dict[x] for x in words]
-            sumn = float(self.pycorp.size())
-        elif rel_mode == 1:
-            sumn = float(sum([x for x in norms]))
+            norms = [norms2_dict.get(x, 0) for x in words]
         sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
-
         head = [dict(n=label(attrs[x]), s=x / 2)
                 for x in range(0, len(attrs), 2)]
         head.append(dict(n=_('Freq'), s='freq'))
