@@ -22,7 +22,6 @@ element application_bar {
   element module { "ucnk_appbar" }
 }
 """
-from plugins import inject
 from plugins.abstract.appbar import AbstractApplicationBar
 
 
