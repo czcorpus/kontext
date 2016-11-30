@@ -42,7 +42,6 @@ import werkzeug.http
 
 import plugins
 import settings
-from plugins.abstract.auth import AuthException
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
 
@@ -193,6 +192,14 @@ class NotFoundException(UserActionException):
     """
     def __init__(self, message):
         super(NotFoundException, self).__init__(message, 404)
+
+
+class ForbiddenException(UserActionException):
+    """
+    Raised in case user access is forbidden
+    """
+    def __init__(self, message):
+        super(ForbiddenException, self).__init__(message, 403)
 
 
 class Controller(object):
@@ -784,11 +791,6 @@ class Controller(object):
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
 
-        except AuthException as ex:
-            self._status = 401
-            self.add_system_message('error', u'%s' % fetch_exception_msg(ex))
-            methodname, tmpl, result = self.process_method('message', path, named_args)
-
         except (UserActionException, RuntimeError) as ex:
             if hasattr(ex, 'code'):
                 self._status = ex.code
@@ -833,6 +835,9 @@ class Controller(object):
         e2 = self._analyze_error(ex)
         if not isinstance(e2, UserActionException):
             logging.getLogger(__name__).error(''.join(get_traceback()))
+            self._status = 500
+        else:
+            self._status = getattr(e2, 'code', 500)
 
         return_type = self._get_method_metadata(action_name, 'return_type')
         if return_type == 'json':
@@ -981,8 +986,8 @@ class Controller(object):
         return kwargs
 
     @exposed(return_type='json', legacy=True)
-    def json_error(self, error='', reset=False):
+    def json_access_error(self, error='', reset=False):
         """
-        Error page
+        Corpus access error response
         """
-        return {'error': {'message': error, 'reset': reset}}
+        raise ForbiddenException('Cannot access corpus %s' % (self.args.corpname,))

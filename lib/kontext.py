@@ -29,7 +29,7 @@ from werkzeug.datastructures import MultiDict
 
 import corplib
 import conclib
-from controller import Controller, UserActionException, convert_types, exposed
+from controller import Controller, UserActionException, ForbiddenException, convert_types, exposed
 import plugins
 import settings
 import l10n
@@ -41,7 +41,7 @@ import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, ConcMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
-from texttypes import TextTypeCollector, get_tt
+from texttypes import get_tt
 
 
 class LinesGroups(object):
@@ -546,7 +546,7 @@ class Kontext(Controller):
                 if action_metadata.get('return_type', None) != 'json':
                     self._redirect(fallback_url)
                 else:
-                    path = ['json_error']  # just passing a fallback method for JSON response
+                    path = ['json_access_error']  # for JSON mode, set special 'access denied' response
         elif len(allowed_corpora) > 0:
             self.args.corpname = ''
         else:
@@ -623,8 +623,7 @@ class Kontext(Controller):
         if len(path) > 0:
             access_level = action_metadata.get('access_level', 0)  # by default, each action is public
             if access_level and self.user_is_anonymous():
-                from plugins.abstract import auth
-                raise auth.AuthException(_('Access forbidden'))
+                raise ForbiddenException(_('Access forbidden'))
         # plugins setup
         for p in plugins.get_plugins().values():
             if callable(getattr(p, 'setup', None)):

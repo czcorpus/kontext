@@ -69,7 +69,10 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         mixins : mixins,
 
         getInitialState : function () {
-            return {data: null, isWaiting: true};
+            return {
+                data: refsDetailStore.getData(),
+                isWaiting: true
+            };
         },
 
         _storeChangeHandler : function (store) {
@@ -98,6 +101,9 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         _renderContents : function () {
             if (this.state.isWaiting) {
                 return <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />;
+
+            } else if (this.state.data.size === 0) {
+                return <p><strong>{this.translate('global__no_data_avail')}</strong></p>;
 
             } else {
                 return(

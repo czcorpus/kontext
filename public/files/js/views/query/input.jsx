@@ -463,6 +463,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         mixins : mixins,
 
+        _queryInputElement : null,
+
         getInitialState : function () {
             return {
                 query: queryStore.getQuery(this.props.corpname),
@@ -495,6 +497,13 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
             queryStore.removeChangeListener(this._handleStoreChange);
         },
 
+        componentDidUpdate : function (prevProps, prevState) {
+            if (this._queryInputElement
+                    && prevState.historyVisible && !this.state.historyVisible) {
+                this._queryInputElement.focus();
+            }
+        },
+
         _inputArrowKeyHandler : function (evt) {
             if (evt.keyCode === 40 && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
@@ -510,12 +519,12 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 case 'word':
                 case 'char':
                     return <input className="simple-input" type="text"
-                                ref={item => item && !this.state.historyVisible ? item.focus() : null}
+                                ref={item => this._queryInputElement = item}
                                 onChange={this._handleInputChange} value={this.state.query}
                                 onKeyDown={this._inputArrowKeyHandler} />;
                 case 'cql':
                     return <textarea className="cql-input" rows="2" cols="60" name="cql"
-                                ref={item => item && !this.state.historyVisible ? item.focus() : null}
+                                ref={item => this._queryInputElement = item}
                                 onChange={this._handleInputChange} value={this.state.query}
                                 onKeyDown={this._inputArrowKeyHandler} />;
             }
