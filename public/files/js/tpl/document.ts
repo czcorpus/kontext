@@ -479,9 +479,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * when using RSVP-ajax too.
      *
      * @param msgType - one of 'info', 'warning', 'error', 'plain'
-     * @param message - text of the message
+     * @param message - text of the message in most cases; in case of
+     *                  the 'error' type: Error instance, XMLHttpRequest instance
+     *                  or an object containing an attribute 'messages' can
+     *                  be used.
      */
-    showMessage = (msgType:string, message:any, onClose?:()=>void) => {
+    showMessage(msgType:string, message:any, onClose?:()=>void) {
         let timeout;
         let outMsg;
         if (msgType === 'error') {
@@ -517,9 +520,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             } else {
                 outMsg = String(message);
             }
+
+        } else {
+            outMsg = String(message);
         }
         this.messageStore.addMessage(msgType, outMsg, onClose);
-    };
+    }
 
     /**
      * Modifies form (actually, it is always the #mainform)
