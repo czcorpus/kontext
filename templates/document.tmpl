@@ -111,12 +111,12 @@ requirejs.config({
     #if $deployment_id#urlArgs: 'v=$deployment_id',#end if#
     shim : {
         #if $qunit_test
-        ,'vendor/QUnit' : {
+        'vendor/QUnit' : {
             exports : 'QUnit',
             init: function() {
                 QUnit.config.autoload = false;
                 QUnit.config.autostart = false;
-            }
+            },
         }
         #end if
         #if $app_bar_js

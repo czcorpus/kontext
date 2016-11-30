@@ -211,4 +211,4 @@ def create_instance(conf):
     Arguments:
     conf -- a dictionary containing imported XML configuration of the plugin
     """
-    return DefaultDb(conf)
+    return DefaultDb(conf.get('plugins', 'db'))
