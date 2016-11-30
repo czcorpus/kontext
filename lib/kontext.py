@@ -827,9 +827,6 @@ class Kontext(Controller):
         """
         return plugins.get('auth').permitted_corpora(self._session_get('user', 'id'))
 
-    def _load_fav_items(self):  # TODO implementation-specific
-        return plugins.get('user_items').get_user_items(self._session_get('user', 'id'))
-
     def _add_corpus_related_globals(self, result, maincorp):
         """
         arguments:
@@ -1061,7 +1058,6 @@ class Kontext(Controller):
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
 
-        result['CorplistFn'] = self._load_fav_items
         user_items = plugins.get('user_items')
         result['bib_conf'] = plugins.get('corparch').get_corpus_info(self.args.corpname).metadata
 

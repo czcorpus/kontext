@@ -194,10 +194,6 @@ class User(Kontext):
             self._session_get('user', 'id'), request.form['id'])
         return {}
 
-    @exposed(return_type='json', access_level=1, skip_corpus_init=True)
-    def get_favorite_corpora(self, request):
-        return lambda: plugins.get('user_items').to_json(self._load_fav_items())
-
     @exposed(return_type='html', template='empty.tmpl', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):
         html = plugins.get('application_bar').get_contents(plugin_api=self._plugin_api,

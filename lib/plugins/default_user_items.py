@@ -15,7 +15,10 @@ import json
 from abstract.user_items import AbstractUserItems, CorpusItem, SubcorpusItem, UserItemException, AlignedCorporaItem
 from abstract.user_items import infer_item_key
 from plugins import inject
+import plugins
 import l10n
+from controller import exposed
+from actions.user import User as UserController
 
 
 class ItemEncoder(json.JSONEncoder):
@@ -71,6 +74,11 @@ def import_from_json(obj, recursive=False):
     else:
         raise UserItemException('Unknown/undefined item type: %s' % item_type)
     return ans
+
+
+@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+def get_favorite_corpora(ctrl, request):
+    return lambda: plugins.get('user_items').get_user_items(ctrl._session_get('user', 'id'))
 
 
 class UserItems(AbstractUserItems):
@@ -136,6 +144,9 @@ class UserItems(AbstractUserItems):
 
     def infer_item_key(self, corpname, usesubcorp, aligned_corpora):
         return infer_item_key(corpname, usesubcorp, aligned_corpora)
+
+    def export_actions(self):
+        return {UserController: [get_favorite_corpora]}
 
 
 @inject('db', 'auth')

@@ -139,6 +139,7 @@ except ImportError:
     markdown = lambda s: s
 from lxml import etree
 
+import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
 from plugins.abstract.corpora import CorplistProvider
@@ -148,6 +149,7 @@ import l10n
 import manatee
 from fallback_corpus import EmptyCorpus
 from translation import ugettext as _
+from controller import exposed
 
 DEFAULT_LANG = 'en'
 
@@ -714,12 +716,13 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return featured
 
     def export(self, plugin_api):
-        return {
-            'featured': self._export_featured(plugin_api.user_id),
-            'corpora_labels': [(k, lab, self.get_label_color(k)) for k, lab in self.all_keywords],
-            'tag_prefix': self._tag_prefix,
-            'max_num_hints': self._max_num_hints
-        }
+        return dict(
+            favorite=[],
+            featured=self._export_featured(plugin_api.user_id),
+            corpora_labels=[(k, lab, self.get_label_color(k)) for k, lab in self.all_keywords],
+            tag_prefix=self._tag_prefix,
+            max_num_hints=self._max_num_hints
+        )
 
     def customize_search_result_item(self, plugin_api, item, permitted_corpora, full_data):
         pass
