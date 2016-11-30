@@ -519,7 +519,7 @@ export class RefsDetailStore extends SimplePageStore {
 
     private layoutModel:PageModel;
 
-    private data:Array<RefsColumn>;
+    private data:Immutable.List<RefsColumn>;
 
     private linesStore:ConcLineStore;
 
@@ -531,6 +531,7 @@ export class RefsDetailStore extends SimplePageStore {
         this.layoutModel = layoutModel;
         this.linesStore = linesStore;
         this.lineIdx = null;
+        this.data = Immutable.List<RefsColumn>();
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
@@ -559,12 +560,12 @@ export class RefsDetailStore extends SimplePageStore {
         });
     }
 
-    getData():Array<[RefsColumn, RefsColumn]> {
+    getData():Immutable.List<[RefsColumn, RefsColumn]> {
         const ans:Array<[RefsColumn, RefsColumn]> = [];
-        for (let i = 0; i < this.data.length; i += 2) {
-            ans.push([this.data[i], this.data[i+1]]);
+        for (let i = 0; i < this.data.size; i += 2) {
+            ans.push([this.data.get(i), this.data.get(i+1)]);
         }
-        return ans;
+        return Immutable.List<[RefsColumn, RefsColumn]>(ans);
     }
 
     private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):RSVP.Promise<any> {
@@ -581,10 +582,10 @@ export class RefsDetailStore extends SimplePageStore {
             (data) => {
                 if (!data.contains_errors) {
                     this.lineIdx = lineIdx;
-                    this.data = data.Refs;
+                    this.data = Immutable.List<RefsColumn>(data.Refs);
 
                 } else {
-                    throw new Error('Invalid response');
+                    throw new Error(data.messages[0]);
                 }
             }
         );
