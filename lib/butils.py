@@ -160,4 +160,4 @@ def manatee_min_version(ver):
     """
     ver = int(''.join(map(lambda x: '%03d' % int(x), ver.split('.'))))
     actual = int(''.join(map(lambda x: '%03d' % int(x), manatee.version().split('-')[-1].split('.'))))
-    return ver >= actual
+    return ver <= actual

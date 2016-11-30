@@ -41,7 +41,8 @@ import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
 from main_menu import MainMenu, MenuGenerator, ConcMenuItem
 from plugins.abstract.auth import AbstractInternalAuth
-from texttypes import TextTypeCollector, get_tt
+from texttypes import get_tt
+import butils
 
 
 class LinesGroups(object):
@@ -1065,6 +1066,7 @@ class Kontext(Controller):
         result['camelize'] = l10n.camelize
         result['update_params'] = templating.update_params
         result['jsonize_user_item'] = user_items.to_json
+        result['manatee_min_version'] = butils.manatee_min_version
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
 
         result['error_report_url'] = self._get_error_reporting_url()

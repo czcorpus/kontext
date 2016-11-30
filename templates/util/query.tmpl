@@ -32,15 +32,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     <tr class="required">
         <th></th>
         <td>
-            <!--
-            this function cannot be used at the moment due to a bug in recent
-            Manatee versions. Problem has been tested and detected in 2.129.2 and 2.130.6).
-            -->
+            #if $manatee_min_version('2.137.2')
             <select name="pcq_pos_neg$suff">
                 <option value="pos">$_('Contains')</option>
                 <option value="neg">$_('Does NOT contain')</option>
             </select>
+            #else
             <input type="hidden" name="pcq_pos_neg$suff" value="pos" />
+            #end if
         </td>
     </tr>
     #end if
