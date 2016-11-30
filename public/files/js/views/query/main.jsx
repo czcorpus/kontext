@@ -268,7 +268,8 @@ export function init(
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
                                 pcqPosNegValues={this.state.pcqPosNegValues}
-                                inputLanguages={this.state.inputLanguages} />
+                                inputLanguages={this.state.inputLanguages}
+                                queryStorageViews={this.props.queryStorageViews} />
                         : null
                     }
                     <fieldset id="specify-context">
