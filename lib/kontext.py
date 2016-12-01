@@ -1084,7 +1084,6 @@ class Kontext(Controller):
         result['to_json'] = lambda obj: json.dumps(obj)
         result['camelize'] = l10n.camelize
         result['update_params'] = templating.update_params
-        result['jsonize_user_item'] = user_items.to_json
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
 
         result['error_report_url'] = self._get_error_reporting_url()

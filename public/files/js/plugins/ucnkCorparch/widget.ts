@@ -68,23 +68,6 @@ interface FeaturedItem {
 }
 
 /**
- * Extracts user items encoded using JSON in data-item attributes of OPTION HTML elements.
- * This is expected to be filled in on server.
- *
- * @param select
- * @returns list of user items related to individual OPTION elements
- */
-export function fetchDataFromSelect(select:HTMLElement):Array<common.CorplistItemUcnk> {
-    const selectElm:JQuery = $(select);
-    const ans:Array<common.CorplistItemUcnk> = [];
-
-    selectElm.find('option').each((_, elm) => {
-        ans.push(JSON.parse($(elm).attr('data-item')));
-    });
-    return ans;
-}
-
-/**
  * General widget tab. All the future additions to Corplist tabs
  * must implement this.
  */
@@ -669,8 +652,9 @@ class FavoritesTab implements WidgetTab {
     /**
      *
      */
-    constructor(targetAction:string, pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement, dataFav:Array<common.CorplistItemUcnk>,
-                dataFeat:Array<FeaturedItem>, itemClickCallback?:CorplistFavItemClick,
+    constructor(targetAction:string, pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement,
+                dataFav:Array<common.CorplistItemUcnk>, dataFeat:Array<FeaturedItem>,
+                itemClickCallback?:CorplistFavItemClick,
                 customListFilter?:(item:common.CorplistItemUcnk)=>boolean) {
         const self = this;
         this.editMode = false;
@@ -835,7 +819,7 @@ class FavoritesTab implements WidgetTab {
             this.dataFav.forEach(item => {
                 if (self.customListFilter(item)) {
                     jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
-                        + ' title="' + item.description + '"'
+                        + ' title="' + (item.description || '') + '"'
                         + ' href="' + self.generateItemUrl(item)
                         + '" data-id="' + item.id + '">' + item.name + '</a></td>'
                         + '<td class="num">' + item.size_info + '</td>'
@@ -1165,14 +1149,9 @@ class StarComponent {
      * @param canonicalCorpusId
      */
     private getAlignedCorpusName(canonicalCorpusId:string):string {
-        let ans = null;
-        $('#add-searched-lang-widget option').each(function (i, item) {
-            if ($(item).val() === canonicalCorpusId) {
-                ans = $(item).text();
-                return false;
-            }
-        });
-        return ans;
+        const srch = this.querySetupHandler.getAvailableAlignedCorpora()
+                .find(item => item.n === canonicalCorpusId);
+        return srch ? srch.label : canonicalCorpusId;
     }
 
     /**
@@ -1187,14 +1166,11 @@ class StarComponent {
     private inferItemCore(corpus_id:string, subcorpus_id:string,
                           aligned_corpora:Array<string>):common.CorplistItemUcnk {
         let ans:common.CorplistItemUcnk;
-        const self = this;
 
         if (corpus_id) {
             ans = common.createEmptyCorplistItem();
             ans.corpus_id = corpus_id; // TODO canonical vs. regular
             ans.canonical_id = corpus_id;
-
-
 
             if (subcorpus_id) {
                 ans.type = commonDefault.CorplistItemType.SUBCORPUS;
@@ -1206,7 +1182,7 @@ class StarComponent {
                 ans.type = commonDefault.CorplistItemType.ALIGNED_CORPORA;
                 ans.id = [ans.corpus_id].concat(aligned_corpora).join('+');
                 ans.name = this.pageModel.getConf('humanCorpname') + '+'
-                    + aligned_corpora.map((item) => { return self.getAlignedCorpusName(item) }).join('+');
+                    + aligned_corpora.map((item) => this.getAlignedCorpusName(item)).join('+');
                 ans.corpora = aligned_corpora;
 
             } else {
@@ -1238,8 +1214,8 @@ class StarComponent {
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
         }
-        $('div.parallel-corp-lang:visible').each(function () {
-            alignedCorpora.push($(this).attr('data-corpus-id'));
+        this.querySetupHandler.getCorpora().slice(1).forEach(item => {
+            alignedCorpora.push(item);
         });
 
         item = this.inferItemCore(corpName, subcorpName, alignedCorpora);
@@ -1251,17 +1227,16 @@ class StarComponent {
      *
      */
     init():void {
-        const self = this;
-
         if (this.editable) {
-            $(this.starImg).on('click', function (e) {
-                if (!self.starSwitch.isStarred()) {
-                    self.setFavorite(commonDefault.Favorite.FAVORITE);
+            $(this.starImg).on('click', (e) => {
+                if (!this.starSwitch.isStarred()) {
+                    this.setFavorite(commonDefault.Favorite.FAVORITE);
 
                 } else {
-                    self.setFavorite(commonDefault.Favorite.NOT_FAVORITE);
+                    this.setFavorite(commonDefault.Favorite.NOT_FAVORITE);
                 }
             });
+
             this.querySetupHandler.registerOnSubcorpChangeAction(this.onSubcorpChange);
             this.querySetupHandler.registerOnAddParallelCorpAction(this.onAlignedCorporaAdd);
             this.querySetupHandler.registerOnBeforeRemoveParallelCorpAction(this.onAlignedCorporaRemove);
@@ -1290,8 +1265,6 @@ export class Corplist implements CorpusArchive.Widget {
     options:Options;
 
     widgetWrapper:HTMLElement;
-
-    private data:Array<common.CorplistItemUcnk>;
 
     private pageModel:Kontext.PluginApi;
 
@@ -1335,11 +1308,11 @@ export class Corplist implements CorpusArchive.Widget {
      *
      * @param options
      */
-    constructor(targetAction:string, parentForm:HTMLElement, data:Array<common.CorplistItemUcnk>,
-            pageModel:Kontext.PluginApi, querySetupHandler:Kontext.QuerySetupHandler, options:Options) {
+    constructor(targetAction:string, parentForm:HTMLElement,
+            pageModel:Kontext.PluginApi, querySetupHandler:Kontext.QuerySetupHandler,
+            options:Options) {
         this.targetAction = targetAction;
         this.options = options;
-        this.data = data;
         this.pageModel = pageModel;
         this.querySetupHandler = querySetupHandler;
         this.parentForm = parentForm;
@@ -1497,10 +1470,22 @@ export class Corplist implements CorpusArchive.Widget {
         // search func
         this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onSrchItemClick);
         this.searchBox.init();
-        this.favoritesBox = new FavoritesTab(this.targetAction, this.pageModel, this.widgetWrapper, this.data,
-            this.pageModel.getConf('pluginData')['corparch']['featured'], this.onFavItemClick,
-            this.options.favoriteItemsFilter);
+
+        // favorites and featured
+        const pluginData = this.pageModel.getConf<any>('pluginData')['corparch'] || {};
+        const favData:Array<common.CorplistItemUcnk> = pluginData['favorite'] || [];
+        const featData = pluginData['featured'] || [];
+        this.favoritesBox = new FavoritesTab(
+            this.targetAction,
+            this.pageModel,
+            this.widgetWrapper,
+            favData,
+            featData,
+            this.onFavItemClick,
+            this.options.favoriteItemsFilter
+        );
         this.favoritesBox.init();
+
         this.footerElm = window.document.createElement('div');
         $(this.footerElm).addClass('footer');
         $(this.widgetWrapper).append(this.footerElm);

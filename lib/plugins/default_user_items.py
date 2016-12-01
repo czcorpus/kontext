@@ -24,7 +24,7 @@ from actions.user import User as UserController
 class ItemEncoder(json.JSONEncoder):
     """
     Provides a consistent encoding of GeneralItem objects into the JSON format.
-    In accordance with plug-in's 'to_json' required signature also a list of
+    In accordance with plug-in's 'serialize()' required signature also a list of
     GeneralItem instances is supported.
     """
     @staticmethod
@@ -78,7 +78,44 @@ def import_from_json(obj, recursive=False):
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    return lambda: plugins.get('user_items').get_user_items(ctrl._session_get('user', 'id'))
+    return [fc.to_dict() for fc in plugins.get('user_items').get_user_items(ctrl._session_get('user', 'id'))]
+
+
+@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+def set_favorite_item(ctrl, request):
+    """
+    """
+    main_corp = ctrl.cm.get_Corpus(request.form['corpus_id'], request.form['subcorpus_id'])
+    corp_size = main_corp.search_size()
+    data = {
+        'corpora': [],
+        'canonical_id': request.form['canonical_id'],
+        'corpus_id': request.form['corpus_id'],
+        'subcorpus_id': request.form['subcorpus_id'],
+        'name': request.form['name'],
+        'size': corp_size,
+        'size_info': l10n.simplify_num(corp_size),
+        'type': request.form['type']
+    }
+    aligned_corpnames = request.form.getlist('corpora')
+    for ac in aligned_corpnames:
+        data['corpora'].append({
+            'name': ac,  # TODO fetch real name??
+            'corpus_id': ac,
+            'canonical_id': ctrl._canonical_corpname(ac),
+            'type': 'corpus'
+        })
+
+    item = plugins.get('user_items').from_dict(data)
+    plugins.get('user_items').add_user_item(ctrl._session_get('user', 'id'), item)
+    return {'id': item.id}
+
+
+@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+def unset_favorite_item(ctrl, request):
+    plugins.get('user_items').delete_user_item(
+        ctrl._session_get('user', 'id'), request.form['id'])
+    return {}
 
 
 class UserItems(AbstractUserItems):
@@ -120,7 +157,10 @@ class UserItems(AbstractUserItems):
     def from_dict(self, data):
         return import_from_json(data, recursive=True)
 
-    def to_json(self, obj):
+    def serialize(self, obj):
+        """
+        This is used for server-side serialization only
+        """
         return json.dumps(obj, cls=ItemEncoder)
 
     def get_user_items(self, user_id):
@@ -136,8 +176,7 @@ class UserItems(AbstractUserItems):
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        data_json = self.to_json(item)
-        self._db.hash_set(self._mk_key(user_id), item.id, data_json)
+        self._db.hash_set(self._mk_key(user_id), item.id, self.serialize(item))
 
     def delete_user_item(self, user_id, item_id):
         self._db.hash_del(self._mk_key(user_id), item_id)
@@ -146,7 +185,7 @@ class UserItems(AbstractUserItems):
         return infer_item_key(corpname, usesubcorp, aligned_corpora)
 
     def export_actions(self):
-        return {UserController: [get_favorite_corpora]}
+        return {UserController: [get_favorite_corpora, set_favorite_item, unset_favorite_item]}
 
 
 @inject('db', 'auth')

@@ -23,7 +23,7 @@ export function init(dispatcher, mixins, treeStore) {
 
     // --------------------------------- <TreeNode /> --------------------------
 
-    let TreeNode = React.createClass({
+    const TreeNode = React.createClass({
 
         mixins : mixins,
 
@@ -34,10 +34,6 @@ export function init(dispatcher, mixins, treeStore) {
                     nodeId: this.props.ident
                 }
             });
-        },
-
-        getInitialState : function () {
-            return {active: false};
         },
 
         _getStateImagePath : function () {
@@ -62,7 +58,7 @@ export function init(dispatcher, mixins, treeStore) {
 
     // -------------------------------- <TreeLeaf /> -------------------------------
 
-    let TreeLeaf = React.createClass({
+    const TreeLeaf = React.createClass({
 
         _clickHandler : function () {
             dispatcher.dispatch({
@@ -80,7 +76,7 @@ export function init(dispatcher, mixins, treeStore) {
 
     // -------------------------------- <ItemList /> -------------------------------
 
-    let ItemList = React.createClass({
+    const ItemList = React.createClass({
 
         _renderChildren : function () {
             return this.props.corplist.map((item, i) => {
@@ -105,10 +101,10 @@ export function init(dispatcher, mixins, treeStore) {
 
     // -------------------------------- <CorptreeWidget /> -------------------------------
 
-    let CorptreeWidget = React.createClass({
+    const CorptreeWidget = React.createClass({
 
         _buttonClickHandler : function () {
-            if (!this.state.active && !this.state.data) {
+            if (!this.state.active) {
                 dispatcher.dispatch({
                     actionType: 'TREE_CORPARCH_GET_DATA',
                     props: {}
@@ -120,16 +116,14 @@ export function init(dispatcher, mixins, treeStore) {
         },
 
         _changeListener : function (store, action) {
-            if (action === 'TREE_CORPARCH_DATA_CHANGED') {
-                this.setState({
-                    active: true,
-                    data: store.getData()
-                });
-            }
+            this.setState({
+                active: true,
+                data: store.getData()
+            });
         },
 
         getInitialState : function () {
-            return {active: false, data: null};
+            return {active: false, data: treeStore.getData()};
         },
 
         componentDidMount : function () {
@@ -153,14 +147,12 @@ export function init(dispatcher, mixins, treeStore) {
 
     // ----------------------- <CorptreePageComponent /> -----------------
 
-    let CorptreePageComponent = React.createClass({
+    const CorptreePageComponent = React.createClass({
 
         _changeListener : function (store, action) {
-            if (action === 'TREE_CORPARCH_DATA_CHANGED') {
-                this.setState({
-                    data: store.getData()
-                });
-            }
+            this.setState({
+                data: store.getData()
+            });
         },
 
         getInitialState : function () {

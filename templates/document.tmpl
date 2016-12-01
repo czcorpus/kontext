@@ -318,16 +318,6 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 
 ## ******** Common methods definitions ******** ##
 
-#def user_item_opt($item)
-#set $selected = ($item.corpus_id == $corpname) and 'selected="selected"' or ''
-<option
-    value="$item.corpus_id"
-    title="$item.name"
-    data-item="#filter $HtmlEscape#$jsonize_user_item($item)#end filter#"
-    $selected>$item.name
-</option>
-#end def
-
 
 ## ***************************************** ##
 #def input_hidden($exclude=())

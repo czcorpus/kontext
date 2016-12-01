@@ -82,6 +82,9 @@ class GeneralItem(object):
         """
         raise NotImplementedError()
 
+    def to_dict(self):
+        raise NotImplementedError()
+
 
 class CorpusItem(GeneralItem):
     """
@@ -104,6 +107,17 @@ class CorpusItem(GeneralItem):
     def __repr__(self):
         return 'CorpusItem(id: %s)' % (self.id,)
 
+    def to_dict(self):
+        return dict(
+            id=self.id,
+            name=self.name,
+            type=self.type,
+            corpus_id=self.corpus_id,
+            canonical_id=self.canonical_id,
+            size=self.size,
+            size_info=self.size_info
+        )
+
 
 class SubcorpusItem(CorpusItem):
     """
@@ -122,6 +136,11 @@ class SubcorpusItem(CorpusItem):
     @property
     def type(self):
         return 'subcorpus'
+
+    def to_dict(self):
+        ans = super(SubcorpusItem, self).to_dict()
+        ans['subcorpus_id'] = self.subcorpus_id
+        return ans
 
 
 class AlignedCorporaItem(CorpusItem):
@@ -142,6 +161,11 @@ class AlignedCorporaItem(CorpusItem):
     @property
     def type(self):
         return 'aligned_corpora'
+
+    def to_dict(self):
+        ans = super(AlignedCorporaItem, self).to_dict()
+        ans['corpora'] = [c.to_dict() for c in self.corpora]
+        return ans
 
 
 class AbstractUserItems(ThreadLocalData):
@@ -171,10 +195,10 @@ class AbstractUserItems(ThreadLocalData):
         """
         raise NotImplementedError()
 
-    def to_json(self, obj):
+    def serialize(self, obj):
         """
         Exports a GeneralItem instance or a list of GeneralItem instances (both variants
-         must be supported) to JSON
+         must be supported) to JSON used for internal storage (i.e. no client-side stuff)
         """
         raise NotImplementedError()
 

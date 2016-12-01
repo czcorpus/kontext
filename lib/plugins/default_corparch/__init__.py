@@ -149,7 +149,6 @@ import l10n
 import manatee
 from fallback_corpus import EmptyCorpus
 from translation import ugettext as _
-from controller import exposed
 
 DEFAULT_LANG = 'en'
 
@@ -640,7 +639,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                                                       lang_code=language)
                 else:
                     return self._raw_list()[corp_name]
-            raise ValueError('Missing configuration data for %s' % corp_name)
+            return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()
 
@@ -716,8 +715,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return featured
 
     def export(self, plugin_api):
+        user_id = plugin_api.session.get('user', {}).get('id')
         return dict(
-            favorite=[],
+            favorite=[c.to_dict()
+                      for c in plugins.get('user_items').get_user_items(user_id)],
             featured=self._export_featured(plugin_api.user_id),
             corpora_labels=[(k, lab, self.get_label_color(k)) for k, lab in self.all_keywords],
             tag_prefix=self._tag_prefix,

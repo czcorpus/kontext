@@ -121,6 +121,14 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         this.queryStore.registerOnSubcorpChangeAction(fn);
     }
 
+    getCorpora():Immutable.List<string> {
+        return this.queryStore.getCorpora();
+    }
+
+    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
+        return this.queryStore.getAvailableAlignedCorpora();
+    }
+
     private initCorplistComponent():void {
         this.corplistComponent = corplistComponent.create(
             window.document.getElementById('corparch-mount'),
