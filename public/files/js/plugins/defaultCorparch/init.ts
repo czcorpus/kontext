@@ -21,7 +21,6 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins/abstract.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../types/views.d.ts" />
@@ -29,11 +28,9 @@
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
 
-import $ = require('jquery');
-import util = require('../../util');
-import common = require('./common');
-import widget = require('./widget');
-import corplist = require('./corplist');
+import * as $ from 'jquery';
+import {Corplist} from './widget';
+import {CorplistPage} from './corplist';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
@@ -61,7 +58,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
         );
         return ans;
     }
-    return new corplist.CorplistPage(pluginApi, initViews);
+    return new CorplistPage(pluginApi, initViews);
 }
 
 /**
@@ -77,9 +74,14 @@ export function create(
         selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
         querySetupHandler:Kontext.QuerySetupHandler,
         options:CorpusArchive.Options):CorpusArchive.Widget {
-    const data:Array<common.CorplistItem> = widget.fetchDataFromSelect(selectElm);
-    const corplist:widget.Corplist = new widget.Corplist(targetAction, $(selectElm).closest('form').get(0), data,
-            pluginApi, querySetupHandler, options);
+
+    const corplist:Corplist = new Corplist(
+        targetAction,
+        $(selectElm).closest('form').get(0),
+        pluginApi,
+        querySetupHandler,
+        options
+    );
     corplist.bind(selectElm);
     return corplist;
 }

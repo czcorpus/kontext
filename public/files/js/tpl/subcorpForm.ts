@@ -24,6 +24,7 @@
 /// <reference path="../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../ts/declarations/immutable.d.ts" />
 
 import $ = require('jquery');
 import * as RSVP from 'vendor/rsvp';
@@ -37,6 +38,7 @@ import {UserSettings} from '../userSettings';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
 import corplistComponent = require('plugins/corparch/init');
+import * as Immutable from 'vendor/immutable';
 
 
 
@@ -73,6 +75,14 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
 
     registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+
+    getCorpora():Immutable.List<string> {
+        return Immutable.List<string>();
+    }
+
+    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
+        return Immutable.List<{n:string; label:string}>();
+    }
 
     formChangeCorpus(item:JQueryEventObject):void {
         let formAncestor;

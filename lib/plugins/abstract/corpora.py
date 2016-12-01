@@ -101,7 +101,9 @@ class BrokenCorpusInfo(CorpusInfo):
     An incomplete corpus information. It should be used in corpus info lists
     instead of None and similar solutions to detect a problematic item.
     """
-    pass
+    def __init__(self, name=None):
+        super(BrokenCorpusInfo, self).__init__()
+        self.name = (name if name else 'undefined') + '(!)'
 
 
 class CorpInfoEncoder(json.JSONEncoder):

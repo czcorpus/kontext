@@ -56,7 +56,7 @@ export function init(
                 <tr>
                     <th>{this.translate('global__corpus')}:</th>
                     <td>
-                        <select id="corparch-mount" name="corpname">SYN2015</select>
+                        <div id="corparch-mount" />
                         {this.props.subcorpList.size > 0 ?
                             (<span id="subcorp-selector-wrapper">
                                 <strong>{'\u00a0'}:{'\u00a0'}</strong>

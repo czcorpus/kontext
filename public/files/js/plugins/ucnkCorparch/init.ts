@@ -27,14 +27,14 @@
 /// <amd-dependency path="vendor/typeahead" />
 /// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
 
-import $ = require('jquery');
-import util = require('../../util');
-import common = require('./common');
-import widget = require('./widget');
-import corplist = require('./corplist');
+import * as $ from 'jquery';
+import {CorplistItemUcnk} from './common';
+import * as widget from './widget';
+import {CorplistPage} from './corplist';
 import {init as viewsInit} from './view';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
+import {QueryStore} from '../../stores/query/main';
 
 /**
  *
@@ -59,7 +59,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
         );
         return ans;
     }
-    return new corplist.CorplistPage(pluginApi, initViews);
+    return new CorplistPage(pluginApi, initViews);
 }
 
 /**
@@ -68,14 +68,21 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customiz
  *  2) corpus search tool
  *
  * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
+ * @param targetAction ???
  * @param pluginApi
+ * @param querySetupHandler - an object handling specific events within the query form (non-React world)
  * @param options A configuration for the widget
  */
 export function create(selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-                       querySetupHandler:Kontext.QuerySetupHandler, options:CorpusArchive.Options):CorpusArchive.Widget {
-    const data:Array<common.CorplistItemUcnk> = widget.fetchDataFromSelect(selectElm);
-    const corplist:widget.Corplist = new widget.Corplist(targetAction, $(selectElm).closest('form').get(0),
-            data, pluginApi, querySetupHandler, options);
+                       querySetupHandler:Kontext.QuerySetupHandler,
+                       options:CorpusArchive.Options):CorpusArchive.Widget {
+    const corplist:widget.Corplist = new widget.Corplist(
+        targetAction,
+        $(selectElm).closest('form').get(0),
+        pluginApi,
+        querySetupHandler,
+        options
+    );
     corplist.bind(selectElm);
     return corplist;
 }

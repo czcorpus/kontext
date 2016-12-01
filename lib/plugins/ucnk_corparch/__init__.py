@@ -96,18 +96,6 @@ class UcnkCorpusInfo(CorpusInfo):
         self.requestable = False
 
 
-@exposed(acess_level=1, return_type='json', skip_corpus_init=True)
-def ask_corpus_access(controller, request):
-    ans = {}
-    status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
-                                                        plugin_api=getattr(controller, '_plugin_api'),
-                                                        custom_message=request.form['customMessage'])
-    if status is False:
-        ans['error'] = _(
-            'Failed to send e-mail. Please try again later or contact system administrator')
-    return ans
-
-
 class UcnkCorplistProvider(DeafultCorplistProvider):
 
     def __init__(self, plugin_api, auth, corparch, tag_prefix):
@@ -119,6 +107,19 @@ class UcnkCorplistProvider(DeafultCorplistProvider):
     def should_fetch_next(self, ans, offset, limit):
         # we have to fetch +1 item to know if there is another page/offset, that's why we use '>'
         return len(ans['rows']) <= offset + limit
+
+
+
+@exposed(acess_level=1, return_type='json', skip_corpus_init=True)
+def ask_corpus_access(ctrl, request):
+    ans = {}
+    status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
+                                                        plugin_api=getattr(ctrl, '_plugin_api'),
+                                                        custom_message=request.form['customMessage'])
+    if status is False:
+        ans['error'] = _(
+            'Failed to send e-mail. Please try again later or contact system administrator')
+    return ans
 
 
 class UcnkCorpArch(CorpusArchive):
