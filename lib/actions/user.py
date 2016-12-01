@@ -159,6 +159,45 @@ class User(Kontext):
             'limit': limit
         }
 
+    @exposed(return_type='json', access_level=1, skip_corpus_init=True)
+    def set_favorite_item(self, request):
+        """
+        """
+        main_corp = self.cm.get_Corpus(request.form['corpus_id'], request.form['subcorpus_id'])
+        corp_size = main_corp.search_size()
+        data = {
+            'corpora': [],
+            'canonical_id': request.form['canonical_id'],
+            'corpus_id': request.form['corpus_id'],
+            'subcorpus_id': request.form['subcorpus_id'],
+            'name': request.form['name'],
+            'size': corp_size,
+            'size_info': l10n.simplify_num(corp_size),
+            'type': request.form['type']
+        }
+        aligned_corpnames = request.form.getlist('corpora')
+        for ac in aligned_corpnames:
+            data['corpora'].append({
+                'name': ac,  # TODO fetch real name??
+                'corpus_id': ac,
+                'canonical_id': self._canonical_corpname(ac),
+                'type': 'corpus'
+            })
+
+        item = plugins.get('user_items').from_dict(data)
+        plugins.get('user_items').add_user_item(self._session_get('user', 'id'), item)
+        return {'id': item.id}
+
+    @exposed(return_type='json', access_level=1, skip_corpus_init=True)
+    def unset_favorite_item(self, request):
+        plugins.get('user_items').delete_user_item(
+            self._session_get('user', 'id'), request.form['id'])
+        return {}
+
+    @exposed(return_type='json', access_level=1, skip_corpus_init=True)
+    def get_favorite_corpora(self, request):
+        return lambda: plugins.get('user_items').to_json(self._load_fav_items())
+
     @exposed(return_type='html', template='empty.tmpl', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):
         html = plugins.get('application_bar').get_contents(plugin_api=self._plugin_api,

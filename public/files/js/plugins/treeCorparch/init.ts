@@ -67,11 +67,11 @@ export class TreeWidgetStore extends util.SimplePageStore {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
                         let item = self.idMap.get(payload.props['nodeId']);
                         item.active = !item.active;
-                        self.notifyChangeListeners();
+                        self.notifyChangeListeners('TREE_CORPARCH_DATA_CHANGED');
                         break;
                     case 'TREE_CORPARCH_GET_DATA':
                         self.loadData().then(
-                            (d) => self.notifyChangeListeners());
+                            (d) => self.notifyChangeListeners('TREE_CORPARCH_DATA_CHANGED'));
                         break;
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
                         self.corpusClickHandler(payload.props['ident']);
@@ -135,24 +135,20 @@ export class TreeWidgetStore extends util.SimplePageStore {
  *  1) user's favorite items
  *  2) corpus search tool
  *
- * @param targetElm - an element the component will mount to
- * @param targetAction - ignored here
+ * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
  * @param pluginApi
- * @param querySetupHandler - query form functions
- * @param options A configuration of the widget
+ * @param options A configuration for the widget
  */
-export function create(targetElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-            querySetupHandler:Kontext.QuerySetupHandler, options:CorpusArchive.Options):void {
-    const widgetWrapper = window.document.createElement('div');
+export function create(selectElm:HTMLElement, pluginApi:Kontext.PluginApi,
+                       options:CorpusArchive.Options) {
+    let widgetWrapper = window.document.createElement('div');
     $(widgetWrapper).addClass('corp-tree-wrapper');
-    $(targetElm).replaceWith(widgetWrapper);
-    const treeStore = new TreeWidgetStore(
-        pluginApi,
-        (corpusIdent:string) => {
-            window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpusIdent);
-        }
-    );
-    const viewsLib = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
+    $(selectElm).replaceWith(widgetWrapper);
+
+    let treeStore = new TreeWidgetStore(pluginApi, (corpusIdent:string) => {
+        window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpusIdent);
+    });
+    let viewsLib = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
             treeStore);
     pluginApi.renderReactComponent(
         viewsLib.CorptreeWidget,

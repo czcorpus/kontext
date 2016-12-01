@@ -46,14 +46,6 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
 
     registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
 
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>();
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
-        return Immutable.List<{n:string; label:string}>();
-    }
-
     /**
      * Registers a callback which is invoked after the subcorpus
      * selection element is changed. It guarantees that all the

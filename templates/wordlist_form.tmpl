@@ -55,14 +55,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, c
       <input type="hidden" name="wlsort" value="f" />
       <input type="hidden" name="subcnorm" value="freq" />
     <table class="form">
-    <tr>
-        <th>
-            $_('Corpus'):
-        </th>
-        <td>
-            <div id="corparch-mount"></div>
-        </td>
-    </tr>
+      #filter None
+      $corp_sel_node
+      #end filter
     <tr class="required">
     <th>$_("Search attribute"):</th>
       <td><select class="wlattr-sel" name="wlattr">

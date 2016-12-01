@@ -45,15 +45,10 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 <h2>$_('New subcorpus')</h2>
     <form id="subcorp-form" action="subcorp" method="POST">
         <table class="form">
+        #filter None
+        $corp_sel_node
+        #end filter
         <tbody>
-        <tr>
-            <th>
-                $_('Corpus'):
-            </th>
-            <td>
-                <div id="corparch-mount"></div>
-            </td>
-        </tr>
         <tr class="required">
         <th style="width: 20%">$_("New subcorpus name"):</th>
         <td style="width: 80%"><input type="text" name="subcname" id="subcname" value="$subcname" /></td>

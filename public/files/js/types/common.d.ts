@@ -121,10 +121,6 @@ declare module Kontext {
         registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
 
         registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
-
-        getCorpora():Immutable.List<string>;
-
-        getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}>;
     }
 
     /**
