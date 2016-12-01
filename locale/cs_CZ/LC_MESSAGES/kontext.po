@@ -431,7 +431,7 @@ msgstr "Volby pro pokročilé"
 #: cmpltmpl/filter_form.py:126 cmpltmpl/filter_form.py:341
 #: cmpltmpl/document.py:2307
 msgid "Text Types"
-msgstr "Typy textu"
+msgstr "Typy textů"
 
 #: cmpltmpl/filter_form.py:201
 msgid "Concordance Filter"
