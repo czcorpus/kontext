@@ -48,14 +48,6 @@ class CorpusSetupHandler implements Kontext.QuerySetupHandler {
     registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
 
     registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
-
-    getCorpora():Immutable.List<string> {
-        return Immutable.List<string>();
-    }
-
-    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
-        return Immutable.List<{n:string; label:string}>();
-    }
 }
 
 

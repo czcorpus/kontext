@@ -63,6 +63,23 @@ interface FeaturedItem {
 }
 
 /**
+ * Extracts user items encoded using JSON in data-item attributes of OPTION HTML elements.
+ * This is expected to be filled in on server.
+ *
+ * @param select
+ * @returns list of user items related to individual OPTION elements
+ */
+export function fetchDataFromSelect(select:HTMLElement):Array<common.CorplistItem> {
+    const elm:JQuery = $(select);
+    const ans:Array<common.CorplistItem> = [];
+
+    elm.find('option').each((_, elm) => {
+        ans.push(JSON.parse($(elm).attr('data-item')));
+    });
+    return ans;
+}
+
+/**
  * General widget tab. All the future additions to Corplist tabs
  * must implement this.
  */
@@ -159,6 +176,8 @@ class WidgetMenu {
 
     pageModel:Kontext.PluginApi;
 
+    querySetupHandler:Kontext.QuerySetupHandler;
+
     currentBoxId:string;
 
     blockingTimeout:number;
@@ -174,7 +193,7 @@ class WidgetMenu {
      *
      * @param widget
      */
-    constructor(widget:Corplist, pageModel:Kontext.PluginApi) {
+    constructor(widget:Corplist, pageModel:Kontext.PluginApi, querySetupHandler:Kontext.QuerySetupHandler) {
         this.widget = widget;
         this.pageModel = pageModel;
         this.menuWrapper = $('<div class="menu"></div>');
@@ -374,6 +393,7 @@ class SearchTab implements WidgetTab {
         } else {
             skipIds = [];
         }
+
         for (let p in this.selectedTags) {
             if (this.selectedTags.hasOwnProperty(p)
                 && this.selectedTags[p]
@@ -732,9 +752,9 @@ class FavoritesTab implements WidgetTab {
             params.push('usesubcorp=' + itemData.subcorpus_id);
         }
         if (itemData.type === common.CorplistItemType.ALIGNED_CORPORA) {
-            itemData.corpora.forEach(item => {
-                params.push(`sel_aligned=${item.corpus_id}`);
-            });
+            for (var i = 0; i < itemData.corpora.length; i++) {
+                params.push('sel_aligned=' + itemData.corpora[i].corpus_id);
+            }
         }
         return rootPath + '?' + params.join('&');
     }
@@ -802,7 +822,7 @@ class FavoritesTab implements WidgetTab {
             this.dataFav.forEach(item => {
                 if (self.customListFilter(item)) {
                     jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
-                        + ' title="' + (item.description || '') + '"'
+                        + ' title="' + item.description + '"'
                         + ' href="' + self.generateItemUrl(item)
                         + '" data-id="' + item.id + '">' + item.name + '</a></td>'
                         + '<td class="num">' + item.size_info + '</td>'
@@ -1132,9 +1152,14 @@ class StarComponent {
      * @param canonicalCorpusId
      */
     private getAlignedCorpusName(canonicalCorpusId:string):string {
-        const srch = this.querySetupHandler.getAvailableAlignedCorpora()
-                .find(item => item.n === canonicalCorpusId);
-        return srch ? srch.label : canonicalCorpusId;
+        let ans = null;
+        $('#add-searched-lang-widget option').each(function (i, item) {
+            if ($(item).val() === canonicalCorpusId) {
+                ans = $(item).text();
+                return false;
+            }
+        });
+        return ans;
     }
 
     /**
@@ -1164,7 +1189,7 @@ class StarComponent {
                 ans.type = common.CorplistItemType.ALIGNED_CORPORA;
                 ans.id = [ans.corpus_id].concat(aligned_corpora).join('+');
                 ans.name = this.pageModel.getConf('humanCorpname') + '+'
-                    + aligned_corpora.map((item) => this.getAlignedCorpusName(item)).join('+');
+                    + aligned_corpora.map((item) => { return self.getAlignedCorpusName(item) }).join('+');
                 ans.corpora = aligned_corpora;
 
             } else {
@@ -1194,8 +1219,8 @@ class StarComponent {
         if ($('#subcorp-selector').length > 0) {
             subcorpName = $('#subcorp-selector').val();
         }
-        this.querySetupHandler.getCorpora().slice(1).forEach(item => {
-            alignedCorpora.push(item);
+        $('div.parallel-corp-lang:visible').each(function () {
+            alignedCorpora.push($(this).attr('data-corpus-id'));
         });
 
         const item:common.CorplistItem = this.inferItemCore(corpName, subcorpName, alignedCorpora);
@@ -1246,6 +1271,8 @@ export class Corplist implements CorpusArchive.Widget {
 
     widgetWrapper:HTMLElement;
 
+    private data:Array<common.CorplistItem>;
+
     private pageModel:Kontext.PluginApi;
 
     private querySetupHandler:Kontext.QuerySetupHandler;
@@ -1288,11 +1315,11 @@ export class Corplist implements CorpusArchive.Widget {
      *
      * @param options
      */
-    constructor(targetAction:string, parentForm:HTMLElement,
-            pageModel:Kontext.PluginApi, querySetupHandler:Kontext.QuerySetupHandler,
-            options:Options) {
+    constructor(targetAction:string, parentForm:HTMLElement, data:Array<common.CorplistItem>,
+            pageModel:Kontext.PluginApi, querySetupHandler:Kontext.QuerySetupHandler, options:Options) {
         this.targetAction = targetAction;
         this.options = options;
+        this.data = data;
         this.pageModel = pageModel;
         this.querySetupHandler = querySetupHandler;
         this.parentForm = parentForm;
@@ -1437,25 +1464,15 @@ export class Corplist implements CorpusArchive.Widget {
         this.jqWrapper.addClass(this.widgetClass);
 
         // main menu
-        this.mainMenu = new WidgetMenu(this, this.pageModel);
+        this.mainMenu = new WidgetMenu(this, this.pageModel, this.querySetupHandler);
 
         // search func
         this.searchBox = new SearchTab(this.pageModel, this.jqWrapper.get(0), this.onSrchItemClick);
         this.searchBox.init();
 
-        // favorites and featured
-        const pluginData = this.pageModel.getConf<any>('pluginData')['corparch'] || {};
-        const favData:Array<common.CorplistItem> = pluginData['favorite'] || [];
-        const featData = pluginData['featured'] || [];
-        this.favoritesBox = new FavoritesTab(
-            this.targetAction,
-            this.pageModel,
-            this.widgetWrapper,
-            favData,
-            featData,
-            this.onFavItemClick,
-            this.options.favoriteItemsFilter
-        );
+        this.favoritesBox = new FavoritesTab(this.targetAction, this.pageModel, this.widgetWrapper, this.data,
+            this.pageModel.getConf('pluginData')['corparch']['featured'], this.onFavItemClick,
+            this.options.favoriteItemsFilter);
         this.favoritesBox.init();
 
         this.footerElm = window.document.createElement('div');

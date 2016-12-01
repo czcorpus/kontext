@@ -318,7 +318,60 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 
 ## ******** Common methods definitions ******** ##
 
+#def user_item_opt($item)
+#set $selected = ($item.corpus_id == $corpname) and 'selected="selected"' or ''
+<option
+    value="$item.corpus_id"
+    title="$item.name"
+    data-item="#filter $HtmlEscape#$jsonize_user_item($item)#end filter#"
+    $selected>$item.name
+</option>
+#end def
 
+
+#def corp_sel($corplist)
+
+    <input type="hidden" name="reload" />
+    #set $is_fav = False
+    <select name="corpname">
+      #for $c in $corplist
+        #filter None#$user_item_opt($c)#end filter#
+      #end for
+    </select>
+    <span id="subcorp-selector-wrapper">
+    #if $SubcorpList
+    <strong>:</strong> <select id="subcorp-selector" name="usesubcorp">
+        #for $subc in $SubcorpList
+        <option value="$subc.v" #if $varExists('usesubcorp') and $usesubcorp==$subc.v#selected="selected"#end if#>$subc.n</option>
+        #end for
+    </select>
+    #end if ## SubcorpList
+    </span>
+    #if not $_anonymous
+    <div class="starred">
+    </div>
+    #end if
+
+#end def  ## corp_sel
+## ***************************************** ##
+#def corp_sel_node
+    ## Select corpus name
+    #set $corplist = $CorplistFn()
+
+    #set $corplist_size = $min($len($corplist), 20)
+    #filter None
+    <tbody>
+        <tr class="required">
+            <th>$_("Corpus"):</th>
+            <td colspan="2">
+            #filter None
+            $corp_sel($corplist)
+            #end filter
+            </td>
+        </tr>
+    </tbody>
+    #end filter
+#end def  ## corp_sel_node
 ## ***************************************** ##
 #def input_hidden($exclude=())
     ## Argument to keep current concordance
