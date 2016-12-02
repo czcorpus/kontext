@@ -48,6 +48,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, con
     conf.DefaultAttr = $to_json($default_attr);
     conf.AttrList = $to_json($getVar('AttrList', []));
     conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
+    conf.InputLanguages = $to_json($input_languages);
+    conf.Pnfilter = $to_json($pnfilter);
     filterForm.init(conf);
 });
 

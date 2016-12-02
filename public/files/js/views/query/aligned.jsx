@@ -69,12 +69,12 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     </div>
                     <table className="form">
                         <tbody>
-                            <inputViews.TRPcqPosNegField corpname={this.props.corpname}
-                                    value={this.props.pcqPosNegValue} />
+                            <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
+                                    value={this.props.pcqPosNegValue} actionPrefix="" />
                             <inputViews.TRQueryTypeField queryType={this.props.queryType}
-                                    corpname={this.props.corpname} />
+                                    sourceId={this.props.corpname} />
                             <inputViews.TRQueryInputField
-                                corpname={this.props.corpname}
+                                sourceId={this.props.corpname}
                                 queryType={this.props.queryType}
                                 widgets={this.props.widgets}
                                 lposlist={this.props.lposlist}
@@ -85,7 +85,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 attrList={this.props.attrList}
                                 tagsetDocUrl={this.props.tagsetDocUrl}
                                 inputLanguage={this.props.inputLanguage}
-                                queryStorageViews={this.props.queryStorageViews} />
+                                queryStorageViews={this.props.queryStorageViews}
+                                actionPrefix="" />
                         </tbody>
                     </table>
                 </div>
