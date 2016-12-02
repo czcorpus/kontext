@@ -87,12 +87,12 @@ declare module Kontext {
     export interface PluginApi {
         getConf<T>(key:string):T;
         createStaticUrl(path:string):string;
-        createActionUrl(path:string):string;
+        createActionUrl(path:string, args?:Array<[string,string]>):string;
         ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
         appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}):void;
-        showMessage(type:string, message:string, onClose?:()=>void); // TODO type: MsgType vs string
+        showMessage(type:string, message:any, onClose?:()=>void);
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date, timeFormat?:number):string;
