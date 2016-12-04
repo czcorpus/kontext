@@ -239,11 +239,13 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                         {'\u00a0'}={'\u00a0'}
                         <input type="text" value={this.state.query} onChange={this._handleInputChange} />
                         {'\u00a0'}
-                        <button type="button" className="default-button"
+                    </div>
+                    <p>
+                        <button type="button" className="util-button"
                                 onClick={this._handleInsert}>
                             {this.translate('query__insert_within')}
                         </button>
-                    </div>
+                    </p>
                 </layoutViews.PopupBox>
             );
         }
