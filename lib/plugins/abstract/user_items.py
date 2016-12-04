@@ -18,7 +18,6 @@ user corpus list.
 Expected factory method signature: create_instance(config, db)
 """
 
-from structures import ThreadLocalData
 from controller import UserActionException
 
 
@@ -168,13 +167,10 @@ class AlignedCorporaItem(CorpusItem):
         return ans
 
 
-class AbstractUserItems(ThreadLocalData):
+class AbstractUserItems(object):
     """
     A 'user_items' (= favorite corpora, subcorpora, aligned corpora)
-    plug-in interface. It inherits from ThreadLocalData
-    as it is likely that at least language settings will
-    be required to keep lists etc. sorted according to user's
-    current settings.
+    plug-in interface.
 
     Please note that to initiate the plug-in with request-specific
     data the 'setup(controller)' method must be implemented. The controller
@@ -183,7 +179,7 @@ class AbstractUserItems(ThreadLocalData):
     """
 
     def __init__(self):
-        super(AbstractUserItems, self).__init__(('lang',))
+        super(AbstractUserItems, self).__init__()
 
     def from_dict(self, data):
         """
@@ -202,34 +198,34 @@ class AbstractUserItems(ThreadLocalData):
         """
         raise NotImplementedError()
 
-    def get_user_items(self, user_id):
+    def get_user_items(self, plugin_api):
         """
         Returns a list of user items (GeneralItem implementations)
 
         arguments:
-        user_id -- a database ID of a user
+        plugin_api --
 
         return:
         a list or a compatible structure containing GeneralItem objects
         """
         raise NotImplementedError()
 
-    def add_user_item(self, user_id, item):
+    def add_user_item(self, plugin_api, item):
         """
         Adds (persistently) an item to user's list.
 
         arguments:
-        user_id -- a database ID of a user
+        plugin_api --
         item -- an instance of GeneralItem implementation
         """
         raise NotImplementedError()
 
-    def delete_user_item(self, user_id, item_id):
+    def delete_user_item(self, plugin_api, item_id):
         """
         Removes (in a persistent way) an item from user's list.
 
         arguments:
-        user_id -- a databse ID of a user
+        plugin_api --
         item_id -- an ID of GeneralItem instance
         """
         raise NotImplementedError()

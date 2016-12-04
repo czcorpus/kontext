@@ -18,45 +18,7 @@
 Miscellaneous data structures
 """
 
-import threading
 import inspect
-
-
-class ThreadLocalData(object):
-    """
-    A class which provides a way to store and retrieve thread-local properties
-    without interfering with normal properties.
-    A predefined set of attributes can be specified to make the behavior more
-    'static-like'.
-    """
-
-    def __init__(self, fixed_attrs=None):
-        """
-        arguments:
-        fixed_attrs -- if a list or a tuple is provided then 'setlocal' and 'getlocal' check
-        whether the requested attribute is one of fixed_attrs. If not then AttributeError
-        is thrown.
-        """
-        self._local = threading.local()
-        self._fixed_local = tuple(fixed_attrs) if fixed_attrs is not None else None
-
-    def _validate(self, key):
-        if self._fixed_local is not None and key not in self._fixed_local:
-            raise AttributeError('Foo[local=%s] does not permit attribute %s' % (self._fixed_local, key))
-
-    def haslocal(self, key):
-        return hasattr(self._local, key)
-
-    def setlocal(self, key, value):
-        self._validate(key)
-        setattr(self._local, key, value)
-
-    def getlocal(self, *args):
-        self._validate(args[0])
-        try:
-            return getattr(*((self._local,) + args))
-        except AttributeError:
-            raise AttributeError('%s object has no attribute %s' % (self.__class__.__name__, args[0]))
 
 
 class FixedDict(object):

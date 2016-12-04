@@ -297,7 +297,7 @@ class DeafultCorplistProvider(CorplistProvider):
         else:
             limit = int(limit)
 
-        user_items = self._corparch.user_items.get_user_items(plugin_api.user_id)
+        user_items = self._corparch.user_items.get_user_items(plugin_api)
 
         def is_fav(corpus_id):
             for item in user_items:
@@ -674,10 +674,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return featured
 
     def export(self, plugin_api):
-        user_id = plugin_api.session.get('user', {}).get('id')
         return dict(
             favorite=[c.to_dict()
-                      for c in plugins.get('user_items').get_user_items(user_id)],
+                      for c in plugins.get('user_items').get_user_items(plugin_api)],
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
