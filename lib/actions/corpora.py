@@ -34,7 +34,6 @@ class Corpora(Kontext):
         if isinstance(corparch_plugin, AbstractSearchableCorporaArchive):
             params = corparch_plugin.initial_search_params(request.args.get('query'), request.args)
             data = corparch_plugin.search(plugin_api=self._plugin_api,
-                                          user_id=self._session_get('user', 'id'),
                                           query=False,
                                           offset=0,
                                           limit=request.args.get('limit', None),
@@ -47,7 +46,6 @@ class Corpora(Kontext):
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_list_corpora(self, request):
         return plugins.get('corparch').search(plugin_api=self._plugin_api,
-                                              user_id=self._session_get('user', 'id'),
                                               query=request.args['query'],
                                               offset=request.args.get('offset', None),
                                               limit=request.args.get('limit', None),
@@ -57,7 +55,7 @@ class Corpora(Kontext):
     def ajax_get_corp_details(self, request):
         """
         """
-        corp_conf_info = plugins.get('corparch').get_corpus_info(request.args['corpname'])
+        corp_conf_info = self.get_corpus_info(request.args['corpname'])
         corpus = self.cm.get_Corpus(request.args['corpname'])
         citation_info = corp_conf_info.get('citation_info', None)
         citation_info = citation_info.to_dict() if citation_info else {}
@@ -94,7 +92,7 @@ class Corpora(Kontext):
         Provides a map (struct_name=>[list of attributes]). This is used
         by 'insert within' widget.
         """
-        speech_segment = plugins.get('corparch').get_corpus_info(self.args.corpname).speech_segment
+        speech_segment = self.get_corpus_info(self.args.corpname).speech_segment
         ans = defaultdict(lambda: [])
         for item in self.corp.get_conf('STRUCTATTRLIST').split(','):
             if item != speech_segment:
@@ -104,5 +102,5 @@ class Corpora(Kontext):
 
     @exposed(return_type='json', legacy=True)
     def bibliography(self, id=''):
-        bib_data = plugins.get('live_attributes').get_bibliography(self.corp, item_id=id)
+        bib_data = plugins.get('live_attributes').get_bibliography(self._plugin_api, self.corp, item_id=id)
         return {'bib_data': bib_data}

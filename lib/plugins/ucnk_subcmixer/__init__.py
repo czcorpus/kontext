@@ -33,7 +33,7 @@ import corplib
 @exposed(return_type='json', acess_level=1)
 def subcmixer_run_calc(ctrl, request):
     try:
-        return plugins.get('subcmixer').process(ctrl.corp, request.form['corpname'],
+        return plugins.get('subcmixer').process(ctrl._plugin_api, ctrl.corp, request.form['corpname'],
                                                 json.loads(request.form['expression']))
     except Exception as e:
         ctrl.add_system_message('error', unicode(e))
@@ -160,11 +160,11 @@ class SubcMixer(AbstractSubcMixer):
                 ret.append(subitem)
         return ret
 
-    def process(self, corpus, corpname, args):
+    def process(self, plugin_api, corpus, corpname, args):
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
             raise SubcMixerException('Subcorpora based on more than a single structure are not supported at the moment.')
-        corpus_info = self._corparch.get_corpus_info(corpname)
+        corpus_info = self._corparch.get_corpus_info(plugin_api, corpname)
         db = Database(corpus_info.metadata.database, corpus_info.id,
                       corpus_info.metadata.id_attr)
         conditions = self._import_task_args(args)

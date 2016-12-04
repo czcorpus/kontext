@@ -69,14 +69,14 @@ def cached(f):
     time.
     """
     @wraps(f)
-    def wrapper(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
-        db = self.db(vanilla_corpname(corpus.corpname))
+    def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
+        db = self.db(plugin_api, vanilla_corpname(corpus.corpname))
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
             ans = self.from_cache(db, key)
             if ans:
                 return ans
-        ans = f(self, corpus, attr_map, aligned_corpora, autocomplete_attr)
+        ans = f(self, plugin_api, corpus, attr_map, aligned_corpora, autocomplete_attr)
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
             self.to_cache(db, key, ans)
@@ -88,7 +88,8 @@ def cached(f):
 def filter_attributes(ctrl, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
-    return plugins.get('live_attributes').get_attr_values(corpus=ctrl.corp, attr_map=attrs, aligned_corpora=aligned)
+    return plugins.get('live_attributes').get_attr_values(ctrl._plugin_api, corpus=ctrl.corp, attr_map=attrs,
+                                                          aligned_corpora=aligned)
 
 
 @exposed(return_type='json')
@@ -96,7 +97,8 @@ def attr_val_autocomplete(ctrl, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
     attrs[request.args['patternAttr']] = '%%%s%%' % request.args['pattern']
-    return plugins.get('live_attributes').get_attr_values(corpus=ctrl.corp, attr_map=attrs, aligned_corpora=aligned,
+    return plugins.get('live_attributes').get_attr_values(ctrl._plugin_api, corpus=ctrl.corp, attr_map=attrs,
+                                                          aligned_corpora=aligned,
                                                           autocomplete_attr=request.args['patternAttr'])
 
 
@@ -114,15 +116,16 @@ class LiveAttributes(AbstractLiveAttributes):
     def export_actions(self):
         return {concordance.Actions: [filter_attributes, attr_val_autocomplete]}
 
-    def db(self, corpname):
+    def db(self, plugin_api, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
 
         arguments:
+        plugin_api --
         corpname -- vanilla corpus name (i.e. without any path-like prefixes)
         """
         if corpname not in self.databases:
-            db_path = self.corparch.get_corpus_info(corpname).get('metadata', {}).get('database')
+            db_path = self.corparch.get_corpus_info(plugin_api, corpname).get('metadata', {}).get('database')
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
@@ -130,11 +133,11 @@ class LiveAttributes(AbstractLiveAttributes):
                 self.databases[corpname] = None
         return self.databases[corpname]
 
-    def is_enabled_for(self, corpname):
+    def is_enabled_for(self, plugin_api, corpname):
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
-        return self.db(corpname) is not None
+        return self.db(plugin_api, corpname) is not None
 
     def execute_sql(self, db, sql, args=()):
         cursor = db.cursor()
@@ -231,7 +234,7 @@ class LiveAttributes(AbstractLiveAttributes):
         data[bib_label] = ans.values()
 
     @cached
-    def get_attr_values(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
+    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -246,7 +249,7 @@ class LiveAttributes(AbstractLiveAttributes):
         a dictionary containing matching attributes and values
         """
         corpname = vanilla_corpname(corpus.corpname)
-        corpus_info = self.corparch.get_corpus_info(corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_api, corpname)
 
         srch_attrs = set(self._get_subcorp_attrs(corpus))
         expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
@@ -273,7 +276,7 @@ class LiveAttributes(AbstractLiveAttributes):
                                            aligned_corpora=aligned_corpora,
                                            autocomplete_attr=self.import_key(autocomplete_attr),
                                            empty_val_placeholder=self.empty_val_placeholder)
-        data_iterator = query.DataIterator(self.db(corpname), query_builder)
+        data_iterator = query.DataIterator(self.db(plugin_api, corpname), query_builder)
 
         # initialize result dictionary
         ans = dict((attr, set()) for attr in srch_attrs)
@@ -321,11 +324,11 @@ class LiveAttributes(AbstractLiveAttributes):
         exported['poscount'] = values['poscount']
         return exported
 
-    def get_bibliography(self, corpus, item_id):
-        db = self.db(vanilla_corpname(corpus.corpname))
+    def get_bibliography(self, plugin_api, corpus, item_id):
+        db = self.db(plugin_api, vanilla_corpname(corpus.corpname))
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
-        corpus_info = self.corparch.get_corpus_info(corpus.corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_api, corpus.corpname)
         if corpus_info.metadata.sort_attrs:
             col_rows = sorted(col_rows, key=lambda v: v[1])   # here we accept default collator as attr IDs are ASCII
         col_map = OrderedDict([(x[1], x[0]) for x in col_rows])

@@ -15,5 +15,5 @@
 
 class AbstractSubcMixer(object):
 
-    def process(self, subc_path, corpus, corpname, conditions):
+    def process(self, plugin_api, corpus, corpname, args):
         raise NotImplementedError()

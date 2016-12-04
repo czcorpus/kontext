@@ -257,10 +257,10 @@ class DeafultCorplistProvider(CorplistProvider):
                 (not min_size or int(item_size) >= int(min_size)) and
                 (not max_size or int(item_size) <= int(max_size)))
 
-    def sort(self, data, *fields):
+    def sort(self, plugin_api, data, *fields):
         def corp_cmp_key(c):
             return c.get('name') if c.get('name') is not None else ''
-        return l10n.sort(data, loc=self._corparch.lang, key=corp_cmp_key)
+        return l10n.sort(data, loc=plugin_api.user_lang, key=corp_cmp_key)
 
     def should_fetch_next(self, ans, offset, limit):
         """
@@ -271,11 +271,11 @@ class DeafultCorplistProvider(CorplistProvider):
         """
         return True
 
-    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
         if query is False:  # False means 'use default values'
             query = ''
         ans = {'rows': []}
-        permitted_corpora = self._auth.permitted_corpora(user_id)
+        permitted_corpora = self._auth.permitted_corpora(plugin_api.user_id)
         used_keywords = set()
         all_keywords_map = dict(self._corparch.all_keywords)
         if filter_dict.get('minSize'):
@@ -297,7 +297,7 @@ class DeafultCorplistProvider(CorplistProvider):
         else:
             limit = int(limit)
 
-        user_items = self._corparch.user_items.get_user_items(user_id)
+        user_items = self._corparch.user_items.get_user_items(plugin_api.user_id)
 
         def is_fav(corpus_id):
             for item in user_items:
@@ -309,7 +309,7 @@ class DeafultCorplistProvider(CorplistProvider):
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
         for corp in self._corparch.get_list(permitted_corpora):
-            full_data = self._corparch.get_corpus_info(corp['id'], self._corparch.lang)
+            full_data = self._corparch.get_corpus_info(plugin_api, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 keywords = [k for k in full_data['metadata']['keywords'].keys()]
                 tests = []
@@ -340,7 +340,7 @@ class DeafultCorplistProvider(CorplistProvider):
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):
                         break
-        ans['rows'], ans['nextOffset'] = self.cut_result(self.sort(ans['rows']), offset, limit)
+        ans['rows'], ans['nextOffset'] = self.cut_result(self.sort(plugin_api, ans['rows']), offset, limit)
         ans['keywords'] = l10n.sort(used_keywords, loc=self._corparch.lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
@@ -629,11 +629,12 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.metadata.keywords = translated_k
         return ans
 
-    def get_corpus_info(self, corp_name, language=None):
+    def get_corpus_info(self, plugin_api, corp_name):
         if corp_name:
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
             if corp_name in self._raw_list():
+                language = plugin_api.user_lang
                 if language is not None:
                     return self._localize_corpus_info(self._raw_list()[corp_name],
                                                       lang_code=language)

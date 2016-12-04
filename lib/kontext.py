@@ -220,6 +220,7 @@ class Kontext(Controller):
         self.subcpath = []
         self._lines_groups = LinesGroups(data=[])
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
+        self.get_corpus_info = partial(plugins.get('corparch').get_corpus_info, self._plugin_api)
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -832,7 +833,7 @@ class Kontext(Controller):
                 # if the plug-in is "always on" or "sometimes off but currently on"
                 # then it must configure JavaScript
                 if (not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin) or
-                        plugin_obj.is_enabled_for(self.args.corpname)):
+                        plugin_obj.is_enabled_for(self._plugin_api, self.args.corpname)):
                     js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
                     if js_file:
                         ans[opt_plugin] = js_file
@@ -988,7 +989,7 @@ class Kontext(Controller):
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
 
-        result['bib_conf'] = plugins.get('corparch').get_corpus_info(self.args.corpname).metadata
+        result['bib_conf'] = self.get_corpus_info(self.args.corpname).metadata
 
         # available languages; used just by UI language switch
         if plugins.has_plugin('getlang'):
@@ -1297,7 +1298,7 @@ class PluginApi(object):
         subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')
         if not subcorpattrs:
             subcorpattrs = self.current_corpus.get_conf('FULLREF')
-        tt = get_tt(self.current_corpus, self.user_lang).export(subcorpattrs, maxlistsize)
+        tt = get_tt(self.current_corpus, self).export(subcorpattrs, maxlistsize)
         for item in tt:
             for tt2 in item['Line']:
                 ans[tt2['name']] = {'type': 'default', 'values': [x['v'] for x in tt2.get('Values', [])]}

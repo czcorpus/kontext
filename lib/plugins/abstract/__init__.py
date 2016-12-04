@@ -12,7 +12,7 @@ class CorpusDependentPlugin(object):
     This class prescribes methods required by optional plug-ins which
     must remain inactive in case of some corpora.
     """
-    def is_enabled_for(self, corpname):
+    def is_enabled_for(self, plugin_api, corpname):
         """
         arguments:
         corpname -- a name of the corpus
@@ -20,7 +20,7 @@ class CorpusDependentPlugin(object):
         returns:
         True if plug-in supports corpus 'corpname' else False
         """
-        raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(corpname)')
+        raise NotImplementedError('OptionalPlugin instance must implement method is_enabled_for(plugin_api, corpname)')
 
 
 class PluginException(Exception):

@@ -126,21 +126,14 @@ class AbstractCorporaArchive(ThreadLocalData):
     not defined in a KonText core independent way.
     """
 
-    def setup(self, controller_obj):
-        pass
-
-    def get_corpus_info(self, corp_id, language=None):
+    def get_corpus_info(self, plugin_api, corp_id):
         """
         Returns an information related to the provided corpus ID as defined in
         the respective configuration XML file.
 
         arguments:
+        plugin_api
         corp_id -- corpus identifier (both canonical and non-canonical should be accepted)
-        language -- a language to export localized data to; both xx_YY and xx variants are
-                    accepted (in case there is no match for xx_YY xx is used).
-                    If None then all the variants are returned (=> slightly different structure
-                    of returned dictionary; typically - instead of a str value there is a dict
-                    where keys correspond to language codes).
 
         returns:
         A dictionary containing corpus information. Expected keys are:
@@ -173,10 +166,10 @@ class CorplistProvider(object):
     """
     An object providing actual corpus list based on passed arguments.
     """
-    def search(self, user_id, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
         """
         arguments:
-        user_id -- database user ID
+        plugin_api --
         query -- raw query entered by user (possibly modified by client-side code)
         offset -- zero-based offset specifying returned data
         limit -- number of items to return
@@ -184,9 +177,10 @@ class CorplistProvider(object):
         """
         raise NotImplementedError()
 
-    def sort(self, data, *fields):
+    def sort(self, plugin_api, data, *fields):
         """
         arguments:
+        plugin_api --
         data -- a list of dicts to be sorted
         *fields -- zero or more keys to be used to sort the data
 
@@ -201,13 +195,12 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
         """
         Returns a subset of corplist matching provided query.
 
         arguments:
         plugin_api -- a controller.PluginApi instance
-        user_id -- a database ID of the user who triggered the search
         query -- any search query the concrete plug-in implementation can understand
                  (KonText itself just passes it around). If False then default parameters
                  are expected. An empty string is understood as "no query".
@@ -221,7 +214,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         a JSON-serializable dictionary a concrete plug-in implementation understands
         """
         service = self.create_corplist_provider(plugin_api)
-        return service.search(user_id=user_id, query=query, offset=offset, limit=limit,
+        return service.search(plugin_api=plugin_api, query=query, offset=offset, limit=limit,
                               filter_dict=filter_dict)
 
     def create_corplist_provider(self, plugin_api):
