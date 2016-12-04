@@ -41,14 +41,14 @@ export function init(dispatcher, mixins, queryStorageStore) {
                 dispatcher.dispatch({
                     actionType: 'QUERY_INPUT_SELECT_TYPE',
                     props: {
-                        corpname: this.props.corpname,
+                        sourceId: this.props.sourceId, // either corpname or filterId
                         queryType: historyItem.query_type
                     }
                 });
                 dispatcher.dispatch({
                     actionType: 'QUERY_INPUT_SET_QUERY',
                     props: {
-                        corpname: this.props.corpname,
+                        sourceId: this.props.sourceId,
                         query: historyItem.query
                     }
                 });
@@ -63,16 +63,16 @@ export function init(dispatcher, mixins, queryStorageStore) {
         _handleClickSelection : function (itemNum) {
             const historyItem = this.state.data.get(itemNum);
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_TYPE',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     queryType: historyItem.query_type
                 }
             });
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_QUERY',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     query: historyItem.query
                 }
             });

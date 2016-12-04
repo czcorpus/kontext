@@ -33,8 +33,20 @@ import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';
 
 
-export interface QueryFormProperties {
+export interface GeneralQueryFormProperties {
     currentArgs:Kontext.MultiDictSrc;
+    lposlist:Array<{v:string; n:string}>;
+    forcedAttr:string;
+    attrList:Array<{n:string; label:string}>;
+    tagsetDocUrl:string;
+    lemmaWindowSizes:Array<number>;
+    posWindowSizes:Array<number>;
+    hasLemmaAttr:boolean;
+    wPoSList:Array<{v:string; n:string}>;
+}
+
+
+export interface QueryFormProperties extends GeneralQueryFormProperties {
     corpora:Array<string>;
     availableAlignedCorpora:Array<{n:string; label:string}>;
     subcorpList:Array<string>;
@@ -45,28 +57,174 @@ export interface QueryFormProperties {
     currDefaultAttrValues:{[corpname:string]:string};
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
-    lposlist:Array<{v:string; n:string}>;
     currLposValues:{[corpname:string]:string};
     currQmcaseValues:{[corpname:string]:boolean};
-    forcedAttr:string;
-    attrList:Array<{n:string; label:string}>;
-    tagsetDocUrl:string;
-    // context form props
-    lemmaWindowSizes:Array<number>;
-    posWindowSizes:Array<number>;
-    hasLemmaAttr:boolean;
-    wPoSList:Array<{v:string; n:string}>;
     inputLanguages:{[corpname:string]:string};
 }
 
 export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 
 
-export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHandler {
+/**
+ *
+ */
+export class GeneralQueryStore extends SimplePageStore {
 
-    pageModel:PageModel;
+    protected pageModel:PageModel;
 
-    private queryTypes:Immutable.Map<string, string>;
+    protected currentArgs:Immutable.List<[string, any]>;
+
+    protected lposlist:Immutable.List<{v:string; n:string}>;
+
+    protected forcedAttr:string;
+
+    protected attrList:Immutable.List<{n:string; label:string}>;
+
+    protected tagsetDocUrl:string;
+
+    protected lemmaWindowSizes:Immutable.List<number>;
+
+    protected posWindowSizes:Immutable.List<number>;
+
+    protected hasLemmaAttr:boolean;
+
+    protected wPoSList:Immutable.List<{v:string; n:string}>;
+
+    protected currentAction:string;
+
+    protected targetAction:string;
+
+    // ----- other stores
+
+    protected textTypesStore:TextTypesStore;
+
+    protected queryContextStore:QueryContextStore;
+
+    // ----- non flux world handlers
+
+    protected onSubcorpChangeActions:Immutable.List<(subcname:string)=>void>;
+
+    protected onAddParallelCorpActions:Immutable.List<(corpname:string)=>void>;
+
+    protected onBeforeRemoveParallelCorpActions:Immutable.List<(corpname:string)=>void>;
+
+    protected onRemoveParallelCorpAction:Immutable.List<(corpname:string)=>void>;
+
+    // -------
+
+    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
+            queryContextStore:QueryContextStore, props:GeneralQueryFormProperties) {
+        super(dispatcher);
+        this.pageModel = pageModel;
+        this.textTypesStore = textTypesStore;
+        this.queryContextStore = queryContextStore;
+        this.currentArgs = Immutable.List<[string, any]>(props.currentArgs);
+        this.lposlist = Immutable.List<{v:string; n:string}>(props.lposlist);
+        this.forcedAttr = props.forcedAttr;
+        this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
+        this.tagsetDocUrl = props.tagsetDocUrl;
+        this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
+        this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
+        this.hasLemmaAttr = props.hasLemmaAttr;
+        this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
+
+        this.onSubcorpChangeActions = Immutable.List<(subcname:string)=>void>();
+        this.onAddParallelCorpActions = Immutable.List<(corpname:string)=>void>();
+        this.onBeforeRemoveParallelCorpActions = Immutable.List<(corpname:string)=>void>();
+        this.onRemoveParallelCorpAction = Immutable.List<(corpname:string)=>void>();
+    }
+
+    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {
+        this.onSubcorpChangeActions = this.onSubcorpChangeActions.push(fn);
+    }
+
+    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {
+        this.onAddParallelCorpActions = this.onAddParallelCorpActions.push(fn);
+    }
+
+    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
+        this.onBeforeRemoveParallelCorpActions = this.onBeforeRemoveParallelCorpActions.push(fn);
+    }
+
+    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
+        this.onRemoveParallelCorpAction = this.onRemoveParallelCorpAction.push(fn);
+    }
+
+    getLposlist():Immutable.List<{v:string; n:string}> {
+        return this.lposlist;
+    }
+
+    getForcedAttr():string {
+        return this.forcedAttr;
+    }
+
+    getAttrList():Immutable.List<{n:string; label:string}> {
+        return this.attrList;
+    }
+
+    getTagsetDocUrl():string {
+        return this.tagsetDocUrl;
+    }
+
+    getLemmaWindowSizes():Immutable.List<number> {
+        return this.lemmaWindowSizes;
+    }
+
+    getPosWindowSizes():Immutable.List<number> {
+        return this.posWindowSizes;
+    }
+
+    getHasLemmaAttr():boolean {
+        return this.hasLemmaAttr;
+    }
+
+    getwPoSList():Immutable.List<{v:string; n:string}> {
+        return this.wPoSList;
+    }
+
+    protected validateQuery(query:string, queryType:string):boolean {
+        let parseFn;
+        switch (queryType) {
+            case 'iquery':
+                parseFn = () => {
+                    if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
+                        throw new Error();
+                    }
+                }
+            break;
+            case 'phrase':
+                parseFn = parseQuery.bind(null, query, {startRule: 'PhraseQuery'});
+            break;
+            case 'lemma':
+            case 'word':
+                parseFn = parseQuery.bind(null, query, {startRule: 'RegExpRaw'});
+            break;
+            case 'cql':
+                parseFn = parseQuery.bind(null, query + ';');
+            break;
+            default:
+                parseFn = () => {};
+        }
+
+        let mismatch;
+        try {
+            parseFn();
+            mismatch = false;
+
+        } catch (e) {
+            mismatch = true;
+            console.log(e);
+        }
+        return mismatch;
+    }
+
+}
+
+
+/**
+ *
+ */
+export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupHandler {
 
     private corpora:Immutable.List<string>;
 
@@ -76,98 +234,51 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
 
     private currentSubcorp:string;
 
-    private tagBuilderSupport:Immutable.Map<string, boolean>;
-
     private shuffleConcByDefault:boolean;
 
     private queries:Immutable.Map<string, string>; // corpname -> query
-
-    private currentArgs:Immutable.List<[string, any]>;
-
-    private lposlist:Immutable.List<{v:string; n:string}>;
 
     private lposValues:Immutable.Map<string, string>; // corpname -> lpos
 
     private matchCaseValues:Immutable.Map<string, boolean>; // corpname -> qmcase
 
-    private forcedAttr:string;
-
     private defaultAttrValues:Immutable.Map<string, string>;
-
-    private attrList:Immutable.List<{n:string; label:string}>;
-
-    private tagsetDocUrl:string;
 
     private pcqPosNegValues:Immutable.Map<string, string>;
 
-    private lemmaWindowSizes:Immutable.List<number>;
+    private queryTypes:Immutable.Map<string, string>;
 
-    private posWindowSizes:Immutable.List<number>;
-
-    private hasLemmaAttr:boolean;
-
-    private wPoSList:Immutable.List<{v:string; n:string}>;
+    private tagBuilderSupport:Immutable.Map<string, boolean>;
 
     private inputLanguages:Immutable.Map<string, string>;
 
-    // ----- non flux world handlers
-
-    private onSubcorpChangeActions:Immutable.List<(subcname:string)=>void>;
-
-    private onAddParallelCorpActions:Immutable.List<(corpname:string)=>void>;
-
-    private onBeforeRemoveParallelCorpActions:Immutable.List<(corpname:string)=>void>;
-
-    private onRemoveParallelCorpAction:Immutable.List<(corpname:string)=>void>;
-
-    // ----- other stores
-
-    private textTypesStore:TextTypesStore;
-
-    private queryContextStore:QueryContextStore;
 
     // ----------------------
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore, props:QueryFormProperties) {
-        super(dispatcher);
+        super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
         const self = this;
-        this.pageModel = pageModel;
-        this.textTypesStore = textTypesStore;
-        this.queryContextStore = queryContextStore;
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<{n:string; label:string}>(props.availableAlignedCorpora);
-        this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes).map((v, k) => v ? v : 'iquery').toMap();
         this.subcorpList = Immutable.List<string>(props.subcorpList);
         this.currentSubcorp = props.currentSubcorp;
-        this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.shuffleConcByDefault = props.shuffleConcByDefault;
         this.queries = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueries[item] || '']));
-        this.currentArgs = Immutable.List<[string, any]>(props.currentArgs);
-        this.lposlist = Immutable.List<{v:string; n:string}>(props.lposlist);
         this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || '']));
         this.matchCaseValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false]));
-        this.forcedAttr = props.forcedAttr;
         this.defaultAttrValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word']));
-        this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
-        this.tagsetDocUrl = props.tagsetDocUrl;
-        this.pcqPosNegValues = Immutable.Map<string, string>(this.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
-        this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
-        this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
-        this.hasLemmaAttr = props.hasLemmaAttr;
-        this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
+        this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes).map((v, k) => v ? v : 'iquery').toMap();
+        this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
-
-        this.onSubcorpChangeActions = Immutable.List<(subcname:string)=>void>();
-        this.onAddParallelCorpActions = Immutable.List<(corpname:string)=>void>();
-        this.onBeforeRemoveParallelCorpActions = Immutable.List<(corpname:string)=>void>();
-        this.onRemoveParallelCorpAction = Immutable.List<(corpname:string)=>void>();
+        this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
+        this.currentAction = 'first_form';
+        this.targetAction = 'first';
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
-
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SELECT_TYPE':
-                    self.queryTypes = self.queryTypes.set(payload.props['corpname'], payload.props['queryType']);
+                    self.queryTypes = self.queryTypes.set(payload.props['sourceId'], payload.props['queryType']);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SELECT_SUBCORP':
@@ -176,44 +287,44 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
                     self.onSubcorpChangeActions.forEach(fn => fn(self.currentSubcorp));
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
-                    self.queries = self.queries.set(payload.props['corpname'], payload.props['query']);
+                    self.queries = self.queries.set(payload.props['sourceId'], payload.props['query']);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_APPEND_QUERY':
-                    const currQuery = self.queries.get(payload.props['corpname'])
+                    const currQuery = self.queries.get(payload.props['sourceId'])
                     const newQuery =  currQuery + (currQuery && payload.props['prependSpace'] ? ' ' : '') + payload.props['query'];
-                    self.queries = self.queries.set(payload.props['corpname'], newQuery);
+                    self.queries = self.queries.set(payload.props['sourceId'], newQuery);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_LPOS':
-                    self.lposValues = self.lposValues.set(payload.props['corpname'], payload.props['lpos']);
+                    self.lposValues = self.lposValues.set(payload.props['sourceId'], payload.props['lpos']);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_MATCH_CASE':
-                    self.matchCaseValues = self.matchCaseValues.set(payload.props['corpname'], payload.props['value']);
+                    self.matchCaseValues = self.matchCaseValues.set(payload.props['sourceId'], payload.props['value']);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_DEFAULT_ATTR':
-                    self.defaultAttrValues = self.defaultAttrValues.set(payload.props['corpname'], payload.props['value']);
+                    self.defaultAttrValues = self.defaultAttrValues.set(payload.props['sourceId'], payload.props['value']);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
-                    self.addAlignedCorpus(payload.props['corpname']);
+                    self.addAlignedCorpus(payload.props['sourceId']);
                     self.notifyChangeListeners();
-                    self.onAddParallelCorpActions.forEach(fn => fn(payload.props['corpname']));
+                    self.onAddParallelCorpActions.forEach(fn => fn(payload.props['sourceId']));
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
-                    self.onBeforeRemoveParallelCorpActions.forEach(fn => fn(payload.props['corpname']));
-                    self.removeAlignedCorpus(payload.props['corpname']);
+                    self.onBeforeRemoveParallelCorpActions.forEach(fn => fn(payload.props['sourceId']));
+                    self.removeAlignedCorpus(payload.props['sourceId']);
                     self.notifyChangeListeners();
-                    self.onRemoveParallelCorpAction.forEach(fn => fn(payload.props['corpname']));
+                    self.onRemoveParallelCorpAction.forEach(fn => fn(payload.props['sourceId']));
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
                     self.pcqPosNegValues = self.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
                     self.notifyChangeListeners();
                     break;
                 case 'QUERY_MAKE_CORPUS_PRIMARY':
-                    self.makeCorpusPrimary(payload.props['corpname']);
+                    self.makeCorpusPrimary(payload.props['sourceId']);
                     break;
                 case 'QUERY_INPUT_SUBMIT':
                     const errors = self.corpora.map(corpname => {
@@ -231,7 +342,7 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
         const idx = this.corpora.indexOf(corpname);
         if (idx > -1) {
             this.corpora = this.corpora.remove(idx).insert(0, corpname);
-            window.location.href = this.pageModel.createActionUrl('first_form', this.createSubmitArgs().items());
+            window.location.href = this.pageModel.createActionUrl(this.currentAction, this.createSubmitArgs().items());
         }
     }
 
@@ -322,29 +433,43 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
 
     private submitQuery():void {
         const args = this.createSubmitArgs().items();
-        const url = this.pageModel.createActionUrl('first', args);
+        const url = this.pageModel.createActionUrl(this.targetAction, args);
         if (url.length < 2048) {
             window.location.href = url;
 
         } else {
-            this.pageModel.setLocationPost('first', args);
+            this.pageModel.setLocationPost(this.targetAction, args);
         }
     }
 
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {
-        this.onSubcorpChangeActions = this.onSubcorpChangeActions.push(fn);
+    isPossibleQueryTypeMismatch(corpname:string):boolean {
+        const query = this.queries.get(corpname);
+        const queryType = this.queryTypes.get(corpname);
+        return this.validateQuery(query, queryType);
     }
 
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onAddParallelCorpActions = this.onAddParallelCorpActions.push(fn);
+    getQueryTypes():Immutable.Map<string, string> {
+        return this.queryTypes;
     }
 
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onBeforeRemoveParallelCorpActions = this.onBeforeRemoveParallelCorpActions.push(fn);
+    getLposValues():Immutable.Map<string, string> {
+        return this.lposValues;
     }
 
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onRemoveParallelCorpAction = this.onRemoveParallelCorpAction.push(fn);
+    getMatchCaseValues():Immutable.Map<string, boolean> {
+        return this.matchCaseValues;
+    }
+
+    getDefaultAttrValues():Immutable.Map<string, string> {
+        return this.defaultAttrValues;
+    }
+
+    getQuery(corpname:string):string {
+        return this.queries.get(corpname);
+    }
+
+    supportsParallelCorpora():boolean {
+        return this.corpora.size > 1 || this.availableAlignedCorpora.size > 0;
     }
 
     getSupportedWidgets():WidgetsMap {
@@ -372,16 +497,16 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
         }));
     }
 
+    getPcqPosNegValues():Immutable.Map<string, string> {
+        return this.pcqPosNegValues;
+    }
+
     getCorpora():Immutable.List<string> {
         return this.corpora;
     }
 
     getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
         return this.availableAlignedCorpora;
-    }
-
-    getQueryTypes():Immutable.Map<string, string> {
-        return this.queryTypes;
     }
 
     getSubcorpList():Immutable.List<string> {
@@ -396,102 +521,8 @@ export class QueryStore extends SimplePageStore implements Kontext.QuerySetupHan
         return this.shuffleConcByDefault;
     }
 
-    getQuery(corpname:string):string {
-        return this.queries.get(corpname);
-    }
-
-    getLposlist():Immutable.List<{v:string; n:string}> {
-        return this.lposlist;
-    }
-
-    getLposValues():Immutable.Map<string, string> {
-        return this.lposValues;
-    }
-
-    getMatchCaseValues():Immutable.Map<string, boolean> {
-        return this.matchCaseValues;
-    }
-
-    getForcedAttr():string {
-        return this.forcedAttr;
-    }
-
-    getDefaultAttrValues():Immutable.Map<string, string> {
-        return this.defaultAttrValues;
-    }
-
-    getAttrList():Immutable.List<{n:string; label:string}> {
-        return this.attrList;
-    }
-
-    getTagsetDocUrl():string {
-        return this.tagsetDocUrl;
-    }
-
-    supportsParallelCorpora():boolean {
-        return this.corpora.size > 1 || this.availableAlignedCorpora.size > 0;
-    }
-
-    getPcqPosNegValues():Immutable.Map<string, string> {
-        return this.pcqPosNegValues;
-    }
-
-    getLemmaWindowSizes():Immutable.List<number> {
-        return this.lemmaWindowSizes;
-    }
-
-    getPosWindowSizes():Immutable.List<number> {
-        return this.posWindowSizes;
-    }
-
-    getHasLemmaAttr():boolean {
-        return this.hasLemmaAttr;
-    }
-
-    getwPoSList():Immutable.List<{v:string; n:string}> {
-        return this.wPoSList;
-    }
-
     getInputLanguages():Immutable.Map<string, string> {
         return this.inputLanguages;
-    }
-
-    isPossibleQueryTypeMismatch(corpname:string):boolean {
-        const query = this.queries.get(corpname);
-        const queryType = this.queryTypes.get(corpname);
-        let parseFn;
-        switch (queryType) {
-            case 'iquery':
-                parseFn = () => {
-                    if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
-                        throw new Error();
-                    }
-                }
-            break;
-            case 'phrase':
-                parseFn = parseQuery.bind(null, query, {startRule: 'PhraseQuery'});
-            break;
-            case 'lemma':
-            case 'word':
-                parseFn = parseQuery.bind(null, query, {startRule: 'RegExpRaw'});
-            break;
-            case 'cql':
-                parseFn = parseQuery.bind(null, query + ';');
-            break;
-            default:
-                parseFn = () => {};
-        }
-
-        let mismatch;
-        try {
-            parseFn();
-            mismatch = false;
-
-        } catch (e) {
-            mismatch = true;
-            console.log(e);
-        }
-        return mismatch;
     }
 }
 

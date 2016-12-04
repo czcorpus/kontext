@@ -21,8 +21,9 @@ from collections import defaultdict
 from werkzeug.datastructures import MultiDict
 import manatee
 
-from kontext import Kontext, MainMenu, LinesGroups
+from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
+from querying import Querying
 import settings
 import conclib
 import corplib
@@ -32,7 +33,7 @@ import plugins
 import butils
 from kwiclib import Kwic, KwicPageArgs
 import l10n
-from l10n import import_string
+from l10n import import_string, corpus_get_conf
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping, Parameter
 from texttypes import TextTypeCollector, get_tt
@@ -42,7 +43,7 @@ class ConcError(Exception):
     pass
 
 
-class Actions(Kontext):
+class Actions(Querying):
     """
     KonText actions are specified here
     """
@@ -70,58 +71,19 @@ class Actions(Kontext):
         """
         return '/'
 
-    def _attach_tag_builder(self, tpl_out):
+    def get_speech_segment(self):
         """
-        arguments:
-        tpl_out -- dict data to be used when building an output page from a template
-        """
+        Returns a speech segment (= structural attribute, e.g. 'sp.audio')
+        if the current corpus has one configured.
 
-        def tag_support(c):
-            return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
-
-        tpl_out['tag_builder_support'] = {
-            self.args.corpname: tag_support(self.args.corpname)
-        }
-        tpl_out['user_menu'] = True
-        if 'Aligned' in tpl_out:
-            for item in tpl_out['Aligned']:
-                tpl_out['tag_builder_support']['_%s' % item['n']] = tag_support(item['n'])
-
-    def _export_subcorpora_list(self, corpname, out):
+        Returns:
+            str: segment name if speech_segment is configured in 'corpora.xml' and it actually exists; else None
         """
-        Updates passed dictionary by information about available sub-corpora.
-        Listed values depend on current user and corpus.
-        If there is a list already present in 'out' then it is extended
-        by the new values.
-
-        arguments:
-        corpname -- corpus id
-        out -- a dictionary used by templating system
-        """
-        basecorpname = corpname.split(':')[0]
-        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
-        if len(subcorp_list) > 0:
-            subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
-        if out.get('SubcorpList', None) is None:
-            out['SubcorpList'] = []
-        out['SubcorpList'].extend(subcorp_list)
-
-    def _export_aligned_form_params(self, aligned_corp, state_only, name_filter=None):
-        """
-        Collects aligned corpora-related arguments with dynamic names
-        (i.e. the names with corpus name as a suffix)
-        """
-        if name_filter is None:
-            name_filter = lambda v: True
-        args = ('include_empty', 'pcq_pos_neg')
-        if not state_only:
-            args += ('queryselector',)
-        ans = {}
-        for param_name in args:
-            full_name = '%s_%s' % (param_name, aligned_corp)
-            if full_name in self._request.args and name_filter(param_name):
-                ans[full_name] = self._request.args[full_name]
-        return ans
+        speech_struct = plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment')
+        if speech_struct in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(','):
+            return tuple(speech_struct.split('.'))
+        else:
+            return None
 
     def _store_semi_persistent_attrs(self, attr_list):
         """
@@ -190,16 +152,6 @@ class Actions(Kontext):
                 conc.set_linegroup_at_pos(lg[0], lg[2])
             if self._lines_groups.sorted:
                 conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
-
-    def _query_contains_within(self):
-        """
-        Tests (by a super-simplified CQL parsing) whether there is a
-        'within' expression in the current query (self.args.q).
-        """
-        if self.args.q is not None and len(self.args.q) > 0:
-            within_part = butils.CQLDetectWithin().get_within_part(self.args.q[0])
-            return within_part is not None and len(within_part) > 0
-        return False
 
     def _get_ipm_base_set_desc(self, contains_within):
         """
@@ -341,17 +293,13 @@ class Actions(Kontext):
             self._store_checked_text_types(request.form, out)
         self._restore_aligned_forms()
 
-        out['input_languages'] = {}
-        self._attach_aligned_corpora_info(out)
-        self._attach_tag_builder(out)
-        self._export_query_info(out)
-        out['user_menu'] = True
         out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
         tt_data = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)  # TODO deprecated
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
+        self._attach_aligned_query_params(out)
+        self._attach_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
-        self._attach_query_metadata(out)
         return out
 
     @exposed(return_type='json', legacy=True)
@@ -429,14 +377,14 @@ class Actions(Kontext):
         multiple level sort concordance
         """
 
-        crit = Kontext.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
-                                    ml1icase, ml1bward)
+        crit = self.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
+                                 ml1icase, ml1bward)
         if sortlevel > 1:
-            crit += Kontext.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
-                                         ml2icase, ml2bward)
+            crit += self.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
+                                      ml2icase, ml2bward)
             if sortlevel > 2:
-                crit += Kontext.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
-                                             ml3icase, ml3bward)
+                crit += self.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
+                                          ml3icase, ml3bward)
         self.args.q.append(crit)
         return self.view()
 
@@ -714,9 +662,7 @@ class Actions(Kontext):
         self._store_checked_text_types(self, out)
         if within and not self.contains_errors():
             self.add_system_message('warning', _('Please specify positive filter to switch'))
-        self._attach_tag_builder(out)
-        self._attach_query_metadata(out)
-        self._export_query_info(out)
+        self._attach_query_params(out)
         tt = get_tt(self.corp, self.ui_lang)
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         out['Normslist'] = tt_data['Normslist']

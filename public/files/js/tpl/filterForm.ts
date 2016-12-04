@@ -25,7 +25,8 @@ import {PageModel} from './document';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as liveAttributes from 'plugins/liveAttributes/init';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
-import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
+import {QueryFormProperties, QueryHintStore} from '../stores/query/main';
+import {FilterStore} from '../stores/query/filter';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
@@ -67,7 +68,7 @@ export class FilterFormpage {
 
     private textTypesStore:TextTypesStore;
 
-    private queryStore:QueryStore;
+    private filterStore:FilterStore;
 
     private queryHintStore:QueryHintStore;
 
@@ -126,23 +127,20 @@ export class FilterFormpage {
     }
 
     private attachQueryForm(properties:{[key:string]:any}):void {
-        this.queryStore = new QueryStore(
+        this.filterStore = new FilterStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.textTypesStore,
             this.queryContextStore,
             {
+                filters: [0], // TODO this will be dynamic and based on the current query pipeline
+                currPnFilterValues: {0: this.layoutModel.getConf<string>('Pnfilter')}, // TODO dtto
                 currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
-                corpora: [this.layoutModel.getConf<string>('corpname')].concat(
-                        this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
-                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                corpname: this.layoutModel.getConf<string>('corpname'),
                 currQueryTypes: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueryTypes'),
                 currQueries: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueries'),
                 currPcqPosNegValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrPcqPosNegValues'),
-                subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
-                currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
                 tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
-                shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
                 currLposValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrLposValues'),
                 currQmcaseValues: this.layoutModel.getConf<{[corpname:string]:boolean}>('CurrQmcaseValues'),
@@ -154,14 +152,14 @@ export class FilterFormpage {
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
+                inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')]
             }
         );
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
-            this.queryStore,
+            this.filterStore,
             this.textTypesStore,
             this.queryHintStore,
             this.withinBuilderStore,
@@ -169,7 +167,7 @@ export class FilterFormpage {
             this.queryContextStore
         );
         this.layoutModel.renderReactComponent(
-            queryFormComponents.QueryForm,
+            queryFormComponents.FilterForm,
             window.document.getElementById('query-form-mount'),
             properties
         );
@@ -203,8 +201,13 @@ export class FilterFormpage {
                 props['tagHelperViews'] = tagHelperPlugin.getViews();
                 props['queryStorageViews'] = queryStoragePlugin.getViews();
                 props['allowCorpusSelection'] = false;
+                props['actionPrefix'] = 'FILTER_';
+                props['filterId'] = 0; // TODO this should be based on the position within the query pipeline
                 this.attachQueryForm(props);
             }
+        ).then(
+            () => undefined,
+            (err) => console.error(err)
         );
     }
 }

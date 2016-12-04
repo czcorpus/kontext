@@ -52,7 +52,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _clickHandler : function () {
             dispatcher.dispatch({
-                actionType: 'NEXT_QUERY_HINT',
+                actionType: this.props.actionPrefix + 'NEXT_QUERY_HINT',
                 props: {}
             });
         },
@@ -78,9 +78,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _handleSelection : function (evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_TYPE',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     queryType: evt.target.value
                 }
             });
@@ -113,7 +113,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _handleSelectChange : function (evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_PCQ_POS_NEG',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_PCQ_POS_NEG',
                 props: {
                     corpname: this.props.corpname,
                     value: evt.target.value
@@ -148,7 +148,10 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                         onCloseClick={this.props.closeClickHandler}
                         customClass="tag-builder-widget"
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                    <this.props.tagHelperViews.TagBuilder corpname={this.props.corpname} onInsert={this.props.closeClickHandler} />
+                    <this.props.tagHelperViews.TagBuilder
+                            sourceId={this.props.sourceId}
+                            onInsert={this.props.closeClickHandler}
+                            actionPrefix={this.props.actionPrefix} />
                 </layoutViews.PopupBox>
             );
         }
@@ -165,7 +168,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
                 props: {
-                    corpname: this.props.corpname
+                    sourceId: this.props.sourceId
                 }
             });
         },
@@ -212,9 +215,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _handleInsert : function () {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_APPEND_QUERY',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     query: this.state.exportedQuery,
                     prependSpace: true
                 }
@@ -256,8 +259,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
             return (
                 <div className="history-widget">
                     <this.props.queryStorageViews.QueryStorage
-                            corpname={this.props.corpname}
-                            onCloseTrigger={this.props.onCloseTrigger} />
+                            sourceId={this.props.sourceId}
+                            onCloseTrigger={this.props.onCloseTrigger}
+                            actionPrefix={this.props.actionPrefix} />
                 </div>
             );
         }
@@ -272,8 +276,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 <layoutViews.PopupBox
                         onCloseClick={this.props.closeClickHandler}
                         customStyle={{marginTop: '3.5em'}}>
-                    <keyboardViews.Keyboard corpname={this.props.corpname}
-                            inputLanguage={this.props.inputLanguage} />
+                    <keyboardViews.Keyboard sourceId={this.props.sourceId}
+                            inputLanguage={this.props.inputLanguage}
+                            actionPrefix={this.props.actionPrefix} />
                 </layoutViews.PopupBox>
             );
         }
@@ -321,13 +326,15 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 case 'tag':
                     return <TagWidget closeClickHandler={this._handleCloseWidget}
                                 tagHelperViews={this.props.tagHelperViews}
-                                corpname={this.props.corpname} />;
+                                sourceId={this.props.sourceId}
+                                actionPrefix={this.props.actionPrefix} />;
                 case 'within':
                     return <WithinWidget closeClickHandler={this._handleCloseWidget}
-                                corpname={this.props.corpname} />;
+                                sourceId={this.props.sourceId} actionPrefix={this.props.actionPrefix} />;
                 case 'keyboard':
                     return <KeyboardWidget closeClickHandler={this._handleCloseWidget}
-                                corpname={this.props.corpname} inputLanguage={this.props.inputLanguage} />;
+                                sourceId={this.props.sourceId} inputLanguage={this.props.inputLanguage}
+                                actionPrefix={this.props.actionPrefix} />;
                 default:
                     return null;
             }
@@ -371,9 +378,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _handleLposChange : function (evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_LPOS',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_LPOS',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     lpos: evt.target.value
                 }
             });
@@ -402,9 +409,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _handleCheckbox : function (evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_MATCH_CASE',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_MATCH_CASE',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     value: !this.props.matchCaseValue
                 }
             });
@@ -429,9 +436,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _handleSelectChange : function (evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_DEFAULT_ATTR',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_DEFAULT_ATTR',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     value: evt.target.value
                 }
             });
@@ -467,16 +474,16 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         getInitialState : function () {
             return {
-                query: queryStore.getQuery(this.props.corpname),
+                query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: false
             };
         },
 
         _handleInputChange : function (evt) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SET_QUERY',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     query: evt.target.value
                 }
             });
@@ -484,7 +491,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
         _handleStoreChange : function (store, action) {
             this.setState({
-                query: queryStore.getQuery(this.props.corpname),
+                query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: false
             });
         },
@@ -538,19 +545,23 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 case 'lemma':
                     return <LposSelector lposlist={this.props.lposlist}
                                 lposValue={this.props.lposValue}
-                                corpname={this.props.corpname}  />;
+                                sourceId={this.props.sourceId}
+                                actionPrefix={this.props.actionPrefix}  />;
                 case 'phrase':
                     return <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                corpname={this.props.corpname} />;
+                                sourceId={this.props.sourceId}
+                                actionPrefix={this.props.actionPrefix} />;
                 case 'word':
                     return (
                         <span>
                             <LposSelector lposlist={this.props.lposlist}
                                 lposValue={this.props.lposValue}
-                                corpname={this.props.corpname}  />
+                                sourceId={this.props.sourceId}
+                                actionPrefix={this.props.actionPrefix}  />
                             {'\u00a0'}
                             <MatchCaseSelector matchCaseValue={this.props.matchCaseValue}
-                                corpname={this.props.corpname} />
+                                sourceId={this.props.sourceId}
+                                actionPrefix={this.props.actionPrefix} />
                         </span>
                     );
                 case 'cql':
@@ -560,7 +571,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                             <DefaultAttrSelector defaultAttr={this.props.defaultAttr}
                                     forcedAttr={this.props.forcedAttr}
                                     attrList={this.props.attrList}
-                                    corpname={this.props.corpname} />{'\u00a0'}
+                                    sourceId={this.props.sourceId}
+                                    actionPrefix={this.props.actionPrefix} />{'\u00a0'}
                             {this.props.tagsetDocUrl ?
                                 <a className="tagset-summary" target="_blank" href={this.props.tagsetDocUrl}>
                                     {this.translate('query__tagset_summary')}
@@ -586,17 +598,21 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                             <QueryToolbox widgets={this.props.widgets}
                                 tagHelperViews={this.props.tagHelperViews}
                                 queryStorageViews={this.props.queryStorageViews}
-                                corpname={this.props.corpname}
+                                sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}
-                                inputLanguage={this.props.inputLanguage} />
+                                inputLanguage={this.props.inputLanguage}
+                                actionPrefix={this.props.actionPrefix} />
                             {this._renderInput()}
                             {this.state.historyVisible ?
-                                <HistoryWidget queryStorageViews={this.props.queryStorageViews}
-                                        corpname={this.props.corpname} onCloseTrigger={this._toggleHistoryWidget} />
+                                <HistoryWidget
+                                        queryStorageViews={this.props.queryStorageViews}
+                                        sourceId={this.props.sourceId}
+                                        onCloseTrigger={this._toggleHistoryWidget}
+                                        actionPrefix={this.props.actionPrefix}/>
                                 : null
                             }
                             <div className="query-hints">
-                                <QueryHints />
+                                <QueryHints actionPrefix={this.props.actionPrefix} />
                             </div>
                         </div>
                         <div className="query-options">

@@ -65,10 +65,10 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
             } else if (evt.target.value === 'insert') {
                 dispatcher.dispatch({
-                    actionType: 'QUERY_INPUT_APPEND_QUERY',
+                    actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                     props: {
                         query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`,
-                        corpname: this.props.corpname,
+                        sourceId: this.props.sourceId,
                         prependSpace: true
                     }
                 });
@@ -318,8 +318,9 @@ export function init(dispatcher, mixins, tagHelperStore) {
                 }
                 <div className="tag-header">
                     <TagDisplay tagValue={this.state.tagValue} />
-                    <TagButtons corpname={this.props.corpname}
-                                onInsert={this.props.onInsert} />
+                    <TagButtons sourceId={this.props.sourceId}
+                                onInsert={this.props.onInsert}
+                                actionPrefix={this.props.actionPrefix} />
                 </div>
                 <PositionList positions={this.state.positions}
                                 stateId={this.state.stateId} />

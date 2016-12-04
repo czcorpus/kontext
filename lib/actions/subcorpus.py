@@ -14,12 +14,12 @@ import os
 import logging
 import json
 import time
-from collections import OrderedDict
 
 import werkzeug.urls
 
 from controller import exposed
-from kontext import Kontext, MainMenu, UserActionException, AsyncTaskStatus
+from kontext import MainMenu, UserActionException, AsyncTaskStatus
+from querying import Querying
 from translation import ugettext as _
 import plugins
 import l10n
@@ -33,7 +33,7 @@ class SubcorpusError(Exception):
     pass
 
 
-class Subcorpus(Kontext):
+class Subcorpus(Querying):
 
     def __init__(self, request, ui_lang):
         super(Subcorpus, self).__init__(request, ui_lang)
@@ -183,24 +183,24 @@ class Subcorpus(Kontext):
                 structs_and_attrs[s] = []
             structs_and_attrs[s].append(a)
 
-        out = {'SubcorpList': ()}
+        out = dict(SubcorpList=())
         if self.environ['REQUEST_METHOD'] == 'POST':
             self._store_checked_text_types(request.form, out)
         else:
             out['checked_sca'] = {}
 
-        self._attach_aligned_corpora_info(out)
+        self._attach_aligned_query_params(out)
         corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
-        out.update({
-            'Normslist': tt_sel['Normslist'],
-            'text_types_data': json.dumps(tt_sel),
-            'structs_and_attrs': structs_and_attrs,
-            'method': method,
-            'within_data': within_data,
-            'subcname': subcname,
-            'subcnorm': subcnorm,
-            'id_attr': corpus_info.metadata.id_attr
-        })
+        out.update(dict(
+            Normslist=tt_sel['Normslist'],
+            text_types_data=json.dumps(tt_sel),
+            structs_and_attrs=structs_and_attrs,
+            method=method,
+            within_data=within_data,
+            subcname=subcname,
+            subcnorm=subcnorm,
+            id_attr=corpus_info.metadata.id_attr
+        ))
         return out
 
     @exposed(access_level=1, return_type='json')
@@ -272,7 +272,7 @@ class Subcorpus(Kontext):
         else:
             full_list = data
 
-        sort_key, rev = Kontext._parse_sorting_param(sort)
+        sort_key, rev = self._parse_sorting_param(sort)
         if sort_key in ('size', 'created'):
             full_list = sorted(full_list, key=lambda x: x[sort_key], reverse=rev)
         else:

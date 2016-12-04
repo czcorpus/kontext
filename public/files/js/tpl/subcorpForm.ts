@@ -43,7 +43,7 @@ import * as Immutable from 'vendor/immutable';
 
 
 /**
- * This model contains functionality related to the subcorp_form.tmpl template
+ * A page model for the 'create new subcorpus' page.
  */
 export class SubcorpForm implements Kontext.QuerySetupHandler {
 
@@ -60,9 +60,14 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     constructor(pageModel:PageModel, viewComponents,
             subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
         this.layoutModel = pageModel;
-        let subcForm = $('#subcorp-form');
-        let corplist = corplistComponent.create(subcForm.find('select[name="corpname"]').get(0),
-                'subcorpus/subcorp_form', this.layoutModel.pluginApi(), this, {editable: false});
+        const subcForm = $('#subcorp-form');
+        const corplist = corplistComponent.create(
+            window.document.getElementById('corparch-mount'),
+            'subcorpus/subcorp_form',
+            this.layoutModel.pluginApi(),
+            this,
+            {editable: false}
+        );
         this.corplistComponent = corplistComponent;
         this.viewComponents = viewComponents;
         this.subcorpFormStore = subcorpFormStore;
@@ -86,7 +91,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     formChangeCorpus(item:JQueryEventObject):void {
         let formAncestor;
-        let ancestors = $(item.currentTarget).parents();
+        const ancestors = $(item.currentTarget).parents();
 
         for (let i = 0; i < ancestors.length; i += 1) {
             if (ancestors[i].nodeName === 'FORM') {
@@ -108,11 +113,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     }
 
     subcCreationVariantSwitch(value:string):void {
-        let widgetMap = {
+        const widgetMap = {
             'raw': '#subc-within-row',
             'gui': '#subcorp-text-type-selection'
         };
-        let jqSubmitBtn = $('#subcorp-form').find('button[type="submit"]');
+        const jqSubmitBtn = $('#subcorp-form').find('button[type="submit"]');
         for (let p in widgetMap) {
             if (widgetMap.hasOwnProperty(p)) {
                 $(widgetMap[p]).hide();
@@ -154,7 +159,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
      */
     sizeUnitsSafeSwitch():void {
         $('.text-type-top-bar a').on('click', (event) => {
-            let ans = confirm(this.layoutModel.translate('global__this_action_resets_current_selection'));
+            const ans = confirm(this.layoutModel.translate('global__this_action_resets_current_selection'));
 
             if (!ans) {
                 event.preventDefault();
@@ -164,11 +169,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     }
 
     initHints():void {
-        let attrs = this.layoutModel.getConf('structsAndAttrs');
-        let msg = this.layoutModel.translate('global__within_hint_text');
-        let hintRoot = $(window.document.createElement('div'));
-        let structList = $(window.document.createElement('ul'));
-        let hintAttrs = $(window.document.createElement('p'));
+        const attrs = this.layoutModel.getConf('structsAndAttrs');
+        const msg = this.layoutModel.translate('global__within_hint_text');
+        const hintRoot = $(window.document.createElement('div'));
+        const structList = $(window.document.createElement('ul'));
+        const hintAttrs = $(window.document.createElement('p'));
 
         hintRoot.append('<p>' + msg + '</p>');
         hintRoot.append(hintAttrs);
@@ -191,14 +196,14 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     }
 
     createTextTypesComponents():void {
-        let textTypesData = this.layoutModel.getConf<any>('textTypesData');
+        const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesStore = new TextTypesStore(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
                 textTypesData,
                 this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
-        let ttViewComponents = ttViewsInit(
+        const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.textTypesStore
@@ -239,7 +244,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                         Widget: null
                     };
                 }
-                let liveAttrsViews = liveAttributes.getViews(
+                const liveAttrsViews = liveAttributes.getViews(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     subcmixerViews,
@@ -264,9 +269,9 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
     }
 
     init(conf:Kontext.Conf):void {
-        let getStoredAlignedCorp = () => {
+        const getStoredAlignedCorp = () => {
             return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
-        }
+        };
         this.layoutModel.init().then(
             () => {
                 this.initSubcCreationVariantSwitch();
@@ -283,13 +288,13 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
 
 export function init(conf:Kontext.Conf) {
-    let layoutModel:PageModel = new PageModel(conf);
-    let subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
+    const layoutModel:PageModel = new PageModel(conf);
+    const subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
         layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
         layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
-    let subcorpFormComponents = subcorpViewsInit(layoutModel.dispatcher,
+    const subcorpFormComponents = subcorpViewsInit(layoutModel.dispatcher,
             layoutModel.exportMixins(), subcorpFormStore);
-    let pageModel = new SubcorpForm(layoutModel, subcorpFormComponents,
+    const pageModel = new SubcorpForm(layoutModel, subcorpFormComponents,
             subcorpFormStore);
     pageModel.init(conf);
 }

@@ -121,9 +121,9 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
 
         _handleClick : function (v) {
             dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_APPEND_QUERY',
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                 props: {
-                    corpname: this.props.corpname,
+                    sourceId: this.props.sourceId,
                     query: v,
                     prependSpace: false
                 }

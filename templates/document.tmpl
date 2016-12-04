@@ -350,15 +350,15 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     #set $i = 0
     #for $item in $getVar('query_overview', [])
     <li>
-    #if $i > 0#<span class="transition">&\#9654;</span>#else#|#end if
-    <strong>$item.op:</strong>
+    #if $i > 0
+        <span class="transition">&\#9654;</span>
+        <strong>$item.op:</strong>
+    #else
+        | <strong>$item.op:</strong>
+     #end if
     <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
     title="#filter $HtmlEscape#$item.arg#end filter#">
-    #if $item.nicearg
-    ${item.nicearg}
-    #else
-    &#10003;
-    #end if
+    #if $item.nicearg#${item.nicearg}#else#&#10003;#end if#
     </a>
     #if $item.size
     (#filter $FloatFormatter#$item.size#end filter# $_('hits'))

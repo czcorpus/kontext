@@ -261,9 +261,13 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 props['tagHelperViews'] = tagHelperPlugin.getViews();
                 props['queryStorageViews'] = queryStoragePlugin.getViews();
                 props['allowCorpusSelection'] = true;
+                props['actionPrefix'] = '';
                 this.attachQueryForm(props);
                 this.initCorplistComponent(); // non-React world here
             }
+        ).then(
+            () => undefined,
+            (err) => console.error(err)
         );
     }
 }

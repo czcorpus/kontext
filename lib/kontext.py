@@ -646,38 +646,6 @@ class Kontext(Controller):
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
 
-    def _attach_query_metadata(self, tpl_out):
-        """
-        Adds information needed by extended version of text type (and other attributes) selection in a query
-        """
-        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname, language=self.ui_lang)
-        tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
-        tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
-
-    def _export_query_info(self, tpl_out):
-        def import_qs(qs):
-            return qs[:-3] if qs is not None else None
-
-        qtype = import_qs(self.args.queryselector)
-        qinfo = dict(
-            query_types={self.args.corpname: qtype},
-            queries={self.args.corpname: getattr(self.args, qtype, None)},
-            pcq_pos_neg_values={self.args.corpname: getattr(self.args, 'pcq_pos_neg', None)},
-            lpos_values={self.args.corpname: getattr(self.args, 'lpos', None)},
-            qmcase_values={self.args.corpname: bool(getattr(self.args, 'qmcase', False))},
-            default_attr_values={self.args.corpname: getattr(self.args, 'default_attr', 'word')}
-        )
-        if self.corp.get_conf('ALIGNED'):
-            for al in self.corp.get_conf('ALIGNED').split(','):
-                qtype = import_qs(getattr(self.args, 'queryselector_{0}'.format(al), None))
-                qinfo['query_types'][al] = qtype
-                qinfo['queries'][al] = getattr(self.args, qtype + '_' + al, None) if qtype is not None else None
-                qinfo['pcq_pos_neg_values'][al] = getattr(self.args, 'pcq_pos_neg_' + al, None)
-                qinfo['lpos_values'][al] = getattr(self.args, 'lpos_' + al, None)
-                qinfo['qmcase_values'][al] = bool(getattr(self.args, 'qmcase_' + al, False))
-                qinfo['default_attr_values'][al] = getattr(self.args, 'default_attr_' + al, 'word')
-        tpl_out['query_info'] = qinfo
-
     def _add_save_menu_item(self, label, action, params, save_format=None):
         params = copy.copy(params)
         if save_format:
@@ -690,21 +658,6 @@ class Kontext(Controller):
                 raise ValueError('Unsupported argument type: %s' % type(params))
         item_id = '%s-%s' % (action.replace('/', '_'), save_format)
         self.save_menu.append(ConcMenuItem(MainMenu.SAVE(item_id), label, action).add_args(*params))
-
-    def _save_query(self, query, query_type):
-        if plugins.has_plugin('query_storage'):
-            params = {}
-            if query_type == 'lemma':
-                params['lpos'] = self.args.lpos
-            elif query_type == 'word':
-                params['wpos'] = self.args.wpos
-                params['qmcase'] = self.args.qmcase
-            elif query_type == 'cql':
-                params['default_attr'] = self.args.default_attr
-            plugins.get('query_storage').write(
-                user_id=self._session_get('user', 'id'), corpname=self.args.corpname,
-                subcorpname=self.args.usesubcorp, query=query, query_type=query_type,
-                params=params)
 
     def _determine_curr_corpus(self, form, corp_list):
         """
@@ -763,29 +716,6 @@ class Kontext(Controller):
             cn = ''
             fallback = '%scorpora/corplist' % self.get_root_url()  # TODO hardcoded '/corpora/'
         return cn, fallback
-
-    def _attach_aligned_corpora_info(self, exp_data):
-        """
-        Adds template data required to generate components for adding/overviewing
-        aligned corpora.
-
-        arguments:
-        exp_data -- a dict where exported data is stored
-        """
-        if self.corp.get_conf('ALIGNED'):
-            exp_data['Aligned'] = []
-            for al in self.corp.get_conf('ALIGNED').split(','):
-                alcorp = corplib.open_corpus(al)
-                exp_data['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
-                attrlist = alcorp.get_conf('ATTRLIST').split(',')
-                poslist = self.cm.corpconf_pairs(alcorp, 'WPOSLIST')
-                exp_data['Wposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                if 'lempos' in attrlist:
-                    poslist = self.cm.corpconf_pairs(alcorp, 'LPOSLIST')
-                exp_data['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                exp_data['has_lemmaattr_' + al] = 'lempos' in attrlist \
-                    or 'lemma' in attrlist
-                exp_data['input_languages'][al] = plugins.get('corparch').get_corpus_info(al).collator_locale
 
     def self_encoding(self):
         enc = corpus_get_conf(self.corp, 'ENCODING')
@@ -973,16 +903,16 @@ class Kontext(Controller):
         def is_remote_resource(path):
             return path.find('//') == 0 or path.find('http') == 0
 
-        data['theme'] = {
-            'name': settings.get('theme', 'name'),
-            'logo_path': os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_img)),
-            'logo_mouseover_path': os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_alt_img)),
-            'logo_href': logo_href,
-            'logo_title': logo_title,
-            'logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
-            'online_fonts': settings.get_list('theme', 'fonts'),
-            'online_css': filter(lambda x: is_remote_resource(x), settings.get_list('theme', 'css'))
-        }
+        data['theme'] = dict(
+            name=settings.get('theme', 'name'),
+            logo_path=os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_img)),
+            logo_mouseover_path=os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_alt_img)),
+            logo_href=logo_href,
+            logo_title=logo_title,
+            logo_inline_css=settings.get('theme', 'logo_inline_css', ''),
+            online_fonts=settings.get_list('theme', 'fonts'),
+            online_css=filter(lambda x: is_remote_resource(x), settings.get_list('theme', 'css'))
+        )
         if settings.is_debug_mode() and os.path.isfile(os.path.join(os.path.dirname(__file__),
                                                                     '../public/files/css/custom.min.css')):
             # custom.min.css contains both theme and plug-in custom stylesheets
@@ -1058,7 +988,6 @@ class Kontext(Controller):
         # updates result dict with javascript modules paths required by some of the optional plugins
         self._setup_optional_plugins_js(result)
 
-        user_items = plugins.get('user_items')
         result['bib_conf'] = plugins.get('corparch').get_corpus_info(self.args.corpname).metadata
 
         # available languages; used just by UI language switch
@@ -1151,20 +1080,6 @@ class Kontext(Controller):
             return self._canonical_corpname(self.args.corpname)
         else:
             return ''
-
-    def get_speech_segment(self):
-        """
-        Returns a speech segment (= structural attribute, e.g. 'sp.audio')
-        if the current corpus has one configured.
-
-        Returns:
-            str: segment name if speech_segment is configured in 'corpora.xml' and it actually exists; else None
-        """
-        speech_struct = plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment')
-        if speech_struct in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(','):
-            return tuple(speech_struct.split('.'))
-        else:
-            return None
 
     @staticmethod
     def _validate_range(actual_range, max_range):
