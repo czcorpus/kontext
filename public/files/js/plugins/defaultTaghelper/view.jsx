@@ -85,12 +85,12 @@ export function init(dispatcher, mixins, tagHelperStore) {
         render : function () {
             return (
                 <div className="buttons">
-                    <button id="insert-tag-button" type="button"
+                    <button className="util-button" type="button"
                             value="insert" onClick={this._buttonClick}>
                     {this.translate('taghelper__insert_btn')}
                     </button>
-                    <button id="reset-tag-button" type="button"
-                            value="reset"  onClick={this._buttonClick}>Reset</button>
+                    <button type="button" className="util-button cancel"
+                            value="reset" onClick={this._buttonClick}>Reset</button>
                 </div>
             );
         }

@@ -1444,7 +1444,10 @@ export class Corplist implements CorpusArchive.Widget {
     private buildWidget() {
         const jqSelectBoxItem = $(this.selectElm);
         this.triggerButton = window.document.createElement('button');
-        $(this.triggerButton).attr('type', 'button').text(this.currCorpname);
+        $(this.triggerButton)
+            .attr('type', 'button')
+            .text(this.currCorpname)
+            .addClass('util-button');
         jqSelectBoxItem.replaceWith(this.triggerButton);
 
         this.widgetWrapper = window.document.createElement('div');
