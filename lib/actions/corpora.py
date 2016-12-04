@@ -32,7 +32,8 @@ class Corpora(Kontext):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
         corparch_plugin = plugins.get('corparch')
         if isinstance(corparch_plugin, AbstractSearchableCorporaArchive):
-            params = corparch_plugin.initial_search_params(request.args.get('query'), request.args)
+            params = corparch_plugin.initial_search_params(self._plugin_api, request.args.get('query'),
+                                                           request.args)
             data = corparch_plugin.search(plugin_api=self._plugin_api,
                                           query=False,
                                           offset=0,
@@ -40,7 +41,7 @@ class Corpora(Kontext):
                                           filter_dict=request.args)
         else:
             params = {}
-            data = corparch_plugin.get_all(self._session_get('user', 'id'))
+            data = corparch_plugin.get_all(self._plugin_api)
         return dict(corplist_params=params, corplist_data=data)
 
     @exposed(return_type='json', skip_corpus_init=True)

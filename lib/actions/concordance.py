@@ -1191,7 +1191,7 @@ class Actions(Querying):
         if not ref_corpname:
             ref_corpname = self.args.corpname
         if hasattr(self, 'compatible_corpora'):
-            out['CompatibleCorpora'] = plugins.get('corparch').get_list(self.permitted_corpora())
+            out['CompatibleCorpora'] = plugins.get('corparch').get_list(self._plugin_api, self.permitted_corpora())
         refcm = corplib.CorpusManager(self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname

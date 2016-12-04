@@ -32,8 +32,6 @@ all the attributes etc. are defined.
 
 import json
 
-from structures import ThreadLocalData
-
 
 class DictLike(object):
     def __getitem__(self, item):
@@ -117,7 +115,7 @@ class CorpInfoEncoder(json.JSONEncoder):
         return ans
 
 
-class AbstractCorporaArchive(ThreadLocalData):
+class AbstractCorporaArchive(object):
     """
     A template for the 'corparch' (the quite misleading name stays
     for historical reasons) plug-in.
@@ -142,12 +140,13 @@ class AbstractCorporaArchive(ThreadLocalData):
         """
         raise NotImplementedError()
 
-    def get_list(self, user_allowed_corpora):
+    def get_list(self, plugin_api, user_allowed_corpora):
         """
         Returns a list of dicts containing information about individual corpora.
         (it should be equal to self.corplist().values())
 
         arguments:
+        plugin_api --
         user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) of corpora ids the current
                                 user can access
         """
@@ -158,7 +157,7 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     """
     An archive without server-side searching/filtering abilities
     """
-    def get_all(self, user_id):
+    def get_all(self, plugin_api):
         raise NotImplementedError()
 
 
@@ -229,7 +228,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
         raise NotImplementedError()
 
-    def initial_search_params(self, user_id, lang):
+    def initial_search_params(self, plugin_api, query, args):
         """
         Returns a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).

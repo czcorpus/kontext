@@ -227,14 +227,14 @@ class UcnkCorpArch(CorpusArchive):
     def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
         return corpus_info.id in permitted_corpora or (corpus_info.requestable and not plugin_api.user_is_anonymous)
 
-    def get_list(self, user_allowed_corpora):
+    def get_list(self, plugin_api, user_allowed_corpora):
         """
         arguments:
         user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
                                 accessible by the current user
         """
         cl = []
-        for item in self._raw_list().values():
+        for item in self._raw_list(plugin_api.user_lang).values():
             canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
             corp_id = user_allowed_corpora.get(canonical_id, canonical_id)
             try:
