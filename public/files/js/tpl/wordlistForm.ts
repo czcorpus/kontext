@@ -19,11 +19,13 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../../ts/declarations//immutable.d.ts" />
 
 import {PageModel, PluginApi} from './document';
 import * as $ from 'jquery';
 import {create as createCorparch} from 'plugins/corparch/init';
 import {bind as bindPopupBox} from '../popupbox';
+import * as Immutable from 'vendor/immutable';
 
 /**
  *
@@ -223,16 +225,19 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
             (d) => {
                 this.bindStaticElements();
                 this.corplistComponent = createCorparch(
-                        $('form[id="wordlist_form"] select[name="corpname"]').get(0),
+                        window.document.getElementById('corparch-mount'),
                         'wordlist_form',
                         this.layoutModel.pluginApi(),
                         this,
-                        {formTarget: 'wordlist_form', submitMethod: 'GET'}
-                ),
+                        {submitMethod: 'GET'}
+                );
                 this.registerSubcorpChange();
                 this.initOutputTypeForms();
             }
-        )
+        ).then(
+            () => undefined,
+            (err) => console.error(err)
+        );
     }
 }
 

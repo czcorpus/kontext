@@ -79,7 +79,7 @@ class Actions(Querying):
         Returns:
             str: segment name if speech_segment is configured in 'corpora.xml' and it actually exists; else None
         """
-        speech_struct = plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment')
+        speech_struct = self.get_corpus_info(self.args.corpname).get('speech_segment')
         if speech_struct in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(','):
             return tuple(speech_struct.split('.'))
         else:
@@ -127,7 +127,7 @@ class Actions(Querying):
         Returns:
             tuple (structname, attr_name)
         """
-        segment_str = plugins.get('corparch').get_corpus_info(self.args.corpname).get('speech_segment')
+        segment_str = self.get_corpus_info(self.args.corpname).get('speech_segment')
         if segment_str:
             return tuple(segment_str.split('.'))
         return None
@@ -186,7 +186,7 @@ class Actions(Querying):
         """
         KWIC view
         """
-        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
+        corpus_info = self.get_corpus_info(self.args.corpname)
         if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
             self.args.refs = self.corp.get_conf('SHORTREF')
 
@@ -294,7 +294,7 @@ class Actions(Querying):
         self._restore_aligned_forms()
 
         out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
-        tt_data = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)  # TODO deprecated
+        tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
         self._attach_aligned_query_params(out)
@@ -646,7 +646,7 @@ class Actions(Querying):
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.q.append('f')
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
-            ans['TextTypeSel'] = get_tt(self.corp, self.ui_lang).export_with_norms(ret_nums=False)
+            ans['TextTypeSel'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)
             ans.update(self.view())
         except ConcError as e:
             raise UserActionException(e.message)
@@ -663,7 +663,7 @@ class Actions(Querying):
         if within and not self.contains_errors():
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_query_params(out)
-        tt = get_tt(self.corp, self.ui_lang)
+        tt = get_tt(self.corp, self._plugin_api)
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
@@ -768,7 +768,7 @@ class Actions(Querying):
             rel_mode = 1
         else:
             rel_mode = 0
-        corp_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
+        corp_info = self.get_corpus_info(self.args.corpname)
 
         args = freq_calc.FreqCalsArgs()
         args.corpname = self.corp.corpname
@@ -1191,7 +1191,7 @@ class Actions(Querying):
         if not ref_corpname:
             ref_corpname = self.args.corpname
         if hasattr(self, 'compatible_corpora'):
-            out['CompatibleCorpora'] = plugins.get('corparch').get_list(self.permitted_corpora())
+            out['CompatibleCorpora'] = plugins.get('corparch').get_list(self._plugin_api, self.permitted_corpora())
         refcm = corplib.CorpusManager(self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
@@ -1496,7 +1496,7 @@ class Actions(Querying):
     @exposed(access_level=1, legacy=True)
     def saveconc_form(self, from_line=1, to_line=''):
         self.disabled_menu_items = (MainMenu.SAVE, )
-        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
+        corpus_info = self.get_corpus_info(self.args.corpname)
         conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user'),
                                                      corpus_info.sample_size))
         if not to_line:
@@ -1539,7 +1539,7 @@ class Actions(Querying):
             return ans
 
         try:
-            corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
+            corpus_info = self.get_corpus_info(self.args.corpname)
             conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user'),
                                                          corpus_info.sample_size))
             self._apply_linegroups(conc)

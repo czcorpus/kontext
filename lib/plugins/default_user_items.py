@@ -78,7 +78,7 @@ def import_from_json(obj, recursive=False):
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    return [fc.to_dict() for fc in plugins.get('user_items').get_user_items(ctrl._session_get('user', 'id'))]
+    return [fc.to_dict() for fc in plugins.get('user_items').get_user_items(ctrl._plugin_api)]
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
@@ -107,14 +107,14 @@ def set_favorite_item(ctrl, request):
         })
 
     item = plugins.get('user_items').from_dict(data)
-    plugins.get('user_items').add_user_item(ctrl._session_get('user', 'id'), item)
-    return {'id': item.id}
+    plugins.get('user_items').add_user_item(ctrl._plugin_api, item)
+    return dict(id=item.id)
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def unset_favorite_item(ctrl, request):
     plugins.get('user_items').delete_user_item(
-        ctrl._session_get('user', 'id'), request.form['id'])
+        ctrl._plugin_api, request.form['id'])
     return {}
 
 
@@ -136,16 +136,6 @@ class UserItems(AbstractUserItems):
         self._db = db
         self._auth = auth
 
-    def setup(self, controller_obj):
-        """
-        Interface method expected by KonText if a module wants to be set-up by
-        some "late" information (like locales).
-
-        Please note that each request calls this method on the same instance
-        which means that any client-specific data must be thread-local.
-        """
-        self.setlocal('lang', getattr(controller_obj, 'ui_lang', None))
-
     @property
     def max_num_favorites(self):
         return int(self._settings.get('plugins', 'corparch')['default:max_num_favorites'])
@@ -163,23 +153,23 @@ class UserItems(AbstractUserItems):
         """
         return json.dumps(obj, cls=ItemEncoder)
 
-    def get_user_items(self, user_id):
+    def get_user_items(self, plugin_api):
         ans = []
-        if self._auth.anonymous_user()['id'] != user_id:
-            for item_id, item in self._db.hash_get_all(self._mk_key(user_id)).items():
+        if self._auth.anonymous_user()['id'] != plugin_api.user_id:
+            for item_id, item in self._db.hash_get_all(self._mk_key(plugin_api.user_id)).items():
                 ans.append(self.decoder.decode(item))
-            ans = l10n.sort(ans, self.getlocal('lang'), key=lambda itm: itm.name, reverse=False)
+            ans = l10n.sort(ans, plugin_api.user_lang, key=lambda itm: itm.name, reverse=False)
         return ans
 
-    def add_user_item(self, user_id, item):
-        if len(self.get_user_items(user_id)) >= self.max_num_favorites:
+    def add_user_item(self, plugin_api, item):
+        if len(self.get_user_items(plugin_api)) >= self.max_num_favorites:
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        self._db.hash_set(self._mk_key(user_id), item.id, self.serialize(item))
+        self._db.hash_set(self._mk_key(plugin_api.user_id), item.id, self.serialize(item))
 
-    def delete_user_item(self, user_id, item_id):
-        self._db.hash_del(self._mk_key(user_id), item_id)
+    def delete_user_item(self, plugin_api, item_id):
+        self._db.hash_del(self._mk_key(plugin_api.user_id), item_id)
 
     def infer_item_key(self, corpname, usesubcorp, aligned_corpora):
         return infer_item_key(corpname, usesubcorp, aligned_corpora)

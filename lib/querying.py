@@ -37,7 +37,7 @@ class Querying(Kontext):
         """
         Attach data required by client-side query component
         """
-        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname, language=self.ui_lang)
+        corpus_info = self.get_corpus_info(self.args.corpname)
         tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
@@ -93,7 +93,7 @@ class Querying(Kontext):
                 tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
                 tpl_out['has_lemmaattr_' + al] = 'lempos' in attrlist \
                                                  or 'lemma' in attrlist
-                tpl_out['input_languages'][al] = plugins.get('corparch').get_corpus_info(al).collator_locale
+                tpl_out['input_languages'][al] = self.get_corpus_info(al).collator_locale
 
     def _export_subcorpora_list(self, corpname, out):
         """

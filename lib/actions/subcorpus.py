@@ -173,7 +173,7 @@ class Subcorpus(Querying):
         subcnorm = request.args.get('subcnorm', 'tokens')
 
         try:
-            tt_sel = get_tt(self.corp, self.ui_lang).export_with_norms(subcnorm=subcnorm)
+            tt_sel = get_tt(self.corp, self._plugin_api).export_with_norms(subcnorm=subcnorm)
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)
@@ -190,7 +190,7 @@ class Subcorpus(Querying):
             out['checked_sca'] = {}
 
         self._attach_aligned_query_params(out)
-        corpus_info = plugins.get('corparch').get_corpus_info(self.args.corpname)
+        corpus_info = self.get_corpus_info(self.args.corpname)
         out.update(dict(
             Normslist=tt_sel['Normslist'],
             text_types_data=json.dumps(tt_sel),

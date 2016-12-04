@@ -101,13 +101,12 @@ class UcnkCorplistProvider(DeafultCorplistProvider):
     def __init__(self, plugin_api, auth, corparch, tag_prefix):
         super(UcnkCorplistProvider, self).__init__(plugin_api, auth, corparch, tag_prefix)
 
-    def sort(self, data, *fields):
+    def sort(self, plugin_api, data, *fields):
         return data
 
     def should_fetch_next(self, ans, offset, limit):
         # we have to fetch +1 item to know if there is another page/offset, that's why we use '>'
         return len(ans['rows']) <= offset + limit
-
 
 
 @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
@@ -149,7 +148,7 @@ class UcnkCorpArch(CorpusArchive):
     def create_corplist_provider(self, plugin_api):
         return UcnkCorplistProvider(plugin_api, self._auth, self, self._tag_prefix)
 
-    def search(self, plugin_api, user_id, query, offset=0, limit=None, filter_dict=None):
+    def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
         if self.SESSION_KEYWORDS_KEY not in plugin_api.session:
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
         initial_query = query
@@ -162,7 +161,7 @@ class UcnkCorpArch(CorpusArchive):
             plugin_api.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = ' '.join(query_substrs) \
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
-        return super(UcnkCorpArch, self).search(plugin_api, user_id, query, offset, limit, filter_dict)
+        return super(UcnkCorpArch, self).search(plugin_api, query, offset, limit, filter_dict)
 
     def send_request_email(self, corpus_id, plugin_api, custom_message):
         """
@@ -228,14 +227,14 @@ class UcnkCorpArch(CorpusArchive):
     def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
         return corpus_info.id in permitted_corpora or (corpus_info.requestable and not plugin_api.user_is_anonymous)
 
-    def get_list(self, user_allowed_corpora):
+    def get_list(self, plugin_api, user_allowed_corpora):
         """
         arguments:
         user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
                                 accessible by the current user
         """
         cl = []
-        for item in self._raw_list().values():
+        for item in self._raw_list(plugin_api.user_lang).values():
             canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
             corp_id = user_allowed_corpora.get(canonical_id, canonical_id)
             try:

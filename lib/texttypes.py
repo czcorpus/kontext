@@ -209,16 +209,16 @@ class TextTypesException(Exception):
 
 class TextTypes(object):
 
-    def __init__(self, corp, corpname, ui_lang):
+    def __init__(self, corp, corpname, plugin_api):
         """
         arguments:
         corp -- a manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
         corpname -- a corpus ID
-        ui_lang -- a language of the current user interface
+        plugin_api --
         """
         self._corp = corp
         self._corpname = corpname
-        self._ui_lang = ui_lang
+        self._plugin_api = plugin_api
         self._tt_cache = TextTypesCache(plugins.get('db'))
 
     def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
@@ -240,7 +240,7 @@ class TextTypes(object):
             raise TextTypesException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
-        corpus_info = plugins.get('corparch').get_corpus_info(self._corpname)
+        corpus_info = plugins.get('corparch').get_corpus_info(self._plugin_api, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
@@ -295,19 +295,19 @@ class TextTypes(object):
         return normslist
 
     def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.get('corparch').get_corpus_info(
-                               self._corpname, language=self._ui_lang)['metadata']
+        metadata = plugins.get('corparch').get_corpus_info(self._plugin_api, self._corpname)['metadata']
         for line in tt:
             for item in line.get('Line', ()):
                 item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))
 
 
-def get_tt(corp, ui_lang):
+def get_tt(corp, plugin_api):
     """
     A convenience factory to create a TextType instance
 
     arguments:
     corp -- a manatee.Corpus instance (enriched version returned by corplib.CorpusManager)
-    ui_lang -- a language of the current user interface
+    corpname --
+    plugin_api --
     """
-    return TextTypes(corp, corp.corpname, ui_lang)
+    return TextTypes(corp, corp.corpname, plugin_api)

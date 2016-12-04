@@ -22,7 +22,7 @@ class SyntaxViewerPlugin(CorpusDependentPlugin):
     def search_by_token_id(self, corp, canonical_corpname, token_id, kwic_len):
         raise NotImplementedError()
 
-    def is_enabled_for(self, corpname):
+    def is_enabled_for(self, plugin_api, corpname):
         raise NotImplementedError()
 
 

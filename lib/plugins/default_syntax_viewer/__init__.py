@@ -90,7 +90,7 @@ class SyntaxDataProvider(SyntaxViewerPlugin):
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
-    def is_enabled_for(self, corpname):
+    def is_enabled_for(self, plugin_api,corpname):
         return self._auth.canonical_corpname(corpname) in self._conf
 
     def export_actions(self):

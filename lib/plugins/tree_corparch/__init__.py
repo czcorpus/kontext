@@ -113,7 +113,7 @@ def ajax_get_corptree_data(ctrl, request):
     """
     An exposed HTTP action required by client-side widget.
     """
-    return plugins.get('corparch').get_all(ctrl._session_get('user', 'id'))
+    return plugins.get('corparch').get_all(ctrl._plugin_api)
 
 
 class TreeCorparch(AbstractCorporaArchive):
@@ -130,19 +130,19 @@ class TreeCorparch(AbstractCorporaArchive):
     def setup(self, controller_obj):
         pass
 
-    def get_corpus_info(self, corp_id, language=None):
+    def get_corpus_info(self, plugin_api, corp_id):
         return BrokenCorpusInfo()
 
-    def get_list(self, user_allowed_corpora):
+    def get_list(self, plugin_api, user_allowed_corpora):
         return sorted(self._metadata.keys())
 
-    def get_all(self, user_id):
+    def get_all(self, plugin_api):
         return self._data
 
     def export_actions(self):
         return {corpora.Corpora: [ajax_get_corptree_data]}
 
-    def initial_search_params(self, query, filter_dict=None):
+    def initial_search_params(self, plugin_api, query, filter_dict=None):
         return {}
 
 

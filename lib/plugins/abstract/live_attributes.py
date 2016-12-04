@@ -19,24 +19,25 @@ from . import CorpusDependentPlugin
 
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
-    def db(self, corpname):
+    def db(self, plugin_api, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
         """
         raise NotImplementedError()
 
-    def is_enabled_for(self, corpname):
+    def is_enabled_for(self, plugin_api, corpname):
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         raise NotImplementedError()
 
-    def get_attr_values(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
+    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
 
         arguments:
+        plugin_api --
         corpus -- manatee.corpus object
         attr_map -- a dictionary of attributes and values as selected by a user
         aligned_corpora -- a list/tuple of corpora names aligned to base one (the 'corpus' argument)
@@ -47,7 +48,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
-    def get_bibliography(self, corpus, item_id):
+    def get_bibliography(self, plugin_api, corpus, item_id):
         """
         Returns a list of 2-tuples (attr_name, attr_value).
         """

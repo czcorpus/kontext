@@ -60,7 +60,7 @@ def ajax_get_tag_variants(ctrl, pattern=''):
     try:
         tag_loader = plugins.get('taghelper').loader(
             ctrl.args.corpname,
-            plugins.get('corparch').get_corpus_info(ctrl.args.corpname)['tagset'],
+            ctrl.get_corpus_info(ctrl.args.corpname)['tagset'],
             ctrl.ui_lang)
     except IOError:
         raise UserActionException(_('Corpus %s is not supported by this widget.') % ctrl.args.corpname)
