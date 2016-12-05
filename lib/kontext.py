@@ -1246,7 +1246,7 @@ class PluginApi(object):
 
     def get_environ(self, key, default=None):
         """
-        Return an environment variable
+        Return a WSGI environment variable
         """
         return self._controller.environ.get(key, default)
 

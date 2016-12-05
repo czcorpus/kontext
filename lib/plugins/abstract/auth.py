@@ -1,4 +1,6 @@
-# Copyright (c) 2013 Institute of the Czech National Corpus
+# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,7 +18,7 @@ from translation import ugettext as _
 class AbstractAuth(object):
     """
     Represents general authentication module.
-    Custom implementations should inherit this.
+    Custom implementations should inherit from this.
     """
 
     def __init__(self, anonymous_id):
@@ -32,11 +34,10 @@ class AbstractAuth(object):
         specifying anonymous user. By default it is ID = 0,
         user = 'anonymous', fullname = _('anonymous')
         """
-        return {
-            'id': self._anonymous_id,
-            'user': 'anonymous',
-            'fullname': _('anonymous')
-        }
+        return dict(
+            id=self._anonymous_id,
+            user='anonymous',
+            fullname=_('anonymous'))
 
     def is_anonymous(self, user_id):
         return user_id == self._anonymous_id
@@ -65,7 +66,7 @@ class AbstractAuth(object):
 
     def permitted_corpora(self, user_id):
         """
-        Returns a dictionary containing corpora IDs user can access.
+        Return a dictionary containing corpora IDs user can access.
 
         arguments:
         user_id -- database user ID
@@ -77,9 +78,9 @@ class AbstractAuth(object):
 
     def get_user_info(self, user_id):
         """
-        Returns a dictionary containing all the data about a user.
+        Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
-        etc. are not expected/required to be present there.
+        etc. are not expected/required to be included.
         """
         raise NotImplementedError()
 
@@ -169,8 +170,8 @@ class AbstractRemoteAuth(AbstractAuth):
     def revalidate(self, plugin_api):
         """
         Re-validates user authentication against external database with central
-        authentication ticket (expected to be found in cookies) and session data.
-        Resulting user data is written to the session (typically - if a remote
+        authentication ticket (stored as a cookie) and session data.
+        Resulting user data are written to the session (typically - if a remote
         service marks auth. cookie as invalid we store an anonymous user into
         the session. The method returns no value.
 
@@ -185,9 +186,9 @@ class AbstractRemoteAuth(AbstractAuth):
     def refresh_user_permissions(self, plugin_api):
         """
         Forces KonText to reload corpus access permissions for the current user
-        form a remote server. This is triggered in case user cannot access an
+        from a remote server. This is triggered in case user cannot access an
         explicit corpus. But the auth plug-in may use this in other procedures as
-        well (e.g. during 'revalidate()').
+        well (e.g. during 'revalidate()' or when session ID changes).
         """
         pass
 

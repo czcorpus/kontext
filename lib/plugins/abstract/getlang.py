@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -10,6 +12,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 """
 All the custom getlang plug-in implementations should inherit from AbstractGetLang
 """
@@ -17,34 +23,30 @@ All the custom getlang plug-in implementations should inherit from AbstractGetLa
 
 class AbstractGetLang(object):
     """
-    Looks for a language settings in user's cookies/session/local storage/etc. It is ok
-    to return also None. In such case, KonText will try to
-    infer the language from request headers.
-
-    arguments:
-    cookie_name -- name of the cookie storing current language setting
-    fallback_lang -- language code to be used in case no setting is found (default is '')
+    This plug-in customizes a way how KonText finds out what language user
+    wants for the user interface. E.g. data from cookies/session/local storage can
+    be used for this but it is up to this plug-in how to process it.
     """
 
-    def fetch_current_language(self, source):
+    def fetch_current_language(self, cookies):
         """
-        Returns currently selected language
+        Return a currently selected language
 
         arguments:
-        source -- any Cookie.BaseCookie compatible implementation
+        cookies -- any Cookie.BaseCookie compatible implementation
 
         returns:
         underscore-separated ISO 639 language code and ISO 3166 country code
-        of the detected language or an empty string in case no value was found
+        of the detected language or None in case no value was found
         """
         raise NotImplementedError()
 
     def get_fallback_language(self):
         """
-        This is an optional method (i.e. KonText calls this only if
-        a plugin implements this method).
+        An optional method providing a fallback language to be used in case
+        KonText fails to detect anything reasonable.
 
-        This specific implementation requires you to specify either an empty value
-        or underscore-separated ISO 639 language code and ISO 3166 country code
+        returns:
+        underscore-separated ISO 639 language code and ISO 3166 country code
         """
         pass

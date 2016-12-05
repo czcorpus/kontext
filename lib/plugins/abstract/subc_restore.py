@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -9,6 +11,10 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
 A plug-in template for storing Subcorpus parameters to be able to restore
@@ -22,7 +28,7 @@ class AbstractSubcRestore(object):
 
     def store_query(self, user_id, corpname, subcname, cql):
         """
-        Stores user's subcorpus query. Please note that the method should
+        Store user's subcorpus query. Please note that the method should
         also:
         1. store a current UNIX timestamp
         2. generate and store unique (on its own, i.e. even without user_id) string ID for the record
@@ -39,7 +45,7 @@ class AbstractSubcRestore(object):
 
     def delete_query(self, user_id, corpname, subcname):
         """
-        Removes a query from archive
+        Remove a query from archive
 
         arguments:
         user_id -- int, ID of a user
@@ -53,8 +59,9 @@ class AbstractSubcRestore(object):
 
     def list_queries(self, user_id, from_idx, to_idx):
         """
-        Lists all user subcorpus-creation queries from index from_idx to index to_idx
-        (including both ends). The method is not expected to support negative indices (like Python does).
+        List all user subcorpus queries from index from_idx to index to_idx
+        (including both ends). The method is not expected to support negative
+        indices (like e.g. Python does).
 
         arguments:
         user_id -- int, ID of a user

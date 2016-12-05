@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,11 +20,14 @@
 class AbstractConcPersistence(object):
     """
     Custom conc_persistence plug-in implementations should inherit from this class.
+    Concordance persistence plug-in is expected to store current query (typically represented
+    by a list/tuple containing manatee query args) and represent the value by a
+    (short) identifier.
     """
 
     def is_valid_id(self, data_id):
         """
-        Returns True if data_id is a valid data identifier else False is returned
+        Return True if data_id is a valid data identifier else False
 
         arguments:
         data_id -- identifier to be tested
@@ -31,7 +36,7 @@ class AbstractConcPersistence(object):
 
     def open(self, data_id):
         """
-        Loads operation data according to the passed data_id argument.
+        Load operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
 
         arguments:
@@ -44,9 +49,10 @@ class AbstractConcPersistence(object):
 
     def store(self, user_id, curr_data, prev_data=None):
         """
-        Stores current operation (defined in curr_data) into the database. If also prev_date argument is
+        Store a current operation (defined in curr_data) into the database. If also prev_date argument is
         provided then a comparison is performed and based on the result, new record is created and new
-        ID is returned on nothing is done and current ID is returned.
+        ID is returned. In case there is no reason to store anything (e.g. curr and prev data are the same)
+        it is valid to do nothing and return the same ID.
 
         arguments:
         user_id -- database ID of the current user

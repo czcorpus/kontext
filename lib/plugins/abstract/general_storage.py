@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -10,15 +12,21 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 
 class KeyValueStorage(object):
     """
-    A general key-value storage as needed by default_* plugins
+    A general key-value storage as needed by typical KonText plugins. The interface
+    was written with Redis in mind but it should be easy to implement a solution
+    with other back-ends too.
     """
 
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
-        Returns a stored list. If there is a non-list value stored with the passed key
+        Return a stored list. If there is a non-list value stored with the passed key
         then TypeError is raised.
 
         arguments:
@@ -41,7 +49,7 @@ class KeyValueStorage(object):
 
     def list_len(self, key):
         """
-        Returns length of a list. If there is a non-list value stored with the passed key
+        Return length of a list. If there is a non-list value stored with the passed key
         then TypeError is raised.
 
         arguments:
@@ -51,7 +59,7 @@ class KeyValueStorage(object):
 
     def list_trim(self, key, keep_left, keep_right):
         """
-        Trims the list from the beginning to keep_left - 1 and from keep_right to the end.
+        Trim the list from the beginning to keep_left - 1 and from keep_right to the end.
         The function does not return anything.
 
         arguments:
@@ -63,7 +71,7 @@ class KeyValueStorage(object):
 
     def hash_get(self, key, field):
         """
-        Gets a value from a hash table stored under the passed key. If there is no
+        Get a value from a hash table stored under the passed key. If there is no
         such field then None is returned.
 
         arguments:
@@ -74,7 +82,7 @@ class KeyValueStorage(object):
 
     def hash_set(self, key, field, value):
         """
-        Puts a value into a hash table stored under the passed key
+        Put a value into a hash table stored under the passed key
 
         arguments:
         key -- data access key
@@ -85,7 +93,7 @@ class KeyValueStorage(object):
 
     def hash_del(self, key, *fields):
         """
-        Removes one or more fields from a hash item
+        Remove one or more fields from a hash item
 
         arguments:
         key -- hash item access key
@@ -95,7 +103,7 @@ class KeyValueStorage(object):
 
     def hash_get_all(self, key):
         """
-        Returns a complete hash object (= Python dict) stored under the passed
+        Return a complete hash object (= Python dict) stored under the passed
         key. If the provided key is not present then an empty dict should be
         returned.
 
@@ -106,7 +114,8 @@ class KeyValueStorage(object):
 
     def get(self, key, default=None):
         """
-        Gets a value stored with passed key and returns its JSON decoded form.
+        Get a value stored with passed key
+        and return its JSON decoded form.
 
         arguments:
         key -- data access key
@@ -116,7 +125,7 @@ class KeyValueStorage(object):
 
     def set(self, key, data):
         """
-        Saves 'data' with 'key'.
+        Save 'data' with 'key'.
 
         arguments:
         key -- an access key
@@ -126,7 +135,7 @@ class KeyValueStorage(object):
 
     def remove(self, key):
         """
-        Removes a value specified by a key
+        Remove a value specified by a key
 
         arguments:
         key -- key of the data to be removed
@@ -135,7 +144,7 @@ class KeyValueStorage(object):
 
     def exists(self, key):
         """
-        Tests whether there is a value with the specified key
+        Test whether there is a value with the specified key
 
         arguments:
         key -- the key to be tested
@@ -153,16 +162,5 @@ class KeyValueStorage(object):
         key -- data access key
         ttl -- number of seconds to wait before the value is removed
         (please note that update actions may reset the timer to zero)
-        """
-        pass
-
-    def apply_on_entries(self, fn, match):
-        """
-        Iterates through keys matching provided argument "match" and
-        applies function "fn" in a following manner: fn(self, key).
-
-        It should not be expected from the implementations that they
-        handle real-time changes of data in a 'transaction-like' way,
-        i.e. elements may disappear, re-enter etc.
         """
         pass

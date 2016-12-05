@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -10,8 +12,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 """
-All the custom query_storage plug-in implementations should inherit from the AbstractQueryStorage class
+Query storage plug-in works as a backend for the 'recent queries' function.
 """
 
 
@@ -19,7 +25,7 @@ class AbstractQueryStorage(object):
 
     def write(self, user_id, corpname, subcorpname, query, query_type, params=None):
         """
-        Writes data as a new saved query
+        Write data as a new saved query
 
         arguments:
         user_id -- a numeric ID of a user
@@ -34,7 +40,8 @@ class AbstractQueryStorage(object):
         """
         raise NotImplementedError()
 
-    def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0, limit=None):
+    def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0,
+                         limit=None):
         """
         Returns list of queries of a specific user.
 

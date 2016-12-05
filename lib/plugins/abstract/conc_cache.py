@@ -1,4 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -51,13 +53,13 @@ class AbstractConcCache(object):
 
     def refresh_map(self):
         """
-        Tests whether the data for a given corpus (the one this instance
+        Test whether the data for a given corpus (the one this instance
         has been created for) is ready and valid (e.g. a directory
         for the corpus cache files exists). If there is something missing
         then the method has a chance to fix it.
 
         Some implementations may probably leave this method empty
-        as soon as their other interface methods ensure they can
+        as long as their other interface methods ensure they can
         handle 'missing initialization / invalid cache' situations
         themselves.
         """
@@ -65,7 +67,7 @@ class AbstractConcCache(object):
 
     def cache_file_path(self, subchash, q):
         """
-        Returns a path to a cache file matching provided subcorpus hash and query
+        Return a path to a cache file matching provided subcorpus hash and query
         elements. If there is no entry matching (subchash, q) then None must be
         returned.
 
@@ -77,7 +79,7 @@ class AbstractConcCache(object):
 
     def add_to_map(self, subchash, query, size, pid_file=None):
         """
-        adds or updates a cache map entry
+        Add or update a cache map entry
 
         arguments:
         subchash -- a subcorpus identifier hash (see corplib.CorpusManager.get_Corpus)
@@ -97,7 +99,7 @@ class AbstractConcCache(object):
 
     def del_entry(self, subchash, q):
         """
-        Removes a specific entry with concrete subchash and query.
+        Remove a specific entry with concrete subchash and query.
 
         subchash -- a md5 hash generated from subcorpus identifier by
                     CorpusManager.get_Corpus()

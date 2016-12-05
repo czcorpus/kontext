@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,26 +16,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from . import CorpusDependentPlugin
+
+from plugins.abstract import CorpusDependentPlugin
 
 
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
-    def db(self, plugin_api, corpname):
-        """
-        Returns thread-local database connection to a sqlite3 database
-        """
-        raise NotImplementedError()
-
     def is_enabled_for(self, plugin_api, corpname):
         """
-        Returns True if live attributes are enabled for selected corpus else returns False
+        Return True if live attributes are enabled for selected corpus
+        else return False
         """
         raise NotImplementedError()
 
     def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """
-        Finds all the available values of remaining attributes according to the
+        Find all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
 
         arguments:
