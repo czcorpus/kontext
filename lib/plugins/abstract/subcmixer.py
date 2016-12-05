@@ -12,8 +12,22 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+"""
+The 'subcmixer' plug-in provides a way how to create
+subcorpora with defined proportions of specific text
+types. It requires a working 'live_attributes'
+plug-in which provides input arguments used by 'subcmixer'.
+"""
+
 
 class AbstractSubcMixer(object):
 
     def process(self, plugin_api, corpus, corpname, args):
+        """
+        arguments:
+            plugin_api -- kontext.PluginApi instance
+            corpus -- a manatee.Corpus instance
+            corpname -- a corpus name
+            args -- required text types ratios
+        """
         raise NotImplementedError()

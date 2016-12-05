@@ -122,7 +122,7 @@ class LiveAttributes(AbstractLiveAttributes):
 
         arguments:
         plugin_api --
-        corpname -- vanilla corpus name (i.e. without any path-like prefixes)
+        corpname -- canonical corpus name
         """
         if corpname not in self.databases:
             db_path = self.corparch.get_corpus_info(plugin_api, corpname).get('metadata', {}).get('database')

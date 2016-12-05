@@ -1,4 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,7 @@
 """
 This module contains classes representing a corpus and a list/set
 of corpora as Manatee-independent database-like records. Any
-corpus search/listing/overviewing is based on these classes.
+corpora search/listing is based on these classes.
 Especially the 'corparch' and 'live_attributes' plug-ins
 use them quite a lot.
 
@@ -26,8 +28,8 @@ a concrete format of stored corpora information is up to
 a concrete 'corparch' plug-in (default_corparch uses XML)
 
 Please note that many of the attributes defined here are
-tightly related to respective corpora registry files where
-all the attributes etc. are defined.
+tightly related to respective corpora registry (configuration)
+files.
 """
 
 import json
@@ -96,8 +98,10 @@ class CorpusInfo(DictLike):
 
 class BrokenCorpusInfo(CorpusInfo):
     """
-    An incomplete corpus information. It should be used in corpus info lists
-    instead of None and similar solutions to detect a problematic item.
+    An incomplete corpus information. It should be used in corpora lists/search
+    results instead of None and similar solutions to prevent unwanted exceptions
+    to be risen. Broken corpus information still does not mean that the corpus
+    cannot be used.
     """
     def __init__(self, name=None):
         super(BrokenCorpusInfo, self).__init__()
@@ -126,11 +130,10 @@ class AbstractCorporaArchive(object):
 
     def get_corpus_info(self, plugin_api, corp_id):
         """
-        Returns an information related to the provided corpus ID as defined in
-        the respective configuration XML file.
+        Return a full available corpus information.
 
         arguments:
-        plugin_api
+        plugin_api --
         corp_id -- corpus identifier (both canonical and non-canonical should be accepted)
 
         returns:
@@ -142,7 +145,7 @@ class AbstractCorporaArchive(object):
 
     def get_list(self, plugin_api, user_allowed_corpora):
         """
-        Returns a list of dicts containing information about individual corpora.
+        Return a list of dicts containing information about individual corpora.
         (it should be equal to self.corplist().values())
 
         arguments:
@@ -157,7 +160,12 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     """
     An archive without server-side searching/filtering abilities
     """
+
     def get_all(self, plugin_api):
+        """
+        Return all the available corpora (user credentials can be accessed
+        via plugin_api).
+        """
         raise NotImplementedError()
 
 
@@ -165,6 +173,7 @@ class CorplistProvider(object):
     """
     An object providing actual corpus list based on passed arguments.
     """
+
     def search(self, plugin_api, query, offset=0, limit=None, filter_dict=None):
         """
         arguments:
@@ -218,7 +227,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
 
     def create_corplist_provider(self, plugin_api):
         """
-        A factory function producing search service
+        A factory function for a configured search service
 
         arguments:
         plugin_api -- a controller.PluginApi instance
@@ -230,7 +239,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
 
     def initial_search_params(self, plugin_api, query, args):
         """
-        Returns a dictionary containing initial corpus search parameters.
+        Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
         """
         raise NotImplementedError()

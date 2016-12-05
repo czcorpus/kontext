@@ -1,4 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -13,6 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+"""
+A locking mechanism may be required by some of the plug-ins
+to handle concurrent access to shared resources.
+
+It is expected to support Python's 'with' statement.
+E.g.
+
+with plugins.get('locking').create('/tmp/shared-file') as path:
+    # do the stuff with 'path'
+
+"""
 
 
 class DummyLock(object):
@@ -37,7 +51,8 @@ class AbstractLock(object):
 
     def __enter__(self):
         """
-        Acquires lock with a specific ID (= an attribute of self)
+        Acquires lock with a specific ID (= an attribute of self). Should
+        return the original resource string identifier.
         """
         raise NotImplementedError()
 

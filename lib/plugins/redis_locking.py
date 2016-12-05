@@ -36,7 +36,8 @@ class RedisLock(AbstractLock):
                          raising LockTimeout exception
         """
         self._db = db
-        self._key = 'lock:%s' % key
+        self._key = key
+        self._db_key = 'lock:%s' % key
         self._num_attempts = num_attempts
         self._ttl = ttl
 
@@ -47,17 +48,17 @@ class RedisLock(AbstractLock):
     def __enter__(self):
         for i in range(self._num_attempts):
             expires = time.time() + self._ttl + 1
-            if self._db.setnx(self._key, expires):  # success entering critical section
-                return
-            curr_lock = self._db.get(self._key)
-            if self._lock_expired(curr_lock) and self._db.getset(self._key, expires) == curr_lock:
+            if self._db.setnx(self._db_key, expires):  # success entering critical section
+                return self._key
+            curr_lock = self._db.get(self._db_key)
+            if self._lock_expired(curr_lock) and self._db.getset(self._db_key, expires) == curr_lock:
                 # if lock is expired and we succeeded to acquire new one we can enter crit. sec.
-                return
+                return self._key
             time.sleep(1.1 ** i)  # exponential backoff
-        raise LockTimeout('Failed to acquire lock %s due to timeout' % self._key)
+        raise LockTimeout('Failed to acquire lock %s due to timeout' % self._db_key)
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self._db.remove(self._key)
+        self._db.remove(self._db_key)
 
 
 class LockFactory(object):

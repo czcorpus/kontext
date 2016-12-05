@@ -1,4 +1,6 @@
-# Copyright (c) 2013 Institute of the Czech National Corpus
+# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -10,8 +12,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 """
-All the custom settings_storage plug-ins should inherit from AbstractSettingsStorage
+The 'settings storage' plug-in works as a backend for storing and
+loading user settings.
 """
 
 

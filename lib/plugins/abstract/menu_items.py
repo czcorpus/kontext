@@ -1,4 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -13,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 """
 This module provides interface and types needed to implement "menu_items" plug-in properly.
 Please note that KonText currently understands only "menu-help" section when inserting
@@ -41,14 +44,14 @@ class MenuItem(object):
     @property
     def label(self):
         """
-        Returns a language dependent label
+        Return a language dependent label
         """
         return self._data['label']
 
     @property
     def url(self):
         """
-        Returns a language dependent URL
+        Return a language dependent URL
         """
         return self._data['url']
 
@@ -61,7 +64,7 @@ class AbstractMenuItems(object):
 
     def get_items(self, menu_section, lang):
         """
-        Returns custom menu items which will be appended to the existing ones.
+        Return custom menu items which will be appended to the existing ones.
 
         The method should never raise an exception when asked for non-existing
         undefined sections.
