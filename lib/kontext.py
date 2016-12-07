@@ -1123,24 +1123,17 @@ class Kontext(Controller):
             revers = False
         return k, revers
 
-    @staticmethod
-    def _store_checked_text_types(src_obj, out):
+    def _store_checked_text_types(self, request, out):
         """
         arguments:
-        src_obj -- an object storing keys and values (or list of values);
-                   e.g. controller or request.form (i.e. a MultiDict)
+        request -- Werkzeug request instance
         out -- an output dictionary the method will be writing to
         """
         out['checked_sca'] = {}
-        if isinstance(src_obj, Controller):
-            src_obj = src_obj.args.__dict__
-            get_list = lambda o, k: o[k] if type(o[k]) is list else [o[k]]
-        else:
-            get_list = lambda o, k: o.getlist(k)
-
+        src_obj = request.args if self.get_http_method() == 'GET' else request.form
         for p in src_obj.keys():
             if p.startswith('sca_'):
-                out['checked_sca'][p[4:]] = get_list(src_obj, p)
+                out['checked_sca'][p[4:]] = src_obj.getlist(p)
 
     @staticmethod
     def _uses_internal_user_pages():

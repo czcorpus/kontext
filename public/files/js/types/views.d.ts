@@ -135,6 +135,7 @@ declare module "views/query/main" {
 
     export interface QueryFormViews {
         QueryForm:React.ReactClass;
+        QueryFormLite:React.ReactClass;
         FilterForm:React.ReactClass;
     }
 
