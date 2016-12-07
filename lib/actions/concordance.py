@@ -274,6 +274,13 @@ class Actions(Querying):
                                           map(lambda x: x.split('.'), self.corp.get_conf('STRUCTATTRLIST').split(','))))
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
+        # query form data
+        tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
+        out['text_types_data'] = json.dumps(tt_data)
+        self._store_checked_text_types(self._request, out)
+        self._attach_query_params(out)
+        self._export_subcorpora_list(self.args.corpname, out)
+
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
         if not out['finished'] and self.args.async and self.args.save and not out['sampled_size']:
             out['running_calc'] = True
@@ -287,10 +294,7 @@ class Actions(Querying):
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
         out = {}
-        if self.get_http_method() == 'GET':
-            self._store_checked_text_types(request.args, out)
-        else:
-            self._store_checked_text_types(request.form, out)
+        self._store_checked_text_types(request, out)
         self._restore_aligned_forms()
 
         out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
@@ -659,7 +663,6 @@ class Actions(Querying):
         self.args.lemma = ''
         self.args.lpos = ''
         out = {'within': within}
-        self._store_checked_text_types(self, out)
         if within and not self.contains_errors():
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_query_params(out)

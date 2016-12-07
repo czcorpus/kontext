@@ -64,6 +64,27 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.SpeechAttrs = $to_json($speech_attrs);
     conf.SpeechSegment = $to_json($speech_segment);
     conf.StructCtx = $to_json($struct_ctx);
+    ## query form
+    conf.textTypesData = $text_types_data;
+    conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
+    conf.Wposlist = $to_json($Wposlist);
+    conf.CheckedSca = $to_json($checked_sca);
+    conf.CurrQueryTypes = $to_json($query_info.query_types);
+    conf.CurrQueries = $to_json($query_info.queries);
+    conf.CurrLposValues = $to_json($query_info.lpos_values);
+    conf.CurrPcqPosNegValues = $to_json($query_info.pcq_pos_neg_values);
+    conf.CurrQmcaseValues = $to_json($query_info.qmcase_values);
+    conf.CurrDefaultAttrValues = $to_json($query_info.default_attr_values);
+    conf.SubcorpList = $to_json($SubcorpList);
+    conf.CurrentSubcorp = $to_json($usesubcorp);
+    conf.TagBuilderSupport = $to_json($query_info.tag_builder_support);
+    conf.ShuffleConcByDefault = $to_json($shuffle);
+    conf.Lposlist = $to_json($Lposlist);
+    conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
+    conf.DefaultAttr = $to_json($default_attr);
+    conf.AttrList = $to_json($getVar('AttrList', []));
+    conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
+    conf.InputLanguages = $to_json($input_languages);
 
     #if $running_calc
     conf.numLines = $len($Lines);
