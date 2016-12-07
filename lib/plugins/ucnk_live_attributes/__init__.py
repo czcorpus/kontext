@@ -54,7 +54,7 @@ def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora, auto
                                    autocomplete_attr)).hexdigest()
 
 
-def vanilla_corpname(corpname):
+def canonical_corpname(corpname):
     """
     Removes all additional information from corpus name (in UCNK case this means removing path-like prefixes)
     """
@@ -70,7 +70,7 @@ def cached(f):
     """
     @wraps(f)
     def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
-        db = self.db(plugin_api, vanilla_corpname(corpus.corpname))
+        db = self.db(plugin_api, canonical_corpname(corpus.corpname))
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
             ans = self.from_cache(db, key)
@@ -85,19 +85,19 @@ def cached(f):
 
 
 @exposed(return_type='json')
-def filter_attributes(ctrl, request):
+def filter_attributes(self, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
-    return plugins.get('live_attributes').get_attr_values(ctrl._plugin_api, corpus=ctrl.corp, attr_map=attrs,
+    return plugins.get('live_attributes').get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
                                                           aligned_corpora=aligned)
 
 
 @exposed(return_type='json')
-def attr_val_autocomplete(ctrl, request):
+def attr_val_autocomplete(self, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
     attrs[request.args['patternAttr']] = '%%%s%%' % request.args['pattern']
-    return plugins.get('live_attributes').get_attr_values(ctrl._plugin_api, corpus=ctrl.corp, attr_map=attrs,
+    return plugins.get('live_attributes').get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
                                                           aligned_corpora=aligned,
                                                           autocomplete_attr=request.args['patternAttr'])
 
@@ -248,7 +248,7 @@ class LiveAttributes(AbstractLiveAttributes):
         returns:
         a dictionary containing matching attributes and values
         """
-        corpname = vanilla_corpname(corpus.corpname)
+        corpname = canonical_corpname(corpus.corpname)
         corpus_info = self.corparch.get_corpus_info(plugin_api, corpname)
 
         srch_attrs = set(self._get_subcorp_attrs(corpus))
@@ -325,7 +325,7 @@ class LiveAttributes(AbstractLiveAttributes):
         return exported
 
     def get_bibliography(self, plugin_api, corpus, item_id):
-        db = self.db(plugin_api, vanilla_corpname(corpus.corpname))
+        db = self.db(plugin_api, canonical_corpname(corpus.corpname))
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
         corpus_info = self.corparch.get_corpus_info(plugin_api, corpus.corpname)
@@ -334,7 +334,7 @@ class LiveAttributes(AbstractLiveAttributes):
         col_map = OrderedDict([(x[1], x[0]) for x in col_rows])
         if 'corpus_id' in col_map:
             ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? AND corpus_id = ? LIMIT 1',
-                                   (item_id, vanilla_corpname(corpus.corpname))).fetchone()
+                                   (item_id, canonical_corpname(corpus.corpname))).fetchone()
         else:
             ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
         return [(k, ans[i]) for k, i in col_map.items() if k != 'id']
@@ -343,7 +343,7 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         Returns total number of items in bibliography
         """
-        db = self.db(vanilla_corpname(corpus.corpname))
+        db = self.db(canonical_corpname(corpus.corpname))
         size = self.from_cache(db, 'bib_size')
         if size is None:
             ans = self.execute_sql(db, 'SELECT COUNT(*) FROM bibliography').fetchone()
