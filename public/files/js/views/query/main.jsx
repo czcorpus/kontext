@@ -101,7 +101,7 @@ export function init(
 
         mixins : mixins,
 
-        getInitialState : function () {
+        _fetchStoreState : function () {
             return {
                 corpora: queryStore.getCorpora(),
                 availableAlignedCorpora: queryStore.getAvailableAlignedCorpora(),
@@ -129,32 +129,14 @@ export function init(
             };
         },
 
+        getInitialState : function () {
+            return this._fetchStoreState();
+        },
+
         _storeChangeHandler : function (store, action) {
-            this.setState({
-                corpora: queryStore.getCorpora(),
-                availableAlignedCorpora: queryStore.getAvailableAlignedCorpora(),
-                supportsParallelCorpora: queryStore.supportsParallelCorpora(),
-                queryTypes: queryStore.getQueryTypes(),
-                subcorpList: queryStore.getSubcorpList(),
-                currentSubcorp: queryStore.getCurrentSubcorp(),
-                supportedWidgets: queryStore.getSupportedWidgets(),
-                shuffleConcByDefault: queryStore.isShuffleConcByDefault(),
-                lposlist: queryStore.getLposlist(),
-                lposValues: queryStore.getLposValues(),
-                matchCaseValues: queryStore.getMatchCaseValues(),
-                forcedAttr: queryStore.getForcedAttr(),
-                defaultAttrValues: queryStore.getDefaultAttrValues(),
-                attrList: queryStore.getAttrList(),
-                tagsetDocUrl: queryStore.getTagsetDocUrl(),
-                pcqPosNegValues: queryStore.getPcqPosNegValues(),
-                lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
-                posWindowSizes: queryStore.getPosWindowSizes(),
-                hasLemmaAttr: queryStore.getHasLemmaAttr(),
-                wPoSList: queryStore.getwPoSList(),
-                contextFormVisible: this.state.contextFormVisible,
-                textTypesFormVisible: this.state.textTypesFormVisible,
-                inputLanguages: queryStore.getInputLanguages()
-            });
+            const state = this._fetchStoreState();
+            state['contextFormVisible'] = this.state.contextFormVisible;
+            state['textTypesFormVisible'] = this.state.textTypesFormVisible;
         },
 
         _handleSubmit : function () {
@@ -281,6 +263,110 @@ export function init(
                         </button>
                     </div>
                 </form>
+            );
+        }
+    });
+
+    // -------- <QueryFormLite /> ------------------------------------
+
+    const QueryFormLite = React.createClass({
+
+        mixins : mixins,
+
+        _fetchStoreState : function () {
+            return {
+                corpora: queryStore.getCorpora(),
+                queryTypes: queryStore.getQueryTypes(),
+                subcorpList: queryStore.getSubcorpList(),
+                currentSubcorp: queryStore.getCurrentSubcorp(),
+                supportedWidgets: queryStore.getSupportedWidgets(),
+                lposlist: queryStore.getLposlist(),
+                lposValues: queryStore.getLposValues(),
+                matchCaseValues: queryStore.getMatchCaseValues(),
+                forcedAttr: queryStore.getForcedAttr(),
+                defaultAttrValues: queryStore.getDefaultAttrValues(),
+                attrList: queryStore.getAttrList(),
+                tagsetDocUrl: queryStore.getTagsetDocUrl(),
+                pcqPosNegValues: queryStore.getPcqPosNegValues(),
+                lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
+                posWindowSizes: queryStore.getPosWindowSizes(),
+                hasLemmaAttr: queryStore.getHasLemmaAttr(),
+                wPoSList: queryStore.getwPoSList(),
+                contextFormVisible: false, // TODO use data from session?
+                inputLanguages: queryStore.getInputLanguages()
+            };
+        },
+
+        _keyEventHandler : function (evt) {
+            if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
+                dispatcher.dispatch({
+                    actionType: 'QUERY_INPUT_SUBMIT',
+                    props: {}
+                });
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
+        },
+
+        getInitialState : function () {
+            return this._fetchStoreState()
+        },
+
+        _handleSubmit : function () {
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SUBMIT',
+                props: {}
+            });
+        },
+
+        _storeChangeHandler : function (store, action) {
+            this.setState(this._fetchStoreState());
+        },
+
+        componentDidMount : function () {
+            queryStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            queryStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        render : function () {
+            return (
+                <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
+                    <layoutViews.PopupBox customClass="query-form-lite"
+                            onCloseClick={this.props.onCloseClick}>
+                        <h3>{this.translate('query__edit_current_hd')}</h3>
+                        <form id="query-form-lite"  onKeyDown={this._keyEventHandler}>
+                            <table className="form primary-language">
+                                <tbody>
+                                    <inputViews.TRQueryTypeField queryType={this.state.queryTypes.get(this.props.corpname)}
+                                            sourceId={this.props.corpname} actionPrefix={this.props.actionPrefix} />
+                                    <inputViews.TRQueryInputField
+                                        queryType={this.state.queryTypes.get(this.props.corpname)}
+                                        widgets={this.state.supportedWidgets.get(this.props.corpname)}
+                                        sourceId={this.props.corpname}
+                                        lposlist={this.state.lposlist}
+                                        lposValue={this.state.lposValues.get(this.props.corpname)}
+                                        matchCaseValue={this.state.matchCaseValues.get(this.props.corpname)}
+                                        forcedAttr={this.state.forcedAttr}
+                                        defaultAttr={this.state.defaultAttrValues.get(this.props.corpname)}
+                                        attrList={this.state.attrList}
+                                        tagsetDocUrl={this.state.tagsetDocUrl}
+                                        tagHelperViews={this.props.tagHelperViews}
+                                        queryStorageViews={this.props.queryStorageViews}
+                                        inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
+                                        actionPrefix={this.props.actionPrefix} />
+                                </tbody>
+                            </table>
+                            <div className="buttons">
+                                <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                    {this.translate('query__search_btn')}
+                                </button>
+                            </div>
+                        </form>
+                    </layoutViews.PopupBox>
+                </layoutViews.ModalOverlay>
             );
         }
     });
@@ -481,6 +567,7 @@ export function init(
 
     return {
         QueryForm: QueryForm,
+        QueryFormLite: QueryFormLite,
         FilterForm: FilterForm
     };
 }

@@ -41,6 +41,13 @@ import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
 import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary} from '../stores/concordance/lines';
+import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
+import {TextTypesStore} from '../stores/textTypes/attrValues';
+import {WithinBuilderStore} from '../stores/query/withinBuilder';
+import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
+import {QueryContextStore} from '../stores/query/context';
+import tagHelperPlugin from 'plugins/taghelper/init';
+import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
 import * as d3 from 'vendor/d3';
 import * as syntaxViewer from 'plugins/syntaxViewer/init';
@@ -49,6 +56,7 @@ import * as applicationBar from 'plugins/applicationBar/init';
 import * as RSVP from 'vendor/rsvp';
 import {UserInfo} from '../stores/userStores';
 import {ViewOptionsStore} from '../stores/viewOptions';
+import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -59,6 +67,15 @@ export class ViewPageStores {
     refsDetailStore:RefsDetailStore;
     userInfoStore:Kontext.IUserInfoStore;
     viewOptionsStore:ViewOptions.IViewOptionsStore;
+}
+
+export class QueryStores {
+    queryStore:QueryStore;
+    textTypesStore:TextTypesStore;
+    queryHintStore:QueryHintStore;
+    withinBuilderStore:WithinBuilderStore;
+    virtualKeyboardStore:VirtualKeyboardStore;
+    queryContextStore:QueryContextStore;
 }
 
 
@@ -79,6 +96,8 @@ export class ViewPage {
     private concViews:any; // TODO
 
     private lastGroupStats:any; // group stats cache
+
+    private queryFormViews:QueryFormViews;
 
     constructor(layoutModel:documentModule.PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
@@ -419,6 +438,94 @@ export class ViewPage {
         this.layoutModel.userSettings.set(UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
+
+    private initPipelineEdit():void {
+        $(window.document.getElementById('edit-query-trigger')).on('click', () => {
+            const targetElm = window.document.getElementById('query-form-mount');
+            this.layoutModel.renderReactComponent(
+                this.queryFormViews.QueryFormLite,
+                targetElm,
+                {
+                    corpname: this.layoutModel.getConf<string>('corpname'),
+                    tagHelperViews: tagHelperPlugin.getViews(),
+                    queryStorageViews: queryStoragePlugin.getViews(),
+                    allowCorpusSelection: false,
+                    actionPrefix: '',
+                    onCloseClick: () => {
+                        this.layoutModel.unmountReactComponent(targetElm);
+                    }
+                }
+            );
+        });
+    }
+
+    private initQueryForm():void {
+        const queryStores = new QueryStores();
+        const textTypesData = this.layoutModel.getConf<any>('textTypesData');
+        queryStores.textTypesStore = new TextTypesStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel.pluginApi(),
+            textTypesData,
+            this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
+        );
+
+        queryStores.queryHintStore = new QueryHintStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel.getConf<Array<string>>('queryHints')
+        );
+        queryStores.withinBuilderStore = new WithinBuilderStore(this.layoutModel.dispatcher,
+                this.layoutModel);
+        queryStores.virtualKeyboardStore = new VirtualKeyboardStore(this.layoutModel.dispatcher,
+                this.layoutModel);
+        queryStores.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
+
+        const queryFormProps = {
+            currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
+            corpora: [this.layoutModel.getConf<string>('corpname')].concat(
+                this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
+            availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+            currQueryTypes: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueryTypes'),
+            currQueries: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueries'),
+            currPcqPosNegValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrPcqPosNegValues'),
+            subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
+            currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
+            tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
+            shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
+            lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
+            currLposValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrLposValues'),
+            currQmcaseValues: this.layoutModel.getConf<{[corpname:string]:boolean}>('CurrQmcaseValues'),
+            currDefaultAttrValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrDefaultAttrValues'),
+            forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
+            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+            tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),
+            lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+            posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+            hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
+            wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
+            inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
+        };
+
+        queryStores.queryStore = new QueryStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            queryStores.textTypesStore,
+            queryStores.queryContextStore,
+            queryFormProps
+        );
+
+        this.queryFormViews = queryFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            queryStores.queryStore,
+            queryStores.textTypesStore,
+            queryStores.queryHintStore,
+            queryStores.withinBuilderStore,
+            queryStores.virtualKeyboardStore,
+            queryStores.queryContextStore
+        );
+    }
+
     init(lineViewProps:ViewConfiguration):RSVP.Promise<any> {
         return this.layoutModel.init().then(
             () => {
@@ -450,6 +557,19 @@ export class ViewPage {
                 this.setStateUrl();
                 this.updateLocalAlignedCorpora();
                 syntaxViewer.create(this.layoutModel.pluginApi());
+            }
+        ).then(
+            () => {
+                tagHelperPlugin.create(this.layoutModel.pluginApi());
+            }
+        ).then(
+            () => {
+                queryStoragePlugin.create(this.layoutModel.pluginApi());
+            }
+        ).then(
+            () => {
+                this.initQueryForm();
+                this.initPipelineEdit();
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);
@@ -530,6 +650,7 @@ export function init(conf):ViewPage {
         layoutModel.dispatcher,
         stores.lineViewStore
     );
+
     const pageModel = new ViewPage(
         layoutModel,
         stores,

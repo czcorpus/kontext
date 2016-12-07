@@ -350,19 +350,25 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
     #set $i = 0
     #for $item in $getVar('query_overview', [])
     <li>
-    #if $i > 0
-        <span class="transition">&\#9654;</span>
-        <strong>$item.op:</strong>
-    #else
-        | <strong>$item.op:</strong>
-     #end if
-    <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
-    title="#filter $HtmlEscape#$item.arg#end filter#">
-    #if $item.nicearg#${item.nicearg}#else#&#10003;#end if#
-    </a>
-    #if $item.size
-    (#filter $FloatFormatter#$item.size#end filter# $_('hits'))
-    #end if
+        #if $i == 0
+            | <strong>$item.op:</strong>
+        #else
+            <span class="transition">&\#9654;</span>
+            <strong>$item.op:</strong>
+        #end if
+        #if $i == 0
+            <a class="args" id="edit-query-trigger" title="$_('Click to edit the query')">
+                #if $item.nicearg#${item.nicearg}#else#&#10003;#end if#
+            </a><span id="query-form-mount" />
+        #else
+            <a class="args" href="${root_url}view?$join_params($item.tourl, $globals)"
+                    title="#filter $HtmlEscape#$item.arg#end filter#">
+                #if $item.nicearg#${item.nicearg}#else#&#10003;#end if#
+            </a>
+        #end if
+        #if $item.size
+        (#filter $FloatFormatter#$item.size#end filter# $_('hits'))
+        #end if
     </li>
     #set $i += 1
     #end for
