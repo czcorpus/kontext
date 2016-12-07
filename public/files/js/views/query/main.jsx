@@ -292,7 +292,7 @@ export function init(
                 posWindowSizes: queryStore.getPosWindowSizes(),
                 hasLemmaAttr: queryStore.getHasLemmaAttr(),
                 wPoSList: queryStore.getwPoSList(),
-                contextFormVisible: false, // TODO use data from session?
+                contextFormVisible: false,
                 inputLanguages: queryStore.getInputLanguages()
             };
         },
@@ -308,6 +308,14 @@ export function init(
             }
         },
 
+        _handleContextFormVisibility : function () {
+            this.setState(React.addons.update(this.state,
+                {
+                    contextFormVisible: {$set: !this.state.contextFormVisible}
+                }
+            ));
+        },
+
         getInitialState : function () {
             return this._fetchStoreState()
         },
@@ -320,7 +328,9 @@ export function init(
         },
 
         _storeChangeHandler : function (store, action) {
-            this.setState(this._fetchStoreState());
+            const state = this._fetchStoreState();
+            state['contextFormVisible'] = this.state.contextFormVisible;
+            this.setState(state);
         },
 
         componentDidMount : function () {
@@ -359,6 +369,19 @@ export function init(
                                         actionPrefix={this.props.actionPrefix} />
                                 </tbody>
                             </table>
+                            <fieldset id="specify-context">
+                                <AdvancedFormLegend
+                                        formVisible={this.state.contextFormVisible}
+                                        handleClick={this._handleContextFormVisibility}
+                                        title={this.translate('query__specify_context')} />
+                                {this.state.contextFormVisible ?
+                                    <contextViews.SpecifyContextForm
+                                            lemmaWindowSizes={this.state.lemmaWindowSizes}
+                                            posWindowSizes={this.state.posWindowSizes}
+                                            hasLemmaAttr={this.state.hasLemmaAttr}
+                                            wPoSList={this.state.wPoSList} />
+                                    : null}
+                            </fieldset>
                             <div className="buttons">
                                 <button type="button" className="default-button" onClick={this._handleSubmit}>
                                     {this.translate('query__search_btn')}
