@@ -410,6 +410,11 @@ class MenuGenerator(object):
                                 ('Query overview'), 'OVERVIEW_SHOW_QUERY_INFO')
         )
 
+        self.query_edit = (
+            EventTriggeringItem(MainMenu.CONCORDANCE('query-edit'), _('Edit query'), 'TRIGGER_QUERY_LITE_FORM')
+            .mark_indirect()
+        )
+
         self.query_undo = (
             HideOnCustomCondItem(MainMenu.CONCORDANCE('undo'), _('Undo'), 'view')
             .add_args(
@@ -553,7 +558,7 @@ class MenuGenerator(object):
             (MainMenu.CONCORDANCE.name, dict(
                 label=_('Concordance'),
                 items=exp(self.curr_conc, self.sorting, self.shuffle, self.sample, self.query_overview,
-                          self.query_undo),
+                          self.query_edit, self.query_undo),
                 disabled=is_disabled(MainMenu.CONCORDANCE)
             )),
             (MainMenu.FILTER.name, dict(

@@ -39,7 +39,7 @@ class ViewOptsPage {
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.mainForm = window.document.getElementById('mainform');
+        this.mainForm = window.document.getElementById('viewopts-form');
     }
 
     private blockUnsaved():void {

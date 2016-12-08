@@ -137,6 +137,7 @@ export function init(
             const state = this._fetchStoreState();
             state['contextFormVisible'] = this.state.contextFormVisible;
             state['textTypesFormVisible'] = this.state.textTypesFormVisible;
+            this.setState(state);
         },
 
         _handleSubmit : function () {
@@ -184,7 +185,7 @@ export function init(
         render : function () {
             const primaryCorpname = this.state.corpora.get(0);
             return (
-                <form id="mainform"  onKeyDown={this._keyEventHandler}>
+                <form className="query-form" onKeyDown={this._keyEventHandler}>
                     {this.state.shuffleConcByDefault ? <input type="hidden" name="shuffle" value="1" /> : null}
                     <table className="form primary-language">
                         <tbody>
@@ -347,7 +348,7 @@ export function init(
                     <layoutViews.PopupBox customClass="query-form-lite"
                             onCloseClick={this.props.onCloseClick}>
                         <h3>{this.translate('query__edit_current_hd')}</h3>
-                        <form id="query-form-lite"  onKeyDown={this._keyEventHandler}>
+                        <form className="query-form" onKeyDown={this._keyEventHandler}>
                             <table className="form primary-language">
                                 <tbody>
                                     <inputViews.TRQueryTypeField queryType={this.state.queryTypes.get(this.props.corpname)}
@@ -507,7 +508,7 @@ export function init(
 
         render : function () {
             return (
-                <form id="mainform" onKeyDown={this._keyEventHandler}>
+                <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form">
                         <tbody>
                             <tr>
