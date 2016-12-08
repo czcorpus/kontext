@@ -449,10 +449,10 @@ export function init(dispatcher, mixins, viewOptionsStore) {
         render : function () {
             if (this.props.isSubmitMode || this.state.hasLoadedData) {
                 return (
-                    <form id="mainform" method="POST" action={this.createActionLink('options/viewattrsx')}>
-                        <p>
+                    <form className="options-form" method="POST" action={this.createActionLink('options/viewattrsx')}>
+                        <h3>
                             {this.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.humanCorpname})}
-                        </p>
+                        </h3>
                         {this.props.isSubmitMode ? this._renderStateInputs() : null}
                         <FieldsetAttributes fixedAttr={this.state.fixedAttr} attrList={this.state.attrList}
                                 hasSelectAll={this.state.hasSelectAllAttrs} attrsAllpos={this.state.attrsAllpos}

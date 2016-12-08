@@ -568,7 +568,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     );
                 case 'cql':
                     return (
-                        <span>
+                        <span className="default-attr-selection">
                             {this.translate('query__default_attr') + ':\u00a0'}
                             <DefaultAttrSelector defaultAttr={this.props.defaultAttr}
                                     forcedAttr={this.props.forcedAttr}
@@ -576,9 +576,10 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                     sourceId={this.props.sourceId}
                                     actionPrefix={this.props.actionPrefix} />{'\u00a0'}
                             {this.props.tagsetDocUrl ?
-                                <a className="tagset-summary" target="_blank" href={this.props.tagsetDocUrl}>
-                                    {this.translate('query__tagset_summary')}
-                                </a> : null}
+                                (<span className="tagset-summary">(
+                                    <a className="external" target="_blank" href={this.props.tagsetDocUrl}>
+                                    {this.translate('query__tagset_summary')}</a>)</span>)
+                                : null}
                         </span>
                     );
             }

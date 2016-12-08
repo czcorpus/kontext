@@ -105,6 +105,7 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
                 actionType: this.props.data.message,
                 props: this.props.data.args
             });
+            this.props.closeActiveSubmenu();
         },
 
         render : function () {
@@ -131,7 +132,8 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
                 return <DisabledItem key={key} data={item} />;
 
             } else if (item.message) {
-                return <EventTriggeringItem key={key} data={item} />;
+                return <EventTriggeringItem key={key} data={item}
+                            closeActiveSubmenu={this.props.closeActiveSubmenu} />;
 
             } else if (item.currConc) {
                 return <ConcDependentItem key={key} data={item} />;
@@ -346,6 +348,10 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
             asyncTaskStore.removeChangeListener(this._storeChangeListener);
         },
 
+        _closeActiveSubmenu : function () {
+            this.setState(React.addons.update(this.state, {currFocus: {$set: null}}));
+        },
+
         render : function () {
             return (
                 <ul id="menu-level-1">
@@ -357,7 +363,8 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
                                     isDisabled={item[1].disabled}
                                     isOpened={this.state.currFocus === item[0]}
                                     handleMouseOver={mouseOverHandler}
-                                    handleMouseOut={mouseOutHandler} />;
+                                    handleMouseOut={mouseOutHandler}
+                                    closeActiveSubmenu={this._closeActiveSubmenu} />;
                     })}
                     <LiAsyncTaskNotificator numRunning={this.state.numRunningTasks}
                         numFinished={this.state.numFinishedTasks} />

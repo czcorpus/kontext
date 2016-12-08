@@ -199,7 +199,7 @@ export function init(dispatcher, mixins, queryContextStore) {
 
         render : function () {
             return (
-                <div>
+                <div className="pos-filter">
                     <h3>{this.translate('query__pos_filter')}</h3>
                     <table className="form">
                         <tbody>

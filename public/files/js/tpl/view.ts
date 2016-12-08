@@ -32,11 +32,10 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import win = require('win');
-import $ = require('jquery');
-import documentModule = require('./document');
-import popupBox = require('../popupbox');
-import conclines = require('../conclines');
+import * as $ from 'jquery';
+import {PageModel} from './document';
+import * as popupBox from '../popupbox';
+import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
@@ -87,7 +86,7 @@ export class ViewPage {
 
     private static CHECK_CONC_MAX_ATTEMPTS = 500;
 
-    private layoutModel:documentModule.PageModel;
+    private layoutModel:PageModel;
 
     private stores:ViewPageStores;
 
@@ -99,7 +98,7 @@ export class ViewPage {
 
     private queryFormViews:QueryFormViews;
 
-    constructor(layoutModel:documentModule.PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
+    constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
         this.stores = stores;
         this.hasLockedGroups = hasLockedGroups;
@@ -248,7 +247,7 @@ export class ViewPage {
      */
     private onBeforeUnloadAsk():any {
         let self = this;
-        $(win).on('beforeunload.alert_unsaved', function (event:any) {
+        $(window).on('beforeunload.alert_unsaved', function (event:any) {
             if (self.stores.lineSelectionStore.size() > 0) {
                 event.returnValue = self.translate('global__are_you_sure_to_leave');
                 return event.returnValue;
@@ -285,7 +284,7 @@ export class ViewPage {
                 }
             }
         );
-        left = $(win).width() / 2 - box.getPosition().width / 2;
+        left = $(window).width() / 2 - box.getPosition().width / 2;
         top = $('#conc-wrapper').offset().top + 40;
         box.setCss('left', left + 'px');
         box.setCss('top', top + 'px');
@@ -440,8 +439,8 @@ export class ViewPage {
 
 
     private initPipelineEdit():void {
-        $(window.document.getElementById('edit-query-trigger')).on('click', () => {
-            const targetElm = window.document.getElementById('query-form-mount');
+        const showQueryForm = () => {
+            const targetElm = window.document.getElementById('popup-query-form-mount');
             this.layoutModel.renderReactComponent(
                 this.queryFormViews.QueryFormLite,
                 targetElm,
@@ -456,7 +455,16 @@ export class ViewPage {
                     }
                 }
             );
+        };
+
+        this.layoutModel.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'TRIGGER_QUERY_LITE_FORM':
+                    showQueryForm();
+                break;
+            }
         });
+        $(window.document.getElementById('edit-query-trigger')).on('click', showQueryForm);
     }
 
     private initQueryForm():void {
@@ -570,16 +578,13 @@ export class ViewPage {
             () => {
                 this.initQueryForm();
                 this.initPipelineEdit();
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
             }
         );
     }
 }
 
 export function init(conf):ViewPage {
-    const layoutModel = new documentModule.PageModel(conf);
+    const layoutModel = new PageModel(conf);
 
     const concSummaryProps:ConcSummary = {
         concSize: layoutModel.getConf<number>('ConcSize'),

@@ -671,6 +671,7 @@ class Actions(Querying):
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
         out['force_cql_default_attr'] = 'word'  # beucause filter form does not support custom implicit attrs
+        out['checked_sca'] = {}
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
