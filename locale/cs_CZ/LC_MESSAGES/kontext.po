@@ -1940,6 +1940,9 @@ msgstr "Implicitní atribut zde nelze změnit."
 msgid "Click to edit the query"
 msgstr "Klikněte pro editaci dotazu"
 
+msgid "Edit query"
+msgstr "Upravit dotaz"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 
