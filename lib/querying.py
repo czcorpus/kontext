@@ -16,12 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from collections import defaultdict
 
 from kontext import Kontext
 import corplib
 import plugins
 import l10n
 import butils
+
+
+def import_qs(qs):
+    return qs[:-3] if qs is not None else None
 
 
 class Querying(Kontext):
@@ -33,6 +38,20 @@ class Querying(Kontext):
     def __init__(self, request, ui_lang):
         super(Querying, self).__init__(request=request, ui_lang=ui_lang)
 
+    def _fetch_query_params(self, only_active_corpora):
+        corpora = self._get_current_aligned_corpora() if only_active_corpora else self._get_available_aligned_corpora()
+        qinfo = defaultdict(lambda: {})
+        for i, corp in enumerate(corpora):
+            suffix = '_{0}'.format(corp) if i > 0 else ''
+            qtype = import_qs(getattr(self.args, 'queryselector' + suffix, None))
+            qinfo['query_types'][corp] = qtype
+            qinfo['queries'][corp] = getattr(self.args, qtype + suffix, None) if qtype is not None else None
+            qinfo['pcq_pos_neg_values'][corp] = getattr(self.args, 'pcq_pos_neg' + suffix, None)
+            qinfo['lpos_values'][corp] = getattr(self.args, 'lpos' + suffix, None)
+            qinfo['qmcase_values'][suffix] = bool(getattr(self.args, 'qmcase' + suffix, False))
+            qinfo['default_attr_values'][suffix] = getattr(self.args, 'default_attr' + suffix, 'word')
+        return corpora, qinfo
+
     def _attach_query_params(self, tpl_out):
         """
         Attach data required by client-side query component
@@ -42,32 +61,12 @@ class Querying(Kontext):
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
 
-        def import_qs(qs):
-            return qs[:-3] if qs is not None else None
-
         def tag_support(c):
             return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
 
-        qtype = import_qs(self.args.queryselector)
-        qinfo = dict(
-            query_types={self.args.corpname: qtype},
-            queries={self.args.corpname: getattr(self.args, qtype, None)},
-            pcq_pos_neg_values={self.args.corpname: getattr(self.args, 'pcq_pos_neg', None)},
-            lpos_values={self.args.corpname: getattr(self.args, 'lpos', None)},
-            qmcase_values={self.args.corpname: bool(getattr(self.args, 'qmcase', False))},
-            default_attr_values={self.args.corpname: getattr(self.args, 'default_attr', 'word')},
-            tag_builder_support={self.args.corpname: tag_support(self.args.corpname)}
-        )
-        if self.corp.get_conf('ALIGNED'):
-            for al in self.corp.get_conf('ALIGNED').split(','):
-                qtype = import_qs(getattr(self.args, 'queryselector_{0}'.format(al), None))
-                qinfo['query_types'][al] = qtype
-                qinfo['queries'][al] = getattr(self.args, qtype + '_' + al, None) if qtype is not None else None
-                qinfo['pcq_pos_neg_values'][al] = getattr(self.args, 'pcq_pos_neg_' + al, None)
-                qinfo['lpos_values'][al] = getattr(self.args, 'lpos_' + al, None)
-                qinfo['qmcase_values'][al] = bool(getattr(self.args, 'qmcase_' + al, False))
-                qinfo['default_attr_values'][al] = getattr(self.args, 'default_attr_' + al, 'word')
-                qinfo['tag_builder_support'][al] = tag_support(al)
+        corpora, qinfo = self._fetch_query_params(only_active_corpora=False)
+        for corp in corpora:
+            qinfo['tag_builder_support'][corp] = tag_support(corp)
         tpl_out['query_info'] = qinfo
 
     def _attach_aligned_query_params(self, tpl_out):

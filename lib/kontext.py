@@ -289,6 +289,12 @@ class Kontext(Controller):
             excluded_users = [int(x) for x in excluded_users]
         return self._session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
 
+    def _get_current_aligned_corpora(self):
+        return [self.args.corpname] + self.args.align
+
+    def _get_available_aligned_corpora(self):
+        return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
+
     def _load_user_settings(self):
         """
         Loads user settings via settings_storage plugin. The settings are divided
