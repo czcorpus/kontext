@@ -309,22 +309,22 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
-                    self.addAlignedCorpus(payload.props['sourceId']);
+                    self.addAlignedCorpus(payload.props['corpname']);
                     self.notifyChangeListeners();
-                    self.onAddParallelCorpActions.forEach(fn => fn(payload.props['sourceId']));
+                    self.onAddParallelCorpActions.forEach(fn => fn(payload.props['corpname']));
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
-                    self.onBeforeRemoveParallelCorpActions.forEach(fn => fn(payload.props['sourceId']));
-                    self.removeAlignedCorpus(payload.props['sourceId']);
+                    self.onBeforeRemoveParallelCorpActions.forEach(fn => fn(payload.props['corpname']));
+                    self.removeAlignedCorpus(payload.props['corpname']);
                     self.notifyChangeListeners();
-                    self.onRemoveParallelCorpAction.forEach(fn => fn(payload.props['sourceId']));
+                    self.onRemoveParallelCorpAction.forEach(fn => fn(payload.props['corpname']));
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
                     self.pcqPosNegValues = self.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
                     self.notifyChangeListeners();
                     break;
                 case 'QUERY_MAKE_CORPUS_PRIMARY':
-                    self.makeCorpusPrimary(payload.props['sourceId']);
+                    self.makeCorpusPrimary(payload.props['corpname']);
                     break;
                 case 'QUERY_INPUT_SUBMIT':
                     const errors = self.corpora.map(corpname => {
