@@ -582,7 +582,6 @@ class Actions(Querying):
             pcq_args = self._export_aligned_form_params(al_corpname, state_only=False,
                                                         name_filter=lambda v: v.startswith('pcq_pos_neg'))
             wnot = '' if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos' else '!'
-            logging.getLogger(__name__).debug('al_corpname: %s' % (al_corpname,))
             pq = self._compile_basic_query(suff='_' + al_corpname,
                                            cname=al_corpname)
             if pq:

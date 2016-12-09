@@ -93,7 +93,19 @@ class Querying(Kontext):
         def tag_support(c):
             return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
 
-        corpora, qinfo = self._fetch_query_params(only_active_corpora=False)
+        def load_qinfo():
+            ans = defaultdict(lambda: {})
+            if self._prev_q_data is not None:
+                ca = self._prev_q_data.get('corpora', [])
+                ans.update(self._decompress_query_info(ca, self._prev_q_data.get('user_query', {})))
+            else:
+                ca = []
+            return ca, ans
+
+        if 'queryselector' in self._request.args or 'queryselector' in self._request.form:
+            corpora, qinfo = self._fetch_query_params(only_active_corpora=False)
+        else:
+            corpora, qinfo = load_qinfo()
         for corp in corpora:
             qinfo['tag_builder_support'][corp] = tag_support(corp)
         tpl_out['query_info'] = qinfo
