@@ -96,8 +96,7 @@ ConcArgsMapping = (
     'attr_allpos',
     'ctxattrs',
     'structs',
-    'refs',
-    'sel_aligned'
+    'refs'
 )
 
 
@@ -134,7 +133,6 @@ class GlobalArgs(object):
     fc_pos = Parameter([])
     ml = Parameter(0)
     concarf = Parameter(u'')
-    Aligned = Parameter([])
     concsize = Parameter(u'')
     Lines = Parameter([])
     fromp = Parameter(u'1')
@@ -237,8 +235,7 @@ class GlobalArgs(object):
     senleftctx_tpl = Parameter('-1:%s')
     senrightctx_tpl = Parameter('1:%s')
     viewmode = Parameter('kwic')
-    align = Parameter('')
-    sel_aligned = Parameter([])
+    align = Parameter([])
     maincorp = Parameter('')  # used only in case of parallel corpora - specifies primary corp.
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants no refs"
 

@@ -733,7 +733,7 @@ class FavoritesTab implements WidgetTab {
         }
         if (itemData.type === common.CorplistItemType.ALIGNED_CORPORA) {
             itemData.corpora.forEach(item => {
-                params.push(`sel_aligned=${item.corpus_id}`);
+                params.push(`align=${item.corpus_id}`);
             });
         }
         return rootPath + '?' + params.join('&');

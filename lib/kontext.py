@@ -289,6 +289,12 @@ class Kontext(Controller):
             excluded_users = [int(x) for x in excluded_users]
         return self._session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
 
+    def _get_current_aligned_corpora(self):
+        return [self.args.corpname] + self.args.align
+
+    def _get_available_aligned_corpora(self):
+        return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
+
     def _load_user_settings(self):
         """
         Loads user settings via settings_storage plugin. The settings are divided
@@ -414,6 +420,14 @@ class Kontext(Controller):
                 self.args.q = []
                 raise UserActionException(_('Invalid or expired query'))
 
+    def get_saveable_conc_data(self):
+        return dict(
+            q=self.args.q,
+            corpora=self._get_current_aligned_corpora(),
+            usesubcorp=self.args.usesubcorp,
+            lines_groups=self._lines_groups.serialize()
+        )
+
     def _store_conc_params(self):
         """
         Stores concordance operation if the conc_persistence plugin is installed
@@ -423,15 +437,8 @@ class Kontext(Controller):
         string ID of the stored operation or None if nothing was done (from whatever reason)
         """
         if plugins.has_plugin('conc_persistence') and self.args.q:
-            query = {
-                'q': self.args.q,
-                'corpname': self.args.corpname,
-                'usesubcorp': self.args.usesubcorp,
-                'align': self.args.align,
-                'lines_groups': self._lines_groups.serialize()
-            }
             q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
-                                                         curr_data=query,
+                                                         curr_data=self.get_saveable_conc_data(),
                                                          prev_data=self._prev_q_data)
         else:
             q_id = None
