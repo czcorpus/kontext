@@ -109,18 +109,18 @@ class Actions(Querying):
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
         # aligned corpora forms inputs require different approach due to their dynamic nature
-        if self.args.sel_aligned:
+        if self.args.align:
             sess_key = 'aligned_forms:%s' % self.args.corpname
             tmp = self._session.get(sess_key, {})
             # TODO restore this
-            for aligned_lang in self.args.sel_aligned:
+            for aligned_lang in self.args.align:
                 tmp[aligned_lang] = self._export_aligned_form_params(aligned_lang, state_only=False)
             self._session[sess_key] = tmp
 
     def _restore_aligned_forms(self):
         sess_key = 'aligned_forms:%s' % self.args.corpname
-        if sess_key in self._session and not self.args.sel_aligned:
-            self.args.sel_aligned = self._session[sess_key].keys()
+        if sess_key in self._session and not self.args.align:
+            self.args.align = self._session[sess_key].keys()
 
     def _get_speech_segment(self):
         """
@@ -135,8 +135,8 @@ class Actions(Querying):
     def _add_globals(self, result, methodname, action_metadata):
         super(Actions, self)._add_globals(result, methodname, action_metadata)
         args = {}
-        if self.args.sel_aligned:
-            for aligned_lang in self.args.sel_aligned:
+        if self.args.align:
+            for aligned_lang in self.args.align:
                 args.update(self._export_aligned_form_params(aligned_lang, state_only=True))
         result['globals'] += '&' + self.urlencode(args)
         result['Globals'] = result['Globals'].update(args)
@@ -219,7 +219,7 @@ class Actions(Querying):
         kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
         kwic_args.speech_attr = self._get_speech_segment()
         kwic_args.labelmap = {}
-        kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align.split(',') if c]
+        kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
         kwic_args.structs = self._get_struct_opts()
         out = kwic.kwicpage(kwic_args)
 
@@ -262,7 +262,7 @@ class Actions(Querying):
         # to be able to display extended context with all set structural attributes
         out['widectx_globals'] = self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts()))
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
-        out['aligned_corpora'] = self.args.sel_aligned
+        out['aligned_corpora'] = self.args.align
         out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
         out['speech_segment'] = self.get_speech_segment()
         out['speaker_id_attr'] = corpus_info.speaker_id_attr.split('.') if corpus_info.speaker_id_attr else None
@@ -297,7 +297,7 @@ class Actions(Querying):
         self._store_checked_text_types(request, out)
         self._restore_aligned_forms()
 
-        out['aligned_corpora'] = self.args.sel_aligned  # TODO check list type
+        out['aligned_corpora'] = self.args.align
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
@@ -578,11 +578,11 @@ class Actions(Querying):
             ttquery = u''
         par_query = ''
         nopq = []
-        for al_corpname in self.args.sel_aligned:
+        for al_corpname in self.args.align:
             pcq_args = self._export_aligned_form_params(al_corpname, state_only=False,
                                                         name_filter=lambda v: v.startswith('pcq_pos_neg'))
             wnot = '' if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos' else '!'
-
+            logging.getLogger(__name__).debug('al_corpname: %s' % (al_corpname,))
             pq = self._compile_basic_query(suff='_' + al_corpname,
                                            cname=al_corpname)
             if pq:
@@ -620,7 +620,7 @@ class Actions(Querying):
                           [wposlist.get(t, '') for t in fc_pos],
                           '-%i %i 1' % (fc_pos_wsize, fc_pos_wsize),
                           fc_pos_type)
-        for al_corpname in self.args.sel_aligned:
+        for al_corpname in self.args.align:
             if al_corpname in nopq and not getattr(self.args,
                                                    'include_empty_' + al_corpname, ''):
                 if butils.manatee_min_version('2.130.6'):
@@ -634,7 +634,7 @@ class Actions(Querying):
     def first(self):
 
         ans = {}
-        self._store_semi_persistent_attrs(('sel_aligned', 'corpname'))
+        self._store_semi_persistent_attrs(('align', 'corpname'))
         self._save_options(['queryselector'])
         try:
             self._set_first_query(self.args.fc_lemword_window_type,
@@ -645,8 +645,6 @@ class Actions(Querying):
                                   self.args.fc_pos_wsize,
                                   self.args.fc_pos_type,
                                   self.args.fc_pos)
-            if self.args.sel_aligned:
-                self.args.align = ','.join(self.args.sel_aligned)
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.q.append('f')
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
@@ -1565,7 +1563,7 @@ class Actions(Querying):
             kwic_args.line_offset = (from_line - 1)
             kwic_args.labelmap = {}
             kwic_args.align = ()
-            kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align.split(',') if c]
+            kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
             kwic_args.leftctx = leftctx
             kwic_args.rightctx = rightctx
             kwic_args.structs = self._get_struct_opts()
@@ -1602,8 +1600,7 @@ class Actions(Querying):
                         raise ConcError(_('Invalid data'))
 
                     aligned_corpora = [self.corp] + \
-                                      [self.cm.get_Corpus(c)
-                                       for c in self.args.align.split(',') if c]
+                                      [self.cm.get_Corpus(c) for c in self.args.align if c]
                     writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
                                           for c in aligned_corpora])
 

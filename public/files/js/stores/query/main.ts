@@ -387,8 +387,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
         if (this.corpora.size > 1) {
             args.replace('maincorp', [primaryCorpus]);
-            args.replace('sel_aligned', this.corpora.rest().toArray());
-            args.replace('align', this.corpora.rest().toArray()); // TODO why sel_align AND align???
+            args.replace('aligned', this.corpora.rest().toArray());
             args.replace('viewmode', ['align']);
         }
 
