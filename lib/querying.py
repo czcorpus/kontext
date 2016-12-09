@@ -38,6 +38,16 @@ class Querying(Kontext):
     def __init__(self, request, ui_lang):
         super(Querying, self).__init__(request=request, ui_lang=ui_lang)
 
+    def get_saveable_conc_data(self):
+        corpora, qinfo = self._fetch_query_params(only_active_corpora=True)
+        return dict(
+            q=self.args.q,
+            corpora=corpora,
+            usesubcorp=self.args.usesubcorp,
+            lines_groups=self._lines_groups.serialize(),
+            user_query=self._compress_query_info(corpora, qinfo)
+        )
+
     def _fetch_query_params(self, only_active_corpora):
         corpora = self._get_current_aligned_corpora() if only_active_corpora else self._get_available_aligned_corpora()
         qinfo = defaultdict(lambda: {})
@@ -48,9 +58,28 @@ class Querying(Kontext):
             qinfo['queries'][corp] = getattr(self.args, qtype + suffix, None) if qtype is not None else None
             qinfo['pcq_pos_neg_values'][corp] = getattr(self.args, 'pcq_pos_neg' + suffix, None)
             qinfo['lpos_values'][corp] = getattr(self.args, 'lpos' + suffix, None)
-            qinfo['qmcase_values'][suffix] = bool(getattr(self.args, 'qmcase' + suffix, False))
-            qinfo['default_attr_values'][suffix] = getattr(self.args, 'default_attr' + suffix, 'word')
+            qinfo['qmcase_values'][corp] = bool(getattr(self.args, 'qmcase' + suffix, False))
+            qinfo['default_attr_values'][corp] = getattr(self.args, 'default_attr' + suffix, 'word')
         return corpora, qinfo
+
+    def _compress_query_info(self, corpora, qinfo):
+        """
+        Remove some redundancy in stored data
+        """
+        ans = {}
+        for arg, values in qinfo.items():
+            ans[arg] = []
+            for corp in corpora:
+                ans[arg].append(values[corp])
+        return ans
+
+    def _decompress_query_info(self, corpora, qinfo):
+        ans = {}
+        for arg, values in qinfo.items():
+            ans[arg] = {}
+            for i, corp in enumerate(corpora):
+                ans[arg][corp] = values[i]
+        return ans
 
     def _attach_query_params(self, tpl_out):
         """
