@@ -268,7 +268,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.lposValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currLposValues[item] || '']));
         this.matchCaseValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false]));
         this.defaultAttrValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word']));
-        this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes).map((v, k) => v ? v : 'iquery').toMap();
+        this.queryTypes = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueryTypes[item] || 'iquery'])).toMap();
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
         this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
@@ -387,7 +387,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
         if (this.corpora.size > 1) {
             args.replace('maincorp', [primaryCorpus]);
-            args.replace('aligned', this.corpora.rest().toArray());
+            args.replace('align', this.corpora.rest().toArray());
             args.replace('viewmode', ['align']);
         }
 

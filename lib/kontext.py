@@ -571,8 +571,8 @@ class Kontext(Controller):
 
         """
         sp_data = MultiDict(self._session_get('semi_persistent_attrs'))
-        if 'corpname' in self._request.args and 'sel_aligned' in sp_data:
-            curr_corpora = (sp_data.getlist('sel_aligned') + [sp_data.get('corpname', None)])
+        if 'corpname' in self._request.args and 'align' in sp_data:
+            curr_corpora = (sp_data.getlist('align') + [sp_data.get('corpname', None)])
             if self._request.args['corpname'] not in curr_corpora:
                 sp_data.pop('sel_aligned')
         self._session['semi_persistent_attrs'] = sp_data.items(multi=True)
