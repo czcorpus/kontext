@@ -129,12 +129,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     pluginResets:Array<()=>void> = []; // TODO
 
     /**
-     *
-     * @type {Array}
-     */
-    initCallbacks:Array<()=>void>;
-
-    /**
      * Local user settings
      */
     userSettings:userSettings.UserSettings;
@@ -174,7 +168,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
         this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
-        this.initCallbacks = [];
         this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
         this.history = Modernizr.history ? new History(this) : new NullHistory();
@@ -1017,8 +1010,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.externalHelpLinks();
                 this.initNotifications();
                 this.asyncTaskChecker.init();
-
-                this.initCallbacks.forEach(fn => fn());
 
                 this.registerCoreEvents();
 

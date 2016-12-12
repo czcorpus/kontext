@@ -69,19 +69,6 @@ declare module Kontext {
     }
 
     /**
-     */
-    export interface InitCallbackObject {
-        plugin:string;
-        method:string;
-        args?:Array<any>;
-    }
-
-    /**
-     * Either a function or an object
-     */
-    export type InitCallback = InitCallbackObject|(()=>void);
-
-    /**
      * An interface used by KonText plug-ins
      */
     export interface PluginApi {
