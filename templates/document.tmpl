@@ -130,10 +130,9 @@ requirejs.config({
 });
 
 require(['vendor/rsvp'], function (RSVP) {
-    var i;
-    for (i = 0; i < missingPlugins.length; i += 1) {
-        define(missingPlugins[i], [], function () {
-            return {
+    missingPlugins.forEach(function (pluginPath) {
+        define(pluginPath, [], function () {
+            var plg = {
                 getViews : function () { return {}; },
                 create : function () {
                     return new RSVP.Promise(function (fulfill, reject) {
@@ -141,8 +140,10 @@ require(['vendor/rsvp'], function (RSVP) {
                     });
                 }
             };
+            plg.default = plg;
+            return plg;
         });
-    }
+    });
 });
 
 define('win', [], function () { return window; });
