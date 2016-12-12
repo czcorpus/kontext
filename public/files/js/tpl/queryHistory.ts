@@ -43,15 +43,39 @@ class QueryHistoryPage {
         return $('table.query-history tr.data-item').length;
     }
 
-    private escapeHTML(s) {
-        return $(window.document.createElement('div')).text(s).html();
+    private escapeHTML(html:string) {
+        let elm = document.createElement('div');
+        elm.appendChild(document.createTextNode(html));
+        return elm.innerHTML;
+    }
+
+    /**
+     * Cuts an end of a text. If a non-empty string is detected
+     * at the end then additional characters up to the next whitespace
+     * are removed.
+     *
+     * @param s
+     * @param length
+     */
+    shortenText(s:string, length:number):string {
+        let ans = s.substr(0, length);
+        let items;
+
+        if (ans.length > length && !/\s.|.\s/.exec(s.substr(length - 1, 2))) {
+            items = ans.split(/\s+/);
+            ans = items.slice(0, items.length - 1).join(' ');
+        }
+        if (ans.length < s.length) {
+            ans += '...';
+        }
+        return ans;
     }
 
     private appendData(data:Array<AjaxResponse.QueryHistoryItem>) {
         data.forEach(item => {
             $('table.query-history .expand-line').before('<tr class="data-item">'
                 + '<td class="query">'
-                + this.escapeHTML(this.layoutModel.shortenText(item.query, this.layoutModel.getConf<number>('historyMaxQuerySize')))
+                + this.escapeHTML(this.shortenText(item.query, this.layoutModel.getConf<number>('historyMaxQuerySize')))
                 + '</td>'
                 + `<td class="corpname">${item.humanCorpname}${item.subcorpname ? '+' + item.subcorpname : ''}</td>`
                 + `<td>${item.query_type_translated}</td>`
@@ -91,6 +115,28 @@ class QueryHistoryPage {
         });
     }
 
+    /**
+     * Appends an animated image symbolizing loading of data.
+     *
+     * @param elm
+     * @param options
+     * @return
+     */
+    appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}) {
+        let jImage = $('<img />');
+
+        options = options || {domId:null, htmlClass:null};
+        jImage.attr('src', this.layoutModel.createStaticUrl('img/ajax-loader.gif'));
+        if (options.domId) {
+            jImage.addClass(options.domId);
+        }
+        if (options.htmlClass) {
+            jImage.addClass(options.htmlClass);
+        }
+        $(elm).append(jImage);
+        return jImage;
+    }
+
     private addExpandLink() {
         $('table.query-history').append('<tr class="expand-line"><td colspan="7"><a class="expand-list">'
             + this.layoutModel.translate('global__load_more') + '</a></td></tr>');
@@ -98,7 +144,7 @@ class QueryHistoryPage {
         $('table.query-history').find('a.expand-list').on('click', () => {
             const actionCell = $('table.query-history .expand-line td');
             const linkElm = actionCell.find('a').detach();
-            const loaderImg = this.layoutModel.appendLoader(actionCell.get(0));
+            const loaderImg = this.appendLoader(actionCell.get(0));
 
             function cleanUpLoader(fn?:()=>void) {
                 loaderImg.remove();

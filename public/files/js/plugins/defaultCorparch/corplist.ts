@@ -406,7 +406,7 @@ export class CorplistTableStore extends util.SimplePageStore {
 /**
  * Corplist page 'model'.
  */
-export class CorplistPage implements Customized.CorplistPage {
+export class CorplistPage {
 
     components:any;
 

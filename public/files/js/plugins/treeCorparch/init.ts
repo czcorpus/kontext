@@ -162,7 +162,7 @@ export function create(targetElm:HTMLElement, targetAction:string, pluginApi:Kon
 }
 
 
-export class CorplistPage implements Customized.CorplistPage {
+export class CorplistPage implements CorplistPage {
 
     private pluginApi:Kontext.PluginApi;
 
@@ -196,6 +196,6 @@ export class CorplistPage implements Customized.CorplistPage {
 }
 
 
-export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
+export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage {
     return new CorplistPage(pluginApi);
 }

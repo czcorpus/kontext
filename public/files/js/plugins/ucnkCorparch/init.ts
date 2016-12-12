@@ -41,7 +41,7 @@ import {QueryStore} from '../../stores/query/main';
  * @param pluginApi
  * @returns {CorplistPage}
  */
-export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage {
+export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage {
     const overviewViews = overviewViewInit(
         pluginApi.dispatcher(),
         pluginApi.exportMixins(),

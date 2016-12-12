@@ -32,7 +32,7 @@ import Immutable = require('vendor/immutable');
  * Instances of this class operate in an immutable way. Any modification call to the
  * object will produce a new copy.
  */
-export class TextInputAttributeSelection implements TextTypes.TextInputAttributeSelection {
+export class TextInputAttributeSelection implements TextTypes.ITextInputAttributeSelection {
 
     attrDoc:string;  // ??
 

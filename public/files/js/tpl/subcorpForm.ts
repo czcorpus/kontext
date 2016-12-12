@@ -89,29 +89,6 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return Immutable.List<{n:string; label:string}>();
     }
 
-    formChangeCorpus(item:JQueryEventObject):void {
-        let formAncestor;
-        const ancestors = $(item.currentTarget).parents();
-
-        for (let i = 0; i < ancestors.length; i += 1) {
-            if (ancestors[i].nodeName === 'FORM') {
-                formAncestor = ancestors[i];
-                break;
-            }
-        }
-        if (formAncestor !== undefined) {
-            let srch = $(formAncestor).find('*[name="reload"]');
-            if (srch.length > 0) {
-                $(srch[0]).attr('value', '1');
-            }
-            srch = $(formAncestor).find('*[name="usesubcorp"]');
-            if (srch.length > 0) {
-                $(srch[0]).attr('value', '');
-            }
-            formAncestor.submit();
-        }
-    }
-
     subcCreationVariantSwitch(value:string):void {
         const widgetMap = {
             'raw': '#subc-within-row',

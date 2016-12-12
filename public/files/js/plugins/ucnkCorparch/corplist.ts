@@ -194,7 +194,7 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
 /**
  * Corplist page 'model'.
  */
-export class CorplistPage implements Customized.CorplistPage {
+export class CorplistPage implements CorplistPage {
 
     components:any;
 
