@@ -104,8 +104,11 @@ class Querying(Kontext):
 
         if 'queryselector' in self._request.args or 'queryselector' in self._request.form:
             corpora, qinfo = self._fetch_query_params(only_active_corpora=False)
-        else:
+        elif 'q' in self._request.args or 'q' in self._request.form:
             corpora, qinfo = load_qinfo()
+        else:
+            corpora = [self.args.corpname] + self.args.align
+            qinfo = defaultdict(lambda: {})
         for corp in corpora:
             qinfo['tag_builder_support'][corp] = tag_support(corp)
         tpl_out['query_info'] = qinfo
