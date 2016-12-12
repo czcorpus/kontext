@@ -375,7 +375,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return this.attributes.find((val) => val.name === ident);
     }
 
-    getTextInputAttribute(ident:string):TextTypes.TextInputAttributeSelection {
+    getTextInputAttribute(ident:string):TextTypes.ITextInputAttributeSelection {
         const ans = this.attributes.find(val => val.name === ident);
         if (ans instanceof TextInputAttributeSelection) {
             return ans;

@@ -59,10 +59,25 @@ declare module 'plugins/footerBar/init' {
 }
 
 declare module "plugins/corparch/init" {
+
+    /**
+     * A factory class for generating corplist page. The page is expected
+     * to contain two blocks
+     *  - a form (typically a filter)
+     *  - a dataset (= list of matching corpora)
+     *
+     */
+    export interface CorplistPage {
+
+        createForm(targetElm:HTMLElement, properties:any):void;
+
+        createList(targetElm:HTMLElement, properties:any):void;
+    }
+
     export function create(target:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
         querySetupHandler:Kontext.QuerySetupHandler, conf:CorpusArchive.Options);
 
-    export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Customized.CorplistPage;
+    export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage;
 }
 
 declare module "plugins/liveAttributes/init" {

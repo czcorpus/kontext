@@ -33,6 +33,13 @@ import {PageModel} from '../../tpl/document';
 import {SimplePageStore} from '../../util';
 
 
+
+export interface SubcListFilter {
+    show_deleted:boolean;
+    corpname:string;
+}
+
+
 export interface SubcorpListItem {
     name:string;
     corpname:string;
@@ -67,13 +74,13 @@ export class SubcorpListStore extends SimplePageStore {
 
     private sortKey:SortKey;
 
-    private filter:Kontext.SubcListFilter;
+    private filter:SubcListFilter;
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,
-            initialFilter:Kontext.SubcListFilter) {
+            initialFilter:SubcListFilter) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.importLines(data);
@@ -130,7 +137,7 @@ export class SubcorpListStore extends SimplePageStore {
                     );
                 break;
                 case 'SUBCORP_LIST_UPDATE_FILTER':
-                    self.filterItems(<Kontext.SubcListFilter>payload.props).then(
+                    self.filterItems(<SubcListFilter>payload.props).then(
                         (data) => {
                             self.notifyChangeListeners();
                         },
@@ -328,7 +335,7 @@ export class SubcorpListStore extends SimplePageStore {
         );
     }
 
-    private mergeFilter(currArgs:{[key:string]:string}, filter:Kontext.SubcListFilter):void {
+    private mergeFilter(currArgs:{[key:string]:string}, filter:SubcListFilter):void {
         function exportVal(v) {
             if (typeof v === 'boolean') {
                 return v ? '1' : '0';
@@ -346,7 +353,7 @@ export class SubcorpListStore extends SimplePageStore {
         return this.filterItems(this.filter);
     }
 
-    private filterItems(filter:Kontext.SubcListFilter):RSVP.Promise<any> {
+    private filterItems(filter:SubcListFilter):RSVP.Promise<any> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.sortKey.reverse ? '-' : '') + this.sortKey.name,

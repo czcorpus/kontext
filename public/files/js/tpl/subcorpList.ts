@@ -25,7 +25,7 @@ import $ = require('jquery');
 import {PageModel, PluginApi} from './document';
 import corplist = require('plugins/corparch/init');
 import popupBox = require('../popupbox');
-import {SubcorpListStore, SortKey} from '../stores/subcorp/list';
+import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';
 import {init as listViewInit} from 'views/subcorp/list';
 
 /**
@@ -97,7 +97,7 @@ export function init(conf) {
         layoutModel.getConf<SortKey>('SortKey'),
         layoutModel.getConf<Array<string>>('RelatedCorpora'),
         layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('UnfinishedSubcorpora'),
-        layoutModel.getConf<Kontext.SubcListFilter>('Filter')
+        layoutModel.getConf<SubcListFilter>('Filter')
     );
     const pageModel = new SubcorpListPage(layoutModel, subcorpListStore);
     pageModel.init();

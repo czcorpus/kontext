@@ -78,15 +78,12 @@ declare module Kontext {
         ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
         ajaxAnim(): JQuery;
         ajaxAnimSmall();
-        appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}):void;
         showMessage(type:string, message:any, onClose?:()=>void);
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date, timeFormat?:number):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
-        registerReset(fn:Function);
         userIsAnonymous():boolean;
-        shortenText(s:string, length:number);
         dispatcher():Dispatcher.Dispatcher<any>; // TODO type
         exportMixins(...mixins:any[]):any[];
         renderReactComponent(reactClass:React.ReactClass,
@@ -99,6 +96,11 @@ declare module Kontext {
         getConcArgs():IMultiDict;
     }
 
+    /**
+     * This interface is used by legacy non-React code in corparch plug-ins.
+     * It attaches miscellaneous events which may happen in the query form
+     * and to which these plug-ins must react to.
+     */
     export interface QuerySetupHandler {
 
         registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void;
@@ -124,19 +126,28 @@ declare module Kontext {
     export type MultipleViews = {[key:string]:React.ReactClass};
 
     /**
-     * Flux+React compatible plug-ins
+     * Flux+React compatible plug-ins.
+     * An object of type T is expected to be an object
+     * required by specific KonText interface. If there is
+     * no need for one, null can be returned.
      */
     export interface PluginObject<T> {
-        getViews():MultipleViews;
-        create(pluginApi:Kontext.PluginApi):RSVP.Promise<T>;
-    }
 
-    /**
-     * Any closeable component (closing means here that
-     * the component stops what it is doing and hides itself).
-     */
-    export interface Closeable {
-        close(): void;
+        /**
+         * Return initialized React classes used by KonText.
+         * Plug-in should be able to return these objects before
+         * create() is called but on the other hand it is not
+         * expected for these views to be able to handle user
+         * interaction before create() is called.
+         */
+        getViews():MultipleViews;
+
+        /**
+         * Instantiate and initialize plug-in itself (typically -
+         * create required stores and connect them with KonText
+         * stores/callbacks if needed).
+         */
+        create(pluginApi:Kontext.PluginApi):RSVP.Promise<T>;
     }
 
     /**
@@ -159,6 +170,10 @@ declare module Kontext {
         getCredentials():UserCredentials;
     }
 
+    /**
+     * A store handling state of server-asynchronous
+     * tasks.
+     */
     export interface IAsyncTaskStore extends PageStore {
 
         registerTask(task:Kontext.AsyncTaskInfo):void;
@@ -185,22 +200,30 @@ declare module Kontext {
     }
 
     /**
-     *
+     * A funcition listening for change in a store.
+     * In general, React components should not misuse
+     * 'eventType' to make complex rules when to update
+     * themselves.
      */
     export interface StoreListener {
         (store:Kontext.PageStore, eventType:string, err?:Error):void;
     }
 
     /**
-     *
+     * Flux event dispatcher payload.
      */
     export interface DispatcherPayload {
+
+        /**
+         * Upper case action identifier
+         */
         actionType:string;
+
+        /**
+         * Action's arguments. A defined, non-null
+         * object should be always used.
+         */
         props:{[name:string]:any};
-    }
-
-    export interface OverviewViews {
-
     }
 
     /**
@@ -260,6 +283,10 @@ declare module Kontext {
         (taskInfoList:Immutable.List<AsyncTaskInfo>):void;
     }
 
+    /**
+     * A dictionary allowing multiple values per-key.
+     * It is mostly used to carry URL arguments.
+     */
     export interface IMultiDict {
         getList(key:string):Array<string>;
         set(key:string, value:any):void;
@@ -292,14 +319,6 @@ declare module Kontext {
         pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
         replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
         setOnPopState(fn:(event:{state: any})=>void):void;
-    }
-
-    /**
-     * A filter used on 'My subcorpora' page
-     */
-    export interface SubcListFilter {
-        show_deleted:boolean;
-        corpname:string;
     }
 }
 
@@ -359,28 +378,6 @@ declare module ViewOptions {
         getFixedAttr():string;
         getAttrsVmode():string;
         getAttrsAllpos():string;
-    }
-}
-
-
-/**
- * This module contains types for customizable parts of KonText
- * client-side code.
- */
-declare module Customized {
-
-    /**
-     * A factory class for generating corplist page. The page is expected
-     * to contain two blocks
-     *  - a form (typically a filter)
-     *  - a dataset (= list of matching corpora)
-     *
-     */
-    export interface CorplistPage {
-
-        createForm(targetElm:HTMLElement, properties:any):void;
-
-        createList(targetElm:HTMLElement, properties:any):void;
     }
 }
 
@@ -546,11 +543,11 @@ declare module TextTypes {
     /**
      *
      */
-    interface TextInputAttributeSelection extends AttributeSelection {
+    interface ITextInputAttributeSelection extends AttributeSelection {
 
         getTextFieldValue():string;
 
-        setTextFieldValue(v:string):TextInputAttributeSelection;
+        setTextFieldValue(v:string):ITextInputAttributeSelection;
 
         /**
          * Sets a list of items containing hints based on
@@ -559,11 +556,11 @@ declare module TextTypes {
          * should silently ignore this call (unless they
          * use it in some way).
          */
-        setAutoComplete(values:Array<AutoCompleteItem>):TextInputAttributeSelection;
+        setAutoComplete(values:Array<AutoCompleteItem>):ITextInputAttributeSelection;
 
         getAutoComplete():Immutable.List<AutoCompleteItem>;
 
-        resetAutoComplete():TextInputAttributeSelection;
+        resetAutoComplete():ITextInputAttributeSelection;
 
     }
 
@@ -581,7 +578,7 @@ declare module TextTypes {
         /**
          *
          */
-        getTextInputAttribute(ident:string):TextInputAttributeSelection
+        getTextInputAttribute(ident:string):ITextInputAttributeSelection
 
         /**
          * Return a list of all the defined attributes
@@ -706,21 +703,6 @@ declare module Legacy {
     }
 }
 
-/**
- *
- */
-declare module "win" {
-    var win:typeof window;
-
-    export = win;
-}
-
-/**
- *
- */
-declare module "queryInput" {
-    export function bindQueryHelpers(formElm:string|HTMLElement|JQuery, api:Kontext.PluginApi);
-}
 
 
 

@@ -31,29 +31,27 @@
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 
-
-import win = require('win');
-import $ = require('jquery');
-import popupbox = require('../popupbox');
-import applicationBar = require('plugins/applicationBar/init');
-import footerBar = require('plugins/footerBar/init');
-import flux = require('vendor/Dispatcher');
+import * as $ from 'jquery';
+import * as popupbox from '../popupbox';
+import * as applicationBar from 'plugins/applicationBar/init';
+import * as footerBar from 'plugins/footerBar/init';
+import {Dispatcher} from 'vendor/Dispatcher';
 import {init as documentViewsInit} from 'views/document';
 import {init as menuViewsInit} from 'views/menu';
 import {init as overviewAreaViewsInit} from 'views/overview';
-import React = require('vendor/react');
-import ReactDOM = require('vendor/react-dom');
-import RSVP = require('vendor/rsvp');
-import rsvpAjax = require('vendor/rsvp-ajax');
+import * as React from 'vendor/react';
+import * as ReactDOM from 'vendor/react-dom';
+import * as RSVP from 'vendor/rsvp';
+import * as rsvpAjax from 'vendor/rsvp-ajax';
 import {MultiDict, History, NullHistory} from '../util';
 import * as docStores from '../stores/common/layout';
-import userStores = require('../stores/userStores');
+import {UserInfo} from '../stores/userStores';
 import {ViewOptionsStore} from '../stores/viewOptions';
-import translations = require('translations');
+import * as translations from 'translations';
 import IntlMessageFormat = require('vendor/intl-messageformat');
-import Immutable = require('vendor/immutable');
+import * as Immutable from 'vendor/immutable';
 import {AsyncTaskChecker} from '../stores/asyncTask';
-import userSettings = require('../userSettings');
+import {UserSettings} from '../userSettings';
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**
@@ -90,8 +88,8 @@ class NullStorage implements Storage {
  * API is not supported then @link{NullStorage} is returned.
  */
 function getLocalStorage():Storage {
-    if (typeof win.localStorage === 'object') {
-        return win.localStorage;
+    if (typeof window.localStorage === 'object') {
+        return window.localStorage;
 
     } else {
         new NullStorage();
@@ -116,22 +114,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     /**
      * Flux Dispatcher (currently not used across the app)
      */
-    dispatcher:flux.Dispatcher<Kontext.DispatcherPayload>;
-
-    /**
-     * Custom client-side plug-ins implementations
-     */
-    plugins:{[name:string]:any}; // TODO type
-
-    /**
-     * Registered callbacks for plug-ins reinitialization
-     */
-    pluginResets:Array<()=>void> = []; // TODO
+    dispatcher:Dispatcher<Kontext.DispatcherPayload>;
 
     /**
      * Local user settings
      */
-    userSettings:userSettings.UserSettings;
+    userSettings:UserSettings;
 
     history:Kontext.IHistory;
 
@@ -144,7 +132,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private messageStore:docStores.MessageStore;
 
-    private userInfoStore:userStores.UserInfo;
+    private userInfoStore:UserInfo;
 
     private viewOptionsStore:ViewOptionsStore;
 
@@ -167,13 +155,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
-        this.dispatcher = new flux.Dispatcher<Kontext.DispatcherPayload>();
-        this.userSettings = new userSettings.UserSettings(getLocalStorage(), 'kontext_ui',
+        this.dispatcher = new Dispatcher<Kontext.DispatcherPayload>();
+        this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
         this.history = Modernizr.history ? new History(this) : new NullHistory();
         this.corpusInfoStore = new docStores.CorpusInfoStore(this.pluginApi(), this.dispatcher);
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
-        this.userInfoStore = new userStores.UserInfo(this, this.dispatcher);
+        this.userInfoStore = new UserInfo(this, this.dispatcher);
         this.viewOptionsStore = new ViewOptionsStore(this, this.dispatcher);
         this.translations = translations[this.conf['uiLang']] || {};
         this.asyncTaskChecker = new AsyncTaskChecker(this.dispatcher, this.pluginApi(),
@@ -304,63 +292,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.asyncTaskChecker.addOnUpdate(fn);
     }
 
+    /**
+     *
+     */
     registerTask(task:Kontext.AsyncTaskInfo):void {
         this.asyncTaskChecker.registerTask(task);
-    }
-
-    /**
-     * Escapes general string containing HTML elements and entities
-     *
-     * @param html
-     */
-    escapeHTML(html:string):string {
-        let elm = document.createElement('div');
-        elm.appendChild(document.createTextNode(html));
-        return elm.innerHTML;
-    }
-
-    /**
-     * Cuts an end of a text. If a non-empty string is detected
-     * at the end then additional characters up to the next whitespace
-     * are removed.
-     *
-     * @param s
-     * @param length
-     */
-    shortenText(s:string, length:number):string {
-        let ans = s.substr(0, length);
-        let items;
-
-        if (ans.length > length && !/\s.|.\s/.exec(s.substr(length - 1, 2))) {
-            items = ans.split(/\s+/);
-            ans = items.slice(0, items.length - 1).join(' ');
-        }
-        if (ans.length < s.length) {
-            ans += '...';
-        }
-        return ans;
-    }
-
-    /**
-     * Appends an animated image symbolizing loading of data.
-     *
-     * @param elm
-     * @param options
-     * @return
-     */
-    appendLoader(elm:HTMLElement, options?:{domId:string; htmlClass:string}) {
-        let jImage = $('<img />');
-
-        options = options || {domId:null, htmlClass:null};
-        jImage.attr('src', this.createStaticUrl('img/ajax-loader.gif'));
-        if (options.domId) {
-            jImage.addClass(options.domId);
-        }
-        if (options.htmlClass) {
-            jImage.addClass(options.htmlClass);
-        }
-        $(elm).append(jImage);
-        return jImage;
     }
 
     /**
@@ -477,7 +413,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *                  or an object containing an attribute 'messages' can
      *                  be used.
      */
-    showMessage(msgType:string, message:any, onClose?:()=>void) {
+    showMessage(msgType:string, message:any, onClose?:()=>void):void {
         let timeout;
         let outMsg;
         if (msgType === 'error') {
@@ -521,33 +457,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * Modifies form (actually, it is always the #mainform)
-     * in a way that only current corpus is changed. Under
-     * normal circumstances, the form submits to the concordance
-     * view page via POST method.
-     *
-     * @param event
-     */
-    formChangeCorpus(event:JQueryEventObject):void {
-        let jqFormElm = $(event.target).closest('form');
-        let subcorpSelect = $('#subcorp-selector');
-
-        jqFormElm.attr('action', 'first_form');
-        jqFormElm.attr('method', 'GET');
-        if (subcorpSelect.val()) {
-            subcorpSelect.val(null);
-        }
-        jqFormElm.submit();
-    }
-
-    /**
      * @param {HTMLElement|String|jQuery} elm
      * @param {String|jQuery} context checkbox context selector (parent element or list of checkboxes)
      */
-    applySelectAll = function (elm, context) {
-        let self = this;
-        let jqElm = $(elm);
-        let jqContext = $(context);
+    applySelectAll(elm, context):void {
+        const self = this;
+        const jqElm = $(elm);
+        const jqContext = $(context);
         let jqCheckboxes;
         let updateButtonStatus;
 
@@ -574,41 +490,24 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
         jqElm.off('click');
         jqElm.on('click', function (event) {
-            let evtTarget = event.target;
+            const evtTarget = event.target;
 
             if ($(evtTarget).attr('data-status') === '1') {
                 jqCheckboxes.each(function () {
                     this.checked = true;
                 });
-                self.toggleSelectAllTrigger(evtTarget);
+                self.toggleSelectAllTrigger(<HTMLInputElement>evtTarget);
 
             } else if ($(evtTarget).attr('data-status') === '2') {
                 jqCheckboxes.each(function () {
                     this.checked = false;
                 });
-                self.toggleSelectAllTrigger(evtTarget);
+                self.toggleSelectAllTrigger(<HTMLInputElement>evtTarget);
             }
         });
     }
 
-    /**
-     *
-     */
-    bindStaticElements() {
-        let self = this;
-        let citationHtml = $('#corpus-citation-box').html();
-
-        popupbox.extended(this.pluginApi()).bind(
-            $('#positions-help-link'),
-            self.translate('global__what_are_positions'),
-            {width: '30%'}
-        );
-
-        // 'Select all' buttons for structural attribute lists
-        $('table.envelope input[class="select-all"]').each(function () {
-            self.applySelectAll(this, $(this).closest('table.envelope'));
-        });
-
+    bindLangSwitch():void {
         // Footer's language switch
         $('#switch-language-box a').each(function () {
             let lang = $(this).data('lang');
@@ -626,11 +525,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         let jqMessage = $('.message');
 
         if (jqMessage.length > 0 && this.conf['messageAutoHideInterval']) {
-            timeout = win.setTimeout(function () {
+            timeout = window.setTimeout(function () {
                 jqMessage.hide(200);
-                win.clearTimeout(timeout);
+                window.clearTimeout(timeout);
                 if (jqMessage.data('next-url')) {
-                    win.location.href = jqMessage.data('next-url');
+                    window.location.href = jqMessage.data('next-url');
                 }
             }, this.conf['messageAutoHideInterval']);
         }
@@ -646,7 +545,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     mouseOverImages(context?) {
-        context = context || win.document;
+        context = context || window.document;
 
         $(context).find('.over-img').each(function () {
             let tmp;
@@ -707,7 +606,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *
      */
     reload():void {
-        win.document.location.reload();
+        window.document.location.reload();
     }
 
     /**
@@ -722,7 +621,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             .css({
                 'bottom' : '50px',
                 'position' : 'fixed',
-                'left' : ($(win).width() / 2 - 50) + 'px'
+                'left' : ($(window).width() / 2 - 50) + 'px'
             })
             .append('<span>' + this.translate('global__loading') + '</span>');
         return loader;
@@ -780,15 +679,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             .attr('alt', this.translate('global__loading'))
             .attr('title', this.translate('global__loading'))
             .css({width: '16px', height: '11px'});
-    }
-
-    /**
-     *
-     */
-    resetPlugins():void {
-        for (let i = 0; i < this.pluginResets.length; i += 1) {
-            this.pluginResets[i]();
-        }
     }
 
     /**
@@ -1003,7 +893,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.userSettings.init();
                 this.initMainMenu();
                 this.initOverviewArea();
-                this.bindStaticElements();
+                this.bindLangSwitch();
                 this.timeoutMessages();
                 this.mouseOverImages();
                 this.enhanceMessages();
@@ -1065,10 +955,6 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.createSmallAjaxLoader.apply(this.pageModel, arguments);
     }
 
-    appendLoader(elm:HTMLElement) {
-        return this.pageModel.appendLoader(elm);
-    }
-
     showMessage(type, message, onClose) {
         return this.pageModel.showMessage(type, message, onClose);
     }
@@ -1089,20 +975,8 @@ export class PluginApi implements Kontext.PluginApi {
         this.pageModel.applySelectAll(elm, context);
     }
 
-    registerReset(fn) {
-        this.pageModel.pluginResets.push(fn);
-    }
-
     userIsAnonymous():boolean {
         return this.getConf<boolean>('anonymousUser');
-    }
-
-    formChangeCorpus(event) {
-        return this.pageModel.formChangeCorpus(event);
-    }
-
-    shortenText(s, length) {
-        return this.pageModel.shortenText(s, length);
     }
 
     dispatcher() {
