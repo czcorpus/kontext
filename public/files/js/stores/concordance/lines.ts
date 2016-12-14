@@ -480,7 +480,7 @@ export class ConcLineStore extends SimplePageStore {
 
         } else {
             args.set('maincorp', corpusId);
-            args.set('within', 1);
+            args.set('within', 1); // forces server to ask for a positive filter (see filter_form action)
             link = this.layoutModel.createActionUrl('filter_form') + '?' + this.layoutModel.encodeURLParameters(args);
         }
         window.location.href = link; // TODO (should go through a router of some kind)
