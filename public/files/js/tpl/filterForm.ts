@@ -152,7 +152,8 @@ export class FilterFormpage {
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-                inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')]
+                inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
+                isWithin: this.layoutModel.getConf<boolean>('IsWithin')
             }
         );
         const queryFormComponents = queryFormInit(

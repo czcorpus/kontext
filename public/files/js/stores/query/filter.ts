@@ -49,6 +49,7 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     currQmcaseValues:{[filterId:number]:boolean};
     inputLanguage:string;
     currPnFilterValues:{[filterId:number]:string};
+    isWithin:boolean;
 }
 
 
@@ -89,6 +90,8 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
 
     private inputLanguage:string;
 
+    private isWithin:boolean;
+
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore, props:FilterFormProperties) {
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
@@ -109,6 +112,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         this.inputLanguage = props.inputLanguage;
         this.currentAction = 'filter_form';
         this.targetAction = 'filter';
+        this.isWithin = props.isWithin;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -173,7 +177,13 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         args.replace('filfpos', [range[0]]);
         args.replace('filtpos', [range[1]]);
         args.replace('inclkwic', [this.inclkwicValues.get(filterId) ? '1' : '0']);
-        args.replace('queryselector', [this.queryTypes.get(filterId)]);
+        args.replace('queryselector', [`${this.queryTypes.get(filterId)}row`]);
+        if (this.isWithin) {
+            args.replace('within', ['1']);
+
+        } else {
+            args.remove('within');
+        }
         args.replace(this.queryTypes.get(filterId), [this.queries.get(filterId)]);
         return args;
     }

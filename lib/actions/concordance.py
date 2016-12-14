@@ -370,12 +370,11 @@ class Actions(Querying):
         char = getattr(self.args, 'char' + suff, '')
         cql = getattr(self.args, 'cql' + suff, '')
 
-        queries = {
-            'cql': '%(cql)s',
-            'lemma': '[lempos="%(lemma)s%(lpos)s"]',
-            'wordform': '[%(wordattr)s="%(word)s" & tag="%(wpos)s.*"]',
-            'wordformonly': '[%(wordattr)s="%(word)s"]',
-        }
+        queries = dict(
+            cql='%(cql)s',
+            lemma='[lempos="%(lemma)s%(lpos)s"]',
+            wordform='[%(wordattr)s="%(word)s" & tag="%(wpos)s.*"]',
+            wordformonly='[%(wordattr)s="%(word)s"]')
         for a in ('iquery', 'word', 'lemma', 'phrase', 'cql'):
             if queryselector == a + 'row':
                 if getattr(self.args, a + suff, ''):
@@ -615,22 +614,27 @@ class Actions(Querying):
             raise UserActionException(e.message)
         return ans
 
-    @exposed(access_level=1, legacy=True)
-    def filter_form(self, within=0):
+    @exposed(access_level=1)
+    def filter_form(self, request):
         self.disabled_menu_items = (MainMenu.SAVE,)
-
         self.args.lemma = ''
         self.args.lpos = ''
-        out = {'within': within}
+        # 'within=1' forces KonText to ask for a positive filter
+        # when switching concordance's primary language
+        # to an aligned language without KWIC
+        within = int(request.args.get('within', 0))
+        out = dict(within=within)
         if within and not self.contains_errors():
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self._attach_query_params(out)
         tt = get_tt(self.corp, self._plugin_api)
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
-        out['Normslist'] = tt_data['Normslist']
-        out['text_types_data'] = json.dumps(tt_data)
-        out['force_cql_default_attr'] = 'word'  # beucause filter form does not support custom implicit attrs
-        out['checked_sca'] = {}
+        out.update(
+            Normslist=tt_data['Normslist'],
+            text_types_data=json.dumps(tt_data),
+            force_cql_default_attr='word',  # beucause filter form does not support custom implicit attrs
+            checked_sca={},
+            is_within=bool(within))
         return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
@@ -645,7 +649,7 @@ class Actions(Querying):
             raise ConcError(_('Select Positive or Negative filter type'))
         if not inclkwic:
             pnfilter = pnfilter.upper()
-        rank = {'f': 1, 'l': -1}.get(filfl, 1)
+        rank = dict(f=1, l=-1).get(filfl, 1)
         texttypes = TextTypeCollector(self.corp, self.args).get_query()
         try:
             query = self._compile_query(cname=self.args.maincorp)
