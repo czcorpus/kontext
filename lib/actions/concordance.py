@@ -85,43 +85,6 @@ class Actions(Querying):
         else:
             return None
 
-    def _store_semi_persistent_attrs(self, attr_list):
-        """
-        Stores the state of all semi-persistent parameters (i.e. the ones
-        with persistence flag Parameter.PERSISTENT) and also aligned
-        corpora form elements (they must be treated in a different way because
-        they cannot be hardcoded as Parameter instances due to their dynamic nature).
-
-        arguments:
-            explicit_list -- a list of attributes to store (the ones
-                             without Parameter.SEMI_PERSISTENT flag will be ignored)
-        """
-        semi_persist_attrs = self._get_items_by_persistence(Parameter.SEMI_PERSISTENT)
-        tmp = MultiDict(self._session.get('semi_persistent_attrs', {}))
-        for attr_name in attr_list:
-            if attr_name in semi_persist_attrs:
-                v = getattr(self.args, attr_name)
-                if type(v) in (list, tuple):
-                    tmp.setlist(attr_name, v)
-                else:
-                    tmp[attr_name] = v
-        # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
-        self._session['semi_persistent_attrs'] = tmp.items(multi=True)
-
-        # aligned corpora forms inputs require different approach due to their dynamic nature
-        if self.args.align:
-            sess_key = 'aligned_forms:%s' % self.args.corpname
-            tmp = self._session.get(sess_key, {})
-            # TODO restore this
-            for aligned_lang in self.args.align:
-                tmp[aligned_lang] = self._export_aligned_form_params(aligned_lang, state_only=False)
-            self._session[sess_key] = tmp
-
-    def _restore_aligned_forms(self):
-        sess_key = 'aligned_forms:%s' % self.args.corpname
-        if sess_key in self._session and not self.args.align:
-            self.args.align = self._session[sess_key].keys()
-
     def _get_speech_segment(self):
         """
         Returns:
@@ -288,14 +251,13 @@ class Actions(Querying):
             out['running_calc'] = False
         return out
 
-    @exposed()
+    @exposed(apply_semi_persist_args=True)
     def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
         out = {}
         self._store_checked_text_types(request, out)
-        self._restore_aligned_forms()
 
         out['aligned_corpora'] = self.args.align
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated

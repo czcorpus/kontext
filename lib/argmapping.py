@@ -20,9 +20,15 @@ class Parameter(object):
     Defines an argument of an argument-mapping template (see below).
     """
 
-    NON_PERSISTENT = 0b0000  # not stored at all
-    PERSISTENT = 0b0001  # stored in user's settings (and not elsewhere)
-    SEMI_PERSISTENT = 0b0010  # stored in user's session (and not elsewhere)
+    # not stored at all
+    NON_PERSISTENT = 0b0000
+
+    # stored in user's settings (and not elsewhere)
+    PERSISTENT = 0b0001
+
+    # stored in user's session (and not elsewhere), used to optionally set suitable initial values
+    # (action method must have 'apply_semi_persist_args' annotation set to True)
+    SEMI_PERSISTENT = 0b0010
 
     def __init__(self, value, persistent=NON_PERSISTENT):
         """
@@ -235,7 +241,7 @@ class GlobalArgs(object):
     senleftctx_tpl = Parameter('-1:%s')
     senrightctx_tpl = Parameter('1:%s')
     viewmode = Parameter('kwic')
-    align = Parameter([])
+    align = Parameter([], persistent=Parameter.SEMI_PERSISTENT)
     maincorp = Parameter('')  # used only in case of parallel corpora - specifies primary corp.
     refs = Parameter(None)  # None means "not initialized" while '' means "user wants no refs"
 

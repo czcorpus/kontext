@@ -389,8 +389,12 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
             args.replace('maincorp', [primaryCorpus]);
             args.replace('align', this.corpora.rest().toArray());
             args.replace('viewmode', ['align']);
-        }
 
+        } else {
+            args.remove('maincorp');
+            args.remove('align');
+            args.replace('viewmode', ['kwic']);
+        }
         function createArgname(name, corpname) {
             return corpname !== primaryCorpus ? name + '_' + corpname : name;
         }
