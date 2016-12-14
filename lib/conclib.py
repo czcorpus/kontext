@@ -278,8 +278,8 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
                                   samplesize=samplesize)
     # process subsequent concordance actions (e.g. sample)
     for act in range(toprocess, len(q)):
-        command = q[act][0]
-        getattr(conc, 'command_' + command)(q[act][1:])
+        command, args = q[act][0], q[act][1:]
+        conc.exec_command(command, args)
         if command in 'gae':  # user specific/volatile actions, cannot save
             save = 0
         if save:
