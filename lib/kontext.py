@@ -561,7 +561,7 @@ class Kontext(Controller):
             self.args.corpname = ''
         return path
 
-    def _init_semi_persistent_args(self, form_proxy):
+    def _apply_semi_persistent_args(self, form_proxy):
         """
         Update self.args using semi persistent attributes. Only values
         not present in provided form_proxy are updated.
@@ -570,15 +570,29 @@ class Kontext(Controller):
         form_proxy -- a RequestArgsProxy instance
 
         """
-        sp_data = MultiDict(self._session_get('semi_persistent_attrs'))
-        if 'corpname' in self._request.args and 'align' in sp_data:
-            curr_corpora = (sp_data.getlist('align') + [sp_data.get('corpname', None)])
-            if self._request.args['corpname'] not in curr_corpora:
-                sp_data.pop('sel_aligned')
-        self._session['semi_persistent_attrs'] = sp_data.items(multi=True)
         for k, v in self._session['semi_persistent_attrs']:
             if k not in form_proxy:
                 self.PARAM_TYPES[k].update_attr(self.args, k, v)
+
+    def _store_semi_persistent_attrs(self, attr_list):
+        """
+        Store all the semi-persistent (Parameter.SEMI_PERSISTENT) args listed in attr_list.
+
+        arguments:
+            explicit_list -- a list of attributes to store (the ones
+                             without Parameter.SEMI_PERSISTENT flag will be ignored)
+        """
+        semi_persist_attrs = self._get_items_by_persistence(Parameter.SEMI_PERSISTENT)
+        tmp = MultiDict(self._session.get('semi_persistent_attrs', {}))
+        for attr_name in attr_list:
+            if attr_name in semi_persist_attrs:
+                v = getattr(self.args, attr_name)
+                if type(v) in (list, tuple):
+                    tmp.setlist(attr_name, v)
+                else:
+                    tmp[attr_name] = v
+        # we have to ensure Werkzeug sets 'should_save' attribute (mishaps of mutable data structures)
+        self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
     # TODO: decompose this method (phase 2)
     def _pre_dispatch(self, path, named_args, action_metadata=None):
@@ -596,10 +610,11 @@ class Kontext(Controller):
 
         form = RequestArgsProxy(self._request.form, self._request.args)
 
-        self._init_semi_persistent_args(form)
-
         if not action_metadata:
             action_metadata = {}
+
+        if action_metadata.get('apply_semi_persist_args', False):
+            self._apply_semi_persistent_args(form)
 
         options, corp_options = self._load_user_settings()
         self._scheduled_actions(options)
