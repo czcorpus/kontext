@@ -839,23 +839,29 @@ class Controller(object):
         else:
             self._status = getattr(e2, 'code', 500)
 
+        if settings.is_debug_mode() or type(ex) is UserActionException:
+            user_msg = str(e2).decode('utf-8')
+        else:
+            user_msg = _('Failed to process your request. '
+                         'Please try again later or contact system support.')
+
         return_type = self._get_method_metadata(action_name, 'return_type')
         if return_type == 'json':
-            if settings.is_debug_mode() or type(ex) is UserActionException:
-                json_msg = str(e2).decode('utf-8')
-            else:
-                json_msg = _('Failed to process your request. '
-                             'Please try again later or contact system support.')
-            return action_name, None, {'error': json_msg, 'contains_errors': True,
-                                       'error_code': getattr(ex, 'error_code', None),
-                                       'error_args': getattr(ex, 'error_args', {})}
+            return (
+                action_name,
+                None,
+                dict(error=user_msg,
+                     contains_errors=True,
+                     error_code=getattr(ex, 'error_code', None),
+                     error_args=getattr(ex, 'error_args', {}))
+            )
         else:
             if not self._exceptmethod and self.is_template(action_name + '_form'):
                 self._exceptmethod = action_name + '_form'
             if not self._exceptmethod:  # let general error handlers in run() handle the error
                 raise e2
             else:
-                self.add_system_message('error', e2.message)
+                self.add_system_message('error', user_msg)
 
             self._pre_dispatch(self._exceptmethod, named_args,
                                self._get_method_metadata(self._exceptmethod))

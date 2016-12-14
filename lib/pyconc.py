@@ -99,6 +99,17 @@ class PyConc(manatee.Concordance):
             raise RuntimeError('Character encoding of this corpus ({0}) does not support one or more characters in the query.'
                                .format(self.corpus_encoding))
 
+    def exec_command(self, name, options):
+        fn = getattr(self, 'command_{0}'.format(name), None)
+        if fn is not None:
+            try:
+                return fn(options)
+            except ValueError as ex:
+                raise ValueError('Invalid arguments for PyConc command {0}: {1} (original error: {2})'
+                                 .format(name, options, ex))
+        else:
+            raise ValueError('Unknown PyConc command: {0}'.format(name))
+
     def command_g(self, options):
         """
         sort according to linegroups
