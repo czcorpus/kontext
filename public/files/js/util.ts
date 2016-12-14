@@ -148,6 +148,11 @@ export class MultiDict implements Kontext.IMultiDict {
         this._data[key] = values || [];
     }
 
+    remove(key:string):void {
+        delete this[key];
+        delete this._data[key];
+    }
+
     /**
      * Add a new value. Traditional
      * dictionary mode rewrites current value

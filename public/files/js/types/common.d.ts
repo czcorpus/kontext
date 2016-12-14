@@ -291,6 +291,7 @@ declare module Kontext {
         getList(key:string):Array<string>;
         set(key:string, value:any):void;
         replace(key:string, values:Array<string>):void;
+        remove(key:string):void;
         add(key:string, value:any):void;
         items():Array<Array<string>>;
         toDict():{[key:string]:string};
