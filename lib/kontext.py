@@ -570,7 +570,7 @@ class Kontext(Controller):
         form_proxy -- a RequestArgsProxy instance
 
         """
-        for k, v in self._session['semi_persistent_attrs']:
+        for k, v in self._session.get('semi_persistent_attrs', []):
             if k not in form_proxy:
                 self.PARAM_TYPES[k].update_attr(self.args, k, v)
 
