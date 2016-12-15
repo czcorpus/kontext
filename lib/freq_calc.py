@@ -20,7 +20,7 @@ from datetime import datetime
 import time
 import math
 import hashlib
-import pickle
+import cPickle as pickle
 from structures import FixedDict
 
 import corplib
