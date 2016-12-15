@@ -20,7 +20,10 @@ from datetime import datetime
 import time
 import math
 import hashlib
-import pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from structures import FixedDict
 
 import corplib
@@ -264,7 +267,6 @@ def calculate_freqs(args):
     calc_result, cache_path = cache.get(fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
                                         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
                                         collator_locale=args.collator_locale)
-
     if calc_result is None:
         backend, conf = settings.get_full('global', 'calc_backend')
         if backend == 'celery':

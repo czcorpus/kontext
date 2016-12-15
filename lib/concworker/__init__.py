@@ -18,7 +18,10 @@
 
 import logging
 import time
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import os
 import settings
 import uuid
@@ -64,16 +67,16 @@ class GeneralWorker(object):
     @staticmethod
     def _update_pidfile(file_path, **kwargs):
         with open(file_path, 'r') as pf:
-            data = cPickle.load(pf)
+            data = pickle.load(pf)
         data.update(kwargs)
         with open(file_path, 'w') as pf:
-            cPickle.dump(data, pf)
+            pickle.dump(data, pf)
 
     def _create_pid_file(self):
         pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
                                                   uuid.uuid1()))
         with open(pidfile, 'wb') as pf:
-            cPickle.dump(
+            pickle.dump(
                 {
                     'task_id': self._task_id,
                     'pid': os.getpid(),
