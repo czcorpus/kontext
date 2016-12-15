@@ -12,7 +12,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import hashlib
 import os
 import time

@@ -26,7 +26,10 @@ import sys
 import os
 import argparse
 import time
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import collections
 import json
 import logging
@@ -154,7 +157,7 @@ class CacheCleanup(CacheFiles):
             if os.path.isfile(map_path):
                 with self._lock_factory.create(map_path):
                     try:
-                        cache_map = cPickle.load(open(map_path, 'rb'))
+                        cache_map = pickle.load(open(map_path, 'rb'))
                         for k, v in cache_map.items():
                             item_hash = v[0]
                             if item_hash in to_del:
@@ -171,7 +174,7 @@ class CacheCleanup(CacheFiles):
                                 logging.getLogger().warn('deleted stale cache map entry: %s '
                                                          '(hash: %s)' % (map_path, item_hash))
                         if not dry_run:
-                            cPickle.dump(cache_map, open(map_path, 'wb'))
+                            pickle.dump(cache_map, open(map_path, 'wb'))
                     except Exception as ex:
                         logging.getLogger().warn('Failed to process cache map file (will be deleted): %s' % (ex,))
                         os.unlink(map_path)

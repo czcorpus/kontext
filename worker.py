@@ -33,7 +33,10 @@ import os
 import imp
 import sys
 import time
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 CURR_PATH = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '%s/lib' % CURR_PATH)
@@ -216,7 +219,7 @@ class CollsTask(app.Task):
     def after_return(self, *args, **kw):
         if self.cache_data:
             with open(self.cache_path, 'wb') as f:
-                cPickle.dump(self.cache_data, f)
+                pickle.dump(self.cache_data, f)
                 self.cache_data = None
 
 
@@ -253,7 +256,7 @@ class FreqsTask(app.Task):
     def after_return(self, *args, **kw):
         if self.cache_data:
             with open(self.cache_path, 'wb') as f:
-                cPickle.dump(self.cache_data, f)
+                pickle.dump(self.cache_data, f)
                 self.cache_data = None
 
 

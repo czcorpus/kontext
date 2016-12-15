@@ -38,7 +38,10 @@ element conc_cache {
 import os
 import logging
 import hashlib
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory
 from plugins import inject
@@ -108,8 +111,8 @@ class CacheMapping(AbstractConcCache):
         try:
             with self._lock_factory.create(self._cache_map_path()):
                 with open(self._cache_map_path(), 'rb') as f:
-                    ans = cPickle.load(f)
-        except (ValueError, IOError, EOFError, cPickle.UnpicklingError) as ex:
+                    ans = pickle.load(f)
+        except (ValueError, IOError, EOFError, pickle.UnpicklingError) as ex:
             logging.getLogger(__name__).warning('Failed to load/unpickle cache mapping file: %s' % ex)
             self._clear_cache()
         return ans if ans is not None else {}
@@ -127,38 +130,36 @@ class CacheMapping(AbstractConcCache):
         return os.path.normpath('%s/%s' % (self._cache_dir_path(), self.CACHE_FILENAME))
 
     def add_to_map(self, subchash, query, size, pid_file=None):
-        import cPickle
         with self._lock_factory.create(self._cache_map_path()):
             if not os.path.exists(self._cache_map_path()):
                 with open(self._cache_map_path(), 'wb') as f_new:
-                    cPickle.dump({}, f_new)
+                    pickle.dump({}, f_new)
             with open(self._cache_map_path(), 'r+b') as f:
-                kmap = cPickle.load(f)
+                kmap = pickle.load(f)
                 if (subchash, query) in kmap:
                     ret, storedsize, stored_pidfile = kmap[subchash, query]
                     if storedsize < size:
                         kmap[subchash, query] = (ret, size, stored_pidfile)
                         f.seek(0)
-                        cPickle.dump(kmap, f)
+                        pickle.dump(kmap, f)
                 else:
                     stored_pidfile = None
                     ret = _uniqname(subchash, query)
                     kmap[subchash, query] = (ret, size, pid_file)
                     f.seek(0)
-                    cPickle.dump(kmap, f)
+                    pickle.dump(kmap, f)
                 return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), ret)), stored_pidfile
 
     def _del_from_map(self, tuple_key):
         subchash, key = tuple_key
-        import cPickle
 
         with self._lock_factory.create(self._cache_map_path()):
             with open(self._cache_map_path(), 'r+b') as f:
-                kmap = cPickle.load(f)
+                kmap = pickle.load(f)
                 try:
                     del kmap[subchash, key]
                     f.seek(0)
-                    cPickle.dump(kmap, f)
+                    pickle.dump(kmap, f)
                 except KeyError:
                     pass
 

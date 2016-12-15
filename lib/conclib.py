@@ -19,7 +19,10 @@ import os
 import sys
 import time
 import logging
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import math
 
 import manatee
@@ -83,7 +86,7 @@ def _min_conc_unfinished(pidfile, minsize):
     """
     if pidfile is not None and os.path.exists(os.path.realpath(pidfile)):
         with open(pidfile, 'r') as f:
-            data = cPickle.load(f)
+            data = pickle.load(f)
             # TODO: still not bullet-proof solution
             if data.get('error', None):
                 raise ConcCalculationControlException(data['error'])
@@ -122,7 +125,7 @@ def _cancel_async_task(cache_map, cachefile, pidfile, subchash, q):
         logging.getLogger(__name__).warning('Unable to cancel async task in multiprocessing mode')
     elif backend == 'celery' and pidfile:
         import task
-        data = cPickle.load(open(pidfile, 'rb'))
+        data = pickle.load(open(pidfile, 'rb'))
         task_id = data.get('task_id', None)
         if task_id:
             app = task.get_celery_app(conf['conf'])
