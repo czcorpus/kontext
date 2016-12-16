@@ -217,6 +217,45 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         }
     });
 
+    // ------------------------- <NonKwicText /> ---------------------------
+
+    const NonKwicText = React.createClass({
+
+        _hasClass : function (cls) {
+            return this.props.data.className.indexOf(cls) > -1;
+        },
+
+        _mkKey : function () {
+            return `${this.props.position}:${this.props.idx}`;
+        },
+
+        render : function () {
+            if (this.props.data.className && this.props.data.text) {
+                if (this._hasClass('coll') && !this._hasClass('col0')) {
+                    return(
+                        <em key={this._mkKey()} className={this.props.data.className}>
+                            {this.props.data.text}
+                        </em>
+                    );
+
+                } else {
+                    return(
+                        <span key={this._mkKey()} className={this.props.data.className}>
+                            {this.props.data.text}
+                        </span>
+                    );
+                }
+
+            } else {
+                return(
+                    <span key={this._mkKey()} title={(this.props.data.mouseover || []).join(', ')}>
+                        {this.props.data.text}
+                    </span>
+                );
+            }
+        }
+    });
+
     // ------------------------- <Line /> ---------------------------
 
     let Line = React.createClass({
@@ -225,8 +264,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
 
         _renderLeftChunk : function (item, i, itemList) {
-            let ans = [];
-            let mouseover = (item.mouseover || []).join(', ');
+            const ans = [];
             if (i > 0 && itemList.get(i - 1).closeLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[itemList.get(i - 1), item]} />);
@@ -235,12 +273,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            if (item.className && item.text) {
-                ans.push(<span key={'l:' + String(i)} className={item.className}>{item.text}</span>);
-
-            } else {
-                ans.push(<span key={'l:' + String(i)} title={mouseover}>{item.text}</span>);
-            }
+            ans.push(<NonKwicText data={item} idx={i} position="l" />);
             if (item.closeLink) {
                 ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
@@ -288,12 +321,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            if (item.className && item.text) {
-                ans.push(<span key={'r:' + String(i)} className={item.className}>{item.text}</span>);
-
-            } else {
-                ans.push(<span key={'r:' + String(i)} title={mouseover}>{item.text}</span>);
-            }
+            ans.push(<NonKwicText data={item} idx={i} position="r" />);
             if (item.closeLink) {
                 ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
