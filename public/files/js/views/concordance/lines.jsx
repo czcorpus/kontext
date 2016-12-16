@@ -31,7 +31,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
-    let ConcColsHeading = React.createClass({
+    const ConcColsHeading = React.createClass({
 
         _handleSetMainCorpClick : function (corpusId) {
             dispatcher.dispatch({
@@ -43,7 +43,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _renderCol : function (corpInfo) {
-            let colSpan = this.props.viewMode === 'kwic' ? 3 : 1;
+            const colSpan = this.props.viewMode === 'kwic' ? 3 : 1;
 
             return [
                 <td key={'ref:' + corpInfo.n}>{/* matches reference column */}</td>,
@@ -68,7 +68,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     // ------------------------- <AudioLink /> ---------------------------
 
-    let AudioLink = React.createClass({
+    const AudioLink = React.createClass({
 
         _getChar : function () {
             return {'L': '\u00A0[\u00A0', '+': '\u00A0+\u00A0', 'R': '\u00A0]\u00A0'}[this.props.t];
@@ -102,7 +102,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     // ------------------------- <LineSelCheckbox /> ---------------------------
 
-    let LineSelCheckbox = React.createClass({
+    const LineSelCheckbox = React.createClass({
 
         _checkboxChangeHandler : function (event) {
             this.setState({checked: !this.state.checked});
@@ -118,7 +118,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _handleStoreChange : function () {
-            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
             this.setState({checked: tmp ? true : false});
         },
 
@@ -131,7 +131,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         getInitialState : function () {
-            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
             return {checked: tmp ? true : false};
         },
 
@@ -147,7 +147,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     // ------------------------- <LineSelInput /> ---------------------------
 
-    let LineSelInput = React.createClass({
+    const LineSelInput = React.createClass({
 
         _textChangeHandler : function (event) {
             dispatcher.dispatch({
@@ -162,7 +162,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _handleStoreChange : function () {
-            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
             this.setState({value: tmp ? tmp[1] : ''});
         },
 
@@ -175,7 +175,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         getInitialState : function () {
-            let tmp = lineSelectionStore.getLine(this.props.tokenNumber);
+            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
             return {value: tmp ? tmp[1] : ''};
         },
 
@@ -191,7 +191,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     // ------------------------- <TdLineSelection /> ---------------------------
 
-    let TdLineSelection = React.createClass({
+    const TdLineSelection = React.createClass({
 
         _renderInput : function () {
             if (this.props.lockedGroupId) {
@@ -217,16 +217,54 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         }
     });
 
+    // ------------------------- <NonKwicText /> ---------------------------
+
+    const NonKwicText = React.createClass({
+
+        _hasClass : function (cls) {
+            return this.props.data.className.indexOf(cls) > -1;
+        },
+
+        _mkKey : function () {
+            return `${this.props.position}:${this.props.idx}`;
+        },
+
+        render : function () {
+            if (this.props.data.className && this.props.data.text) {
+                if (this._hasClass('coll') && !this._hasClass('col0')) {
+                    return(
+                        <em key={this._mkKey()} className={this.props.data.className}>
+                            {this.props.data.text}
+                        </em>
+                    );
+
+                } else {
+                    return(
+                        <span key={this._mkKey()} className={this.props.data.className}>
+                            {this.props.data.text}
+                        </span>
+                    );
+                }
+
+            } else {
+                return(
+                    <span key={this._mkKey()} title={(this.props.data.mouseover || []).join(', ')}>
+                        {this.props.data.text}
+                    </span>
+                );
+            }
+        }
+    });
+
     // ------------------------- <Line /> ---------------------------
 
-    let Line = React.createClass({
+    const Line = React.createClass({
 
         mixins : mixins,
 
 
         _renderLeftChunk : function (item, i, itemList) {
-            let ans = [];
-            let mouseover = (item.mouseover || []).join(', ');
+            const ans = [];
             if (i > 0 && itemList.get(i - 1).closeLink) {
                 ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[itemList.get(i - 1), item]} />);
@@ -235,12 +273,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            if (item.className && item.text) {
-                ans.push(<span key={'l:' + String(i)} className={item.className}>{item.text}</span>);
-
-            } else {
-                ans.push(<span key={'l:' + String(i)} title={mouseover}>{item.text}</span>);
-            }
+            ans.push(<NonKwicText data={item} idx={i} position="l" />);
             if (item.closeLink) {
                 ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
@@ -288,12 +321,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            if (item.className && item.text) {
-                ans.push(<span key={'r:' + String(i)} className={item.className}>{item.text}</span>);
-
-            } else {
-                ans.push(<span key={'r:' + String(i)} title={mouseover}>{item.text}</span>);
-            }
+            ans.push(<NonKwicText data={item} idx={i} position="r" />);
             if (item.closeLink) {
                 ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
@@ -302,7 +330,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _exportTextElmClass : function (corpname, ...customClasses) {
-            let ans = customClasses.slice();
+            const ans = customClasses.slice();
             if (corpname === this.props.mainCorp) {
                 ans.push('maincorp');
             }
@@ -310,7 +338,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _renderTextKwicMode : function (corpname, corpusOutput) {
-            let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
+            const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             return [
                 <td key="lc" className={this._exportTextElmClass(corpname, 'lc')}>
                     {corpusOutput.left.map(this._renderLeftChunk)}
@@ -327,7 +355,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _renderTextParMode : function (corpname, corpusOutput) {
-            let hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
+            const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             return [
                 <td key="par" className={this._exportTextElmClass(corpname, 'par')}
                         onClick={this._handleKwicClick.bind(this, corpname,
@@ -400,7 +428,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     // ------------------------- <ConcLines /> ---------------------------
 
-    let ConcLines = React.createClass({
+    const ConcLines = React.createClass({
 
         mixins : mixins,
 
