@@ -259,7 +259,12 @@ class Actions(Querying):
         out = {}
         self._store_checked_text_types(request, out)
 
+        if len(self._get_available_aligned_corpora()) == 1:
+            self.args.align = []
+        else:
+            self.args.align = [ac for ac in self.args.align if ac in self._get_available_aligned_corpora()]
         out['aligned_corpora'] = self.args.align
+
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
