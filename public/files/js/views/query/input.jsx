@@ -151,6 +151,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     <this.props.tagHelperViews.TagBuilder
                             sourceId={this.props.sourceId}
                             onInsert={this.props.closeClickHandler}
+                            onEscKey={this.props.closeClickHandler}
                             actionPrefix={this.props.actionPrefix} />
                 </layoutViews.PopupBox>
             );
