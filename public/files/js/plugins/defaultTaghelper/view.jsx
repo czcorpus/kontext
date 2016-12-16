@@ -45,8 +45,18 @@ export function init(dispatcher, mixins, tagHelperStore) {
             return {pattern: this.props.tagValue};
         },
 
+        _keyEventHandler : function (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            if (typeof this.props.onEscKey === 'function' && evt.keyCode === 27) {
+                this.props.onEscKey();
+            }
+        },
+
         render : function () {
-            return <div id="tag-display" className="tag-display-box">{this.state.pattern}</div>;
+            return <input type="text" className="tag-display-box" value={this.state.pattern}
+                        onKeyDown={this._keyEventHandler} readOnly
+                        ref={item => item ? item.focus() : null} />;
         }
     });
 
@@ -317,7 +327,7 @@ export function init(dispatcher, mixins, tagHelperStore) {
                     null
                 }
                 <div className="tag-header">
-                    <TagDisplay tagValue={this.state.tagValue} />
+                    <TagDisplay tagValue={this.state.tagValue} onEscKey={this.props.onEscKey} />
                     <TagButtons sourceId={this.props.sourceId}
                                 onInsert={this.props.onInsert}
                                 actionPrefix={this.props.actionPrefix} />
