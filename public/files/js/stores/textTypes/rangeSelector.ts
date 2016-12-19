@@ -144,16 +144,16 @@ export class RangeSelector {
         }
 
         return this.textTypesStore.mapItems(attribName, (item:TextTypes.AttributeValue) => {
-            let newItem = {
+            const newItem = {
                 ident: item.ident,
                 value: item.value,
                 locked: item.locked,
                 selected: item.selected,
                 numGrouped: item.numGrouped
             };
-            let interval = this.decodeRange(item.value);
+            const interval = this.decodeRange(item.value);
             if (!interval) {
-                return newItem; // silently ignore unknown entries
+                return newItem; // silently ignore non-expanded entries
 
             } else {
                 let [lft, rgt] = [interval.lft, interval.rgt];
@@ -168,12 +168,16 @@ export class RangeSelector {
                     }
 
                 } else {
-                    if ((lft >= fromVal && lft <= toVal) || (lft >= fromVal && isEmpty(toVal)) || (rgt >= fromVal && isNaN(toVal))
-                            || (rgt >= fromVal && rgt <= toVal) || (lft <= toVal && isEmpty(fromVal)) || (rgt <= toVal && isNaN(fromVal))) {
+                    if ((lft >= fromVal && lft <= toVal)
+                            || (lft >= fromVal && isEmpty(toVal))
+                            || (rgt >= fromVal && isNaN(toVal))
+                            || (rgt >= fromVal && rgt <= toVal)
+                            || (lft <= toVal && isEmpty(fromVal))
+                            || (rgt <= toVal && isNaN(fromVal))) {
                         newItem.selected = true;
 
                     } else if (!keepCurrent) {
-                        newItem.selected = true;
+                        newItem.selected = false;
                     }
                 }
                 return newItem;
@@ -256,9 +260,9 @@ export class RangeSelector {
 
             return prom.then(
                 () => {
-                    let currSelection = this.textTypesStore.getAttribute(attrName);
+                    const currSelection = this.textTypesStore.getAttribute(attrName);
                     this.checkIntervalRange(attrName, fromVal, toVal, strictInterval, keepCurrent);
-                    let ans = this.textTypesStore.getAttribute(attrName);
+                    const ans = this.textTypesStore.getAttribute(attrName);
                     if (currSelection.getNumOfSelectedItems() === ans.getNumOfSelectedItems()) {
                         this.pluginApi.showMessage('warning',
                                 this.pluginApi.translate('ucnkLA__nothing_selected'));
