@@ -33,15 +33,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, con
     conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
     conf.Wposlist = $to_json($Wposlist);
     conf.CheckedSca = $to_json($checked_sca);
-    conf.CurrQueryTypes = $to_json($query_info.query_types);
-    conf.CurrQueries = $to_json($query_info.queries);
-    conf.CurrLposValues = $to_json($query_info.lpos_values);
-    conf.CurrPcqPosNegValues = $to_json($query_info.pcq_pos_neg_values);
-    conf.CurrQmcaseValues = $to_json($query_info.qmcase_values);
-    conf.CurrDefaultAttrValues = $to_json($query_info.default_attr_values);
+    conf.ConcFormsArgs = $to_json($conc_forms_args);
     conf.SubcorpList = $to_json([]);
     conf.CurrentSubcorp = $to_json($usesubcorp);
-    conf.TagBuilderSupport = $to_json($query_info.tag_builder_support);
     conf.ShuffleConcByDefault = $to_json($shuffle);
     conf.Lposlist = $to_json($Lposlist);
     conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
@@ -49,7 +43,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (filterForm, con
     conf.AttrList = $to_json($getVar('AttrList', []));
     conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
     conf.InputLanguages = $to_json($input_languages);
-    conf.Pnfilter = $to_json($pnfilter);
     conf.IsWithin = $to_json($is_within);
     filterForm.init(conf);
 });

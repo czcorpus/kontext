@@ -21,6 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/cqlParser.d.ts" />
 
 
@@ -31,10 +32,10 @@ import {MultiDict} from '../../util';
 import {parse as parseQuery} from 'cqlParser/parser';
 import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';
+import * as RSVP from 'vendor/rsvp';
 
 
 export interface GeneralQueryFormProperties {
-    currentArgs:Kontext.MultiDictSrc;
     lposlist:Array<{v:string; n:string}>;
     forcedAttr:string;
     attrList:Array<{n:string; label:string}>;
@@ -46,19 +47,23 @@ export interface GeneralQueryFormProperties {
 }
 
 
-export interface QueryFormProperties extends GeneralQueryFormProperties {
-    corpora:Array<string>;
-    availableAlignedCorpora:Array<{n:string; label:string}>;
-    subcorpList:Array<string>;
-    currentSubcorp:string;
+export interface QueryFormUserEntries {
     currQueryTypes:{[corpname:string]:string};
     currQueries:{[corpname:string]:string};  // current queries values (e.g. when restoring a form state)
     currPcqPosNegValues:{[corpname:string]:string};
     currDefaultAttrValues:{[corpname:string]:string};
-    tagBuilderSupport:{[corpname:string]:boolean};
-    shuffleConcByDefault:boolean;
     currLposValues:{[corpname:string]:string};
     currQmcaseValues:{[corpname:string]:boolean};
+}
+
+
+export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFormUserEntries {
+    corpora:Array<string>;
+    availableAlignedCorpora:Array<{n:string; label:string}>;
+    subcorpList:Array<string>;
+    currentSubcorp:string;
+    tagBuilderSupport:{[corpname:string]:boolean};
+    shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
 }
 
@@ -71,8 +76,6 @@ export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 export class GeneralQueryStore extends SimplePageStore {
 
     protected pageModel:PageModel;
-
-    protected currentArgs:Immutable.List<[string, any]>;
 
     protected lposlist:Immutable.List<{v:string; n:string}>;
 
@@ -91,8 +94,6 @@ export class GeneralQueryStore extends SimplePageStore {
     protected wPoSList:Immutable.List<{v:string; n:string}>;
 
     protected currentAction:string;
-
-    protected targetAction:string;
 
     // ----- other stores
 
@@ -118,7 +119,6 @@ export class GeneralQueryStore extends SimplePageStore {
         this.pageModel = pageModel;
         this.textTypesStore = textTypesStore;
         this.queryContextStore = queryContextStore;
-        this.currentArgs = Immutable.List<[string, any]>(props.currentArgs);
         this.lposlist = Immutable.List<{v:string; n:string}>(props.lposlist);
         this.forcedAttr = props.forcedAttr;
         this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
@@ -213,7 +213,7 @@ export class GeneralQueryStore extends SimplePageStore {
 
         } catch (e) {
             mismatch = true;
-            console.log(e);
+            console.error(e);
         }
         return mismatch;
     }
@@ -269,11 +269,11 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.matchCaseValues = Immutable.Map<string, boolean>(props.corpora.map(item => [item, props.currQmcaseValues[item] || false]));
         this.defaultAttrValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currDefaultAttrValues[item] || 'word']));
         this.queryTypes = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currQueryTypes[item] || 'iquery'])).toMap();
+        this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
-        this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
+        this.setUserValues(props);
         this.currentAction = 'first_form';
-        this.targetAction = 'first';
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
@@ -292,7 +292,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 break;
                 case 'QUERY_INPUT_APPEND_QUERY':
                     const currQuery = self.queries.get(payload.props['sourceId'])
-                    const newQuery =  currQuery + (currQuery && payload.props['prependSpace'] ? ' ' : '') + payload.props['query'];
+                    const newQuery = currQuery + (currQuery && payload.props['prependSpace'] ? ' ' : '') + payload.props['query'];
                     self.queries = self.queries.set(payload.props['sourceId'], newQuery);
                     self.notifyChangeListeners();
                 break;
@@ -338,6 +338,31 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         });
     }
 
+    private setUserValues(data:QueryFormUserEntries):void {
+        this.queries = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currQueries[item] || '']));
+        this.lposValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currLposValues[item] || '']));
+        this.matchCaseValues = Immutable.Map<string, boolean>(this.corpora.map(item => [item, data.currQmcaseValues[item] || false]));
+        this.defaultAttrValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currDefaultAttrValues[item] || 'word']));
+        this.queryTypes = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currQueryTypes[item] || 'iquery'])).toMap();
+        this.pcqPosNegValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currPcqPosNegValues[item] || 'pos']));
+    }
+
+    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.QueryFormArgs>):RSVP.Promise<QueryStore> {
+        return fn().then(
+            (data) => {
+                this.setUserValues({
+                    currQueries: data.curr_queries,
+                    currQueryTypes: data.curr_query_types,
+                    currLposValues: data.curr_lpos_values,
+                    currDefaultAttrValues: data.curr_default_attr_values,
+                    currQmcaseValues: data.curr_qmcase_values,
+                    currPcqPosNegValues: data.curr_pcq_pos_neg_values
+                });
+                return this;
+            }
+        );
+    }
+
     private makeCorpusPrimary(corpname:string):void {
         const idx = this.corpora.indexOf(corpname);
         if (idx > -1) {
@@ -379,7 +404,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     private createSubmitArgs():MultiDict {
         const primaryCorpus = this.corpora.get(0);
-        const args = new MultiDict(this.currentArgs.toArray());
+        const args = this.pageModel.getConcArgs();
         args.replace('corpname', [primaryCorpus]);
         if (this.currentSubcorp) {
             args.add('usesubcorp', this.currentSubcorp);
@@ -434,15 +459,20 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         return args;
     }
 
-    private submitQuery():void {
+    submitQuery():void {
         const args = this.createSubmitArgs().items();
-        const url = this.pageModel.createActionUrl(this.targetAction, args);
+        const url = this.pageModel.createActionUrl('first', args);
         if (url.length < 2048) {
             window.location.href = url;
 
         } else {
-            this.pageModel.setLocationPost(this.targetAction, args);
+            this.pageModel.setLocationPost(this.pageModel.createActionUrl('first'), args);
         }
+    }
+
+    getSubmitUrl():string {
+        const args = this.createSubmitArgs().items();
+        return this.pageModel.createActionUrl('first', args);
     }
 
     isPossibleQueryTypeMismatch(corpname:string):boolean {

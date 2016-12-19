@@ -386,7 +386,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
             size = ''
             args = _('enabled')
         if op:
-            desc.append((op, args, url1, url2, size))
+            desc.append((op, args, url1, url2, size, opid))
         i += 1
     return desc
 

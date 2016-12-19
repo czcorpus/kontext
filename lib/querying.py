@@ -16,102 +16,178 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from collections import defaultdict
 
 from kontext import Kontext
 import corplib
 import plugins
 import l10n
 import butils
+from translation import ugettext as _
+from controller import exposed
+import logging
 
 
-def import_qs(qs):
-    return qs[:-3] if qs is not None else None
+def has_tag_support(corpname):
+    return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(corpname)
+
+
+class ConcFormArgs(object):
+
+    def __init__(self, persistent):
+        self._persistent = persistent
+
+    def updated(self, attrs):
+        for k, v in attrs.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+        return self
+
+    def to_dict(self):
+        return dict((k, v) for k, v in self.__dict__.items() if not k.startswith('_'))
+
+    @property
+    def is_persistent(self):
+        return self._persistent
+
+
+class QueryFormArgs(ConcFormArgs):
+    """
+    QueryFormArgs collects arguments required
+    to initialize the 'first_form' for one or more
+    corpora.
+
+    The class is only used to make collecting and
+    serializing data easier. Stored data are expected
+    to be JSON-serializable.
+    """
+    def __init__(self, corpora, persistent):
+        super(QueryFormArgs, self).__init__(persistent)
+        self.form_type = 'query'
+        self.curr_query_types = dict((c, None) for c in corpora)
+        self.curr_queries = dict((c, None) for c in corpora)
+        self.curr_pcq_pos_neg_values = dict((c, None) for c in corpora)
+        self.curr_lpos_values = dict((c, None) for c in corpora)
+        self.curr_qmcase_values = dict((c, None) for c in corpora)
+        self.curr_default_attr_values = dict((c, None) for c in corpora)
+        self.tag_builder_support = dict((c, None) for c in corpora)
+        for corp in self.tag_builder_support.keys():
+            self.tag_builder_support[corp] = has_tag_support(corp)
+
+
+class FilterFormArgs(ConcFormArgs):
+    """
+    FilterFormArgs collects arguments required
+    to initialize the 'filter' form.
+
+    The class is only used to make collecting and
+    serializing data easier. Stored data are expected
+    to be JSON-serializable.
+    """
+    def __init__(self, maincorp, persistent):
+        super(FilterFormArgs, self).__init__(persistent)
+        self.form_type = 'filter'
+        self.query_type = 'iquery'
+        self.query = ''
+        self.maincorp = maincorp
+        self.pnfilter = 'p'
+        self.filfl = 'f'
+        self.filfpos = '-5'
+        self.filtpos = '5'
+        self.inclkwic = True
+        self.qmcase = False
+        self.default_attr = 'word'
+        self.tag_builder_support = has_tag_support(self.maincorp)
+
+
+class SortFormArgs(ConcFormArgs):
+    """
+    SortFormArgs collects arguments required
+    to initialize the 'sort' form.
+
+    The class is only used to make collecting and
+    serializing data easier. Stored data are expected
+    to be JSON-serializable.
+    """
+    def __init__(self, persistent):
+        super(SortFormArgs, self).__init__(persistent)
+        self.form_type = 'sort'
+        self.sattr = None
+        self.skey = None
+        self.spos = None
+        self.sicase = None
+        self.sbward = None
+
+
+def build_conc_form_args(data):
+    tp = data['form_type']
+    if tp == 'query':
+        return QueryFormArgs(corpora=data.get('corpora', []), persistent=False).updated(data)
+    elif tp == 'filter':
+        return FilterFormArgs(maincorp=data['maincorp'], persistent=False).updated(data)
+    elif tp == 'sort':
+        return SortFormArgs(persistent=False).updated(data)
+    else:
+        raise ValueError('Cannot determine stored conc args class from type %s' % (type))
 
 
 class Querying(Kontext):
     """
     A controller for actions which rely on
     query input form (either directly or indirectly).
+    Put in different words, any action requiring
+    self.args.q should be part of a class extended
+    from this one.
     """
 
     def __init__(self, request, ui_lang):
         super(Querying, self).__init__(request=request, ui_lang=ui_lang)
+        self._curr_conc_form_args = None
 
-    def get_saveable_conc_data(self):
-        corpora, qinfo = self._fetch_query_params(only_active_corpora=True)
-        return dict(
-            q=self.args.q,
-            corpora=corpora,
-            usesubcorp=self.args.usesubcorp,
-            lines_groups=self._lines_groups.serialize(),
-            user_query=self._compress_query_info(corpora, qinfo)
-        )
+    def get_mapping_url_prefix(self):
+        return super(Kontext, self).get_mapping_url_prefix()
 
-    def _fetch_query_params(self, only_active_corpora):
-        corpora = self._get_current_aligned_corpora() if only_active_corpora else self._get_available_aligned_corpora()
-        qinfo = defaultdict(lambda: {})
-        for i, corp in enumerate(corpora):
-            suffix = '_{0}'.format(corp) if i > 0 else ''
-            qtype = import_qs(getattr(self.args, 'queryselector' + suffix, None))
-            qinfo['query_types'][corp] = qtype
-            qinfo['queries'][corp] = getattr(self.args, qtype + suffix, None) if qtype is not None else None
-            qinfo['pcq_pos_neg_values'][corp] = getattr(self.args, 'pcq_pos_neg' + suffix, None)
-            qinfo['lpos_values'][corp] = getattr(self.args, 'lpos' + suffix, None)
-            qinfo['qmcase_values'][corp] = bool(getattr(self.args, 'qmcase' + suffix, False))
-            qinfo['default_attr_values'][corp] = getattr(self.args, 'default_attr' + suffix, 'word')
-        return corpora, qinfo
+    def add_conc_form_args(self, item):
+        self._curr_conc_form_args = item
 
-    def _compress_query_info(self, corpora, qinfo):
+    def get_saveable_conc_data(self, prev_data):
         """
-        Remove some redundancy in stored data
+        Export data stored by conc_persistence
         """
-        ans = {}
-        for arg, values in qinfo.items():
-            ans[arg] = []
-            for corp in corpora:
-                ans[arg].append(values[corp])
+        ans = super(Querying, self).get_saveable_conc_data(prev_data)
+
+        if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
+            ans.update(conc_forms_args=self._curr_conc_form_args.to_dict())
         return ans
 
-    def _decompress_query_info(self, corpora, qinfo):
-        ans = {}
-        for arg, values in qinfo.items():
-            ans[arg] = {}
-            for i, corp in enumerate(corpora):
-                ans[arg][corp] = values[i]
-        return ans
+    @staticmethod
+    def import_qs(qs):
+        """
+        Import query selector value (e.g. 'iqueryrow')
+        into a query type identifier (e.g. 'iquery').
+        """
+        return qs[:-3] if qs is not None else None
+
+    def _select_current_aligned_corpora(self, active_only):
+        return self._get_current_aligned_corpora() if active_only else self._get_available_aligned_corpora()
 
     def _attach_query_params(self, tpl_out):
         """
-        Attach data required by client-side query component
+        Attach data required by client-side forms which are
+        part of the current query pipeline (i.e. initial query, filters,
+        sorting, samples,...)
         """
         corpus_info = self.get_corpus_info(self.args.corpname)
         tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
-
-        def tag_support(c):
-            return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(c)
-
-        def load_qinfo():
-            ans = defaultdict(lambda: {})
-            if self._prev_q_data is not None:
-                ca = self._prev_q_data.get('corpora', [])
-                ans.update(self._decompress_query_info(ca, self._prev_q_data.get('user_query', {})))
-            else:
-                ca = []
-            return ca, ans
-
-        if 'queryselector' in self._request.args or 'queryselector' in self._request.form:
-            corpora, qinfo = self._fetch_query_params(only_active_corpora=False)
-        elif 'q' in self._request.args or 'q' in self._request.form:
-            corpora, qinfo = load_qinfo()
+        if self._prev_q_data is not None and 'conc_forms_args' in self._prev_q_data:
+            conc_forms_args = {self._prev_q_data['id']: build_conc_form_args(self._prev_q_data['conc_forms_args']).to_dict()}
         else:
-            corpora = [self.args.corpname] + self.args.align
-            qinfo = defaultdict(lambda: {})
-        for corp in corpora:
-            qinfo['tag_builder_support'][corp] = tag_support(corp)
-        tpl_out['query_info'] = qinfo
+            conc_forms_args = {}
+        # Attach new form args added by the current action.
+        if self._curr_conc_form_args is not None:
+            conc_forms_args['__new__'] = self._curr_conc_form_args.to_dict()
+        tpl_out['conc_forms_args'] = conc_forms_args
 
     def _attach_aligned_query_params(self, tpl_out):
         """
@@ -200,3 +276,24 @@ class Querying(Kontext):
             within_part = butils.CQLDetectWithin().get_within_part(self.args.q[0])
             return within_part is not None and len(within_part) > 0
         return False
+
+    @exposed(return_type='json', http_method='GET')
+    def ajax_fetch_conc_form_args(self, request):
+        pipeline = self._load_pipeline(request.args['last_key'])
+        tmp = pipeline[int(request.args['idx'])]
+        return tmp.get('conc_forms_args', {})
+
+    @staticmethod
+    def _load_pipeline(last_id):
+        ans = []
+        if plugins.has_plugin('conc_persistence'):
+            cp = plugins.get('conc_persistence')
+            data = cp.open(last_id)
+            if data is not None:
+                ans.append(data)
+            limit = 100
+            while data is not None and data.get('prev_id') and limit > 0:
+                data = cp.open(data['prev_id'])
+                ans.insert(0, data)
+                limit -= 1
+        return ans

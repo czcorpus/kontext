@@ -35,58 +35,75 @@ import {GeneralQueryFormProperties, GeneralQueryStore} from './main';
 
 
 /**
- *
+ * This interface encodes values of multiple filter values. Array indices
+ * should match query pipeline with non-filter ones represented by
+ * 'undefined'.
  */
 export interface FilterFormProperties extends GeneralQueryFormProperties {
-    filters:Array<number>;
-    corpname:string;
-    currQueryTypes:{[filterId:number]:string};
-    currQueries:{[filterId:number]:string};  // current queries values (e.g. when restoring a form state)
-    currPcqPosNegValues:{[filterId:number]:string};
-    currDefaultAttrValues:{[filterId:number]:string};
-    tagBuilderSupport:{[filterId:number]:boolean};
-    currLposValues:{[filterId:number]:string};
-    currQmcaseValues:{[filterId:number]:boolean};
+    filters:Array<string>;
+    maincorps:Array<[string, string]>;
+    currQueryTypes:Array<[string, string]>;
+    currQueries:Array<[string, string]>;  // current queries values (e.g. when restoring a form state)
+    currDefaultAttrValues:Array<[string, string]>;
+    tagBuilderSupport:Array<[string, boolean]>;
+    currLposValues:Array<[string, string]>;
+    currQmcaseValues:Array<[string, boolean]>;
+    currInclkwicValues:Array<[string, boolean]>;
     inputLanguage:string;
-    currPnFilterValues:{[filterId:number]:string};
+    currPnFilterValues:Array<[string, string]>;
+    currFilflVlaues:Array<[string, string]>;
+    currFilfposValues:Array<[string, string]>;
+    currFiltposValues:Array<[string, string]>;
     isWithin:boolean;
 }
-
 
 /**
  *
  */
-export type FilterWidgetsMap = Immutable.Map<number, Immutable.List<string>>;
+export type FilterWidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 
+/**
+ *
+ */
+export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
+        key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]> {
+    const ans = [];
+    for (let formId in args) {
+        if (args.hasOwnProperty(formId) && args[formId].form_type === 'filter') {
+            ans.push([formId, key(<AjaxResponse.FilterFormArgs>args[formId])]);
+        }
+    }
+    return ans;
+}
 
 /**
  *
  */
 export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetupHandler {
 
-    private corpus:string;
+    private maincorps:Immutable.Map<string, string>;
 
-    private queries:Immutable.Map<number, string>;
+    private queries:Immutable.Map<string, string>;
 
-    private queryTypes:Immutable.Map<number, string>;
+    private queryTypes:Immutable.Map<string, string>;
 
-    private lposValues:Immutable.Map<number, string>;
+    private lposValues:Immutable.Map<string, string>;
 
-    private matchCaseValues:Immutable.Map<number, string>;
+    private matchCaseValues:Immutable.Map<string, boolean>;
 
-    private defaultAttrValues:Immutable.Map<number, string>;
+    private defaultAttrValues:Immutable.Map<string, string>;
 
-    private pnFilterValues:Immutable.Map<number, string>;
+    private pnFilterValues:Immutable.Map<string, string>;
 
-    private filflValues:Immutable.Map<number, string>;
+    private filflValues:Immutable.Map<string, string>;
 
-    private filfposValues:Immutable.Map<number, [string, string]>;
+    private filfposValues:Immutable.Map<string, string>;
 
-    private inclkwicValues:Immutable.Map<number, boolean>;
+    private filtposValues:Immutable.Map<string, string>;
 
-    private hasTagBuilderSupport:boolean;
+    private inclkwicValues:Immutable.Map<string, boolean>;
 
-    private filters:Immutable.List<number>;
+    private tagBuilderSupport:Immutable.Map<string, boolean>;
 
     private inputLanguage:string;
 
@@ -95,23 +112,23 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore, props:FilterFormProperties) {
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
-        this.corpus = props.corpname;
-        this.queries = Immutable.Map<number, string>(props.filters.map(item => [item, ''])); // TODO
-        this.queryTypes = Immutable.Map<number, string>(props.filters.map(item => [item, 'iquery'])); // TODO
-        this.lposValues = Immutable.Map<number, string>(props.filters.map(item => [item, ''])); // TODO
-        this.matchCaseValues = Immutable.Map<number, string>(props.filters.map(item => [item, false])); // TODO
-        this.defaultAttrValues = Immutable.Map<number, string>(props.filters.map(item => [item, 'word'])); // TODO
-        this.pnFilterValues = Immutable.Map<number, string>(props.filters
-                .map(filterId => [filterId, props.currPnFilterValues[filterId] || 'p']));
-        this.filflValues = Immutable.Map<number, string>(props.filters.map(item => [item, 'f'])); // TODO !!
-        this.filfposValues = Immutable.Map<number, [string, string]>(props.filters.map(item => [item, ['-5', '5']])); // TODO !!
-        this.inclkwicValues = Immutable.Map<number, boolean>(props.filters.map(item => [item, true])); // TODO !!
 
-        this.filters = Immutable.List<number>(props.filters);
-        this.hasTagBuilderSupport = props.tagBuilderSupport[this.corpus];
+        this.maincorps = Immutable.Map<string, string>(props.maincorps);
+        this.queries = Immutable.Map<string, string>(props.currQueries);
+        this.queryTypes = Immutable.Map<string, string>(props.currQueryTypes);
+        this.lposValues = Immutable.Map<string, string>(props.currLposValues);
+        this.matchCaseValues = Immutable.Map<string, boolean>(props.currQmcaseValues);
+        this.defaultAttrValues = Immutable.Map<string, string>(props.currDefaultAttrValues);
+        this.pnFilterValues = Immutable.Map<string, string>(props.currPnFilterValues);
+        this.filflValues = Immutable.Map<string, string>(props.currFilflVlaues);
+        this.filfposValues = Immutable.Map<string, string>(props.currFilfposValues);
+        this.filtposValues = Immutable.Map<string, string>(props.currFiltposValues);
+        this.inclkwicValues = Immutable.Map<string, boolean>(props.currInclkwicValues);
+        this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
+
+
         this.inputLanguage = props.inputLanguage;
         this.currentAction = 'filter_form';
-        this.targetAction = 'filter';
         this.isWithin = props.isWithin;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -151,10 +168,12 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_SET_RANGE':
-                    const currVal = this.filfposValues.get(payload.props['filterId']);
-                    const newVal:[string, string] = [currVal[0], currVal[1]];
-                    newVal[payload.props['idx']] = payload.props['value'];
-                    this.filfposValues = this.filfposValues.set(payload.props['filterId'], newVal);
+                    if (payload.props['rangeId'] === 'filfpos') {
+                        this.filfposValues = this.filfposValues.set(payload.props['filterId'], payload.props['value']);
+
+                    } else if (payload.props['rangeId'] === 'filtpos') {
+                        this.filtposValues = this.filtposValues.set(payload.props['filterId'], payload.props['value']);
+                    }
                     this.notifyChangeListeners();
                 break;
                 case'FILTER_QUERY_SET_INCL_KWIC':
@@ -169,13 +188,36 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         });
     }
 
-    private createSubmitArgs(filterId:number):MultiDict {
-        const args = new MultiDict(this.currentArgs.toArray());
+    getSubmitUrl(filterId:string):string {
+        return this.pageModel.createActionUrl('filter', this.createSubmitArgs(filterId).items());
+    }
+
+    syncFrom(filterId:string, fn:()=>RSVP.Promise<AjaxResponse.FilterFormArgs>):RSVP.Promise<FilterStore> {
+        return fn().then(
+            (data) => {
+                this.queries = this.queries.set(filterId, data.query);
+                this.queryTypes = this.queryTypes.set(filterId, data.query_type);
+                this.maincorps = this.queryTypes.set(filterId, data.maincorp);
+                this.pnFilterValues = this.pnFilterValues.set(filterId, data.pnfilter);
+                this.filflValues = this.filflValues.set(filterId, data.filfl);
+                this.filfposValues = this.filfposValues.set(filterId, data.filfpos);
+                this.filtposValues = this.filtposValues.set(filterId, data.filtpos);
+                this.inclkwicValues = this.inclkwicValues.set(filterId, data.inclkwic);
+                this.matchCaseValues = this.matchCaseValues.set(filterId, data.qmcase);
+                this.defaultAttrValues = this.defaultAttrValues.set(filterId, data.default_attr_value);
+                this.tagBuilderSupport = this.tagBuilderSupport.set(filterId, data.tag_builder_support);
+                this.lposValues = this.lposValues.set(filterId, data.lpos);
+                return this;
+            }
+        );
+    }
+
+    private createSubmitArgs(filterId:string):MultiDict {
+        const args = this.pageModel.getConcArgs();
         args.replace('pnfilter', [this.pnFilterValues.get(filterId)]);
         args.replace('filfl', [this.filflValues.get(filterId)]);
-        const range = this.filfposValues.get(filterId);
-        args.replace('filfpos', [range[0]]);
-        args.replace('filtpos', [range[1]]);
+        args.replace('filfpos', [this.filfposValues.get(filterId)]);
+        args.replace('filtpos', [this.filtposValues.get(filterId)]);
         args.replace('inclkwic', [this.inclkwicValues.get(filterId) ? '1' : '0']);
         args.replace('queryselector', [`${this.queryTypes.get(filterId)}row`]);
         if (this.isWithin) {
@@ -188,35 +230,35 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         return args;
     }
 
-    private submitQuery(filterId:number):void {
+    submitQuery(filterId:string):void {
         const error = this.validateQuery(this.queries.get(filterId), this.queryTypes.get(filterId));
         if (!error || window.confirm(this.pageModel.translate('global__query_type_mismatch'))) {
             const args = this.createSubmitArgs(filterId);
-            window.location.href = this.pageModel.createActionUrl(this.targetAction, args.items());
+            window.location.href = this.pageModel.createActionUrl('filter', args.items());
         }
     }
 
     getCorpora():Immutable.List<string> {
-        return Immutable.List<string>([this.corpus]);
+        return Immutable.List<string>([this.maincorps]);
     }
 
     getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
         return Immutable.List<{n:string; label:string}>();
     }
 
-    getQueryTypes():Immutable.Map<number, string> {
+    getQueryTypes():Immutable.Map<string, string> {
         return this.queryTypes;
     }
 
-    getLposValues():Immutable.Map<number, string> {
+    getLposValues():Immutable.Map<string, string> {
         return this.lposValues;
     }
 
-    getMatchCaseValues():Immutable.Map<number, string> {
+    getMatchCaseValues():Immutable.Map<string, boolean> {
         return this.matchCaseValues;
     }
 
-    getDefaultAttrValues():Immutable.Map<number, string> {
+    getDefaultAttrValues():Immutable.Map<string, string> {
         return this.defaultAttrValues;
     }
 
@@ -224,30 +266,34 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         return this.inputLanguage;
     }
 
-    getQuery(filterId:number):string {
+    getQuery(filterId:string):string {
         return this.queries.get(filterId);
     }
 
-    getPnFilterValues():Immutable.Map<number, string> {
+    getPnFilterValues():Immutable.Map<string, string> {
         return this.pnFilterValues;
     }
 
-    getFilfposValues():Immutable.Map<number, [string, string]> {
+    getFilfposValues():Immutable.Map<string, string> {
         return this.filfposValues;
     }
 
-    getFilflValues():Immutable.Map<number, string> {
+    getFiltposValues():Immutable.Map<string, string> {
+        return this.filtposValues;
+    }
+
+    getFilflValues():Immutable.Map<string, string> {
         return this.filflValues;
     }
 
-    getInclKwicValues():Immutable.Map<number, boolean> {
+    getInclKwicValues():Immutable.Map<string, boolean> {
         return this.inclkwicValues;
     }
 
     getSupportedWidgets():FilterWidgetsMap {
 
-        const getWidgets = (queryType:string):Array<string> => {
-            switch (queryType) {
+        const getWidgets = (filterId:string):Array<string> => {
+            switch (this.queryTypes.get(filterId)) {
                 case 'iquery':
                 case 'lemma':
                 case 'phrase':
@@ -256,16 +302,18 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                     return ['keyboard', 'history'];
                 case 'cql':
                     const ans = ['keyboard', 'history', 'within'];
-                    if (this.hasTagBuilderSupport) {
+                    if (this.tagBuilderSupport.get(filterId)) {
                         ans.push('tag');
                     }
                     return ans;
             }
         }
         const ans = Immutable.Map<string, Immutable.List<string>>();
-
-        return Immutable.Map<number, Immutable.List<string>>(this.filters.map(filterId => {
-            return [filterId, Immutable.List<string>(getWidgets(this.queryTypes.get(filterId)))];
-        }));
+        return Immutable.Map<string, Immutable.List<string>>(
+            this.queries.keySeq().map(filterId => {
+                return [filterId, Immutable.List<string>(
+                getWidgets(filterId))];
+            })
+        );
     }
 }

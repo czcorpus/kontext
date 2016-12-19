@@ -17,6 +17,7 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
@@ -26,7 +27,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as liveAttributes from 'plugins/liveAttributes/init';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {QueryFormProperties, QueryHintStore} from '../stores/query/main';
-import {FilterStore} from '../stores/query/filter';
+import {FilterStore, fetchFilterFormArgs} from '../stores/query/filter';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
@@ -35,6 +36,7 @@ import {init as ttViewsInit} from 'views/textTypes';
 import {init as contextViewsInit} from 'views/query/context';
 import {init as queryFormInit} from 'views/query/main';
 import tagHelperPlugin from 'plugins/taghelper/init';
+
 
 /**
  * Corpus handling actions are not used here on the "filter" page but
@@ -127,24 +129,30 @@ export class FilterFormpage {
     }
 
     private attachQueryForm(properties:{[key:string]:any}):void {
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]>=>fetchFilterFormArgs(concFormsArgs, key);
+
         this.filterStore = new FilterStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.textTypesStore,
             this.queryContextStore,
             {
-                filters: [0], // TODO this will be dynamic and based on the current query pipeline
-                currPnFilterValues: {0: this.layoutModel.getConf<string>('Pnfilter')}, // TODO dtto
-                currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
-                corpname: this.layoutModel.getConf<string>('corpname'),
-                currQueryTypes: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueryTypes'),
-                currQueries: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueries'),
-                currPcqPosNegValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrPcqPosNegValues'),
-                tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
+                filters: Object.keys(concFormsArgs)
+                            .filter(k => concFormsArgs[k].form_type === 'filter'),
+                maincorps: fetchArgs<string>(item => item.maincorp),
+                currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
+                currQueryTypes: fetchArgs<string>(item => item.query_type),
+                currQueries: fetchArgs<string>(item => item.query),
+                currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),
+                currDefaultAttrValues: fetchArgs<string>(item => item.default_attr_value),
+                currLposValues: fetchArgs<string>(item => item.lpos),
+                currFilflVlaues: fetchArgs<string>(item => item.filfl),
+                currFilfposValues: fetchArgs<string>(item => item.filfpos),
+                currFiltposValues: fetchArgs<string>(item => item.filtpos),
+                currInclkwicValues: fetchArgs<boolean>(item => item.inclkwic),
+                tagBuilderSupport: fetchArgs<boolean>(item => item.tag_builder_support),
                 lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
-                currLposValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrLposValues'),
-                currQmcaseValues: this.layoutModel.getConf<{[corpname:string]:boolean}>('CurrQmcaseValues'),
-                currDefaultAttrValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrDefaultAttrValues'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
                 attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
                 tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),
@@ -156,6 +164,7 @@ export class FilterFormpage {
                 isWithin: this.layoutModel.getConf<boolean>('IsWithin')
             }
         );
+        console.log('test: ', fetchArgs<string>(item => item.filfpos));
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
@@ -203,7 +212,7 @@ export class FilterFormpage {
                 props['queryStorageViews'] = queryStoragePlugin.getViews();
                 props['allowCorpusSelection'] = false;
                 props['actionPrefix'] = 'FILTER_';
-                props['filterId'] = 0; // TODO this should be based on the position within the query pipeline
+                props['filterId'] = '__new__';
                 this.attachQueryForm(props);
             }
         ).then(

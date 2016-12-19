@@ -158,7 +158,8 @@ declare module "views/query/aligned" {
         AlignedCorpora:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins, queryStore:any):AlignedQueryFormViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            queryStore:any):AlignedQueryFormViews;
 }
 
 
@@ -168,7 +169,23 @@ declare module "views/query/context" {
         SpecifyContextForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins):QueryContextViews;
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any):QueryContextViews;
+}
+
+
+declare module "views/query/overview" {
+
+    export interface QueryOverviewViews {
+        QueryOverview:React.ReactClass;
+    }
+
+    export function init(
+            dispatcher:Dispatcher.Dispatcher<any>,
+            mixins:any,
+            layoutViews:Kontext.LayoutViews,
+            QueryFormView:React.ReactClass,
+            FilterFormView:React.ReactClass,
+            queryReplayStore:any):QueryOverviewViews;
 }
 
 

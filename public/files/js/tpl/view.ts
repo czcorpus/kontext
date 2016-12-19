@@ -40,7 +40,9 @@ import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
 import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary} from '../stores/concordance/lines';
-import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
+import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} from '../stores/query/main';
+import {QueryReplayStore, QueryOperation, LocalQueryFormData} from '../stores/query/replay';
+import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
@@ -56,6 +58,7 @@ import * as RSVP from 'vendor/rsvp';
 import {UserInfo} from '../stores/userStores';
 import {ViewOptionsStore} from '../stores/viewOptions';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
+import {init as queryOverviewInit, QueryOverviewViews} from 'views/query/overview';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -70,11 +73,13 @@ export class ViewPageStores {
 
 export class QueryStores {
     queryStore:QueryStore;
+    filterStore:FilterStore;
     textTypesStore:TextTypesStore;
     queryHintStore:QueryHintStore;
     withinBuilderStore:WithinBuilderStore;
     virtualKeyboardStore:VirtualKeyboardStore;
     queryContextStore:QueryContextStore;
+    queryReplayStore:QueryReplayStore;
 }
 
 
@@ -88,7 +93,9 @@ export class ViewPage {
 
     private layoutModel:PageModel;
 
-    private stores:ViewPageStores;
+    private viewStores:ViewPageStores;
+
+    private queryStores:QueryStores;
 
     private hasLockedGroups:boolean;
 
@@ -98,9 +105,12 @@ export class ViewPage {
 
     private queryFormViews:QueryFormViews;
 
+    private queryOverviewViews:QueryOverviewViews;
+
     constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.stores = stores;
+        this.viewStores = stores;
+        this.queryStores = new QueryStores();
         this.hasLockedGroups = hasLockedGroups;
     }
 
@@ -248,7 +258,7 @@ export class ViewPage {
     private onBeforeUnloadAsk():any {
         let self = this;
         $(window).on('beforeunload.alert_unsaved', function (event:any) {
-            if (self.stores.lineSelectionStore.size() > 0) {
+            if (self.viewStores.lineSelectionStore.size() > 0) {
                 event.returnValue = self.translate('global__are_you_sure_to_leave');
                 return event.returnValue;
             }
@@ -426,7 +436,7 @@ export class ViewPage {
             this.layoutModel.getConcArgs(),
             {
                 pagination: true,
-                pageNum: this.stores.lineViewStore.getCurrentPage()
+                pageNum: this.viewStores.lineViewStore.getCurrentPage()
             },
             window.document.title
         );
@@ -437,72 +447,73 @@ export class ViewPage {
         this.layoutModel.userSettings.set(UserSettings.ALIGNED_CORPORA_KEY, serverSideAlignedCorpora);
     }
 
+    private getActiveCorpora():Array<string> {
+        return [this.layoutModel.getConf<string>('corpname')].concat(
+                this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
+    }
 
-    private initPipelineEdit():void {
-        const showQueryForm = () => {
-            const targetElm = window.document.getElementById('popup-query-form-mount');
-            this.layoutModel.renderReactComponent(
-                this.queryFormViews.QueryFormLite,
-                targetElm,
-                {
-                    corpname: this.layoutModel.getConf<string>('corpname'),
-                    tagHelperViews: tagHelperPlugin.getViews(),
-                    queryStorageViews: queryStoragePlugin.getViews(),
-                    allowCorpusSelection: false,
-                    actionPrefix: '',
-                    onCloseClick: () => {
-                        this.layoutModel.unmountReactComponent(targetElm);
-                    }
-                }
-            );
-        };
-
-        this.layoutModel.dispatcher.register((payload:Kontext.DispatcherPayload) => {
-            switch (payload.actionType) {
-                case 'TRIGGER_QUERY_LITE_FORM':
-                    showQueryForm();
-                break;
+    private fetchQueryFormKey(data:{[ident:string]:AjaxResponse.ConcFormArgs}):string {
+        for (let p in data) {
+            if (data.hasOwnProperty(p) && data[p].form_type === 'query') {
+                return p;
             }
-        });
-        $(window.document.getElementById('edit-query-trigger')).on('click', showQueryForm);
+        }
+        return null;
+    }
+
+    private fetchQueryFormArgs(data:{[ident:string]:AjaxResponse.ConcFormArgs}):AjaxResponse.QueryFormArgs {
+        const k = this.fetchQueryFormKey(data);
+        if (k !== null) {
+            return <AjaxResponse.QueryFormArgs>data[k];
+        }
+        return {
+            form_type: 'query',
+            curr_query_types: {},
+            curr_queries: {},
+            curr_pcq_pos_neg_values: {},
+            curr_lpos_values: {},
+            curr_qmcase_values: {},
+            curr_default_attr_values: {},
+            tag_builder_support: {}
+        };
     }
 
     private initQueryForm():void {
-        const queryStores = new QueryStores();
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        queryStores.textTypesStore = new TextTypesStore(
+        this.queryStores.textTypesStore = new TextTypesStore(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
             textTypesData,
             this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
 
-        queryStores.queryHintStore = new QueryHintStore(
+        this.queryStores.queryHintStore = new QueryHintStore(
             this.layoutModel.dispatcher,
             this.layoutModel.getConf<Array<string>>('queryHints')
         );
-        queryStores.withinBuilderStore = new WithinBuilderStore(this.layoutModel.dispatcher,
+        this.queryStores.withinBuilderStore = new WithinBuilderStore(this.layoutModel.dispatcher,
                 this.layoutModel);
-        queryStores.virtualKeyboardStore = new VirtualKeyboardStore(this.layoutModel.dispatcher,
+        this.queryStores.virtualKeyboardStore = new VirtualKeyboardStore(this.layoutModel.dispatcher,
                 this.layoutModel);
-        queryStores.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
+        this.queryStores.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
 
-        const queryFormProps = {
-            currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
-            corpora: [this.layoutModel.getConf<string>('corpname')].concat(
-                this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const queryFormArgs = this.fetchQueryFormArgs(concFormArgs);
+
+        const queryFormProps:QueryFormProperties = {
+            corpora: this.getActiveCorpora(),
             availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
-            currQueryTypes: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueryTypes'),
-            currQueries: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueries'),
-            currPcqPosNegValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrPcqPosNegValues'),
+            currQueryTypes: queryFormArgs.curr_query_types,
+            currQueries: queryFormArgs.curr_queries,
+            currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
+            currLposValues: queryFormArgs.curr_lpos_values,
+            currQmcaseValues: queryFormArgs.curr_qmcase_values,
+            currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
             subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
             currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
             tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
-            currLposValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrLposValues'),
-            currQmcaseValues: this.layoutModel.getConf<{[corpname:string]:boolean}>('CurrQmcaseValues'),
-            currDefaultAttrValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrDefaultAttrValues'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
             tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),
@@ -513,27 +524,125 @@ export class ViewPage {
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
         };
 
-        queryStores.queryStore = new QueryStore(
+        this.queryStores.queryStore = new QueryStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            queryStores.textTypesStore,
-            queryStores.queryContextStore,
+            this.queryStores.textTypesStore,
+            this.queryStores.queryContextStore,
             queryFormProps
+        );
+
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
+        const filterFormProps:FilterFormProperties = {
+            filters: Object.keys(concFormsArgs)
+                        .filter(k => concFormsArgs[k].form_type === 'filter'),
+            maincorps: fetchArgs<string>(item => item.maincorp),
+            currPnFilterValues: fetchArgs<string>(item => item.pnfilter),
+            currQueryTypes: fetchArgs<string>(item => item.query_type),
+            currQueries: fetchArgs<string>(item => item.query),
+            currQmcaseValues: fetchArgs<boolean>(item => item.qmcase),
+            currDefaultAttrValues: fetchArgs<string>(item => item.default_attr_value),
+            currLposValues: fetchArgs<string>(item => item.lpos),
+            currFilflVlaues: fetchArgs<string>(item => item.filfl),
+            currFilfposValues: fetchArgs<string>(item => item.filfpos),
+            currFiltposValues: fetchArgs<string>(item => item.filtpos),
+            currInclkwicValues: fetchArgs<boolean>(item => item.inclkwic),
+            tagBuilderSupport: fetchArgs<boolean>(item => item.tag_builder_support),
+            lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
+            forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
+            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+            tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),
+            lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+            posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
+            hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
+            wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
+            inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
+            isWithin: this.layoutModel.getConf<boolean>('IsWithin')
+        }
+
+        this.queryStores.filterStore = new FilterStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.queryStores.textTypesStore,
+            this.queryStores.queryContextStore,
+            filterFormProps
         );
 
         this.queryFormViews = queryFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
-            queryStores.queryStore,
-            queryStores.textTypesStore,
-            queryStores.queryHintStore,
-            queryStores.withinBuilderStore,
-            queryStores.virtualKeyboardStore,
-            queryStores.queryContextStore
+            this.queryStores.queryStore,
+            this.queryStores.textTypesStore,
+            this.queryStores.queryHintStore,
+            this.queryStores.withinBuilderStore,
+            this.queryStores.virtualKeyboardStore,
+            this.queryStores.queryContextStore
         );
     }
 
+    /**
+     *
+     */
+    private attachQueryEditMenuItem():void {
+        this.layoutModel.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'TRIGGER_QUERY_LITE_FORM':
+                    alert('todo'); // TODO
+                break;
+            }
+        });
+    }
+
+    /**
+     *
+     */
+    initQueryOverviewArea():void {
+        this.queryStores.queryReplayStore = new QueryReplayStore(
+                this.layoutModel.dispatcher,
+                this.layoutModel,
+                {
+                    queryStore: this.queryStores.queryStore,
+                    filterStore: this.queryStores.filterStore
+                },
+                this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || [],
+                this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
+        );
+        this.queryOverviewViews = queryOverviewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.queryFormViews.QueryFormLite,
+            this.queryFormViews.FilterForm,
+            this.queryStores.queryReplayStore
+        );
+        this.layoutModel.renderReactComponent(
+            this.queryOverviewViews.QueryOverview,
+            window.document.getElementById('query-overview-mount'),
+            {
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
+                queryFormProps: {
+                    corpname: this.layoutModel.getConf<string>('corpname'),
+                    tagHelperViews: tagHelperPlugin.getViews(),
+                    queryStorageViews: queryStoragePlugin.getViews(),
+                    allowCorpusSelection: false,
+                    actionPrefix: ''
+                },
+                filterFormProps: {
+                    tagHelperViews: tagHelperPlugin.getViews(),
+                    queryStorageViews: queryStoragePlugin.getViews(),
+                    allowCorpusSelection: false,
+                    actionPrefix: 'FILTER_'
+                }
+            }
+        );
+    }
+
+    /**
+     *
+     */
     init(lineViewProps:ViewConfiguration):RSVP.Promise<any> {
         return this.layoutModel.init().then(
             () => {
@@ -550,7 +659,7 @@ export class ViewPage {
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     this.layoutModel.layoutViews,
-                    this.stores
+                    this.viewStores
                 );
 
                 return this.renderLines(lineViewProps);
@@ -577,7 +686,8 @@ export class ViewPage {
         ).then(
             () => {
                 this.initQueryForm();
-                this.initPipelineEdit();
+                this.initQueryOverviewArea();
+                this.attachQueryEditMenuItem();
             }
         );
     }
