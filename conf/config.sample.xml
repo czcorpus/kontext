@@ -28,6 +28,7 @@
         <action_path_prefix />
         <static_files_prefix>/files</static_files_prefix>
         <intl_polyfill_url>https://cdn.polyfill.io/v2/polyfill.js?features={0}</intl_polyfill_url>
+        <use_conc_toolbar>0</use_conc_toolbar>
     </global>
     <mailing />
     <logging>
@@ -66,6 +67,9 @@
         <speech_files_path />
         <empty_attr_value_placeholder>--</empty_attr_value_placeholder>
         <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
+        <right_interval_char>+</right_interval_char>
+        <left_interval_char/>
+        <interval_char>±</interval_char>
     </corpora>
     <plugins>
         <application_bar />

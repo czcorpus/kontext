@@ -397,18 +397,20 @@
                         <a:documentation>Multilevel frequency distribution - max. number of levels</a:documentation>
                         <data type="integer" />
                     </element>
-                    <element name="right_interval_char">
-                        <a:documentation>A character used to denote a left interval (e.g. -10)</a:documentation>
-                        <text />
-                    </element>
-                    <element name="left_interval_char">
-                        <a:documentation>A character used to denote a left interval (e.g. +10)</a:documentation>
-                        <text />
-                    </element>
-                    <element name="interval_char">
-                        <a:documentation>A character used to denote a left interval (e.g. +/-10)</a:documentation>
-                        <text />
-                    </element>
+                    <optional>
+                        <element name="right_interval_char">
+                            <a:documentation>A character used to denote a left interval (e.g. -10)</a:documentation>
+                            <text />
+                        </element>
+                        <element name="left_interval_char">
+                            <a:documentation>A character used to denote a left interval (e.g. +10)</a:documentation>
+                            <text />
+                        </element>
+                        <element name="interval_char">
+                            <a:documentation>A character used to denote a left interval (e.g. +/-10)</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="plugins">
