@@ -136,7 +136,6 @@ declare module "views/query/main" {
     export interface QueryFormViews {
         QueryForm:React.ReactClass;
         QueryFormLite:React.ReactClass;
-        FilterForm:React.ReactClass;
     }
 
     export function init(
@@ -173,6 +172,28 @@ declare module "views/query/context" {
 }
 
 
+declare module "views/query/filter" {
+
+    export interface FilterFormViews {
+        FilterForm:React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any, layoutViews:Kontext.LayoutViews,
+            filterStore:any, queryHintStore:any, withinBuilderStore:any, virtualKeyboardStore:any):FilterFormViews;
+
+}
+
+declare module "views/query/sort" {
+
+    export interface SortFormViews {
+        SortFormView:React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>,
+        mixins:any, sortStore:any, multiLevelSortStore:any):SortFormViews;
+}
+
+
 declare module "views/query/overview" {
 
     export interface QueryOverviewViews {
@@ -185,6 +206,7 @@ declare module "views/query/overview" {
             layoutViews:Kontext.LayoutViews,
             QueryFormView:React.ReactClass,
             FilterFormView:React.ReactClass,
+            SortFormView:React.ReactClass,
             queryReplayStore:any):QueryOverviewViews;
 }
 

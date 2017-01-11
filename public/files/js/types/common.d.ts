@@ -295,6 +295,7 @@ declare module Kontext {
         add(key:string, value:any):void;
         items():Array<Array<string>>;
         toDict():{[key:string]:string};
+        has(key:string):boolean;
     }
 
     export interface IURLHandler {

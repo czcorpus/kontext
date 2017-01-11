@@ -196,6 +196,10 @@ export class MultiDict implements Kontext.IMultiDict {
         }
         return ans;
     }
+
+    has(key:string) {
+        return this._data.hasOwnProperty(key);
+    }
 }
 
 export class NullHistory implements Kontext.IHistory {

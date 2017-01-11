@@ -16,7 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
 from kontext import Kontext
 import corplib
 import plugins
@@ -24,7 +23,6 @@ import l10n
 import butils
 from translation import ugettext as _
 from controller import exposed
-import logging
 
 
 def has_tag_support(corpname):
@@ -32,22 +30,58 @@ def has_tag_support(corpname):
 
 
 class ConcFormArgs(object):
+    """
+    A helper class to handle miscellaneous
+    form (filter, query, sort,...) args
+    properly. It is used only indirectly
+    - we create an instance and immediately
+    after that we export it (either to serialize
+    it via conc_persistence or to pass it
+    to the client-side).
+    """
 
-    def __init__(self, persistent):
-        self._persistent = persistent
+    def __init__(self, persist):
+        self._persistent = persist
+        self._op_key = '__new__'
 
-    def updated(self, attrs):
+    def updated(self, attrs, op_key):
+        """
+        Return an updated self object
+        (the same instance). There must
+        be always the 'op_key' value
+        present to emphasize the fact
+        that only serialized data (i.e.
+        data with their database key)
+        can be used to update an 'unbound'
+        instance.
+        """
         for k, v in attrs.items():
-            if hasattr(self, k):
+            if k in vars(self):
                 setattr(self, k, v)
+        self._op_key = op_key
         return self
 
     def to_dict(self):
-        return dict((k, v) for k, v in self.__dict__.items() if not k.startswith('_'))
+        tmp = dict((k, v) for k, v in self.__dict__.items() if not k.startswith('_'))
+        if not self.is_persistent:
+            tmp['op_key'] = self._op_key
+        return tmp
 
     @property
     def is_persistent(self):
         return self._persistent
+
+    @property
+    def op_key(self):
+        """
+        op_key property has a special status as
+        it is kept separate from other attributes
+        and is exported only if an instance is
+        persistent (= loaded from database). I.e.
+        newly created objects (where op_key == '__new__')
+        should not export it.
+        """
+        return self._op_key
 
 
 class QueryFormArgs(ConcFormArgs):
@@ -60,8 +94,8 @@ class QueryFormArgs(ConcFormArgs):
     serializing data easier. Stored data are expected
     to be JSON-serializable.
     """
-    def __init__(self, corpora, persistent):
-        super(QueryFormArgs, self).__init__(persistent)
+    def __init__(self, corpora, persist):
+        super(QueryFormArgs, self).__init__(persist)
         self.form_type = 'query'
         self.curr_query_types = dict((c, None) for c in corpora)
         self.curr_queries = dict((c, None) for c in corpora)
@@ -83,8 +117,8 @@ class FilterFormArgs(ConcFormArgs):
     serializing data easier. Stored data are expected
     to be JSON-serializable.
     """
-    def __init__(self, maincorp, persistent):
-        super(FilterFormArgs, self).__init__(persistent)
+    def __init__(self, maincorp, persist):
+        super(FilterFormArgs, self).__init__(persist)
         self.form_type = 'filter'
         self.query_type = 'iquery'
         self.query = ''
@@ -108,8 +142,8 @@ class SortFormArgs(ConcFormArgs):
     serializing data easier. Stored data are expected
     to be JSON-serializable.
     """
-    def __init__(self, persistent):
-        super(SortFormArgs, self).__init__(persistent)
+    def __init__(self, persist):
+        super(SortFormArgs, self).__init__(persist)
         self.form_type = 'sort'
         self.sattr = None
         self.skey = None
@@ -118,16 +152,21 @@ class SortFormArgs(ConcFormArgs):
         self.sbward = None
 
 
-def build_conc_form_args(data):
+def build_conc_form_args(data, op_key):
+    """
+    A factory method to create a conc form args
+    instance based on deserialized data from
+    conc_persistnece database.
+    """
     tp = data['form_type']
     if tp == 'query':
-        return QueryFormArgs(corpora=data.get('corpora', []), persistent=False).updated(data)
+        return QueryFormArgs(corpora=data.get('corpora', []), persist=False).updated(data, op_key)
     elif tp == 'filter':
-        return FilterFormArgs(maincorp=data['maincorp'], persistent=False).updated(data)
+        return FilterFormArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key)
     elif tp == 'sort':
-        return SortFormArgs(persistent=False).updated(data)
+        return SortFormArgs(persist=False).updated(data, op_key)
     else:
-        raise ValueError('Cannot determine stored conc args class from type %s' % (type))
+        raise ValueError('Cannot determine stored conc args class from type %s' % (tp,))
 
 
 class Querying(Kontext):
@@ -181,7 +220,10 @@ class Querying(Kontext):
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
         if self._prev_q_data is not None and 'conc_forms_args' in self._prev_q_data:
-            conc_forms_args = {self._prev_q_data['id']: build_conc_form_args(self._prev_q_data['conc_forms_args']).to_dict()}
+            op_key = self._prev_q_data['id']
+            conc_forms_args = {
+                op_key: build_conc_form_args(self._prev_q_data['conc_forms_args'], op_key).to_dict()
+            }
         else:
             conc_forms_args = {}
         # Attach new form args added by the current action.
@@ -280,8 +322,10 @@ class Querying(Kontext):
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request):
         pipeline = self._load_pipeline(request.args['last_key'])
-        tmp = pipeline[int(request.args['idx'])]
-        return tmp.get('conc_forms_args', {})
+        op_data = pipeline[int(request.args['idx'])]
+        tmp = op_data.get('conc_forms_args', {})
+        tmp.update(op_key=op_data['id'])
+        return tmp
 
     @staticmethod
     def _load_pipeline(last_id):
@@ -290,10 +334,12 @@ class Querying(Kontext):
             cp = plugins.get('conc_persistence')
             data = cp.open(last_id)
             if data is not None:
+                data['conc_forms_args'] = build_conc_form_args(data['conc_forms_args'], data['id']).to_dict()
                 ans.append(data)
             limit = 100
             while data is not None and data.get('prev_id') and limit > 0:
                 data = cp.open(data['prev_id'])
+                data['conc_forms_args'] = build_conc_form_args(data['conc_forms_args'], data['id']).to_dict()
                 ans.insert(0, data)
                 limit -= 1
         return ans

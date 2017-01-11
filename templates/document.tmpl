@@ -165,6 +165,7 @@ define('conf', [], function () {
     conf.bibConf = $bib_conf.to_json();
     conf.stateParams = "$join_params($q, $globals)";
     conf.currentArgs = $Globals.to_json();
+    conf.encodedQuery = $to_json($Q);
     conf.uiLang = "$uiLang";
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.uiStateTTL = ${ui_state_ttl};

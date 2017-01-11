@@ -119,6 +119,7 @@ declare module AjaxResponse {
 
     export interface ConcFormArgs {
         form_type:string;
+        op_key:string; // an ID used by conc_persistence
     }
 
     export interface QueryFormArgs extends ConcFormArgs {

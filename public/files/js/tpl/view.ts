@@ -47,6 +47,7 @@ import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
+import {SortStore, MultiLevelSortStore, SortFormProperties} from '../stores/query/sort';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -58,7 +59,9 @@ import * as RSVP from 'vendor/rsvp';
 import {UserInfo} from '../stores/userStores';
 import {ViewOptionsStore} from '../stores/viewOptions';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
+import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
 import {init as queryOverviewInit, QueryOverviewViews} from 'views/query/overview';
+import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -80,6 +83,8 @@ export class QueryStores {
     virtualKeyboardStore:VirtualKeyboardStore;
     queryContextStore:QueryContextStore;
     queryReplayStore:QueryReplayStore;
+    sortStore:SortStore;
+    multiLevelSortStore:MultiLevelSortStore;
 }
 
 
@@ -106,6 +111,10 @@ export class ViewPage {
     private queryFormViews:QueryFormViews;
 
     private queryOverviewViews:QueryOverviewViews;
+
+    private filterFormViews:FilterFormViews;
+
+    private sortFormViews:SortFormViews;
 
     constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
@@ -468,6 +477,7 @@ export class ViewPage {
         }
         return {
             form_type: 'query',
+            op_key: '__new__',
             curr_query_types: {},
             curr_queries: {},
             curr_pcq_pos_neg_values: {},
@@ -532,6 +542,18 @@ export class ViewPage {
             queryFormProps
         );
 
+        this.queryFormViews = queryFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.queryStores.queryStore,
+            this.queryStores.textTypesStore,
+            this.queryStores.queryHintStore,
+            this.queryStores.withinBuilderStore,
+            this.queryStores.virtualKeyboardStore,
+            this.queryStores.queryContextStore
+        );
+
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
         const filterFormProps:FilterFormProperties = {
@@ -569,16 +591,38 @@ export class ViewPage {
             filterFormProps
         );
 
-        this.queryFormViews = queryFormInit(
+        this.filterFormViews = filterFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
-            this.queryStores.queryStore,
-            this.queryStores.textTypesStore,
+            this.queryStores.filterStore,
             this.queryStores.queryHintStore,
             this.queryStores.withinBuilderStore,
-            this.queryStores.virtualKeyboardStore,
-            this.queryStores.queryContextStore
+            this.queryStores.virtualKeyboardStore
+        );
+
+        // --------------- sort form
+
+        const sortStoreProps:SortFormProperties = {
+            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList')
+        };
+
+        this.queryStores.sortStore = new SortStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            sortStoreProps
+        );
+        this.queryStores.multiLevelSortStore = new MultiLevelSortStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            sortStoreProps
+        );
+
+        this.sortFormViews = sortFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.queryStores.sortStore,
+            this.queryStores.multiLevelSortStore
         );
     }
 
@@ -614,7 +658,8 @@ export class ViewPage {
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
             this.queryFormViews.QueryFormLite,
-            this.queryFormViews.FilterForm,
+            this.filterFormViews.FilterForm,
+            this.sortFormViews.SortFormView,
             this.queryStores.queryReplayStore
         );
         this.layoutModel.renderReactComponent(

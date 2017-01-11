@@ -77,7 +77,10 @@ export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
 }
 
 /**
- *
+ * FilterStore handles all the filpublic/files/js/stores/query/replay.tsters applied within a query "pipeline".
+ * Each filter is identified by its database ID (i.e. a key used by conc_persistence
+ * plug-in to store it). Please note that it does not know the order of filters
+ * in pipeline (it is up to QueryReplay store to handle this).
  */
 export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetupHandler {
 
@@ -192,9 +195,14 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         return this.pageModel.createActionUrl('filter', this.createSubmitArgs(filterId).items());
     }
 
-    syncFrom(filterId:string, fn:()=>RSVP.Promise<AjaxResponse.FilterFormArgs>):RSVP.Promise<FilterStore> {
+    /**
+     * Synchronize user input values from an external source
+     * (typically a server response or a local cache).
+     */
+    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.FilterFormArgs>):RSVP.Promise<FilterStore> {
         return fn().then(
             (data) => {
+                const filterId = data.op_key;
                 this.queries = this.queries.set(filterId, data.query);
                 this.queryTypes = this.queryTypes.set(filterId, data.query_type);
                 this.maincorps = this.queryTypes.set(filterId, data.maincorp);
@@ -291,7 +299,6 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
     }
 
     getSupportedWidgets():FilterWidgetsMap {
-
         const getWidgets = (filterId:string):Array<string> => {
             switch (this.queryTypes.get(filterId)) {
                 case 'iquery':
@@ -301,14 +308,13 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                 case 'char':
                     return ['keyboard', 'history'];
                 case 'cql':
-                    const ans = ['keyboard', 'history', 'within'];
+                    const ans = ['keyboard', 'history'];
                     if (this.tagBuilderSupport.get(filterId)) {
                         ans.push('tag');
                     }
                     return ans;
             }
         }
-        const ans = Immutable.Map<string, Immutable.List<string>>();
         return Immutable.Map<string, Immutable.List<string>>(
             this.queries.keySeq().map(filterId => {
                 return [filterId, Immutable.List<string>(

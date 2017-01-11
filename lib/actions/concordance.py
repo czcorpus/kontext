@@ -267,7 +267,7 @@ class Actions(Querying):
         out['text_types_data'] = json.dumps(tt_data)
         self._attach_aligned_query_params(out)
         self.add_conc_form_args(QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False),
-                                              persistent=False))
+                                              persist=False))
         self._attach_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
         return out
@@ -313,7 +313,7 @@ class Actions(Querying):
         """
         sort concordance form
         """
-        sf_args = SortFormArgs(persistent=False)
+        sf_args = SortFormArgs(persist=False)
         sf_args.sattr = self._request.args.get('sattr')
         sf_args.skey = self._request.args.get('skey')
         sf_args.spos = self._request.args.get('spos')
@@ -329,6 +329,14 @@ class Actions(Querying):
         simple sort concordance
         """
         self.disabled_menu_items = ()
+
+        qinfo = SortFormArgs(persist=True)
+        # qinfo.sattr = ??? TODO
+        qinfo.sbward = self.args.sbward
+        qinfo.sicase = self.args.sicase
+        qinfo.skey = self.args.skey
+        qinfo.spos = self.args.spos
+        self.add_conc_form_args(qinfo)
 
         if skey == 'lc':
             ctx = '-1<0~-%i<0' % spos
@@ -609,7 +617,7 @@ class Actions(Querying):
 
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
-        qinfo = QueryFormArgs(corpora=corpora, persistent=True)
+        qinfo = QueryFormArgs(corpora=corpora, persist=True)
         for i, corp in enumerate(corpora):
             suffix = '_{0}'.format(corp) if i > 0 else ''
             qtype = self.import_qs(getattr(self.args, 'queryselector' + suffix, None))
@@ -652,8 +660,7 @@ class Actions(Querying):
         if within and not self.contains_errors():
             self.add_system_message('warning', _('Please specify positive filter to switch'))
         self.add_conc_form_args(FilterFormArgs(
-            maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-            persistent=False))
+            maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname, persist=False))
         self._attach_query_params(out)
         tt = get_tt(self.corp, self._plugin_api)
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
@@ -679,7 +686,7 @@ class Actions(Querying):
 
         qtype = self.import_qs(self.args.queryselector)
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-                                 persistent=True)
+                                 persist=True)
         ff_args.query_type = qtype
         ff_args.query = getattr(self.args, qtype, None) if qtype is not None else None
         ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
@@ -1795,7 +1802,7 @@ class Actions(Querying):
         else:
             return {'total': None}
 
-    @exposed(http_method='POST', return_type='json')
+    @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, request):
         pipeline = self._load_pipeline(self._q_code)
         return dict(ops=[dict(id=x['id'], form_args=x.get('conc_forms_args', {})) for x in pipeline])

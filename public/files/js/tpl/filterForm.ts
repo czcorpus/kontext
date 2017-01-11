@@ -34,7 +34,7 @@ import {QueryContextStore} from '../stores/query/context';
 import * as RSVP from 'vendor/rsvp';
 import {init as ttViewsInit} from 'views/textTypes';
 import {init as contextViewsInit} from 'views/query/context';
-import {init as queryFormInit} from 'views/query/main';
+import {init as filterFormInit} from 'views/query/filter';
 import tagHelperPlugin from 'plugins/taghelper/init';
 
 
@@ -164,20 +164,17 @@ export class FilterFormpage {
                 isWithin: this.layoutModel.getConf<boolean>('IsWithin')
             }
         );
-        console.log('test: ', fetchArgs<string>(item => item.filfpos));
-        const queryFormComponents = queryFormInit(
+        const filterFormComponents = filterFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
             this.filterStore,
-            this.textTypesStore,
             this.queryHintStore,
-            this.withinBuilderStore,
-            this.virtualKeyboardStore,
-            this.queryContextStore
+            null, // TODO bad design (within widget required)
+            this.virtualKeyboardStore
         );
         this.layoutModel.renderReactComponent(
-            queryFormComponents.FilterForm,
+            filterFormComponents.FilterForm,
             window.document.getElementById('query-form-mount'),
             properties
         );

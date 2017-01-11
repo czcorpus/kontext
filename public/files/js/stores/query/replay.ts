@@ -30,9 +30,18 @@ import {QueryStore, QueryFormUserEntries} from './main';
 import {FilterStore} from './filter';
 
 
+/**
+ * This represent an already encode query
+ * operation (i.e. the one without individual
+ * form attributes but with encoded q=[...] value
+ * understood by Manatee).
+ *
+ * Please note that these objects are used
+ * only marginally and as read-only ones.
+ */
 export interface QueryOperation {
     op:string;
-    opid:string;
+    opid:string; // an operation type ID (do not confuse with conc_persistence op_key)
     nicearg:string;
     tourl:string;
     arg:string;
@@ -40,15 +49,29 @@ export interface QueryOperation {
     size:number;
 }
 
+/**
+ * Local query form data cache.
+ */
 export type LocalQueryFormData = {[ident:string]:AjaxResponse.ConcFormArgs};
 
 
+/**
+ * Stores required by QueryReplayStore to operate
+ */
 export interface ReplayStoreDeps {
     queryStore:QueryStore;
     filterStore:FilterStore;
 }
 
 
+/**
+ * QueryReplayStore reads operations stored in the breadcrumb-like navigation
+ * and query operation data stored on server (handled by conc_persistence plug-in)
+ * and generates a new query "pipeline" with a single step updated by a user
+ * via a respective form (query, filter, sort,...). Then it submits all the
+ * server requests one-by-one (while updating query operation ID) and the final
+ * request is used to redirect client to see the result.
+ */
 export class QueryReplayStore extends SimplePageStore {
 
     private pageModel:PageModel;
@@ -70,11 +93,12 @@ export class QueryReplayStore extends SimplePageStore {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currEncodedOperations = Immutable.List<QueryOperation>(currentOperations);
-        this.replayOperations = Immutable.List<string>();
+        this.replayOperations = Immutable.List<string>(currentOperations.map(item => null));
         this.concArgsCache = Immutable.Map<string, AjaxResponse.ConcFormArgs>(concArgsCache);
         this.queryStore = replayStoreDeps.queryStore;
         this.filterStore = replayStoreDeps.filterStore;
         this.branchReplayIsRunning = false;
+        this.syncCache();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'EDIT_QUERY_OPERATION':
@@ -109,32 +133,50 @@ export class QueryReplayStore extends SimplePageStore {
     }
 
     private getCurrentQueryKey():string {
-        const qArgs = this.pageModel.getConcArgs().getList('q');
-        return qArgs[0].indexOf('~') === 0 ? qArgs[0].substr(1) : undefined;
+        const encodedQuery = this.pageModel.getConf<Array<string>>('encodedQuery') || [];
+        const lastOp = encodedQuery[encodedQuery.length - 1] || '';
+        return lastOp.substr(0, 1) === '~' ? lastOp.substr(1) : undefined;
     }
 
-    private opIdxToCachedQueryKey(idx:number):string {
-        if (this.replayOperations.size > 0) {
-            return this.replayOperations.get(idx);
-
-        } else if (this.concArgsCache.has('__new__') && idx === this.currEncodedOperations.size - 1) {
-            return '__new__';
-
-        } else {
-            // no local data about idx->key mapping
-            // but we can still succeed in case of the most current op
-            const currKey = this.getCurrentQueryKey();
-            if (currKey !== undefined && idx === this.currEncodedOperations.size - 1) {
-                return currKey;
-
-            } else {
-                return undefined;
-            }
+    /**
+     * Because server operations do not know a newly created query ID (it is handled
+     * in controller's post dispatche when a concrete action is already finished)
+     * it uses a special value '__new__' to mark arguments which have been just created.
+     * But unlike the server, we know the ID so we update the '__new__' pseudo-key by
+     * the real one. This makes further processing a little bit easier.
+     */
+    private syncCache():void {
+        const opKey = this.getCurrentQueryKey();
+        if (this.concArgsCache.has('__new__') && opKey !== undefined) {
+            const tmp = this.concArgsCache.get('__new__');
+            tmp.op_key = opKey;
+            this.concArgsCache = this.concArgsCache.delete('__new__').set(opKey, tmp);
+            this.replayOperations = this.replayOperations.set(this.replayOperations.size - 1, opKey);
         }
     }
 
     /**
-     * Generate a function representing an operation within query pipeline.
+     * Transform query operation idx (i.e. its position in a respective
+     * query pipeline) into a related key of stored form data (conc_persistence plug-in).
+     * Latest operation which has not been serialized yet uses a special key '__new__'.
+     */
+    private opIdxToCachedQueryKey(idx:number):string {
+        if (this.replayOperations.get(idx) !== null) {
+            return this.replayOperations.get(idx);
+
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
+     * Generate a function representing an operation within query pipeline. Such
+     * an operation typically consists of:
+     * 1) form synchronization from a database (conc_persistence)
+     * 2) submitting a respective action to the server (0 up to n-2 are submitted via ajax, n-1th directly)
+     *
+     * In case of just updated form (i.e. the operation user just changed) the synchronization
+     * is an empty operation.
      *
      * @param opIdx operation index in a respective query pipeline
      * @param opKey operation key used to store it on server (see q=~[opKey])
@@ -207,8 +249,15 @@ export class QueryReplayStore extends SimplePageStore {
 
     /**
      * Process a query pipeline with the operation with index [changedOpIdx] updated.
-     * Once all done a string containing a URL KonText should
-     * reload to is returned wrapped in a promise.
+     * The function must load a list of all operations a pipeline is composed of (the
+     * pipeline is identified by its last operation ID). Then it generates dynamically
+     * a chain of promises based on these stored operations.
+     *
+     * @param changedOpIdx the last operation of the pipeline
+     * @return a promise generated by the last operation in the chain; it can be either
+     * an object containing a response of the operation returned by server or a function
+     * containing a local action (typically - the last operation contains something
+     * like ()=>submit()).
      */
     private branchQuery(changedOpIdx:number):RSVP.Promise<any> {
         this.branchReplayIsRunning = true;
@@ -216,7 +265,7 @@ export class QueryReplayStore extends SimplePageStore {
 
         const args = this.pageModel.getConcArgs();
         const fetchQueryPipeline:RSVP.Promise<Immutable.List<string>> = this.pageModel.ajax(
-            'POST',
+            'GET',
             this.pageModel.createActionUrl('load_query_pipeline'),
             args
 
@@ -257,11 +306,17 @@ export class QueryReplayStore extends SimplePageStore {
     }
 
     /**
+     * Synchronize query (= initial) form with position [opIdx] in a
+     * respective query pipeline. In fact the query form should have
+     * always opIdx = 0 as it is the initial operation but to keep
+     * things general the opIdx argument is required and applied.
      *
+     * @param opIdx an index of the operation in a respective query pipeline
+     * @returns updated query store wrapped in a promise
      */
-    private syncQueryForm(opIdx:number):RSVP.Promise<any> {
+    private syncQueryForm(opIdx:number):RSVP.Promise<QueryStore> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        if (queryKey !== undefined) {
+        if (queryKey !== undefined) { // cache hit
             return this.queryStore.syncFrom(() => {
                 return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
                     resolve(this.concArgsCache.get(queryKey));
@@ -270,22 +325,31 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else {
             return this.queryStore.syncFrom(() => {
-                return this.pageModel.ajax<any>(
+                return this.pageModel.ajax<AjaxResponse.QueryFormArgs>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
+
+                ).then(
+                    (data) => {
+                        this.concArgsCache = this.concArgsCache.set(
+                            data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
+                    }
                 );
             });
         }
     }
 
     /**
-     *
+     * Synchronize filter form with position [opIdx] in a
+     * respective query pipeline.
      */
-    private syncFilterForm(opIdx:number):RSVP.Promise<any> {
+    private syncFilterForm(opIdx:number):RSVP.Promise<FilterStore> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        if (queryKey !== undefined) {
-            return this.filterStore.syncFrom(queryKey, () => {
+        if (queryKey !== undefined) { // cache hit
+            return this.filterStore.syncFrom(() => {
                 return new RSVP.Promise<AjaxResponse.FilterFormArgs>(
                     (resolve:(data)=>void, reject:(err)=>void) => {
                         resolve(this.concArgsCache.get(queryKey));
@@ -294,11 +358,19 @@ export class QueryReplayStore extends SimplePageStore {
             });
 
         } else {
-            return this.queryStore.syncFrom(() => {
+            return this.filterStore.syncFrom(() => {
                 return this.pageModel.ajax<any>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
+
+                ).then(
+                    (data) => {
+                        this.concArgsCache = this.concArgsCache.set(
+                            data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
+                    }
                 );
             });
         }
@@ -315,7 +387,8 @@ export class QueryReplayStore extends SimplePageStore {
     }
 
     private operationIsQuery(opIdx:number):boolean {
-        return this.currEncodedOperations.get(opIdx).opid === 'q' || this.currEncodedOperations.get(opIdx).opid === 'a';
+        return this.currEncodedOperations.get(opIdx).opid === 'q'
+                || this.currEncodedOperations.get(opIdx).opid === 'a';
     }
 
     private operationIsFilter(opIdx:number):boolean {

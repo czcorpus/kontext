@@ -20,7 +20,7 @@
 
 import React from 'vendor/react';
 
-export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormView, queryReplayStore) {
+export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormView, SortFormView, queryReplayStore) {
 
     // ------------------------ <QueryReplayView /> --------------------------------
 
@@ -97,10 +97,31 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 return <QueryFormView {...this.props.editorProps} operationIdx={this.props.operationIdx} />;
 
             } else if (['n', 'N', 'p', 'P'].indexOf(this.props.operationId) > -1) {
-                return <FilterFormView {...this.props.editorProps} operationIdx={this.props.operationIdx} />;
+                return <FilterFormView {...this.props.editorProps}
+                            operationIdx={this.props.operationIdx}
+                            filterId={this.props.opKey} />;
 
             } else {
-                return <div>currently unsupported...</div>;
+                return <SortFormView />;
+            }
+        },
+
+        _getContextTitle : function (opId) {
+            const isOperation = (...values) => values.indexOf(opId) > -1;
+            if (isOperation('a', 'q')) {
+                return this.translate('query__operation_name_query');
+
+            } else if (isOperation('n', 'N', 'p', 'P')) {
+                return this.translate('query__operation_name_filter');
+
+            } else if (isOperation('s')) {
+                return this.translate('query__operation_name_sort');
+
+            } else if (isOperation('f')) {
+                return this.translate('query__operation_name_shuffle');
+
+            } else if (isOperation('r')) {
+                return this.translate('query__operation_name_sample');
             }
         },
 
@@ -109,7 +130,11 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
                     <layoutViews.PopupBox customClass="query-form-lite"
                             onCloseClick={this.props.closeClickHandler}>
-                        <h3>{this.translate('query__edit_current_hd')}</h3>
+                        <h3>
+                            {this.translate('query__edit_current_hd_{operation}',
+                                    {operation: this._getContextTitle(this.props.operationId)})
+                            }
+                        </h3>
                         {this._renderEditorComponent()}
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
@@ -144,7 +169,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                     {this._renderLabel()}{':\u00a0'}
                     {this.props.item.nicearg ?
                         <a className="args" onClick={this.props.clickHandler}>{this.props.item.nicearg}</a>
-                    : '\u2713'}
+                        : <a className="args" onClick={this.props.clickHandler}>{'\u2713'}</a>}
                     {this.props.item.size ?
                          '\u00a0(' + this.translate('query__overview_hits_{num_hits}',
                             {num_hits: this.props.item.size}) + ')'
@@ -155,6 +180,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             closeClickHandler={this.props.closeEditorHandler}
                             operationIdx={this.props.idx}
                             operationId={this.props.item.opid}
+                            opKey={this.props.editOpKey}
                             isLoading={this.props.isLoading} />
                         : null}
                 </li>
@@ -174,6 +200,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: null,
+                editOpKey: null,
                 isLoading: false
             };
         },
@@ -187,6 +214,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: idx,
+                editOpKey: null, // we don't know the key here yet
                 isLoading: true
             });
         },
@@ -196,6 +224,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: null,
+                editOpKey: null,
                 isLoading: false
             });
         },
@@ -204,7 +233,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
             this.setState({
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
-                editOpIdx: this.state.editOpIdx,
+                editOpIdx: queryReplayStore.getBranchReplayIsRunning() ? null : this.state.editOpIdx,
+                editOpKey: queryReplayStore.opIdxToCachedQueryKey(this.state.editOpIdx),
                 isLoading: false
             });
         },
@@ -243,6 +273,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             return <QueryOpInfo
                                     key={`op_${i}`}
                                     idx={i}
+                                    editOpKey={this.state.editOpKey}
                                     item={item}
                                     clickHandler={this._handleEditClick.bind(this, i)}
                                     hasOpenEditor={this.state.editOpIdx === i && !this.state.replayIsRunning}
