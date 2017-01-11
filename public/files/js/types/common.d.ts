@@ -87,7 +87,7 @@ declare module Kontext {
     export interface PluginApi {
         getConf<T>(key:string):T;
         createStaticUrl(path:string):string;
-        createActionUrl(path:string):string;
+        createActionUrl(path:string, args?:IMultiDict|Array<[string,string]>):string;
         ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
         ajaxAnim(): JQuery;
         ajaxAnimSmall();

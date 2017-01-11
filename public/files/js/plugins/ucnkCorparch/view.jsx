@@ -174,7 +174,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
             });
 
-            const link = this.createActionLink('first_form?corpname=' + this.props.row.id);
+            const link = this.createActionLink('first_form', [['corpname', this.props.row.id]]);
             const size = this.props.row.raw_size ? this.props.row.raw_size : '-';
 
             let userAction = null;
