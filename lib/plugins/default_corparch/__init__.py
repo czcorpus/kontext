@@ -420,7 +420,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         """
         simple_names = set(user_allowed_corpora.keys())
         cl = []
-        for item in self.raw_list(plugin_api.user_lang).values():
+        for item in self._raw_list(plugin_api.user_lang).values():
             canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
             if canonical_id in simple_names:
                 try:

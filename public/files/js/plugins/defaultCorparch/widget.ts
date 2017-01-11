@@ -725,18 +725,17 @@ class FavoritesTab implements WidgetTab {
      * @returns {string}
      */
     generateItemUrl(itemData):string {
-        const rootPath = this.pageModel.createActionUrl(this.targetAction);
-        const params = ['corpname=' + itemData.corpus_id];
+        const params:Array<[string, string]> = [['corpname', itemData.corpus_id]];
 
         if (itemData.type === common.CorplistItemType.SUBCORPUS) {
-            params.push('usesubcorp=' + itemData.subcorpus_id);
+            params.push(['usesubcorp', itemData.subcorpus_id]);
         }
         if (itemData.type === common.CorplistItemType.ALIGNED_CORPORA) {
             itemData.corpora.forEach(item => {
-                params.push(`align=${item.corpus_id}`);
+                params.push(['align', item.corpus_id]);
             });
         }
-        return rootPath + '?' + params.join('&');
+        return this.pageModel.createActionUrl(this.targetAction, params);
     }
 
     /**
