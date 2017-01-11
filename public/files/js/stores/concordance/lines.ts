@@ -461,8 +461,11 @@ export class ConcLineStore extends SimplePageStore {
     private createAudioLink(textChunk:TextChunk):string {
         const tmp = textChunk.openLink || textChunk.closeLink;
         if (tmp) {
-            return this.layoutModel.createActionUrl('audio?corpname=' +
-                    this.baseCorpname + '&' + 'chunk='+encodeURIComponent(tmp.speechPath));
+            return this.layoutModel.createActionUrl(
+                'audio',
+                [['corpname', this.baseCorpname], ['chunk', tmp.speechPath]]
+            );
+
         } else {
             return null;
         }
