@@ -190,7 +190,7 @@ declare module "views/query/sort" {
     }
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>,
-        mixins:any, sortStore:any, multiLevelSortStore:any):SortFormViews;
+        mixins:any, layoutViews:Kontext.LayoutViews, sortStore:any, multiLevelSortStore:any):SortFormViews;
 }
 
 

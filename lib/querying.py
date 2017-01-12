@@ -143,13 +143,40 @@ class SortFormArgs(ConcFormArgs):
     to be JSON-serializable.
     """
     def __init__(self, persist):
+        """
+        args:
+            persist -- specify whether the object should be stored
+                       to disk when the current action is finished
+        """
         super(SortFormArgs, self).__init__(persist)
         self.form_type = 'sort'
-        self.sattr = None
-        self.skey = None
-        self.spos = None
-        self.sicase = None
-        self.sbward = None
+        self.form_action = 'sortx'
+        self.sattr = ''
+        self.skey = 'kw'
+        self.spos = 3  # number of tokens to sort
+        self.sicase = ''
+        self.sbward = ''
+        self.sortlevel = 1
+        self.ml1attr = ''
+        self.ml2attr = ''
+        self.ml3attr = ''
+        self.ml4attr = ''
+        self.ml1icase = ''
+        self.ml2icase = ''
+        self.ml3icase = ''
+        self.ml4icase = ''
+        self.ml1bward = ''
+        self.ml2bward = ''
+        self.ml3bward = ''
+        self.ml4bward = ''
+        self.ml1pos = 1
+        self.ml2pos = 1
+        self.ml3pos = 1
+        self.ml4pos = 1
+        self.ml1ctx = u'0~0>0'
+        self.ml2ctx = u'0~0>0'
+        self.ml3ctx = u'0~0>0'
+        self.ml4ctx = u'0~0>0'
 
 
 def build_conc_form_args(data, op_key):

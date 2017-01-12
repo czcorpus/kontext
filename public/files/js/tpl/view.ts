@@ -47,7 +47,7 @@ import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
-import {SortStore, MultiLevelSortStore, SortFormProperties} from '../stores/query/sort';
+import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -554,6 +554,9 @@ export class ViewPage {
             this.queryStores.queryContextStore
         );
 
+    }
+
+    private initFilterForm():void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
         const filterFormProps:FilterFormProperties = {
@@ -600,11 +603,27 @@ export class ViewPage {
             this.queryStores.withinBuilderStore,
             this.queryStores.virtualKeyboardStore
         );
+    }
 
-        // --------------- sort form
+    private initSortForm():void {
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>fetchSortFormArgs(concFormsArgs, key);
+        const availAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
 
         const sortStoreProps:SortFormProperties = {
-            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList')
+            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+            sattr: fetchArgs<string>(item => item.sattr),
+            sbward: fetchArgs<string>(item => item.sbward),
+            sicase: fetchArgs<string>(item => item.sicase),
+            skey: fetchArgs<string>(item => item.skey),
+            spos: fetchArgs<string>(item => item.spos),
+            sortlevel : fetchArgs<number>(item => item.sortlevel),
+            defaultFormAction : fetchSortFormArgs<string>(concFormsArgs, item => item.form_action),
+            mlxattr : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxattr', item, (n)=>availAttrs[0].n)),
+            mlxicase : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxicase', item)),
+            mlxbward : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxbward', item)),
+            mlxctx : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxctx', item)),
+            mlxpos : fetchArgs<Array<number>>(item => importMultiLevelArg<number>('mlxpos', item)),
         };
 
         this.queryStores.sortStore = new SortStore(
@@ -621,6 +640,7 @@ export class ViewPage {
         this.sortFormViews = sortFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
             this.queryStores.sortStore,
             this.queryStores.multiLevelSortStore
         );
@@ -629,29 +649,18 @@ export class ViewPage {
     /**
      *
      */
-    private attachQueryEditMenuItem():void {
-        this.layoutModel.dispatcher.register((payload:Kontext.DispatcherPayload) => {
-            switch (payload.actionType) {
-                case 'TRIGGER_QUERY_LITE_FORM':
-                    alert('todo'); // TODO
-                break;
-            }
-        });
-    }
-
-    /**
-     *
-     */
     initQueryOverviewArea():void {
         this.queryStores.queryReplayStore = new QueryReplayStore(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                {
-                    queryStore: this.queryStores.queryStore,
-                    filterStore: this.queryStores.filterStore
-                },
-                this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || [],
-                this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                queryStore: this.queryStores.queryStore,
+                filterStore: this.queryStores.filterStore,
+                sortStore: this.queryStores.sortStore,
+                mlSortStore: this.queryStores.multiLevelSortStore
+            },
+            this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || [],
+            this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
         );
         this.queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
@@ -662,6 +671,7 @@ export class ViewPage {
             this.sortFormViews.SortFormView,
             this.queryStores.queryReplayStore
         );
+
         this.layoutModel.renderReactComponent(
             this.queryOverviewViews.QueryOverview,
             window.document.getElementById('query-overview-mount'),
@@ -680,6 +690,8 @@ export class ViewPage {
                     queryStorageViews: queryStoragePlugin.getViews(),
                     allowCorpusSelection: false,
                     actionPrefix: 'FILTER_'
+                },
+                sortFormProps: {
                 }
             }
         );
@@ -731,8 +743,9 @@ export class ViewPage {
         ).then(
             () => {
                 this.initQueryForm();
+                this.initFilterForm();
+                this.initSortForm();
                 this.initQueryOverviewArea();
-                this.attachQueryEditMenuItem();
             }
         );
     }

@@ -153,6 +153,24 @@ declare module AjaxResponse {
         spos:string;
         sicase:string;
         sbward:string;
+        sortlevel:number;
+        form_action:string;
+        ml1icase:string;
+        ml2icase:string;
+        ml3icase:string;
+        ml4icase:string;
+        ml1bward:string;
+        ml2bward:string;
+        ml3bward:string;
+        ml4bward:string;
+        ml1pos:number;
+        ml2pos:number;
+        ml3pos:number;
+        ml4pos:number;
+        ml1ctx:string;
+        ml2ctx:string;
+        ml3ctx:string;
+        ml4ctx:string;
     }
 
     export interface BranchQuery extends Kontext.AjaxResponse {

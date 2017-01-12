@@ -40,7 +40,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                         <div>
                             <h3>Replaying the query...</h3>
                             <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />
-                            <div>...</div>
+                            <div />
                         </div>
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
@@ -102,7 +102,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             filterId={this.props.opKey} />;
 
             } else {
-                return <SortFormView />;
+                return <SortFormView sortId={this.props.opKey} operationIdx={this.props.operationIdx} />;
             }
         },
 

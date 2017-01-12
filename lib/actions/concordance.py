@@ -313,15 +313,11 @@ class Actions(Querying):
         """
         sort concordance form
         """
-        sf_args = SortFormArgs(persist=False)
-        sf_args.sattr = self._request.args.get('sattr')
-        sf_args.skey = self._request.args.get('skey')
-        sf_args.spos = self._request.args.get('spos')
-        sf_args.sicase = self._request.args.get('sicase')
-        sf_args.sbward = self._request.args.get('sbward')
-        self.add_conc_form_args(sf_args)
+        out = dict(Pos_ctxs=conclib.pos_ctxs(1, 1))
+        self.add_conc_form_args(SortFormArgs(persist=False))
+        self._attach_query_params(out)
         self.disabled_menu_items = (MainMenu.SAVE,)
-        return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
+        return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
@@ -331,11 +327,12 @@ class Actions(Querying):
         self.disabled_menu_items = ()
 
         qinfo = SortFormArgs(persist=True)
-        # qinfo.sattr = ??? TODO
+        qinfo.sattr = self.args.sattr
         qinfo.sbward = self.args.sbward
         qinfo.sicase = self.args.sicase
         qinfo.skey = self.args.skey
         qinfo.spos = self.args.spos
+        qinfo.form_action = 'sortx'
         self.add_conc_form_args(qinfo)
 
         if skey == 'lc':
@@ -353,23 +350,44 @@ class Actions(Querying):
         return self.view()
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
-    def mlsortx(self,
-                ml1attr='word', ml1pos=1, ml1icase='', ml1bward='', ml1fcode='rc',
-                ml2attr='word', ml2pos=1, ml2icase='', ml2bward='', ml2fcode='rc',
-                ml3attr='word', ml3pos=1, ml3icase='', ml3bward='', ml3fcode='rc',
-                sortlevel=1, ml1ctx='', ml2ctx='', ml3ctx=''):
+    def mlsortx(self):
         """
         multiple level sort concordance
         """
+        qinfo = SortFormArgs(persist=True)
+        qinfo.form_action = 'mlsortx'
+        qinfo.sortlevel = self.args.sortlevel
+        qinfo.ml1attr = self.args.ml1attr
+        qinfo.ml2attr = self.args.ml2attr
+        qinfo.ml3attr = self.args.ml3attr
+        qinfo.ml4attr = self.args.ml4attr
+        qinfo.ml1bward = self.args.ml1bward
+        qinfo.ml2bward = self.args.ml2bward
+        qinfo.ml3bward = self.args.ml3bward
+        qinfo.ml4bward = self.args.ml4bward
+        qinfo.ml1ctx = self.args.ml1ctx
+        qinfo.ml2ctx = self.args.ml2ctx
+        qinfo.ml3ctx = self.args.ml3ctx
+        qinfo.ml4ctx = self.args.ml4ctx
+        qinfo.ml1icase = self.args.ml1icase
+        qinfo.ml2icase = self.args.ml2icase
+        qinfo.ml3icase = self.args.ml3icase
+        qinfo.ml4icase = self.args.ml4icase
+        qinfo.ml1pos = self.args.ml1pos
+        qinfo.ml2pos = self.args.ml2pos
+        qinfo.ml3pos = self.args.ml3pos
+        qinfo.ml4pos = self.args.ml4pos
+        self.add_conc_form_args(qinfo)
 
-        crit = self.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
-                                 ml1icase, ml1bward)
-        if sortlevel > 1:
-            crit += self.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
-                                      ml2icase, ml2bward)
-            if sortlevel > 2:
-                crit += self.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
-                                          ml3icase, ml3bward)
+        mlxfcode = 'rc'
+        crit = self.onelevelcrit('s', self.args.ml1attr, self.args.ml1ctx, self.args.ml1pos, mlxfcode,
+                                 self.args.ml1icase, self.args.ml1bward)
+        if self.args.sortlevel > 1:
+            crit += self.onelevelcrit(' ', self.args.ml2attr, self.args.ml2ctx, self.args.ml2pos, mlxfcode,
+                                      self.args.ml2icase, self.args.ml2bward)
+            if self.args.sortlevel > 2:
+                crit += self.onelevelcrit(' ', self.args.ml3attr, self.args.ml3ctx, self.args.ml3pos, mlxfcode,
+                                          self.args.ml3icase, self.args.ml3bward)
         self.args.q.append(crit)
         return self.view()
 

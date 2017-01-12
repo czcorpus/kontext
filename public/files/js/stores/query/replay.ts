@@ -28,6 +28,7 @@ import {SimplePageStore} from '../../util';
 import {PageModel} from '../../tpl/document';
 import {QueryStore, QueryFormUserEntries} from './main';
 import {FilterStore} from './filter';
+import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';
 
 
 /**
@@ -61,6 +62,9 @@ export type LocalQueryFormData = {[ident:string]:AjaxResponse.ConcFormArgs};
 export interface ReplayStoreDeps {
     queryStore:QueryStore;
     filterStore:FilterStore;
+    sortStore:SortStore;
+    mlSortStore:MultiLevelSortStore;
+
 }
 
 
@@ -84,6 +88,10 @@ export class QueryReplayStore extends SimplePageStore {
 
     private filterStore:FilterStore;
 
+    private sortStore:SortStore;
+
+    private mlSortStore:MultiLevelSortStore;
+
     private concArgsCache:Immutable.Map<string, AjaxResponse.ConcFormArgs>;
 
     private branchReplayIsRunning:boolean;
@@ -97,6 +105,8 @@ export class QueryReplayStore extends SimplePageStore {
         this.concArgsCache = Immutable.Map<string, AjaxResponse.ConcFormArgs>(concArgsCache);
         this.queryStore = replayStoreDeps.queryStore;
         this.filterStore = replayStoreDeps.filterStore;
+        this.sortStore = replayStoreDeps.sortStore;
+        this.mlSortStore = replayStoreDeps.mlSortStore;
         this.branchReplayIsRunning = false;
         this.syncCache();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -242,6 +252,36 @@ export class QueryReplayStore extends SimplePageStore {
                 );
             };
 
+        } else if (formType === 'sort') {
+            return () => {
+                return prepareFormData().then(
+                    () => {
+                        let activeStore:ISubmitableSortStore;
+
+                        if (this.sortStore.isDefaultActionValue(opKey)) {
+                            activeStore = this.sortStore;
+
+                        } else if (this.mlSortStore.isDefaultActionValue(opKey)) {
+                            activeStore = this.mlSortStore;
+                        }
+                        if (opIdx < numOps - 1) {
+                            return this.pageModel.ajax(
+                                'GET',
+                                activeStore.getSubmitUrl(opKey),
+                                {format: 'json'}
+                            );
+
+                        } else {
+                            return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                                resolve(() => {
+                                    activeStore.submit(opKey);
+                                });
+                            });
+                        }
+                    }
+                );
+            }
+
         } else {
             throw new Error('cannot prepare operation for type ' + formType);
         }
@@ -381,9 +421,54 @@ export class QueryReplayStore extends SimplePageStore {
      */
     private syncSortForm(opIdx:number):RSVP.Promise<any> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        return new RSVP.Promise((resolve:(v:any)=>void, reject:(err:any)=>void) => {
-            resolve(`sync sort done, idx: ${opIdx}, key: ${queryKey}`); // TODO !!!
-        });
+        if (queryKey !== undefined) {
+            return this.sortStore.syncFrom(() => {
+                return new RSVP.Promise<AjaxResponse.SortFormArgs>(
+                    (resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
+                    }
+                );
+            }).then(
+                () => {
+                    return this.mlSortStore.syncFrom(() => {
+                        return new RSVP.Promise<AjaxResponse.SortFormArgs>(
+                            (resolve:(data)=>void, reject:(err)=>void) => {
+                                resolve(this.concArgsCache.get(queryKey));
+                            }
+                        );
+                    });
+                }
+            );
+
+        } else {
+            return this.sortStore.syncFrom(() => {
+                return this.pageModel.ajax<any>(
+                    'GET',
+                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                    {last_key: this.getCurrentQueryKey(), idx: opIdx}
+
+                ).then(
+                    (data) => {
+                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
+                    }
+                )
+
+            }).then(
+                (data) => {
+                    const queryKey = this.opIdxToCachedQueryKey(opIdx); // now we know queryKey for sure
+                    return this.mlSortStore.syncFrom(() => {
+                        return new RSVP.Promise<AjaxResponse.SortFormArgs>(
+                            (resolve:(data)=>void, reject:(err)=>void) => {
+                                resolve(this.concArgsCache.get(queryKey));
+                            }
+                        );
+                    });
+
+                }
+            );
+        }
     }
 
     private operationIsQuery(opIdx:number):boolean {

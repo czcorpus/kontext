@@ -1,5 +1,7 @@
 #*
-Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -26,176 +28,15 @@ $_("Sort form")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
+    conf.AttrList = $to_json($getVar('AttrList', []));
+    conf.ConcFormsArgs = $to_json($conc_forms_args);
     pageSelf.init(conf);
 });
 #end def
 
 #def main
 <section>
-    #filter WebSafe
-    <h2>$_("Simple Sort")</h2>
-    <form action="sortx">
-        <fieldset>
-            #filter None
-            $input_hidden
-            #end filter
-            <table class="form">
-              <tr>
-                <th>$_("Attribute"):</th>
-                <td><select name="sattr" id="select">
-              #for $a in $AttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              #for $a in $StructAttrList
-                <option value="$a.n">$a.label</option>
-              #end for
-              </select></td>
-              </tr>
-              <tr>
-                <th>$_("Sort key"):</th>
-                <td><label><input type="radio" name="skey" value="lc"
-              #if $skey == 'lc'
-                checked="checked"
-              #end if
-              />$_("Left context")</label>
-              <label><input type="radio" name="skey" value="kw"
-              #if $skey == 'kw'
-                checked="checked"
-              #end if
-              />$_("Node")</label>
-              <label><input type="radio" name="skey" value="rc"
-              #if $skey == 'rc'
-                checked="checked"
-              #end if
-              />$_("Right context")</label></td>
-              </tr>
-              <tr>
-                <th>$_("Number of tokens to sort"):</th>
-                <td><input type="text" name="spos" value="$spos" size="3" /></td>
-              </tr>
-              <tr>
-                <th>
-                  <label for="sicase_checkbox">$_("Ignore case"):</label>
-                </th>
-                <td>
-                <input id="sicase_checkbox" type="checkbox" name="sicase" value="i" #if $sicase#checked="checked"#end if# />
-                </td>
-              </tr>
-              <tr>
-              <th>
-              <label for="sbward_checkbox">$_("Backward")</label>
-              <a class="backward-sort-help context-help"><img class="over-img" src="${files_path}/img/question-mark.svg" data-alt-img="${files_path}/img/question-mark_s.svg" /></a>:
-              </th>
-              <td>
-              <input id="sbward_checkbox" type="checkbox" name="sbward" value="r"
-              #if $sbward
-                checked="checked"
-              #end if
-              />
-              </td>
-              </tr>
-            </table>
-            <div class="buttons">
-              <input type="submit" class="default-button" value="$_("Sort Concordance")" />
-            </div>
-        </fieldset>
-    </form>
-</section>
-
-<section>
-    <h2>$_("Multilevel sort")</h2>
-    <form action="mlsortx">
-        <fieldset>
-            #filter None
-            $input_hidden
-            #end filter
-            <table class="multi-level-blocks">
-                <tbody>
-                    <tr>
-                        <td colspan="3">
-                            $_('use levels'):
-                            <select name="sortlevel" class="sortlevel">
-                                <option value="1" #if $sortlevel == 1#selected="selected"#end if#>1</option>
-                                <option value="2" #if $sortlevel == 2#selected="selected"#end if#>2</option>
-                                <option value="3" #if $sortlevel == 3#selected="selected"#end if#>3</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        #for $i in $range(1, 4)
-                        <td>
-                            <table class="sort-level" data-level="$i">
-                                <tbody>
-                                    <tr>
-                                        <th colspan="2" class="level">
-                                            ${i}.
-                                        </th>
-                                    </tr>
-                                    <tr>
-                                        <th>$_("Attribute"):</th>
-                                        <td>
-                                            <select name="ml${i}attr">
-                                                #for $a in $AttrList
-                                                <option value="$a.n">$a.label</option>
-                                                #end for
-                                                #for $a in $StructAttrList
-                                                <option value="$a.n">$a.label</option>
-                                                #end for
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>
-                                            <label for="ml${i}icase_checkbox">$_("Ignore case"):</label>
-                                        </th>
-                                        <td>
-                                            <input id="ml${i}icase_checkbox" type="checkbox" name="ml${i}icase" value="i" />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th><label for="sbward_checkbox2"> $_("Backward")</label>
-                                        <a class="backward-sort-help context-help"><img class="over-img" src="${files_path}/img/question-mark.svg" data-alt-img="${files_path}/img/question-mark_s.svg" /></a>:
-                                        </th>
-                                        <td>
-                                            <input id="sbward_checkbox2" type="checkbox" name="ml${i}bward" value="r" />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th class="tall">$_("Position"):</th>
-                                        <td>
-                                            <select name="ml${i}ctx" size="5">
-                                                #for $p in $Pos_ctxs
-                                                <option value="$p.ctx">$p.n</option>
-                                                #end for
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>
-                                            $_("(Node) start at")
-                                            <a class="kwic-alignment-help context-help"><img class="over-img" src="${files_path}/img/question-mark.svg" data-alt-img="${files_path}/img/question-mark_s.svg" /></a>:
-                                        </th>
-                                        <td>
-                                            <select class="kwic-alignment" id="kwic-alignment-${i}">
-                                                <option value="left">$_("leftmost KWIC word")</option>
-                                                <option value="right">$_("rightmost KWIC word")</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </td>
-                        #end for
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="buttons">
-              <input class="submit default-button" type="submit" value="$_("Sort Concordance")" />
-            </div>
-        </fieldset>
-    </form>
-
-    #end filter
+    <h2>$_("Sort")</h2>
+    <div id="sort-form-mount"></div>
 </section>
 #end def

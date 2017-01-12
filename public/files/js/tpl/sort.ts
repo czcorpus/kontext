@@ -17,113 +17,84 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../types/views.d.ts" />
+
 import {PageModel} from './document';
 import * as popupBox from '../popupbox';
 import * as $ from 'jquery';
 import * as kwicAlignUtils from '../kwicAlignUtils';
+import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
+import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 
 
 class SortPage {
 
     private layoutModel:PageModel;
 
+    private sortFormViews:SortFormViews;
+
+    private sortStore:SortStore;
+
+    private multiLevelSortStore:MultiLevelSortStore;
+
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-    }
-
-    private showLevelForm(elm, btn) {
-        let closeLink;
-
-        $(elm).show(100);
-        closeLink = $('<a class="close-icon">'
-            + '<img class="over-img" src="' + this.layoutModel.createStaticUrl('img/close-icon.svg')
-            + '" data-alt-img="' + this.layoutModel.createStaticUrl('img/close-icon_s.svg') + '" />'
-            + '</a>');
-        closeLink.on('click', () => {
-            $(elm).closest('td').nextAll('td').find('table.sort-level th.level a.close-icon').addClass('sync').trigger('click');
-
-            if ($(elm).hasClass('sync')) {
-                $(elm).hide(0);
-                btn.show();
-                this.setCurrentSortingLevel();
-
-            } else {
-                $(elm).hide(100, () => {
-                    btn.show();
-                    this.setCurrentSortingLevel();
-                });
-            }
-        });
-
-        if ($(elm).find('th.level a.close-icon').length === 0) {
-            $(elm).find('th.level').append(closeLink);
-        }
-        btn.hide();
-    }
-
-    /**
-     *
-     */
-    private setCurrentSortingLevel():void {
-        $('input.sortlevel').val(1); // reset
-        $('table.sort-level').each(function () {
-            if ($(this).is(':visible')) {
-                $('input.sortlevel').val($(this).attr('data-level'));
-            }
-        });
-    }
-
-    private updateForm():void {
-        const self = this;
-        let btnList = [null];
-
-        $('select.sortlevel').closest('td').empty().append($('<input class="sortlevel" type="hidden" name="sortlevel" value="1" />'));
-        $('table.sort-level').each(function (i, v) {
-            let btn;
-
-            if (i > 0) {
-                btn = $(document.createElement('buttodocumentModn'));
-                btn.attr('type', 'button');
-                btn.addClass('add-level-button');
-                btn.attr('title', self.layoutModel.translate('add_level'));
-                btn.text(i + 1);
-                $(v).hide();
-                $(v).closest('td').append(btn);
-                btn.on('click', function () {
-                    self.showLevelForm(v, btn);
-                    $.each(btnList, function (j) {
-                        if (j < i && btnList[j] && btnList[j].is(':visible')) {
-                            $(btnList[j]).trigger('click');
-                        }
-                    });
-                    self.setCurrentSortingLevel();
-                });
-                btnList.push(btn);
-            }
-        });
     }
 
     /**
      *
      */
     init():void {
-        this.layoutModel.init();
-        kwicAlignUtils.extendKwicAlignmentSelector();
-        $('a.kwic-alignment-help').each((i, elm) => {
-            popupBox.bind($(elm), this.layoutModel.translate('global__this_applies_only_for_mk'), {
-                'top': 'attached-bottom',
-                'width': 'auto',
-                'height': 'auto'
-            });
-        });
-        $('a.backward-sort-help').each((i, elm) => {
-            popupBox.bind($(elm), this.layoutModel.translate('global__sorting_backwards_explanation'), {
-                'top': 'attached-bottom',
-                'width': 'auto',
-                'height': 'auto'
-            });
-        });
-        this.updateForm();
+        this.layoutModel.init().then(
+            () => {
+                const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+                const availAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+                const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>fetchSortFormArgs(concFormsArgs, key);
+                const sortStoreProps:SortFormProperties = {
+                    attrList: availAttrs,
+                    sattr: fetchArgs<string>(item => item.sattr ? item.sattr : availAttrs[0].n),
+                    sbward: fetchArgs<string>(item => item.sbward),
+                    sicase: fetchArgs<string>(item => item.sicase),
+                    skey: fetchArgs<string>(item => item.skey),
+                    spos: fetchArgs<string>(item => item.spos),
+                    sortlevel : fetchArgs<number>(item => item.sortlevel),
+                    defaultFormAction : fetchSortFormArgs<string>(concFormsArgs, item => 'sortx'),
+                    mlxattr : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxattr', item, (n)=>availAttrs[0].n)),
+                    mlxicase : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxicase', item)),
+                    mlxbward : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxbward', item)),
+                    mlxctx : fetchArgs<Array<string>>(item => importMultiLevelArg<string>('mlxctx', item)),
+                    mlxpos : fetchArgs<Array<number>>(item => importMultiLevelArg<number>('mlxpos', item)),
+                };
+                this.sortStore = new SortStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    sortStoreProps
+                );
+                this.multiLevelSortStore = new MultiLevelSortStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    sortStoreProps
+                );
+                this.sortFormViews = sortFormInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.exportMixins(),
+                    this.layoutModel.layoutViews,
+                    this.sortStore,
+                    this.multiLevelSortStore
+                );
+
+                this.layoutModel.renderReactComponent(
+                    this.sortFormViews.SortFormView,
+                    window.document.getElementById('sort-form-mount'),
+                    {
+                        sortId: '__new__'
+                    }
+                );
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
     }
 
 }
