@@ -236,43 +236,6 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
         }
     });
 
-     // ----------------------------- <QueryOverivew /> --------------------------
-
-    const QueryOverivew = React.createClass({
-
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <div>
-                    <h3>Query overview</h3>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <th>Operation</th>
-                                <th>Parameters</th>
-                                <th>Num. of hits</th>
-                                <th></th>
-                            </tr>
-                            {this.props.data.map((item, i) => (
-                                <tr key={i}>
-                                    <td>{item.op}</td>
-                                    <td>{item.arg}</td>
-                                    <td>{item.size}</td>
-                                    <td>
-                                        <a href={this.createActionLink('view?' + item.tourl)}>
-                                            {this.translate('global__view_result')}
-                                        </a>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        }
-    });
-
     // ----------------------------- <OverviewArea /> --------------------------
 
     const OverviewArea = React.createClass({
@@ -318,26 +281,16 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
                     return <CorpusReference data={this.state.data} />;
                 case 'subcorpus-info':
                     return <SubcorpusInfo data={this.state.data} />;
-                case 'query-info':
-                    return <QueryOverivew data={this.state.data} />;
                 default:
                     return null;
             }
-        },
-
-        _gethtmlClasses : function () {
-            const ans = ['centered'];
-            if (this.state.infoType === 'query-info') {
-                ans.push('query-overview');
-            }
-            return ans.join(' ');
         },
 
         render : function () {
             const ans = this._renderInfo();
             if (this.state.isLoading) {
                 return (
-                    <PopupBoxComponent customClass={this._gethtmlClasses()}
+                    <PopupBoxComponent customClass="centered"
                             onCloseClick={this._handleCloseClick}>
                         <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader.gif')}
                                 alt={this.translate('global__loading')} title={this.translate('global__loading')} />
@@ -346,7 +299,7 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
 
             } else if (ans) {
                 return (
-                    <PopupBoxComponent customClass={this._gethtmlClasses()}
+                    <PopupBoxComponent customClass="centered"
                             onCloseClick={this._handleCloseClick}>
                         {ans}
                     </PopupBoxComponent>

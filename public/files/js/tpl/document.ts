@@ -847,11 +847,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     private initOverviewArea():void {
         const overviewViews = overviewAreaViewsInit(this.dispatcher, this.exportMixins(),
                 this.corpusInfoStore, this.layoutViews.PopupBox);
-        this.renderReactComponent(
-            overviewViews.OverviewArea,
-            window.document.getElementById('overview-area-mount'),
-            {}
-        );
 
         $(window.document.getElementById('corpus-desc-link')).on('click', () => {
             this.dispatcher.dispatch({

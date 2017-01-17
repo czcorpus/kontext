@@ -231,7 +231,9 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     </table>
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
-                            {this.translate('query__search_btn')}
+                            {this.props.operationIdx !== undefined ?
+                                this.translate('global__proceed')
+                                : this.translate('query__search_btn')}
                         </button>
                     </div>
                 </form>
