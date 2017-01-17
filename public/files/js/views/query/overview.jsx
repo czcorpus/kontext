@@ -140,7 +140,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 </layoutViews.ModalOverlay>
             );
         }
-    });QueryOverview
+    });
 
     // ------------------------ <QueryOpInfo /> --------------------------------
 
@@ -188,6 +188,66 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
         }
     });
 
+    // ----------------------------- <QueryOverivewTable /> --------------------------
+
+    const QueryOverivewTable = React.createClass({
+
+        mixins : mixins,
+
+        _handleCloseClick : function () {
+            dispatcher.dispatch({
+                actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
+                props: {}
+            });
+        },
+
+        _handleEditClick : function (idx) {
+            dispatcher.dispatch({
+                actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
+                props: {}
+            }); // this is synchronous
+            this.props.onEditClick(idx);
+        },
+
+        render : function () {
+            return (
+                <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={this._handleCloseClick}>
+                    <div>
+                        <h3>Query overview</h3>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>Operation</th>
+                                    <th>Parameters</th>
+                                    <th>Num. of hits</th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                                {this.props.data.map((item, i) => (
+                                    <tr key={i}>
+                                        <td>{item.op}</td>
+                                        <td>{item.arg}</td>
+                                        <td>{item.size}</td>
+                                        <td>
+                                            <a href={this.createActionLink('view?' + item.tourl)}>
+                                                {this.translate('global__view_result')}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a onClick={this._handleEditClick.bind(this, i)}>
+                                                {this.translate('query__overview_edit_query')}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </layoutViews.PopupBox>
+            );
+        }
+    });
+
 
     // ------------------------ <QueryOverview /> --------------------------------
 
@@ -201,7 +261,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: null,
                 editOpKey: null,
-                isLoading: false
+                isLoading: false,
+                queryOverview: queryReplayStore.getCurrentQueryOverview()
             };
         },
 
@@ -215,7 +276,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: idx,
                 editOpKey: null, // we don't know the key here yet
-                isLoading: true
+                isLoading: true,
+                queryOverview: null
             });
         },
 
@@ -225,7 +287,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: null,
                 editOpKey: null,
-                isLoading: false
+                isLoading: false,
+                queryOverview: null
             });
         },
 
@@ -235,7 +298,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: queryReplayStore.getBranchReplayIsRunning() ? null : this.state.editOpIdx,
                 editOpKey: queryReplayStore.opIdxToCachedQueryKey(this.state.editOpIdx),
-                isLoading: false
+                isLoading: false,
+                queryOverview: queryReplayStore.getCurrentQueryOverview()
             });
         },
 
@@ -262,6 +326,9 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
         render : function () {
             return (
                 <div>
+                    {this.state.queryOverview ?
+                            <QueryOverivewTable data={this.state.queryOverview} onEditClick={this._handleEditClick} />
+                            : null}
                     {this.state.replayIsRunning ? <QueryReplayView /> : null}
 
                     <ul id="query-overview-bar">

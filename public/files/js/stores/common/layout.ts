@@ -118,8 +118,6 @@ export class CorpusInfoStore extends SimplePageStore {
 
     currentInfoType:string;
 
-    currentQueryInfo:any;
-
     isWaiting:boolean = false;
 
 
@@ -180,20 +178,6 @@ export class CorpusInfoStore extends SimplePageStore {
                             },
                             (err) => {
                                 self.isWaiting = false;
-                                self.pluginApi.showMessage('error', err);
-                            }
-                        )
-                    break;
-                    case 'OVERVIEW_SHOW_QUERY_INFO':
-                        self.isWaiting = true;
-                        self.notifyChangeListeners();
-                        self.loadQueryOverview().then(
-                            (data) => {
-                                self.currentInfoType = 'query-info';
-                                self.isWaiting = false;
-                                self.notifyChangeListeners();
-                            },
-                            (err) => {
                                 self.pluginApi.showMessage('error', err);
                             }
                         )
@@ -286,27 +270,6 @@ export class CorpusInfoStore extends SimplePageStore {
         }
     }
 
-    private loadQueryOverview():RSVP.Promise<any> {
-        const args = this.pluginApi.getConcArgs();
-        return this.pluginApi.ajax<any>(
-            'GET',
-            this.pluginApi.createActionUrl('concdesc_json'),
-            args,
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
-        ).then(
-            (data) => {
-                if (!data.contains_errors) {
-                    this.currentQueryInfo = data.Desc;
-
-                } else {
-                    throw new Error(this.pluginApi.translate('global__failed_to_load_query_overview'));
-                }
-            }
-        );
-    }
-
     getCurrentInfoType():string {
         return this.currentInfoType;
     }
@@ -319,8 +282,6 @@ export class CorpusInfoStore extends SimplePageStore {
                 return this.corpusData['citation_info'];
             case 'subcorpus-info':
                 return this.subcorpusData;
-            case 'query-info':
-                return this.currentQueryInfo;
             default:
                 return {};
         }

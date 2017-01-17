@@ -225,6 +225,7 @@
         "query__sort_plus_btn_add_level": "Add a sorting level",
         "query__sort_remove_this_level_btn": "Remove this sorting level",
         "query__sort_set_spos_error_msg": "A number greater than zero must be used",
+        "query__overview_edit_query": "Edit",
         "concview__next_page_btn": "Next page",
         "concview__last_page_btn": "Last page",
         "concview__prev_page_btn": "Previous page",

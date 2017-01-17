@@ -96,6 +96,12 @@ export class QueryReplayStore extends SimplePageStore {
 
     private branchReplayIsRunning:boolean;
 
+    /**
+     * This is a little bit independent from the rest. It just
+     * contains data required to render tabular query overview.
+     */
+    private currentQueryOverview:any;
+
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
             currentOperations:Array<QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher);
@@ -137,6 +143,20 @@ export class QueryReplayStore extends SimplePageStore {
                                 this.pageModel.showMessage('error', err);
                             }
                         );
+                    break;
+                    case 'OVERVIEW_SHOW_QUERY_INFO':
+                        this.loadQueryOverview().then(
+                            (data) => {
+                                this.notifyChangeListeners();
+                            },
+                            (err) => {
+                                this.pageModel.showMessage('error', err);
+                            }
+                        );
+                    break;
+                    case 'CLEAR_QUERY_OVERVIEW_DATA':
+                        this.currentQueryOverview = null;
+                        this.notifyChangeListeners();
                     break;
                 }
         });
@@ -515,5 +535,31 @@ export class QueryReplayStore extends SimplePageStore {
 
     getBranchReplayIsRunning():boolean {
         return this.branchReplayIsRunning;
+    }
+
+
+    private loadQueryOverview():RSVP.Promise<any> {
+        const args = this.pageModel.getConcArgs();
+        return this.pageModel.ajax<any>(
+            'GET',
+            this.pageModel.createActionUrl('concdesc_json'),
+            args,
+            {
+                contentType : 'application/x-www-form-urlencoded'
+            }
+        ).then(
+            (data) => {
+                if (!data.contains_errors) {
+                    this.currentQueryOverview = data.Desc;
+
+                } else {
+                    throw new Error(this.pageModel.translate('global__failed_to_load_query_overview'));
+                }
+            }
+        );
+    }
+
+    getCurrentQueryOverview():any {
+        return this.currentQueryOverview;
     }
 }
