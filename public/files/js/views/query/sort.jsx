@@ -649,7 +649,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         <p>
                             <button type="button" className="default-button"
                                     onClick={this._handleFormSubmit}>
-                                {this.translate('query__sort_concordance_btn')}
+                                {this.props.operationIdx !== undefined ?
+                                    this.translate('global__proceed')
+                                    : this.translate('query__sort_concordance_btn')}
                             </button>
                         </p>
                     </form>
