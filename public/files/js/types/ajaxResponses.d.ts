@@ -116,4 +116,65 @@ declare module AjaxResponse {
         structattrs:{[attr:string]:Array<string>};
     }
 
+
+    export interface ConcFormArgs {
+        form_type:string;
+        op_key:string; // an ID used by conc_persistence
+    }
+
+    export interface QueryFormArgs extends ConcFormArgs {
+        curr_query_types:{[corpname:string]:string};
+        curr_queries:{[corpname:string]:string};
+        curr_pcq_pos_neg_values:{[corpname:string]:string};
+        curr_lpos_values:{[corpname:string]:string};
+        curr_qmcase_values:{[corpname:string]:boolean};
+        curr_default_attr_values:{[corpname:string]:string};
+        tag_builder_support:{[corpname:string]:boolean};
+    }
+
+    export interface FilterFormArgs extends ConcFormArgs {
+        query_type:string;
+        query:string;
+        maincorp:string;
+        pnfilter:string;
+        filfl:string;
+        filfpos:string;
+        filtpos:string;
+        inclkwic:boolean;
+        qmcase:boolean;
+        default_attr_value:string;
+        tag_builder_support:boolean;
+        lpos:string;
+    }
+
+    export interface SortFormArgs extends ConcFormArgs {
+        sattr:string;
+        skey:string;
+        spos:string;
+        sicase:string;
+        sbward:string;
+        sortlevel:number;
+        form_action:string;
+        ml1icase:string;
+        ml2icase:string;
+        ml3icase:string;
+        ml4icase:string;
+        ml1bward:string;
+        ml2bward:string;
+        ml3bward:string;
+        ml4bward:string;
+        ml1pos:number;
+        ml2pos:number;
+        ml3pos:number;
+        ml4pos:number;
+        ml1ctx:string;
+        ml2ctx:string;
+        ml3ctx:string;
+        ml4ctx:string;
+    }
+
+    export interface BranchQuery extends Kontext.AjaxResponse {
+        ops:Array<{id:string; form_args:any}>;
+    }
+
 }

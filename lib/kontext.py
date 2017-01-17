@@ -226,6 +226,9 @@ class Kontext(Controller):
         self._q_code = None  # a key to 'code->query' database
         self._prev_q_data = None  # data of the previous operation are stored here
 
+    def get_mapping_url_prefix(self):
+        return super(Kontext, self).get_mapping_url_prefix()
+
     def _log_request(self, user_settings, action_name, proc_time=None):
         """
         Logs user's request by storing URL parameters, user settings and user name
@@ -420,7 +423,16 @@ class Kontext(Controller):
                 self.args.q = []
                 raise UserActionException(_('Invalid or expired query'))
 
-    def get_saveable_conc_data(self):
+    def get_saveable_conc_data(self, prev_data):
+        """
+        Return values to be stored as a representation
+        of user's query (here we mean all the data needed
+        to reach the current result page including data
+        needed to restore involved query forms).
+
+        Method is guaranteed to have prev_data != None
+        and self.args.q with at least one element.
+        """
         return dict(
             q=self.args.q,
             corpora=self._get_current_aligned_corpora(),
@@ -437,8 +449,9 @@ class Kontext(Controller):
         string ID of the stored operation or None if nothing was done (from whatever reason)
         """
         if plugins.has_plugin('conc_persistence') and self.args.q:
+            prev_data = self._prev_q_data if self._prev_q_data is not None else {}
             q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
-                                                         curr_data=self.get_saveable_conc_data(),
+                                                         curr_data=self.get_saveable_conc_data(prev_data),
                                                          prev_data=self._prev_q_data)
         else:
             q_id = None
@@ -1208,12 +1221,13 @@ class Kontext(Controller):
                         niceargs.append('within')
             return ', '.join(niceargs)
 
-        for o, a, u1, u2, s in conc_desc:
+        for o, a, u1, u2, s, opid in conc_desc:
             u2.append(('corpname', self.args.corpname))
             if self.args.usesubcorp:
                 u2.append(('usesubcorp', self.args.usesubcorp))
             out['Desc'].append({
                 'op': o,
+                'opid': opid,
                 'arg': a,
                 'nicearg': nicearg(a),
                 'churl': self.urlencode(u1),

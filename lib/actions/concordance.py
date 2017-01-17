@@ -18,12 +18,9 @@ import re
 import json
 from collections import defaultdict
 
-from werkzeug.datastructures import MultiDict
-import manatee
-
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from querying import Querying
+from querying import Querying, FilterFormArgs, QueryFormArgs, SortFormArgs
 import settings
 import conclib
 import corplib
@@ -35,7 +32,7 @@ from kwiclib import Kwic, KwicPageArgs
 import l10n
 from l10n import import_string, corpus_get_conf
 from translation import ugettext as _
-from argmapping import WidectxArgsMapping, Parameter
+from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 
 
@@ -269,6 +266,8 @@ class Actions(Querying):
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
         self._attach_aligned_query_params(out)
+        self.add_conc_form_args(QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False),
+                                              persist=False))
         self._attach_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
         return out
@@ -314,8 +313,11 @@ class Actions(Querying):
         """
         sort concordance form
         """
+        out = dict(Pos_ctxs=conclib.pos_ctxs(1, 1))
+        self.add_conc_form_args(SortFormArgs(persist=False))
+        self._attach_query_params(out)
         self.disabled_menu_items = (MainMenu.SAVE,)
-        return {'Pos_ctxs': conclib.pos_ctxs(1, 1)}
+        return out
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
@@ -323,6 +325,15 @@ class Actions(Querying):
         simple sort concordance
         """
         self.disabled_menu_items = ()
+
+        qinfo = SortFormArgs(persist=True)
+        qinfo.sattr = self.args.sattr
+        qinfo.sbward = self.args.sbward
+        qinfo.sicase = self.args.sicase
+        qinfo.skey = self.args.skey
+        qinfo.spos = self.args.spos
+        qinfo.form_action = 'sortx'
+        self.add_conc_form_args(qinfo)
 
         if skey == 'lc':
             ctx = '-1<0~-%i<0' % spos
@@ -339,23 +350,44 @@ class Actions(Querying):
         return self.view()
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
-    def mlsortx(self,
-                ml1attr='word', ml1pos=1, ml1icase='', ml1bward='', ml1fcode='rc',
-                ml2attr='word', ml2pos=1, ml2icase='', ml2bward='', ml2fcode='rc',
-                ml3attr='word', ml3pos=1, ml3icase='', ml3bward='', ml3fcode='rc',
-                sortlevel=1, ml1ctx='', ml2ctx='', ml3ctx=''):
+    def mlsortx(self):
         """
         multiple level sort concordance
         """
+        qinfo = SortFormArgs(persist=True)
+        qinfo.form_action = 'mlsortx'
+        qinfo.sortlevel = self.args.sortlevel
+        qinfo.ml1attr = self.args.ml1attr
+        qinfo.ml2attr = self.args.ml2attr
+        qinfo.ml3attr = self.args.ml3attr
+        qinfo.ml4attr = self.args.ml4attr
+        qinfo.ml1bward = self.args.ml1bward
+        qinfo.ml2bward = self.args.ml2bward
+        qinfo.ml3bward = self.args.ml3bward
+        qinfo.ml4bward = self.args.ml4bward
+        qinfo.ml1ctx = self.args.ml1ctx
+        qinfo.ml2ctx = self.args.ml2ctx
+        qinfo.ml3ctx = self.args.ml3ctx
+        qinfo.ml4ctx = self.args.ml4ctx
+        qinfo.ml1icase = self.args.ml1icase
+        qinfo.ml2icase = self.args.ml2icase
+        qinfo.ml3icase = self.args.ml3icase
+        qinfo.ml4icase = self.args.ml4icase
+        qinfo.ml1pos = self.args.ml1pos
+        qinfo.ml2pos = self.args.ml2pos
+        qinfo.ml3pos = self.args.ml3pos
+        qinfo.ml4pos = self.args.ml4pos
+        self.add_conc_form_args(qinfo)
 
-        crit = self.onelevelcrit('s', ml1attr, ml1ctx, ml1pos, ml1fcode,
-                                 ml1icase, ml1bward)
-        if sortlevel > 1:
-            crit += self.onelevelcrit(' ', ml2attr, ml2ctx, ml2pos, ml2fcode,
-                                      ml2icase, ml2bward)
-            if sortlevel > 2:
-                crit += self.onelevelcrit(' ', ml3attr, ml3ctx, ml3pos, ml3fcode,
-                                          ml3icase, ml3bward)
+        mlxfcode = 'rc'
+        crit = self.onelevelcrit('s', self.args.ml1attr, self.args.ml1ctx, self.args.ml1pos, mlxfcode,
+                                 self.args.ml1icase, self.args.ml1bward)
+        if self.args.sortlevel > 1:
+            crit += self.onelevelcrit(' ', self.args.ml2attr, self.args.ml2ctx, self.args.ml2pos, mlxfcode,
+                                      self.args.ml2icase, self.args.ml2bward)
+            if self.args.sortlevel > 2:
+                crit += self.onelevelcrit(' ', self.args.ml3attr, self.args.ml3ctx, self.args.ml3pos, mlxfcode,
+                                          self.args.ml3icase, self.args.ml3bward)
         self.args.q.append(crit)
         return self.view()
 
@@ -595,12 +627,26 @@ class Actions(Querying):
                     self.args.q.append('p0 0 1 []')
                     self.args.q.append('x-%s' % self.args.corpname)
 
-    @exposed(template='view.tmpl', page_model='view', legacy=True)
-    def first(self):
-
+    @exposed(template='view.tmpl', page_model='view')
+    def first(self, request):
         ans = {}
         self._store_semi_persistent_attrs(('align', 'corpname'))
         self._save_options(['queryselector'])
+
+        # 1) store query forms arguments for later reuse on client-side
+        corpora = self._select_current_aligned_corpora(active_only=True)
+        qinfo = QueryFormArgs(corpora=corpora, persist=True)
+        for i, corp in enumerate(corpora):
+            suffix = '_{0}'.format(corp) if i > 0 else ''
+            qtype = self.import_qs(getattr(self.args, 'queryselector' + suffix, None))
+            qinfo.curr_query_types[corp] = qtype
+            qinfo.curr_queries[corp] = getattr(self.args, qtype + suffix, None) if qtype is not None else None
+            qinfo.curr_pcq_pos_neg_values[corp] = getattr(self.args, 'pcq_pos_neg' + suffix, None)
+            qinfo.curr_lpos_values[corp] = getattr(self.args, 'lpos' + suffix, None)
+            qinfo.curr_qmcase_values[corp] = bool(getattr(self.args, 'qmcase' + suffix, False))
+            qinfo.curr_default_attr_values[corp] = getattr(self.args, 'default_attr' + suffix, 'word')
+        self.add_conc_form_args(qinfo)
+        # 2) process the query
         try:
             self._set_first_query(self.args.fc_lemword_window_type,
                                   self.args.fc_lemword_wsize,
@@ -631,6 +677,8 @@ class Actions(Querying):
         out = dict(within=within)
         if within and not self.contains_errors():
             self.add_system_message('warning', _('Please specify positive filter to switch'))
+        self.add_conc_form_args(FilterFormArgs(
+            maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname, persist=False))
         self._attach_query_params(out)
         tt = get_tt(self.corp, self._plugin_api)
         tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
@@ -642,17 +690,37 @@ class Actions(Querying):
             is_within=bool(within))
         return out
 
-    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view',
-             legacy=True)
-    def filter(self, pnfilter='', filfl='f', filfpos='-5', filtpos='5',
-               inclkwic=False, within=0):
+    @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
+    def filter(self, request):
         """
         Positive/Negative filter
         """
+        pnfilter = request.args.get('pnfilter', '')
+        filfl = request.args.get('filfl', 'f')
+        filfpos = request.args.get('filfpos', '-5')
+        filtpos = request.args.get('filtpos', '5')
+        inclkwic = request.args.get('inclkwic', '0')
+        within = request.args.get('within', '0')
+
+        qtype = self.import_qs(self.args.queryselector)
+        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+                                 persist=True)
+        ff_args.query_type = qtype
+        ff_args.query = getattr(self.args, qtype, None) if qtype is not None else None
+        ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
+        ff_args.pnfilter = self.args.pnfilter
+        ff_args.filfl = self.args.filfl
+        ff_args.filfpos = self.args.filfpos
+        ff_args.filtpos = self.args.filtpos
+        ff_args.inclkwic = bool(int(inclkwic))
+        ff_args.qmcase = self.args.qmcase
+        ff_args.default_attr = self.args.default_attr
+        self.add_conc_form_args(ff_args)
+
         self._store_semi_persistent_attrs(('queryselector', 'filfpos', 'filtpos'))
         if pnfilter not in ('p', 'n'):
             raise ConcError(_('Select Positive or Negative filter type'))
-        if not inclkwic:
+        if not int(inclkwic):
             pnfilter = pnfilter.upper()
         rank = dict(f=1, l=-1).get(filfl, 1)
         texttypes = TextTypeCollector(self.corp, self.args).get_query()
@@ -667,7 +735,7 @@ class Actions(Querying):
                 raise ConcError(_('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
         query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
-        if within:
+        if int(within):
             wquery = ' within %s:(%s)' % (self.args.maincorp or self.args.corpname, query)
             self.args.q[0] += wquery
             self.args.q.append('x-' + (self.args.maincorp or self.args.corpname))
@@ -676,7 +744,7 @@ class Actions(Querying):
         try:
             return self.view()
         except:
-            if within:
+            if int(within):
                 self.args.q[0] = self.args.q[0][:-len(wquery)]
             else:
                 del self.args.q[-1]
@@ -1752,4 +1820,7 @@ class Actions(Querying):
         else:
             return {'total': None}
 
-
+    @exposed(http_method='GET', return_type='json')
+    def load_query_pipeline(self, request):
+        pipeline = self._load_pipeline(self._q_code)
+        return dict(ops=[dict(id=x['id'], form_args=x.get('conc_forms_args', {})) for x in pipeline])

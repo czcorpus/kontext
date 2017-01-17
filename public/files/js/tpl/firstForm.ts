@@ -21,6 +21,7 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
+/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins/corparch.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
@@ -184,27 +185,28 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private attachQueryForm(properties:{[key:string]:any}):void {
         const formCorpora = [this.layoutModel.getConf<string>('corpname')];
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
         this.queryStore = new QueryStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.textTypesStore,
             this.queryContextStore,
             {
-                currentArgs: this.layoutModel.getConf<Kontext.MultiDictSrc>('currentArgs'),
                 corpora: [this.layoutModel.getConf<string>('corpname')].concat(
                     this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
                 availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
-                currQueryTypes: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueryTypes'),
-                currQueries: this.layoutModel.getConf<{[corpname:string]:string}>('CurrQueries'),
-                currPcqPosNegValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrPcqPosNegValues'),
+                currQueryTypes: queryFormArgs.curr_query_types,
+                currQueries: queryFormArgs.curr_queries,
+                currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
+                currLposValues: queryFormArgs.curr_lpos_values,
+                currQmcaseValues: queryFormArgs.curr_qmcase_values,
+                currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
                 subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
                 currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
                 tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
-                currLposValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrLposValues'),
-                currQmcaseValues: this.layoutModel.getConf<{[corpname:string]:boolean}>('CurrQmcaseValues'),
-                currDefaultAttrValues: this.layoutModel.getConf<{[corpname:string]:string}>('CurrDefaultAttrValues'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
                 attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
                 tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),

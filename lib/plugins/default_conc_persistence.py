@@ -134,14 +134,15 @@ class ConcPersistence(AbstractConcPersistence):
         returns:
         new operation ID if a new record is created or current ID if no new operation is defined
         """
-        def records_are_same(r1, r2):
-            return (r1['q'] != r2['q'] or
-                    r1.get('lines_groups') != r2.get('lines_groups'))
+        def records_differ(r1, r2):
+            return r1['q'] != r2['q'] or r1.get('lines_groups') != r2.get('lines_groups')
 
-        if prev_data is None or records_are_same(curr_data, prev_data):
+        if prev_data is None or records_differ(curr_data, prev_data):
             time_created = time.time()
             data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
             curr_data['id'] = data_id
+            if prev_data is not None:
+                curr_data['prev_id'] = prev_data['id']
             data_key = self._mk_key(data_id)
 
             self.db.set(data_key, curr_data)

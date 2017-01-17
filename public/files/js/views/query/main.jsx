@@ -300,10 +300,18 @@ export function init(
 
         _keyEventHandler : function (evt) {
             if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
-                dispatcher.dispatch({
-                    actionType: 'QUERY_INPUT_SUBMIT',
-                    props: {}
-                });
+                if (this.props.operationIdx !== undefined) {
+                    dispatcher.dispatch({
+                        actionType: 'BRANCH_QUERY',
+                        props: {operationIdx: this.props.operationIdx}
+                    });
+
+                } else {
+                    dispatcher.dispatch({
+                        actionType: 'QUERY_INPUT_SUBMIT',
+                        props: {}
+                    });
+                }
                 evt.stopPropagation();
                 evt.preventDefault();
             }
@@ -322,10 +330,18 @@ export function init(
         },
 
         _handleSubmit : function () {
-            dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SUBMIT',
-                props: {}
-            });
+            if (this.props.operationIdx !== undefined) {
+                dispatcher.dispatch({
+                    actionType: 'BRANCH_QUERY',
+                    props: {operationIdx: this.props.operationIdx}
+                });
+
+            } else {
+                dispatcher.dispatch({
+                    actionType: 'QUERY_INPUT_SUBMIT',
+                    props: {}
+                });
+            }
         },
 
         _storeChangeHandler : function (store, action) {
@@ -344,241 +360,41 @@ export function init(
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
-                    <layoutViews.PopupBox customClass="query-form-lite"
-                            onCloseClick={this.props.onCloseClick}>
-                        <h3>{this.translate('query__edit_current_hd')}</h3>
-                        <form className="query-form" onKeyDown={this._keyEventHandler}>
-                            <table className="form primary-language">
-                                <tbody>
-                                    <inputViews.TRQueryTypeField queryType={this.state.queryTypes.get(this.props.corpname)}
-                                            sourceId={this.props.corpname} actionPrefix={this.props.actionPrefix} />
-                                    <inputViews.TRQueryInputField
-                                        queryType={this.state.queryTypes.get(this.props.corpname)}
-                                        widgets={this.state.supportedWidgets.get(this.props.corpname)}
-                                        sourceId={this.props.corpname}
-                                        lposlist={this.state.lposlist}
-                                        lposValue={this.state.lposValues.get(this.props.corpname)}
-                                        matchCaseValue={this.state.matchCaseValues.get(this.props.corpname)}
-                                        forcedAttr={this.state.forcedAttr}
-                                        defaultAttr={this.state.defaultAttrValues.get(this.props.corpname)}
-                                        attrList={this.state.attrList}
-                                        tagsetDocUrl={this.state.tagsetDocUrl}
-                                        tagHelperViews={this.props.tagHelperViews}
-                                        queryStorageViews={this.props.queryStorageViews}
-                                        inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
-                                        actionPrefix={this.props.actionPrefix} />
-                                </tbody>
-                            </table>
-                            <fieldset id="specify-context">
-                                <AdvancedFormLegend
-                                        formVisible={this.state.contextFormVisible}
-                                        handleClick={this._handleContextFormVisibility}
-                                        title={this.translate('query__specify_context')} />
-                                {this.state.contextFormVisible ?
-                                    <contextViews.SpecifyContextForm
-                                            lemmaWindowSizes={this.state.lemmaWindowSizes}
-                                            posWindowSizes={this.state.posWindowSizes}
-                                            hasLemmaAttr={this.state.hasLemmaAttr}
-                                            wPoSList={this.state.wPoSList} />
-                                    : null}
-                            </fieldset>
-                            <div className="buttons">
-                                <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                    {this.translate('query__search_btn')}
-                                </button>
-                            </div>
-                        </form>
-                    </layoutViews.PopupBox>
-                </layoutViews.ModalOverlay>
-            );
-        }
-    });
-
-    // -------- <FilterForm /> ---------------------------------------
-
-    const FilterForm = React.createClass({
-
-        mixins : mixins,
-
-        _fetchState : function () {
-            return {
-                queryTypes: queryStore.getQueryTypes(),
-                supportedWidgets: queryStore.getSupportedWidgets(),
-                lposlist: queryStore.getLposlist(),
-                lposValues: queryStore.getLposValues(),
-                matchCaseValues: queryStore.getMatchCaseValues(),
-                forcedAttr: queryStore.getForcedAttr(),
-                defaultAttrValues: queryStore.getDefaultAttrValues(),
-                attrList: queryStore.getAttrList(),
-                tagsetDocUrl: queryStore.getTagsetDocUrl(),
-                lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
-                posWindowSizes: queryStore.getPosWindowSizes(),
-                hasLemmaAttr: queryStore.getHasLemmaAttr(),
-                wPoSList: queryStore.getwPoSList(),
-                contextFormVisible: false,
-                inputLanguage: queryStore.getInputLanguage(),
-                pnFilterValue: queryStore.getPnFilterValues().get(this.props.filterId),
-                filfposValue: queryStore.getFilfposValues().get(this.props.filterId),
-                filflValue: queryStore.getFilflValues().get(this.props.filterId),
-                inclKwicValue: queryStore.getInclKwicValues().get(this.props.filterId)
-            };
-        },
-
-        _keyEventHandler : function (evt) {
-            if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
-                dispatcher.dispatch({
-                    actionType: 'FILTER_QUERY_APPLY_FILTER',
-                    props: {
-                        filterId: this.props.filterId
-                    }
-                });
-                evt.stopPropagation();
-                evt.preventDefault();
-            }
-        },
-
-        getInitialState : function () {
-            return this._fetchState();
-        },
-
-        _storeChangeHandler : function () {
-            const ans = this._fetchState();
-            ans['contextFormVisible'] = this.state.contextFormVisible;
-            this.setState(ans);
-        },
-
-        componentDidMount : function () {
-            queryStore.addChangeListener(this._storeChangeHandler);
-        },
-
-        componentWillUnmount : function () {
-            queryStore.removeChangeListener(this._storeChangeHandler);
-        },
-
-        _handlePosNegSelect : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_POS_NEG',
-                props: {
-                    filterId: this.props.filterId,
-                    value: evt.target.value
-                }
-            });
-        },
-
-        _handleSelTokenSelect : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_FILFL',
-                props: {
-                    filterId: this.props.filterId,
-                    value: evt.target.value
-                }
-            });
-        },
-
-        _handleToFromRangeValChange : function (pos, evt) {
-            dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_RANGE',
-                props: {
-                    filterId: this.props.filterId,
-                    idx: ({from: 0, to: 1})[pos],
-                    value: evt.target.value
-                }
-            });
-        },
-
-        _handleSubmit : function () {
-            dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_APPLY_FILTER',
-                props: {
-                    filterId: this.props.filterId
-                }
-            });
-        },
-
-        _handleInclKwicCheckbox : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'FILTER_QUERY_SET_INCL_KWIC',
-                props: {
-                    filterId: this.props.filterId,
-                    value: !this.state.inclKwicValue
-                }
-            });
-        },
-
-        render : function () {
-            return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    <table className="form">
+                    <table className="form primary-language">
                         <tbody>
-                            <tr>
-                                <th>{this.translate('query__filter_th')}:</th>
-                                <td>
-                                    <select value={this.state.pnFilterValue} onChange={this._handlePosNegSelect}>
-                                        <option value="p">{this.translate('query__qfilter_pos')}</option>
-                                        <option value="n">{this.translate('query__qfilter_neg')}</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>{this.translate('query__qlfilter_sel_token')}:</th>
-                                <td>
-                                    <select onChange={this._handleSelTokenSelect}
-                                            value={this.state.filflValue}>
-                                        <option value="f">{this.translate('query__token_first')}</option>
-                                        <option value="l">{this.translate('query__token_last')}</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>{this.translate('query__qfilter_range_srch_th')}:</th>
-                                <td>
-                                    <label>
-                                        {this.translate('query__qfilter_range_from')}:{'\u00a0'}
-                                        <input type="text" style={{width: '3em'}}
-                                            value={this.state.filfposValue[0]}
-                                            onChange={this._handleToFromRangeValChange.bind(this, 'from')} />
-                                    </label>
-                                    {'\u00a0'}
-                                    <label>
-                                        {this.translate('query__qfilter_range_to')}:{'\u00a0'}
-                                        <input type="text" style={{width: '3em'}}
-                                        value={this.state.filfposValue[1]}
-                                            onChange={this._handleToFromRangeValChange.bind(this, 'to')} />
-                                    </label>
-                                    {'\u00a0'}
-                                    <label>
-                                        {this.translate('query_qfilter_include_kwic')}
-                                        <input type="checkbox" checked={this.state.inclKwicValue}
-                                            onChange={this._handleInclKwicCheckbox} />
-                                    </label>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tbody>
-                            <inputViews.TRQueryTypeField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
-                                sourceId={this.props.filterId}
-                                actionPrefix={this.props.actionPrefix} />
-                        </tbody>
-                        <tbody>
+                            <inputViews.TRQueryTypeField queryType={this.state.queryTypes.get(this.props.corpname)}
+                                    sourceId={this.props.corpname} actionPrefix={this.props.actionPrefix} />
                             <inputViews.TRQueryInputField
-                                queryType={this.state.queryTypes.get(this.props.filterId)}
-                                widgets={this.state.supportedWidgets.get(this.props.filterId)}
-                                sourceId={this.props.filterId}
+                                queryType={this.state.queryTypes.get(this.props.corpname)}
+                                widgets={this.state.supportedWidgets.get(this.props.corpname)}
+                                sourceId={this.props.corpname}
                                 lposlist={this.state.lposlist}
-                                lposValue={this.state.lposValues.get(this.props.filterId)}
-                                matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
+                                lposValue={this.state.lposValues.get(this.props.corpname)}
+                                matchCaseValue={this.state.matchCaseValues.get(this.props.corpname)}
                                 forcedAttr={this.state.forcedAttr}
-                                defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
+                                defaultAttr={this.state.defaultAttrValues.get(this.props.corpname)}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
                                 tagHelperViews={this.props.tagHelperViews}
                                 queryStorageViews={this.props.queryStorageViews}
-                                inputLanguage={this.state.inputLanguage}
+                                inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
                                 actionPrefix={this.props.actionPrefix} />
                         </tbody>
                     </table>
+                    <fieldset id="specify-context">
+                        <AdvancedFormLegend
+                                formVisible={this.state.contextFormVisible}
+                                handleClick={this._handleContextFormVisibility}
+                                title={this.translate('query__specify_context')} />
+                        {this.state.contextFormVisible ?
+                            <contextViews.SpecifyContextForm
+                                    lemmaWindowSizes={this.state.lemmaWindowSizes}
+                                    posWindowSizes={this.state.posWindowSizes}
+                                    hasLemmaAttr={this.state.hasLemmaAttr}
+                                    wPoSList={this.state.wPoSList} />
+                            : null}
+                    </fieldset>
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
                             {this.translate('query__search_btn')}
@@ -589,9 +405,10 @@ export function init(
         }
     });
 
+
+
     return {
         QueryForm: QueryForm,
-        QueryFormLite: QueryFormLite,
-        FilterForm: FilterForm
+        QueryFormLite: QueryFormLite
     };
 }
