@@ -108,11 +108,12 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
     private sbwardValues:Immutable.Map<string, string>; // value 'r' means 'backward'
 
     /**
-     *  Specifies whether the single-level variant is the default one in case
-     *  of known (= used or in use) sort forms. It must be mutually-exclusive
-     *  when compared with the same attribute and its keys in MultiLevelSortStore.
+     * Specifies whether the single-level variant (i.e. this specific sorting store)
+     * is the active one in case of known (= used or in use) sort forms. It must be
+     * mutually-exclusive when compared with the same attribute and its keys
+     * in MultiLevelSortStore.
      */
-    private isDefaultActionValues:Immutable.Map<string, boolean>;
+    private isActiveActionValues:Immutable.Map<string, boolean>;
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
@@ -123,11 +124,16 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
         this.sbwardValues = Immutable.Map<string, string>(props.sbward);
         this.sicaseValues = Immutable.Map<string, string>(props.sicase);
         this.sposValues = Immutable.Map<string, string>(props.spos);
-
-        this.isDefaultActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx']));
+        this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx']));
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
+                case 'SORT_SET_ACTIVE_STORE':
+                    this.isActiveActionValues = this.isActiveActionValues.set(
+                        payload.props['sortId'], payload.props['formAction'] === 'sortx'
+                    );
+                    this.notifyChangeListeners();
+                break;
                 case 'SORT_FORM_SUBMIT':
                     this.submit(payload.props['sortId']);
                     // no need to notify anybody - we're leaving the page here
@@ -170,9 +176,10 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
         return fn().then(
             (data) => {
                 const sortId = data.op_key;
-                this.isDefaultActionValues = this.isDefaultActionValues.set(sortId, data.form_action === 'sortx');
+                this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'sortx');
                 this.sattrValues = this.sattrValues.set(sortId, data.sattr);
                 this.skeyValues = this.skeyValues.set(sortId, data.skey);
+                this.sposValues = this.sposValues.set(sortId, data.spos);
                 this.sbwardValues = this.sbwardValues.set(sortId, data.sbward);
                 this.sicaseValues = this.sicaseValues.set(sortId, data.sicase);
                 return this;
@@ -224,8 +231,8 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
         return this.sbwardValues;
     }
 
-    isDefaultActionValue(sortId:string):boolean {
-        return this.isDefaultActionValues.get(sortId);
+    isActiveActionValue(sortId:string):boolean {
+        return this.isActiveActionValues.get(sortId);
     }
 }
 
@@ -260,11 +267,11 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
     private ctxAlignValues:Immutable.Map<string, Immutable.List<string>>;
 
     /**
-     *  Specifies whether the single-level variant is the default one in case
-     *  of known (= used or in use) sort forms. It must be mutually-exclusive
-     *  when compared with the same attribute and its keys in SortStore.
+     * Specifies whether the single-level variant (i.e. this specific sorting store)
+     * is the active one in case of known (= used or in use) sort forms. It must be
+     * mutually-exclusive  when compared with the same attribute and its keys in SortStore.
      */
-    private isDefaultActionValues:Immutable.Map<string, boolean>;
+    private isActiveActionValues:Immutable.Map<string, boolean>;
 
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
@@ -286,7 +293,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
             props.mlxctx.map(item => [item[0], Immutable.List<string>(item[1].map(subitem => this.decodeCtxAlignValue(subitem)))])
         );
 
-        this.isDefaultActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'mlsortx']));
+        this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'mlsortx']));
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -300,6 +307,12 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
                 break;
                 case 'ML_SORT_FORM_REMOVE_LEVEL':
                     this.removeLevel(payload.props['sortId'], payload.props['levelIdx']);
+                    this.notifyChangeListeners();
+                break;
+                case 'SORT_SET_ACTIVE_STORE':
+                    this.isActiveActionValues = this.isActiveActionValues.set(
+                        payload.props['sortId'], payload.props['formAction'] === 'mlsortx'
+                    );
                     this.notifyChangeListeners();
                 break;
                 case 'ML_SORT_FORM_SET_SATTR':
@@ -345,7 +358,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
         return fn().then(
             (data) => {
                 const sortId = data.op_key;
-                this.isDefaultActionValues = this.isDefaultActionValues.set(sortId, data.form_action === 'mlsortx');
+                this.isActiveActionValues = this.isActiveActionValues.set(sortId, data.form_action === 'mlsortx');
                 this.sortlevelValues = this.sortlevelValues.set(sortId, data.sortlevel);
                 this.mlxattrValues = this.mlxattrValues.set(sortId, Immutable.List<string>(
                         importMultiLevelArg<string>('mlxattr', data, (n)=>this.availAttrList.get(0).n)));
@@ -499,7 +512,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
         return this.mlxattrValues.get(sortId).slice(0, sortLevel).map((_, i) => i).toList();
     }
 
-    isDefaultActionValue(sortId:string):boolean {
-        return this.isDefaultActionValues.get(sortId);
+    isActiveActionValue(sortId:string):boolean {
+        return this.isActiveActionValues.get(sortId);
     }
 }
