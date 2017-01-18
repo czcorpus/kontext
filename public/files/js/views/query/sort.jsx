@@ -588,6 +588,13 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
         },
 
         _handleSortTypeChange : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'SORT_SET_ACTIVE_STORE',
+                props: {
+                    sortId: this.props.sortId,
+                    formAction: evt.target.value
+                }
+            }); // <-- synchronous stuff
             this.setState({
                 sortType: evt.target.value
             });
@@ -602,7 +609,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
 
             } else {
                 dispatcher.dispatch({
-                    actionType: this.state.sortType === 'simple' ? 'SORT_FORM_SUBMIT' : 'ML_SORT_FORM_SUBMIT',
+                    actionType: this.state.sortType === 'sortx' ? 'SORT_FORM_SUBMIT' : 'ML_SORT_FORM_SUBMIT',
                     props: {
                         sortId: this.props.sortId
                     }
@@ -611,11 +618,11 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
         },
 
         _getDefaultFormType : function () {
-            if (sortStore.isDefaultActionValue(this.props.sortId)) {
-                return 'simple';
+            if (sortStore.isActiveActionValue(this.props.sortId)) {
+                return 'sortx';
 
-            } else if (multiLevelSortStore.isDefaultActionValue(this.props.sortId)) {
-                return 'multilevel';
+            } else if (multiLevelSortStore.isActiveActionValue(this.props.sortId)) {
+                return 'mlsortx';
 
             } else {
                 throw new Error('Cannot determine default sorting action'); // TODO should we be so strict here?
@@ -624,9 +631,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
 
         _renderFields : function () {
             switch (this.state.sortType) {
-                case 'simple':
+                case 'sortx':
                     return <SimpleSortForm sortId={this.props.sortId} />;
-                case 'multilevel':
+                case 'mlsortx':
                     return <MultiLevelSortForm sortId={this.props.sortId} />;
                 default:
                     throw new Error('Unknown sort form type: ' + this.state.sortType);
@@ -640,8 +647,8 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         <fieldset>
                             <legend>
                                 <select onChange={this._handleSortTypeChange} value={this.state.sortType}>
-                                    <option value="simple">{this.translate('query__sort_type_simple_hd')}</option>
-                                    <option value="multilevel">{this.translate('query__sort_type_multilevel_hd')}</option>
+                                    <option value="sortx">{this.translate('query__sort_type_simple_hd')}</option>
+                                    <option value="mlsortx">{this.translate('query__sort_type_multilevel_hd')}</option>
                                 </select>
                             </legend>
                             {this._renderFields()}
