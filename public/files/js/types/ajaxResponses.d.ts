@@ -117,7 +117,7 @@ declare module AjaxResponse {
     }
 
 
-    export interface ConcFormArgs {
+    export interface ConcFormArgs extends Kontext.AjaxResponse {
         form_type:string;
         op_key:string; // an ID used by conc_persistence
     }

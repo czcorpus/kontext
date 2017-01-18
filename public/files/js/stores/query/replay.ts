@@ -96,6 +96,8 @@ export class QueryReplayStore extends SimplePageStore {
 
     private branchReplayIsRunning:boolean;
 
+    private editedOperationIdx:number;
+
     /**
      * This is a little bit independent from the rest. It just
      * contains data required to render tabular query overview.
@@ -114,20 +116,25 @@ export class QueryReplayStore extends SimplePageStore {
         this.sortStore = replayStoreDeps.sortStore;
         this.mlSortStore = replayStoreDeps.mlSortStore;
         this.branchReplayIsRunning = false;
+        this.editedOperationIdx = null;
         this.syncCache();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'EDIT_QUERY_OPERATION':
+                        this.editedOperationIdx = null;
                         this.syncFormData(payload.props['operationIdx']).then(
                             (data) => {
+                                this.editedOperationIdx = payload.props['operationIdx'];
                                 this.notifyChangeListeners();
                             },
                             (err) => {
+                                this.notifyChangeListeners();
                                 this.pageModel.showMessage('error', err);
                             }
-                        )
+                        );
                     break;
                     case 'BRANCH_QUERY':
+                        this.editedOperationIdx = null;
                         this.branchQuery(payload.props['operationIdx']).then(
                             (data) => {
                                 this.branchReplayIsRunning = false;
@@ -140,6 +147,8 @@ export class QueryReplayStore extends SimplePageStore {
                                 }
                             },
                             (err) => {
+                                this.branchReplayIsRunning = false;
+                                this.notifyChangeListeners();
                                 this.pageModel.showMessage('error', err);
                             }
                         );
@@ -392,10 +401,15 @@ export class QueryReplayStore extends SimplePageStore {
 
                 ).then(
                     (data) => {
-                        this.concArgsCache = this.concArgsCache.set(
-                            data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
+                        if (!data.contains_errors) {
+                            this.concArgsCache = this.concArgsCache.set(
+                                data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+
+                        } else {
+                            throw new Error(data.messages[0]);
+                        }
                     }
                 );
             });
@@ -419,17 +433,22 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else {
             return this.filterStore.syncFrom(() => {
-                return this.pageModel.ajax<any>(
+                return this.pageModel.ajax<AjaxResponse.FilterFormArgs>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
 
                 ).then(
                     (data) => {
-                        this.concArgsCache = this.concArgsCache.set(
-                            data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
+                        if (!data.contains_errors) {
+                            this.concArgsCache = this.concArgsCache.set(
+                                data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+
+                        } else {
+                            throw new Error(data.messages[0]);
+                        }
                     }
                 );
             });
@@ -462,16 +481,21 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else {
             return this.sortStore.syncFrom(() => {
-                return this.pageModel.ajax<any>(
+                return this.pageModel.ajax<AjaxResponse.SortFormArgs>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
 
                 ).then(
                     (data) => {
-                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
+                        if (!data.contains_errors) {
+                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+
+                        } else {
+                            throw new Error(data.messages[0]);
+                        }
                     }
                 )
 
@@ -518,7 +542,13 @@ export class QueryReplayStore extends SimplePageStore {
             P: Positive filter (excluding KWIC)
             x: Switch KWIC
         */
-        if (this.operationIsQuery(opIdx)) {
+        if (this.concArgsCache.size === 0) {
+            // query operation update not supported (probably old query code)
+            return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                resolve(null);
+            });
+
+        } else if (this.operationIsQuery(opIdx)) {
             return this.syncQueryForm(opIdx);
 
         } else if (this.operationIsFilter(opIdx)) {
@@ -561,5 +591,9 @@ export class QueryReplayStore extends SimplePageStore {
 
     getCurrentQueryOverview():any {
         return this.currentQueryOverview;
+    }
+
+    getEditedOperationIdx():number {
+        return this.editedOperationIdx;
     }
 }
