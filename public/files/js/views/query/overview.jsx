@@ -28,17 +28,12 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
 
         mixins : mixins,
 
-        _handleCloseClick : function () {
-            // TODO
-            console.log('close click ...');
-        },
-
         render : function () {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                    <layoutViews.PopupBox customClass="query-replay-box" onCloseClick={this._handleCloseClick}>
+                    <layoutViews.PopupBox customClass="query-replay-box" onCloseClick={()=>undefined}>
                         <div>
-                            <h3>Replaying the query...</h3>
+                            <h3>{this.translate('query__replay_replaying_query')}{'\u2026'}</h3>
                             <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />
                             <div />
                         </div>
@@ -92,6 +87,21 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
         _renderEditorComponent : function () {
             if (this.props.isLoading) {
                 return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />;
+
+            } else if (!this.props.opKey) {
+                return (
+                    <div>
+                        <p>
+                            <img src={this.createStaticUrl('img/warning-icon.svg')}
+                                alt={this.translate('global__warning')}
+                                 style={{verticalAlign: 'middle', marginRight: '0.5em'}} />
+                            {this.translate('query__replay_op_cannot_be_edited_msg')}.
+                            {'\u00a0'}<a href={this.createActionLink(`view?${this.props.opEncodedArgs}`)}>
+                                {this.translate('query__replay_view_the_result')}
+                            </a>
+                        </p>
+                    </div>
+                );
 
             } else if (this.props.operationIdx === 0) {
                 return <QueryFormView {...this.props.editorProps} operationIdx={this.props.operationIdx} />;
@@ -181,6 +191,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             operationIdx={this.props.idx}
                             operationId={this.props.item.opid}
                             opKey={this.props.editOpKey}
+                            opEncodedArgs={this.props.item.tourl}
                             isLoading={this.props.isLoading} />
                         : null}
                 </li>
@@ -275,7 +286,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: idx,
-                editOpKey: null, // we don't know the key here yet
+                editOpKey: queryReplayStore.getEditedOperationIdx(),
                 isLoading: true,
                 queryOverview: null
             });
@@ -296,7 +307,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
             this.setState({
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
-                editOpIdx: queryReplayStore.getBranchReplayIsRunning() ? null : this.state.editOpIdx,
+                editOpIdx: queryReplayStore.getEditedOperationIdx(),
                 editOpKey: queryReplayStore.opIdxToCachedQueryKey(this.state.editOpIdx),
                 isLoading: false,
                 queryOverview: queryReplayStore.getCurrentQueryOverview()

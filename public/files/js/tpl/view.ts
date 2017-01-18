@@ -476,6 +476,8 @@ export class ViewPage {
             return <AjaxResponse.QueryFormArgs>data[k];
         }
         return {
+            contains_errors: false,
+            messages: [],
             form_type: 'query',
             op_key: '__new__',
             curr_query_types: {},

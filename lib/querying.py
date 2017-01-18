@@ -222,7 +222,7 @@ class Querying(Kontext):
         ans = super(Querying, self).get_saveable_conc_data(prev_data)
 
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
-            ans.update(conc_forms_args=self._curr_conc_form_args.to_dict())
+            ans.update(lastop_form=self._curr_conc_form_args.to_dict())
         return ans
 
     @staticmethod
@@ -246,10 +246,10 @@ class Querying(Kontext):
         tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][self.args.corpname] = corpus_info['collator_locale']
-        if self._prev_q_data is not None and 'conc_forms_args' in self._prev_q_data:
+        if self._prev_q_data is not None and 'lastop_form' in self._prev_q_data:
             op_key = self._prev_q_data['id']
             conc_forms_args = {
-                op_key: build_conc_form_args(self._prev_q_data['conc_forms_args'], op_key).to_dict()
+                op_key: build_conc_form_args(self._prev_q_data['lastop_form'], op_key).to_dict()
             }
         else:
             conc_forms_args = {}
@@ -348,11 +348,16 @@ class Querying(Kontext):
 
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request):
-        pipeline = self._load_pipeline(request.args['last_key'])
-        op_data = pipeline[int(request.args['idx'])]
-        tmp = op_data.get('conc_forms_args', {})
-        tmp.update(op_key=op_data['id'])
-        return tmp
+        try:
+            pipeline = self._load_pipeline(request.args['last_key'])
+            op_data = pipeline[int(request.args['idx'])]
+            tmp = op_data.get('conc_forms_args', {})
+            tmp.update(op_key=op_data['id'])
+            return tmp
+        except (IndexError, KeyError):
+            self.add_system_message('error', _('Operation not found in the storage'))
+            return {}
+
 
     @staticmethod
     def _load_pipeline(last_id):
@@ -361,12 +366,14 @@ class Querying(Kontext):
             cp = plugins.get('conc_persistence')
             data = cp.open(last_id)
             if data is not None:
-                data['conc_forms_args'] = build_conc_form_args(data['conc_forms_args'], data['id']).to_dict()
+                data['conc_forms_args'] = build_conc_form_args(data['lastop_form'], data['id']).to_dict()
+                del data['lastop_form']
                 ans.append(data)
             limit = 100
             while data is not None and data.get('prev_id') and limit > 0:
                 data = cp.open(data['prev_id'])
-                data['conc_forms_args'] = build_conc_form_args(data['conc_forms_args'], data['id']).to_dict()
+                data['conc_forms_args'] = build_conc_form_args(data['lastop_form'], data['id']).to_dict()
+                del data['lastop_form']
                 ans.insert(0, data)
                 limit -= 1
         return ans
