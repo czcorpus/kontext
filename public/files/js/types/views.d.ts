@@ -196,8 +196,8 @@ declare module "views/query/sort" {
 
 declare module "views/query/overview" {
 
-    export interface QueryOverviewViews {
-        QueryOverview:React.ReactClass;
+    export interface QueryToolbarViews {
+        QueryToolbar:React.ReactClass;
     }
 
     export function init(
@@ -207,7 +207,8 @@ declare module "views/query/overview" {
             QueryFormView:React.ReactClass,
             FilterFormView:React.ReactClass,
             SortFormView:React.ReactClass,
-            queryReplayStore:any):QueryOverviewViews;
+            queryReplayStore:any,
+            mainMenuStore:any):QueryToolbarViews;
 }
 
 

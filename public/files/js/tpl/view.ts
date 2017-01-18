@@ -60,7 +60,7 @@ import {UserInfo} from '../stores/userStores';
 import {ViewOptionsStore} from '../stores/viewOptions';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
-import {init as queryOverviewInit, QueryOverviewViews} from 'views/query/overview';
+import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
@@ -110,19 +110,21 @@ export class ViewPage {
 
     private queryFormViews:QueryFormViews;
 
-    private queryOverviewViews:QueryOverviewViews;
+    private queryOverviewViews:QueryToolbarViews;
 
     private filterFormViews:FilterFormViews;
 
     private sortFormViews:SortFormViews;
+
+    private concFormsInitialArgs:AjaxResponse.ConcFormsInitialArgs;
 
     constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
         this.viewStores = stores;
         this.queryStores = new QueryStores();
         this.hasLockedGroups = hasLockedGroups;
+        this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
     }
-
 
     private translate(s:string, values?:any):string {
         return this.layoutModel.translate(s, values);
@@ -470,10 +472,10 @@ export class ViewPage {
         return null;
     }
 
-    private fetchQueryFormArgs(data:{[ident:string]:AjaxResponse.ConcFormArgs}):AjaxResponse.QueryFormArgs {
+    private fetchQueryFormArgs(data:{[ident:string]:AjaxResponse.ConcFormArgs}):AjaxResponse.QueryFormArgsResponse {
         const k = this.fetchQueryFormKey(data);
         if (k !== null) {
-            return <AjaxResponse.QueryFormArgs>data[k];
+            return <AjaxResponse.QueryFormArgsResponse>data[k];
         }
         return {
             contains_errors: false,
@@ -596,6 +598,18 @@ export class ViewPage {
             filterFormProps
         );
 
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_FILTER',
+            (args:Kontext.GeneralProps) => {
+                return this.queryStores.filterStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.FilterFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
+                        this.concFormsInitialArgs.filter.pnfilter = args['pnfilter'];
+                        resolve(this.concFormsInitialArgs.filter);
+                    });
+                });
+            }
+        );
+
         this.filterFormViews = filterFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
@@ -638,6 +652,24 @@ export class ViewPage {
             this.layoutModel,
             sortStoreProps
         );
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_SORT',
+            (args:Kontext.GeneralProps) => {
+                return this.queryStores.sortStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
+                        resolve(this.concFormsInitialArgs.sort);
+                    });
+                }).then(
+                    () => {
+                        this.queryStores.multiLevelSortStore.syncFrom(() => {
+                            return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
+                                resolve(this.concFormsInitialArgs.sort);
+                            });
+                        });
+                    }
+                );
+            }
+        );
 
         this.sortFormViews = sortFormInit(
             this.layoutModel.dispatcher,
@@ -671,11 +703,12 @@ export class ViewPage {
             this.queryFormViews.QueryFormLite,
             this.filterFormViews.FilterForm,
             this.sortFormViews.SortFormView,
-            this.queryStores.queryReplayStore
+            this.queryStores.queryReplayStore,
+            this.layoutModel.getStores().mainMenuStore
         );
 
         this.layoutModel.renderReactComponent(
-            this.queryOverviewViews.QueryOverview,
+            this.queryOverviewViews.QueryToolbar,
             window.document.getElementById('query-overview-mount'),
             {
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),

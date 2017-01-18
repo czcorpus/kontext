@@ -408,7 +408,6 @@ export function init(
     });
 
 
-
     return {
         QueryForm: QueryForm,
         QueryFormLite: QueryFormLite

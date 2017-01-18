@@ -116,8 +116,7 @@ declare module AjaxResponse {
         structattrs:{[attr:string]:Array<string>};
     }
 
-
-    export interface ConcFormArgs extends Kontext.AjaxResponse {
+    export interface ConcFormArgs {
         form_type:string;
         op_key:string; // an ID used by conc_persistence
     }
@@ -131,6 +130,8 @@ declare module AjaxResponse {
         curr_default_attr_values:{[corpname:string]:string};
         tag_builder_support:{[corpname:string]:boolean};
     }
+
+    export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}
 
     export interface FilterFormArgs extends ConcFormArgs {
         query_type:string;
@@ -146,6 +147,8 @@ declare module AjaxResponse {
         tag_builder_support:boolean;
         lpos:string;
     }
+
+    export interface FilterFormArgsResponse extends FilterFormArgs, Kontext.AjaxResponse {}
 
     export interface SortFormArgs extends ConcFormArgs {
         sattr:string;
@@ -173,8 +176,23 @@ declare module AjaxResponse {
         ml4ctx:string;
     }
 
+    export interface SortFormArgsResponse extends SortFormArgs, Kontext.AjaxResponse {}
+
+    export interface SampleFormArgs extends ConcFormArgs {
+    // TODO:fill in args
+    }
+
     export interface BranchQuery extends Kontext.AjaxResponse {
         ops:Array<{id:string; form_args:any}>;
+    }
+
+    export interface ConcFormArgsResponse extends Kontext.AjaxResponse, ConcFormArgs {}
+
+    export interface ConcFormsInitialArgs {
+        query:QueryFormArgs;
+        filter:FilterFormArgs;
+        sort:SortFormArgs;
+        sample:SampleFormArgs;
     }
 
 }

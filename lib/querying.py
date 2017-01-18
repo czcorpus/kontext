@@ -255,8 +255,17 @@ class Querying(Kontext):
             conc_forms_args = {}
         # Attach new form args added by the current action.
         if self._curr_conc_form_args is not None:
-            conc_forms_args['__new__'] = self._curr_conc_form_args.to_dict()
+            item_key = '__latest__' if self._curr_conc_form_args.is_persistent else '__new__'
+            conc_forms_args[item_key] = self._curr_conc_form_args.to_dict()
         tpl_out['conc_forms_args'] = conc_forms_args
+
+        corpora = self._select_current_aligned_corpora(active_only=True)
+        tpl_out['conc_forms_initial_args'] = dict(
+            query=QueryFormArgs(corpora=corpora, persist=False).to_dict(),
+            filter=FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+                                  persist=False).to_dict(),
+            sort=SortFormArgs(persist=False).to_dict(),
+            sample={})
 
     def _attach_aligned_query_params(self, tpl_out):
         """

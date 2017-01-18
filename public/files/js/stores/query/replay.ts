@@ -92,6 +92,18 @@ export class QueryReplayStore extends SimplePageStore {
 
     private mlSortStore:MultiLevelSortStore;
 
+    /**
+     * Contains args used by different input forms involved in the current query operations.
+     * The used key is the one used by conc_persistence to store operations to db.
+     * There are also two special keys:
+     * __new__: contains arguments for a form of a new operation which will be submitted
+     *          and appended to the current query (e.g. we add a filter/sort/...)
+     * __latest__: contains arguments of a just submitted form. Due to the server-side
+     *             architecture, the (server) action itself does not know the actual
+     *             key yet. But after the action is processed, KonText stores the action
+     *             and passes the new ID (key) to layout arguments which are accessible
+     *             here as well.
+     */
     private concArgsCache:Immutable.Map<string, AjaxResponse.ConcFormArgs>;
 
     private branchReplayIsRunning:boolean;
@@ -180,16 +192,16 @@ export class QueryReplayStore extends SimplePageStore {
     /**
      * Because server operations do not know a newly created query ID (it is handled
      * in controller's post dispatche when a concrete action is already finished)
-     * it uses a special value '__new__' to mark arguments which have been just created.
-     * But unlike the server, we know the ID so we update the '__new__' pseudo-key by
+     * it uses a special value '__latest__' to mark arguments which have been just created.
+     * But unlike the server, we know the ID so we update the '__latest__' pseudo-key by
      * the real one. This makes further processing a little bit easier.
      */
     private syncCache():void {
         const opKey = this.getCurrentQueryKey();
-        if (this.concArgsCache.has('__new__') && opKey !== undefined) {
-            const tmp = this.concArgsCache.get('__new__');
+        if (this.concArgsCache.has('__latest__') && opKey !== undefined) {
+            const tmp = this.concArgsCache.get('__latest__');
             tmp.op_key = opKey;
-            this.concArgsCache = this.concArgsCache.delete('__new__').set(opKey, tmp);
+            this.concArgsCache = this.concArgsCache.delete('__latest__').set(opKey, tmp);
             this.replayOperations = this.replayOperations.set(this.replayOperations.size - 1, opKey);
         }
     }
@@ -197,7 +209,6 @@ export class QueryReplayStore extends SimplePageStore {
     /**
      * Transform query operation idx (i.e. its position in a respective
      * query pipeline) into a related key of stored form data (conc_persistence plug-in).
-     * Latest operation which has not been serialized yet uses a special key '__new__'.
      */
     private opIdxToCachedQueryKey(idx:number):string {
         if (this.replayOperations.get(idx) !== null) {
@@ -394,7 +405,7 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else {
             return this.queryStore.syncFrom(() => {
-                return this.pageModel.ajax<AjaxResponse.QueryFormArgs>(
+                return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
@@ -433,7 +444,7 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else {
             return this.filterStore.syncFrom(() => {
-                return this.pageModel.ajax<AjaxResponse.FilterFormArgs>(
+                return this.pageModel.ajax<AjaxResponse.FilterFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
@@ -481,7 +492,7 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else {
             return this.sortStore.syncFrom(() => {
-                return this.pageModel.ajax<AjaxResponse.SortFormArgs>(
+                return this.pageModel.ajax<AjaxResponse.SortFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
