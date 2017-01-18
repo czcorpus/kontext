@@ -278,10 +278,10 @@ export class QueryReplayStore extends SimplePageStore {
                     () => {
                         let activeStore:ISubmitableSortStore;
 
-                        if (this.sortStore.isDefaultActionValue(opKey)) {
+                        if (this.sortStore.isActiveActionValue(opKey)) {
                             activeStore = this.sortStore;
 
-                        } else if (this.mlSortStore.isDefaultActionValue(opKey)) {
+                        } else if (this.mlSortStore.isActiveActionValue(opKey)) {
                             activeStore = this.mlSortStore;
                         }
                         if (opIdx < numOps - 1) {
