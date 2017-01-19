@@ -1823,4 +1823,4 @@ class Actions(Querying):
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, request):
         pipeline = self._load_pipeline(self._q_code)
-        return dict(ops=[dict(id=x['id'], form_args=x.get('lastop_form', {})) for x in pipeline])
+        return dict(ops=[dict(id=x['id'], form_args=x.get('conc_forms_args', {})) for x in pipeline])
