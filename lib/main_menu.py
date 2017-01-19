@@ -395,7 +395,7 @@ class MenuGenerator(object):
         )
 
         self.sorting = (
-            ConcMenuItem(MainMenu.CONCORDANCE('sorting'), _('Sorting'), 'sort').mark_indirect()
+            EventTriggeringItem(MainMenu.CONCORDANCE('sorting'), _('Sorting'), 'MAIN_MENU_SHOW_SORT').mark_indirect()
         )
 
         self.shuffle = (
@@ -420,13 +420,13 @@ class MenuGenerator(object):
         # ------------------------------------ menu-filter ------------------------------
 
         self.filter_pos = (
-            ConcMenuItem(MainMenu.FILTER('positive'), _('Positive'), 'filter_form')
+            EventTriggeringItem(MainMenu.FILTER('positive'), _('Positive'), 'MAIN_MENU_SHOW_FILTER')
             .add_args(('pnfilter', 'p'))
             .mark_indirect()
         )
 
         self.filter_neg = (
-            ConcMenuItem(MainMenu.FILTER('negative'), _('Negative'), 'filter_form')
+            EventTriggeringItem(MainMenu.FILTER('negative'), _('Negative'), 'MAIN_MENU_SHOW_FILTER')
             .add_args(('pnfilter', 'n'))
             .mark_indirect()
         )

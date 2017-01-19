@@ -377,11 +377,12 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         <tr>
                             <th colSpan="2" className="level">
                                 {this.props.level + 1}.
-                                <a className="close-icon" onClick={this.props.onRemoveLevel}>
-                                    <img src={this.createStaticUrl('img/close-icon.svg')}
-                                        alt={this.translate('query__sort_remove_this_level_btn')}
-                                        title={this.translate('query__sort_remove_this_level_btn')} />
-                                </a>
+                                {this.props.level > 1 || this.props.numLevels > 1 ?
+                                    (<a className="close-icon" onClick={this.props.onRemoveLevel}>
+                                        <img src={this.createStaticUrl('img/close-icon.svg')}
+                                            alt={this.translate('query__sort_remove_this_level_btn')}
+                                            title={this.translate('query__sort_remove_this_level_btn')} />
+                                </a>) : null}
                             </th>
                         </tr>
                         <tr>
@@ -556,7 +557,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                                 return (
                                     <td key={`level_${level}`}>
                                         <MLSingleLevelFields availAttrs={this.state.availAttrs}
-                                            level={level} sortId={this.props.sortId}
+                                            level={level}
+                                            numLevels={this.state.levels.size}
+                                            sortId={this.props.sortId}
                                             onRemoveLevel={this._removeLevel.bind(this, level)}
                                             mlxattr={this.state.mlxattrValues.get(level)}
                                             mlxicase={this.state.mlxicaseValues.get(level)}

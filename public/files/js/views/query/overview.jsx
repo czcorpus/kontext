@@ -20,7 +20,8 @@
 
 import React from 'vendor/react';
 
-export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormView, SortFormView, queryReplayStore) {
+export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormView, SortFormView,
+        queryReplayStore, mainMenuStore) {
 
     // ------------------------ <QueryReplayView /> --------------------------------
 
@@ -365,8 +366,77 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
         }
     });
 
+    // ------------------------ <QueryToolbar /> --------------------------------
+
+    const AppendOperationOverlay = React.createClass({
+
+        _handleCloseClick : function () {
+            dispatcher.dispatch({
+                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                props: {}
+            });
+        },
+
+        _createActionBasedForm : function () {
+            switch (this.props.menuActiveItem.actionName) {
+                case 'MAIN_MENU_SHOW_FILTER':
+                    return <FilterFormView {...this.props.filterFormProps} filterId="__new__"  />;
+                case 'MAIN_MENU_SHOW_SORT':
+                    return <SortFormView sortId="__new__" />;
+                default:
+                    return null;
+            }
+        },
+
+        render : function () {
+            return (
+                <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
+                    <layoutViews.PopupBox customClass="query-replay-box" onCloseClick={this._handleCloseClick}>
+                        {this._createActionBasedForm()}
+                    </layoutViews.PopupBox>
+                </layoutViews.ModalOverlay>
+            );
+        }
+    });
+
+
+    // ------------------------ <QueryToolbar /> --------------------------------
+
+    const QueryToolbar = React.createClass({
+
+        _mainMenuStoreChangeListener : function () {
+            this.setState({
+                activeItem: mainMenuStore.getActiveItem()
+            });
+        },
+
+        componentDidMount : function () {
+            mainMenuStore.addChangeListener(this._mainMenuStoreChangeListener);
+        },
+
+        componentWillUnmount : function () {
+            mainMenuStore.removeChangeListener(this._mainMenuStoreChangeListener);
+        },
+
+        getInitialState : function () {
+            return {
+                activeItem: mainMenuStore.getActiveItem()
+            }
+        },
+
+        render : function () {
+            return (
+                <div>
+                    <QueryOverview {...this.props} />
+                    {this.state.activeItem !== null ?
+                        <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem} /> : null}
+                </div>
+            );
+        }
+    });
+
 
     return {
-        QueryOverview: QueryOverview
+        QueryToolbar: QueryToolbar
     };
 }

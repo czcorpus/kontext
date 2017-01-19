@@ -69,6 +69,11 @@ declare module Kontext {
     }
 
     /**
+     *
+     */
+    export type GeneralProps = {[key:string]:any};
+
+    /**
      * An interface used by KonText plug-ins
      */
     export interface PluginApi {
@@ -193,6 +198,39 @@ declare module Kontext {
     }
 
     /**
+     *
+     */
+    export interface MainMenuActiveItem {
+        actionName:string;
+        actionArgs:GeneralProps;
+    }
+
+    /**
+     * This store is watched by components which are
+     * able to render user content based on a selected
+     * menu item.
+     *
+     */
+    export interface IMainMenuStore extends PageStore {
+
+        getActiveItem():MainMenuActiveItem;
+
+        /**
+         * Register an action which is run before listeners
+         * are notified. This is used to allow other stores
+         * to prepare themselves before their views are
+         * shown.
+         */
+        addItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+
+        /**
+         * Unregister an action which is run before listeners
+         * are notified.
+         */
+        removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+    }
+
+    /**
      * A store managing system messages presented to a user
      */
     export interface MessagePageStore extends PageStore {
@@ -200,7 +238,7 @@ declare module Kontext {
     }
 
     /**
-     * A funcition listening for change in a store.
+     * A function listening for change in a store.
      * In general, React components should not misuse
      * 'eventType' to make complex rules when to update
      * themselves.
@@ -256,7 +294,8 @@ declare module Kontext {
         messageStore:MessagePageStore,
         userInfoStore:IUserInfoStore,
         viewOptionsStore:ViewOptions.IViewOptionsStore,
-        asyncTaskInfoStore:IAsyncTaskStore
+        asyncTaskInfoStore:IAsyncTaskStore,
+        mainMenuStore:IMainMenuStore;
     }
 
     export interface AjaxOptions {

@@ -52,6 +52,7 @@ import IntlMessageFormat = require('vendor/intl-messageformat');
 import * as Immutable from 'vendor/immutable';
 import {AsyncTaskChecker} from '../stores/asyncTask';
 import {UserSettings} from '../userSettings';
+import {MainMenuStore} from '../stores/mainMenu';
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**
@@ -136,6 +137,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private viewOptionsStore:ViewOptionsStore;
 
+    private mainMenuStore:MainMenuStore;
+
     /**
      * A dictionary containing translations for current UI language (conf['uiLang']).
      */
@@ -163,6 +166,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.userInfoStore = new UserInfo(this, this.dispatcher);
         this.viewOptionsStore = new ViewOptionsStore(this, this.dispatcher);
+        this.mainMenuStore = new MainMenuStore(this.dispatcher, this);
         this.translations = translations[this.conf['uiLang']] || {};
         this.asyncTaskChecker = new AsyncTaskChecker(this.dispatcher, this.pluginApi(),
                 this.getConf<any>('asyncTasks') || []);
@@ -178,7 +182,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             messageStore: this.messageStore,
             userInfoStore: this.userInfoStore,
             viewOptionsStore: this.viewOptionsStore,
-            asyncTaskInfoStore: this.asyncTaskChecker
+            asyncTaskInfoStore: this.asyncTaskChecker,
+            mainMenuStore: this.mainMenuStore
         };
     }
 
@@ -821,10 +826,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     // TODO dispatcher misuse (this should conform Flux pattern)
     private registerCoreEvents():void {
-        const self = this;
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             if (payload.props['message']) {
-                self.showMessage(payload.props['msgType'], payload.props['message']);
+                this.showMessage(payload.props['msgType'], payload.props['message']);
             }
         });
     }
