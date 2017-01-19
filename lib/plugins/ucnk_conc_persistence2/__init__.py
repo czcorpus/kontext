@@ -185,6 +185,8 @@ class ConcPersistence(AbstractConcPersistence):
             time_created = time.time()
             data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
             curr_data[ID_KEY] = data_id
+            if prev_data is not None:
+                curr_data['prev_id'] = prev_data['id']
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
             data_key = self._mk_key(data_id)
             self.db.set(data_key, curr_data)
