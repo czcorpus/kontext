@@ -449,6 +449,9 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
     }
 
     private removeLevel(sortId:string, level:number):void {
+        if (this.sortlevelValues.get(sortId) - 1 === 0) {
+            throw new Error('At least one level must be defined');
+        }
         this.mlxattrValues = this.mlxattrValues.set(
             sortId,
             this.mlxattrValues.get(sortId).remove(level).push(this.availAttrList.get(0).n)
