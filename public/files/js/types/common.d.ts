@@ -197,14 +197,36 @@ declare module Kontext {
         addOnUpdate(fn:Kontext.AsyncTaskOnUpdate):void;
     }
 
+    /**
+     *
+     */
     export interface MainMenuActiveItem {
         actionName:string;
         actionArgs:GeneralProps;
     }
 
+    /**
+     * This store is watched by components which are
+     * able to render user content based on a selected
+     * menu item.
+     *
+     */
     export interface IMainMenuStore extends PageStore {
+
         getActiveItem():MainMenuActiveItem;
+
+        /**
+         * Register an action which is run before listeners
+         * are notified. This is used to allow other stores
+         * to prepare themselves before their views are
+         * shown.
+         */
         addItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+
+        /**
+         * Unregister an action which is run before listeners
+         * are notified.
+         */
         removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
     }
 
