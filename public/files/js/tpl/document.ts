@@ -641,8 +641,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         if (msg) {
             let tmp = this.translations[msg];
             if (tmp) {
-                let format = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
-                return format.format(values);
+                try {
+                    let format = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
+                    return format.format(values);
+
+                } catch (e) {
+                    console.error('Failed to translate ', msg, e);
+                    return tmp;
+                }
             }
             return msg;
         }
