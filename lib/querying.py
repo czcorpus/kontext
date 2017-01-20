@@ -179,6 +179,14 @@ class SortFormArgs(ConcFormArgs):
         self.ml4ctx = u'0~0>0'
 
 
+class SampleFormArgs(ConcFormArgs):
+
+    def __init__(self, persist):
+        super(SampleFormArgs, self).__init__(persist)
+        self.form_type = 'sample'
+        self.rlines = '250'
+
+
 def build_conc_form_args(data, op_key):
     """
     A factory method to create a conc form args
@@ -192,6 +200,8 @@ def build_conc_form_args(data, op_key):
         return FilterFormArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key)
     elif tp == 'sort':
         return SortFormArgs(persist=False).updated(data, op_key)
+    elif tp == 'sample':
+        return SampleFormArgs(persist=False).updated(data, op_key)
     else:
         raise ValueError('Cannot determine stored conc args class from type %s' % (tp,))
 
@@ -265,7 +275,8 @@ class Querying(Kontext):
             filter=FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                   persist=False).to_dict(),
             sort=SortFormArgs(persist=False).to_dict(),
-            sample={})
+            sample=SampleFormArgs(persist=False).to_dict()
+        )
 
     def _attach_aligned_query_params(self, tpl_out):
         """
