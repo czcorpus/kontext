@@ -20,8 +20,28 @@
 
 import React from 'vendor/react';
 
+
+
 export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormView, SortFormView,
         SampleFormView, queryReplayStore, mainMenuStore) {
+
+    function formTypeToTitle(opFormType) {
+        switch (opFormType) {
+            case 'query':
+                return mixins[0].translate('query__operation_name_query');
+            case 'filter':
+                return mixins[0].translate('query__operation_name_filter');
+            case 'sort':
+                return mixins[0].translate('query__operation_name_sort');
+            case 'sample':
+                return mixins[0].translate('query__operation_name_sample');
+            case 'shuffle':
+                return mixins[0].translate('query__operation_name_shuffle');
+            default:
+                return null;
+        }
+    }
+
 
     // ------------------------ <QueryReplayView /> --------------------------------
 
@@ -69,19 +89,6 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
     // ------------------------ <QueryEditor /> --------------------------------
 
     const QueryEditor = React.createClass({
-        /*
-            query codes:
-            q: Query
-            a: Query
-            r: Random sample
-            s: Sort
-            f: Shuffle
-            n: Negative filter
-            N: Negative filter (excluding KWIC)
-            p: Positive filter
-            P: Positive filter (excluding KWIC)
-            x: Switch KWIC
-        */
 
         mixins : mixins,
 
@@ -107,38 +114,19 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
             } else if (this.props.operationIdx === 0) {
                 return <QueryFormView {...this.props.editorProps} operationIdx={this.props.operationIdx} />;
 
-            } else if (['n', 'N', 'p', 'P'].indexOf(this.props.operationId) > -1) {
+            } else if (this.props.operationFormType === 'filter') {
                 return <FilterFormView {...this.props.editorProps}
                             operationIdx={this.props.operationIdx}
                             filterId={this.props.opKey} />;
 
-            } else if (['s'].indexOf(this.props.operationId) > -1) {
+            } else if (this.props.operationFormType === 'sort') {
                 return <SortFormView sortId={this.props.opKey} operationIdx={this.props.operationIdx} />;
 
-            } else if (['r'].indexOf(this.props.operationId) > -1) {
+            } else if (this.props.operationFormType === 'sample') {
                 return <SampleFormView sampleId={this.props.opKey} operationIdx={this.props.operationIdx} />;
 
             } else {
-                return <div>Unsupported...</div>;
-            }
-        },
-
-        _getContextTitle : function (opId) {
-            const isOperation = (...values) => values.indexOf(opId) > -1;
-            if (isOperation('a', 'q')) {
-                return this.translate('query__operation_name_query');
-
-            } else if (isOperation('n', 'N', 'p', 'P')) {
-                return this.translate('query__operation_name_filter');
-
-            } else if (isOperation('s')) {
-                return this.translate('query__operation_name_sort');
-
-            } else if (isOperation('f')) {
-                return this.translate('query__operation_name_shuffle');
-
-            } else if (isOperation('r')) {
-                return this.translate('query__operation_name_sample');
+                return <div>???</div>;
             }
         },
 
@@ -149,7 +137,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             onCloseClick={this.props.closeClickHandler}>
                         <h3>
                             {this.translate('query__edit_current_hd_{operation}',
-                                    {operation: this._getContextTitle(this.props.operationId)})
+                                    {operation: formTypeToTitle(this.props.operationFormType)})
                             }
                         </h3>
                         {this._renderEditorComponent()}
@@ -197,6 +185,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             closeClickHandler={this.props.closeEditorHandler}
                             operationIdx={this.props.idx}
                             operationId={this.props.item.opid}
+                            operationFormType={this.props.item.formType}
                             opKey={this.props.editOpKey}
                             opEncodedArgs={this.props.item.tourl}
                             isLoading={this.props.isLoading} />
@@ -231,13 +220,13 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
             return (
                 <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={this._handleCloseClick}>
                     <div>
-                        <h3>Query overview</h3>
+                        <h3>{this.translate('global__query_overview')}</h3>
                         <table>
                             <tbody>
                                 <tr>
-                                    <th>Operation</th>
-                                    <th>Parameters</th>
-                                    <th>Num. of hits</th>
+                                    <th>{this.translate('global__operation')}</th>
+                                    <th>{this.translate('global__parameters')}</th>
+                                    <th>{this.translate('global__num_of_hits')}</th>
                                     <th></th>
                                     <th></th>
                                 </tr>
@@ -398,11 +387,21 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
             }
         },
 
+        _createTitle : function () {
+            const m = {
+                MAIN_MENU_SHOW_FILTER: 'filter',
+                MAIN_MENU_SHOW_SORT: 'sort',
+                MAIN_MENU_SHOW_SAMPLE: 'sample'
+            };
+            const ident = formTypeToTitle(m[this.props.menuActiveItem.actionName]);
+            return this.translate('query__add_an_operation_title_{opname}', {opname: ident});
+        },
+
         render : function () {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
                     <layoutViews.PopupBox customClass="query-form-spa" onCloseClick={this._handleCloseClick}>
-                        <h3>Add a </h3>
+                        <h3>{this._createTitle()}</h3>
                         {this._createActionBasedForm()}
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
