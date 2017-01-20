@@ -51,6 +51,40 @@ export interface QueryOperation {
     size:number;
 }
 
+export interface ExtendedQueryOperation extends QueryOperation {
+    formType:string;
+}
+
+
+function mapOpIdToFormType(opId:string):string {
+    /*
+        query operation codes:
+        q: Query
+        a: Query
+        r: Random sample
+        s: Sort
+        f: Shuffle
+        n: Negative filter
+        N: Negative filter (excluding KWIC)
+        p: Positive filter
+        P: Positive filter (excluding KWIC)
+        x: Switch KWIC
+    */
+    if (['q', 'a'].indexOf(opId) > -1) {
+        return 'query';
+
+    } else if (['n', 'N', 'p', 'P'].indexOf(opId) > -1) {
+        return 'filter';
+
+    } else if (opId === 's') {
+        return 'sort';
+
+    } else if (opId === 'r') {
+        return 'sample';
+    }
+}
+
+
 /**
  * Local query form data cache.
  */
@@ -81,7 +115,7 @@ export class QueryReplayStore extends SimplePageStore {
 
     private pageModel:PageModel;
 
-    private currEncodedOperations:Immutable.List<QueryOperation>;
+    private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
 
     private replayOperations:Immutable.List<string>;
 
@@ -123,7 +157,18 @@ export class QueryReplayStore extends SimplePageStore {
             currentOperations:Array<QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.currEncodedOperations = Immutable.List<QueryOperation>(currentOperations);
+        this.currEncodedOperations = Immutable.List<ExtendedQueryOperation>(currentOperations.map(item => {
+            return {
+                op: item.op,
+                opid: item.opid,
+                nicearg: item.nicearg,
+                tourl: item.tourl,
+                arg: item.arg,
+                churl: item.churl,
+                size: item.size,
+                formType: mapOpIdToFormType(item.opid)
+            };
+        }));
         this.replayOperations = Immutable.List<string>(currentOperations.map(item => null));
         this.concArgsCache = Immutable.Map<string, AjaxResponse.ConcFormArgs>(concArgsCache);
         this.queryStore = replayStoreDeps.queryStore;
@@ -587,53 +632,26 @@ export class QueryReplayStore extends SimplePageStore {
         }
     }
 
-    private operationIsQuery(opIdx:number):boolean {
-        return this.currEncodedOperations.get(opIdx).opid === 'q'
-                || this.currEncodedOperations.get(opIdx).opid === 'a';
-    }
-
-    private operationIsFilter(opIdx:number):boolean {
-        return ['n', 'N', 'p', 'P'].indexOf(this.currEncodedOperations.get(opIdx).opid) > -1;
-    }
-
-    private operationIsSort(opIdx:number):boolean {
-        return this.currEncodedOperations.get(opIdx).opid === 's';
-    }
-
-    private operationIsSample(opIdx:number):boolean {
-        return this.currEncodedOperations.get(opIdx).opid === 'r';
-    }
-
     private syncFormData(opIdx:number):RSVP.Promise<any> {
-        /*
-            query codes:
-            q: Query
-            a: Query
-            r: Random sample
-            s: Sort
-            f: Shuffle
-            n: Negative filter
-            N: Negative filter (excluding KWIC)
-            p: Positive filter
-            P: Positive filter (excluding KWIC)
-            x: Switch KWIC
-        */
+        const opId = this.currEncodedOperations.get(opIdx).opid;
+        const formType = this.currEncodedOperations.get(opIdx).formType;
+
         if (this.concArgsCache.size === 0) {
             // query operation update not supported (probably old query code)
             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                 resolve(null);
             });
 
-        } else if (this.operationIsQuery(opIdx)) {
+        } else if (formType === 'query') {
             return this.syncQueryForm(opIdx);
 
-        } else if (this.operationIsFilter(opIdx)) {
+        } else if (formType === 'filter') {
             return this.syncFilterForm(opIdx);
 
-        } else if (this.operationIsSort(opIdx)) {
+        } else if (formType === 'sort') {
             return this.syncSortForm(opIdx);
 
-        } else if (this.operationIsSample(opIdx)) {
+        } else if (formType === 'sample') {
             return this.syncSampleForm(opIdx);
         }
     }
