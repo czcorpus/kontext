@@ -403,7 +403,8 @@ class MenuGenerator(object):
             .add_query_modifiers('f')
         )
 
-        self.sample = ConcMenuItem(MainMenu.CONCORDANCE('sample'), _('Sample'), 'reduce_form').mark_indirect()
+        self.sample = EventTriggeringItem(MainMenu.CONCORDANCE('sample'),
+                                          _('Sample'), 'MAIN_MENU_SHOW_SAMPLE').mark_indirect()
 
         self.query_overview = (
             EventTriggeringItem(MainMenu.CONCORDANCE('query-overview'), _

@@ -21,7 +21,7 @@
 import React from 'vendor/react';
 
 export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormView, SortFormView,
-        queryReplayStore, mainMenuStore) {
+        SampleFormView, queryReplayStore, mainMenuStore) {
 
     // ------------------------ <QueryReplayView /> --------------------------------
 
@@ -112,8 +112,14 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             operationIdx={this.props.operationIdx}
                             filterId={this.props.opKey} />;
 
-            } else {
+            } else if (['s'].indexOf(this.props.operationId) > -1) {
                 return <SortFormView sortId={this.props.opKey} operationIdx={this.props.operationIdx} />;
+
+            } else if (['r'].indexOf(this.props.operationId) > -1) {
+                return <SampleFormView sampleId={this.props.opKey} operationIdx={this.props.operationIdx} />;
+
+            } else {
+                return <div>Unsupported...</div>;
             }
         },
 
@@ -370,6 +376,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
 
     const AppendOperationOverlay = React.createClass({
 
+        mixins : mixins,
+
         _handleCloseClick : function () {
             dispatcher.dispatch({
                 actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
@@ -383,15 +391,18 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                     return <FilterFormView {...this.props.filterFormProps} filterId="__new__"  />;
                 case 'MAIN_MENU_SHOW_SORT':
                     return <SortFormView sortId="__new__" />;
+                case 'MAIN_MENU_SHOW_SAMPLE':
+                    return <SampleFormView sampleId="__new__" />;
                 default:
-                    return null;
+                    return <div>unknown...</div>;
             }
         },
 
         render : function () {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                    <layoutViews.PopupBox customClass="query-replay-box" onCloseClick={this._handleCloseClick}>
+                    <layoutViews.PopupBox customClass="query-form-spa" onCloseClick={this._handleCloseClick}>
+                        <h3>Add a </h3>
                         {this._createActionBasedForm()}
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>

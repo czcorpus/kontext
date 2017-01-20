@@ -43,6 +43,7 @@ import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, Conc
 import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} from '../stores/query/main';
 import {QueryReplayStore, QueryOperation, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
+import {SampleStore, SampleFormProperties, fetchSampleFormArgs} from '../stores/query/sample';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
@@ -62,6 +63,7 @@ import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
+import {init as sampleFormInit, SampleFormViews} from 'views/query/sample';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -85,6 +87,7 @@ export class QueryStores {
     queryReplayStore:QueryReplayStore;
     sortStore:SortStore;
     multiLevelSortStore:MultiLevelSortStore;
+    sampleStore:SampleStore;
 }
 
 
@@ -115,6 +118,8 @@ export class ViewPage {
     private filterFormViews:FilterFormViews;
 
     private sortFormViews:SortFormViews;
+
+    private sampleFormViews:SampleFormViews;
 
     private concFormsInitialArgs:AjaxResponse.ConcFormsInitialArgs;
 
@@ -680,6 +685,37 @@ export class ViewPage {
         );
     }
 
+    private initSampleForm():void {
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const fetchArgs = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>fetchSampleFormArgs(concFormsArgs, key);
+
+        const sampleStoreProps:SampleFormProperties = {
+            rlines: fetchArgs<number>(item => item.rlines)
+        };
+
+        this.queryStores.sampleStore = new SampleStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            sampleStoreProps
+        );
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_SAMPLE',
+            (args:Kontext.GeneralProps) => {
+                return this.queryStores.sampleStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.SampleFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
+                        resolve(this.concFormsInitialArgs.sample);
+                    });
+                });
+            }
+        );
+
+        this.sampleFormViews = sampleFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.queryStores.sampleStore
+        );
+    }
+
     /**
      *
      */
@@ -691,7 +727,8 @@ export class ViewPage {
                 queryStore: this.queryStores.queryStore,
                 filterStore: this.queryStores.filterStore,
                 sortStore: this.queryStores.sortStore,
-                mlSortStore: this.queryStores.multiLevelSortStore
+                mlSortStore: this.queryStores.multiLevelSortStore,
+                sampleStore: this.queryStores.sampleStore
             },
             this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
@@ -703,6 +740,7 @@ export class ViewPage {
             this.queryFormViews.QueryFormLite,
             this.filterFormViews.FilterForm,
             this.sortFormViews.SortFormView,
+            this.sampleFormViews.SampleFormView,
             this.queryStores.queryReplayStore,
             this.layoutModel.getStores().mainMenuStore
         );
@@ -780,6 +818,7 @@ export class ViewPage {
                 this.initQueryForm();
                 this.initFilterForm();
                 this.initSortForm();
+                this.initSampleForm();
                 this.initQueryOverviewArea();
             }
         );

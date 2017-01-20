@@ -20,7 +20,7 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from querying import Querying, FilterFormArgs, QueryFormArgs, SortFormArgs
+from querying import Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs
 import settings
 import conclib
 import corplib
@@ -759,11 +759,15 @@ class Actions(Querying):
 
     @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view',
              legacy=True)
-    def reduce(self, rlines='250'):
+    def reduce(self):
         """
         random sample
         """
-        self.args.q.append('r' + rlines)
+        qinfo = SampleFormArgs(persist=True)
+        qinfo.rlines = self.args.rlines
+        self.add_conc_form_args(qinfo)
+
+        self.args.q.append('r' + self.args.rlines)
         return self.view()
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)

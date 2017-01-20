@@ -29,6 +29,7 @@ import {PageModel} from '../../tpl/document';
 import {QueryStore, QueryFormUserEntries} from './main';
 import {FilterStore} from './filter';
 import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';
+import {SampleStore} from './sample';
 
 
 /**
@@ -64,7 +65,7 @@ export interface ReplayStoreDeps {
     filterStore:FilterStore;
     sortStore:SortStore;
     mlSortStore:MultiLevelSortStore;
-
+    sampleStore:SampleStore;
 }
 
 
@@ -91,6 +92,8 @@ export class QueryReplayStore extends SimplePageStore {
     private sortStore:SortStore;
 
     private mlSortStore:MultiLevelSortStore;
+
+    private sampleStore:SampleStore;
 
     /**
      * Contains args used by different input forms involved in the current query operations.
@@ -127,6 +130,7 @@ export class QueryReplayStore extends SimplePageStore {
         this.filterStore = replayStoreDeps.filterStore;
         this.sortStore = replayStoreDeps.sortStore;
         this.mlSortStore = replayStoreDeps.mlSortStore;
+        this.sampleStore = replayStoreDeps.sampleStore;
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
         this.syncCache();
@@ -315,6 +319,29 @@ export class QueryReplayStore extends SimplePageStore {
                             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                                 resolve(() => {
                                     activeStore.submit(opKey);
+                                });
+                            });
+                        }
+                    }
+                );
+            }
+
+        } else if (formType == 'sample') {
+            return () => {
+                return prepareFormData().then(
+                    () => {
+                        const url = this.sampleStore.getSubmitUrl(opKey);
+                        if (opIdx < numOps - 1) {
+                            return this.pageModel.ajax(
+                                'GET',
+                                url,
+                                {format: 'json'}
+                            );
+
+                        } else {
+                            return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                                resolve(() => {
+                                    this.sampleStore.submitQuery(opKey);
                                 });
                             });
                         }
@@ -526,6 +553,40 @@ export class QueryReplayStore extends SimplePageStore {
         }
     }
 
+    private syncSampleForm(opIdx:number):RSVP.Promise<any> {
+        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+        if (queryKey !== undefined) {
+            return this.sampleStore.syncFrom(() => {
+                return new RSVP.Promise<AjaxResponse.SampleFormArgs>(
+                    (resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
+                    }
+                );
+            });
+
+        } else {
+            return this.sampleStore.syncFrom(() => {
+                return this.pageModel.ajax<AjaxResponse.SampleFormArgsResponse>(
+                    'GET',
+                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                    {last_key: this.getCurrentQueryKey(), idx: opIdx}
+
+                ).then(
+                    (data) => {
+                        if (!data.contains_errors) {
+                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+
+                        } else {
+                            throw new Error(data.messages[0]);
+                        }
+                    }
+                )
+            });
+        }
+    }
+
     private operationIsQuery(opIdx:number):boolean {
         return this.currEncodedOperations.get(opIdx).opid === 'q'
                 || this.currEncodedOperations.get(opIdx).opid === 'a';
@@ -537,6 +598,10 @@ export class QueryReplayStore extends SimplePageStore {
 
     private operationIsSort(opIdx:number):boolean {
         return this.currEncodedOperations.get(opIdx).opid === 's';
+    }
+
+    private operationIsSample(opIdx:number):boolean {
+        return this.currEncodedOperations.get(opIdx).opid === 'r';
     }
 
     private syncFormData(opIdx:number):RSVP.Promise<any> {
@@ -567,6 +632,9 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else if (this.operationIsSort(opIdx)) {
             return this.syncSortForm(opIdx);
+
+        } else if (this.operationIsSample(opIdx)) {
+            return this.syncSampleForm(opIdx);
         }
     }
 

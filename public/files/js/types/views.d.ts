@@ -194,6 +194,16 @@ declare module "views/query/sort" {
 }
 
 
+declare module "views/query/sample" {
+
+    export interface SampleFormViews {
+        SampleFormView:React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any, sampleStore:any):SampleFormViews;
+}
+
+
 declare module "views/query/overview" {
 
     export interface QueryToolbarViews {
@@ -207,6 +217,7 @@ declare module "views/query/overview" {
             QueryFormView:React.ReactClass,
             FilterFormView:React.ReactClass,
             SortFormView:React.ReactClass,
+            SampleFormView:React.ReactClass,
             queryReplayStore:any,
             mainMenuStore:any):QueryToolbarViews;
 }

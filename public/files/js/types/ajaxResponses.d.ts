@@ -186,6 +186,12 @@ declare module AjaxResponse {
         ops:Array<{id:string; form_args:any}>;
     }
 
+    export interface SampleFormArgs extends ConcFormArgs {
+        rlines:number;
+    }
+
+    export interface SampleFormArgsResponse extends SampleFormArgs, Kontext.AjaxResponse {}
+
     export interface ConcFormArgsResponse extends Kontext.AjaxResponse, ConcFormArgs {}
 
     export interface ConcFormsInitialArgs {
