@@ -139,7 +139,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
         render : function () {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
-                    <layoutViews.PopupBox customClass="query-form-lite"
+                    <layoutViews.PopupBox customClass="query-form-spa"
                             onCloseClick={this.props.closeClickHandler}>
                         <h3>
                             {this.translate('query__edit_current_hd_{operation}',
