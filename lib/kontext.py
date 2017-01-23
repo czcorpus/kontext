@@ -207,9 +207,6 @@ class Kontext(Controller):
 
     PARAM_TYPES = dict(inspect.getmembers(GlobalArgs, predicate=lambda x: isinstance(x, Parameter)))
 
-    _conc_dir = u''
-    _files_path = settings.get('global', 'static_files_prefix', u'../files')
-
     def __init__(self, request, ui_lang):
         super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
         self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
@@ -218,6 +215,8 @@ class Kontext(Controller):
         self.disabled_menu_items = []
         self.save_menu = []
         self.subcpath = []
+        self._conc_dir = u''
+        self._files_path = settings.get('global', 'static_files_prefix', u'../files')
         self._lines_groups = LinesGroups(data=[])
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
         self.get_corpus_info = partial(plugins.get('corparch').get_corpus_info, self._plugin_api)
@@ -965,7 +964,8 @@ class Kontext(Controller):
         """
         Controller._add_globals(self, result, methodname, action_metadata)
         result['base_attr'] = Kontext.BASE_ATTR
-        result['files_path'] = self._files_path
+        result['root_url'] = self.get_root_url()
+        result['files_path'] = self._files_path + '/'
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
 
@@ -989,8 +989,6 @@ class Kontext(Controller):
         result['undo_q'] = self.urlencode([('q', q) for q in self.args.q[:-1]])
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
-        result['root_url'] = self.get_root_url()
-        result['static_url'] = '%sfiles/' % self.get_root_url()
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
 

@@ -702,7 +702,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         if (path.indexOf('/') === 0) {
             path = path.substr(1);
         }
-        return this.getConf<string>('staticUrl') + path;
+        return this.getConf<string>('staticPath') + path;
     }
 
     /**
