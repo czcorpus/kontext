@@ -25,6 +25,8 @@ import {init as inputInit} from './input';
 
 export function init(dispatcher, mixins, sampleStore) {
 
+    // ------------------------ <SampleForm /> --------------------------------
+
     const SampleForm = React.createClass({
 
         mixins : mixins,
@@ -92,12 +94,74 @@ export function init(dispatcher, mixins, sampleStore) {
                 </form>
             );
         }
+    });
 
+
+    // ------------------------ <ShuffleForm /> --------------------------------
+
+    const ShuffleForm = React.createClass({
+
+        mixins : mixins,
+
+        getInitialState : function () {
+            return {
+                isWarning: this.props.shuffleMinResultWarning <= this.props.lastOpSize,
+                isAutoSubmit: this.props.shuffleMinResultWarning > this.props.lastOpSize
+                                && this.props.operationIdx === null
+            };
+        },
+
+        _renderWarningState : function () {
+            return (
+                <div>
+                    <p>
+                        <img src={this.createStaticUrl('img/warning-icon.svg')}
+                                alt={this.translate('global__warning_icon')}
+                                style={{verticalAlign: 'middle', marginRight: '0.4em'}} />
+                        {this.translate('query__shuffle_large_data_warn')}
+                    </p>
+                    <button type="button" className="default-button"
+                            onClick={()=>this.props.shuffleSubmitFn()}>
+                        {this.translate('global__submit_anyway')}
+                    </button>
+                </div>
+            );
+        },
+
+        _renderAutoSubmitState : function () {
+            return <div><img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={this.translate('global__loading')} /></div>;
+        },
+
+        componentDidMount : function () {
+            if (this.state.isAutoSubmit) {
+                window.setTimeout(() => {
+                    this.props.shuffleSubmitFn();
+                }, 0);
+            }
+        },
+
+        _renderContents : function () {
+            if (this.state.isWarning) {
+                return this._renderWarningState();
+
+            } else if (this.state.isAutoSubmit) {
+                return this._renderAutoSubmitState();
+
+            } else {
+                return <div>{this.translate('query__shuffle_form_no_params_to_change')}</div>;
+            }
+        },
+
+        render : function () {
+            return <form>{this._renderContents()}</form>;
+        }
     });
 
 
     return {
-        SampleFormView: SampleForm
+        SampleFormView: SampleForm,
+        ShuffleFormView: ShuffleForm
     }
 
 }

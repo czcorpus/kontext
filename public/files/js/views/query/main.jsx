@@ -395,6 +395,7 @@ export function init(
                                     wPoSList={this.state.wPoSList} />
                             : null}
                     </fieldset>
+
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
                             {this.props.operationIdx !== undefined ?
@@ -406,7 +407,6 @@ export function init(
             );
         }
     });
-
 
     return {
         QueryForm: QueryForm,

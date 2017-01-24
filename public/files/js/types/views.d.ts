@@ -194,10 +194,11 @@ declare module "views/query/sort" {
 }
 
 
-declare module "views/query/sample" {
+declare module "views/query/sampleShuffle" {
 
     export interface SampleFormViews {
         SampleFormView:React.ReactClass;
+        ShuffleFormView:React.ReactClass;
     }
 
     export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any, sampleStore:any):SampleFormViews;
@@ -205,6 +206,14 @@ declare module "views/query/sample" {
 
 
 declare module "views/query/overview" {
+
+    export interface QueryToolbarViewDeps {
+        QueryFormView:React.ReactClass;
+        FilterFormView:React.ReactClass;
+        SortFormView:React.ReactClass;
+        SampleFormView:React.ReactClass;
+        ShuffleFormView:React.ReactClass;
+    }
 
     export interface QueryToolbarViews {
         QueryToolbar:React.ReactClass;
@@ -214,10 +223,7 @@ declare module "views/query/overview" {
             dispatcher:Dispatcher.Dispatcher<any>,
             mixins:any,
             layoutViews:Kontext.LayoutViews,
-            QueryFormView:React.ReactClass,
-            FilterFormView:React.ReactClass,
-            SortFormView:React.ReactClass,
-            SampleFormView:React.ReactClass,
+            viewDeps:QueryToolbarViewDeps,
             queryReplayStore:any,
             mainMenuStore:any):QueryToolbarViews;
 }

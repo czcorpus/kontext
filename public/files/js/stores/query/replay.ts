@@ -81,6 +81,9 @@ function mapOpIdToFormType(opId:string):string {
 
     } else if (opId === 'r') {
         return 'sample';
+
+    } else if (opId === 'f') {
+        return 'shuffle';
     }
 }
 
@@ -148,6 +151,12 @@ export class QueryReplayStore extends SimplePageStore {
     private editedOperationIdx:number;
 
     /**
+     * Specifies an operation idx after which the query replay
+     * stops. If null then whole pipeline is replayed.
+     */
+    private stopAfterOpIdx:number;
+
+    /**
      * This is a little bit independent from the rest. It just
      * contains data required to render tabular query overview.
      */
@@ -178,6 +187,7 @@ export class QueryReplayStore extends SimplePageStore {
         this.sampleStore = replayStoreDeps.sampleStore;
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
+        this.stopAfterOpIdx = null;
         this.syncCache();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
@@ -226,6 +236,10 @@ export class QueryReplayStore extends SimplePageStore {
                     break;
                     case 'CLEAR_QUERY_OVERVIEW_DATA':
                         this.currentQueryOverview = null;
+                        this.notifyChangeListeners();
+                    break;
+                    case 'QUERY_SET_STOP_AFTER_IDX':
+                        this.stopAfterOpIdx = payload.props['value'];
                         this.notifyChangeListeners();
                     break;
                 }
@@ -297,6 +311,7 @@ export class QueryReplayStore extends SimplePageStore {
         }
         if (opIdx === 0) {
             return () => {
+                this.pageModel.replaceConcArg('q', []); // !!! 'q' must be cleared as it contains current encoded query
                 return prepareFormData().then(
                     () => {
                         const url = this.queryStore.getSubmitUrl();
@@ -316,7 +331,7 @@ export class QueryReplayStore extends SimplePageStore {
                         }
                     }
                 );
-            }
+            };
 
         } else if (formType === 'filter') {
             return () => {
@@ -369,9 +384,9 @@ export class QueryReplayStore extends SimplePageStore {
                         }
                     }
                 );
-            }
+            };
 
-        } else if (formType == 'sample') {
+        } else if (formType === 'sample') {
             return () => {
                 return prepareFormData().then(
                     () => {
@@ -392,7 +407,26 @@ export class QueryReplayStore extends SimplePageStore {
                         }
                     }
                 );
-            }
+            };
+
+        } else if (formType === 'shuffle') { // please note that shuffle does not have its own store
+            return () => {
+                const targetUrl = this.pageModel.createActionUrl('shuffle', this.pageModel.getConcArgs().items());
+                if (opIdx < numOps - 1) {
+                    return this.pageModel.ajax(
+                        'GET',
+                        targetUrl,
+                        {format: 'json'}
+                    );
+
+                } else {
+                    return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                        resolve(() => {
+                            window.location.href = targetUrl;
+                        });
+                    });
+                }
+            };
 
         } else {
             throw new Error('cannot prepare operation for type ' + formType);
@@ -432,11 +466,12 @@ export class QueryReplayStore extends SimplePageStore {
 
         return fetchQueryPipeline.then(
             (opList) => {
-                const operations = opList.map((opKey, i) => {
+                const operations = opList.filter((item, i) => i <= this.stopAfterOpIdx || this.stopAfterOpIdx === null);
+                return operations.map((opKey, i) => {
                     return this.createOperation(
-                        i, opKey, changedOpIdx, opList.size, this.concArgsCache.get(opKey).form_type);
-                });
-                return operations.reduce<RSVP.Promise<any>>(
+                        i, opKey, changedOpIdx, operations.size, this.concArgsCache.get(opKey).form_type);
+                    }
+                ).reduce<RSVP.Promise<any>>(
                     (prev, curr, idx) => {
                         return prev.then(
                             (data) => {
@@ -632,12 +667,41 @@ export class QueryReplayStore extends SimplePageStore {
         }
     }
 
+    private syncShuffleForm(opIdx:number):RSVP.Promise<any> {
+        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+        if (queryKey !== undefined) {
+            return new RSVP.Promise<AjaxResponse.ConcFormArgs>(
+                (resolve:(data)=>void, reject:(err)=>void) => {
+                    resolve(this.concArgsCache.get(queryKey));
+                }
+            );
+
+        } else {
+            return this.pageModel.ajax<AjaxResponse.ConcFormArgsResponse>(
+                'GET',
+                this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                {last_key: this.getCurrentQueryKey(), idx: opIdx}
+
+            ).then(
+                (data) => {
+                    if (!data.contains_errors) {
+                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
+
+                    } else {
+                        throw new Error(data.messages[0]);
+                    }
+                }
+            );
+        }
+    }
+
     private syncFormData(opIdx:number):RSVP.Promise<any> {
         const opId = this.currEncodedOperations.get(opIdx).opid;
         const formType = this.currEncodedOperations.get(opIdx).formType;
 
         if (this.concArgsCache.size === 0) {
-            // query operation update not supported (probably old query code)
             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                 resolve(null);
             });
@@ -653,6 +717,9 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else if (formType === 'sample') {
             return this.syncSampleForm(opIdx);
+
+        } else if (formType === 'shuffle') {
+            return this.syncShuffleForm(opIdx);
         }
     }
 
@@ -692,5 +759,9 @@ export class QueryReplayStore extends SimplePageStore {
 
     getEditedOperationIdx():number {
         return this.editedOperationIdx;
+    }
+
+    getRunFullQuery():boolean {
+        return this.stopAfterOpIdx === null;
     }
 }

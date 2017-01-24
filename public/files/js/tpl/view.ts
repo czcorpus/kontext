@@ -63,7 +63,7 @@ import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
-import {init as sampleFormInit, SampleFormViews} from 'views/query/sample';
+import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -737,10 +737,13 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
-            this.queryFormViews.QueryFormLite,
-            this.filterFormViews.FilterForm,
-            this.sortFormViews.SortFormView,
-            this.sampleFormViews.SampleFormView,
+            {
+                QueryFormView: this.queryFormViews.QueryFormLite,
+                FilterFormView: this.filterFormViews.FilterForm,
+                SortFormView: this.sortFormViews.SortFormView,
+                SampleFormView: this.sampleFormViews.SampleFormView,
+                ShuffleFormView: this.sampleFormViews.ShuffleFormView
+            },
             this.queryStores.queryReplayStore,
             this.layoutModel.getStores().mainMenuStore
         );
@@ -765,6 +768,13 @@ export class ViewPage {
                     actionPrefix: 'FILTER_'
                 },
                 sortFormProps: {
+                },
+                shuffleFormProps: {
+                    shuffleMinResultWarning: this.layoutModel.getConf<number>('ShuffleMinResultWarning'),
+                    shuffleSubmitFn: () => {
+                        const args = this.layoutModel.getConcArgs();
+                        window.location.href = this.layoutModel.createActionUrl('shuffle', args.items());
+                    }
                 }
             }
         );

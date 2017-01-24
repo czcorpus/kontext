@@ -399,8 +399,7 @@ class MenuGenerator(object):
         )
 
         self.shuffle = (
-            ConcMenuItem(MainMenu.CONCORDANCE('shuffle'), _('Shuffle'), 'view')
-            .add_query_modifiers('f')
+            EventTriggeringItem(MainMenu.CONCORDANCE('shuffle'), _('Shuffle'), 'MAIN_MENU_APPLY_SHUFFLE')
         )
 
         self.sample = EventTriggeringItem(MainMenu.CONCORDANCE('sample'),
