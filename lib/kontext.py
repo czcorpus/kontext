@@ -1005,7 +1005,7 @@ class Kontext(Controller):
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
         result['root_url'] = self.get_root_url()
-        result['static_url'] = '%sfiles/' % self.get_root_url()
+        result['static_url'] = '%s/' % self._files_path
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
 
