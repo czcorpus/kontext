@@ -187,6 +187,13 @@ class SampleFormArgs(ConcFormArgs):
         self.rlines = '250'
 
 
+class ShuffleFormArgs(ConcFormArgs):
+
+    def __init__(self, persist):
+        super(ShuffleFormArgs, self).__init__(persist)
+        self.form_type = 'shuffle'
+
+
 def build_conc_form_args(data, op_key):
     """
     A factory method to create a conc form args
@@ -202,6 +209,8 @@ def build_conc_form_args(data, op_key):
         return SortFormArgs(persist=False).updated(data, op_key)
     elif tp == 'sample':
         return SampleFormArgs(persist=False).updated(data, op_key)
+    elif tp == 'shuffle':
+        return ShuffleFormArgs(persist=False).updated(data, op_key)
     else:
         raise ValueError('Cannot determine stored conc args class from type %s' % (tp,))
 
@@ -275,7 +284,8 @@ class Querying(Kontext):
             filter=FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                   persist=False).to_dict(),
             sort=SortFormArgs(persist=False).to_dict(),
-            sample=SampleFormArgs(persist=False).to_dict()
+            sample=SampleFormArgs(persist=False).to_dict(),
+            shuffle=ShuffleFormArgs(persist=False).to_dict()
         )
 
     def _attach_aligned_query_params(self, tpl_out):

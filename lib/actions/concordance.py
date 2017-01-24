@@ -20,7 +20,7 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from querying import Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs
+from querying import Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs
 import settings
 import conclib
 import corplib
@@ -629,10 +629,11 @@ class Actions(Querying):
 
     @exposed(template='view.tmpl', page_model='view')
     def first(self, request):
-        ans = {}
+        self._clear_prev_conc_params()
         self._store_semi_persistent_attrs(('align', 'corpname'))
         self._save_options(['queryselector'])
 
+        ans = {}
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
         qinfo = QueryFormArgs(corpora=corpora, persist=True)
@@ -768,6 +769,12 @@ class Actions(Querying):
         self.add_conc_form_args(qinfo)
 
         self.args.q.append('r' + self.args.rlines)
+        return self.view()
+
+    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
+    def shuffle(self):
+        self.add_conc_form_args(ShuffleFormArgs(persist=True))
+        self.args.q.append('f')
         return self.view()
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)

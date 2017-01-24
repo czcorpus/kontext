@@ -189,6 +189,7 @@ define('conf', [], function () {
     conf.ShowConcToolbar = $to_json($use_conc_toolbar);
     conf.queryOverview = $to_json($getVar('query_overview', []));
     conf.numQueryOps = $to_json($len($getVar('query_overview', [])));
+    conf.ShuffleMinResultWarning = $to_json($shuffle_min_result_warning);
 
     return conf;
 });

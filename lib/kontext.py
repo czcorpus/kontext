@@ -456,6 +456,9 @@ class Kontext(Controller):
             q_id = None
         return q_id
 
+    def _clear_prev_conc_params(self):
+        self._prev_q_data = None
+
     def _redirect_to_conc(self):
         """
         Redirects to the current concordance
@@ -988,6 +991,7 @@ class Kontext(Controller):
         result['supports_password_change'] = self._uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in self.args.q[:-1]])
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
+        result['shuffle_min_result_warning'] = settings.get_int('global', 'shuffle_min_result_warning', 100000)
 
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()

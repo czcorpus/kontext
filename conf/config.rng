@@ -276,6 +276,13 @@
                             <value>true</value>
                         </choice>
                     </element>
+                    <optional>
+                        <element name="shuffle_min_result_warning">
+                            <data type="integer" />
+                            <a:documentation>Specifies a result size at which a warning about long
+                            processing time pops-up when applying *shuffle*</a:documentation>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <optional>

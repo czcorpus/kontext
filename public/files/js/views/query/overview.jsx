@@ -22,8 +22,7 @@ import React from 'vendor/react';
 
 
 
-export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormView, SortFormView,
-        SampleFormView, queryReplayStore, mainMenuStore) {
+export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore, mainMenuStore) {
 
     function formTypeToTitle(opFormType) {
         switch (opFormType) {
@@ -55,7 +54,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                     <layoutViews.PopupBox customClass="query-replay-box" onCloseClick={()=>undefined}>
                         <div>
                             <h3>{this.translate('query__replay_replaying_query')}{'\u2026'}</h3>
-                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />
+                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                    alt={this.translate('global__loading_icon')} />
                             <div />
                         </div>
                     </layoutViews.PopupBox>
@@ -86,6 +86,51 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
         }
     });
 
+    // ------------------------ <ExecutionOptions /> --------------------------------
+
+    const ExecutionOptions = React.createClass({
+
+        mixins : mixins,
+
+        _handleRadioInputChange : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'QUERY_SET_STOP_AFTER_IDX',
+                props: {
+                    operationIdx: this.props.operationIdx,
+                    value: evt.target.value === 'continue' ? null : this.props.operationIdx
+                }
+            });
+        },
+
+        render : function () {
+            return (
+                <fieldset className="query-exec-opts">
+                    <legend>
+                        {this.translate('query__execution_opts_fieldset')}
+                    </legend>
+                    <ul>
+                        <li>
+                            <label className={this.props.modeRunFullQuery ? 'active' : null}>
+                                <input type="radio" name="exec-opts" style={{verticalAlign: 'middle'}} value="continue"
+                                        checked={this.props.modeRunFullQuery}
+                                        onChange={this._handleRadioInputChange} />
+                                {this.translate('query__behaviour_apply_and_continue')}
+                            </label>
+                        </li>
+                        <li>
+                            <label className={!this.props.modeRunFullQuery ? 'active' : null}>
+                                <input type="radio" name="exec-opts" style={{verticalAlign: 'middle'}} value="stop"
+                                        checked={!this.props.modeRunFullQuery}
+                                        onChange={this._handleRadioInputChange} />
+                                {this.translate('query__behaviour_apply_and_stop')}
+                            </label>
+                        </li>
+                    </ul>
+                </fieldset>
+            );
+        }
+    });
+
     // ------------------------ <QueryEditor /> --------------------------------
 
     const QueryEditor = React.createClass({
@@ -101,7 +146,7 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                     <div>
                         <p>
                             <img src={this.createStaticUrl('img/warning-icon.svg')}
-                                alt={this.translate('global__warning')}
+                                alt={this.translate('global__warning_icon')}
                                  style={{verticalAlign: 'middle', marginRight: '0.5em'}} />
                             {this.translate('query__replay_op_cannot_be_edited_msg')}.
                             {'\u00a0'}<a href={this.createActionLink(`view?${this.props.opEncodedArgs}`)}>
@@ -112,18 +157,24 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 );
 
             } else if (this.props.operationIdx === 0) {
-                return <QueryFormView {...this.props.editorProps} operationIdx={this.props.operationIdx} />;
+                return <viewDeps.QueryFormView {...this.props.editorProps} operationIdx={this.props.operationIdx} />;
 
             } else if (this.props.operationFormType === 'filter') {
-                return <FilterFormView {...this.props.editorProps}
+                return <viewDeps.FilterFormView {...this.props.editorProps}
                             operationIdx={this.props.operationIdx}
                             filterId={this.props.opKey} />;
 
             } else if (this.props.operationFormType === 'sort') {
-                return <SortFormView sortId={this.props.opKey} operationIdx={this.props.operationIdx} />;
+                return <viewDeps.SortFormView sortId={this.props.opKey} operationIdx={this.props.operationIdx} />;
 
             } else if (this.props.operationFormType === 'sample') {
-                return <SampleFormView sampleId={this.props.opKey} operationIdx={this.props.operationIdx} />;
+                return <viewDeps.SampleFormView sampleId={this.props.opKey} operationIdx={this.props.operationIdx} />;
+
+            } else if (this.props.operationFormType === 'shuffle') {
+                return <viewDeps.ShuffleFormView {...this.props.editorProps} shuffleId={this.props.opKey}
+                            shuffleMinResultWarning={this.props.shuffleMinResultWarning}
+                            lastOpSize={this.props.resultSize}
+                            operationIdx={this.props.operationIdx} />;
 
             } else {
                 return <div>???</div>;
@@ -140,6 +191,11 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                                     {operation: formTypeToTitle(this.props.operationFormType)})
                             }
                         </h3>
+                        {this.props.operationIdx < this.props.numOps - 1 ?
+                            <ExecutionOptions modeRunFullQuery={this.props.modeRunFullQuery}
+                                    operationIdx={this.props.operationIdx} />
+                            : null
+                        }
                         {this._renderEditorComponent()}
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
@@ -173,8 +229,12 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 <li>
                     {this._renderLabel()}{':\u00a0'}
                     {this.props.item.nicearg ?
-                        <a className="args" onClick={this.props.clickHandler}>{this.props.item.nicearg}</a>
-                        : <a className="args" onClick={this.props.clickHandler}>{'\u2713'}</a>}
+                        (<a className="args" onClick={this.props.clickHandler} title={this.translate('query__click_to_edit_the_op')}>
+                            {this.props.item.nicearg}
+                        </a>)
+                        : (<a className="args" onClick={this.props.clickHandler} title={this.translate('query__click_to_edit_the_op')}>
+                            {'\u2713'}</a>)
+                        }
                     {this.props.item.size ?
                          '\u00a0(' + this.translate('query__overview_hits_{num_hits}',
                             {num_hits: this.props.item.size}) + ')'
@@ -188,7 +248,11 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                             operationFormType={this.props.item.formType}
                             opKey={this.props.editOpKey}
                             opEncodedArgs={this.props.item.tourl}
-                            isLoading={this.props.isLoading} />
+                            isLoading={this.props.isLoading}
+                            modeRunFullQuery={this.props.modeRunFullQuery}
+                            numOps={this.props.numOps}
+                            shuffleMinResultWarning={this.props.shuffleMinResultWarning}
+                            resultSize={this.props.item.size} />
                         : null}
                 </li>
             );
@@ -269,7 +333,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 editOpIdx: null,
                 editOpKey: null,
                 isLoading: false,
-                queryOverview: queryReplayStore.getCurrentQueryOverview()
+                queryOverview: queryReplayStore.getCurrentQueryOverview(),
+                modeRunFullQuery: queryReplayStore.getRunFullQuery()
             };
         },
 
@@ -284,7 +349,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 editOpIdx: idx,
                 editOpKey: queryReplayStore.getEditedOperationIdx(),
                 isLoading: true,
-                queryOverview: null
+                queryOverview: null,
+                modeRunFullQuery: queryReplayStore.getRunFullQuery()
             });
         },
 
@@ -295,7 +361,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 editOpIdx: null,
                 editOpKey: null,
                 isLoading: false,
-                queryOverview: null
+                queryOverview: null,
+                modeRunFullQuery: queryReplayStore.getRunFullQuery()
             });
         },
 
@@ -306,7 +373,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 editOpIdx: queryReplayStore.getEditedOperationIdx(),
                 editOpKey: queryReplayStore.opIdxToCachedQueryKey(this.state.editOpIdx),
                 isLoading: false,
-                queryOverview: queryReplayStore.getCurrentQueryOverview()
+                queryOverview: queryReplayStore.getCurrentQueryOverview(),
+                modeRunFullQuery: queryReplayStore.getRunFullQuery()
             });
         },
 
@@ -318,15 +386,27 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
             queryReplayStore.removeChangeListener(this._storeChangeListener);
         },
 
-        _getEditorProps : function (opId) {
+        _getEditorProps : function (opIdx, opId) {
             if (['a', 'q'].indexOf(opId) > -1) {
                 return this.props.queryFormProps;
 
             } else if (['p', 'P', 'n', 'N'].indexOf(opId) > -1) {
                 return this.props.filterFormProps;
 
-            } else { // TODO
-                return {}; // TODO
+            } else if (opId === 'f') {
+                return {
+                    shuffleSubmitFn: () => {
+                        dispatcher.dispatch({
+                            actionType: 'BRANCH_QUERY',
+                            props: {
+                                operationIdx: opIdx
+                            }
+                        });
+                    }
+                }
+
+            } else {
+                return {};
             }
         },
 
@@ -345,15 +425,18 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                                 : null}
                         {this.state.ops.map((item, i) => {
                             return <QueryOpInfo
-                                    key={`op_${i}`}
-                                    idx={i}
-                                    editOpKey={this.state.editOpKey}
-                                    item={item}
-                                    clickHandler={this._handleEditClick.bind(this, i)}
-                                    hasOpenEditor={this.state.editOpIdx === i && !this.state.replayIsRunning}
-                                    editorProps={this.state.editOpIdx === i ? this._getEditorProps(item.opid) : null}
-                                    closeEditorHandler={this._handleEditorClose}
-                                    isLoading={this.state.isLoading} />;
+                                        key={`op_${i}`}
+                                        idx={i}
+                                        editOpKey={this.state.editOpKey}
+                                        item={item}
+                                        clickHandler={this._handleEditClick.bind(this, i)}
+                                        hasOpenEditor={this.state.editOpIdx === i && !this.state.replayIsRunning}
+                                        editorProps={this.state.editOpIdx === i ? this._getEditorProps(i, item.opid) : null}
+                                        closeEditorHandler={this._handleEditorClose}
+                                        isLoading={this.state.isLoading}
+                                        modeRunFullQuery={this.state.modeRunFullQuery}
+                                        numOps={this.state.ops.size}
+                                        shuffleMinResultWarning={this.props.shuffleFormProps.shuffleMinResultWarning} />;
                         })}
                     </ul>
                 </div>
@@ -377,11 +460,14 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
         _createActionBasedForm : function () {
             switch (this.props.menuActiveItem.actionName) {
                 case 'MAIN_MENU_SHOW_FILTER':
-                    return <FilterFormView {...this.props.filterFormProps} filterId="__new__"  />;
+                    return <viewDeps.FilterFormView {...this.props.filterFormProps} filterId="__new__"  />;
                 case 'MAIN_MENU_SHOW_SORT':
-                    return <SortFormView sortId="__new__" />;
+                    return <viewDeps.SortFormView sortId="__new__" />;
                 case 'MAIN_MENU_SHOW_SAMPLE':
-                    return <SampleFormView sampleId="__new__" />;
+                    return <viewDeps.SampleFormView sampleId="__new__" />;
+                case 'MAIN_MENU_APPLY_SHUFFLE':
+                    return <viewDeps.ShuffleFormView {...this.props.shuffleFormProps}
+                                lastOpSize={this.props.lastOpSize} sampleId="__new__" />;
                 default:
                     return <div>unknown...</div>;
             }
@@ -391,7 +477,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
             const m = {
                 MAIN_MENU_SHOW_FILTER: 'filter',
                 MAIN_MENU_SHOW_SORT: 'sort',
-                MAIN_MENU_SHOW_SAMPLE: 'sample'
+                MAIN_MENU_SHOW_SAMPLE: 'sample',
+                MAIN_MENU_APPLY_SHUFFLE: 'shuffle'
             };
             const ident = formTypeToTitle(m[this.props.menuActiveItem.actionName]);
             return this.translate('query__add_an_operation_title_{opname}', {opname: ident});
@@ -416,7 +503,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
 
         _mainMenuStoreChangeListener : function () {
             this.setState({
-                activeItem: mainMenuStore.getActiveItem()
+                activeItem: mainMenuStore.getActiveItem(),
+                lastOpSize: queryReplayStore.getCurrEncodedOperations().get(-1).size
             });
         },
 
@@ -430,7 +518,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
 
         getInitialState : function () {
             return {
-                activeItem: mainMenuStore.getActiveItem()
+                activeItem: mainMenuStore.getActiveItem(),
+                lastOpSize: queryReplayStore.getCurrEncodedOperations().get(-1).size
             }
         },
 
@@ -439,7 +528,8 @@ export function init(dispatcher, mixins, layoutViews, QueryFormView, FilterFormV
                 <div>
                     <QueryOverview {...this.props} />
                     {this.state.activeItem !== null ?
-                        <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem} /> : null}
+                        <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem}
+                            lastOpSize={this.state.lastOpSize} /> : null}
                 </div>
             );
         }
