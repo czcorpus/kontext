@@ -20,7 +20,8 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from querying import Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs
+from querying import (Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs,
+                      ShuffleFormArgs, NOPFormsArgs, LockedOpFormsArgs)
 import settings
 import conclib
 import corplib
@@ -1744,22 +1745,26 @@ class Actions(Querying):
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_apply_lines_groups(self, rows=''):
         self._lines_groups = LinesGroups(data=json.loads(rows))
+        self.add_conc_form_args(NOPFormsArgs(persist=True))
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_non_group_lines(self):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
+        self.add_conc_form_args(NOPFormsArgs(persist=True))
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_sort_group_lines(self):
         self._lines_groups.sorted = True
+        self.add_conc_form_args(NOPFormsArgs(persist=True))
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         data = json.loads(rows)
         self.args.q.append(self._filter_lines(data, pnfilter))
+        self.add_conc_form_args(LockedOpFormsArgs(persist=True))
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=False)
@@ -1774,6 +1779,7 @@ class Actions(Querying):
     def ajax_reedit_line_selection(self):
         ans = self._lines_groups.as_list()
         self._lines_groups = LinesGroups(data=[])
+        self.add_conc_form_args(NOPFormsArgs(persist=True))
         return dict(selection=ans)
 
     @exposed(return_type='json', legacy=True)
@@ -1789,6 +1795,7 @@ class Actions(Querying):
         if to_num > 0:
             new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
         self._lines_groups = LinesGroups(data=new_groups)
+        self.add_conc_form_args(NOPFormsArgs(persist=True))
         return {}
 
     @exposed(return_type='json', legacy=True)

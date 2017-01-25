@@ -83,6 +83,45 @@ class ConcFormArgs(object):
         """
         return self._op_key
 
+    @property
+    def is_locked(self):
+        return False
+
+
+class NOPFormsArgs(ConcFormArgs):
+    """
+    This is used to store special actions that modify
+    compiled query string but are produced in a special
+    way and thus cannot be edited again (e.g. lines groups
+    operations).
+    """
+    def __init__(self, persist):
+        super(NOPFormsArgs, self).__init__(persist)
+        self.form_type = 'nop'
+
+    @property
+    def is_locked(self):
+        return True
+
+
+class LockedOpFormsArgs(ConcFormArgs):
+    """
+    This is used to store actions that modify compiled
+    query string and are mapped to an existing user-editable
+    form (see the difference with NOPFormsArgs) but we
+    do not want user to edit them manually (e.g. user
+    filters manually selected lines which produces a bunch
+    of token IDs - nothing human-friendly). We actually
+    do not bother with storing the arguments.
+    """
+    def __init__(self, form_type, persist):
+        super(LockedOpFormsArgs, self).__init__(persist)
+        self.form_type = form_type
+
+    @property
+    def is_locked(self):
+        return True
+
 
 class QueryFormArgs(ConcFormArgs):
     """
@@ -211,6 +250,8 @@ def build_conc_form_args(data, op_key):
         return SampleFormArgs(persist=False).updated(data, op_key)
     elif tp == 'shuffle':
         return ShuffleFormArgs(persist=False).updated(data, op_key)
+    elif tp == 'nop':
+        return NOPFormsArgs(persist=False).updated(data, op_key)
     else:
         raise ValueError('Cannot determine stored conc args class from type %s' % (tp,))
 
@@ -379,15 +420,17 @@ class Querying(Kontext):
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request):
         try:
-            pipeline = self._load_pipeline(request.args['last_key'])
+            # we must include only regular (i.e. the ones visible in the breadcrumb-like navigation bar)
+            # operations - otherwise the indices would not match.
+            pipeline = filter(lambda x: x.get('conc_forms_args', {}).get('form_type') != 'nop',
+                              self._load_pipeline(request.args['last_key']))
             op_data = pipeline[int(request.args['idx'])]
-            tmp = op_data.get('conc_forms_args', {})
-            tmp.update(op_key=op_data['id'])
-            return tmp
+            ans = op_data.get('conc_forms_args', {})
+            ans.update(op_key=op_data['id'])
+            return ans
         except (IndexError, KeyError):
             self.add_system_message('error', _('Operation not found in the storage'))
             return {}
-
 
     @staticmethod
     def _load_pipeline(last_id):

@@ -141,8 +141,7 @@ export class QueryReplayStore extends SimplePageStore {
      * __latest__: contains arguments of a just submitted form. Due to the server-side
      *             architecture, the (server) action itself does not know the actual
      *             key yet. But after the action is processed, KonText stores the action
-     *             and passes the new ID (key) to layout arguments which are accessible
-     *             here as well.
+     *             and passes the new ID (key) to response arguments.
      */
     private concArgsCache:Immutable.Map<string, AjaxResponse.ConcFormArgs>;
 
