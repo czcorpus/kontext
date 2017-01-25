@@ -347,18 +347,26 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.pcqPosNegValues = Immutable.Map<string, string>(this.corpora.map(item => [item, data.currPcqPosNegValues[item] || 'pos']));
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.QueryFormArgs>):RSVP.Promise<QueryStore> {
+    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.QueryFormArgs>):RSVP.Promise<AjaxResponse.QueryFormArgs> {
         return fn().then(
             (data) => {
-                this.setUserValues({
-                    currQueries: data.curr_queries,
-                    currQueryTypes: data.curr_query_types,
-                    currLposValues: data.curr_lpos_values,
-                    currDefaultAttrValues: data.curr_default_attr_values,
-                    currQmcaseValues: data.curr_qmcase_values,
-                    currPcqPosNegValues: data.curr_pcq_pos_neg_values
-                });
-                return this;
+                if (data.form_type === 'query') {
+                    this.setUserValues({
+                        currQueries: data.curr_queries,
+                        currQueryTypes: data.curr_query_types,
+                        currLposValues: data.curr_lpos_values,
+                        currDefaultAttrValues: data.curr_default_attr_values,
+                        currQmcaseValues: data.curr_qmcase_values,
+                        currPcqPosNegValues: data.curr_pcq_pos_neg_values
+                    });
+                    return data;
+
+                } else if (data.form_type === 'locked') {
+                    return null;
+
+                } else {
+                    throw new Error('Cannot sync query store - invalid form data type: ' + data.form_type);
+                }
             }
         );
     }

@@ -83,10 +83,6 @@ class ConcFormArgs(object):
         """
         return self._op_key
 
-    @property
-    def is_locked(self):
-        return False
-
 
 class NOPFormsArgs(ConcFormArgs):
     """
@@ -99,10 +95,6 @@ class NOPFormsArgs(ConcFormArgs):
         super(NOPFormsArgs, self).__init__(persist)
         self.form_type = 'nop'
 
-    @property
-    def is_locked(self):
-        return True
-
 
 class LockedOpFormsArgs(ConcFormArgs):
     """
@@ -114,13 +106,9 @@ class LockedOpFormsArgs(ConcFormArgs):
     of token IDs - nothing human-friendly). We actually
     do not bother with storing the arguments.
     """
-    def __init__(self, form_type, persist):
+    def __init__(self, persist):
         super(LockedOpFormsArgs, self).__init__(persist)
-        self.form_type = form_type
-
-    @property
-    def is_locked(self):
-        return True
+        self.form_type = 'locked'
 
 
 class QueryFormArgs(ConcFormArgs):
@@ -252,6 +240,8 @@ def build_conc_form_args(data, op_key):
         return ShuffleFormArgs(persist=False).updated(data, op_key)
     elif tp == 'nop':
         return NOPFormsArgs(persist=False).updated(data, op_key)
+    elif tp == 'locked':
+        return LockedOpFormsArgs(persist=False).updated(data, op_key)
     else:
         raise ValueError('Cannot determine stored conc args class from type %s' % (tp,))
 

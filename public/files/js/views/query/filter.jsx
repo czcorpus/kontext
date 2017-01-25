@@ -55,7 +55,8 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                 filfposValue: filterStore.getFilfposValues().get(this.props.filterId),
                 filtposValue: filterStore.getFiltposValues().get(this.props.filterId),
                 filflValue: filterStore.getFilflValues().get(this.props.filterId),
-                inclKwicValue: filterStore.getInclKwicValues().get(this.props.filterId)
+                inclKwicValue: filterStore.getInclKwicValues().get(this.props.filterId),
+                isLocked: filterStore.getOpLocks().get(this.props.filterId)
             };
         },
 
@@ -156,7 +157,7 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
             });
         },
 
-        render : function () {
+        _renderForm : function () {
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form">
@@ -238,6 +239,21 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     </div>
                 </form>
             );
+        },
+
+        render : function () {
+            if (this.state.isLocked) {
+                return (
+                    <div>
+                        <img src={this.createStaticUrl('img/info-icon.svg')} alt={this.translate('global__info_icon')}
+                                style={{verticalAlign: 'middle', marginLeft: '0.7em'}} />
+                        {this.translate('query__operation_is_automatic_and_cannot_be_changed')}
+                    </div>
+                );
+
+            } else {
+                return this._renderForm();
+            }
         }
     });
 

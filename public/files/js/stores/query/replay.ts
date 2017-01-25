@@ -500,7 +500,7 @@ export class QueryReplayStore extends SimplePageStore {
      * @param opIdx an index of the operation in a respective query pipeline
      * @returns updated query store wrapped in a promise
      */
-    private syncQueryForm(opIdx:number):RSVP.Promise<QueryStore> {
+    private syncQueryForm(opIdx:number):RSVP.Promise<AjaxResponse.QueryFormArgsResponse> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) { // cache hit
             return this.queryStore.syncFrom(() => {
@@ -537,7 +537,7 @@ export class QueryReplayStore extends SimplePageStore {
      * Synchronize filter form with position [opIdx] in a
      * respective query pipeline.
      */
-    private syncFilterForm(opIdx:number):RSVP.Promise<FilterStore> {
+    private syncFilterForm(opIdx:number):RSVP.Promise<AjaxResponse.FilterFormArgsResponse> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) { // cache hit
             return this.filterStore.syncFrom(() => {
@@ -575,7 +575,7 @@ export class QueryReplayStore extends SimplePageStore {
     /**
      * @todo
      */
-    private syncSortForm(opIdx:number):RSVP.Promise<any> {
+    private syncSortForm(opIdx:number):RSVP.Promise<AjaxResponse.SortFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) {
             return this.sortStore.syncFrom(() => {
@@ -584,12 +584,12 @@ export class QueryReplayStore extends SimplePageStore {
                         resolve(this.concArgsCache.get(queryKey));
                     }
                 );
-            }).then(
-                () => {
+            }).then<AjaxResponse.SortFormArgs>(
+                (data) => {
                     return this.mlSortStore.syncFrom(() => {
                         return new RSVP.Promise<AjaxResponse.SortFormArgs>(
                             (resolve:(data)=>void, reject:(err)=>void) => {
-                                resolve(this.concArgsCache.get(queryKey));
+                                resolve(data);
                             }
                         );
                     });
@@ -603,7 +603,7 @@ export class QueryReplayStore extends SimplePageStore {
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {last_key: this.getCurrentQueryKey(), idx: opIdx}
 
-                ).then(
+                ).then<AjaxResponse.SortFormArgsResponse>(
                     (data) => {
                         if (!data.contains_errors) {
                             this.concArgsCache = this.concArgsCache.set(data.op_key, data);
@@ -616,7 +616,7 @@ export class QueryReplayStore extends SimplePageStore {
                     }
                 )
 
-            }).then(
+            }).then<AjaxResponse.SortFormArgsResponse>(
                 (data) => {
                     const queryKey = this.opIdxToCachedQueryKey(opIdx); // now we know queryKey for sure
                     return this.mlSortStore.syncFrom(() => {
