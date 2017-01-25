@@ -24,15 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Word List Form")#slurp
 #end def
 
-#def left_submenu
-#filter WebSafe
-    <li><a title="$_("Compute a list of all words")" href="wordlist?$globals;wlattr=word;wlsort=f">$_("All words")</a></li>
-  #if $has_lemmaattr
-    <li><a title="$_("Compute a list of all lemmas")" href="wordlist?$globals;wlattr=lemma;wlsort=f">$_("All lemmas")</a></li>
-  #end if
-#end filter
-#end def
-
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, conf) {
     conf.wltype = "$wltype";

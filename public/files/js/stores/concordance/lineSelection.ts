@@ -307,7 +307,10 @@ export class LineSelectionStore extends SimplePageStore {
     public resetServerLineGroups():RSVP.Promise<MultiDict> {
         return this.layoutModel.ajax<RedirectingResponse>(
             'POST',
-            this.layoutModel.createActionUrl('ajax_unset_lines_groups?' +  this.layoutModel.getConf('stateParams')),
+            this.layoutModel.createActionUrl(
+                    'ajax_unset_lines_groups',
+                    this.layoutModel.getConcArgs().items()
+            ),
             {},
             {
                 contentType : 'application/x-www-form-urlencoded'
@@ -324,8 +327,10 @@ export class LineSelectionStore extends SimplePageStore {
     private markLines():RSVP.Promise<MultiDict> {
         return this.layoutModel.ajax<RedirectingResponse>(
             'POST',
-            this.layoutModel.createActionUrl('ajax_apply_lines_groups?' +
-                    this.layoutModel.getConf('stateParams')),
+            this.layoutModel.createActionUrl(
+                'ajax_apply_lines_groups',
+                this.layoutModel.getConcArgs().items()
+            ),
             {
                 rows : JSON.stringify(this.clStorage.getAll())
             },
