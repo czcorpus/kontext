@@ -163,7 +163,6 @@ define('conf', [], function () {
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
     conf.bibConf = $bib_conf.to_json();
-    conf.stateParams = "$join_params($q, $globals)";
     conf.currentArgs = $Globals.to_json();
     conf.encodedQuery = $to_json($Q);
     conf.uiLang = "$uiLang";
