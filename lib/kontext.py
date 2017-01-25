@@ -480,7 +480,12 @@ class Kontext(Controller):
         tpl_data -- a dictionary used along with HTML template to render the output
         """
         if plugins.has_plugin('conc_persistence'):
-            tpl_data['Q'] = ['~%s' % op_id] if op_id else []
+            if op_id:
+                tpl_data['Q'] = ['~%s' % op_id]
+                tpl_data['conc_persistence_op_id'] = op_id
+            else:
+                tpl_data['Q'] = []
+                tpl_data['conc_persistence_op_id'] = None
         else:
             tpl_data['Q'] = self.args.q[:]
         tpl_data['num_lines_in_groups'] = len(self._lines_groups)

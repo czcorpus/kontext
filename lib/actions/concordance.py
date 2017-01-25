@@ -1739,50 +1739,28 @@ class Actions(Querying):
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_unset_lines_groups(self):
         self._lines_groups = LinesGroups(data=[])
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {'id': q_id, 'next_url': self.create_url('view', params)}
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_apply_lines_groups(self, rows=''):
         self._lines_groups = LinesGroups(data=json.loads(rows))
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_non_group_lines(self):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_sort_group_lines(self):
         self._lines_groups.sorted = True
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         data = json.loads(rows)
         self.args.q.append(self._filter_lines(data, pnfilter))
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=False)
     def ajax_send_group_selection_link_to_mail(self, request):
@@ -1790,15 +1768,13 @@ class Actions(Querying):
         ans = mailing.send_concordance_url(plugins.get('auth'), self._plugin_api,
                                            request.form.get('email'),
                                            request.form.get('url'))
-        return {'ok': ans}
+        return dict(ok=ans)
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_reedit_line_selection(self):
         ans = self._lines_groups.as_list()
         self._lines_groups = LinesGroups(data=[])
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return dict(id=q_id, selection=ans, next_url=self.create_url('view', params))
+        return dict(selection=ans)
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_line_groups_stats(self):
@@ -1813,9 +1789,7 @@ class Actions(Querying):
         if to_num > 0:
             new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
         self._lines_groups = LinesGroups(data=new_groups)
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return dict(id=q_id, next_url=self.create_url('view', params))
+        return {}
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_within_max_hits(self):

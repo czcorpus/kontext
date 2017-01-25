@@ -308,6 +308,11 @@ declare module Kontext {
         messages:Array<string>;
     }
 
+    export interface AjaxConcResponse extends AjaxResponse {
+        Q:Array<string>;
+        conc_persistence_op_id:string;
+    }
+
     export interface AsyncTaskInfo {
         ident:string;
         label:string;
