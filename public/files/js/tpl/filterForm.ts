@@ -161,7 +161,8 @@ export class FilterFormpage {
                 hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
                 inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
-                isWithin: this.layoutModel.getConf<boolean>('IsWithin')
+                isWithin: this.layoutModel.getConf<boolean>('IsWithin'),
+                opLocks: fetchArgs<boolean>(item => item.form_type === 'locked')
             }
         );
         const filterFormComponents = filterFormInit(

@@ -77,12 +77,20 @@ export class SampleStore extends SimplePageStore {
         });
     }
 
-    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.SampleFormArgs>):RSVP.Promise<SampleStore> {
+    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.SampleFormArgs>):RSVP.Promise<AjaxResponse.SampleFormArgs> {
         return fn().then(
             (data) => {
-                const filterId = data.op_key;
-                this.rlinesValues = this.rlinesValues.set(data.op_key, data.rlines);
-                return this;
+                if (data.form_type === 'sample') {
+                    const filterId = data.op_key;
+                    this.rlinesValues = this.rlinesValues.set(data.op_key, data.rlines);
+                    return data;
+
+                } else if (data.form_type === 'locked') {
+                    return null;
+
+                } else {
+                    throw new Error('Cannot sync sample store - invalid form data type: ' + data.form_type);
+                }
             }
         );
     }
