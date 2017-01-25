@@ -247,8 +247,8 @@ export class QueryReplayStore extends SimplePageStore {
     }
 
     private getCurrentQueryKey():string {
-        const encodedQuery = this.pageModel.getConf<Array<string>>('encodedQuery') || [];
-        const lastOp = encodedQuery[encodedQuery.length - 1] || '';
+        const compiledQuery = this.pageModel.getConf<Array<string>>('compiledQuery') || [];
+        const lastOp = compiledQuery[compiledQuery.length - 1] || '';
         return lastOp.substr(0, 1) === '~' ? lastOp.substr(1) : undefined;
     }
 

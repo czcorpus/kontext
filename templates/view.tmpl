@@ -37,7 +37,6 @@ $_("Concordance")#slurp
 
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
-    conf.q = "$q";
     conf.replicableQuery = #if $getVar('replicable_query', False)#true#else#false#end if#;
     conf.concLineMaxGroupNum = $conc_line_max_group_num;
     conf.WideCtxGlobals = $to_json($widectx_globals);
@@ -86,10 +85,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
     #if $running_calc
     conf.numLines = $len($Lines);
-    conf.q = '$q';
-    conf.q2 = '$q[2]';
-    conf.q2toEnd = '$q[2:]';
-    conf.globals = '$globals';
     conf.Unfinished = true;
     var model = pageSelf.init(conf);
     model.reloadHits(conf);
