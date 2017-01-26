@@ -147,6 +147,9 @@ class Actions(Querying):
         """
         KWIC view
         """
+        if len(self._lines_groups) > 0:
+            self.disabled_menu_items = (MainMenu.CONCORDANCE('sorting', 'shuffle', 'sample'),
+                                        MainMenu.FILTER)
         corpus_info = self.get_corpus_info(self.args.corpname)
         if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
             self.args.refs = self.corp.get_conf('SHORTREF')
@@ -326,6 +329,10 @@ class Actions(Querying):
         simple sort concordance
         """
         self.disabled_menu_items = ()
+
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a sorting once a group of lines has been saved')
 
         qinfo = SortFormArgs(persist=True)
         qinfo.sattr = self.args.sattr
@@ -697,6 +704,10 @@ class Actions(Querying):
         """
         Positive/Negative filter
         """
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a filter once a group of lines has been saved')
+
         pnfilter = request.args.get('pnfilter', '')
         filfl = request.args.get('filfl', 'f')
         filfpos = request.args.get('filfpos', '-5')
@@ -765,6 +776,9 @@ class Actions(Querying):
         """
         random sample
         """
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a random sample once a group of lines has been saved')
         qinfo = SampleFormArgs(persist=True)
         qinfo.rlines = self.args.rlines
         self.add_conc_form_args(qinfo)
@@ -774,6 +788,9 @@ class Actions(Querying):
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def shuffle(self):
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(ShuffleFormArgs(persist=True))
         self.args.q.append('f')
         return self.view()
