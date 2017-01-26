@@ -202,6 +202,12 @@ export class LineSelectionStore extends SimplePageStore {
         }
     }
 
+    private updateGlobalArgs(data:Kontext.AjaxConcResponse):void {
+        this.layoutModel.setConf<number>('NumLinesInGroups', data.num_lines_in_groups);
+        this.layoutModel.setConf<Array<number>>('LinesGroupsNumbers', data.lines_groups_numbers);
+        this.layoutModel.replaceConcArg('q', data.Q);
+    }
+
     private clearSelection():void {
         this.clStorage.clear();
     }
@@ -242,7 +248,7 @@ export class LineSelectionStore extends SimplePageStore {
                 (data) => {
                     if (!data.contains_errors) {
                         this.currentGroupIds = data['lines_groups_numbers'];
-                        this.layoutModel.replaceConcArg('q', data.Q);
+                        this.updateGlobalArgs(data);
                         return this.concLineStore.reloadPage();
 
                     } else {
@@ -324,7 +330,7 @@ export class LineSelectionStore extends SimplePageStore {
         ).then<MultiDict>(
             (data) => {
                 this.clStorage.clear();
-                this.layoutModel.replaceConcArg('q', data.Q);
+                this.updateGlobalArgs(data);
                 return this.concLineStore.reloadPage();
             }
         )
@@ -345,7 +351,8 @@ export class LineSelectionStore extends SimplePageStore {
             }
         ).then<MultiDict>(
             (data) => {
-                this.layoutModel.replaceConcArg('q', data.Q);
+
+                this.updateGlobalArgs(data);
                 this.currentGroupIds = data['lines_groups_numbers'];
                 return this.concLineStore.reloadPage();
             }
@@ -380,7 +387,7 @@ export class LineSelectionStore extends SimplePageStore {
         ).then<MultiDict>(
             (data) => {
                 this.importData(data.selection);
-                this.layoutModel.replaceConcArg('q', data.Q);
+                this.updateGlobalArgs(data);
                 return this.concLineStore.reloadPage();
             }
         );

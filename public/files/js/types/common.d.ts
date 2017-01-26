@@ -311,6 +311,8 @@ declare module Kontext {
     export interface AjaxConcResponse extends AjaxResponse {
         Q:Array<string>;
         conc_persistence_op_id:string;
+        num_lines_in_groups:number;
+        lines_groups_numbers:Array<number>;
     }
 
     export interface AsyncTaskInfo {

@@ -147,9 +147,6 @@ class Actions(Querying):
         """
         KWIC view
         """
-        if len(self._lines_groups) > 0:
-            self.disabled_menu_items = (MainMenu.CONCORDANCE('sorting', 'shuffle', 'sample'),
-                                        MainMenu.FILTER)
         corpus_info = self.get_corpus_info(self.args.corpname)
         if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
             self.args.refs = self.corp.get_conf('SHORTREF')

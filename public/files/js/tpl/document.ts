@@ -52,7 +52,7 @@ import IntlMessageFormat = require('vendor/intl-messageformat');
 import * as Immutable from 'vendor/immutable';
 import {AsyncTaskChecker} from '../stores/asyncTask';
 import {UserSettings} from '../userSettings';
-import {MainMenuStore} from '../stores/mainMenu';
+import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**
@@ -166,10 +166,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.messageStore = new docStores.MessageStore(this.pluginApi(), this.dispatcher);
         this.userInfoStore = new UserInfo(this, this.dispatcher);
         this.viewOptionsStore = new ViewOptionsStore(this, this.dispatcher);
-        this.mainMenuStore = new MainMenuStore(this.dispatcher, this);
+        this.mainMenuStore = new MainMenuStore(
+            this.dispatcher,
+            this,
+            this.getConf<InitialMenuData>('menuData')
+        );
         this.translations = translations[this.conf['uiLang']] || {};
-        this.asyncTaskChecker = new AsyncTaskChecker(this.dispatcher, this.pluginApi(),
-                this.getConf<any>('asyncTasks') || []);
+        this.asyncTaskChecker = new AsyncTaskChecker(
+            this.dispatcher,
+            this.pluginApi(),
+            this.getConf<any>('asyncTasks') || []
+        );
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
     }
 
@@ -768,6 +775,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.conf[item];
     }
 
+    setConf<T>(key:string, value:T):void {
+        this.conf[key] = value;
+    }
+
     /**
      * Return a list of concordance arguments and their values. Multi-value keys
      * are preserved.
@@ -845,12 +856,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private initMainMenu():void {
         const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this,
-                this.getStores().asyncTaskInfoStore, this.layoutViews);
-        const menuData = this.getConf<any>('menuData');
+                this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
         this.renderReactComponent(
             menuViews.MainMenu,
             window.document.getElementById('main-menu-mount'),
-            {submenuItems: Immutable.List(menuData['submenuItems'])}
+            {}
         );
     }
 
