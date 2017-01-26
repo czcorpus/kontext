@@ -149,10 +149,12 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                                 alt={this.translate('global__warning_icon')}
                                  style={{verticalAlign: 'middle', marginRight: '0.5em'}} />
                             {this.translate('query__replay_op_cannot_be_edited_msg')}.
-                            {'\u00a0'}<a href={this.createActionLink(`view?${this.props.opEncodedArgs}`)}>
+                        </p>
+                        <div>
+                            <a className="default-button" href={this.createActionLink(`view?${this.props.opEncodedArgs}`)}>
                                 {this.translate('query__replay_view_the_result')}
                             </a>
-                        </p>
+                        </div>
                     </div>
                 );
 

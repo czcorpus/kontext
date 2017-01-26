@@ -145,6 +145,8 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                         <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
                                 title={this.translate('global__loading')} />
                         : null}
+                    {this.state.mode === 'groups' ?
+                        <p style={{marginTop: '1em'}}>({this.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
                 </div>
             );
         }
