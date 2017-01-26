@@ -28,11 +28,14 @@ import * as RSVP from 'vendor/rsvp';
 
 
 export interface SubmenuItem {
+    ident:string;
     action:string;
     args:{[key:string]:any};
     currConc:boolean;
+    message:string; // a dispatcher action type
     indirect:boolean;
     label:string;
+    disabled:boolean;
 }
 
 export interface MenuItem {
@@ -105,16 +108,43 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
     }
 
     disableMenuItem(itemId:string, subItemId?:string):void {
+        this.setMenuItemDisabledValue(itemId, subItemId, true);
+        this.notifyChangeListeners();
+    }
+
+    enableMenuItem(itemId:string, subItemId?:string):void {
+        this.setMenuItemDisabledValue(itemId, subItemId, false);
+        this.notifyChangeListeners();
+    }
+
+    private setMenuItemDisabledValue(itemId:string, subItemId:string, v:boolean):void {
         const srchIdx = this.data.findIndex(item => item[0] === itemId);
         if (srchIdx) {
             const srch = this.data.get(srchIdx);
             if (subItemId === undefined) {
-                const newItem:MenuEntry = [srch[0], srch[1]];
-                // TODO
-                this.data = this.data.set(srchIdx, newItem);
+                const newItem:MenuItem = {
+                    disabled: v,
+                    fallback_action: srch[1].fallback_action,
+                    items: srch[1].items, // TODO - mutability
+                    label: srch[1].label
+                };
+                const newEntry:MenuEntry = [srch[0], newItem];
+                this.data = this.data.set(srchIdx, newEntry);
 
             } else {
-                // TODO
+                const newEntry:MenuEntry = [srch[0], srch[1]];
+                newEntry[1].items = newEntry[1].items.map(item => {
+                    return {
+                        ident: item.ident,
+                        action: item.action,
+                        args: item.args,
+                        message: item.message,
+                        currConc: item.currConc,
+                        indirect: item.indirect,
+                        label: item.label,
+                        disabled: item.ident === subItemId ? v : item.disabled
+                    }
+                });
             }
         }
     }

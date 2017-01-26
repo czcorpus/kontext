@@ -337,16 +337,19 @@ export function init(dispatcher, mixins, concArgHandler, mainMenuStore, asyncTas
             this.setState({
                 currFocus: this.state.currFocus,
                 numRunningTasks: asyncTaskStore.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskStore.getNumFinishedTasks()
+                numFinishedTasks: asyncTaskStore.getNumFinishedTasks(),
+                menuItems: mainMenuStore.getData()
             });
         },
 
         componentDidMount : function () {
             asyncTaskStore.addChangeListener(this._storeChangeListener);
+            mainMenuStore.addChangeListener(this._storeChangeListener);
         },
 
         componentWillUnmount : function () {
             asyncTaskStore.removeChangeListener(this._storeChangeListener);
+            mainMenuStore.removeChangeListener(this._storeChangeListener);
         },
 
         _closeActiveSubmenu : function () {

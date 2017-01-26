@@ -46,6 +46,9 @@ class MainMenuItemId(object):
         else:
             return self.name
 
+    def get_sub_id(self):
+        return self.items[0] if len(self.items) > 0 else None
+
     def matches(self, item_id):
         """
         Tests whether self matches provided item_id.
@@ -134,6 +137,7 @@ class AbstractMenuItem(object):
         self._args = []
         self._indirect = False
         self._corpus_dependent = False
+        self._disabled = False
 
     def add_args(self, *args):
         """
@@ -164,6 +168,10 @@ class AbstractMenuItem(object):
         instance (e.g. corpora list).
         """
         self._corpus_dependent = True
+        return self
+
+    def set_disabled(self, v):
+        self._disabled = v
         return self
 
     @property
@@ -209,11 +217,13 @@ class MenuItemInternal(AbstractMenuItem):
 
     def create(self, out_data):
         return dict(
+            ident=self._ident.get_sub_id(),
             label=self._label,
             action=self._action,
             indirect=self._indirect,
             currConc=False,
-            args=self._args
+            args=self._args,
+            disabled=self._disabled
         )
 
 
@@ -229,11 +239,13 @@ class MenuItemExternal(AbstractMenuItem):
 
     def create(self, out_data):
         return dict(
+            ident=self._ident.get_sub_id(),
             label=self._label,
             indirect=False,
             url=self._url,
             currConc=False,
-            args=join_params(self._args)
+            args=join_params(self._args),
+            disabled=self._disabled
         )
 
 
@@ -530,7 +542,7 @@ class MenuGenerator(object):
             return False
 
         def exp(*args):
-            return [item.filter_empty_args().create(self._args) for item in args if not is_disabled(item)]
+            return [item.filter_empty_args().set_disabled(is_disabled(item)).create(self._args) for item in args]
 
         items = [
             (MainMenu.NEW_QUERY.name, dict(

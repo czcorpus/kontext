@@ -112,6 +112,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     conf:Kontext.Conf;
 
+    confChangeHandlers:Immutable.Map<string, Immutable.List<(v:any)=>void>>;
+
     /**
      * Flux Dispatcher (currently not used across the app)
      */
@@ -158,6 +160,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
+        this.confChangeHandlers = Immutable.Map<string, Immutable.List<(v:any)=>void>>();
         this.dispatcher = new Dispatcher<Kontext.DispatcherPayload>();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
@@ -178,6 +181,16 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             this.getConf<any>('asyncTasks') || []
         );
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
+    }
+
+    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
+        if (!this.confChangeHandlers.has(key)) {
+            this.confChangeHandlers = this.confChangeHandlers.set(key, Immutable.List<(v:any)=>void>());
+        }
+        this.confChangeHandlers = this.confChangeHandlers.set(
+            key,
+            this.confChangeHandlers.get(key).push(handler)
+        );
     }
 
     /**
@@ -777,6 +790,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     setConf<T>(key:string, value:T):void {
         this.conf[key] = value;
+        if (this.confChangeHandlers.has(key)) {
+            this.confChangeHandlers.get(key).forEach(item => item(value));
+        }
     }
 
     /**
@@ -855,6 +871,23 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     private initMainMenu():void {
+        const updateMenu = (numLinesInGroups) => {
+            if (numLinesInGroups > 0) {
+                this.mainMenuStore.disableMenuItem('menu-filter');
+                this.mainMenuStore.disableMenuItem('menu-concordance', 'sorting');
+                this.mainMenuStore.disableMenuItem('menu-concordance', 'shuffle');
+                this.mainMenuStore.disableMenuItem('menu-concordance', 'sample');
+
+            } else {
+                this.mainMenuStore.enableMenuItem('menu-filter');
+                this.mainMenuStore.enableMenuItem('menu-concordance', 'sorting');
+                this.mainMenuStore.enableMenuItem('menu-concordance', 'shuffle');
+                this.mainMenuStore.enableMenuItem('menu-concordance', 'sample');
+            }
+        };
+        updateMenu(this.getConf<number>('NumLinesInGroups'));
+        this.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
+
         const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this,
                 this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
         this.renderReactComponent(
