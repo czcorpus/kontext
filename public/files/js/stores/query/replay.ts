@@ -197,6 +197,8 @@ export class QueryReplayStore extends SimplePageStore {
      */
     private currentQueryOverview:any;
 
+    private _editIsLocked:boolean;
+
     constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
             currentOperations:Array<QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher);
@@ -224,6 +226,12 @@ export class QueryReplayStore extends SimplePageStore {
         this.editedOperationIdx = null;
         this.stopAfterOpIdx = null;
         this.syncCache();
+
+        this._editIsLocked = this.pageModel.getConf<number>('NumLinesInGroups') > 0;
+        this.pageModel.addConfChangeHandler<number>('NumLinesInGroups', (v) => {
+            this._editIsLocked = v > 0;
+        });
+
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'EDIT_QUERY_OPERATION':
@@ -820,5 +828,9 @@ export class QueryReplayStore extends SimplePageStore {
 
     getRunFullQuery():boolean {
         return this.stopAfterOpIdx === null;
+    }
+
+    editIsLocked():boolean {
+        return this._editIsLocked;
     }
 }

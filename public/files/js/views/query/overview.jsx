@@ -141,7 +141,7 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
             if (this.props.isLoading) {
                 return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />;
 
-            } else if (!this.props.opKey) {
+            } else if (!this.props.opKey || this.props.editIsLocked) {
                 return (
                     <div>
                         <p>
@@ -150,7 +150,7 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                                  style={{verticalAlign: 'middle', marginRight: '0.5em'}} />
                             {this.translate('query__replay_op_cannot_be_edited_msg')}.
                         </p>
-                        <div>
+                        <div style={{textAlign: 'center', marginTop: '2em'}}>
                             <a className="default-button" href={this.createActionLink(`view?${this.props.opEncodedArgs}`)}>
                                 {this.translate('query__replay_view_the_result')}
                             </a>
@@ -254,7 +254,8 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                             modeRunFullQuery={this.props.modeRunFullQuery}
                             numOps={this.props.numOps}
                             shuffleMinResultWarning={this.props.shuffleMinResultWarning}
-                            resultSize={this.props.item.size} />
+                            resultSize={this.props.item.size}
+                            editIsLocked={this.props.editIsLocked} />
                         : null}
                 </li>
             );
@@ -336,7 +337,8 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 editOpKey: null,
                 isLoading: false,
                 queryOverview: queryReplayStore.getCurrentQueryOverview(),
-                modeRunFullQuery: queryReplayStore.getRunFullQuery()
+                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
+                editIsLocked: queryReplayStore.editIsLocked()
             };
         },
 
@@ -352,7 +354,8 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 editOpKey: queryReplayStore.getEditedOperationIdx(),
                 isLoading: true,
                 queryOverview: null,
-                modeRunFullQuery: queryReplayStore.getRunFullQuery()
+                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
+                editIsLocked: queryReplayStore.editIsLocked()
             });
         },
 
@@ -364,7 +367,8 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 editOpKey: null,
                 isLoading: false,
                 queryOverview: null,
-                modeRunFullQuery: queryReplayStore.getRunFullQuery()
+                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
+                editIsLocked: queryReplayStore.editIsLocked()
             });
         },
 
@@ -376,7 +380,8 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 editOpKey: queryReplayStore.opIdxToCachedQueryKey(this.state.editOpIdx),
                 isLoading: false,
                 queryOverview: queryReplayStore.getCurrentQueryOverview(),
-                modeRunFullQuery: queryReplayStore.getRunFullQuery()
+                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
+                editIsLocked: queryReplayStore.editIsLocked()
             });
         },
 
@@ -438,7 +443,8 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                                         isLoading={this.state.isLoading}
                                         modeRunFullQuery={this.state.modeRunFullQuery}
                                         numOps={this.state.ops.size}
-                                        shuffleMinResultWarning={this.props.shuffleFormProps.shuffleMinResultWarning} />;
+                                        shuffleMinResultWarning={this.props.shuffleFormProps.shuffleMinResultWarning}
+                                        editIsLocked={this.state.editIsLocked} />;
                         })}
                     </ul>
                 </div>
