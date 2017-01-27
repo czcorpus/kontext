@@ -268,6 +268,7 @@ export class QueryReplayStore extends SimplePageStore {
                         );
                     break;
                     case 'OVERVIEW_SHOW_QUERY_INFO':
+                        this.editedOperationIdx = null;
                         this.loadQueryOverview().then(
                             (data) => {
                                 this.notifyChangeListeners();
