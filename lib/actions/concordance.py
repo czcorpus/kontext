@@ -21,7 +21,7 @@ from collections import defaultdict
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
 from querying import (Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs,
-                      ShuffleFormArgs, NOPFormsArgs, LockedOpFormsArgs)
+                      ShuffleFormArgs, LgroupOpArgs, LockedOpFormsArgs, build_conc_form_args)
 import settings
 import conclib
 import corplib
@@ -1753,25 +1753,37 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_unset_lines_groups(self):
+        pipeline = self._load_pipeline_ops(self._q_code)
+        i = len(pipeline) - 1
+        # we have to go back before the current block
+        # of lines-groups operations and find an
+        # operation to start a new query pipeline
+        while i >= 0 and pipeline[i].form_type == 'lgroup':
+            i -= 1
+        if i < 0:
+            raise Exception('Broken operation chain')
+        self._clear_prev_conc_params()  # we do not want to chain next state with the current one
         self._lines_groups = LinesGroups(data=[])
+        pipeline[i].make_saveable()  # drop old opKey, set as persistent
+        self.add_conc_form_args(pipeline[i])
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_apply_lines_groups(self, rows=''):
         self._lines_groups = LinesGroups(data=json.loads(rows))
-        self.add_conc_form_args(NOPFormsArgs(persist=True))
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_non_group_lines(self):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
-        self.add_conc_form_args(NOPFormsArgs(persist=True))
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_sort_group_lines(self):
         self._lines_groups.sorted = True
-        self.add_conc_form_args(NOPFormsArgs(persist=True))
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
@@ -1793,7 +1805,7 @@ class Actions(Querying):
     def ajax_reedit_line_selection(self):
         ans = self._lines_groups.as_list()
         self._lines_groups = LinesGroups(data=[])
-        self.add_conc_form_args(NOPFormsArgs(persist=True))
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
         return dict(selection=ans)
 
     @exposed(return_type='json', legacy=True)
@@ -1809,7 +1821,7 @@ class Actions(Querying):
         if to_num > 0:
             new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
         self._lines_groups = LinesGroups(data=new_groups)
-        self.add_conc_form_args(NOPFormsArgs(persist=True))
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
     @exposed(return_type='json', legacy=True)
@@ -1828,5 +1840,5 @@ class Actions(Querying):
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, request):
-        pipeline = self._load_pipeline(self._q_code)
-        return dict(ops=[dict(id=x['id'], form_args=x.get('conc_forms_args', {})) for x in pipeline])
+        pipeline = self._load_pipeline_ops(self._q_code)
+        return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])

@@ -721,10 +721,6 @@ export class ViewPage {
      *
      */
     initQueryOverviewArea():void {
-        const concArgsCache:LocalQueryFormData = this.layoutModel.getConf<number>('NumLinesInGroups') > 0 ?
-                {} : this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs');
-
-
         this.queryStores.queryReplayStore = new QueryReplayStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -736,7 +732,7 @@ export class ViewPage {
                 sampleStore: this.queryStores.sampleStore
             },
             this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || [],
-            concArgsCache
+            this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
         );
         this.queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,

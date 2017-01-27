@@ -16,6 +16,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+This module contains a functionality related to
+extended, re-editable query processing.
+"""
+
 from kontext import Kontext
 import corplib
 import plugins
@@ -83,8 +88,12 @@ class ConcFormArgs(object):
         """
         return self._op_key
 
+    def make_saveable(self):
+        self._op_key = '__new__'
+        self._persistent = True
 
-class NOPFormsArgs(ConcFormArgs):
+
+class LgroupOpArgs(ConcFormArgs):
     """
     This is used to store special actions that modify
     compiled query string but are produced in a special
@@ -92,15 +101,15 @@ class NOPFormsArgs(ConcFormArgs):
     operations).
     """
     def __init__(self, persist):
-        super(NOPFormsArgs, self).__init__(persist)
-        self.form_type = 'nop'
+        super(LgroupOpArgs, self).__init__(persist)
+        self.form_type = 'lgroup'
 
 
 class LockedOpFormsArgs(ConcFormArgs):
     """
     This is used to store actions that modify compiled
     query string and are mapped to an existing user-editable
-    form (see the difference with NOPFormsArgs) but we
+    form (see the difference with LgroupOpArgs) but we
     do not want user to edit them manually (e.g. user
     filters manually selected lines which produces a bunch
     of token IDs - nothing human-friendly). We actually
@@ -238,8 +247,8 @@ def build_conc_form_args(data, op_key):
         return SampleFormArgs(persist=False).updated(data, op_key)
     elif tp == 'shuffle':
         return ShuffleFormArgs(persist=False).updated(data, op_key)
-    elif tp == 'nop':
-        return NOPFormsArgs(persist=False).updated(data, op_key)
+    elif tp == 'lgroup':
+        return LgroupOpArgs(persist=False).updated(data, op_key)
     elif tp == 'locked':
         return LockedOpFormsArgs(persist=False).updated(data, op_key)
     else:
@@ -250,9 +259,9 @@ class Querying(Kontext):
     """
     A controller for actions which rely on
     query input form (either directly or indirectly).
-    Put in different words, any action requiring
-    self.args.q should be part of a class extended
-    from this one.
+    It introduces a concept of a 'query pipeline' which
+    is in fact a series of stored form arguments chained
+    by 'prev_id' reference (i.e. a reversed list).
     """
 
     def __init__(self, request, ui_lang):
@@ -263,6 +272,13 @@ class Querying(Kontext):
         return super(Kontext, self).get_mapping_url_prefix()
 
     def add_conc_form_args(self, item):
+        """
+        Add persistent form arguments for a currently processed
+        action. The data are used in two ways:
+        1) as a source of values when respective JS Flux stores are instantiated
+        2) when conc persistence automatic save procedure
+           is performed during post_dispatch() (see self.get_saveable_conc_data())
+        """
         self._curr_conc_form_args = item
 
     def get_saveable_conc_data(self, prev_data):
@@ -412,31 +428,29 @@ class Querying(Kontext):
         try:
             # we must include only regular (i.e. the ones visible in the breadcrumb-like navigation bar)
             # operations - otherwise the indices would not match.
-            pipeline = filter(lambda x: x.get('conc_forms_args', {}).get('form_type') != 'nop',
-                              self._load_pipeline(request.args['last_key']))
+            pipeline = filter(lambda x: x.form_type != 'nop',
+                              self._load_pipeline_ops(request.args['last_key']))
             op_data = pipeline[int(request.args['idx'])]
-            ans = op_data.get('conc_forms_args', {})
-            ans.update(op_key=op_data['id'])
-            return ans
+            return op_data.to_dict()
         except (IndexError, KeyError):
             self.add_system_message('error', _('Operation not found in the storage'))
             return {}
 
     @staticmethod
-    def _load_pipeline(last_id):
+    def _load_pipeline_ops(last_id):
         ans = []
         if plugins.has_plugin('conc_persistence'):
             cp = plugins.get('conc_persistence')
             data = cp.open(last_id)
             if data is not None:
-                data['conc_forms_args'] = build_conc_form_args(data['lastop_form'], data['id']).to_dict()
-                del data['lastop_form']
-                ans.append(data)
+                ans.append(build_conc_form_args(data['lastop_form'], data['id']))
             limit = 100
             while data is not None and data.get('prev_id') and limit > 0:
                 data = cp.open(data['prev_id'])
-                data['conc_forms_args'] = build_conc_form_args(data['lastop_form'], data['id']).to_dict()
-                del data['lastop_form']
-                ans.insert(0, data)
+                ans.insert(0, build_conc_form_args(data['lastop_form'], data['id']))
                 limit -= 1
+                if limit == 0:
+                    logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
+                        last_id))
         return ans
+
