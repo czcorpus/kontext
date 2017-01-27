@@ -18,10 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/**
- * This module contains functionality related directly to the first_form.tmpl template
- */
-
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
@@ -90,7 +86,13 @@ export class QueryStores {
     sampleStore:SampleStore;
 }
 
+type LineGroupStats = {[groupId:number]:number};
 
+/**
+ * This is the concordance viewing and operating model with
+ * all attached subsequent form components (filters, sorting,...)
+ * and manual line selection functionality.
+ */
 export class ViewPage {
 
     private static CHECK_CONC_DELAY = 700;
@@ -107,9 +109,9 @@ export class ViewPage {
 
     private hasLockedGroups:boolean;
 
-    private concViews:any; // TODO
+    private concViews:ConcordanceView;
 
-    private lastGroupStats:any; // group stats cache
+    private lastGroupStats:LineGroupStats; // group stats cache
 
     private queryFormViews:QueryFormViews;
 
@@ -233,10 +235,12 @@ export class ViewPage {
             });
 
         } else {
-            prom = this.layoutModel.ajax(
+            prom = this.layoutModel.ajax<LineGroupStats>(
                 'GET',
-                this.layoutModel.createActionUrl('ajax_get_line_groups_stats?')
-                        + this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs()),
+                this.layoutModel.createActionUrl(
+                    'ajax_get_line_groups_stats',
+                    this.layoutModel.getConcArgs().items()
+                ),
                 {},
                 {contentType : 'application/x-www-form-urlencoded'}
 
@@ -592,7 +596,8 @@ export class ViewPage {
             hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
-            isWithin: this.layoutModel.getConf<boolean>('IsWithin')
+            isWithin: this.layoutModel.getConf<boolean>('IsWithin'),
+            opLocks: fetchArgs<boolean>(item => item.form_type === 'locked')
         }
 
         this.queryStores.filterStore = new FilterStore(

@@ -20,7 +20,8 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from querying import Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs
+from querying import (Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs,
+                      ShuffleFormArgs, LgroupOpArgs, LockedOpFormsArgs, build_conc_form_args)
 import settings
 import conclib
 import corplib
@@ -325,6 +326,10 @@ class Actions(Querying):
         simple sort concordance
         """
         self.disabled_menu_items = ()
+
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a sorting once a group of lines has been saved')
 
         qinfo = SortFormArgs(persist=True)
         qinfo.sattr = self.args.sattr
@@ -696,6 +701,10 @@ class Actions(Querying):
         """
         Positive/Negative filter
         """
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a filter once a group of lines has been saved')
+
         pnfilter = request.args.get('pnfilter', '')
         filfl = request.args.get('filfl', 'f')
         filfpos = request.args.get('filfpos', '-5')
@@ -764,6 +773,9 @@ class Actions(Querying):
         """
         random sample
         """
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a random sample once a group of lines has been saved')
         qinfo = SampleFormArgs(persist=True)
         qinfo.rlines = self.args.rlines
         self.add_conc_form_args(qinfo)
@@ -773,6 +785,9 @@ class Actions(Querying):
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def shuffle(self):
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(ShuffleFormArgs(persist=True))
         self.args.q.append('f')
         return self.view()
@@ -1738,51 +1753,45 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_unset_lines_groups(self):
+        pipeline = self._load_pipeline_ops(self._q_code)
+        i = len(pipeline) - 1
+        # we have to go back before the current block
+        # of lines-groups operations and find an
+        # operation to start a new query pipeline
+        while i >= 0 and pipeline[i].form_type == 'lgroup':
+            i -= 1
+        if i < 0:
+            raise Exception('Broken operation chain')
+        self._clear_prev_conc_params()  # we do not want to chain next state with the current one
         self._lines_groups = LinesGroups(data=[])
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {'id': q_id, 'next_url': self.create_url('view', params)}
+        pipeline[i].make_saveable()  # drop old opKey, set as persistent
+        self.add_conc_form_args(pipeline[i])
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_apply_lines_groups(self, rows=''):
         self._lines_groups = LinesGroups(data=json.loads(rows))
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_non_group_lines(self):
         self.args.q.append(self._filter_lines([(x[0], x[1]) for x in self._lines_groups], 'p'))
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_sort_group_lines(self):
         self._lines_groups.sorted = True
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_remove_selected_lines(self, pnfilter='p', rows=''):
         data = json.loads(rows)
         self.args.q.append(self._filter_lines(data, pnfilter))
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return {
-            'id': q_id,
-            'next_url': self.create_url('view', params)
-        }
+        self.add_conc_form_args(LockedOpFormsArgs(persist=True))
+        return {}
 
     @exposed(return_type='json', http_method='POST', legacy=False)
     def ajax_send_group_selection_link_to_mail(self, request):
@@ -1790,15 +1799,14 @@ class Actions(Querying):
         ans = mailing.send_concordance_url(plugins.get('auth'), self._plugin_api,
                                            request.form.get('email'),
                                            request.form.get('url'))
-        return {'ok': ans}
+        return dict(ok=ans)
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_reedit_line_selection(self):
         ans = self._lines_groups.as_list()
         self._lines_groups = LinesGroups(data=[])
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return dict(id=q_id, selection=ans, next_url=self.create_url('view', params))
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
+        return dict(selection=ans)
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_line_groups_stats(self):
@@ -1813,9 +1821,8 @@ class Actions(Querying):
         if to_num > 0:
             new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
         self._lines_groups = LinesGroups(data=new_groups)
-        q_id = self._store_conc_params()
-        params = self._collect_conc_next_url_params(q_id)
-        return dict(id=q_id, next_url=self.create_url('view', params))
+        self.add_conc_form_args(LgroupOpArgs(persist=True))
+        return {}
 
     @exposed(return_type='json', legacy=True)
     def ajax_get_within_max_hits(self):
@@ -1833,5 +1840,5 @@ class Actions(Querying):
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, request):
-        pipeline = self._load_pipeline(self._q_code)
-        return dict(ops=[dict(id=x['id'], form_args=x.get('conc_forms_args', {})) for x in pipeline])
+        pipeline = self._load_pipeline_ops(self._q_code)
+        return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])

@@ -29,10 +29,12 @@ import {ConcLineStore} from './lines';
 import RSVP = require('vendor/rsvp');
 
 
-export interface RedirectingResponse {
-    next_url: string;
-    id: string;
-    error?:any;
+interface ReenableEditResponse extends Kontext.AjaxConcResponse {
+    selection:Array<[number, number, number]>;
+}
+
+interface SendSelToMailResponse extends Kontext.AjaxConcResponse {
+    ok:boolean;
 }
 
 /**
@@ -157,7 +159,7 @@ export class LineSelectionStore extends SimplePageStore {
                     )
                     break;
                 case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
-                    let prom:RSVP.Promise<any> = self.sendSelectionUrlToEmail(payload.props['email']);
+                    let prom = self.sendSelectionUrlToEmail(payload.props['email']);
                     prom.then(
                         function (data) {
                             self.notifyChangeListeners('LINE_SELECTION_URL_SENT_TO_EMAIL');
@@ -200,6 +202,12 @@ export class LineSelectionStore extends SimplePageStore {
         }
     }
 
+    private updateGlobalArgs(data:Kontext.AjaxConcResponse):void {
+        this.layoutModel.setConf<number>('NumLinesInGroups', data.num_lines_in_groups);
+        this.layoutModel.setConf<Array<number>>('LinesGroupsNumbers', data.lines_groups_numbers);
+        this.layoutModel.replaceConcArg('q', data.Q);
+    }
+
     private clearSelection():void {
         this.clStorage.clear();
     }
@@ -223,10 +231,12 @@ export class LineSelectionStore extends SimplePageStore {
             });
 
         } else {
-            return this.layoutModel.ajax<any>(
+            return this.layoutModel.ajax<Kontext.AjaxConcResponse>(
                 'POST',
-                this.layoutModel.createActionUrl('ajax_rename_line_group?' +
-                        this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs())),
+                this.layoutModel.createActionUrl(
+                    'ajax_rename_line_group',
+                    this.layoutModel.getConcArgs().items()
+                ),
                 {
                     'from_num': srcGroupNum,
                     'to_num': dstGroupNum
@@ -236,9 +246,9 @@ export class LineSelectionStore extends SimplePageStore {
                 }
             ).then<MultiDict>(
                 (data) => {
-                    if (!data['contains_errors']) {
+                    if (!data.contains_errors) {
                         this.currentGroupIds = data['lines_groups_numbers'];
-                        this.layoutModel.setConcArg('q', '~' + data['id']);
+                        this.updateGlobalArgs(data);
                         return this.concLineStore.reloadPage();
 
                     } else {
@@ -249,9 +259,8 @@ export class LineSelectionStore extends SimplePageStore {
         }
     }
 
-    private sendSelectionUrlToEmail(email:string):RSVP.Promise<any> {
-        let self = this;
-        let prom:RSVP.Promise<any> = this.layoutModel.ajax<any>(
+    private sendSelectionUrlToEmail(email:string):RSVP.Promise<boolean> {
+        const prom = this.layoutModel.ajax<SendSelToMailResponse>(
             'POST',
             this.layoutModel.createActionUrl('ajax_send_group_selection_link_to_mail'),
             {
@@ -265,36 +274,39 @@ export class LineSelectionStore extends SimplePageStore {
 
         return prom.then(
             (data) => {
-                if (data['ok']) {
-                    self.layoutModel.showMessage('info',
-                        self.layoutModel.translate('linesel__mail_has_been_sent'));
+                if (!data.contains_errors && data.ok) {
+                    this.layoutModel.showMessage('info',
+                        this.layoutModel.translate('linesel__mail_has_been_sent'));
                     return true;
 
                 } else {
-                    self.layoutModel.showMessage('error',
-                        self.layoutModel.translate('linesel__failed_to_send_the_mail'));
+                    this.layoutModel.showMessage('error',
+                        this.layoutModel.translate('linesel__failed_to_send_the_mail'));
                     return false;
                 }
             }
         );
     }
 
-    private finishAjaxActionWithRedirect<T>(prom:RSVP.Promise<T>):void {
+    private finishAjaxActionWithRedirect(prom:RSVP.Promise<Kontext.AjaxConcResponse>):void {
         /*
          * please note that we do not have to update layout model
          * query code or any other state parameter here because client
-         * is redirected to the 'next_url' once the action is done
+         * is redirected to a new URL once the action is done
          */
         prom.then(
-            (data:any) => { // TODO type
+            (data:Kontext.AjaxConcResponse) => { // TODO type
                 this.performActionFinishHandlers();
-                if (!data.error) {
+                if (!data.contains_errors) {
                     this.clStorage.clear();
+                    const args = this.layoutModel.getConcArgs();
+                    args.replace('q', data.Q);
+                    const nextUrl = this.layoutModel.createActionUrl('view', args.items());
                     $(window).off('beforeunload.alert_unsaved'); // TODO
-                    window.location.href = data.next_url; // we're leaving Flux world here so it's ok
+                    window.location.href = nextUrl; // we're leaving Flux world here so it's ok
 
                 } else {
-                    this.layoutModel.showMessage('error', data.error);
+                    this.layoutModel.showMessage('error', data.messages[0]);
                 }
             },
             (err) => {
@@ -305,7 +317,7 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     public resetServerLineGroups():RSVP.Promise<MultiDict> {
-        return this.layoutModel.ajax<RedirectingResponse>(
+        return this.layoutModel.ajax<Kontext.AjaxConcResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                     'ajax_unset_lines_groups',
@@ -318,14 +330,14 @@ export class LineSelectionStore extends SimplePageStore {
         ).then<MultiDict>(
             (data) => {
                 this.clStorage.clear();
-                this.layoutModel.setConcArg('q', '~' + data['id']);
+                this.updateGlobalArgs(data);
                 return this.concLineStore.reloadPage();
             }
         )
     }
 
     private markLines():RSVP.Promise<MultiDict> {
-        return this.layoutModel.ajax<RedirectingResponse>(
+        return this.layoutModel.ajax<Kontext.AjaxConcResponse>(
             'POST',
             this.layoutModel.createActionUrl(
                 'ajax_apply_lines_groups',
@@ -339,7 +351,8 @@ export class LineSelectionStore extends SimplePageStore {
             }
         ).then<MultiDict>(
             (data) => {
-                this.layoutModel.setConcArg('q', '~' + data['id']);
+
+                this.updateGlobalArgs(data);
                 this.currentGroupIds = data['lines_groups_numbers'];
                 return this.concLineStore.reloadPage();
             }
@@ -347,10 +360,12 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     private removeNonGroupLines():void {
-        let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
+        const prom:RSVP.Promise<Kontext.AjaxConcResponse> = this.layoutModel.ajax<Kontext.AjaxConcResponse>(
             'POST',
-            this.layoutModel.createActionUrl('ajax_remove_non_group_lines?'
-                + this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs())),
+            this.layoutModel.createActionUrl(
+                'ajax_remove_non_group_lines',
+                this.layoutModel.getConcArgs().items()
+            ),
             {},
             {
                 contentType : 'application/x-www-form-urlencoded'
@@ -360,27 +375,33 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     private reenableEdit():RSVP.Promise<MultiDict> {
-        return this.layoutModel.ajax(
+        return this.layoutModel.ajax<ReenableEditResponse>(
             'POST',
-            this.layoutModel.createActionUrl('ajax_reedit_line_selection?')
-                    + this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs()),
+            this.layoutModel.createActionUrl(
+                'ajax_reedit_line_selection',
+                this.layoutModel.getConcArgs().items()
+            ),
             {},
             {contentType : 'application/x-www-form-urlencoded'}
 
         ).then<MultiDict>(
-            (data:{id:string; selection:number[][]; next_url:string}) => {
+            (data) => {
                 this.importData(data.selection);
-                this.layoutModel.setConcArg('q', '~' + data.id);
+                this.updateGlobalArgs(data);
                 return this.concLineStore.reloadPage();
             }
         );
     }
 
     private removeLines(filter:string):void {
-        let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
+        const args = this.layoutModel.getConcArgs();
+        args.set('pnfilter', filter);
+        const prom:RSVP.Promise<Kontext.AjaxConcResponse> = this.layoutModel.ajax<Kontext.AjaxConcResponse>(
             'POST',
-            this.layoutModel.createActionUrl('ajax_remove_selected_lines?pnfilter='
-                + filter + '&' + this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs())),
+            this.layoutModel.createActionUrl(
+                'ajax_remove_selected_lines',
+                args.items()
+            ),
             {
                 rows : JSON.stringify(this.getAll())
             },
@@ -417,8 +438,7 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     getLastCheckpointUrl() {
-        return this.layoutModel.createActionUrl('view') + '?' +
-                this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs());
+        return this.layoutModel.createActionUrl('view', this.layoutModel.getConcArgs().items());
     }
 
     /**
@@ -437,10 +457,10 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     sortLines():void {
-        let prom:RSVP.Promise<RedirectingResponse> = this.layoutModel.ajax<RedirectingResponse>(
+        let prom:RSVP.Promise<Kontext.AjaxConcResponse> = this.layoutModel.ajax<Kontext.AjaxConcResponse>(
             'POST',
-            this.layoutModel.createActionUrl('ajax_sort_group_lines?' +
-                    this.layoutModel.encodeURLParameters(this.layoutModel.getConcArgs())),
+            this.layoutModel.createActionUrl('ajax_sort_group_lines',
+                    this.layoutModel.getConcArgs().items()),
             {},
             {
                 contentType : 'application/x-www-form-urlencoded'
@@ -449,7 +469,7 @@ export class LineSelectionStore extends SimplePageStore {
         this.finishAjaxActionWithRedirect(prom);
     }
 
-    private importData(data:Array<Array<number>>):void {
+    private importData(data:Array<[number, number, number]>):void {
         let self = this;
         this.clear();
         data.forEach((item) => {

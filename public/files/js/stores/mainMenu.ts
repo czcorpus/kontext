@@ -26,6 +26,32 @@ import {PageModel} from '../tpl/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
+
+export interface SubmenuItem {
+    ident:string;
+    action:string;
+    args:{[key:string]:any};
+    currConc:boolean;
+    message:string; // a dispatcher action type
+    indirect:boolean;
+    label:string;
+    disabled:boolean;
+}
+
+export interface MenuItem {
+    disabled:boolean;
+    fallback_action:string;
+    label:string;
+    items:Array<SubmenuItem>;
+}
+
+export type MenuEntry = [string, MenuItem];
+
+export interface InitialMenuData {
+    submenuItems:Array<MenuEntry>;
+}
+
+
 /**
  *
  */
@@ -37,12 +63,15 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
 
     private selectionListeners:Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>;
 
+    private data:Immutable.List<MenuEntry>;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel) {
+
+    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, initialData:InitialMenuData) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.activeItem = null;
         this.selectionListeners = Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>();
+        this.data = Immutable.List<MenuEntry>(initialData.submenuItems);
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             if (payload.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
@@ -74,9 +103,50 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
                 } else {
                     this.notifyChangeListeners();
                 }
-
             }
         });
+    }
+
+    disableMenuItem(itemId:string, subItemId?:string):void {
+        this.setMenuItemDisabledValue(itemId, subItemId, true);
+        this.notifyChangeListeners();
+    }
+
+    enableMenuItem(itemId:string, subItemId?:string):void {
+        this.setMenuItemDisabledValue(itemId, subItemId, false);
+        this.notifyChangeListeners();
+    }
+
+    private setMenuItemDisabledValue(itemId:string, subItemId:string, v:boolean):void {
+        const srchIdx = this.data.findIndex(item => item[0] === itemId);
+        if (srchIdx) {
+            const srch = this.data.get(srchIdx);
+            if (subItemId === undefined) {
+                const newItem:MenuItem = {
+                    disabled: v,
+                    fallback_action: srch[1].fallback_action,
+                    items: srch[1].items, // TODO - mutability
+                    label: srch[1].label
+                };
+                const newEntry:MenuEntry = [srch[0], newItem];
+                this.data = this.data.set(srchIdx, newEntry);
+
+            } else {
+                const newEntry:MenuEntry = [srch[0], srch[1]];
+                newEntry[1].items = newEntry[1].items.map(item => {
+                    return {
+                        ident: item.ident,
+                        action: item.action,
+                        args: item.args,
+                        message: item.message,
+                        currConc: item.currConc,
+                        indirect: item.indirect,
+                        label: item.label,
+                        disabled: item.ident === subItemId ? v : item.disabled
+                    }
+                });
+            }
+        }
     }
 
     getActiveItem():Kontext.MainMenuActiveItem {
@@ -104,6 +174,10 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         } else {
             throw new Error('Function not registered as a listener');
         }
+    }
+
+    getData():Immutable.List<MenuEntry> {
+        return this.data;
     }
 
 }

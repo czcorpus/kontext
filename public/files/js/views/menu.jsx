@@ -21,7 +21,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutViews) {
+export function init(dispatcher, mixins, concArgHandler, mainMenuStore, asyncTaskStore, layoutViews) {
 
     // ----------------------------- <ConcDependentItem /> --------------------------
 
@@ -319,7 +319,8 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
             return {
                 currFocus: null,
                 numRunningTasks: asyncTaskStore.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskStore.getNumFinishedTasks()
+                numFinishedTasks: asyncTaskStore.getNumFinishedTasks(),
+                menuItems: mainMenuStore.getData()
             };
         },
 
@@ -336,16 +337,19 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
             this.setState({
                 currFocus: this.state.currFocus,
                 numRunningTasks: asyncTaskStore.getNumRunningTasks(),
-                numFinishedTasks: asyncTaskStore.getNumFinishedTasks()
+                numFinishedTasks: asyncTaskStore.getNumFinishedTasks(),
+                menuItems: mainMenuStore.getData()
             });
         },
 
         componentDidMount : function () {
             asyncTaskStore.addChangeListener(this._storeChangeListener);
+            mainMenuStore.addChangeListener(this._storeChangeListener);
         },
 
         componentWillUnmount : function () {
             asyncTaskStore.removeChangeListener(this._storeChangeListener);
+            mainMenuStore.removeChangeListener(this._storeChangeListener);
         },
 
         _closeActiveSubmenu : function () {
@@ -355,7 +359,7 @@ export function init(dispatcher, mixins, concArgHandler, asyncTaskStore, layoutV
         render : function () {
             return (
                 <ul id="menu-level-1">
-                    {this.props.submenuItems.map(item => {
+                    {this.state.menuItems.map(item => {
                         const mouseOverHandler = item[1].disabled ? null : this._handleHoverChange.bind(this, item[0], true);
                         const mouseOutHandler = item[1].disabled ? null : this._handleHoverChange.bind(this, item[0], false);
                         return <SubMenu key={item[0]} label={item[1].label}
