@@ -309,17 +309,6 @@ class Actions(Querying):
                     relconcsize=1000000.0 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
-    @exposed(access_level=1, vars=('concsize', ), legacy=True)
-    def sort(self):
-        """
-        sort concordance form
-        """
-        out = dict(Pos_ctxs=conclib.pos_ctxs(1, 1))
-        self.add_conc_form_args(SortFormArgs(persist=False))
-        self._attach_query_params(out)
-        self.disabled_menu_items = (MainMenu.SAVE,)
-        return out
-
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
     def sortx(self, sattr='word', skey='rc', spos=3, sicase='', sbward=''):
         """
@@ -670,31 +659,6 @@ class Actions(Querying):
         except ConcError as e:
             raise UserActionException(e.message)
         return ans
-
-    @exposed(access_level=1)
-    def filter_form(self, request):
-        self.disabled_menu_items = (MainMenu.SAVE,)
-        self.args.lemma = ''
-        self.args.lpos = ''
-        # 'within=1' forces KonText to ask for a positive filter
-        # when switching concordance's primary language
-        # to an aligned language without KWIC
-        within = int(request.args.get('within', 0))
-        out = dict(within=within)
-        if within and not self.contains_errors():
-            self.add_system_message('warning', _('Please specify positive filter to switch'))
-        self.add_conc_form_args(FilterFormArgs(
-            maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname, persist=False))
-        self._attach_query_params(out)
-        tt = get_tt(self.corp, self._plugin_api)
-        tt_data = tt.export_with_norms(ret_nums=False, subcnorm=self.args.subcnorm)
-        out.update(
-            Normslist=tt_data['Normslist'],
-            text_types_data=json.dumps(tt_data),
-            force_cql_default_attr='word',  # beucause filter form does not support custom implicit attrs
-            checked_sca={},
-            is_within=bool(within))
-        return out
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
     def filter(self, request):
