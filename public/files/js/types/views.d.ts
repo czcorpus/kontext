@@ -262,3 +262,31 @@ declare module "views/overview" {
     export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
             corpusInfoStore:any, popupBoxComponent:React.ReactClass):OverviewViews;
 }
+
+
+declare module "views/analysis/frame" {
+
+    export interface AnalysisFrameViews {
+        AnalysisFrame:React.ReactClass;
+    }
+
+    export function init(
+        dispatcher:Dispatcher.Dispatcher<any>,
+        mixins:any,
+        layoutViews:Kontext.LayoutViews,
+        collFormViews:any,
+        freqFormViews:any,
+        mainMenuStore:any
+    );
+}
+
+
+declare module "views/analysis/coll" {
+
+    export interface CollFormViews {
+        CollForm: React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            layoutViews:any, collFormStore:any);
+}

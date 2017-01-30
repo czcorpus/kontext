@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/react.d.ts" />
-
 import React from 'vendor/react';
 import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
@@ -36,6 +34,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     const refsDetailStore = stores.refsDetailStore;
     const userInfoStore = stores.userInfoStore;
     const viewOptionsStore = stores.viewOptionsStore;
+    const mainMenuStore = stores.mainMenuStore;
 
     const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);

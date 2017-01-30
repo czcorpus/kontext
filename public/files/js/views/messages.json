@@ -326,7 +326,18 @@
         "task__status_STARTED": "Started",
         "task__status_RETRY": "Retrying",
         "task__status_FAILURE": "Failed",
-        "task__status_SUCCESS": "Finished"
+        "task__status_SUCCESS": "Finished",
+        "coll__to": "to",
+        "coll__invalid_number_value": "Invalid number value",
+        "coll__invalid_gz_number_value": "Invalid non-negative number value",
+        "coll__attribute_label": "Attribute",
+        "coll__coll_window_span": "Collocation window span",
+        "coll__min_coll_freq_in_corpus": "Minimum collocate frequency in the corpus",
+        "coll__min_coll_freq_in_span": "Minimum collocate frequency in the span",
+        "coll__show_measures_legend": "Show measures",
+        "coll__sort_by_legend": "Sort by",
+        "coll__make_candidate_list": "Make candidate list"
+
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -655,6 +666,16 @@
         "task__status_STARTED": "Běží",
         "task__status_RETRY": "Opakování po chybě",
         "task__status_FAILURE": "Chyba",
-        "task__status_SUCCESS": "Skončeno"
+        "task__status_SUCCESS": "Skončeno",
+        "coll__to": "do",
+        "coll__invalid_number_value": "Chybný formát čísla",
+        "coll__invalid_gz_number_value": "Chybný formát kladného čísla",
+        "coll__attribute_label": "Atribut",
+        "coll__coll_window_span": "V kontextu",
+        "coll__min_coll_freq_in_corpus": "Minimální frekvence kolokátu v korpusu",
+        "coll__min_coll_freq_in_span": "Minimální frekvence kolokátu v kontextu",
+        "coll__show_measures_legend": "Zobrazit míry",
+        "coll__sort_by_legend": "Třídit podle",
+        "coll__make_candidate_list": "Vytvořit seznam kolokátů"
     }
 }

@@ -480,7 +480,7 @@ class MenuGenerator(object):
 
         # -------------------------------- menu-collocations ----------------------------
 
-        self.colloc_custom = ConcMenuItem(MainMenu.COLLOCATIONS('custom'), _('Custom'), 'coll').mark_indirect()
+        self.colloc_custom = EventTriggeringItem(MainMenu.COLLOCATIONS('custom'), _('Custom'), 'MAIN_MENU_SHOW_COLL_FORM').mark_indirect()
 
         # -------------------------------- menu-view ------------------------------------
 
