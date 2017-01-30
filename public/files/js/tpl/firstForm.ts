@@ -41,6 +41,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as RSVP from 'vendor/rsvp';
 import {init as queryFormInit} from 'views/query/main';
+import {init as corpnameLinkInit} from 'views/overview';
 
 
 export class FirstFormPage implements Kontext.QuerySetupHandler {
@@ -235,6 +236,24 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         );
     }
 
+    private initCorpnameLink():void {
+        const corpInfoViews = corpnameLinkInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.getStores().corpusInfoStore,
+            this.layoutModel.layoutViews.PopupBox
+        );
+        this.layoutModel.renderReactComponent(
+            this.layoutModel.layoutViews.EmptyQueryOverviewBar,
+            window.document.getElementById('query-overview-mount'),
+            {
+                corpname: this.layoutModel.getConf<string>('corpname'),
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                usesubcorp: this.layoutModel.getConf<string>('usesubcorp')
+            }
+        );
+    }
+
     init():void {
         this.layoutModel.init().then(
             () => {
@@ -266,6 +285,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 props['actionPrefix'] = '';
                 this.attachQueryForm(props);
                 this.initCorplistComponent(); // non-React world here
+                this.initCorpnameLink();
             }
         ).then(
             () => undefined,

@@ -64,28 +64,6 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
         }
     });
 
-    // ------------------------ <CorpnameInfo /> --------------------------------
-
-    const CorpnameInfo = React.createClass({
-
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <li id="active-corpus">
-                    <strong>{this.translate('global__corpus')}:{'\u00a0'}</strong>
-                    <a id="corpus-desc-link" className="corpus-desc" title="$_('click for details')">
-                        {this.props.humanCorpname}
-                    </a>
-                    {this.props.usesubcorp ? (
-                        <a className="subcorpus" title={this.translate('global__subcorpus')}>
-                        {this.props.usesubcorp}
-                    </a>) : null}
-                </li>
-            );
-        }
-    });
-
     // ------------------------ <ExecutionOptions /> --------------------------------
 
     const ExecutionOptions = React.createClass({
@@ -427,7 +405,9 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
 
                     <ul id="query-overview-bar">
                         {this.props.humanCorpname ?
-                                <CorpnameInfo humanCorpname={this.props.humanCorpname}
+                                <layoutViews.CorpnameInfoTrigger
+                                        corpname={this.props.corpname}
+                                        humanCorpname={this.props.humanCorpname}
                                         usesubcorp={this.props.usesubcorp} />
                                 : null}
                         {this.state.ops.map((item, i) => {

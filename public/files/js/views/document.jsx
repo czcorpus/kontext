@@ -28,7 +28,7 @@ export function init(dispatcher, mixins, storeProvider) {
 
     // ------------------------------ <ModalOverlay /> -----------------------------
 
-    let ModalOverlay = React.createClass({
+    const ModalOverlay = React.createClass({
 
         mixins : mixins,
 
@@ -141,7 +141,7 @@ export function init(dispatcher, mixins, storeProvider) {
 
     // ------------------------------ <InlineHelp /> -----------------------------
 
-    let InlineHelp = React.createClass({
+    const InlineHelp = React.createClass({
 
         mixins : mixins,
 
@@ -173,9 +173,10 @@ export function init(dispatcher, mixins, storeProvider) {
     });
 
 
-    // ----------------------------- info/error/warning message box ----------------------
+    // ------------------------------ <Message /> -----------------------------
+    // (info/error/warning message box)
 
-    let Message = React.createClass({
+    const Message = React.createClass({
 
         mixins: mixins,
 
@@ -219,7 +220,9 @@ export function init(dispatcher, mixins, storeProvider) {
         }
     });
 
-    let Messages = React.createClass({
+    // ------------------------------ <Messages /> -----------------------------
+
+    const Messages = React.createClass({
 
         getInitialState : function () {
             return {messages: []};
@@ -258,6 +261,66 @@ export function init(dispatcher, mixins, storeProvider) {
         }
     });
 
+    // ------------------------ <CorpnameInfoTrigger /> --------------------------------
+
+    const CorpnameInfoTrigger = React.createClass({
+
+        mixins : mixins,
+
+        _handleCorpnameClick : function () {
+            dispatcher.dispatch({
+                actionType: 'OVERVIEW_CORPUS_INFO_REQUIRED',
+                props: {
+                    corpusId: this.props.corpname
+                }
+            });
+        },
+
+        _handleSubcnameClick : function () {
+            dispatcher.dispatch({
+                actionType: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
+                props: {
+                    corpusId: this.props.corpname,
+                    subcorpusId: this.props.usesubcorp
+                }
+            });
+        },
+
+        render : function () {
+            return (
+                <li id="active-corpus">
+                    <strong>{this.translate('global__corpus')}:{'\u00a0'}</strong>
+                    <a className="corpus-desc" title="$_('click for details')"
+                                onClick={this._handleCorpnameClick}>
+                        {this.props.humanCorpname}
+                    </a>
+                    {this.props.usesubcorp ? (
+                        <a className="subcorpus" title={this.translate('global__subcorpus')}
+                                onClick={this.props._handleSubcnameClick}>
+                        {this.props.usesubcorp}
+                    </a>) : null}
+                </li>
+            );
+        }
+    });
+
+    // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
+
+    const EmptyQueryOverviewBar = React.createClass({
+
+        render : function () {
+            return (
+                <ul id="query-overview-bar">
+                    <CorpnameInfoTrigger
+                            corpname={this.props.corpname}
+                            humanCorpname={this.props.humanCorpname}
+                            usesubcorp={this.props.usesubcorp} />
+                </ul>
+            );
+        }
+
+    });
+
 
     // ------------------------------------------------------------------------------------
 
@@ -265,6 +328,8 @@ export function init(dispatcher, mixins, storeProvider) {
         ModalOverlay: ModalOverlay,
         PopupBox: PopupBox,
         InlineHelp: InlineHelp,
-        Messages: Messages
+        Messages: Messages,
+        CorpnameInfoTrigger: CorpnameInfoTrigger,
+        EmptyQueryOverviewBar: EmptyQueryOverviewBar
     };
 }

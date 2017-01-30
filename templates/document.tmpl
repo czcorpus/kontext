@@ -237,11 +237,12 @@ define('conf', [], function () {
             </div>
         </div>
         #if $corpname
-        #block state_navigation
         #filter None
-        $query_overview_bar()
+        <section class="corpus-and-query">
+            <div id="query-overview-mount"></div>
+            <div id="general-overview-mount"></div>
+        </section>
         #end filter
-        #end block
         #end if
 
     </div> ## navig wrapper
@@ -339,8 +340,3 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 #filter $FloatFormatter#$corp_size#end filter##slurp
 #end def
 
-#def query_overview_bar()
-<section class="corpus-and-query">
-    <div id="query-overview-mount"></div>
-</section>
-#end def
