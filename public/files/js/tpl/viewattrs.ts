@@ -26,9 +26,10 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 
-import $ = require('jquery');
+import * as $ from 'jquery';
 import {PageModel} from './document';
 import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
+import {init as corpnameLinkInit} from 'views/overview';
 
 
 
@@ -62,6 +63,24 @@ class ViewAttrsPage {
         });
     }
 
+    private initCorpnameLink():void {
+        const corpInfoViews = corpnameLinkInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.getStores().corpusInfoStore,
+            this.layoutModel.layoutViews.PopupBox
+        );
+        this.layoutModel.renderReactComponent(
+            this.layoutModel.layoutViews.EmptyQueryOverviewBar,
+            window.document.getElementById('query-overview-mount'),
+            {
+                corpname: this.layoutModel.getConf<string>('corpname'),
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                usesubcorp: this.layoutModel.getConf<string>('usesubcorp')
+            }
+        );
+    }
+
     init():void {
         this.layoutModel.init();
 
@@ -91,6 +110,7 @@ class ViewAttrsPage {
                 stateArgs: this.layoutModel.getConcArgs().items()
             }
         );
+        this.initCorpnameLink();
         this.blockUnsaved();
     }
 }

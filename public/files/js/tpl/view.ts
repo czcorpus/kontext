@@ -757,6 +757,7 @@ export class ViewPage {
             this.queryOverviewViews.QueryToolbar,
             window.document.getElementById('query-overview-mount'),
             {
+                corpname: this.layoutModel.getConf<string>('corpname'),
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
                 usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
                 queryFormProps: {

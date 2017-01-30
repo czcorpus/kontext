@@ -272,6 +272,7 @@ declare module Kontext {
         PopupBox:React.ReactClass;
         InlineHelp:React.ReactClass;
         Messages:React.ReactClass;
+        EmptyQueryOverviewBar:React.ReactClass;
     }
 
     /**

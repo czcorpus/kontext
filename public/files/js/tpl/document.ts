@@ -900,25 +900,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     private initOverviewArea():void {
         const overviewViews = overviewAreaViewsInit(this.dispatcher, this.exportMixins(),
                 this.corpusInfoStore, this.layoutViews.PopupBox);
-
-        $(window.document.getElementById('corpus-desc-link')).on('click', () => {
-            this.dispatcher.dispatch({
-                actionType: 'OVERVIEW_CORPUS_INFO_REQUIRED',
-                props: {
-                    corpusId: this.getConf<string>('corpname')
-                }
-            });
-        });
-
-         $('#active-corpus').find('a.subcorpus').on('click', () => {
-            this.dispatcher.dispatch({
-                actionType: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
-                props: {
-                    corpusId: this.getConf<string>('corpname'),
-                    subcorpusId: this.getConf<string>('subcorpname')
-                }
-            });
-         });
+        this.renderReactComponent(
+            overviewViews.OverviewArea,
+            window.document.getElementById('general-overview-mount'),
+            {}
+        );
     }
 
     /**
