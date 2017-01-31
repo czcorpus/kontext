@@ -20,8 +20,8 @@
 
 import {PageModel} from './document';
 import $ = require('jquery');
-import {MultiDict} from '../util';
-import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
+import {MultiDict, dictToPairs} from '../util';
+import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 
@@ -146,6 +146,44 @@ export class CollPage {
     init():void {
         this.pageModel.init().then(
             () => {
+                const mainMenuStore = this.pageModel.getStores().mainMenuStore;
+                // we must capture concordance-related actions which lead
+                // to specific "pop-up" forms and redirect user back to
+                // the 'view' action with additional information (encoded in
+                // the fragment part of the URL) which form should be opened
+                // once the 'view' page is loaded
+                mainMenuStore.addChangeListener(() => {
+                    const activeItem = mainMenuStore.getActiveItem() || {actionName: null, actionArgs: []};
+                    switch (activeItem.actionName) {
+                        case 'MAIN_MENU_SHOW_FILTER':
+                            const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
+                            window.location.replace(
+                                this.pageModel.createActionUrl(
+                                    'view',
+                                    this.pageModel.getConcArgs().items()
+                                ) + '#filter/' + this.pageModel.encodeURLParameters(filterArgs)
+                            );
+                        break;
+                        case 'MAIN_MENU_SHOW_SORT':
+                            window.location.replace(this.pageModel.createActionUrl(
+                                'view',
+                                this.pageModel.getConcArgs().items()
+                            ) + '#sort');
+                        break;
+                        case 'MAIN_MENU_SHOW_SAMPLE':
+                            window.location.replace(this.pageModel.createActionUrl(
+                                'view',
+                                this.pageModel.getConcArgs().items()
+                            ) + '#sample');
+                        break;
+                        case 'MAIN_MENU_APPLY_SHUFFLE':
+                            window.location.replace(this.pageModel.createActionUrl(
+                                'view',
+                                this.pageModel.getConcArgs().items()
+                            ) + '#shuffle');
+                        break;
+                    }
+                });
                 this.initAnalysisViews();
             }
         )
