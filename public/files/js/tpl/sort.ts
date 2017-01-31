@@ -22,7 +22,6 @@
 import {PageModel} from './document';
 import * as popupBox from '../popupbox';
 import * as $ from 'jquery';
-import * as kwicAlignUtils from '../kwicAlignUtils';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 

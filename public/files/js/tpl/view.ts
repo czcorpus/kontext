@@ -47,6 +47,7 @@ import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
 import {CollFormStore, CollFormProps} from '../stores/analysis/collForm';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormProps} from '../stores/analysis/freqForms';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -64,6 +65,7 @@ import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
+import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -136,6 +138,12 @@ export class ViewPage {
     private collFormStore:CollFormStore;
 
     private collFormViews:CollFormViews;
+
+    private mlFreqStore:MLFreqFormStore;
+
+    private ttFreqStore:TTFreqFormStore;
+
+    private freqFormViews:FreqFormViews;
 
     /**
      * An action encoded as a fragment part of the current URL.
@@ -841,6 +849,7 @@ export class ViewPage {
 
     initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        // ------------------ coll ------------
         this.collFormStore = new CollFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -861,19 +870,51 @@ export class ViewPage {
             this.layoutModel.layoutViews,
             this.collFormStore
         );
-        // TODO: init freq form
+        // ------------------ freq ------------
+        const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
+        const freqFormProps:FreqFormProps = {
+            structAttrList: structAttrs,
+            fttattr: [structAttrs[0].n],
+            ftt_include_empty: false,
+            flimit: '0',
+            attrList: attrs,
+            mlxattr: [attrs[0].n],
+            mlxicase: [false],
+            mlxctx: ['0~0>0'],  // = "Node'"
+            alignType: ['left']
+        }
+        this.mlFreqStore = new MLFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps,
+            this.layoutModel.getConf<number>('multilevelFreqDistMaxLevels')
+        );
+        this.ttFreqStore = new TTFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps
+        )
+        this.freqFormViews = freqFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.mlFreqStore,
+            this.ttFreqStore
+        );
         this.analysisViews = analysisFrameInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
             this.collFormViews,
-            null, // TODO
+            this.freqFormViews,
             this.layoutModel.getStores().mainMenuStore
-        )
+        );
         this.layoutModel.renderReactComponent(
             this.analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
-            {}
+            {
+                initialFreqFormVariant: 'ml'
+            }
         );
     }
 

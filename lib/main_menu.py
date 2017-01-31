@@ -476,7 +476,7 @@ class MenuGenerator(object):
             .enable_if(lambda d: bool(d['ttcrit']))
         )
 
-        self.freq_custom = ConcMenuItem(MainMenu.FREQUENCY('custom'), _('Custom'), 'freq').mark_indirect()
+        self.freq_custom = EventTriggeringItem(MainMenu.FREQUENCY('custom'), _('Custom'), 'MAIN_MENU_SHOW_FREQ_FORM').mark_indirect()
 
         # -------------------------------- menu-collocations ----------------------------
 

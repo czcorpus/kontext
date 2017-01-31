@@ -38,19 +38,6 @@ class ConcCalculationControlException(Exception):
     pass
 
 
-def pos_ctxs(min_hitlen, max_hitlen, max_ctx=3):
-    ctxs = [{'n': _('%iL') % -c, 'ctx': '%i<0' % c} for c in range(-
-                                                                   max_ctx, 0)]
-    if max_hitlen == 1:
-        ctxs.append({'n': _('Node'), 'ctx': '0~0>0'})
-    else:
-        ctxs.extend([{'n': 'Node %i' % c, 'ctx': '%i<0' % c}
-                    for c in range(1, max_hitlen + 1)])
-    ctxs.extend([{'n': _('%iR') % c, 'ctx': '%i>0' % c}
-                for c in range(1, max_ctx + 1)])
-    return ctxs
-
-
 def _wait_for_conc(cachefile, cache_map, pidfile, minsize):
     """
     Called by webserver process (i.e. not by the background worker).
