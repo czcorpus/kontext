@@ -45,6 +45,7 @@ import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
+import {CollFormStore, CollFormProps} from '../stores/coll/collForm';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -60,6 +61,8 @@ import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
+import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
+import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -70,6 +73,8 @@ export class ViewPageStores {
     refsDetailStore:RefsDetailStore;
     userInfoStore:Kontext.IUserInfoStore;
     viewOptionsStore:ViewOptions.IViewOptionsStore;
+    collFormStore:CollFormStore;
+    mainMenuStore:Kontext.IMainMenuStore;
 }
 
 export class QueryStores {
@@ -111,6 +116,8 @@ export class ViewPage {
 
     private concViews:ConcordanceView;
 
+    private analysisViews:AnalysisFrameViews;
+
     private lastGroupStats:LineGroupStats; // group stats cache
 
     private queryFormViews:QueryFormViews;
@@ -124,6 +131,10 @@ export class ViewPage {
     private sampleFormViews:SampleFormViews;
 
     private concFormsInitialArgs:AjaxResponse.ConcFormsInitialArgs;
+
+    private collFormStore:CollFormStore;
+
+    private collFormViews:CollFormViews;
 
     constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
@@ -786,6 +797,45 @@ export class ViewPage {
         );
     }
 
+
+    initAnalysisViews():void {
+        const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        this.collFormStore = new CollFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                attrList: attrs,
+                cattr: attrs[0].n,
+                cfromw: '-1',
+                ctow: '0',
+                cminfreq: '5',
+                cminbgr: '3',
+                cbgrfns: ['t', 'm'],
+                csortfn: 't'
+            }
+        );
+        this.collFormViews = collFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.collFormStore
+        );
+        // TODO: init freq form
+        this.analysisViews = analysisFrameInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.collFormViews,
+            null, // TODO
+            this.layoutModel.getStores().mainMenuStore
+        )
+        this.layoutModel.renderReactComponent(
+            this.analysisViews.AnalysisFrame,
+            window.document.getElementById('analysis-forms-mount'),
+            {}
+        );
+    }
+
     /**
      *
      */
@@ -836,6 +886,7 @@ export class ViewPage {
                 this.initSortForm();
                 this.initSampleForm();
                 this.initQueryOverviewArea();
+                this.initAnalysisViews();
             }
         );
     }
@@ -881,6 +932,7 @@ export function init(conf):ViewPage {
     const stores = new ViewPageStores();
     stores.userInfoStore = layoutModel.getStores().userInfoStore;
     stores.viewOptionsStore = layoutModel.getStores().viewOptionsStore;
+    stores.mainMenuStore = layoutModel.getStores().mainMenuStore;
     stores.lineViewStore = new ConcLineStore(
             layoutModel,
             layoutModel.dispatcher,

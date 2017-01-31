@@ -511,11 +511,21 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
             }
         },
 
+        _activeItemIsOurs : function () {
+            const actions = [
+                'MAIN_MENU_SHOW_SORT',
+                'MAIN_MENU_APPLY_SHUFFLE',
+                'MAIN_MENU_SHOW_SAMPLE',
+                'MAIN_MENU_SHOW_FILTER'
+            ];
+            return this.state.activeItem !== null && actions.indexOf(this.state.activeItem.actionName) > -1;
+        },
+
         render : function () {
             return (
                 <div>
                     <QueryOverview {...this.props} />
-                    {this.state.activeItem !== null ?
+                    {this._activeItemIsOurs() ?
                         <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem}
                             lastOpSize={this.state.lastOpSize} /> : null}
                 </div>

@@ -1072,27 +1072,27 @@ class Actions(Querying):
         if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
             self.args.csortfn = self.args.cbgrfnscbgrfns[0]
 
-        args = coll_calc.CollCalcArgs()
-        args.corpus_encoding = self.corp.get_conf('ENCODING')
-        args.corpname = self.args.corpname
-        args.subcname = getattr(self.corp, 'subcname', None)
-        args.subcpath = self.subcpath
-        args.user_id = self._session_get('user', 'user')
-        args.q = self.args.q
-        args.minsize = None  # TODO ??
-        args.save = self.args.save
-        args.samplesize = 0  # TODO (check also freqs)
-        args.cattr = self.args.cattr
-        args.csortfn = self.args.csortfn
-        args.cbgrfns = ''.join(self.args.cbgrfns)
-        args.cfromw = self.args.cfromw
-        args.ctow = self.args.ctow
-        args.cminbgr = self.args.cminbgr
-        args.cminfreq = self.args.cminfreq
-        args.line_offset = line_offset
-        args.num_lines = num_lines
-        args.citemsperpage = self.args.citemsperpage
-        args.collpage = self.args.collpage
+        calc_args = coll_calc.CollCalcArgs()
+        calc_args.corpus_encoding = self.corp.get_conf('ENCODING')
+        calc_args.corpname = self.args.corpname
+        calc_args.subcname = getattr(self.corp, 'subcname', None)
+        calc_args.subcpath = self.subcpath
+        calc_args.user_id = self._session_get('user', 'user')
+        calc_args.q = self.args.q
+        calc_args.minsize = None  # TODO ??
+        calc_args.save = self.args.save
+        calc_args.samplesize = 0  # TODO (check also freqs)
+        calc_args.cattr = self.args.cattr
+        calc_args.csortfn = self.args.csortfn
+        calc_args.cbgrfns = ''.join(self.args.cbgrfns)
+        calc_args.cfromw = self.args.cfromw
+        calc_args.ctow = self.args.ctow
+        calc_args.cminbgr = self.args.cminbgr
+        calc_args.cminfreq = self.args.cminfreq
+        calc_args.line_offset = line_offset
+        calc_args.num_lines = num_lines
+        calc_args.citemsperpage = self.args.citemsperpage
+        calc_args.collpage = self.args.collpage
 
         save_args = [
             ('cmaxitems', self.COLLS_QUICK_SAVE_MAX_LINES),
@@ -1112,7 +1112,17 @@ class Actions(Querying):
         save_args = save_args[1:]
         self._add_save_menu_item('%s...' % _('Custom'), 'savecoll_form', save_args)
 
-        return coll_calc.calculate_colls(args)
+        ans = coll_calc.calculate_colls(calc_args)
+        ans['coll_form_args'] = dict(
+            cattr=self.args.cattr,
+            cfromw=self.args.cfromw,
+            ctow=self.args.ctow,
+            cminfreq=self.args.cminfreq,
+            cminbgr=self.args.cminbgr,
+            csortfn=self.args.csortfn,
+            cbgrfns=self.args.cbgrfns
+        )
+        return ans
 
     @exposed(access_level=1, legacy=True)
     def savecoll_form(self, from_line=1, to_line='', saveformat='text'):

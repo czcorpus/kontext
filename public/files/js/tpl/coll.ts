@@ -21,6 +21,9 @@
 import {PageModel} from './document';
 import $ = require('jquery');
 import {MultiDict} from '../util';
+import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
+import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
+import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 
 /**
  *
@@ -34,6 +37,8 @@ export class CollPage {
     private numNoChange:number;
 
     private lastStatus:number;
+
+    private collFormStore:CollFormStore;
 
     static MAX_NUM_NO_CHANGE = 20;
 
@@ -98,11 +103,57 @@ export class CollPage {
     stopWatching():void {
         clearTimeout(this.checkIntervalId);
     }
+
+    initAnalysisViews():void {
+        const attrs = this.pageModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        const currArgs = this.pageModel.getConf<CollFormInputs>('CollFormArgs');
+        this.collFormStore = new CollFormStore(
+            this.pageModel.dispatcher,
+            this.pageModel,
+            {
+                attrList: attrs,
+                cattr: currArgs.cattr,
+                cfromw: currArgs.cfromw,
+                ctow: currArgs.ctow,
+                cminfreq: currArgs.cminfreq,
+                cminbgr: currArgs.cminbgr,
+                cbgrfns: currArgs.cbgrfns,
+                csortfn: currArgs.csortfn
+            }
+        );
+        const collFormViews = collFormInit(
+            this.pageModel.dispatcher,
+            this.pageModel.exportMixins(),
+            this.pageModel.layoutViews,
+            this.collFormStore
+        );
+        // TODO: init freq form
+        const analysisViews = analysisFrameInit(
+            this.pageModel.dispatcher,
+            this.pageModel.exportMixins(),
+            this.pageModel.layoutViews,
+            collFormViews,
+            null, // TODO
+            this.pageModel.getStores().mainMenuStore
+        );
+        this.pageModel.renderReactComponent(
+            analysisViews.AnalysisFrame,
+            window.document.getElementById('analysis-forms-mount'),
+            {}
+        );
+    }
+
+    init():void {
+        this.pageModel.init().then(
+            () => {
+                this.initAnalysisViews();
+            }
+        )
+    }
 }
 
 
-export function init(conf:Kontext.Conf) {
-    let layoutModel = new PageModel(conf);
-    layoutModel.init();
-    return new CollPage(layoutModel);
+export function init(conf:Kontext.Conf):void {
+    const model = new CollPage(new PageModel(conf));
+    model.init();
 }
