@@ -283,7 +283,7 @@ def calculate_freqs(args):
     conc_size = calc_result['conc_size']
     lastpage = None
     if len(data) == 1:  # a single block => pagination
-        total_length = len(data[0]['Items'])
+        total_length = len(data[0]['Items']) if 'Items' in data[0] else 0
         items_per_page = args.fmaxitems
         fstart = (args.fpage - 1) * args.fmaxitems + args.line_offset
         fmaxitems = args.fmaxitems * args.fpage + 1 + args.line_offset
@@ -293,8 +293,8 @@ def calculate_freqs(args):
             lastpage = 0
         ans = [dict(Total=total_length,
                     TotalPages=int(math.ceil(total_length / float(items_per_page))),
-                    Items=data[0]['Items'][fstart:fmaxitems - 1],
-                    Head=data[0]['Head'])]
+                    Items=data[0]['Items'][fstart:fmaxitems - 1] if 'Items' in data[0] else [],
+                    Head=data[0].get('Head', []))]
     else:
         ans = data
         fstart = None

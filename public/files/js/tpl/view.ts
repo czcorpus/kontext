@@ -30,6 +30,7 @@
 
 import * as $ from 'jquery';
 import {PageModel} from './document';
+import {MultiDict, parseUrlArgs} from '../util';
 import * as popupBox from '../popupbox';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
@@ -45,7 +46,8 @@ import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
-import {CollFormStore, CollFormProps} from '../stores/coll/collForm';
+import {CollFormStore, CollFormProps} from '../stores/analysis/collForm';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormProps} from '../stores/analysis/freqForms';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -63,6 +65,7 @@ import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
+import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -136,6 +139,20 @@ export class ViewPage {
 
     private collFormViews:CollFormViews;
 
+    private mlFreqStore:MLFreqFormStore;
+
+    private ttFreqStore:TTFreqFormStore;
+
+    private freqFormViews:FreqFormViews;
+
+    /**
+     * An action encoded as a fragment part of the current URL.
+     * This is used to open specific components after redirected
+     * from other pages (e.g. collocations moves user back to
+     * the concordance view due to main menu click).
+     */
+    private hashedAction:Kontext.DispatcherPayload;
+
     constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
         this.viewStores = stores;
@@ -146,6 +163,35 @@ export class ViewPage {
 
     private translate(s:string, values?:any):string {
         return this.layoutModel.translate(s, values);
+    }
+
+    private deserializeHashAction(v:string):Kontext.DispatcherPayload {
+        const tmp = v.substr(1).split('/');
+        switch (tmp[0]) {
+            case 'filter':
+                const args = new MultiDict(tmp[1] ? parseUrlArgs(tmp[1]) : []);
+                return {
+                    actionType: 'MAIN_MENU_SHOW_FILTER',
+                    props: args.toDict()
+                };
+            case 'sort':
+                return {
+                    actionType: 'MAIN_MENU_SHOW_SORT',
+                    props: {}
+                };
+            case 'sample':
+                return {
+                    actionType: 'MAIN_MENU_SHOW_SAMPLE',
+                    props: {}
+                };
+            case 'shuffle':
+                return {
+                    actionType: 'MAIN_MENU_APPLY_SHUFFLE',
+                    props: {}
+                };
+            default:
+                return null;
+        }
     }
 
     showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
@@ -462,6 +508,9 @@ export class ViewPage {
      * method).
      */
     private setStateUrl():void {
+        if (window.location.hash) {
+            this.hashedAction = this.deserializeHashAction(window.location.hash);
+        }
         this.layoutModel.history.replaceState(
             'view',
             this.layoutModel.getConcArgs(),
@@ -800,6 +849,7 @@ export class ViewPage {
 
     initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        // ------------------ coll ------------
         this.collFormStore = new CollFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -820,19 +870,51 @@ export class ViewPage {
             this.layoutModel.layoutViews,
             this.collFormStore
         );
-        // TODO: init freq form
+        // ------------------ freq ------------
+        const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
+        const freqFormProps:FreqFormProps = {
+            structAttrList: structAttrs,
+            fttattr: [structAttrs[0].n],
+            ftt_include_empty: false,
+            flimit: '0',
+            attrList: attrs,
+            mlxattr: [attrs[0].n],
+            mlxicase: [false],
+            mlxctx: ['0~0>0'],  // = "Node'"
+            alignType: ['left']
+        }
+        this.mlFreqStore = new MLFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps,
+            this.layoutModel.getConf<number>('multilevelFreqDistMaxLevels')
+        );
+        this.ttFreqStore = new TTFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps
+        )
+        this.freqFormViews = freqFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.mlFreqStore,
+            this.ttFreqStore
+        );
         this.analysisViews = analysisFrameInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
             this.collFormViews,
-            null, // TODO
+            this.freqFormViews,
             this.layoutModel.getStores().mainMenuStore
-        )
+        );
         this.layoutModel.renderReactComponent(
             this.analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
-            {}
+            {
+                initialFreqFormVariant: 'ml'
+            }
         );
     }
 
@@ -887,6 +969,9 @@ export class ViewPage {
                 this.initSampleForm();
                 this.initQueryOverviewArea();
                 this.initAnalysisViews();
+                if (this.hashedAction) {
+                    this.layoutModel.dispatcher.dispatch(this.hashedAction);
+                }
             }
         );
     }

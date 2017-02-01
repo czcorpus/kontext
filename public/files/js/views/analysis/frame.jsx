@@ -37,11 +37,13 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
             switch ((this.state.activeItem || {}).actionName) {
                 case 'MAIN_MENU_SHOW_COLL_FORM':
                     return <collViews.CollForm />;
+                case 'MAIN_MENU_SHOW_FREQ_FORM':
+                    return <freqViews.FrequencyForm initialFreqFormVariant={this.props.initialFreqFormVariant} />;
             }
         },
 
         _activeItemIsOurs : function () {
-            const actions = ['MAIN_MENU_SHOW_COLL_FORM']; // TODO
+            const actions = ['MAIN_MENU_SHOW_COLL_FORM', 'MAIN_MENU_SHOW_FREQ_FORM'];
             return this.state.activeItem !== null
                     && actions.indexOf(this.state.activeItem.actionName) > -1;
         },

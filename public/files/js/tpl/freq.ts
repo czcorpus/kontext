@@ -18,124 +18,162 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/views.d.ts" />
 
-import $ = require('jquery');
+import * as $ from 'jquery';
 import {PageModel} from './document';
+import {MultiDict, dictToPairs} from '../util';
 import {bind as bindPopupBox} from '../popupbox';
-import kwicAlignUtils = require('../kwicAlignUtils');
+import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/analysis/freqForms';
+import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
+import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
+import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 
-
+/**
+ *
+ */
 class FreqPage {
 
     private layoutModel:PageModel;
 
-    private maxNumLevels:number = 1;
+    private mlFreqStore:MLFreqFormStore;
+
+    private ttFreqStore:TTFreqFormStore;
+
+    private collFormStore:CollFormStore;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
 
+    private initAnalysisViews():void {
+        const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
+        const freqFormProps:FreqFormProps = {
+            fttattr: freqFormInputs.fttattr || [],
+            ftt_include_empty: freqFormInputs.ftt_include_empty || false,
+            flimit: freqFormInputs.flimit || '0',
+            mlxattr: freqFormInputs.mlxattr || [attrs[0].n],
+            mlxicase: freqFormInputs.mlxicase || [false],
+            mlxctx: freqFormInputs.mlxctx || ['0~0>0'],
+            alignType: freqFormInputs.alignType || ['left'],
+            attrList: attrs,
+            structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList')
+        };
 
-    private recalcLevelParams():void {
-        $('#multilevel-freq-params tr.level-line').each((i, elm:HTMLElement) => {
-            let currLevel = i + 1;
+        this.mlFreqStore = new MLFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps,
+            this.layoutModel.getConf<number>('multilevelFreqDistMaxLevels')
+        );
 
-            if (currLevel === 1) {
-                return;
+        this.ttFreqStore = new TTFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps
+        );
+
+        const freqFormViews = freqFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.mlFreqStore,
+            this.ttFreqStore
+        );
+
+        this.collFormStore = new CollFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                attrList: attrs,
+                cattr: attrs[0].n,
+                cfromw: '-1',
+                ctow: '0',
+                cminfreq: '5',
+                cminbgr: '3',
+                cbgrfns: ['t', 'm'],
+                csortfn: 't'
             }
-            $(elm).find('td:first').text(currLevel + '.');
-            $(elm).find('td:nth-child(2) select').attr('name', 'ml' + currLevel + 'attr');
-            $(elm).find('td:nth-child(3) input').attr('name', 'ml' + currLevel + 'icase');
-            $(elm).find('td:nth-child(4) select').attr('name', 'ml' + currLevel + 'ctx');
-            $(elm).find('td:nth-child(5) select').attr('id', 'kwic-alignment-' + currLevel);
-            $(elm).find('td input[name="freqlevel"]').val(currLevel);
-        });
+        );
 
-        let addLevelButton = $('#add-freq-level-button');
-        if (!addLevelButton.is(':visible') && this.getCurrNumLevels() < this.maxNumLevels) {
-            addLevelButton.show();
-        }
-        kwicAlignUtils.extendKwicAlignmentSelector();
-    }
+        const collFormViews = collFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.collFormStore
+        );
 
-    private getCurrNumLevels():number {
-        return $('#multilevel-freq-params tr.level-line').length;
-    }
+        const analysisViews = analysisFrameInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            collFormViews,
+            freqFormViews,
+            this.layoutModel.getStores().mainMenuStore
+        );
 
-    private addLevel():void {
-        let numLevels = this.getCurrNumLevels();
-        let newLine = $('#multilevel-freq-first-level').clone();
-        let newLevelNum = numLevels + 1;
-
-        $('#multilevel-freq-params tr.add-level').before(newLine);
-        newLine.attr('id', null);
-        newLine.find('td:first').text(newLevelNum + '.');
-        newLine.find('td:nth-child(2) select').attr('name', 'ml' + newLevelNum + 'attr');
-        newLine.find('td:nth-child(3) input').attr('name', 'ml' + newLevelNum + 'icase');
-        newLine.find('td:nth-child(4) select').attr('name', 'ml' + newLevelNum + 'ctx');
-        newLine.find('td:nth-child(5) select').attr('id', 'kwic-alignment-' + newLevelNum);
-        newLine.find('td input[name="freqlevel"]').val(newLevelNum);
-        // close icon
-        let title = this.layoutModel.translate('global__remove_item');
-        let imgSrc = this.layoutModel.createStaticUrl('img/close-icon.svg');
-        let imgSrc2 = this.layoutModel.createStaticUrl('img/close-icon_s.svg');
-        newLine.find('td:last')
-            .empty()
-            .append(
-                '<a class="remove-level" title="' + title + '">' +
-                '<img class="over-img" src="' + imgSrc + '" alt="' + title + '"' +
-                    ' data-alt-img="' + imgSrc2 + '" /></a>');
-        this.layoutModel.mouseOverImages(newLine);
-
-        newLine.find('td:last a.remove-level').on('click', (event) => {
-            this.removeLevel($(event.target).closest('tr'));
-        });
-        if (this.getCurrNumLevels() === this.maxNumLevels) {
-            $('#add-freq-level-button').hide();
-        }
-        kwicAlignUtils.extendKwicAlignmentSelector(newLine.get(0));
-    }
-
-    private removeLevel(lineElm):void {
-        lineElm.remove();
-        this.recalcLevelParams();
-    }
-
-    private bindEvents():void {
-        $('#add-freq-level-button').on('click', () => {
-            this.addLevel();
-        });
+        this.layoutModel.renderReactComponent(
+            analysisViews.AnalysisFrame,
+            window.document.getElementById('analysis-forms-mount'),
+            {
+                initialFreqFormVariant: freqFormInputs.mlxattr ? 'ml' : 'tt'
+            }
+        );
     }
 
     init() {
-        this.layoutModel.init();
-        this.maxNumLevels = this.layoutModel.getConf<number>('multilevel_freq_dist_max_levels');
-        kwicAlignUtils.extendKwicAlignmentSelector();
-        const lastNumLevels = this.layoutModel.getConf<number>('lastNumLevels');
-        if (lastNumLevels) {
-            for (let i = 1; i < lastNumLevels; i += 1) {
-                this.addLevel();
+        this.layoutModel.init().then(
+            () => {
+                const mainMenuStore = this.layoutModel.getStores().mainMenuStore;
+                // we must capture concordance-related actions which lead
+                // to specific "pop-up" forms and redirect user back to
+                // the 'view' action with additional information (encoded in
+                // the fragment part of the URL) which form should be opened
+                // once the 'view' page is loaded
+                mainMenuStore.addChangeListener(() => {
+                    const activeItem = mainMenuStore.getActiveItem() || {actionName: null, actionArgs: []};
+                    switch (activeItem.actionName) {
+                        case 'MAIN_MENU_SHOW_FILTER':
+                            const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
+                            window.location.replace(
+                                this.layoutModel.createActionUrl(
+                                    'view',
+                                    this.layoutModel.getConcArgs().items()
+                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                            );
+                        break;
+                        case 'MAIN_MENU_SHOW_SORT':
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#sort');
+                        break;
+                        case 'MAIN_MENU_SHOW_SAMPLE':
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#sample');
+                        break;
+                        case 'MAIN_MENU_APPLY_SHUFFLE':
+                            window.location.replace(this.layoutModel.createActionUrl(
+                                'view',
+                                this.layoutModel.getConcArgs().items()
+                            ) + '#shuffle');
+                        break;
+                    }
+                });
+                this.initAnalysisViews();
             }
-        }
-
-        $('a.kwic-alignment-help').each((_, elm:HTMLElement) => {
-            bindPopupBox(
-                $(elm),
-                this.layoutModel.translate('global__this_applies_only_for_mk'),
-                {
-                    top: 'attached-bottom',
-                    width: 'auto',
-                    height: 'auto'
-                }
-            );
-        });
-        this.bindEvents();
-
-        // "Node start at" function
-        $('#multilevel-freq-first-level .kwic-alignment-box').css('display', 'block');
+        ).then(
+            () => undefined,
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
     }
 }
 

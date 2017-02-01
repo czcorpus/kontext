@@ -24,6 +24,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Frequency list")#slurp
 #end def
 
+#def bodyonload
+require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
+    conf.AttrList = $to_json($getVar('AttrList', []));
+    conf.StructAttrList = $to_json($getVar('StructAttrList', []));
+    conf.FreqFormProps = $to_json($freq_form_args);
+    pageSelf.init(conf);
+});
+#end def
+
+
 #def main
 <section>
     #filter WebSafe

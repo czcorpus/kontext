@@ -724,13 +724,6 @@ class Actions(Querying):
                 del self.args.q[-1]
             raise
 
-    @exposed(legacy=True)
-    def reduce_form(self):
-        """
-        """
-        self.disabled_menu_items = (MainMenu.SAVE,)
-        return {}
-
     @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view',
              legacy=True)
     def reduce(self):
@@ -755,19 +748,6 @@ class Actions(Querying):
         self.add_conc_form_args(ShuffleFormArgs(persist=True))
         self.args.q.append('f')
         return self.view()
-
-    @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def freq(self):
-        """
-        frequency list form
-        """
-        self.disabled_menu_items = (MainMenu.SAVE,)
-        return {
-            'Pos_ctxs': conclib.pos_ctxs(1, 1, 6),
-            'multilevel_freq_dist_max_levels': settings.get('corpora',
-                                                            'multilevel_freq_dist_max_levels', 1),
-            'last_num_levels': self._session_get('last_freq_level')
-        }
 
     @exposed(access_level=1, legacy=True)
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
@@ -836,105 +816,116 @@ class Actions(Querying):
 
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))
-            return {'message': ('error', _('Empty list')), 'Blocks': [], 'paging': 0,
-                    'quick_from_line': None, 'quick_to_line': None, 'FCrit': [], 'fcrit': []}
+            result.update(
+                message=('error', _('Empty list')),
+                Blocks=[],
+                paging=0,
+                quick_from_line=None,
+                quick_to_line=None,
+                FCrit=[],
+                fcrit=[]
+            )
+        else:
+            if len(result['Blocks']) == 1:  # paging
+                result['paging'] = 1
+                result['lastpage'] = calc_result['lastpage']
 
-        if len(result['Blocks']) == 1:  # paging
-            result['paging'] = 1
-            result['lastpage'] = calc_result['lastpage']
+            for b in result['Blocks']:
+                for item in b['Items']:
+                    item['pfilter'] = []
+                    item['nfilter'] = []
+                    # generating positive and negative filter references
+            for b_index, block in enumerate(result['Blocks']):
+                curr_fcrit = fcrit[b_index]
+                attrs, ranges = parse_fcrit(curr_fcrit)
+                for level, (attr, range) in enumerate(zip(attrs, ranges)):
+                    begin = range.split('~')[0]
+                    if '~' in range:
+                        end = range.split('~')[1]
+                    else:
+                        end = begin
+                    attr = attr.split("/")
+                    if len(attr) > 1 and "i" in attr[1]:
+                        icase = '(?i)'
+                    else:
+                        icase = ''
+                    attr = attr[0]
+                    for ii, item in enumerate(block['Items']):
+                        if not item['freq']:
+                            continue
+                        if '.' not in attr:
+                            if attr in self.corp.get_conf('ATTRLIST').split(','):
+                                wwords = item['Word'][level]['n'].split('  ')  # two spaces
+                                fquery = '%s %s 0 ' % (begin, end)
+                                fquery += ''.join(['[%s="%s%s"]'
+                                                   % (attr, icase, l10n.escape(w)) for w in wwords])
+                            else:  # structure number
+                                fquery = '0 0 1 [] within <%s #%s/>' % \
+                                         (attr, item['Word'][0]['n'].split('#')[1])
+                        else:  # text types
+                            structname, attrname = attr.split('.')
+                            if self.corp.get_conf(structname + '.NESTED'):
+                                block['unprecise'] = True
+                            fquery = '0 0 1 [] within <%s %s="%s" />' \
+                                     % (structname, attrname,
+                                        l10n.escape(item['Word'][0]['n']))
+                        if not item['freq']:
+                            continue
+                        item['pfilter'].append(('q', 'p%s' % fquery))
+                        if len(attrs) == 1 and item['freq'] <= calc_result['conc_size']:
+                            item['nfilter'].append(('q', 'n%s' % fquery))
+                            # adding no error, no correction (originally for CUP)
+            errs, corrs, err_block, corr_block = 0, 0, -1, -1
+            for b_index, block in enumerate(result['Blocks']):
+                curr_fcrit = fcrit[b_index]
+                if curr_fcrit.split()[0] == 'err.type':
+                    err_block = b_index
+                    for item in block['Items']:
+                        errs += item['freq']
+                elif curr_fcrit.split()[0] == 'corr.type':
+                    corr_block = b_index
+                    for item in block['Items']:
+                        corrs += item['freq']
+            freq = calc_result['conc_size'] - errs - corrs
+            if freq > 0 and err_block > -1 and corr_block > -1:
+                pfilter = [('q',  'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
+                cc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
+                                        q=self.args.q + [pfilter[0][1]])
+                freq = cc.size()
+                err_nfilter, corr_nfilter = '', ''
+                if freq != calc_result['conc_size']:
+                    err_nfilter = ';q=p0 0 1 ([] within <err/>) within ! <corr/>'
+                    corr_nfilter = ';q=p0 0 1 ([] within ! <err/>) within <corr/>'
+                result['Blocks'][err_block]['Items'].append(
+                    {'Word': [{'n': 'no error'}], 'freq': freq,
+                     'pfilter': pfilter, 'nfilter': err_nfilter,
+                     'norel': 1, 'fbar': 0})
+                result['Blocks'][corr_block]['Items'].append(
+                    {'Word': [{'n': 'no correction'}], 'freq': freq,
+                     'pfilter': pfilter, 'nfilter': corr_nfilter,
+                     'norel': 1, 'fbar': 0})
 
-        for b in result['Blocks']:
-            for item in b['Items']:
-                item['pfilter'] = []
-                item['nfilter'] = []
-                # generating positive and negative filter references
-        for b_index, block in enumerate(result['Blocks']):
-            curr_fcrit = fcrit[b_index]
-            attrs, ranges = parse_fcrit(curr_fcrit)
-            for level, (attr, range) in enumerate(zip(attrs, ranges)):
-                begin = range.split('~')[0]
-                if '~' in range:
-                    end = range.split('~')[1]
-                else:
-                    end = begin
-                attr = attr.split("/")
-                if len(attr) > 1 and "i" in attr[1]:
-                    icase = '(?i)'
-                else:
-                    icase = ''
-                attr = attr[0]
-                for ii, item in enumerate(block['Items']):
-                    if not item['freq']:
-                        continue
-                    if '.' not in attr:
-                        if attr in self.corp.get_conf('ATTRLIST').split(','):
-                            wwords = item['Word'][level]['n'].split('  ')  # two spaces
-                            fquery = '%s %s 0 ' % (begin, end)
-                            fquery += ''.join(['[%s="%s%s"]'
-                                               % (attr, icase, l10n.escape(w)) for w in wwords])
-                        else:  # structure number
-                            fquery = '0 0 1 [] within <%s #%s/>' % \
-                                     (attr, item['Word'][0]['n'].split('#')[1])
-                    else:  # text types
-                        structname, attrname = attr.split('.')
-                        if self.corp.get_conf(structname + '.NESTED'):
-                            block['unprecise'] = True
-                        fquery = '0 0 1 [] within <%s %s="%s" />' \
-                                 % (structname, attrname,
-                                    l10n.escape(item['Word'][0]['n']))
-                    if not item['freq']:
-                        continue
-                    item['pfilter'].append(('q', 'p%s' % fquery))
-                    if len(attrs) == 1 and item['freq'] <= calc_result['conc_size']:
-                        item['nfilter'].append(('q', 'n%s' % fquery))
-                        # adding no error, no correction (originally for CUP)
-        errs, corrs, err_block, corr_block = 0, 0, -1, -1
-        for b_index, block in enumerate(result['Blocks']):
-            curr_fcrit = fcrit[b_index]
-            if curr_fcrit.split()[0] == 'err.type':
-                err_block = b_index
-                for item in block['Items']:
-                    errs += item['freq']
-            elif curr_fcrit.split()[0] == 'corr.type':
-                corr_block = b_index
-                for item in block['Items']:
-                    corrs += item['freq']
-        freq = calc_result['conc_size'] - errs - corrs
-        if freq > 0 and err_block > -1 and corr_block > -1:
-            pfilter = [('q',  'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
-            cc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
-                                    q=self.args.q + [pfilter[0][1]])
-            freq = cc.size()
-            err_nfilter, corr_nfilter = '', ''
-            if freq != calc_result['conc_size']:
-                err_nfilter = ';q=p0 0 1 ([] within <err/>) within ! <corr/>'
-                corr_nfilter = ';q=p0 0 1 ([] within ! <err/>) within <corr/>'
-            result['Blocks'][err_block]['Items'].append(
-                {'Word': [{'n': 'no error'}], 'freq': freq,
-                 'pfilter': pfilter, 'nfilter': err_nfilter,
-                 'norel': 1, 'fbar': 0})
-            result['Blocks'][corr_block]['Items'].append(
-                {'Word': [{'n': 'no correction'}], 'freq': freq,
-                 'pfilter': pfilter, 'nfilter': corr_nfilter,
-                 'norel': 1, 'fbar': 0})
-
-        params = [
-            ('from_line', 1),
-            ('to_line', self.FREQ_QUICK_SAVE_MAX_LINES),
-            ('ml', self.args.ml),
-            ('flimit', self.args.flimit),
-            ('fcrit', fcrit),  # cannot use self.args.fcrit as freqs() is also called directly by other actions
-            ('freq_sort', self.args.freq_sort),
-            ('fpage', self.args.fpage),
-            ('ftt_include_empty', self.args.ftt_include_empty)
-        ]
-        self._add_save_menu_item('CSV', 'savefreq', params, save_format='csv')
-        self._add_save_menu_item('XLSX', 'savefreq', params, save_format='xlsx')
-        self._add_save_menu_item('XML', 'savefreq', params, save_format='xml')
-        self._add_save_menu_item('TXT', 'savefreq', params, save_format='text')
-        params = params[:1] + params[2:]
-        self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', params)
-
+            save_params = [
+                ('from_line', 1),
+                ('to_line', self.FREQ_QUICK_SAVE_MAX_LINES),
+                ('ml', self.args.ml),
+                ('flimit', self.args.flimit),
+                ('fcrit', fcrit),  # cannot use self.args.fcrit as freqs() is also called directly by other actions
+                ('freq_sort', self.args.freq_sort),
+                ('fpage', self.args.fpage),
+                ('ftt_include_empty', self.args.ftt_include_empty)
+            ]
+            self._add_save_menu_item('CSV', 'savefreq', save_params, save_format='csv')
+            self._add_save_menu_item('XLSX', 'savefreq', save_params, save_format='xlsx')
+            self._add_save_menu_item('XML', 'savefreq', save_params, save_format='xml')
+            self._add_save_menu_item('TXT', 'savefreq', save_params, save_format='text')
+            save_params = save_params[:1] + save_params[2:]
+            self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_params)
+        result['freq_form_args'] = dict(
+            fttattr=self._request.args.getlist('fttattr'),
+            flimit=self.args.flimit,
+            ftt_include_empty=self.args.ftt_include_empty
+        )
         return result
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
@@ -1023,7 +1014,7 @@ class Actions(Querying):
             output = writer.raw_content()
         return output
 
-    @exposed(access_level=1, template='freqs.tmpl', accept_kwargs=True, legacy=True)
+    @exposed(access_level=1, template='freqs.tmpl', page_model='freq', accept_kwargs=True, legacy=True)
     def freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
@@ -1034,34 +1025,23 @@ class Actions(Querying):
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
         result['ml'] = 1
-        result['freqml_args'] = []
         self._session['last_freq_level'] = freqlevel
+        tmp = defaultdict(lambda: [])
+        for i in range(1, freqlevel + 1):
+            tmp['mlxattr'].append(kwargs.get('ml{0}attr'.format(i), 'word'))
+            tmp['mlxctx'].append(kwargs.get('ml{0}ctx'.format(i), '0'))
+            tmp['mlxpos'].append(kwargs.get('ml{0}pos'.format(i), 1))
+            tmp['mlxicase'].append(kwargs.get('ml{0}icase'.format(i), ''))
+            tmp['flimit'] = flimit
+        result['freq_form_args'] = tmp
         return result
 
-    @exposed(access_level=1, template='freqs.tmpl', legacy=True)
+    @exposed(access_level=1, template='freqs.tmpl', page_model='freq', legacy=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
             self._exceptmethod = 'freq'
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
-
-    @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def coll(self):
-        """
-        collocations form
-        """
-        self.disabled_menu_items = (MainMenu.SAVE, )
-        if self.args.maincorp:
-            corp = corplib.open_corpus(self.args.maincorp)
-        else:
-            corp = self.corp
-        corp_enc = corp.get_conf('ENCODING')
-        colllist = corp.get_conf('ATTRLIST').split(',')
-        out = {'Coll_attrlist': [{'n': n,
-                                  'label': import_string(corp.get_conf(n + '.LABEL'), from_encoding=corp_enc) or n}
-                                 for n in colllist],
-               'Pos_ctxs': conclib.pos_ctxs(1, 1)}
-        return out
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
     def collx(self, line_offset=0, num_lines=0):

@@ -976,6 +976,8 @@ class Kontext(Controller):
         result['Globals'] = templating.StateGlobals(global_var_val)
         result['Globals'].set('q', [q for q in result.get('Q')])
         result['human_corpname'] = None
+        result['multilevel_freq_dist_max_levels'] = settings.get('corpora', 'multilevel_freq_dist_max_levels', 3)
+        result['last_num_levels'] = self._session_get('last_freq_level')  # TODO enable this
 
         if self.args.maincorp:
             thecorp = corplib.open_corpus(self.args.maincorp)

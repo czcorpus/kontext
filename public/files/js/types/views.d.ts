@@ -290,3 +290,14 @@ declare module "views/analysis/coll" {
     export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
             layoutViews:any, collFormStore:any);
 }
+
+
+declare module "views/analysis/freq" {
+
+    export interface FreqFormViews {
+        FrequencyForm: React.ReactClass;
+    }
+
+    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+            layoutViews:any, mlFreqStore:any, ttFreqStore:any);
+}

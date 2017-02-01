@@ -18,6 +18,40 @@
 
 /// <reference path="./types/common.d.ts" />
 
+
+/**
+ * Transform a dict to a list of pairs. In case
+ * a value is Array<T> then it is expanded as a list
+ * of pairs with the same first value.
+ */
+export function dictToPairs<T>(d:{[key:string]:T|Array<T>}):Array<[string, T]> {
+    const ans = [];
+    for (let k in d) {
+        if (d.hasOwnProperty(k)) {
+            if (Object.prototype.toString.call(d[k]) === '[object Array]') {
+                (<Array<T>>d[k]).forEach((item) => {
+                    ans.push(k, item);
+                });
+
+            } else {
+                ans.push([k, d[k]]);
+            }
+        }
+    }
+    return ans;
+}
+
+/**
+ * Parse a URL args string (k1=v1&k2=v2&...&kN=vN) into
+ * a list of pairs [[k1, v1], [k2, v2],...,[kN, vN]]
+ */
+export function parseUrlArgs(args:string):Array<[string, string]> {
+    return args.split('&').map<[string, string]>(item => {
+        const tmp = item.split('=', 2);
+        return [decodeURIComponent(tmp[0]), decodeURIComponent(tmp[1])];
+    });
+}
+
 /**
  *
  */
@@ -93,6 +127,7 @@ export function getCaretPosition(inputElm) {
     }
     return 0;
 }
+
 
 /**
  * A dictionary which mimics Werkzeug's Multidict
@@ -188,7 +223,7 @@ export class MultiDict implements Kontext.IMultiDict {
      * values you should use items() instead.
      */
     toDict():{[key:string]:string} {
-        let ans:{[key:string]:string} = {};
+        let ans:{[key:string]:any} = {}; // TODO: type mess here
         for (let k in this) {
             if (this.hasOwnProperty(k)) {
                 ans[k] = this[k];
