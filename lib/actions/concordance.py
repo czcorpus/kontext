@@ -724,13 +724,6 @@ class Actions(Querying):
                 del self.args.q[-1]
             raise
 
-    @exposed(legacy=True)
-    def reduce_form(self):
-        """
-        """
-        self.disabled_menu_items = (MainMenu.SAVE,)
-        return {}
-
     @exposed(access_level=1, template='view.tmpl', vars=('concsize',), page_model='view',
              legacy=True)
     def reduce(self):
