@@ -19,18 +19,20 @@
 /// <reference path="../types/common.d.ts" />
 
 import {PageModel} from './document';
-import $ = require('jquery');
+import * as $ from 'jquery';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/analysis/freqForms';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
+import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 
 /**
  *
  */
 export class CollPage {
 
-    private pageModel:PageModel;
+    private layoutModel:PageModel;
 
     private checkIntervalId:number;
 
@@ -40,32 +42,36 @@ export class CollPage {
 
     private collFormStore:CollFormStore;
 
+    private mlFreqStore:MLFreqFormStore;
+
+    private ttFreqStore:TTFreqFormStore;
+
     static MAX_NUM_NO_CHANGE = 20;
 
-    constructor(pageModel:PageModel) {
-        this.pageModel = pageModel;
+    constructor(layoutModel:PageModel) {
+        this.layoutModel = layoutModel;
     }
 
     private stopWithError():void {
         this.stopWatching();
-        this.pageModel.showMessage(
+        this.layoutModel.showMessage(
                 'error',
-                this.pageModel.translate('global__bg_calculation_failed'),
+                this.layoutModel.translate('global__bg_calculation_failed'),
                 () => {window.history.back();});
     }
 
     private checkStatus():void {
         const args = new MultiDict([
-            ['corpname', this.pageModel.getConf<string>('corpname')],
-            ['usesubcorp', this.pageModel.getConf<string>('subcorpname')],
-            ['attrname', this.pageModel.getConf<string>('attrname')]
+            ['corpname', this.layoutModel.getConf<string>('corpname')],
+            ['usesubcorp', this.layoutModel.getConf<string>('subcorpname')],
+            ['attrname', this.layoutModel.getConf<string>('attrname')]
         ]);
-        this.pageModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
+        this.layoutModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
             args.add('worker_tasks', taskId);
         });
-        this.pageModel.ajax(
+        this.layoutModel.ajax(
             'GET',
-            this.pageModel.createActionUrl('wordlist_process'),
+            this.layoutModel.createActionUrl('wordlist_process'),
             args,
             {contentType : 'application/x-www-form-urlencoded'}
 
@@ -78,7 +84,7 @@ export class CollPage {
                     $('#processbar').css('width', data['status'] + '%');
                     if (data['status'] === 100) {
                         this.stopWatching(); // just for sure
-                        this.pageModel.reload();
+                        this.layoutModel.reload();
 
                     } else if (this.numNoChange >= CollPage.MAX_NUM_NO_CHANGE) {
                         this.stopWithError();
@@ -105,11 +111,46 @@ export class CollPage {
     }
 
     initAnalysisViews():void {
-        const attrs = this.pageModel.getConf<Array<{n:string; label:string}>>('AttrList');
-        const currArgs = this.pageModel.getConf<CollFormInputs>('CollFormArgs');
+        const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        const currArgs = this.layoutModel.getConf<CollFormInputs>('CollFormArgs');
+        const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
+
+        const freqFormProps:FreqFormProps = {
+            structAttrList: structAttrs,
+            fttattr: [structAttrs[0].n],
+            ftt_include_empty: false,
+            flimit: '0',
+            attrList: attrs,
+            mlxattr: [attrs[0].n],
+            mlxicase: [false],
+            mlxctx: ['0~0>0'],  // = "Node'"
+            alignType: ['left']
+        }
+
+        this.mlFreqStore = new MLFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps,
+            this.layoutModel.getConf<number>('multilevelFreqDistMaxLevels')
+        );
+
+        this.ttFreqStore = new TTFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            freqFormProps
+        );
+
+        const freqFormViews = freqFormInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.mlFreqStore,
+            this.ttFreqStore
+        );
+
         this.collFormStore = new CollFormStore(
-            this.pageModel.dispatcher,
-            this.pageModel,
+            this.layoutModel.dispatcher,
+            this.layoutModel,
             {
                 attrList: attrs,
                 cattr: currArgs.cattr,
@@ -122,31 +163,33 @@ export class CollPage {
             }
         );
         const collFormViews = collFormInit(
-            this.pageModel.dispatcher,
-            this.pageModel.exportMixins(),
-            this.pageModel.layoutViews,
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
             this.collFormStore
         );
         // TODO: init freq form
         const analysisViews = analysisFrameInit(
-            this.pageModel.dispatcher,
-            this.pageModel.exportMixins(),
-            this.pageModel.layoutViews,
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
             collFormViews,
-            null, // TODO
-            this.pageModel.getStores().mainMenuStore
+            freqFormViews,
+            this.layoutModel.getStores().mainMenuStore
         );
-        this.pageModel.renderReactComponent(
+        this.layoutModel.renderReactComponent(
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
-            {}
+            {
+                initialFreqFormVariant: 'ml'
+            }
         );
     }
 
     init():void {
-        this.pageModel.init().then(
+        this.layoutModel.init().then(
             () => {
-                const mainMenuStore = this.pageModel.getStores().mainMenuStore;
+                const mainMenuStore = this.layoutModel.getStores().mainMenuStore;
                 // we must capture concordance-related actions which lead
                 // to specific "pop-up" forms and redirect user back to
                 // the 'view' action with additional information (encoded in
@@ -158,28 +201,28 @@ export class CollPage {
                         case 'MAIN_MENU_SHOW_FILTER':
                             const filterArgs = new MultiDict(dictToPairs(activeItem.actionArgs));
                             window.location.replace(
-                                this.pageModel.createActionUrl(
+                                this.layoutModel.createActionUrl(
                                     'view',
-                                    this.pageModel.getConcArgs().items()
-                                ) + '#filter/' + this.pageModel.encodeURLParameters(filterArgs)
+                                    this.layoutModel.getConcArgs().items()
+                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
                             );
                         break;
                         case 'MAIN_MENU_SHOW_SORT':
-                            window.location.replace(this.pageModel.createActionUrl(
+                            window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.pageModel.getConcArgs().items()
+                                this.layoutModel.getConcArgs().items()
                             ) + '#sort');
                         break;
                         case 'MAIN_MENU_SHOW_SAMPLE':
-                            window.location.replace(this.pageModel.createActionUrl(
+                            window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.pageModel.getConcArgs().items()
+                                this.layoutModel.getConcArgs().items()
                             ) + '#sample');
                         break;
                         case 'MAIN_MENU_APPLY_SHUFFLE':
-                            window.location.replace(this.pageModel.createActionUrl(
+                            window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.pageModel.getConcArgs().items()
+                                this.layoutModel.getConcArgs().items()
                             ) + '#shuffle');
                         break;
                     }
