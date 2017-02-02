@@ -20,7 +20,7 @@
 This module contains a functionality related to
 extended, re-editable query processing.
 """
-
+import logging
 from kontext import Kontext
 import corplib
 import plugins
