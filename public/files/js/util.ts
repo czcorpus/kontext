@@ -57,7 +57,7 @@ export function parseUrlArgs(args:string):Array<[string, string]> {
  */
 export class SimplePageStore implements Kontext.PageStore {
 
-    dispatcher:Dispatcher.Dispatcher<any>;
+    dispatcher:Kontext.FluxDispatcher;
 
     private changeListeners:Array<Kontext.StoreListener>;
 
@@ -92,7 +92,7 @@ export class SimplePageStore implements Kontext.PageStore {
         }
     }
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>) {
+    constructor(dispatcher:Kontext.FluxDispatcher) {
         this.dispatcher = dispatcher;
         this.changeListeners = [];
     }

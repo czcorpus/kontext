@@ -267,11 +267,19 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 export function init(conf:Kontext.Conf) {
     const layoutModel:PageModel = new PageModel(conf);
     const subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
-        layoutModel.dispatcher, Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
-        layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson'));
-    const subcorpFormComponents = subcorpViewsInit(layoutModel.dispatcher,
-            layoutModel.exportMixins(), subcorpFormStore);
-    const pageModel = new SubcorpForm(layoutModel, subcorpFormComponents,
-            subcorpFormStore);
+        layoutModel.dispatcher,
+        Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
+        layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
+    );
+    const subcorpFormComponents = subcorpViewsInit(
+        layoutModel.dispatcher,
+        layoutModel.exportMixins(),
+        subcorpFormStore
+    );
+    const pageModel = new SubcorpForm(
+        layoutModel,
+        subcorpFormComponents,
+        subcorpFormStore
+    );
     pageModel.init(conf);
 }

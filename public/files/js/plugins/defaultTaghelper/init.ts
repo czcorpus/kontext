@@ -44,7 +44,7 @@ export class TagHelperPlugin implements Kontext.PluginObject<TagHelperStore> {
 
     create(pluginApi:Kontext.PluginApi):RSVP.Promise<TagHelperStore> {
         this.pluginApi = pluginApi;
-        this.store = new TagHelperStore(pluginApi);
+        this.store = new TagHelperStore(pluginApi.dispatcher(), pluginApi);
         this.views = viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.exportMixins(),

@@ -42,7 +42,7 @@ export class VirtualKeyboardStore extends SimplePageStore {
 
     private currLayout:number;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, pageModel:PageModel) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currLayout = 0;

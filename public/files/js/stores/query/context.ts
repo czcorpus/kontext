@@ -29,7 +29,7 @@ export class QueryContextStore extends SimplePageStore {
 
     private formData:Immutable.Map<string, any>;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>) {
+    constructor(dispatcher:Kontext.FluxDispatcher) {
         super(dispatcher);
         this.formData = Immutable.Map<string, any>({
             'fc_lemword_window_type': '',

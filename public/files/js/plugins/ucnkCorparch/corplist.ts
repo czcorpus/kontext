@@ -132,10 +132,9 @@ export class CorplistTableStore extends corplistDefault.CorplistTableStore {
 
     /**
      *
-     * @param pluginApi
      */
-    constructor(pluginApi:Kontext.PluginApi) {
-        super(pluginApi);
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+        super(dispatcher, pluginApi);
     }
 }
 
@@ -145,7 +144,7 @@ export class CorpusAccessRequestStore extends util.SimplePageStore {
 
     static DispatchToken:string;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
         const self = this;
         this.pluginApi = pluginApi;
@@ -208,8 +207,8 @@ export class CorplistPage implements CorplistPage {
 
     constructor(pluginApi:Kontext.PluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
-        this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi);
-        this.corplistTableStore = new CorplistTableStore(pluginApi);
+        this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi.dispatcher(), pluginApi);
+        this.corplistTableStore = new CorplistTableStore(pluginApi.dispatcher(), pluginApi);
         this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
         this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
     }

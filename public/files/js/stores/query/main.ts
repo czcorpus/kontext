@@ -113,7 +113,7 @@ export class GeneralQueryStore extends SimplePageStore {
 
     // -------
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore, props:GeneralQueryFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
@@ -255,7 +255,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     // ----------------------
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore, props:QueryFormProperties) {
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
         const self = this;
@@ -577,7 +577,7 @@ export class QueryHintStore extends SimplePageStore {
 
     private currentHint:number;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, hints:Array<string>) {
+    constructor(dispatcher:Kontext.FluxDispatcher, hints:Array<string>) {
         super(dispatcher);
         const self = this;
         this.hints = hints ? hints : [];

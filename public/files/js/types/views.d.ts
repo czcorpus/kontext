@@ -22,7 +22,7 @@
 
 
 declare module "views/document" {
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             storeProvider:any):Kontext.LayoutViews;
 }
 
@@ -34,7 +34,7 @@ declare module "views/concordance/lineSelection" {
         LockedLineGroupsMenu:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             lineSelectionStore:any, userInfoStore:any):LineSelectionViews;
 }
 
@@ -45,7 +45,7 @@ declare module "views/concordance/lines" {
         ConcLines:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             lineStore:any, lineSelectionStore:any):ConcLinesViews;
 }
 
@@ -56,7 +56,7 @@ declare module "views/concordance/paginator" {
         Paginator:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             lineStore:any):PaginatorViews;
 }
 
@@ -67,7 +67,7 @@ declare module "views/concordance/main" {
     }
 
     export function init(
-        dispatcher:Dispatcher.Dispatcher<any>,
+        dispatcher:Kontext.FluxDispatcher,
         mixins:any,
         layoutViews:Kontext.LayoutViews,
         stores:any
@@ -80,7 +80,7 @@ declare module "views/concordance/detail" {
         RefDetail: React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any, layoutViews:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
             concDetailStore:Kontext.PageStore):RefDetail;
 }
 
@@ -91,7 +91,7 @@ declare module "views/subcorp/forms" {
         WithinBuilder:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             subcorpFormStore:any):SubcorpFormViews;
 }
 
@@ -102,7 +102,7 @@ declare module "views/subcorp/list" {
         SubcorpList:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             layoutViews:Kontext.LayoutViews, subcorpListStore:any):SubcorpListViews;
 }
 
@@ -113,7 +113,7 @@ declare module "views/textTypes" {
         TextTypesPanel:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             textTypesStore:any):TextTypesViews;
 
 }
@@ -125,7 +125,7 @@ declare module "views/menu" {
         MainMenu:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             concArgHandler:Kontext.IConcArgsHandler, mainMenuStore:any,
             asyncTaskStore:Kontext.IAsyncTaskStore,
             layoutViews:Kontext.LayoutViews):MainMenuViews;
@@ -140,7 +140,7 @@ declare module "views/query/main" {
     }
 
     export function init(
-            dispatcher:Dispatcher.Dispatcher<any>,
+            dispatcher:Kontext.FluxDispatcher,
             mixins:any,
             layoutViews:Kontext.LayoutViews,
             queryStore:any,
@@ -158,7 +158,7 @@ declare module "views/query/aligned" {
         AlignedCorpora:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             queryStore:any):AlignedQueryFormViews;
 }
 
@@ -169,7 +169,7 @@ declare module "views/query/context" {
         SpecifyContextForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any):QueryContextViews;
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any):QueryContextViews;
 }
 
 
@@ -179,7 +179,7 @@ declare module "views/query/filter" {
         FilterForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any, layoutViews:Kontext.LayoutViews,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:Kontext.LayoutViews,
             filterStore:any, queryHintStore:any, withinBuilderStore:any, virtualKeyboardStore:any):FilterFormViews;
 
 }
@@ -190,7 +190,7 @@ declare module "views/query/sort" {
         SortFormView:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>,
+    export function init(dispatcher:Kontext.FluxDispatcher,
         mixins:any, layoutViews:Kontext.LayoutViews, sortStore:any, multiLevelSortStore:any):SortFormViews;
 }
 
@@ -202,7 +202,7 @@ declare module "views/query/sampleShuffle" {
         ShuffleFormView:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any, sampleStore:any):SampleFormViews;
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, sampleStore:any):SampleFormViews;
 }
 
 
@@ -221,7 +221,7 @@ declare module "views/query/overview" {
     }
 
     export function init(
-            dispatcher:Dispatcher.Dispatcher<any>,
+            dispatcher:Kontext.FluxDispatcher,
             mixins:any,
             layoutViews:Kontext.LayoutViews,
             viewDeps:QueryToolbarViewDeps,
@@ -236,7 +236,7 @@ declare module "views/wordlist/forms" {
         SaveWlForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>,
+    export function init(dispatcher:Kontext.FluxDispatcher,
             mixins:any):WordlistFormViews;
 }
 
@@ -247,7 +247,7 @@ declare module "views/options/structsAttrs" {
         StructsAndAttrsForm: React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>,
+    export function init(dispatcher:Kontext.FluxDispatcher,
             mixins:any, viewOptionsStore:any):StructsAndAttrsViews;
 }
 
@@ -259,7 +259,7 @@ declare module "views/overview" {
         CorpusInfoBox: React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             corpusInfoStore:any, popupBoxComponent:React.ReactClass):OverviewViews;
 }
 
@@ -271,7 +271,7 @@ declare module "views/analysis/frame" {
     }
 
     export function init(
-        dispatcher:Dispatcher.Dispatcher<any>,
+        dispatcher:Kontext.FluxDispatcher,
         mixins:any,
         layoutViews:Kontext.LayoutViews,
         collFormViews:any,
@@ -287,7 +287,7 @@ declare module "views/analysis/coll" {
         CollForm: React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             layoutViews:any, collFormStore:any);
 }
 
@@ -298,6 +298,6 @@ declare module "views/analysis/freq" {
         FrequencyForm: React.ReactClass;
     }
 
-    export function init(dispatcher:Dispatcher.Dispatcher<any>, mixins:any,
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             layoutViews:any, mlFreqStore:any, ttFreqStore:any);
 }

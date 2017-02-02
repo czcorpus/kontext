@@ -140,7 +140,7 @@ export class ConcDetailStore extends SimplePageStore {
     private speakerColorsAttachments:Immutable.Map<string, RGBColor>;
 
 
-    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>, linesStore:ConcLineStore, structCtx:string,
+    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore, structCtx:string,
             speechOpts:SpeechOptions, speakerColors:Array<string>) {
         super(dispatcher);
         const self = this;
@@ -525,7 +525,7 @@ export class RefsDetailStore extends SimplePageStore {
 
     private lineIdx:number;
 
-    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>, linesStore:ConcLineStore) {
+    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore) {
         super(dispatcher);
         const self = this;
         this.layoutModel = layoutModel;

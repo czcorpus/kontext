@@ -74,6 +74,11 @@ declare module Kontext {
     export type GeneralProps = {[key:string]:any};
 
     /**
+     *
+     */
+    export type FluxDispatcher = Dispatcher.Dispatcher<DispatcherPayload>;
+
+    /**
      * An interface used by KonText plug-ins
      */
     export interface PluginApi {
@@ -89,7 +94,7 @@ declare module Kontext {
         formatDate(d:Date, timeFormat?:number):string;
         applySelectAll(elm:HTMLElement, context:HTMLElement);
         userIsAnonymous():boolean;
-        dispatcher():Dispatcher.Dispatcher<any>; // TODO type
+        dispatcher():Kontext.FluxDispatcher;
         exportMixins(...mixins:any[]):any[];
         renderReactComponent(reactClass:React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;

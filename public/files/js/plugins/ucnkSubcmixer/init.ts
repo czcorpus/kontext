@@ -81,7 +81,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     private errorTolerance:number = SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pluginApi:Kontext.PluginApi,
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
             corpusIdAttr:string) {
         super(dispatcher);
@@ -327,7 +327,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 }
 
 
-export function getViews(dispatcher:Dispatcher.Dispatcher<any>,
+export function getViews(dispatcher:Kontext.FluxDispatcher,
         mixins:Kontext.ComponentCoreMixins, layoutViews:any,
         subcmixerStore:SubcMixerStore):{[name:string]:any} {
     return viewInit(dispatcher, mixins, layoutViews, subcmixerStore);

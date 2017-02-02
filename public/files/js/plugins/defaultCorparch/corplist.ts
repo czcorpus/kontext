@@ -215,8 +215,8 @@ export class CorplistTableStore extends util.SimplePageStore {
      *
      * @param pluginApi
      */
-    constructor(pluginApi:Kontext.PluginApi) {
-        super(pluginApi.dispatcher());
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+        super(dispatcher);
         this.pluginApi = pluginApi;
         const self = this;
         CorplistTableStore.DispatchToken = this.dispatcher.register(
@@ -418,7 +418,7 @@ export class CorplistPage {
 
     constructor(pluginApi:Kontext.PluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
-        this.corplistTableStore = new CorplistTableStore(pluginApi);
+        this.corplistTableStore = new CorplistTableStore(pluginApi.dispatcher(), pluginApi);
         this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);
         this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
     }

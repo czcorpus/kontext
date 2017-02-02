@@ -122,7 +122,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
 
     private updateListeners:Immutable.List<()=>void>;
 
-    constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<any>,
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, bibAttr:string) {
         super(dispatcher);
         let self = this;
