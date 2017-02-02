@@ -26,8 +26,8 @@ element conc_persistence {
 """
 
 import hashlib
-import time
 import re
+import uuid
 
 from abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
@@ -35,6 +35,8 @@ from plugins import inject
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
                ['%d' % i for i in range(10)]
+
+DEFAULT_CONC_ID_LENGTH = 10
 
 
 def id_exists(id):
@@ -69,6 +71,10 @@ def mk_short_id(s, min_length=6):
     return ans[:i]
 
 
+def generate_uniq_id():
+    return mk_short_id(uuid.uuid1().hex, min_length=DEFAULT_CONC_ID_LENGTH)
+
+
 class ConcPersistence(AbstractConcPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
@@ -77,8 +83,6 @@ class ConcPersistence(AbstractConcPersistence):
     DEFAULT_TTL_DAYS = 100
 
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
-
-    DEFAULT_CONC_ID_LENGTH = 8
 
     def __init__(self, settings, db, auth):
         plugin_conf = settings.get('plugins', 'conc_persistence')
@@ -138,8 +142,7 @@ class ConcPersistence(AbstractConcPersistence):
             return r1['q'] != r2['q'] or r1.get('lines_groups') != r2.get('lines_groups')
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            time_created = time.time()
-            data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
+            data_id = generate_uniq_id()
             curr_data['id'] = data_id
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
