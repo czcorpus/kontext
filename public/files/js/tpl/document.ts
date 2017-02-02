@@ -898,13 +898,20 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     private initOverviewArea():void {
-        const overviewViews = overviewAreaViewsInit(this.dispatcher, this.exportMixins(),
-                this.corpusInfoStore, this.layoutViews.PopupBox);
-        this.renderReactComponent(
-            overviewViews.OverviewArea,
-            window.document.getElementById('general-overview-mount'),
-            {}
+        const overviewViews = overviewAreaViewsInit(
+            this.dispatcher,
+            this.exportMixins(),
+            this.corpusInfoStore,
+            this.layoutViews.PopupBox
         );
+        const target = window.document.getElementById('general-overview-mount');
+        if (target) { // few pages do not use this
+            this.renderReactComponent(
+                overviewViews.OverviewArea,
+                window.document.getElementById('general-overview-mount'),
+                {}
+            );
+        }
     }
 
     /**
@@ -923,7 +930,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 window.onkeydown = (evt) => {
                     this.globalKeyHandlers.forEach(fn => fn(evt));
                 }
-
                 this.userSettings.init();
                 this.initMainMenu();
                 this.initOverviewArea();
