@@ -378,6 +378,8 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
         elif opid == 'f':
             size = ''
             args = _('enabled')
+        elif opid == 'X':  # aligned corpora changes (<= orig_size) total size
+            desc[-1] = desc[-1][:4] + (size,) + desc[-1][5:]
         if op:
             desc.append((op, args, url1, url2, size))
         i += 1
