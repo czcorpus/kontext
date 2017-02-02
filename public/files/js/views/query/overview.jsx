@@ -164,20 +164,18 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
         render : function () {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
-                    <layoutViews.PopupBox customClass="query-form-spa"
+                    <layoutViews.CloseableFrame
+                            customClass="query-form-spa"
+                            label={this.translate('query__edit_current_hd_{operation}',
+                                    {operation: formTypeToTitle(this.props.operationFormType)})}
                             onCloseClick={this.props.closeClickHandler}>
-                        <h3>
-                            {this.translate('query__edit_current_hd_{operation}',
-                                    {operation: formTypeToTitle(this.props.operationFormType)})
-                            }
-                        </h3>
                         {this.props.operationIdx < this.props.numOps - 1 ?
                             <ExecutionOptions modeRunFullQuery={this.props.modeRunFullQuery}
                                     operationIdx={this.props.operationIdx} />
                             : null
                         }
                         {this._renderEditorComponent()}
-                    </layoutViews.PopupBox>
+                    </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
             );
         }
@@ -475,10 +473,12 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
         render : function () {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                    <layoutViews.PopupBox customClass="query-form-spa" onCloseClick={this._handleCloseClick}>
-                        <h3>{this._createTitle()}</h3>
+                    <layoutViews.CloseableFrame
+                            customClass="query-form-spa"
+                            onCloseClick={this._handleCloseClick}
+                            label={this._createTitle()}>
                         {this._createActionBasedForm()}
-                    </layoutViews.PopupBox>
+                    </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
             );
         }

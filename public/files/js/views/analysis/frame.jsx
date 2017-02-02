@@ -27,6 +27,8 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
 
     const AnalysisFrame = React.createClass({
 
+        mixins : mixins,
+
         getInitialState : function () {
             return {
                 activeItem: mainMenuStore.getActiveItem()
@@ -39,6 +41,17 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
                     return <collViews.CollForm />;
                 case 'MAIN_MENU_SHOW_FREQ_FORM':
                     return <freqViews.FrequencyForm initialFreqFormVariant={this.props.initialFreqFormVariant} />;
+            }
+        },
+
+        _getTitle : function () {
+            switch ((this.state.activeItem || {}).actionName) {
+                case 'MAIN_MENU_SHOW_COLL_FORM':
+                    return this.translate('Collocation candidates'); // TODO
+                case 'MAIN_MENU_SHOW_FREQ_FORM':
+                    return this.translate('freq__h2_freq_distr');
+                default:
+                    return '?';
             }
         },
 
@@ -73,9 +86,10 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
             if (this._activeItemIsOurs()) {
                 return (
                     <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                        <layoutViews.PopupBox onCloseClick={this._handleCloseClick}>
+                        <layoutViews.CloseableFrame onCloseClick={this._handleCloseClick}
+                                label={this._getTitle()}>
                             {this._renderContents()}
-                        </layoutViews.PopupBox>
+                        </layoutViews.CloseableFrame>
                     </layoutViews.ModalOverlay>
                 );
 
