@@ -70,8 +70,8 @@ export class TagHelperStore extends util.SimplePageStore {
 
     private data:Immutable.List<PositionOptions>;
 
-    constructor(pluginApi:Kontext.PluginApi) {
-        super(pluginApi.dispatcher());
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+        super(dispatcher);
         const self = this;
         this.pluginApi = pluginApi;
         this.data = Immutable.List<PositionOptions>();

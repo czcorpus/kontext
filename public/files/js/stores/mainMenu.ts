@@ -66,7 +66,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
     private data:Immutable.List<MenuEntry>;
 
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, initialData:InitialMenuData) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.activeItem = null;

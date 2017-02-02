@@ -199,7 +199,7 @@ export class QueryReplayStore extends SimplePageStore {
 
     private _editIsLocked:boolean;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
             currentOperations:Array<QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher);
         this.pageModel = pageModel;

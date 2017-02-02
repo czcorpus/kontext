@@ -54,7 +54,7 @@ declare module LiveAttributesInit {
      * (we are not strict about React classes as we just pass them around)
      */
     export function getViews(
-        dispatcher:Dispatcher.Dispatcher<any>,
+        dispatcher:Kontext.FluxDispatcher,
         mixins:any,
         subcMixerViews:Subcmixer.SubcMixerViews,
         textTypesStore:TextTypes.ITextTypesStore,

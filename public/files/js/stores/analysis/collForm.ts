@@ -73,7 +73,7 @@ export class CollFormStore extends SimplePageStore {
     private csortfn:string;
 
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:CollFormProps) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CollFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<AttrValue>(props.attrList);

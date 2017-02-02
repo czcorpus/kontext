@@ -35,7 +35,7 @@ export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore 
 
     private userData:Kontext.UserCredentials;
 
-    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>) {
+    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         const self = this;
         this.layoutModel = layoutModel;

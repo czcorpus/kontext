@@ -76,7 +76,7 @@ export class SubcorpListStore extends SimplePageStore {
 
     private filter:SubcListFilter;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, layoutModel:PageModel,
+    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,

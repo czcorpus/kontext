@@ -84,7 +84,7 @@ export class MLFreqFormStore extends SimplePageStore {
 
     private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<AttrValue>(props.attrList);
@@ -274,7 +274,7 @@ export class TTFreqFormStore extends SimplePageStore {
 
     private flimit:string;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:FreqFormProps) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.structAttrList = Immutable.List<AttrValue>(props.structAttrList);

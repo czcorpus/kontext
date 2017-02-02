@@ -34,7 +34,7 @@ export class AppBarStore extends SimplePageStore {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>) {
+    constructor(dispatcher:Kontext.FluxDispatcher) {
         super(dispatcher);
         const self = this;
 

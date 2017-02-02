@@ -63,7 +63,7 @@ export class LineSelectionStore extends SimplePageStore {
 
     private maxGroupId:number;
 
-    constructor(layoutModel:tplDocument.PageModel, dispatcher:Dispatcher.Dispatcher<any>,
+    constructor(layoutModel:tplDocument.PageModel, dispatcher:Kontext.FluxDispatcher,
             concLineStore:ConcLineStore, clStorage:conclines.ConcLinesStorage, mode:string) {
         super(dispatcher);
         let self = this;

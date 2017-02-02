@@ -83,7 +83,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
         }
     }
 
-    constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         var self = this;
         this.messages = [];
@@ -121,7 +121,7 @@ export class CorpusInfoStore extends SimplePageStore {
     isWaiting:boolean = false;
 
 
-    constructor(pluginApi:Kontext.PluginApi, dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         const self = this;
         this.pluginApi = pluginApi;

@@ -49,7 +49,7 @@ export class SampleStore extends SimplePageStore {
 
     private rlinesValues:Immutable.Map<string, number>;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, props:SampleFormProperties) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SampleFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.rlinesValues = Immutable.Map<string, number>(props.rlines);

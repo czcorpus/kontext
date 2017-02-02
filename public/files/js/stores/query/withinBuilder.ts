@@ -37,7 +37,7 @@ export class WithinBuilderStore extends SimplePageStore {
 
     private currAttrIdx:number;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<Kontext.DispatcherPayload>, pageModel:PageModel) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<[string, string]>();

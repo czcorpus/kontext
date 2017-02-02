@@ -57,7 +57,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
     private attrAllpos:string; // kw/all
 
 
-    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>) {
+    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];

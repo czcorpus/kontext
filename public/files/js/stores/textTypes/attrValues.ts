@@ -120,7 +120,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     private textInputPlaceholder:string;
 
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pluginApi:Kontext.PluginApi, data:InitialData,
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, data:InitialData,
             checkedItems:TextTypes.ServerCheckedValues={}) {
         super(dispatcher);
         this.attributes = Immutable.List(this.importInitialData(data, checkedItems));

@@ -52,7 +52,7 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
     static CHECK_INTERVAL = 10000;
 
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:Kontext.PluginApi, conf:any) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:Kontext.PluginApi, conf:any) {
         super(dispatcher);
         const self = this;
         this.pageModel = pageModel;

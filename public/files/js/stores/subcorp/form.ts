@@ -44,7 +44,7 @@ export class SubcorpFormStore extends SimplePageStore {
 
     private lines:Array<WithinLine>;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, initialStructName:string,
+    constructor(dispatcher:Kontext.FluxDispatcher, initialStructName:string,
             initialState:Array<{[key:string]:string}>) {
         super(dispatcher);
         let self = this;

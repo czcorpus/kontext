@@ -102,7 +102,7 @@ declare module "plugins/syntaxViewer/init" {
 declare module "plugins/subcmixer/init" {
 
     export function getViews(
-        dispatcher:Dispatcher.Dispatcher<any>,
+        dispatcher:Kontext.FluxDispatcher,
         mixins:any,
         layoutViews:any,
         subcmixerStore:Subcmixer.ISubcMixerStore

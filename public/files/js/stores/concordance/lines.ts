@@ -273,7 +273,7 @@ export class ConcLineStore extends SimplePageStore {
     private adHocIpm:number;
 
 
-    constructor(layoutModel:PageModel, dispatcher:Dispatcher.Dispatcher<any>,
+    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
             lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
         super(dispatcher);
         let self = this;

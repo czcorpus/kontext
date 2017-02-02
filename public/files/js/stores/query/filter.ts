@@ -120,7 +120,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
 
     private isWithin:boolean;
 
-    constructor(dispatcher:Dispatcher.Dispatcher<any>, pageModel:PageModel, textTypesStore:TextTypesStore,
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore, props:FilterFormProperties) {
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
 

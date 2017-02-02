@@ -34,7 +34,7 @@ import {create as createSubcMixer} from 'plugins/subcmixer/init';
 
 
 export function getViews(
-        dispatcher:Dispatcher.Dispatcher<any>,
+        dispatcher:Kontext.FluxDispatcher,
         mixins:any,
         subcMixerViews:Subcmixer.SubcMixerViews,
         textTypesStore:TextTypes.ITextTypesStore,
@@ -44,11 +44,16 @@ export function getViews(
 }
 
 
-export function create(pluginApi:Kontext.PluginApi,
-                     textTypesStore:TextTypes.ITextTypesStore, bibAttr:string):RSVP.Promise<Kontext.PageStore> {
+export function create(pluginApi:Kontext.PluginApi, textTypesStore:TextTypes.ITextTypesStore,
+        bibAttr:string):RSVP.Promise<Kontext.PageStore> {
     return new RSVP.Promise(function (resolve, reject) {
         try {
-            resolve(new liveAttrsStore.LiveAttrsStore(pluginApi, pluginApi.dispatcher(), textTypesStore, bibAttr));
+            resolve(new liveAttrsStore.LiveAttrsStore(
+                pluginApi.dispatcher(),
+                pluginApi,
+                textTypesStore,
+                bibAttr
+            ));
 
         } catch (e) {
             reject(e);
