@@ -139,6 +139,65 @@ export function init(dispatcher, mixins, storeProvider) {
         }
     });
 
+    // ------------------------------ <CloseableFrame /> -----------------------------
+
+    const CloseableFrame = React.createClass({
+
+        mixins : mixins,
+
+        _closeClickHandler : function () {
+            if (typeof this.props.onCloseClick === 'function') {
+                this.props.onCloseClick.call(this);
+            }
+        },
+
+        getInitialState : function () {
+            return {
+                isMouseover : false
+            };
+        },
+
+        _handleCloseMouseover : function () {
+            this.setState({isMouseover: true});
+        },
+
+        _handleCloseMouseout : function () {
+            this.setState({isMouseover: false});
+        },
+
+        render : function () {
+            const style = {
+                width: '1.5em',
+                height: '1.5em',
+                float: 'right',
+                cursor: 'pointer',
+                fontSize: '1em'
+            };
+            const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
+            return (
+                <section className={htmlClass}>
+                    <div className="heading">
+                        <h2>
+                            {this.props.label}
+                        </h2>
+                        <div className="control">
+                            <img className="close-icon"
+                                    src={this.state.isMouseover ? this.createStaticUrl('img/close-icon_s.svg')
+                                        : this.createStaticUrl('img/close-icon.svg')}
+                                    onClick={this._closeClickHandler}
+                                    alt={this.translate('global__close_the_window')}
+                                    title={this.translate('global__close_the_window')}
+                                    onMouseOver={this._handleCloseMouseover}
+                                    onMouseOut={this._handleCloseMouseout}  />
+                        </div>
+                    </div>
+                    {this.props.children}
+                </section>
+            );
+        }
+
+    });
+
     // ------------------------------ <InlineHelp /> -----------------------------
 
     const InlineHelp = React.createClass({
@@ -327,6 +386,7 @@ export function init(dispatcher, mixins, storeProvider) {
     return {
         ModalOverlay: ModalOverlay,
         PopupBox: PopupBox,
+        CloseableFrame: CloseableFrame,
         InlineHelp: InlineHelp,
         Messages: Messages,
         CorpnameInfoTrigger: CorpnameInfoTrigger,

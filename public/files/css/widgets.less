@@ -8,14 +8,54 @@
     height: 100%;
     background-color: RGBA(20, 20, 20, 0.85);
 
-    > .tooltip-box {
+    > .tooltip-box, .closeable-frame {
         position: absolute;
         top: 30%;
         left: 50%;
         transform: translate(-50%,-30%);
+    }
+
+    > .tooltip-box {
         min-width: 70%;
         box-shadow: 3px 3px 4px #444;
         background-color: @color-section-bg;
+    }
+}
+
+section.closeable-frame {
+    background-color: @color-section-bg;
+    border-radius: @border-radius-default;
+    box-shadow: @portal-box-shadow;
+    max-width: 80em;
+
+    .heading {
+
+        margin: 0 0 1.7em 0;
+        padding: 0.4em 0.6em;
+        background-color: @color-light-frame;
+        border-radius: 6px 6px 0 0;
+        font-size: 120%;
+        font-weight: 300;
+
+        h2 {
+            margin: 0;
+            padding: 0;
+            display: inline-block;
+            width: 90%;
+        }
+
+        div.control {
+            text-align: right;
+            font-size: 1em;
+            width: 10%;
+            display: inline-block;
+
+            img {
+                width: 1em;
+                height: 1em;
+                cursor: pointer;
+            }
+        }
     }
 }
 

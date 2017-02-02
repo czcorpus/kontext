@@ -513,29 +513,26 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
 
         render : function () {
             return (
-                <div>
-                    <h2>{this.translate('freq__h2_freq_distr')}</h2>
-                    <form className="freq-form">
-                        <fieldset>
-                            <legend>
-                                <select onChange={this._handleFormSwitch} value={this.state.formType}>
-                                    <option value="ml">
-                                        {this.translate('freq__sel_form_type_ml')}
-                                    </option>
-                                    <option value="tt">
-                                        {this.translate('freq__sel_form_type_tt')}
-                                    </option>
-                                </select>
-                            </legend>
-                            {this._renderContents()}
-                        </fieldset>
-                        <div className="buttons">
-                            <button className="default-button" type="button" onClick={this._handleSubmitClick}>
-                                {this.translate('freq__make_freq_list_btn')}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <form className="freq-form">
+                    <fieldset>
+                        <legend>
+                            <select onChange={this._handleFormSwitch} value={this.state.formType}>
+                                <option value="ml">
+                                    {this.translate('freq__sel_form_type_ml')}
+                                </option>
+                                <option value="tt">
+                                    {this.translate('freq__sel_form_type_tt')}
+                                </option>
+                            </select>
+                        </legend>
+                        {this._renderContents()}
+                    </fieldset>
+                    <div className="buttons">
+                        <button className="default-button" type="button" onClick={this._handleSubmitClick}>
+                            {this.translate('freq__make_freq_list_btn')}
+                        </button>
+                    </div>
+                </form>
             );
         }
 

@@ -270,6 +270,7 @@ declare module Kontext {
     export interface LayoutViews {
         ModalOverlay:React.ReactClass;
         PopupBox:React.ReactClass;
+        CloseableFrame:React.ReactClass;
         InlineHelp:React.ReactClass;
         Messages:React.ReactClass;
         EmptyQueryOverviewBar:React.ReactClass;

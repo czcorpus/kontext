@@ -254,63 +254,60 @@ export function init(dispatcher, mixins, layoutViews, collFormStore) {
 
         render : function () {
             return (
-                <div>
-                    <h2>Collocation candidates</h2>
-                    <form className="collocations-form" action="collx">
-                        <table className="form">
-                            <tbody>
-                                <tr>
-                                    <th>{this.translate('coll__attribute_label')}:</th>
-                                    <td>
-                                        <AttrSelection attrList={this.state.attrList} cattr={this.state.cattr} />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>{this.translate('coll__coll_window_span')}:</th>
-                                    <td>
-                                        <WindowSpanInput cfromw={this.state.cfromw} ctow={this.state.ctow} />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>{this.translate('coll__min_coll_freq_in_corpus')}:</th>
-                                    <td>
-                                        <MinCollFreqCorpInput cminfreq={this.state.cminfreq} />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>{this.translate('coll__min_coll_freq_in_span')}:</th>
-                                    <td>
-                                        <MinCollFreqSpanInput cminbgr={this.state.cminbgr} />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan="2">
-                                        <fieldset className="colloc-metrics">
-                                            <legend>
-                                                {this.translate('coll__show_measures_legend')}
-                                            </legend>
-                                            <CollMetricsSelection cbgrfns={this.state.cbgrfns}
-                                                    availCbgrfns={this.state.availCbgrfns} />
-                                        </fieldset>
-                                        <fieldset className="colloc-metrics">
-                                            <legend>
-                                                {this.translate('coll__sort_by_legend')}
-                                            </legend>
-                                            <CollSortBySelection csortfn={this.state.csortfn}
-                                                    availCbgrfns={this.state.availCbgrfns} />
-                                        </fieldset>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div className="buttons">
-                            <button type="button" className="default-button"
-                                    onClick={this._handleSubmitClick}>
-                                {this.translate('coll__make_candidate_list')}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <form className="collocations-form" action="collx">
+                    <table className="form">
+                        <tbody>
+                            <tr>
+                                <th>{this.translate('coll__attribute_label')}:</th>
+                                <td>
+                                    <AttrSelection attrList={this.state.attrList} cattr={this.state.cattr} />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{this.translate('coll__coll_window_span')}:</th>
+                                <td>
+                                    <WindowSpanInput cfromw={this.state.cfromw} ctow={this.state.ctow} />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{this.translate('coll__min_coll_freq_in_corpus')}:</th>
+                                <td>
+                                    <MinCollFreqCorpInput cminfreq={this.state.cminfreq} />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{this.translate('coll__min_coll_freq_in_span')}:</th>
+                                <td>
+                                    <MinCollFreqSpanInput cminbgr={this.state.cminbgr} />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colSpan="2">
+                                    <fieldset className="colloc-metrics">
+                                        <legend>
+                                            {this.translate('coll__show_measures_legend')}
+                                        </legend>
+                                        <CollMetricsSelection cbgrfns={this.state.cbgrfns}
+                                                availCbgrfns={this.state.availCbgrfns} />
+                                    </fieldset>
+                                    <fieldset className="colloc-metrics">
+                                        <legend>
+                                            {this.translate('coll__sort_by_legend')}
+                                        </legend>
+                                        <CollSortBySelection csortfn={this.state.csortfn}
+                                                availCbgrfns={this.state.availCbgrfns} />
+                                    </fieldset>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div className="buttons">
+                        <button type="button" className="default-button"
+                                onClick={this._handleSubmitClick}>
+                            {this.translate('coll__make_candidate_list')}
+                        </button>
+                    </div>
+                </form>
             );
         }
     });
