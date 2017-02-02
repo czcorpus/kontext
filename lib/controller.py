@@ -987,7 +987,7 @@ class Controller(object):
         """
         return None
 
-    @exposed(accept_kwargs=True, skip_corpus_init=True)
+    @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message')
     def message(self, *args, **kwargs):
         return kwargs
 
