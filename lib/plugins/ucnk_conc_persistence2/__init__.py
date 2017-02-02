@@ -46,6 +46,7 @@ import time
 import re
 import json
 import sqlite3
+import uuid
 
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
@@ -57,6 +58,7 @@ KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x i
 PERSIST_LEVEL_KEY = 'persist_level'
 ID_KEY = 'id'
 QUERY_KEY = 'q'
+DEFAULT_CONC_ID_LENGTH = 10
 
 
 def id_exists(id):
@@ -66,6 +68,10 @@ def id_exists(id):
     # currently we assume that id (= prefix of md5 hash with 52^6 possible values)
     #  conflicts are very unlikely
     return False
+
+
+def generate_uniq_id():
+    return mk_short_id(uuid.uuid1().hex, min_length=DEFAULT_CONC_ID_LENGTH)
 
 
 def mk_short_id(s, min_length=6):
@@ -99,8 +105,6 @@ class ConcPersistence(AbstractConcPersistence):
     DEFAULT_TTL_DAYS = 100
 
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
-
-    DEFAULT_CONC_ID_LENGTH = 8
 
     def __init__(self, settings, db, auth):
         plugin_conf = settings.get('plugins', 'conc_persistence')
@@ -182,8 +186,7 @@ class ConcPersistence(AbstractConcPersistence):
                     r1.get('lines_groups') != r2.get('lines_groups'))
 
         if prev_data is None or records_differ(curr_data, prev_data):
-            time_created = time.time()
-            data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
+            data_id = generate_uniq_id()
             curr_data[ID_KEY] = data_id
             if prev_data is not None:
                 curr_data['prev_id'] = prev_data['id']
