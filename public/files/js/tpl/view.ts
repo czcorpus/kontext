@@ -918,6 +918,25 @@ export class ViewPage {
         );
     }
 
+    private updateMainMenu():void {
+        const updateMenu = (numLinesInGroups) => {
+            if (numLinesInGroups > 0) {
+                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-filter');
+                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-concordance', 'sorting');
+                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-concordance', 'shuffle');
+                this.layoutModel.getStores().mainMenuStore.disableMenuItem('menu-concordance', 'sample');
+
+            } else {
+                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-filter');
+                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-concordance', 'sorting');
+                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-concordance', 'shuffle');
+                this.layoutModel.getStores().mainMenuStore.enableMenuItem('menu-concordance', 'sample');
+            }
+        };
+        updateMenu(this.layoutModel.getConf<number>('NumLinesInGroups'));
+        this.layoutModel.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
+    }
+
     /**
      *
      */
@@ -972,6 +991,7 @@ export class ViewPage {
                 if (this.hashedAction) {
                     this.layoutModel.dispatcher.dispatch(this.hashedAction);
                 }
+                this.updateMainMenu();
             }
         );
     }

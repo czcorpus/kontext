@@ -871,23 +871,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     private initMainMenu():void {
-        const updateMenu = (numLinesInGroups) => {
-            if (numLinesInGroups > 0) {
-                this.mainMenuStore.disableMenuItem('menu-filter');
-                this.mainMenuStore.disableMenuItem('menu-concordance', 'sorting');
-                this.mainMenuStore.disableMenuItem('menu-concordance', 'shuffle');
-                this.mainMenuStore.disableMenuItem('menu-concordance', 'sample');
-
-            } else {
-                this.mainMenuStore.enableMenuItem('menu-filter');
-                this.mainMenuStore.enableMenuItem('menu-concordance', 'sorting');
-                this.mainMenuStore.enableMenuItem('menu-concordance', 'shuffle');
-                this.mainMenuStore.enableMenuItem('menu-concordance', 'sample');
-            }
-        };
-        updateMenu(this.getConf<number>('NumLinesInGroups'));
-        this.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
-
         const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this,
                 this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
         this.renderReactComponent(
