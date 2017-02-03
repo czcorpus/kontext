@@ -219,6 +219,8 @@ declare module Kontext {
     export interface IMainMenuStore extends PageStore {
 
         getActiveItem():MainMenuActiveItem;
+        disableMenuItem(itemId:string, subItemId?:string):void;
+        enableMenuItem(itemId:string, subItemId?:string):void;
 
         /**
          * Register an action which is run before listeners
