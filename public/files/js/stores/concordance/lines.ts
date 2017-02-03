@@ -335,17 +335,6 @@ export class ConcLineStore extends SimplePageStore {
                         }
                     );
                 break;
-                case 'CONCORDANCE_RELOAD_PAGE':
-                    self.reloadPage().then(
-                        (data) => {
-                            self.pushHistoryState(self.currentPage);
-                            self.notifyChangeListeners();
-                        },
-                        (err) => {
-                            self.layoutModel.showMessage('error', err);
-                        }
-                    );
-                break;
                 case 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES':
                     self.pagination.lastPage = payload.props['availPages'];
                     self.notifyChangeListeners();
@@ -369,6 +358,18 @@ export class ConcLineStore extends SimplePageStore {
                 break;
             }
         });
+    }
+
+    updateOnViewOptsChange():void {
+        this.reloadPage().then(
+            (data) => {
+                this.pushHistoryState(this.currentPage);
+                this.notifyChangeListeners();
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
     }
 
     getViewAttrs():Array<string> {
@@ -416,7 +417,6 @@ export class ConcLineStore extends SimplePageStore {
     private changePage(action:string, pageNumber?:number, concId?:string):RSVP.Promise<MultiDict> {
         const args = this.layoutModel.getConcArgs();
         const pageNum:number = Number(action === 'customPage' ? pageNumber : this.pagination[action]);
-
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
             return new RSVP.Promise((resolve: (v: MultiDict)=>void, reject:(e:any)=>void) => {
                 reject(new Error(this.layoutModel.translate('concview__invalid_page_num_err')));

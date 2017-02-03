@@ -49,7 +49,7 @@ class Options(Kontext):
             self.args.ctxattrs = 'word'
         self.args.structattrs = structattrs
 
-    @exposed(access_level=1, vars=('concsize', ), legacy=True)
+    @exposed(access_level=1, vars=('concsize', ), legacy=True, return_type='json')
     def viewattrs(self):
         """
         attrs, refs, structs form
