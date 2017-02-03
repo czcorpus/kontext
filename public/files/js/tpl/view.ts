@@ -94,6 +94,8 @@ export class QueryStores {
     sampleStore:SampleStore;
 }
 
+type LineGroupChartData = Array<{group:string; count:number}>;
+
 type LineGroupStats = {[groupId:number]:number};
 
 /**
@@ -195,9 +197,9 @@ export class ViewPage {
     }
 
     showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
-        let self = this;
+        const self = this;
 
-        function renderChart(data):Array<string> {
+        function renderChart(data:LineGroupChartData):Array<string> {
             const width = 200;
             const height = 200;
             const radius = Math.min(width, height) / 2;
@@ -238,18 +240,17 @@ export class ViewPage {
             return color;
         }
 
-        function renderLabels(data, colors, rootElm):void {
-            let labelWrapper:HTMLElement = window.document.createElement('table');
-            let tbody:HTMLElement = window.document.createElement('tbody');
-            let innerSpanElm:HTMLElement;
+        function renderLabels(data:LineGroupChartData, colors:Array<string>, rootElm:HTMLElement):void {
+            const labelWrapper:HTMLElement = window.document.createElement('table');
+            const tbody:HTMLElement = window.document.createElement('tbody');
 
             function addElm(name:string, parent:HTMLElement):HTMLElement {
-                let elm = window.document.createElement(name);
+                const elm = window.document.createElement(name);
                 $(parent).append(elm);
                 return elm;
             }
 
-            let total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
+            const total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
 
             function percentage(item) {
                 return (item['count'] / total * 100).toFixed(1) + '%';
@@ -260,15 +261,14 @@ export class ViewPage {
                 .append(tbody);
 
             data.forEach((item, i) => {
-                let trElm = addElm('tr', tbody);
-                let td1Elm = addElm('td', trElm);
-                let td2Elm = addElm('th', trElm);
-                let td3Elm = addElm('td', trElm);
-                let td4Elm = addElm('td', trElm);
-
+                const trElm = addElm('tr', tbody);
+                const td1Elm = addElm('td', trElm);
+                const td2Elm = addElm('th', trElm);
+                const td3Elm = addElm('td', trElm);
+                const td4Elm = addElm('td', trElm);
                 $(td1Elm)
                     .addClass('label-text')
-                    .css({'background-color': colors(i)})
+                    .css({'background-color': colors[i]})
                     .addClass('color-code')
                     .text('\u00A0');
                 $(td2Elm)
@@ -283,7 +283,6 @@ export class ViewPage {
             });
             $(rootElm).append(labelWrapper);
         }
-
         let prom;
 
         if (this.lastGroupStats && usePrevData) {
@@ -311,7 +310,7 @@ export class ViewPage {
 
         prom.then(
             (data) => {
-                const chartData = [];
+                const chartData:LineGroupChartData = [];
                 for (let p in data) {
                     chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
                 }
