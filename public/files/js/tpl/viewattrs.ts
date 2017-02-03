@@ -98,11 +98,16 @@ class ViewAttrsPage {
         };
         this.layoutModel.getStores().viewOptionsStore.initFromPageData(storeData);
 
-        let views = structsAttrsViewInit(this.layoutModel.dispatcher, this.layoutModel.exportMixins(),
-                this.layoutModel.getStores().viewOptionsStore);
+        let views = structsAttrsViewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.layoutModel.getStores().viewOptionsStore,
+            this.layoutModel.getStores().mainMenuStore
+        );
 
         this.layoutModel.renderReactComponent(
-            views.StructsAndAttrsForm,
+            views.StructAttrsViewOptions,
             window.document.getElementById('viewattrs-mount'),
             {
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),

@@ -487,7 +487,8 @@ class MenuGenerator(object):
         self.view_mode_switch = KwicSenModeSwitchItem()
 
         self.view_structs_attrs = (
-            ConcMenuItem(MainMenu.VIEW('structs-attrs'), _('Attributes, structures and references'), 'options/viewattrs')
+            EventTriggeringItem(MainMenu.VIEW('structs-attrs'), _('Attributes, structures and references'),
+                                'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS')
             .mark_corpus_dependent()
             .mark_indirect()
         )

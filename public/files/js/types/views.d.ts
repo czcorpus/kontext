@@ -244,11 +244,15 @@ declare module "views/wordlist/forms" {
 declare module "views/options/structsAttrs" {
 
     export interface StructsAndAttrsViews {
-        StructsAndAttrsForm: React.ReactClass;
+        StructAttrsViewOptions: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher,
-            mixins:any, viewOptionsStore:any):StructsAndAttrsViews;
+    export function init(
+            dispatcher:Kontext.FluxDispatcher,
+            mixins:any,
+            layoutViews:Kontext.LayoutViews,
+            viewOptionsStore:any,
+            mainMenustore:any):StructsAndAttrsViews;
 }
 
 

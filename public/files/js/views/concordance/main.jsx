@@ -22,7 +22,6 @@ import React from 'vendor/react';
 import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
-import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
 import {init as concDetailViewsInit} from 'views/concordance/detail';
 
 
@@ -39,7 +38,6 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
     const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
-    const viewOptionsViews = structsAttrsViewInit(dispatcher, mixins, viewOptionsStore);
     const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore);
 
 
@@ -388,9 +386,6 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 <div className="conc-toolbar">
                     <span className="separ">|</span>
                     {this._renderMouseOverInfo()}
-                    <a onClick={this.props.onViewOptionsClick}>
-                        {this.translate('concview__change_display_settings')}
-                    </a>
                 </div>
             );
         }
@@ -434,8 +429,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                             onChartFrameReady={this.props.onChartFrameReady}
                             canSendMail={this.props.canSendMail} />
                     {this.props.showConcToolbar ?
-                        <ConcOptions usesMouseoverAttrs={this.props.usesMouseoverAttrs}
-                                onViewOptionsClick={this.props.onViewOptionsClick} />
+                        <ConcOptions usesMouseoverAttrs={this.props.usesMouseoverAttrs} />
                         : null}
                 </div>
             );
@@ -447,51 +441,14 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
     const ConcordanceView = React.createClass({
 
-        _toggleViewOptions : function () {
-            this.setState(React.addons.update(this.state,
-                {viewOptionsVisible: {$set: !this.state.viewOptionsVisible}}));
-        },
-
-        _onCloseOptionsClick : function () {
-            this.setState(React.addons.update(this.state,
-                {viewOptionsVisible: {$set: false}}));
-        },
-
         getInitialState : function () {
             return {
-                viewOptionsVisible: false,
                 concDetailData : null,
                 refsDetailData: null,
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
                 concSummary: lineStore.getConcSummary()
             };
-        },
-
-        _renderViewOptions : function () {
-            return (
-                <layoutViews.PopupBox onCloseClick={this._onCloseOptionsClick}
-                        customStyle={{left: '1em', right: '1em'}}
-                        customClass="view-options">
-                    <viewOptionsViews.StructsAndAttrsForm isSubmitMode={false}
-                        humanCorpname={this.props.baseCorpname}
-                        externalCloseCallback={this._onCloseOptionsClick} />
-                </layoutViews.PopupBox>
-            );
-        },
-
-        _viewOptsStoreChangeHandler : function (store, action) {
-            if (action === '$VIEW_OPTIONS_SAVE_SETTINGS') {
-                this.setState({
-                    viewOptionsVisible: true, // we are still waiting until new conc. lines are loaded
-                    usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
-                    isUnfinishedCalculation: lineStore.isUnfinishedCalculation()
-                });
-                dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_RELOAD_PAGE',
-                    props: {}
-                });
-            }
         },
 
         _handleDetailCloseClick : function () {
@@ -533,7 +490,6 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
         _lineStoreChangeHandler : function (store, action) {
             this.setState({
-                viewOptionsVisible: false,
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 concSummary: lineStore.getConcSummary(),
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation()
@@ -541,19 +497,16 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         },
 
         componentDidMount : function () {
-            viewOptionsStore.addChangeListener(this._viewOptsStoreChangeHandler);
             lineStore.addChangeListener(this._lineStoreChangeHandler);
         },
 
         componentWillUnmount : function () {
-            viewOptionsStore.removeChangeListener(this._viewOptsStoreChangeHandler);
             lineStore.removeChangeListener(this._lineStoreChangeHandler);
         },
 
         render : function () {
             return (
                 <div>
-                    {this.state.viewOptionsVisible ? this._renderViewOptions() : null }
                     {this.state.concDetailData ?
                         <concDetailViews.ConcDetail
                             closeClickHandler={this._handleDetailCloseClick}
@@ -586,7 +539,6 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendMail={this.props.canSendMail}
                                 showConcToolbar={this.props.ShowConcToolbar}
-                                onViewOptionsClick={this._toggleViewOptions}
                                 usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
                     </div>
                     <div id="conclines-wrapper">

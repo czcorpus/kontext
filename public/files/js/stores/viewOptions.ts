@@ -56,20 +56,25 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private attrAllpos:string; // kw/all
 
+    private updateHandlers:Immutable.List<()=>void>;
+
+    private isWaiting:boolean;
+
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];
-        const self = this;
+        this.updateHandlers = Immutable.List<()=>void>();
+        this.isWaiting = false;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'VIEW_OPTIONS_LOAD_DATA':
-                    self.loadData().then(
+                    this.loadData().then(
                         (data) => {
-                            self.hasLoadedData = true;
-                            self.notifyChangeListeners();
+                            this.hasLoadedData = true;
+                            this.notifyChangeListeners();
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
@@ -78,56 +83,69 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                 break;
                 case 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY':
                     if (payload.props['name'] === 'allpos') {
-                        self.attrAllpos = payload.props['value'];
+                        this.attrAllpos = payload.props['value'];
 
                     } else if (payload.props['name'] === 'attr_vmode') {
-                        self.attrVmode = payload.props['value'];
+                        this.attrVmode = payload.props['value'];
                         // Here we limit possible combinations of attrVmode and attrAllPos.
                         // Please note that server's 'view' action always ensures that:
                         // if attrVmode == 'mouseover' then attrAllPos = 'all'
                         // which means that these settings should obey that rule
-                        if (self.attrVmode === 'mouseover') {
-                            self.attrAllpos = 'all';
+                        if (this.attrVmode === 'mouseover') {
+                            this.attrAllpos = 'all';
 
                         } else {
-                            self.attrAllpos = 'kw';
+                            this.attrAllpos = 'kw';
                         }
                     }
-                    self.notifyChangeListeners();
+                    this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE':
-                    self.toggleAttribute(payload.props['idx']);
-                    self.notifyChangeListeners();
+                    this.toggleAttribute(payload.props['idx']);
+                    this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES':
-                    self.toggleAllAttributes();
-                    self.notifyChangeListeners();
+                    this.toggleAllAttributes();
+                    this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_STRUCTURE':
-                    self.toggleStructure(payload.props['structIdent'],
+                    this.toggleStructure(payload.props['structIdent'],
                         payload.props['structAttrIdent']);
-                    self.notifyChangeListeners();
+                    this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_REFERENCE':
-                    self.toggleReference(payload.props['idx']);
-                    self.notifyChangeListeners();
+                    this.toggleReference(payload.props['idx']);
+                    this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES':
-                    self.toggleAllReferences();
-                    self.notifyChangeListeners();
+                    this.toggleAllReferences();
+                    this.notifyChangeListeners();
                 break;
                 case 'VIEW_OPTIONS_SAVE_SETTINGS':
-                    self.saveSettings().then(
+                    this.isWaiting = true;
+                    this.notifyChangeListeners();
+                    this.saveSettings().then(
                         (data) => {
-                            self.notifyChangeListeners('$VIEW_OPTIONS_SAVE_SETTINGS');
+                            this.isWaiting = false;
+                            this.notifyChangeListeners();
+                            this.updateHandlers.forEach(fn => fn());
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this.isWaiting = false;
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
             }
         });
+    }
+
+    getIsWaiting():boolean {
+        return this.isWaiting;
+    }
+
+    addOnSave(fn:()=>void):void {
+        this.updateHandlers = this.updateHandlers.push(fn);
     }
 
     private serialize():any {

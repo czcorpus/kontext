@@ -23,7 +23,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, viewOptionsStore) {
+export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenuStore) {
 
     // ---------------------------- <LiAttributeItem /> ----------------------
 
@@ -337,19 +337,14 @@ export function init(dispatcher, mixins, viewOptionsStore) {
         mixins : mixins,
 
         _handleSaveClick : function () {
-            this.setState({isWaiting: true});
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_SAVE_SETTINGS',
                 props: {}
             });
         },
 
-        getInitialState : function () {
-            return {isWaiting: false};
-        },
-
         _renderSubmitButton : function () {
-            if (this.state.isWaiting) {
+            if (this.props.isWaiting) {
                 return <img key="save-waiting" className="ajax-loader"
                                 src={this.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={this.translate('global__processing')}
@@ -365,29 +360,10 @@ export function init(dispatcher, mixins, viewOptionsStore) {
             }
         },
 
-        _renderButtonVariant : function () {
-            if (this.props.isSubmitMode) {
-                return (
-                    <button type="submit" className="default-button">
-                        {this.translate('options__apply_btn')}
-                    </button>
-                );
-
-            } else {
-                return [
-                    this._renderSubmitButton(),
-                    <button key="cancel" type="button" className="default-button"
-                            onClick={this.props.externalCloseCallback}>
-                        {this.translate('global__close')}
-                    </button>
-                ];
-            }
-        },
-
         render : function () {
             return (
                 <div className="buttons">
-                    {this._renderButtonVariant()}
+                    {this._renderSubmitButton()}
                 </div>
             );
         }
@@ -397,71 +373,23 @@ export function init(dispatcher, mixins, viewOptionsStore) {
     // ---------------------------- <StructsAndAttrsForm /> ----------------------
 
 
-    let StructsAndAttrsForm = React.createClass({
+    const StructsAndAttrsForm = React.createClass({
 
         mixins : mixins,
 
-        _fetchData : function () {
-            return {
-                fixedAttr: viewOptionsStore.getFixedAttr(),
-                attrList: viewOptionsStore.getAttributes(),
-                availStructs: viewOptionsStore.getStructures(),
-                structAttrs: viewOptionsStore.getStructAttrs(),
-                availRefs: viewOptionsStore.getReferences(),
-                hasSelectAllAttrs: viewOptionsStore.getSelectAllAttributes(),
-                hasSellectAllRefs: viewOptionsStore.getSelectAllReferences(),
-                hasLoadedData: viewOptionsStore.isLoaded(),
-                attrsVmode: viewOptionsStore.getAttrsVmode(),
-                attrsAllpos: viewOptionsStore.getAttrsAllpos(),
-                showConcToolbar: viewOptionsStore.getShowConcToolbar()
-            };
-        },
-
-        _storeChangeHandler : function (store, action) {
-            this.setState(this._fetchData());
-        },
-
-        componentDidMount : function () {
-            if (!this.props.isSubmitMode) {
-                dispatcher.dispatch({
-                    actionType: 'VIEW_OPTIONS_LOAD_DATA',
-                    props: {}
-                });
-            }
-            viewOptionsStore.addChangeListener(this._storeChangeHandler);
-        },
-
-        componentWillUnmount : function () {
-            viewOptionsStore.removeChangeListener(this._storeChangeHandler);
-        },
-
-        getInitialState : function () {
-            return this._fetchData();
-        },
-
-        _renderStateInputs : function () {
-            // <input type="hidden" name="fromp" value="TODO__" />;
-            return (this.props.stateArgs || []).map(item => {
-                return <input key={item[0]} type="hidden" name={item[0]} value={item[1]} />;
-            });
-        },
-
         render : function () {
-            if (this.props.isSubmitMode || this.state.hasLoadedData) {
+            if (this.props.hasLoadedData) {
                 return (
                     <form className="options-form" method="POST" action={this.createActionLink('options/viewattrsx')}>
-                        <h3>
-                            {this.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.humanCorpname})}
-                        </h3>
-                        {this.props.isSubmitMode ? this._renderStateInputs() : null}
-                        <FieldsetAttributes fixedAttr={this.state.fixedAttr} attrList={this.state.attrList}
-                                hasSelectAll={this.state.hasSelectAllAttrs} attrsAllpos={this.state.attrsAllpos}
-                                attrsVmode={this.state.attrsVmode} showConcToolbar={this.state.showConcToolbar} />
-                        <FieldsetStructures availStructs={this.state.availStructs} structAttrs={this.state.structAttrs} />
-                        <FieldsetMetainformation availRefs={this.state.availRefs}
-                                hasSelectAll={this.state.hasSellectAllRefs} />
-                        <SubmitButtons externalCloseCallback={this.props.externalCloseCallback}
-                                isSubmitMode={this.props.isSubmitMode} />
+                        <div>
+                            <FieldsetAttributes fixedAttr={this.props.fixedAttr} attrList={this.props.attrList}
+                                    hasSelectAll={this.props.hasSelectAllAttrs} attrsAllpos={this.props.attrsAllpos}
+                                    attrsVmode={this.props.attrsVmode} showConcToolbar={this.props.showConcToolbar} />
+                            <FieldsetStructures availStructs={this.props.availStructs} structAttrs={this.props.structAttrs} />
+                            <FieldsetMetainformation availRefs={this.props.availRefs}
+                                    hasSelectAll={this.props.hasSellectAllRefs} />
+                            <SubmitButtons isWaiting={this.props.isWaiting} />
+                        </div>
                     </form>
                 );
 
@@ -474,12 +402,122 @@ export function init(dispatcher, mixins, viewOptionsStore) {
                 );
             }
         }
+    });
 
+
+    // ---------------------------- <StructAttrsViewOptions /> ----------------------
+
+    const StructAttrsViewOptions = React.createClass({
+
+        // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
+
+        mixins : mixins,
+
+        _fetchStoreState : function () {
+            return {
+                fixedAttr: viewOptionsStore.getFixedAttr(),
+                attrList: viewOptionsStore.getAttributes(),
+                availStructs: viewOptionsStore.getStructures(),
+                structAttrs: viewOptionsStore.getStructAttrs(),
+                availRefs: viewOptionsStore.getReferences(),
+                hasSelectAllAttrs: viewOptionsStore.getSelectAllAttributes(),
+                hasSellectAllRefs: viewOptionsStore.getSelectAllReferences(),
+                hasLoadedData: viewOptionsStore.isLoaded(),
+                attrsVmode: viewOptionsStore.getAttrsVmode(),
+                attrsAllpos: viewOptionsStore.getAttrsAllpos(),
+                showConcToolbar: viewOptionsStore.getShowConcToolbar(),
+                isWaiting: viewOptionsStore.getIsWaiting(),
+                isVisible: false
+            };
+        },
+
+        _handleCloseClick : function () {
+            dispatcher.dispatch({
+                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
+                props: {}
+            });
+            const state = this._fetchStoreState();
+            state.isVisible = false;
+            this.setState(state);
+        },
+
+        _handleStoreChange : function () {
+            const activeItem = mainMenuStore.getActiveItem();
+            if (activeItem &&
+                    activeItem.actionName === 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS') {
+                const state = this._fetchStoreState();
+                state.isVisible = true;
+                this.setState(state);
+            }
+        },
+
+        _handleViewOptsStoreChange : function () {
+            const state = this._fetchStoreState();
+            if (this.state.isWaiting && !state.isWaiting) {
+                state.isVisible = false;
+
+            } else {
+                state.isVisible = this.state.isVisible;
+            }
+            this.setState(state);
+        },
+
+        componentDidMount : function () {
+            mainMenuStore.addChangeListener(this._handleStoreChange);
+            viewOptionsStore.addChangeListener(this._handleViewOptsStoreChange);
+            dispatcher.dispatch({
+                actionType: 'VIEW_OPTIONS_LOAD_DATA',
+                props: {}
+            });
+        },
+
+        componentWillUnmount : function () {
+            mainMenuStore.removeChangeListener(this._handleStoreChange);
+            viewOptionsStore.removeChangeListener(this._handleViewOptsStoreChange);
+        },
+
+        getInitialState : function () {
+            return this._fetchStoreState();
+        },
+
+        _renderContents : function () {
+            return (
+                <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
+                    <layoutViews.CloseableFrame
+                            customClass="query-replay-box"
+                            onCloseClick={this._handleCloseClick}
+                            label={this.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.humanCorpname})}>
+                        <StructsAndAttrsForm
+                                fixedAttr={this.state.fixedAttr}
+                                attrList={this.state.attrList}
+                                availStructs={this.state.availStructs}
+                                structAttrs={this.state.structAttrs}
+                                availRefs={this.state.availRefs}
+                                hasSelectAllAttrs={this.state.hasSelectAllAttrs}
+                                hasSellectAllRefs={this.state.hasSellectAllRefs}
+                                hasLoadedData={this.state.hasLoadedData}
+                                attrsVmode={this.state.attrsVmode}
+                                attrsAllpos={this.state.attrsAllpos}
+                                showConcToolbar={this.state.showConcToolbar}
+                                isWaiting={this.state.isWaiting} />
+                    </layoutViews.CloseableFrame>
+                </layoutViews.ModalOverlay>
+            );
+        },
+
+        render : function () {
+            if (this.state.isVisible) {
+                return this._renderContents();
+
+            } else {
+                return null;
+            }
+        }
     });
 
 
     return {
-        StructsAndAttrsForm: StructsAndAttrsForm
+        StructAttrsViewOptions: StructAttrsViewOptions
     };
 
 }

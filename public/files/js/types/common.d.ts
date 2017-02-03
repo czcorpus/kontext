@@ -426,6 +426,7 @@ declare module ViewOptions {
         initFromPageData(data:ViewOptions.PageData):void;
         loadData():RSVP.Promise<ViewOptions.PageData>;
         isLoaded():boolean;
+        addOnSave(fn:()=>void):void;
         getAttributes():Immutable.List<ViewOptions.AttrDesc>;
         getSelectAllAttributes():boolean;
         getStructures():Immutable.List<ViewOptions.StructDesc>;

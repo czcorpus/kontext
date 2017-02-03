@@ -66,6 +66,7 @@ import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
+import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -146,6 +147,8 @@ export class ViewPage {
     private ttFreqStore:TTFreqFormStore;
 
     private freqFormViews:FreqFormViews;
+
+    private viewOptionsViews:StructsAndAttrsViews;
 
     /**
      * An action encoded as a fragment part of the current URL.
@@ -936,6 +939,26 @@ export class ViewPage {
         this.layoutModel.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
     }
 
+    private initViewOptions():void {
+        this.viewOptionsViews = structsAttrsViewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.viewStores.viewOptionsStore,
+            this.viewStores.mainMenuStore
+        );
+
+        this.layoutModel.renderReactComponent(
+            this.viewOptionsViews.StructAttrsViewOptions,
+            window.document.getElementById('view-options-mount'),
+            {
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                isSubmitMode: true,
+                stateArgs: this.layoutModel.getConcArgs().items()
+            }
+        );
+    }
+
     /**
      *
      */
@@ -991,6 +1014,7 @@ export class ViewPage {
                     this.layoutModel.dispatcher.dispatch(this.hashedAction);
                 }
                 this.updateMainMenu();
+                this.initViewOptions();
             }
         );
     }
@@ -1043,6 +1067,7 @@ export function init(conf):ViewPage {
             lineViewProps,
             layoutModel.getConf<Array<ServerLineData>>('Lines')
     );
+    stores.viewOptionsStore.addOnSave(() => stores.lineViewStore.updateOnViewOptsChange());
     stores.lineSelectionStore = new LineSelectionStore(
             layoutModel,
             layoutModel.dispatcher,
