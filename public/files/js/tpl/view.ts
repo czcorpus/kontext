@@ -160,7 +160,7 @@ export class ViewPage {
 
                 $(td1Elm)
                     .addClass('label-text')
-                    .css({'background-color': colors(i)})
+                    .css({'background-color': colors[i]})
                     .addClass('color-code')
                     .text('\u00A0');
                 $(td2Elm)
