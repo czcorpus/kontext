@@ -290,6 +290,10 @@ export class QueryReplayStore extends SimplePageStore {
         });
     }
 
+    private getActualCorpname():string {
+        return this.pageModel.getConf<string>('corpname');
+    }
+
     private getCurrentQueryKey():string {
         const compiledQuery = this.pageModel.getConf<Array<string>>('compiledQuery') || [];
         const lastOp = compiledQuery[compiledQuery.length - 1] || '';
@@ -581,7 +585,11 @@ export class QueryReplayStore extends SimplePageStore {
                 return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                    {last_key: this.getCurrentQueryKey(), idx: opIdx}
+                    {
+                        corpname: this.getActualCorpname(),
+                        last_key: this.getCurrentQueryKey(),
+                        idx: opIdx
+                    }
 
                 ).then(
                     (data) => {
@@ -620,7 +628,11 @@ export class QueryReplayStore extends SimplePageStore {
                 return this.pageModel.ajax<AjaxResponse.FilterFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                    {last_key: this.getCurrentQueryKey(), idx: opIdx}
+                    {
+                        corpname: this.getActualCorpname(),
+                        last_key: this.getCurrentQueryKey(),
+                        idx: opIdx
+                    }
 
                 ).then(
                     (data) => {
@@ -668,7 +680,11 @@ export class QueryReplayStore extends SimplePageStore {
                 return this.pageModel.ajax<AjaxResponse.SortFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                    {last_key: this.getCurrentQueryKey(), idx: opIdx}
+                    {
+                        corpname: this.getActualCorpname(),
+                        last_key: this.getCurrentQueryKey(),
+                        idx: opIdx
+                    }
 
                 ).then<AjaxResponse.SortFormArgsResponse>(
                     (data) => {
@@ -715,7 +731,11 @@ export class QueryReplayStore extends SimplePageStore {
                 return this.pageModel.ajax<AjaxResponse.SampleFormArgsResponse>(
                     'GET',
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                    {last_key: this.getCurrentQueryKey(), idx: opIdx}
+                    {
+                        corpname: this.getActualCorpname(),
+                        last_key: this.getCurrentQueryKey(),
+                        idx: opIdx
+                    }
 
                 ).then(
                     (data) => {
@@ -746,7 +766,11 @@ export class QueryReplayStore extends SimplePageStore {
             return this.pageModel.ajax<AjaxResponse.ConcFormArgsResponse>(
                 'GET',
                 this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
-                {last_key: this.getCurrentQueryKey(), idx: opIdx}
+                {
+                    corpname: this.getActualCorpname(),
+                    last_key: this.getCurrentQueryKey(),
+                    idx: opIdx
+                }
 
             ).then(
                 (data) => {
