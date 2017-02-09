@@ -751,7 +751,7 @@ class Actions(Querying):
         self.args.q.append('f')
         return self.view()
 
-    @exposed(access_level=1, legacy=True)
+    @exposed(access_level=1, legacy=True, page_model='freq')
     def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
         """
         display a frequency list
@@ -772,14 +772,15 @@ class Actions(Querying):
             attr_list = set(self.corp.get_conf('ATTRLIST').split(','))
             return crit_attrs <= attr_list
 
+        result = {}
         fcrit_is_all_nonstruct = True
         for fcrit_item in fcrit:
             fcrit_is_all_nonstruct = (fcrit_is_all_nonstruct and is_non_structural_attr(fcrit_item))
-
         if fcrit_is_all_nonstruct:
             rel_mode = 1
         else:
             rel_mode = 0
+        result['freq_ipm_warn_enabled'] = not fcrit_is_all_nonstruct and self._query_contains_within()
         corp_info = self.get_corpus_info(self.args.corpname)
 
         args = freq_calc.FreqCalsArgs()
@@ -805,16 +806,15 @@ class Actions(Querying):
         args.line_offset = line_offset
 
         calc_result = freq_calc.calculate_freqs(args)
-        result = {
-            'fcrit': [('fcrit', cr) for cr in fcrit],
-            'FCrit': [{'fcrit': cr} for cr in fcrit],
-            'Blocks': calc_result['data'],
-            'paging': 0,
-            'concsize': calc_result['conc_size'],
-            'fmaxitems': self.args.fmaxitems,
-            'quick_from_line': 1,
-            'quick_to_line': None
-        }
+        result.update(
+            fcrit=[('fcrit', cr) for cr in fcrit],
+            FCrit=[{'fcrit': cr} for cr in fcrit],
+            Blocks=calc_result['data'],
+            paging=0,
+            concsize=calc_result['conc_size'],
+            fmaxitems=self.args.fmaxitems,
+            quick_from_line=1,
+            quick_to_line=None)
 
         if not result['Blocks'][0]:
             logging.getLogger(__name__).warn('freqs - empty list: %s' % (result,))

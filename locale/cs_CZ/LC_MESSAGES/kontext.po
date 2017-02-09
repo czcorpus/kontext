@@ -1943,6 +1943,9 @@ msgstr "Klikněte pro editaci dotazu"
 msgid "Edit query"
 msgstr "Upravit dotaz"
 
+msgid "Relative frequencies (i.p.m.) shown below are related to the size of the respective category as a whole."
+msgstr "Níže uváděné relativní frekvence (i.p.m.) jsou vztažené k velikosti příslušné kategorie jako celku."
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

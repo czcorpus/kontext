@@ -92,6 +92,13 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
         <input type="submit" value="$_("Set limit")" />
     </form>
 
+    #if $getVar('freq_ipm_warn_enabled', False)
+    <p class="freq-ipm-warning">
+        <img class="warning-icon" src="${files_path}/img/warning-icon.svg" alt="warning icon" />
+        $_('Relative frequencies (i.p.m.) shown below are related to the size of the respective category as a whole.')
+    </p>
+    #end if
+
 
     #for $b in $Blocks
     #if 'Total' in $b
