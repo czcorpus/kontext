@@ -165,7 +165,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         render : function () {
             if (this.props.waitingFor !== this.props.waitingKey) {
                 return (
-                    <a className="expand"
+                    <a className={`expand${this.props.position === 'left' ? ' left' : ''}`}
                             title={this._createTitle()} onClick={this.props.clickHandler}>
                         <img src={this._createImgPath()} alt={this._createAlt()} />
                     </a>
