@@ -681,6 +681,12 @@ export class ViewPage {
                 });
             }
         );
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
+            (args:Kontext.GeneralProps) => {
+                return this.layoutModel.getStores().viewOptionsStore.loadData();
+            }
+        );
 
         this.filterFormViews = filterFormInit(
             this.layoutModel.dispatcher,

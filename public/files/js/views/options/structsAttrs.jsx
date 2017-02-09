@@ -465,10 +465,12 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
         componentDidMount : function () {
             mainMenuStore.addChangeListener(this._handleStoreChange);
             viewOptionsStore.addChangeListener(this._handleViewOptsStoreChange);
-            dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_LOAD_DATA',
-                props: {}
-            });
+            if (this.state.isVisible) {
+                dispatcher.dispatch({
+                    actionType: 'VIEW_OPTIONS_LOAD_DATA',
+                    props: {}
+                });
+            }
         },
 
         componentWillUnmount : function () {
