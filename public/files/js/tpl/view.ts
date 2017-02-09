@@ -172,9 +172,9 @@ export class ViewPage {
 
     private deserializeHashAction(v:string):Kontext.DispatcherPayload {
         const tmp = v.substr(1).split('/');
+        const args = new MultiDict(tmp[1] ? parseUrlArgs(tmp[1]) : []);
         switch (tmp[0]) {
             case 'filter':
-                const args = new MultiDict(tmp[1] ? parseUrlArgs(tmp[1]) : []);
                 return {
                     actionType: 'MAIN_MENU_SHOW_FILTER',
                     props: args.toDict()
@@ -193,6 +193,11 @@ export class ViewPage {
                 return {
                     actionType: 'MAIN_MENU_APPLY_SHUFFLE',
                     props: {}
+                };
+            case 'edit_op':
+                return {
+                    actionType: 'EDIT_QUERY_OPERATION',
+                    props: {operationIdx: Number(args['operationIdx'])}
                 };
             default:
                 return null;
