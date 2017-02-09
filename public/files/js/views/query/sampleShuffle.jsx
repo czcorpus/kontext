@@ -107,7 +107,7 @@ export function init(dispatcher, mixins, sampleStore) {
             return {
                 isWarning: this.props.shuffleMinResultWarning <= this.props.lastOpSize,
                 isAutoSubmit: this.props.shuffleMinResultWarning > this.props.lastOpSize
-                                && this.props.operationIdx === null
+                                && this.props.operationIdx === undefined
             };
         },
 
