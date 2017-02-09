@@ -652,7 +652,9 @@ class Actions(Querying):
                                   self.args.fc_pos_type,
                                   self.args.fc_pos)
             if self.args.shuffle == 1 and 'f' not in self.args.q:
+                self.args.shuffle = 0
                 self.args.q.append('f')
+                self.acknowledge_auto_generated_conc_op(len(self.args.q) - 1, ShuffleFormArgs(persist=True))
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
             ans['TextTypeSel'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)
             ans.update(self.view())
