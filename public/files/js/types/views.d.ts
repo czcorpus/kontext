@@ -218,6 +218,7 @@ declare module "views/query/overview" {
 
     export interface QueryToolbarViews {
         QueryToolbar:React.ReactClass;
+        NonViewPageQueryToolbar:React.ReactClass;
     }
 
     export function init(

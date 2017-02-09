@@ -28,10 +28,12 @@ import {MultiDict, dictToPairs} from '../util';
 import {bind as bindPopupBox} from '../popupbox';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/analysis/freqForms';
+import {QueryReplayStore, QueryOperation, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
+import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 
 /**
  *
@@ -45,6 +47,8 @@ class FreqPage {
     private ttFreqStore:TTFreqFormStore;
 
     private collFormStore:CollFormStore;
+
+    private queryReplayStore:IndirectQueryReplayStore;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -146,6 +150,41 @@ class FreqPage {
         );
     }
 
+    private initQueryOpNavigation():void {
+        this.queryReplayStore = new IndirectQueryReplayStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || []
+        );
+        const queryOverviewViews = queryOverviewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            {
+                QueryFormView: null,
+                FilterFormView: null,
+                SortFormView: null,
+                SampleFormView: null,
+                ShuffleFormView: null
+            },
+            this.queryReplayStore,
+            this.layoutModel.getStores().mainMenuStore
+        );
+        this.layoutModel.renderReactComponent(
+            queryOverviewViews.NonViewPageQueryToolbar,
+            window.document.getElementById('query-overview-mount'),
+            {
+                corpname: this.layoutModel.getConf<string>('corpname'),
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
+                queryFormProps: {},
+                filterFormProps: {},
+                sortFormProps: {},
+                shuffleFormProps: {}
+            }
+        );
+    }
+
     init() {
         this.layoutModel.init().then(
             () => {
@@ -195,6 +234,7 @@ class FreqPage {
                 );
                 this.initViewOptions();
                 this.initAnalysisViews();
+                this.initQueryOpNavigation();
             }
         ).then(
             () => undefined,

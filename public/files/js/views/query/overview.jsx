@@ -323,16 +323,6 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 actionType: 'EDIT_QUERY_OPERATION',
                 props: {operationIdx: idx}
             });
-            this.setState({
-                replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
-                ops: queryReplayStore.getCurrEncodedOperations(),
-                editOpIdx: idx,
-                editOpKey: queryReplayStore.getEditedOperationIdx(),
-                isLoading: true,
-                queryOverview: null,
-                modeRunFullQuery: queryReplayStore.getRunFullQuery(),
-                editIsLocked: queryReplayStore.editIsLocked()
-            });
         },
 
         _handleEditorClose : function () {
@@ -430,7 +420,61 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
         }
     });
 
-    // ------------------------ <QueryToolbar /> --------------------------------
+
+    // ------------------------ <RedirectingQueryOverview /> -------------------------------
+
+    const RedirectingQueryOverview = React.createClass({
+
+        mixins : mixins,
+
+        getInitialState : function () {
+            return {
+                ops: queryReplayStore.getCurrEncodedOperations()
+            };
+        },
+
+        _handleEditClick : function (opIdx) {
+            dispatcher.dispatch({
+                actionType: 'REDIRECT_TO_EDIT_QUERY_OPERATION',
+                props: {
+                    operationIdx: opIdx
+                }
+
+            });
+        },
+
+        render : function () {
+            return (
+                <ul id="query-overview-bar">
+                        {this.props.humanCorpname ?
+                                <layoutViews.CorpnameInfoTrigger
+                                        corpname={this.props.corpname}
+                                        humanCorpname={this.props.humanCorpname}
+                                        usesubcorp={this.props.usesubcorp} />
+                                : null}
+                        {this.state.ops.map((item, i) => {
+                            return <QueryOpInfo
+                                        key={`op_${i}`}
+                                        idx={i}
+                                        item={item}
+                                        clickHandler={this._handleEditClick.bind(this, i)}
+                                        hasOpenEditor={this.state.editOpIdx === i && !this.state.replayIsRunning}
+                                        editorProps={this.state.editOpIdx === i ? this._getEditorProps(i, item.opid) : null}
+                                        closeEditorHandler={this._handleEditorClose}
+                                        isLoading={this.state.isLoading}
+                                        modeRunFullQuery={this.state.modeRunFullQuery}
+                                        numOps={this.state.ops.size}
+                                        shuffleMinResultWarning={this.props.shuffleFormProps.shuffleMinResultWarning}
+                                        editIsLocked={this.state.editIsLocked} />;
+                        })}
+                </ul>
+            );
+        }
+
+    });
+
+
+    // ------------------------ <AppendOperationOverlay /> --------------------------------
 
     const AppendOperationOverlay = React.createClass({
 
@@ -534,7 +578,24 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
     });
 
 
+    // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
+
+    const NonViewPageQueryToolbar = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            return (
+                <div>
+                    <RedirectingQueryOverview {...this.props} />
+                </div>
+            );
+        }
+    });
+
+
     return {
-        QueryToolbar: QueryToolbar
+        QueryToolbar: QueryToolbar,
+        NonViewPageQueryToolbar: NonViewPageQueryToolbar
     };
 }

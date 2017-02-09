@@ -142,6 +142,22 @@ export interface ReplayStoreDeps {
 }
 
 
+function importEncodedOperations(currentOperations:Array<QueryOperation>):Immutable.List<ExtendedQueryOperation> {
+    return Immutable.List<ExtendedQueryOperation>(currentOperations.map(item => {
+        return {
+            op: item.op,
+            opid: item.opid,
+            nicearg: item.nicearg,
+            tourl: item.tourl,
+            arg: item.arg,
+            churl: item.churl,
+            size: item.size,
+            formType: mapOpIdToFormType(item.opid)
+        };
+    }));
+}
+
+
 /**
  * QueryReplayStore reads operations stored in the breadcrumb-like navigation
  * and query operation data stored on server (handled by conc_persistence plug-in)
@@ -203,18 +219,7 @@ export class QueryReplayStore extends SimplePageStore {
             currentOperations:Array<QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.currEncodedOperations = Immutable.List<ExtendedQueryOperation>(currentOperations.map(item => {
-            return {
-                op: item.op,
-                opid: item.opid,
-                nicearg: item.nicearg,
-                tourl: item.tourl,
-                arg: item.arg,
-                churl: item.churl,
-                size: item.size,
-                formType: mapOpIdToFormType(item.opid)
-            };
-        }));
+        this.currEncodedOperations = importEncodedOperations(currentOperations);
         this.replayOperations = Immutable.List<string>(currentOperations.map(item => null));
         this.concArgsCache = Immutable.Map<string, AjaxResponse.ConcFormArgs>(concArgsCache);
         this.queryStore = replayStoreDeps.queryStore;
@@ -235,13 +240,14 @@ export class QueryReplayStore extends SimplePageStore {
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'EDIT_QUERY_OPERATION':
-                        this.editedOperationIdx = null;
+                        this.editedOperationIdx = payload.props['operationIdx'];
+                        this.notifyChangeListeners();
                         this.syncFormData(payload.props['operationIdx']).then(
                             (data) => {
-                                this.editedOperationIdx = payload.props['operationIdx'];
                                 this.notifyChangeListeners();
                             },
                             (err) => {
+                                this.editedOperationIdx = null;
                                 this.notifyChangeListeners();
                                 this.pageModel.showMessage('error', err);
                             }
@@ -858,4 +864,46 @@ export class QueryReplayStore extends SimplePageStore {
     editIsLocked():boolean {
         return this._editIsLocked;
     }
+}
+
+
+
+/**
+ * IndirectQueryReplayStore is a replacement for QueryReplayStore
+ * on pages where query editation forms (and most of related data)
+ * are not available but we still want to display operations
+ * description (aka breadcrumb navigation) and redirect to the
+ * 'view' page and open a respective operation form in case
+ * user clicks a item.
+ */
+export class IndirectQueryReplayStore extends SimplePageStore {
+
+    private pageModel:PageModel;
+
+    private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel,
+            currentOperations:Array<QueryOperation>) {
+        super(dispatcher);
+        this.pageModel = pageModel;
+        this.currEncodedOperations = importEncodedOperations(currentOperations);
+
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'REDIRECT_TO_EDIT_QUERY_OPERATION':
+                    window.location.replace(
+                        this.pageModel.createActionUrl(
+                            'view',
+                            this.pageModel.getConcArgs().items()
+                        ) + '#edit_op/operationIdx=' + payload.props['operationIdx']
+                    );
+                break;
+            }
+        });
+    }
+
+    getCurrEncodedOperations():Immutable.List<QueryOperation> {
+        return this.currEncodedOperations;
+    }
+
 }
