@@ -1016,11 +1016,11 @@ export class ViewPage {
                 this.initSampleForm();
                 this.initQueryOverviewArea();
                 this.initAnalysisViews();
+                this.updateMainMenu();
+                this.initViewOptions();
                 if (this.hashedAction) {
                     this.layoutModel.dispatcher.dispatch(this.hashedAction);
                 }
-                this.updateMainMenu();
-                this.initViewOptions();
             }
         );
     }
