@@ -31,6 +31,7 @@ import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '.
 import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
+import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 
 /**
  *
@@ -125,6 +126,26 @@ class FreqPage {
         );
     }
 
+    private initViewOptions():void {
+        const viewOptionsViews:StructsAndAttrsViews = structsAttrsViewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.layoutModel.getStores().viewOptionsStore,
+            this.layoutModel.getStores().mainMenuStore
+        );
+
+        this.layoutModel.renderReactComponent(
+            viewOptionsViews.StructAttrsViewOptions,
+            window.document.getElementById('view-options-mount'),
+            {
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                isSubmitMode: true,
+                stateArgs: this.layoutModel.getConcArgs().items()
+            }
+        );
+    }
+
     init() {
         this.layoutModel.init().then(
             () => {
@@ -166,6 +187,13 @@ class FreqPage {
                         break;
                     }
                 });
+                mainMenuStore.addItemActionPrerequisite(
+                    'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
+                    (args:Kontext.GeneralProps) => {
+                        return this.layoutModel.getStores().viewOptionsStore.loadData();
+                    }
+                );
+                this.initViewOptions();
                 this.initAnalysisViews();
             }
         ).then(

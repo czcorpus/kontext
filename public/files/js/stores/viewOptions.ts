@@ -73,7 +73,6 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                 case 'VIEW_OPTIONS_LOAD_DATA':
                     this.loadData().then(
                         (data) => {
-                            this.hasLoadedData = true;
                             this.notifyChangeListeners();
                         },
                         (err) => {
