@@ -464,6 +464,14 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 args.replace('sca_' + k, ttData[k]);
             }
         }
+
+        // default shuffle
+        if (this.shuffleConcByDefault) {
+            args.set('shuffle', 1);
+
+        } else {
+            args.remove('shuffle');
+        }
         return args;
     }
 
@@ -556,10 +564,6 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     getCurrentSubcorp():string {
         return this.currentSubcorp;
-    }
-
-    isShuffleConcByDefault():boolean {
-        return this.shuffleConcByDefault;
     }
 
     getInputLanguages():Immutable.Map<string, string> {

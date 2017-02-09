@@ -110,7 +110,6 @@ export function init(
                 subcorpList: queryStore.getSubcorpList(),
                 currentSubcorp: queryStore.getCurrentSubcorp(),
                 supportedWidgets: queryStore.getSupportedWidgets(),
-                shuffleConcByDefault: queryStore.isShuffleConcByDefault(),
                 lposlist: queryStore.getLposlist(),
                 lposValues: queryStore.getLposValues(),
                 matchCaseValues: queryStore.getMatchCaseValues(),
@@ -186,7 +185,6 @@ export function init(
             const primaryCorpname = this.state.corpora.get(0);
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
-                    {this.state.shuffleConcByDefault ? <input type="hidden" name="shuffle" value="1" /> : null}
                     <table className="form primary-language">
                         <tbody>
                             {this.props.allowCorpusSelection ?

@@ -373,7 +373,14 @@ export class QueryReplayStore extends SimplePageStore {
                             return this.pageModel.ajax(
                                 'GET',
                                 url,
-                                {format: 'json', async: 0}
+                                {
+                                    format: 'json',
+                                    async: 0,
+                                    // no implicit shuffle during replay as optional shuffle
+                                    // is already "materialized" as a separate operation here
+                                    // and we don't want a double shuffle
+                                    shuffle: 0
+                                }
                             );
 
                         } else {
