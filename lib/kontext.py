@@ -224,6 +224,7 @@ class Kontext(Controller):
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
         self._prev_q_data = None  # data of the previous operation are stored here
+        self._auto_generated_conc_ops = []
 
     def get_mapping_url_prefix(self):
         return super(Kontext, self).get_mapping_url_prefix()
@@ -432,12 +433,36 @@ class Kontext(Controller):
         Method is guaranteed to have prev_data != None
         and self.args.q with at least one element.
         """
+        if len(self._auto_generated_conc_ops) > 0:
+            q_limit = self._auto_generated_conc_ops[0][0]
+        else:
+            q_limit = len(self.args.q)
         return dict(
-            q=self.args.q,
+            # we don't want to store all the items from self.args.q in case auto generated
+            # operations are present (we will store them individually later).
+            q=self.args.q[:q_limit],
             corpora=self._get_current_aligned_corpora(),
             usesubcorp=self.args.usesubcorp,
             lines_groups=self._lines_groups.serialize()
         )
+
+    def acknowledge_auto_generated_conc_op(self, q_idx, query_form_args):
+        """
+        In some cases KonText may automatically (either
+        based on user's settings or for an internal reason)
+        append user-editable (which is a different situation
+        compared e.g. with aligned corpora where there are
+        also auto-added "q" elements but this is hidden from
+        user) operations right after the initial query.
+
+        To be able to chain these operations and offer
+        a way to edit them, KonText must store them too.
+
+        Arguments:
+        q_idx -- defines where the added operation resides within the q list
+        query_form_args -- ConcFormArgs instance
+        """
+        self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
     def _store_conc_params(self):
         """
@@ -452,6 +477,13 @@ class Kontext(Controller):
             q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
                                                          curr_data=self.get_saveable_conc_data(prev_data),
                                                          prev_data=self._prev_q_data)
+            lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
+            for q_idx, op in self._auto_generated_conc_ops:
+                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
+                curr = dict(lines_groups=lines_groups, q=self.args.q[:q_idx+1], lastop_form=op.to_dict())
+                q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
+                                                             curr_data=curr,
+                                                             prev_data=prev)
         else:
             q_id = None
         return q_id
