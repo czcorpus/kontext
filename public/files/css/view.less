@@ -231,10 +231,21 @@ i.coll {
 }
 
 
-#modal-overlay .tooltip-box.conc-detail {
+.tooltip-box.conc-detail,
+.tooltip-box.refs-detail {
+    position: fixed;
+    bottom: 1em;
     left: 50%;
-    top: 25%;
     transform: translate(-50%, 0);
+}
+
+.tooltip-box.refs-detail {
+    max-width: 60em;
+    min-width: 40em;
+
+}
+
+.tooltip-box.conc-detail {
     max-width: 40em;
     min-width: 30em;
 }

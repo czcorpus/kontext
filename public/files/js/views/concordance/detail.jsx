@@ -120,11 +120,9 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render: function () {
             return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
-                    <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail">
-                        {this._renderContents()}
-                    </layoutViews.PopupBox>
-                </layoutViews.ModalOverlay>
+                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail">
+                    {this._renderContents()}
+                </layoutViews.PopupBox>
             );
         }
     });
@@ -691,15 +689,13 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler} isScrollable={true}>
-                    <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail">
-                    {this.state.isWaiting ?
-                        <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
-                        : <div><ConcDetailMenu speakerIdAttr={this.props.speakerIdAttr} mode={this.state.mode}
-                                changeHandler={this._handleViewChange} />{this._renderContents()}</div>
-                    }
-                    </layoutViews.PopupBox>
-                </layoutViews.ModalOverlay>
+                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail">
+                {this.state.isWaiting ?
+                    <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
+                    : <div><ConcDetailMenu speakerIdAttr={this.props.speakerIdAttr} mode={this.state.mode}
+                            changeHandler={this._handleViewChange} />{this._renderContents()}</div>
+                }
+                </layoutViews.PopupBox>
             );
         }
 
