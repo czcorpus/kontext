@@ -508,6 +508,13 @@ export class ConcDetailStore extends SimplePageStore {
     canDisplayWholeDocument():boolean {
         return this.structCtx && !this.wholeDocumentLoaded;
     }
+
+    getDefaultViewMode():string {
+        if (this.speechOpts.speakerIdAttr) {
+            return 'speech';
+        }
+        return 'default';
+    }
 }
 
 

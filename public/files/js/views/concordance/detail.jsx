@@ -390,12 +390,16 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <div className="speech-text" onClick={this.props.handleClick}
-                        title={this.translate('concview__click_to_play_audio')}>
+                <div className="speech-text">
                     <span style={{color: this.props.bulletColor}}>{'\u25cf\u00a0'}</span>
                     {this.props.data.map((item, i) => {
                         return <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>;
                     })}
+                    <span className="play-audio">
+                        <img src={this.createStaticUrl('img/audio.svg')}
+                             onClick={this.props.handleClick}
+                             title={this.translate('concview__click_to_play_audio')} />
+                    </span>
                 </div>
             );
         }
@@ -622,7 +626,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         getInitialState : function () {
             return {
                 isWaiting: true,
-                mode: this.props.speakerIdAttr ? 'speech' : 'default'
+                mode: concDetailStore.getDefaultViewMode()
             };
         },
 
@@ -688,7 +692,9 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail"
+                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler}
+                        customClass="conc-detail"
+                        customStyle={{overflowY: 'auto'}}
                         takeFocus={true}>
                 {this.state.isWaiting ?
                     <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />

@@ -471,14 +471,26 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 }},
                 refsDetailData: {$set: null}
             }));
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
-                props: {
-                    corpusId: corpusId,
-                    tokenNumber: tokenNumber,
-                    lineIdx: lineIdx
-                }
-            });
+            if (concDetailStore.getDefaultViewMode() === 'default') {
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
+                    props: {
+                        corpusId: corpusId,
+                        tokenNumber: tokenNumber,
+                        lineIdx: lineIdx
+                    }
+                });
+
+            } else if (concDetailStore.getDefaultViewMode() === 'speech') {
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
+                    props: {
+                        corpusId: corpusId,
+                        tokenNumber: tokenNumber,
+                        lineIdx: lineIdx
+                    }
+                });
+            }
         },
 
         _handleRefsDetailCloseClick : function () {

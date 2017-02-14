@@ -252,6 +252,7 @@ i.coll {
 .tooltip-box.conc-detail {
     max-width: 40em;
     min-width: 30em;
+    max-height: 90%;
 }
 
 .conc-detail {
@@ -350,29 +351,26 @@ i.coll {
             .speech-text {
                 display: block;
                 margin-left: 1em;
-            }
 
-            .speech-text:hover {
-                text-decoration: underline;
-                cursor: pointer;
+                span.play-audio {
+
+                    padding-left: 1em;
+
+                    img {
+                        width: 1.2em;
+                        vertical-align: middle;
+                        cursor: pointer;
+                    }
+
+                    img:hover {
+                        text-decoration: underline;
+                    }
+                }
             }
 
             .plus {
                 font-weight: bold;
                 font-size: 110%;
-            }
-
-            .play-audio {
-                float: left;
-                cursor: pointer;
-                vertical-align: middle;
-                margin-left: 0.7em;
-
-                img {
-                    width: 1.4em;
-                    display: inline-block;
-                    vertical-align: middle;
-                }
             }
 
             .overlap {
