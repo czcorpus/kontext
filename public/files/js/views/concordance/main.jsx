@@ -443,7 +443,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
         getInitialState : function () {
             return {
-                concDetailData : null,
+                concDetailMetadata : null,
                 refsDetailData: null,
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
@@ -452,7 +452,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         },
 
         _handleDetailCloseClick : function () {
-            this.setState(React.addons.update(this.state, {concDetailData: {$set: null}}));
+            this.setState(React.addons.update(this.state, {concDetailMetadata: {$set: null}}));
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_RESET_DETAIL',
                 props: {}
@@ -461,7 +461,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
         _detailClickHandler : function (corpusId, tokenNumber, lineIdx) {
             this.setState(React.addons.update(this.state, {
-                concDetailData: {$set: {
+                concDetailMetadata: {$set: {
                     corpusId: corpusId,
                     tokenNumber: tokenNumber,
                     lineIdx: lineIdx,
@@ -471,6 +471,14 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 }},
                 refsDetailData: {$set: null}
             }));
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
+                props: {
+                    corpusId: corpusId,
+                    tokenNumber: tokenNumber,
+                    lineIdx: lineIdx
+                }
+            });
         },
 
         _handleRefsDetailCloseClick : function () {
@@ -483,7 +491,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
         _refsDetailClickHandler : function (corpusId, tokenNumber, lineIdx) {
             this.setState(React.addons.update(this.state, {
-                concDetailData: {$set: null},
+                concDetailMetadata: {$set: null},
                 refsDetailData: {$set: {corpusId: corpusId, tokenNumber: tokenNumber, lineIdx: lineIdx}}
             }));
         },
@@ -507,15 +515,15 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         render : function () {
             return (
                 <div>
-                    {this.state.concDetailData ?
+                    {this.state.concDetailMetadata ?
                         <concDetailViews.ConcDetail
                             closeClickHandler={this._handleDetailCloseClick}
-                            corpusId={this.state.concDetailData.corpusId}
-                            tokenNumber={this.state.concDetailData.tokenNumber}
-                            lineIdx={this.state.concDetailData.lineIdx}
-                            speakerIdAttr={this.state.concDetailData.speakerIdAttr}
-                            speechOverlapAttr={this.state.concDetailData.speechOverlapAttr}
-                            speechOverlapVal={this.state.concDetailData.speechOverlapVal}
+                            corpusId={this.state.concDetailMetadata.corpusId}
+                            tokenNumber={this.state.concDetailMetadata.tokenNumber}
+                            lineIdx={this.state.concDetailMetadata.lineIdx}
+                            speakerIdAttr={this.state.concDetailMetadata.speakerIdAttr}
+                            speechOverlapAttr={this.state.concDetailMetadata.speechOverlapAttr}
+                            speechOverlapVal={this.state.concDetailMetadata.speechOverlapVal}
                             speakerColors={this.props.SpeakerColors} />
                         : null
                     }

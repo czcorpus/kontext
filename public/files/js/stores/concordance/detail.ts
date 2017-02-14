@@ -188,6 +188,8 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
+                    self.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    self.expandRightArgs = Immutable.List<ExpandArgs>();
                     self.loadConcDetail(
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
@@ -215,6 +217,8 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
+                    self.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    self.expandRightArgs = Immutable.List<ExpandArgs>();
                     self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
                     self.loadSpeechDetail(
                             payload.props['corpusId'],

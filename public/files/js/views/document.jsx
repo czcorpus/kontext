@@ -117,6 +117,28 @@ export function init(dispatcher, mixins, storeProvider) {
             return css;
         },
 
+        _handleKeyPress : function (evt) {
+            if (evt.keyCode === 27) {
+                 this.closeClickHandler();
+            }
+            evt.preventDefault();
+            evt.stopPropagation();
+        },
+
+        _renderCloseButton : function () {
+             if (this.props.takeFocus) {
+                return <button className="close-link"
+                            onClick={this.closeClickHandler}
+                            onKeyDown={this._handleKeyPress}
+                            ref={item => item ? item.focus() : null} />;
+
+             } else {
+                 return <button className="close-link"
+                            onClick={this.closeClickHandler}
+                            onKeyDown={this._handleKeyPress} />;
+             }
+        },
+
         render: function () {
             let classes = 'tooltip-box';
             if (this.props.customClass) {
@@ -130,7 +152,7 @@ export function init(dispatcher, mixins, storeProvider) {
             return (
                 <div className={classes} style={css}>
                     <div className="header">
-                        <a className="close-link" onClick={this.closeClickHandler}></a>
+                        {this._renderCloseButton()}
                         {this._renderStatusIcon()}
                     </div>
                     {this.props.children}

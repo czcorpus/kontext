@@ -90,7 +90,7 @@ section.closeable-frame {
         margin: 0.4em 0;
     }
 
-    a.close-link {
+    button.close-link {
         display: block;
         position: absolute;
         padding: 0.1em;
@@ -103,9 +103,17 @@ section.closeable-frame {
         background-size: @close-button-size @close-button-size;
         background-repeat: no-repeat;
         background-position: 0.1em 0.1em;
+        cursor: pointer;
+        border: none;
+        background-color: transparent;
+        box-sizing: content-box;
     }
 
-    a.close-link:hover {
+    button.close-link:focus {
+        outline: none;
+    }
+
+    button.close-link:hover {
         background-image: url(../img/close-icon_s.svg);
     }
 

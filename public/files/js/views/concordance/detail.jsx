@@ -222,7 +222,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 data: concDetailStore.getConcDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
                 hasExpandRight: concDetailStore.hasExpandRight(),
-                canDisplayWholeDocument: false
+                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument()
             }
         },
 
@@ -667,7 +667,6 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         componentDidMount : function () {
             concDetailStore.addChangeListener(this._storeChangeHandler);
-            this._reloadData(this.state.mode);
         },
 
         componentWillUnmount : function () {
@@ -689,7 +688,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail">
+                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail"
+                        takeFocus={true}>
                 {this.state.isWaiting ?
                     <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
                     : <div><ConcDetailMenu speakerIdAttr={this.props.speakerIdAttr} mode={this.state.mode}
