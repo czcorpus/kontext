@@ -30,15 +30,14 @@ class DefaultAuthHandler(AbstractInternalAuth):
     Sample authentication handler
     """
 
-    def __init__(self, db, sessions, anonymous_user_id):
+    def __init__(self, db, sessions, anonymous_user_id, login_url, logout_url):
         """
-        arguments:
-        db -- a 'db' plug-in
-        sessions -- a 'sessions' plugin
         """
         super(DefaultAuthHandler, self).__init__(anonymous_user_id)
         self.db = db
         self.sessions = sessions
+        self._login_url = login_url
+        self._logout_url = logout_url
 
     @staticmethod
     def _mk_user_key(user_id):
@@ -147,15 +146,15 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     def get_login_url(self, return_url=None):
         if return_url is not None:
-            return '/user/login?continue=%s' % urllib.quote(return_url)
+            return '{0}?continue={1}'.format(self._login_url, urllib.quote(return_url))
         else:
-            return '/user/login'
+            return self._login_url
 
     def get_logout_url(self, return_url=None):
         if return_url is not None:
-            return '/user/logoutx?continue=%s' % urllib.quote(return_url)
+            return '{0}?continue={1}'.format(self._logout_url, urllib.quote(return_url))
         else:
-            return '/user/logoutx'
+            return self._logout_url
 
     def _find_user(self, username):
         """
@@ -177,5 +176,8 @@ def create_instance(conf, db, sessions):
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
     """
-    return DefaultAuthHandler(db, sessions, int(conf.get('plugins', 'auth')['anonymous_user_id']))
+    plugin_conf = conf.get('plugins', 'auth')
+    return DefaultAuthHandler(db=db, sessions=sessions, anonymous_user_id=int(plugin_conf['anonymous_user_id']),
+                              login_url=plugin_conf.get('login_url', '/user/login'),
+                              logout_url=plugin_conf.get('logout_url', '/user/logoutx'))
 
