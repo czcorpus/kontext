@@ -444,15 +444,15 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
                 if (this.state.data.deleted) {
                     return [
                         <option key="empty" value="">--</option>,
-                        <option key="restore" value="restore">{this.translate('subclist__action_restore')}</option>,
-                        <option key="reuse" value="reuse">{this.translate('subclist__action_reuse')}</option>,
-                        <option key="wipe" value="wipe">{this.translate('subclist__action_wipe')}</option>
+                        <option key="restore" value="restore">{this.translate('subclist__action_restore')}{'\u2026'}</option>,
+                        <option key="reuse" value="reuse">{this.translate('subclist__action_reuse')}{'\u2026'}</option>,
+                        <option key="wipe" value="wipe">{this.translate('subclist__action_wipe')}{'\u2026'}</option>
                     ];
 
                 } else {
                     return [
                         <option key="empty" value="">--</option>,
-                        <option key="reuse" value="reuse">{this.translate('subclist__action_reuse')}</option>
+                        <option key="reuse" value="reuse">{this.translate('subclist__action_reuse')}{'\u2026'}</option>
                     ]
                 }
 

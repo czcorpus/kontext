@@ -162,7 +162,7 @@ class Subcorpus(Querying):
         """
         Displays a form to create a new subcorpus
         """
-        self.disabled_menu_items = self.CONCORDANCE_ACTIONS
+        self.disabled_menu_items = self.CONCORDANCE_ACTIONS + (MainMenu.VIEW, )
         method = request.form.get('method', 'gui')
         within_json = request.form.get('within_json', None)
         if within_json:

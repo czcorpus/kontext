@@ -42,6 +42,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as RSVP from 'vendor/rsvp';
 import {init as queryFormInit} from 'views/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
+import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 
 
 export class FirstFormPage implements Kontext.QuerySetupHandler {
@@ -63,6 +64,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     private virtualKeyboardStore:VirtualKeyboardStore;
 
     private queryContextStore:QueryContextStore;
+
+    private viewOptionsViews:StructsAndAttrsViews;
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
         this.layoutModel = layoutModel;
@@ -254,6 +257,33 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         );
     }
 
+    private initViewOptions():void {
+        this.viewOptionsViews = structsAttrsViewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
+            this.layoutModel.getStores().viewOptionsStore,
+            this.layoutModel.getStores().mainMenuStore
+        );
+
+        this.layoutModel.renderReactComponent(
+            this.viewOptionsViews.StructAttrsViewOptions,
+            window.document.getElementById('view-options-mount'),
+            {
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                isSubmitMode: true,
+                stateArgs: this.layoutModel.getConcArgs().items()
+            }
+        );
+
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
+            (args:Kontext.GeneralProps) => {
+                return this.layoutModel.getStores().viewOptionsStore.loadData();
+            }
+        );
+    }
+
     init():void {
         this.layoutModel.init().then(
             () => {
@@ -292,6 +322,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 this.attachQueryForm(props);
                 this.initCorplistComponent(); // non-React world here
                 this.initCorpnameLink();
+                this.initViewOptions();
             }
         ).then(
             () => undefined,

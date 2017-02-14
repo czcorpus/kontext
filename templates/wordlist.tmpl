@@ -102,7 +102,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
           <input type="hidden" name="$n" value="$v" />
           #end for
           <input type="text" name="wlpage" value="$wlpage" size="4" />
-          <input type="submit" value="$_("Go")" />
+          <button type="submit" class="util-button">$_("Go")</button>
         </div>
 
           #if not $lastpage
