@@ -396,9 +396,13 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                         return <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>;
                     })}
                     <span className="play-audio">
-                        <img src={this.createStaticUrl('img/audio.svg')}
+                        {this.props.waitsForPlay ?
+                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                    alt={this.translate('global__loading')} />
+                        : <img src={this.createStaticUrl('img/audio.svg')}
                              onClick={this.props.handleClick}
                              title={this.translate('concview__click_to_play_audio')} />
+                        }
                     </span>
                 </div>
             );
@@ -425,7 +429,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     <td className="text">
                         <SpeechText data={this.props.speech.text} key={this.props.idx}
                                 bulletColor={color2str(this.props.speech.colorCode)}
-                                handleClick={this.props.handlePlayClick} />
+                                handleClick={this.props.handlePlayClick}
+                                waitsForPlay={this.props.waitsForPlay} />
                     </td>
                 </tr>
             );
@@ -462,7 +467,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     <td className="text overlapping-block">
                         {this.props.speeches.map((speech, i) => <SpeechText data={speech.text}
                                     key={`${this.props.idx}:${i}`} bulletColor={color2str(speech.colorCode)}
-                                    handleClick={this.props.handlePlayClick} />)}
+                                    handleClick={this.props.handlePlayClick}
+                                    waitsForPlay={this.props.waitsForPlay} />)}
                     </td>
                 </tr>
             );
@@ -479,15 +485,17 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return {
                 data: concDetailStore.getSpeechesDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight()
+                hasExpandRight: concDetailStore.hasExpandRight(),
+                playerWaitingIdx: concDetailStore.getPlayingRowIdx()
             }
         },
 
-        _handlePlayClick : function (segments) {
+        _handlePlayClick : function (segments, rowIdx) {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_PLAY_SPEECH',
                 props: {
-                    segments: segments
+                    segments: segments,
+                    rowIdx: rowIdx
                 }
             });
         },
@@ -496,7 +504,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             this.setState({
                 data: concDetailStore.getSpeechesDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight()
+                hasExpandRight: concDetailStore.hasExpandRight(),
+                playerWaitingIdx: concDetailStore.getPlayingRowIdx()
             });
         },
 
@@ -512,10 +521,11 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return (this.state.data || []).map((item, i) => {
                 if (item.length === 1) {
                     return <TRSingleSpeech
-                                key={`sp-line-${i}`}use_conc_toolbar
+                                key={`sp-line-${i}`}
                                 speech={item[0]}
                                 idx={i}
-                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments)} />;
+                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                waitsForPlay={this.state.playerWaitingIdx === i} />;
 
                 } else if (item.length > 1) {
                     return <TROverlappingSpeeches
@@ -523,7 +533,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 speeches={item}
                                 idx={i}
                                 speechOverlapVal={this.props.speechOverlapVal}
-                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments)} />;
+                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                waitsForPlay={this.state.playerWaitingIdx === i} />;
 
                 } else {
                     return null;
