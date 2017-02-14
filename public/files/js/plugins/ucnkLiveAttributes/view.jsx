@@ -169,10 +169,9 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                         <li>
                             <a className="util-button cancel" onClick={this._mkClickHandler('reset')}>{this.translate('ucnkLA__reset_selection_btn')}</a>
                         </li>
-                        {this.state.selectionSteps.length > 0 && subcMixerViews.Widget ?
-                            <li><subcMixerViews.Widget /></li>
-                            : null
-                        }
+                        <li>
+                            <subcMixerViews.Widget isActive={!!(this.state.selectionSteps.length > 0 && subcMixerViews.Widget)} />
+                        </li>
                     </ul>
                     <SelectionSteps items={this.state.selectionSteps} isLoading={this.state.isLoading} />
                 </div>

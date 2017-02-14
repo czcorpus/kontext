@@ -418,14 +418,30 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
             subcMixerStore.removeChangeListener(this._handleStoreChange);
         },
 
+        _renderButton : function () {
+            if (this.props.isActive) {
+                return (
+                    <a className="trigger util-button"
+                            title={this.translate('ucnk_subcm__set_shares')}
+                            onClick={this._handleTrigger}>
+                        {this.translate('ucnk_subcm__define_proportions')}
+                    </a>
+                );
+
+            } else {
+                return (
+                    <span className="util-button disabled"
+                            title={this.translate('ucnk_subcm__currently_disabled_refine_to_enable')}>
+                        {this.translate('ucnk_subcm__define_proportions')}
+                    </span>
+                );
+            }
+        },
+
         render : function () {
             return (
                 <div className="mixer-trigger">
-                    <a className="trigger util-button" title={this.translate('ucnk_subcm__set_shares')}
-                            onClick={this._handleTrigger}>
-                        {this.translate('ucnk_subcm__define_proportions')}
-
-                    </a>
+                    {this._renderButton()}
                     {this.state.useWidget ?
                         <SubcMixer closeClickHandler={this._handleCloseWidget}
                                 selectedValues={this.state.selectedValues}
