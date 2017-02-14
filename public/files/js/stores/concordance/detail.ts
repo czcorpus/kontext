@@ -129,6 +129,8 @@ export class ConcDetailStore extends SimplePageStore {
 
     private audioPlayer:AudioPlayer;
 
+    private playingRowIdx:number;
+
     private speakerColors:Immutable.List<RGBColor>;
 
     /**
@@ -150,6 +152,7 @@ export class ConcDetailStore extends SimplePageStore {
         this.speechOpts = speechOpts;
         this.speechAttrs = speechOpts.speechAttrs;
         this.lineIdx = null;
+        this.playingRowIdx = -1;
         this.wholeDocumentLoaded = false;
         this.speakerColors = Immutable.List<RGBColor>(speakerColors.map(item => importColor(item, ConcDetailStore.SPK_LABEL_OPACITY)));
         this.speakerColorsAttachments = Immutable.Map<string, RGBColor>();
@@ -160,9 +163,14 @@ export class ConcDetailStore extends SimplePageStore {
             () => {
                 this.notifyChangeListeners();
             },
-            () => {}, // TODO
             () => {
+                this.playingRowIdx = -1;
+                this.notifyChangeListeners();
+            },
+            () => {
+                this.playingRowIdx = -1;
                 this.audioPlayer.stop();
+                this.notifyChangeListeners();
                 this.layoutModel.showMessage('error',
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             }
@@ -188,6 +196,8 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
+                    self.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    self.expandRightArgs = Immutable.List<ExpandArgs>();
                     self.loadConcDetail(
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
@@ -215,6 +225,8 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
+                    self.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    self.expandRightArgs = Immutable.List<ExpandArgs>();
                     self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
                     self.loadSpeechDetail(
                             payload.props['corpusId'],
@@ -262,6 +274,7 @@ export class ConcDetailStore extends SimplePageStore {
                     }
                 break;
                 case 'CONCORDANCE_PLAY_SPEECH':
+                    self.playingRowIdx = payload.props['rowIdx'];
                     self.audioPlayer.start(
                         (<Immutable.List<string>>payload.props['segments']).map(item => {
                             return self.layoutModel.createActionUrl(`audio?corpname=${self.corpusId}&chunk=${item}`);
@@ -270,6 +283,10 @@ export class ConcDetailStore extends SimplePageStore {
                 break;
             }
         });
+    }
+
+    getPlayingRowIdx():number {
+        return this.playingRowIdx;
     }
 
     getConcDetail():ConcDetailText {
@@ -503,6 +520,13 @@ export class ConcDetailStore extends SimplePageStore {
 
     canDisplayWholeDocument():boolean {
         return this.structCtx && !this.wholeDocumentLoaded;
+    }
+
+    getDefaultViewMode():string {
+        if (this.speechOpts.speakerIdAttr) {
+            return 'speech';
+        }
+        return 'default';
     }
 }
 

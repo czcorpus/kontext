@@ -132,7 +132,8 @@ class Options(Kontext):
     @exposed(access_level=1, legacy=True)
     def viewopts(self):
         self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
+                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS,
+                                    MainMenu.VIEW('kwic-sentence'))
         out = {
             'newctxsize': self.args.kwicleftctx[1:]
         }

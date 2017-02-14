@@ -69,8 +69,6 @@ export class AudioPlayer {
     }
 
     start(itemsToPlay?:Array<string>):void {
-        const self = this;
-
         if (itemsToPlay) {
             this.itemsToPlay = this.itemsToPlay.concat(Immutable.List<string>(itemsToPlay)).toList();
         }
@@ -82,22 +80,22 @@ export class AudioPlayer {
             volume: 100,
             onload: (bSuccess) => {
                 if (!bSuccess) {
-                    self.onError();
+                    this.onError();
                 }
             },
-            onplay: function () {
-                self.status = AudioPlayer.PLAYER_STATUS_PLAYING;
-                self.onPlay();
+            onplay: () => {
+                this.status = AudioPlayer.PLAYER_STATUS_PLAYING;
+                this.onPlay();
             },
-            onfinish: function () {
-                self.status = AudioPlayer.PLAYER_STATUS_STOPPED;
-                self.soundManager.destroySound(self.playSessionId);
-                if (self.itemsToPlay.size > 0) {
-                    self.soundManager.destroySound(self.playSessionId); // TODO do we need this (again)?
-                    self.start();
+            onfinish: () => {
+                this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
+                this.soundManager.destroySound(this.playSessionId);
+                if (this.itemsToPlay.size > 0) {
+                    this.soundManager.destroySound(this.playSessionId); // TODO do we need this (again)?
+                    this.start();
 
                 } else {
-                    self.onStop();
+                    this.onStop();
                 }
             }
         });

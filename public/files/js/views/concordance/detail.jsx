@@ -222,7 +222,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 data: concDetailStore.getConcDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
                 hasExpandRight: concDetailStore.hasExpandRight(),
-                canDisplayWholeDocument: false
+                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument()
             }
         },
 
@@ -390,12 +390,20 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <div className="speech-text" onClick={this.props.handleClick}
-                        title={this.translate('concview__click_to_play_audio')}>
+                <div className="speech-text">
                     <span style={{color: this.props.bulletColor}}>{'\u25cf\u00a0'}</span>
                     {this.props.data.map((item, i) => {
                         return <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>;
                     })}
+                    <span className="play-audio">
+                        {this.props.waitsForPlay ?
+                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
+                                    alt={this.translate('global__loading')} />
+                        : <img src={this.createStaticUrl('img/audio.svg')}
+                             onClick={this.props.handleClick}
+                             title={this.translate('concview__click_to_play_audio')} />
+                        }
+                    </span>
                 </div>
             );
         }
@@ -421,7 +429,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     <td className="text">
                         <SpeechText data={this.props.speech.text} key={this.props.idx}
                                 bulletColor={color2str(this.props.speech.colorCode)}
-                                handleClick={this.props.handlePlayClick} />
+                                handleClick={this.props.handlePlayClick}
+                                waitsForPlay={this.props.waitsForPlay} />
                     </td>
                 </tr>
             );
@@ -458,7 +467,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     <td className="text overlapping-block">
                         {this.props.speeches.map((speech, i) => <SpeechText data={speech.text}
                                     key={`${this.props.idx}:${i}`} bulletColor={color2str(speech.colorCode)}
-                                    handleClick={this.props.handlePlayClick} />)}
+                                    handleClick={this.props.handlePlayClick}
+                                    waitsForPlay={this.props.waitsForPlay} />)}
                     </td>
                 </tr>
             );
@@ -475,15 +485,17 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return {
                 data: concDetailStore.getSpeechesDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight()
+                hasExpandRight: concDetailStore.hasExpandRight(),
+                playerWaitingIdx: concDetailStore.getPlayingRowIdx()
             }
         },
 
-        _handlePlayClick : function (segments) {
+        _handlePlayClick : function (segments, rowIdx) {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_PLAY_SPEECH',
                 props: {
-                    segments: segments
+                    segments: segments,
+                    rowIdx: rowIdx
                 }
             });
         },
@@ -492,7 +504,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             this.setState({
                 data: concDetailStore.getSpeechesDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight()
+                hasExpandRight: concDetailStore.hasExpandRight(),
+                playerWaitingIdx: concDetailStore.getPlayingRowIdx()
             });
         },
 
@@ -508,10 +521,11 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return (this.state.data || []).map((item, i) => {
                 if (item.length === 1) {
                     return <TRSingleSpeech
-                                key={`sp-line-${i}`}use_conc_toolbar
+                                key={`sp-line-${i}`}
                                 speech={item[0]}
                                 idx={i}
-                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments)} />;
+                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                waitsForPlay={this.state.playerWaitingIdx === i} />;
 
                 } else if (item.length > 1) {
                     return <TROverlappingSpeeches
@@ -519,7 +533,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 speeches={item}
                                 idx={i}
                                 speechOverlapVal={this.props.speechOverlapVal}
-                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments)} />;
+                                handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
+                                waitsForPlay={this.state.playerWaitingIdx === i} />;
 
                 } else {
                     return null;
@@ -622,7 +637,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         getInitialState : function () {
             return {
                 isWaiting: true,
-                mode: this.props.speakerIdAttr ? 'speech' : 'default'
+                mode: concDetailStore.getDefaultViewMode()
             };
         },
 
@@ -667,7 +682,6 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         componentDidMount : function () {
             concDetailStore.addChangeListener(this._storeChangeHandler);
-            this._reloadData(this.state.mode);
         },
 
         componentWillUnmount : function () {
@@ -689,7 +703,10 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render : function () {
             return (
-                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="conc-detail">
+                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler}
+                        customClass="conc-detail"
+                        customStyle={{overflowY: 'auto'}}
+                        takeFocus={true}>
                 {this.state.isWaiting ?
                     <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
                     : <div><ConcDetailMenu speakerIdAttr={this.props.speakerIdAttr} mode={this.state.mode}

@@ -7,6 +7,7 @@
 
 @color-default-text: #010101;
 @color-light-text: #999999;
+@color-superlight-text: #B0B0B0;
 @color-white-text: #ffffff;
 
 @text-shadow: 0 0 2px #A0A0A0;
@@ -107,6 +108,18 @@
     text-decoration: none;
     padding: 3px 8px;
     color: @color-logo-blue;
+    box-shadow: 0px 1px 2px rgba(150, 150, 150, 0.9), inset 0px 0px 2px rgba(215, 215, 215, 0.2);
+    cursor: default;
+}
+
+.disabled-util-button() {
+    display: inline-block;
+    border: 1px solid @color-superlight-text;
+    border-radius: @input-border-radius;
+    background-color: #ffffff;
+    text-decoration: none;
+    padding: 3px 8px;
+    color: @color-superlight-text;
     box-shadow: 0px 1px 2px rgba(150, 150, 150, 0.9), inset 0px 0px 2px rgba(215, 215, 215, 0.2);
     cursor: default;
 }

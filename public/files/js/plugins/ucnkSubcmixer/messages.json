@@ -16,7 +16,8 @@
     "ucnk_subc__condition_fulfilled_{actual_val}": "Condition fulfilled (calculated proportion: {actual_val}%)",
     "ucnk_subc__condition_failed_{actual_val}": "Condition failed (calculated proportion: {actual_val}%)",
     "ucnk_subc__modify_params_btn": "Change parameters",
-    "ucnk_subc__error_tolerance": "Tolerated result range"
+    "ucnk_subc__error_tolerance": "Tolerated result range",
+    "ucnk_subcm__currently_disabled_refine_to_enable": "Button disabled. Refine a text type selection to enable it."
   },
   "cs-CZ": {
     "ucnk_subcm__define_proportions": "Vlastní poměry typů textu",
@@ -35,6 +36,7 @@
     "ucnk_subc__condition_fulfilled_{actual_val}": "Podmínka splněna (vypočtený podíl: {actual_val}%)",
     "ucnk_subc__condition_failed_{actual_val}": "Podmínka nesplněna (vypočtený podíl: {actual_val}%)",
     "ucnk_subc__modify_params_btn": "Změnit parametry",
-    "ucnk_subc__error_tolerance": "Tolerovaný interval výsledku"
+    "ucnk_subc__error_tolerance": "Tolerovaný interval výsledku",
+    "ucnk_subcm__currently_disabled_refine_to_enable": "Tlačítko je neaktivní. Proveďte zúžení výběru pro aktivaci."
   }
 }
