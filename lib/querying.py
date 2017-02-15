@@ -47,6 +47,24 @@ class Querying(Kontext):
     def get_mapping_url_prefix(self):
         return super(Kontext, self).get_mapping_url_prefix()
 
+    def acknowledge_auto_generated_conc_op(self, q_idx, query_form_args):
+        """
+        In some cases KonText may automatically (either
+        based on user's settings or for an internal reason)
+        append user-editable (which is a different situation
+        compared e.g. with aligned corpora where there are
+        also auto-added "q" elements but this is hidden from
+        user) operations right after the initial query.
+
+        To be able to chain these operations and offer
+        a way to edit them, KonText must store them too.
+
+        Arguments:
+        q_idx -- defines where the added operation resides within the q list
+        query_form_args -- ConcFormArgs instance
+        """
+        self._auto_generated_conc_ops.append((q_idx, query_form_args))
+
     def add_conc_form_args(self, item):
         """
         Add persistent form arguments for a currently processed

@@ -342,3 +342,63 @@ class CQLDetectWithin(object):
             result.extend(x)
         result = [x for x in result if x != '']
         return result
+
+
+class QuickFilterArgsConv(object):
+
+    def __init__(self, args):
+        self.args = args
+
+    def __call__(self):
+        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+                                 persist=True)
+        # TODO decompile args
+        return ff_args
+
+
+class ContextFilterArgsConv(object):
+    """
+    Converts quick filter arguments (i.e. the filter encoded as a link
+    on a frequency distribution and collocation pages) to the "standard
+    filter form" arguments.
+
+    """
+
+    def __init__(self, args):
+        self.args = args
+
+    def __call__(self, fc_lemword_window_type, fc_lemword_wsize, fc_lemword_type, fc_lemword,
+                 fc_pos_window_type, fc_pos_wsize, fc_pos_type, fc_pos):
+        filt_win_type = fc_lemword_window_type if fc_lemword_window_type else fc_pos_window_type
+        filt_wsize = fc_lemword_wsize if fc_lemword_wsize else fc_pos_wsize
+        if fc_lemword or fc_pos:
+            ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+                                     persist=True)
+            ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
+            ff_args.pnfilter = 'p'
+            if filt_win_type == 'left':
+                ff_args.filfpos = filt_wsize
+                ff_args.filtpos = '-1'
+                ff_args.filfl = 'f'
+            elif filt_win_type == 'right':
+                ff_args.filfpos = '-' + filt_wsize
+                ff_args.filtpos = filt_wsize
+                ff_args.filfl = 'l'
+            elif filt_win_type == 'right':
+                ff_args.filfpos = '1'
+                ff_args.filtpos = filt_wsize
+                ff_args.filfl = 'l'
+
+            if fc_lemword_window_type:
+                ff_args.query_type = 'lemma'
+                ff_args.query = fc_lemword
+            else:
+                ff_args.query_type = 'lemma'
+                ff_args.query = fc_lemword
+
+            ff_args.filfl = self.args.filfl
+
+            ff_args.inclkwic = False
+            ff_args.default_attr = self.args.default_attr
+            return ff_args
+        return None

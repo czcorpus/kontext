@@ -21,7 +21,7 @@ from collections import defaultdict
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
 from query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs, LgroupOpArgs,
-                   LockedOpFormsArgs)
+                   LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
 from querying import Querying
 import settings
 import conclib
@@ -539,6 +539,13 @@ class Actions(Querying):
         """
         first query screen
         """
+        filter_args = QuickFilterArgsConv(self.args)(
+                fc_lemword_window_type=fc_lemword_window_type,
+                fc_lemword_wsize=fc_lemword_wsize, fc_lemword_type=fc_lemword_type, fc_lemword=fc_lemword,
+                fc_pos_window_type=fc_pos_window_type, fc_pos_wsize=fc_pos_wsize, fc_pos_type=fc_pos_type,
+                fc_pos=fc_pos)
+        if filter_args is not None:
+            self.acknowledge_auto_generated_conc_op(len(self.args.q)-1, filter_args)
 
         def append_filter(attrname, items, ctx, fctxtype):
             if not items:
