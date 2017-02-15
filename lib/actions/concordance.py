@@ -35,6 +35,7 @@ from l10n import import_string, corpus_get_conf
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
+from query import CQLDetectWithin
 
 
 class ConcError(Exception):
@@ -1787,7 +1788,7 @@ class Actions(Querying):
         if m:
             query_pref = m.groups()[0]
             query_suff = m.groups()[1]
-            self.args.q[0] = u'%s[] %s' % (query_pref, butils.CQLDetectWithin().get_within_part(query_suff))
+            self.args.q[0] = u'%s[] %s' % (query_pref, CQLDetectWithin().get_within_part(query_suff))
             conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')))
             conc.sync()
             return {'total': conc.fullsize() if conc else None}

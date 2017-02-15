@@ -25,7 +25,7 @@ from kontext import Kontext
 import corplib
 import plugins
 import l10n
-import butils
+from query import CQLDetectWithin
 from translation import ugettext as _
 from controller import exposed
 
@@ -419,7 +419,7 @@ class Querying(Kontext):
         'within' expression in the current query (self.args.q).
         """
         if self.args.q is not None and len(self.args.q) > 0:
-            within_part = butils.CQLDetectWithin().get_within_part(self.args.q[0])
+            within_part = CQLDetectWithin().get_within_part(self.args.q[0])
             return within_part is not None and len(within_part) > 0
         return False
 
