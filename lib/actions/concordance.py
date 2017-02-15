@@ -20,8 +20,9 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from querying import (Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs,
-                      ShuffleFormArgs, LgroupOpArgs, LockedOpFormsArgs, build_conc_form_args)
+from query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs, LgroupOpArgs,
+                   LockedOpFormsArgs)
+from querying import Querying
 import settings
 import conclib
 import corplib
