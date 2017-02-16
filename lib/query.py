@@ -358,47 +358,36 @@ class QuickFilterArgsConv(object):
 
 class ContextFilterArgsConv(object):
     """
-    Converts quick filter arguments (i.e. the filter encoded as a link
-    on a frequency distribution and collocation pages) to the "standard
-    filter form" arguments.
-
+    Converts context filter (i.e. the filter which is part of the main query form)
+    form arguments into the regular filter ones.
     """
 
     def __init__(self, args):
         self.args = args
 
-    def __call__(self, fc_lemword_window_type, fc_lemword_wsize, fc_lemword_type, fc_lemword,
-                 fc_pos_window_type, fc_pos_wsize, fc_pos_type, fc_pos):
-        filt_win_type = fc_lemword_window_type if fc_lemword_window_type else fc_pos_window_type
-        filt_wsize = fc_lemword_wsize if fc_lemword_wsize else fc_pos_wsize
-        if fc_lemword or fc_pos:
-            ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-                                     persist=True)
-            ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
-            ff_args.pnfilter = 'p'
-            if filt_win_type == 'left':
-                ff_args.filfpos = filt_wsize
-                ff_args.filtpos = '-1'
-                ff_args.filfl = 'f'
-            elif filt_win_type == 'right':
-                ff_args.filfpos = '-' + filt_wsize
-                ff_args.filtpos = filt_wsize
-                ff_args.filfl = 'l'
-            elif filt_win_type == 'right':
-                ff_args.filfpos = '1'
-                ff_args.filtpos = filt_wsize
-                ff_args.filfl = 'l'
+    @staticmethod
+    def _convert_query(attrname, items, fctxtype):
+        if fctxtype == 'any':
+            return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
+        elif fctxtype == 'all':
+            # here we assume len(items) == 1
+            # (it's ok - see function append_filter() in _set_first_query action
+            # where the operation is split into multiple filters as there
+            # is no way how to specify a conjunction in a single query
+            return '[{0}="{1}"]'.format(attrname, items[0])
+        elif fctxtype == 'none':
+            return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
 
-            if fc_lemword_window_type:
-                ff_args.query_type = 'lemma'
-                ff_args.query = fc_lemword
-            else:
-                ff_args.query_type = 'lemma'
-                ff_args.query = fc_lemword
-
-            ff_args.filfl = self.args.filfl
-
-            ff_args.inclkwic = False
-            ff_args.default_attr = self.args.default_attr
-            return ff_args
-        return None
+    def __call__(self, attrname, items, ctx, fctxtype):
+        ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+                                 persist=True)
+        ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
+        ff_args.pnfilter = 'p' if fctxtype in ('any', 'all') else 'n'
+        ff_args.filfpos = ctx[0]
+        ff_args.filtpos = ctx[1]
+        ff_args.filfl = 'f' if ctx[2] > 0 else 'l'
+        ff_args.inclkwic = False
+        ff_args.default_attr = self.args.default_attr
+        ff_args.query_type = 'cql'
+        ff_args.query = self._convert_query(attrname, items, fctxtype)
+        return ff_args

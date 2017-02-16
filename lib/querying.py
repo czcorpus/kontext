@@ -114,7 +114,9 @@ class Querying(Kontext):
         else:
             conc_forms_args = {}
         # Attach new form args added by the current action.
-        if self._curr_conc_form_args is not None:
+        if len(self._auto_generated_conc_ops) > 0:
+            conc_forms_args['__latest__'] = self._auto_generated_conc_ops[-1][1].to_dict()
+        elif self._curr_conc_form_args is not None:  # we add main query only iff there are no auto-generated ops
             item_key = '__latest__' if self._curr_conc_form_args.is_persistent else '__new__'
             conc_forms_args[item_key] = self._curr_conc_form_args.to_dict()
         tpl_out['conc_forms_args'] = conc_forms_args

@@ -81,8 +81,8 @@ export function init(dispatcher, mixins, queryContextStore) {
                                 value={this.props.windowTypeSelector}
                                 onChange={this._changeHandler}>
                             <option value="left">{this.translate('query__left')}</option>
-                            <option value="right">{this.translate('query__right')}</option>
                             <option value="both">{this.translate('query__both')}</option>
+                            <option value="right">{this.translate('query__right')}</option>
                         </select>
                         {'\u00A0'}
                         <select name={`${this.props.namePrefix}_wsize`}

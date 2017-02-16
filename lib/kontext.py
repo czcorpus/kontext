@@ -458,6 +458,11 @@ class Kontext(Controller):
         To be able to chain these operations and offer
         a way to edit them, KonText must store them too.
 
+        Please note that it is expected that these operations
+        follow the query (no matter what q_idx says - it is
+        used just to split original encoded query when storing
+        the multi-operation as separate entities in query storage).
+
         Arguments:
         q_idx -- defines where the added operation resides within the q list
         query_form_args -- ConcFormArgs instance
