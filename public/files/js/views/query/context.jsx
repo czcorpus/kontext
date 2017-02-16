@@ -269,20 +269,19 @@ export function init(dispatcher, mixins, queryContextStore) {
                     <LemmaFilter
                         hasLemmaAttr={this.props.hasLemmaAttr}
                         lemmaWindowSizes={this.props.lemmaWindowSizes}
-                        fc_lemword_window_type={this.state.data.fc_lemword_window_type}
-                        fc_lemword_window_type={this.state.data.fc_lemword_window_type}
-                        fc_lemword_wsize={this.state.data.fc_lemword_wsize}
-                        fc_lemword={this.state.data.fc_lemword}
-                        fc_lemword_type={this.state.data.fc_lemword_type}
+                        fc_lemword_window_type={this.state.data.get('fc_lemword_window_type')}
+                        fc_lemword_wsize={this.state.data.get('fc_lemword_wsize')}
+                        fc_lemword={this.state.data.get('fc_lemword')}
+                        fc_lemword_type={this.state.data.get('fc_lemword_type')}
                          />
                     {this.props.wPoSList && this.props.wPoSList.size > 0
                         ? <PoSFilter
                                 posWindowSizes={this.props.posWindowSizes}
                                 wPoSList={this.props.wPoSList}
-                                fc_pos_window_type={this.state.data.fc_pos_window_type}
-                                fc_pos_wsize={this.state.data.fc_pos_wsize}
-                                fc_pos={this.state.data.fc_pos}
-                                fc_pos_type={this.state.data.fc_pos_type}
+                                fc_pos_window_type={this.state.data.get('fc_pos_window_type')}
+                                fc_pos_wsize={this.state.data.get('fc_pos_wsize')}
+                                fc_pos={this.state.data.get('fc_pos')}
+                                fc_pos_type={this.state.data.get('fc_pos_type')}
                                 />
                         : null}
                 </div>
