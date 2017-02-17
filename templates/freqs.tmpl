@@ -128,9 +128,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
             #set $rowNum += 1
             <td class="nowrap">
                 #if $i.get('pfilter', '')
-                <a href="view?$join_params($Globals, $i.get('pfilter'))" title="$_('positive filter')">p</a>/#slurp
+                <a href="quick_filter?$join_params($Globals, $i.get('pfilter'))" title="$_('positive filter')">p</a>/#slurp
                 #if $len($b.get('Head')) < 3 and $i.get('nfilter', '')
-                <a href="view?$join_params($Globals, $i.get('nfilter'))" title="$_('negative filter')">n</a>
+                <a href="quick_filter?$join_params($Globals, $i.get('nfilter'))" title="$_('negative filter')">n</a>
             </td>
                 #else
                 <span class="disabled" title="Negative filters are disabled for multilevel freqs">n</span>

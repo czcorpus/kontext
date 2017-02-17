@@ -349,10 +349,26 @@ class QuickFilterArgsConv(object):
     def __init__(self, args):
         self.args = args
 
-    def __call__(self):
+    @staticmethod
+    def _parse(q):
+        tmp = re.split(r'\s+', q)
+        return (tmp[0][0], tmp[0][1]) + tuple(tmp[1:])
+
+    def __call__(self, query):
+        elms = self._parse(query)
+
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
-        # TODO decompile args
+        ff_args.query_type = 'cql'
+        ff_args.query = elms[-1]
+        ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
+        ff_args.pnfilter = elms[0]
+        ff_args.filfl = elms[3]
+        ff_args.filfpos = elms[1]
+        ff_args.filtpos = '0' if elms[2] == '0>0' else elms[2]  # TODO !!!!
+        ff_args.inclkwic = True
+        ff_args.qmcase = True
+        ff_args.default_attr = self.args.default_attr
         return ff_args
 
 
