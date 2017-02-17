@@ -295,6 +295,7 @@ export class ConcLineStore extends SimplePageStore {
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
+                self.setStopStatus();
                 self.notifyChangeListeners();
             },
             this.setStopStatus.bind(this),

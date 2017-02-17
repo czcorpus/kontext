@@ -377,8 +377,14 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 mouseoverImg = 'img/mouseover-not-available.svg';
                 mouseoverAlt = this.translate('options__attribs_are_not_mouseover');
             }
-            return <img key="bubb" className="mouseover-available"
-                            src={this.createStaticUrl(mouseoverImg)} alt={mouseoverAlt} title={mouseoverAlt} />;
+            return (
+                <span>
+                    {this.translate('options__vmode_status_label')}
+                    {':\u00a0'}
+                    <img key="bubb" className="mouseover-available"
+                            src={this.createStaticUrl(mouseoverImg)} alt={mouseoverAlt} title={mouseoverAlt} />
+                </span>
+            );
         },
 
         render : function () {

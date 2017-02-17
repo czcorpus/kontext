@@ -119,12 +119,12 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
 
     // ----------------------------- <LiveAttrsView /> --------------------------
 
-    let LiveAttrsView = React.createClass({
+    const LiveAttrsView = React.createClass({
 
         mixins : mixins,
 
         _mkClickHandler : function (action) {
-            let actionMap = {
+            const actionMap = {
                 refine: 'LIVE_ATTRIBUTES_REFINE_CLICKED',
                 reset: 'LIVE_ATTRIBUTES_RESET_CLICKED',
             }
@@ -169,9 +169,11 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                         <li>
                             <a className="util-button cancel" onClick={this._mkClickHandler('reset')}>{this.translate('ucnkLA__reset_selection_btn')}</a>
                         </li>
-                        <li>
-                            <subcMixerViews.Widget isActive={!!(this.state.selectionSteps.length > 0 && subcMixerViews.Widget)} />
-                        </li>
+                        {subcMixerViews.Widget ?
+                            (<li>
+                                <subcMixerViews.Widget isActive={this.state.selectionSteps.length > 0} />
+                            </li>)
+                        : null}
                     </ul>
                     <SelectionSteps items={this.state.selectionSteps} isLoading={this.state.isLoading} />
                 </div>
