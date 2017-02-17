@@ -111,8 +111,8 @@ def calculate_colls_bg(coll_args):
                                cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
                                cminbgr=coll_args.cminbgr, max_lines=coll_args.num_fetch_items)
         for item in collocs['Items']:
-            item['pfilter'] = [('q', item['pfilter'])]
-            item['nfilter'] = [('q', item['nfilter'])]
+            item['pfilter'] = [('q2', item['pfilter'])]
+            item['nfilter'] = [('q2', item['nfilter'])]
             item['str'] = import_string(item['str'], from_encoding=coll_args.corpus_encoding)
         return dict(data=collocs, processing=None, tasks=[])
     except corplib.MissingSubCorpFreqFile as e:

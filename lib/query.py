@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 import re
+import logging
 
 import plugins
 
@@ -351,22 +352,29 @@ class QuickFilterArgsConv(object):
 
     @staticmethod
     def _parse(q):
-        tmp = re.split(r'\s+', q)
-        return (tmp[0][0], tmp[0][1]) + tuple(tmp[1:])
+        srch = re.search(r'^([pPnN])([\s-]\d+)([\s-]\d+)([\s-]\d+)(.*)', q)
+        if srch:
+            return tuple(x.strip() for x in srch.groups())
+        else:
+            logging.getLogger(__name__).warning('Failed to parse quick filter query: %s' % (q,))
+            return 'p', '', '', ''
+
+    @staticmethod
+    def _incl_kwic(v):
+        return True if v in ('n', 'p') else False
 
     def __call__(self, query):
         elms = self._parse(query)
-
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
         ff_args.query_type = 'cql'
         ff_args.query = elms[-1]
         ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
-        ff_args.pnfilter = elms[0]
+        ff_args.pnfilter = elms[0].lower()
         ff_args.filfl = elms[3]
         ff_args.filfpos = elms[1]
         ff_args.filtpos = '0' if elms[2] == '0>0' else elms[2]  # TODO !!!!
-        ff_args.inclkwic = True
+        ff_args.inclkwic = self._incl_kwic(elms[0])
         ff_args.qmcase = True
         ff_args.default_attr = self.args.default_attr
         return ff_args
