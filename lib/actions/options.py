@@ -90,22 +90,16 @@ class Options(Kontext):
             if ref_is_allowed(item):
                 k, v = item.split('.', 1)
                 structattrs[k].append(v)
-        out['Availrefs'] = [{
-                            'n': '#',
-                            'label': _('Token number'),
-                            'sel': 'selected' if '#' in reflist else ''
-                            }] + \
-                           [{
-                            'n': '=' + n,
-                            'sel': 'selected' if ('=' + n) in reflist else '',
-                            'label': (corp.get_conf(n + '.LABEL') or n)
-                            }
-                            for n in availref if ref_is_allowed(n)
-                            ]
+        out['Availrefs'] = [dict(n='#', label=_('Token number'), sel='selected' if '#' in reflist else '')]
+        for n in availref:
+            if ref_is_allowed(n):
+                out['Availrefs'].append(dict(n='=' + n, sel='selected' if ('=' + n) in reflist else '',
+                                             label=(corp.get_conf(n + '.LABEL') or n)))
+
         doc = corp.get_conf('DOCSTRUCTURE')
         if doc in availstruct:
-            out['Availrefs'].insert(1, {'n': doc, 'label': _('Document number'),
-                                        'sel': (doc in reflist and 'selected' or '')})
+            out['Availrefs'].insert(1, dict(n=doc, label=_('Document number'),
+                                            sel=(doc in reflist and 'selected' or '')))
         out['newctxsize'] = self.args.kwicleftctx[1:]
         out['structattrs'] = structattrs
         out['curr_structattrs'] = self.args.structattrs

@@ -241,15 +241,17 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
     }
 
     private clearStructAttrSelection(structIdent:string):void {
-        this.structAttrs = this.structAttrs.set(
-                structIdent,
-                this.structAttrs.get(structIdent).map(item => {
-                    return {
-                        n: item.n,
-                        selected: false
-                    };
-                }).toList()
-        );
+        if (this.structAttrs.has(structIdent)) {
+            this.structAttrs = this.structAttrs.set(
+                    structIdent,
+                    this.structAttrs.get(structIdent).map(item => {
+                        return {
+                            n: item.n,
+                            selected: false
+                        };
+                    }).toList()
+            );
+        }
     }
 
     /**
@@ -338,7 +340,6 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                 locked: false
             };
         }));
-
         this.structAttrs = Immutable.Map<string, Immutable.List<ViewOptions.StructAttrDesc>>(
             Object.keys(data.StructAttrs).map(key => {
                     return [
