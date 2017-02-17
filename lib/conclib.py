@@ -112,11 +112,14 @@ def _cancel_async_task(cache_map, cachefile, pidfile, subchash, q):
         logging.getLogger(__name__).warning('Unable to cancel async task in multiprocessing mode')
     elif backend == 'celery' and pidfile:
         import task
-        data = pickle.load(open(pidfile, 'rb'))
-        task_id = data.get('task_id', None)
-        if task_id:
-            app = task.get_celery_app(conf['conf'])
-            app.control.revoke(task_id, terminate=True, signal='SIGKILL')
+        try:
+            data = pickle.load(open(pidfile, 'rb'))
+            task_id = data.get('task_id', None)
+            if task_id:
+                app = task.get_celery_app(conf['conf'])
+                app.control.revoke(task_id, terminate=True, signal='SIGKILL')
+        except IOError:
+            pass
     cache_map.del_entry(subchash, q)
     _del_silent(cachefile)
     _del_silent(pidfile)
@@ -164,7 +167,7 @@ def _get_cached_conc(corp, subchash, q, pid_dir, minsize):
             try:
                 if not _min_conc_unfinished(pidfile, minsize):
                     conc = PyConc(conccorp, 'l', cachefile, orig_corp=corp)
-            except ConcCalculationControlException as ex:
+            except (ConcCalculationControlException, manatee.FileAccessError) as ex:
                 logging.getLogger(__name__).error('Failed to join unfinished calculation: {0}'.format(ex))
                 _cancel_async_task(cache_map, cachefile, pidfile, subchash, q[:i])
                 continue

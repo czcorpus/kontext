@@ -32,20 +32,21 @@ export class QueryContextStore extends SimplePageStore {
     constructor(dispatcher:Kontext.FluxDispatcher) {
         super(dispatcher);
         this.formData = Immutable.Map<string, any>({
-            'fc_lemword_window_type': '',
-            'fc_lemword_wsize': '1',
-            'fc_lemword': '',
-            'fc_lemword_type': 'all',
-            'fc_pos_window_type': 'left',
-            'fc_pos_wsize': '1',
-            'fc_pos': [],
-            'fc_pos_type': 'all'
+            fc_lemword_window_type: 'both',
+            fc_lemword_wsize: '1',
+            fc_lemword: '',
+            fc_lemword_type: 'all',
+            fc_pos_window_type: 'left',
+            fc_pos_wsize: '1',
+            fc_pos: [],
+            fc_pos_type: 'all'
         });
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM':
                     this.formData = this.formData.set(payload.props['name'], payload.props['value']);
+
                     this.notifyChangeListeners();
                 break;
             }

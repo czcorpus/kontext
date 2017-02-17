@@ -20,8 +20,9 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from querying import (Querying, FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs,
-                      ShuffleFormArgs, LgroupOpArgs, LockedOpFormsArgs, build_conc_form_args)
+from query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs, LgroupOpArgs,
+                   LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
+from querying import Querying
 import settings
 import conclib
 import corplib
@@ -35,6 +36,7 @@ from l10n import import_string, corpus_get_conf
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
+from query import CQLDetectWithin
 
 
 class ConcError(Exception):
@@ -537,19 +539,28 @@ class Actions(Querying):
         """
         first query screen
         """
+        def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
+            filter_args = ContextFilterArgsConv(self.args)(attrname, items, ctx, fctxtype)
+            self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
+
+        def ctx_to_str(ctx):
+            return ' '.join(str(x) for x in ctx)
 
         def append_filter(attrname, items, ctx, fctxtype):
             if not items:
                 return
             if fctxtype == 'any':
                 self.args.q.append('P%s [%s]' %
-                                   (ctx, '|'.join(['%s="%s"' % (attrname, i) for i in items])))
+                                   (ctx_to_str(ctx), '|'.join(['%s="%s"' % (attrname, i) for i in items])))
+                append_form_filter_op(1, attrname, items, ctx, fctxtype)
             elif fctxtype == 'none':
                 self.args.q.append('N%s [%s]' %
-                                   (ctx, '|'.join(['%s="%s"' % (attrname, i) for i in items])))
+                                   (ctx_to_str(ctx), '|'.join(['%s="%s"' % (attrname, i) for i in items])))
+                append_form_filter_op(1, attrname, items, ctx, fctxtype)
             elif fctxtype == 'all':
-                for i in items:
-                    self.args.q.append('P%s [%s="%s"]' % (ctx, attrname, i))
+                for i, v in enumerate(items):
+                    self.args.q.append('P%s [%s="%s"]' % (ctx_to_str(ctx), attrname, v))
+                    append_form_filter_op(1 + i, attrname, [v], ctx, fctxtype)
 
         if 'lemma' in self.corp.get_conf('ATTRLIST').split(','):
             lemmaattr = 'lemma'
@@ -584,32 +595,32 @@ class Actions(Querying):
         if fc_lemword_window_type == 'left':
             append_filter(lemmaattr,
                           fc_lemword.split(),
-                          '-%i -1 -1' % fc_lemword_wsize,
+                          (-fc_lemword_wsize, -1, -1),
                           fc_lemword_type)
         elif fc_lemword_window_type == 'right':
             append_filter(lemmaattr,
                           fc_lemword.split(),
-                          '1 %i 1' % fc_lemword_wsize,
+                          (1, fc_lemword_wsize, 1),
                           fc_lemword_type)
         elif fc_lemword_window_type == 'both':
             append_filter(lemmaattr,
                           fc_lemword.split(),
-                          '-%i %i 1' % (fc_lemword_wsize, fc_lemword_wsize),
+                          (-fc_lemword_wsize, fc_lemword_wsize, 1),
                           fc_lemword_type)
         if fc_pos_window_type == 'left':
             append_filter('tag',
                           [wposlist.get(t, '') for t in fc_pos],
-                          '-%i -1 -1' % fc_pos_wsize,
+                          (-fc_pos_wsize, -1, -1),
                           fc_pos_type)
         elif fc_pos_window_type == 'right':
             append_filter('tag',
                           [wposlist.get(t, '') for t in fc_pos],
-                          '1 %i 1' % fc_pos_wsize,
+                          (1, fc_pos_wsize, 1),
                           fc_pos_type)
         elif fc_pos_window_type == 'both':
             append_filter('tag',
                           [wposlist.get(t, '') for t in fc_pos],
-                          '-%i %i 1' % (fc_pos_wsize, fc_pos_wsize),
+                          (-fc_pos_wsize, fc_pos_wsize, 1),
                           fc_pos_type)
         for al_corpname in self.args.align:
             if al_corpname in nopq and not getattr(self.args,
@@ -661,6 +672,26 @@ class Actions(Querying):
         except ConcError as e:
             raise UserActionException(e.message)
         return ans
+
+    @exposed(template='view.tmpl', page_model='view')
+    def quick_filter(self, request):
+        """
+        A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).
+        """
+        new_q = request.args.getlist('q2')
+        q_conv = QuickFilterArgsConv(self.args)
+
+        op_idx = len(self.args.q)
+        if len(new_q) > 0:
+            ff_args = q_conv(new_q[0])
+            self.add_conc_form_args(ff_args)
+            self.args.q.append(new_q[0])
+            op_idx += 1
+        for q in new_q[1:]:
+            ff_args = q_conv(q)
+            self.acknowledge_auto_generated_conc_op(op_idx, ff_args)
+            self.args.q.append(q)
+        return self.view()
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
     def filter(self, request):
@@ -841,16 +872,12 @@ class Actions(Querying):
                 curr_fcrit = fcrit[b_index]
                 attrs, ranges = parse_fcrit(curr_fcrit)
                 for level, (attr, range) in enumerate(zip(attrs, ranges)):
-                    begin = range.split('~')[0]
-                    if '~' in range:
-                        end = range.split('~')[1]
-                    else:
-                        end = begin
-                    attr = attr.split("/")
-                    if len(attr) > 1 and "i" in attr[1]:
-                        icase = '(?i)'
-                    else:
-                        icase = ''
+                    try:
+                        begin, end = range.split('~')
+                    except ValueError:
+                        begin = end = range
+                    attr = attr.split('/')
+                    icase = '(?i)' if len(attr) > 1 and "i" in attr[1] else ''
                     attr = attr[0]
                     for ii, item in enumerate(block['Items']):
                         if not item['freq']:
@@ -873,9 +900,9 @@ class Actions(Querying):
                                         l10n.escape(item['Word'][0]['n']))
                         if not item['freq']:
                             continue
-                        item['pfilter'].append(('q', 'p%s' % fquery))
+                        item['pfilter'].append(('q2', 'p%s' % fquery))
                         if len(attrs) == 1 and item['freq'] <= calc_result['conc_size']:
-                            item['nfilter'].append(('q', 'n%s' % fquery))
+                            item['nfilter'].append(('q2', 'n%s' % fquery))
                             # adding no error, no correction (originally for CUP)
             errs, corrs, err_block, corr_block = 0, 0, -1, -1
             for b_index, block in enumerate(result['Blocks']):
@@ -896,8 +923,8 @@ class Actions(Querying):
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
                 if freq != calc_result['conc_size']:
-                    err_nfilter = ';q=p0 0 1 ([] within <err/>) within ! <corr/>'
-                    corr_nfilter = ';q=p0 0 1 ([] within ! <err/>) within <corr/>'
+                    err_nfilter = ('q', 'p0 0 1 ([] within <err/>) within ! <corr/>')  # err/corr stuff is untested
+                    corr_nfilter = ('q', 'p0 0 1 ([] within ! <err/>) within <corr/>')
                 result['Blocks'][err_block]['Items'].append(
                     {'Word': [{'n': 'no error'}], 'freq': freq,
                      'pfilter': pfilter, 'nfilter': err_nfilter,
@@ -1787,7 +1814,7 @@ class Actions(Querying):
         if m:
             query_pref = m.groups()[0]
             query_suff = m.groups()[1]
-            self.args.q[0] = u'%s[] %s' % (query_pref, butils.CQLDetectWithin().get_within_part(query_suff))
+            self.args.q[0] = u'%s[] %s' % (query_pref, CQLDetectWithin().get_within_part(query_suff))
             conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')))
             conc.sync()
             return {'total': conc.fullsize() if conc else None}

@@ -17,13 +17,13 @@
 
 import unittest
 
-import butils
+import query
 
 
 class CQLDetectWithinTest(unittest.TestCase):
 
     def setUp(self):
-        self.parser = butils.CQLDetectWithin()
+        self.parser = query.CQLDetectWithin()
 
     def test_get_next_token(self):
         struct = ['foo', 'bar', '[', ' ', 'word', ' ', '!=', ' ', 'hit', ']']
