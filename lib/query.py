@@ -352,7 +352,7 @@ class QuickFilterArgsConv(object):
 
     @staticmethod
     def _parse(q):
-        srch = re.search(r'^([pPnN])([\s-]\d+)([\s-]\d+)([\s-]\d+)(.*)', q)
+        srch = re.search(r'^([pPnN])(-?\d+)([\s-]\d+)([\s-]\d+)(.*)', q)
         if srch:
             return tuple(x.strip() for x in srch.groups())
         else:
