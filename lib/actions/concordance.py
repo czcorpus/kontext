@@ -845,10 +845,8 @@ class Actions(Querying):
 
             for b in result['Blocks']:
                 for item in b['Items']:
-                    item['pfilter'] = [('filfpos', '0'), ('filtpos', '0'), ('inclkwic', '1'), ('filfl', 'f'),
-                                       ('queryselector', 'cqlrow'), ('pnfilter', 'p')]
-                    item['nfilter'] = [('filfpos', '0'), ('filtpos', '0'), ('inclkwic', '1'), ('filfl', 'f'),
-                                       ('queryselector', 'cqlrow'), ('pnfilter', 'n')]
+                    item['pfilter'] = []
+                    item['nfilter'] = []
                     # generating positive and negative filter references
             for b_index, block in enumerate(result['Blocks']):
                 curr_fcrit = fcrit[b_index]
@@ -871,22 +869,25 @@ class Actions(Querying):
                         if '.' not in attr:
                             if attr in self.corp.get_conf('ATTRLIST').split(','):
                                 wwords = item['Word'][level]['n'].split('  ')  # two spaces
-                                filt_q = ''.join('[%s="%s%s"]' % (attr, icase, l10n.escape(w)) for w in wwords)
+                                fquery = '%s %s 0 ' % (begin, end)
+                                fquery += ''.join(['[%s="%s%s"]'
+                                                   % (attr, icase, l10n.escape(w)) for w in wwords])
                             else:  # structure number
-                                filt_q = ''.join('[] within <%s #%s/>' % (attr, item['Word'][0]['n'].split('#')[1]))
+                                fquery = '0 0 1 [] within <%s #%s/>' % \
+                                         (attr, item['Word'][0]['n'].split('#')[1])
                         else:  # text types
                             structname, attrname = attr.split('.')
                             if self.corp.get_conf(structname + '.NESTED'):
                                 block['unprecise'] = True
-                            filt_q = '[] within <%s %s="%s" />' % (structname, attrname, l10n.escape(item['Word'][0]['n']))
+                            fquery = '0 0 1 [] within <%s %s="%s" />' \
+                                     % (structname, attrname,
+                                        l10n.escape(item['Word'][0]['n']))
                         if not item['freq']:
                             continue
-                        item['pfilter'].append(('cql', filt_q))
+                        item['pfilter'].append(('q', 'p%s' % fquery))
                         if len(attrs) == 1 and item['freq'] <= calc_result['conc_size']:
-                            item['nfilter'].append(('cql', filt_q))
+                            item['nfilter'].append(('q', 'n%s' % fquery))
                             # adding no error, no correction (originally for CUP)
-                        else:
-                            item['nfilter'] = []
             errs, corrs, err_block, corr_block = 0, 0, -1, -1
             for b_index, block in enumerate(result['Blocks']):
                 curr_fcrit = fcrit[b_index]
