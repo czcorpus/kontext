@@ -91,6 +91,7 @@
 #conclines-wrapper {
     overflow: auto;
     background-color: #FFFFFF;
+    position: relative; // to prevent audio-player x-position mismatch
 
     img.loader-anim {
         display: block;
@@ -512,7 +513,9 @@ a.speech-link:hover {
 #audio-wrapper {
     position: absolute;
     display: inline-block;
+    margin-top: -2.5em;
     z-index: 1000;
+    width: 7em;
 }
 
 .audio-controls {
