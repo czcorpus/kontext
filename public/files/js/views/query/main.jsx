@@ -191,8 +191,11 @@ export function init(
                                 <TRCorpusField corpname={primaryCorpname} subcorpList={this.state.subcorpList}
                                         currentSubcorp={this.state.currentSubcorp} />
                                 : null}
-                            <inputViews.TRQueryTypeField queryType={this.state.queryTypes.get(primaryCorpname)}
-                                    sourceId={primaryCorpname} actionPrefix={this.props.actionPrefix} />
+                            <inputViews.TRQueryTypeField
+                                    queryType={this.state.queryTypes.get(primaryCorpname)}
+                                    sourceId={primaryCorpname}
+                                    actionPrefix={this.props.actionPrefix}
+                                    hasLemmaAttr={this.state.hasLemmaAttr} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
@@ -361,8 +364,11 @@ export function init(
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form primary-language">
                         <tbody>
-                            <inputViews.TRQueryTypeField queryType={this.state.queryTypes.get(this.props.corpname)}
-                                    sourceId={this.props.corpname} actionPrefix={this.props.actionPrefix} />
+                            <inputViews.TRQueryTypeField
+                                    queryType={this.state.queryTypes.get(this.props.corpname)}
+                                    sourceId={this.props.corpname}
+                                    actionPrefix={this.props.actionPrefix}
+                                    hasLemmaAttr={this.props.hasLemmaAttr} />
                             <inputViews.TRQueryInputField
                                 queryType={this.state.queryTypes.get(this.props.corpname)}
                                 widgets={this.state.supportedWidgets.get(this.props.corpname)}

@@ -278,7 +278,12 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SELECT_TYPE':
-                    self.queryTypes = self.queryTypes.set(payload.props['sourceId'], payload.props['queryType']);
+                    let qType = payload.props['queryType'];
+                    if (!self.hasLemmaAttr &&  qType === 'lemma') {
+                        qType = 'phrase';
+                        self.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
+                    }
+                    self.queryTypes = self.queryTypes.set(payload.props['sourceId'], qType);
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SELECT_SUBCORP':
