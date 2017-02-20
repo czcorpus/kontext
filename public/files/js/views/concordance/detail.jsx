@@ -388,14 +388,26 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         mixins : mixins,
 
+        getInitialState : function () {
+            return {hasFocus: false};
+        },
+
+        _handleMouseOver : function () {
+            this.setState({hasFocus: true});
+        },
+
+        _handleMouseOut : function () {
+            this.setState({hasFocus: false});
+        },
+
         render : function () {
             return (
-                <div className="speech-text">
+                <div className={'speech-text' + (this.state.hasFocus ? ' focus' : '')}>
                     <span style={{color: this.props.bulletColor}}>{'\u25cf\u00a0'}</span>
                     {this.props.data.map((item, i) => {
                         return <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>;
                     })}
-                    <span className="play-audio">
+                    <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
                         {this.props.waitsForPlay ?
                             <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
                                     alt={this.translate('global__loading')} />

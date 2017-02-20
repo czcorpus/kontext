@@ -159,6 +159,10 @@ export class MultiDict implements Kontext.IMultiDict {
         }
     }
 
+    getFirst(key:string):string {
+        return this._data[key] !== undefined ? this._data[key][0] : undefined;
+    }
+
     getList(key:string):Array<string> {
         return this._data[key];
     }
@@ -224,9 +228,9 @@ export class MultiDict implements Kontext.IMultiDict {
      */
     toDict():{[key:string]:string} {
         let ans:{[key:string]:any} = {}; // TODO: type mess here
-        for (let k in this) {
-            if (this.hasOwnProperty(k)) {
-                ans[k] = this[k];
+        for (let k in this._data) {
+            if (this._data.hasOwnProperty(k)) {
+                ans[k] = this._data[k][0];
             }
         }
         return ans;

@@ -21,7 +21,7 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore, MultiDict} from '../../util';
 import {PageModel} from '../../tpl/document';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';
@@ -133,6 +133,8 @@ export class ConcDetailStore extends SimplePageStore {
 
     private speakerColors:Immutable.List<RGBColor>;
 
+    private wideCtxGlobals:Array<[string, string]>;
+
     /**
      * Speaker colors attachments must survive context expansion.
      * Otherwise it would confusing if e.g. green speaker '01'
@@ -143,7 +145,7 @@ export class ConcDetailStore extends SimplePageStore {
 
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore, structCtx:string,
-            speechOpts:SpeechOptions, speakerColors:Array<string>) {
+            speechOpts:SpeechOptions, speakerColors:Array<string>, wideCtxGlobals:Array<[string, string]>) {
         super(dispatcher);
         const self = this;
         this.layoutModel = layoutModel;
@@ -151,6 +153,7 @@ export class ConcDetailStore extends SimplePageStore {
         this.structCtx = structCtx;
         this.speechOpts = speechOpts;
         this.speechAttrs = speechOpts.speechAttrs;
+        this.wideCtxGlobals = wideCtxGlobals;
         this.lineIdx = null;
         this.playingRowIdx = -1;
         this.wholeDocumentLoaded = false;
@@ -406,6 +409,9 @@ export class ConcDetailStore extends SimplePageStore {
         return mergeOverlaps(tmp);
     }
 
+    /**
+     *
+     */
     private loadWholeDocument():RSVP.Promise<any> {
 
         return this.layoutModel.ajax<AjaxResponse.WideCtx>(
@@ -433,37 +439,45 @@ export class ConcDetailStore extends SimplePageStore {
         );
     }
 
+    /**
+     *
+     */
     private loadSpeechDetail(corpusId:string, tokenNum:number, lineIdx:number, expand?:string):RSVP.Promise<any> {
-        const args = this.speechAttrs.map(x => `${this.speechOpts.speakerIdAttr[0]}.${x}`)
+        const structs = this.layoutModel.getConcArgs().getList('structs');
+        const args = this.speechAttrs
+                .map(x => `${this.speechOpts.speakerIdAttr[0]}.${x}`)
                 .concat([this.speechOpts.speechSegment.join('.')]);
         return this.loadConcDetail(corpusId, tokenNum, lineIdx, args, expand);
     }
 
+    /**
+     *
+     */
     private loadConcDetail(corpusId:string, tokenNum:number, lineIdx:number, structs:Array<string>, expand?:string):RSVP.Promise<any> {
         this.corpusId = corpusId;
         this.tokenNum = tokenNum;
         this.lineIdx = lineIdx;
         this.wholeDocumentLoaded = false;
 
-        const args = this.layoutModel.getConcArgs().toDict();
-        args['corpname'] = corpusId; // just for sure (is should be already in args)
+        const args = new MultiDict(this.wideCtxGlobals);
+        args.set('corpname', corpusId); // just for sure (is should be already in args)
         // we must delete 'usesubcorp' as the server API does not need it
         // and in case of an aligned corpus it even produces an error
-        delete args['usesubcorp'];
-        args['pos'] = String(tokenNum);
-        args['format'] = 'json'
+        args.remove('usesubcorp');
+        args.set('pos', String(tokenNum));
+        args.set('format', 'json')
 
         if (structs) {
-            args['structs'] = (args['structs'] || '').split(',').concat(structs).join(',');
+            args.add('structs', (args.getFirst('structs') || '').split(',').concat(structs).join(','));
         }
 
         if (expand === 'left') {
-            args['detail_left_ctx'] = String(this.expandLeftArgs.get(-1)[0]);
-            args['detail_right_ctx'] = String(this.expandLeftArgs.get(-1)[1]);
+            args.set('detail_left_ctx', String(this.expandLeftArgs.get(-1)[0]));
+            args.set('detail_right_ctx', String(this.expandLeftArgs.get(-1)[1]));
 
         } else if (expand === 'right') {
-            args['detail_left_ctx'] = String(this.expandRightArgs.get(-1)[0]);
-            args['detail_right_ctx'] = String(this.expandRightArgs.get(-1)[1]);
+            args.set('detail_left_ctx', String(this.expandRightArgs.get(-1)[0]));
+            args.set('detail_right_ctx', String(this.expandRightArgs.get(-1)[1]));
 
 
         } else if (expand === 'reload' && this.expandLeftArgs.size > 1
@@ -472,8 +486,8 @@ export class ConcDetailStore extends SimplePageStore {
             // mismatch as we have to fetch the 'current' state, not the 'next' one and such
             // info is always on the other side of expansion (expand-left contains
             // also current right and vice versa)
-            args['detail_left_ctx'] = String(this.expandRightArgs.get(-1)[0]);
-            args['detail_right_ctx'] = String(this.expandLeftArgs.get(-1)[1]);
+            args.set('detail_left_ctx', String(this.expandRightArgs.get(-1)[0]));
+            args.set('detail_right_ctx', String(this.expandLeftArgs.get(-1)[1]));
         }
 
         return this.layoutModel.ajax<AjaxResponse.WideCtx>(

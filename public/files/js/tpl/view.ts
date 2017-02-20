@@ -1049,7 +1049,6 @@ export function init(conf):ViewPage {
         ShowLineNumbers: layoutModel.getConf<boolean>('ShowLineNumbers'),
         KWICCorps: layoutModel.getConf<Array<string>>('KWICCorps'),
         CorporaColumns: layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
-        WideCtxGlobals: layoutModel.getConf<Array<Array<string>>>('WideCtxGlobals'),
         SortIdx: layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
         NumItemsInLockedGroups: layoutModel.getConf<number>('NumLinesInGroups'),
         baseCorpname: layoutModel.getConf<string>('corpname'),
@@ -1068,7 +1067,8 @@ export function init(conf):ViewPage {
         SpeechOverlapAttr: layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
         SpeechOverlapVal: layoutModel.getConf<string>('SpeechOverlapVal'),
         SpeechAttrs: layoutModel.getConf<Array<string>>('SpeechAttrs'),
-        StructCtx: layoutModel.getConf<string>('StructCtx')
+        StructCtx: layoutModel.getConf<string>('StructCtx'),
+        WideCtxGlobals: layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals')
     };
     const stores = new ViewPageStores();
     stores.userInfoStore = layoutModel.getStores().userInfoStore;
@@ -1100,7 +1100,8 @@ export function init(conf):ViewPage {
             speechOverlapAttr: lineViewProps.SpeechOverlapAttr,
             speechOverlapVal: lineViewProps.SpeechOverlapVal
         },
-        lineViewProps.SpeakerColors
+        lineViewProps.SpeakerColors,
+        lineViewProps.WideCtxGlobals
     );
     stores.refsDetailStore = new RefsDetailStore(
         layoutModel,

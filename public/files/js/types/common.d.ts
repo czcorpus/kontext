@@ -343,6 +343,7 @@ declare module Kontext {
      * It is mostly used to carry URL arguments.
      */
     export interface IMultiDict {
+        getFirst(key:string):string;
         getList(key:string):Array<string>;
         set(key:string, value:any):void;
         replace(key:string, values:Array<string>):void;
