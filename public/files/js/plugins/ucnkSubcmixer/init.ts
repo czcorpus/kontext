@@ -39,6 +39,7 @@ export interface SubcMixerExpression {
     attrName:string;
     attrValue:string;
     ratio:string;
+    baseRatio:string; // a ratio in the original corpus
     zeroFixed:boolean;
 }
 
@@ -199,7 +200,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
         });
         const errors = [];
         for (let k in sums) {
-            if (sums[k] > 100) {
+            if (sums[k] !== 100) {
                 return new RSVP.Promise<any>((resolve:(v)=>void, reject:(e:any)=>void) => {
                     reject(new Error(this.pluginApi.translate(
                         'ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}',
@@ -268,6 +269,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                     attrName: curr.attrName,
                     attrValue: curr.attrValue,
                     ratio: ratio,
+                    baseRatio: curr.baseRatio,
                     zeroFixed: curr.zeroFixed
                 });
             }
@@ -293,10 +295,14 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                 Immutable.Map<string, number>()
             );
         this.shares = availableValues.map<SubcMixerExpression>((item, _, arr) => {
+            const attrVal = this.textTypesStore.getAttribute(item.attrName).getValues()
+                    .find(item2 => item2.value == item.attrValue);
+            const total = this.textTypesStore.getAttrSize(item.attrName);
             return {
                 attrName: item.attrName,
                 attrValue: item.attrValue,
                 ratio: item.isSelected ? (100 / numValsPerGroup.get(item.attrName)).toFixed(1) : '0',
+                baseRatio: attrVal ? (attrVal.availItems / total * 100).toFixed(1) : '?',
                 zeroFixed: !item.isSelected
             }
         }).toList();

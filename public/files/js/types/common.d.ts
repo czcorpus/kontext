@@ -713,6 +713,12 @@ declare module TextTypes {
         getAttrSummary():Immutable.Map<string, AttrSummary>;
 
         /**
+         * Return the total number of tokens in all the
+         * possible attribute values groups.
+         */
+        getAttrSize(attrName:string):number;
+
+        /**
          * Activate a support for attaching an extended information
          * for a specific attribute. The 'fn' callback is expected
          * to update store(s) in such a way that the information becomes

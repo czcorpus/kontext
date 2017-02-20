@@ -184,7 +184,7 @@ export function init(dispatcher, mixins, textTypesStore) {
         }
     });
 
-    // ----------------------------- <FullListContainer /> --------------------------
+    // ----------------------------- <ExtendedInfoBox /> --------------------------
 
     const ExtendedInfoBox = React.createClass({
 

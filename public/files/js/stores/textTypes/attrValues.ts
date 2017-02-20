@@ -375,6 +375,14 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return this.attributes.find((val) => val.name === ident);
     }
 
+    getAttrSize(attrName:string):number {
+        const item = this.initialAttributes.find(item => item.name === attrName);
+        if (item) {
+            return item.getValues().reduce((prev, curr) => prev + curr.availItems, 0);
+        }
+        return -1;
+    }
+
     getTextInputAttribute(ident:string):TextTypes.ITextInputAttributeSelection {
         const ans = this.attributes.find(val => val.name === ident);
         if (ans instanceof TextInputAttributeSelection) {

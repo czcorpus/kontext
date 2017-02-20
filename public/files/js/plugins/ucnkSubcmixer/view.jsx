@@ -68,12 +68,12 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
         render : function () {
             return (
                 <tr>
-                    <td className="num">{`${this.props.rowId})`}</td>
+                    <td className="num">{this.props.rowId}.</td>
                     <td className="expression">
                         <strong>{this.props.attrName} = </strong>
-                        {'\u0022' + this.props.attrValue + '\u0022'}:
+                        {'\u0022' + this.props.attrValue + '\u0022'}
                     </td>
-                    <td>
+                    <td className="num">
                         <span>
                             <input type="text" className={'num' + (this.props.hasResults ? ' disabled' : '')}
                                     style={{width: '3em'}} value={this.props.ratio}
@@ -82,8 +82,11 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                             <strong>%</strong>
                         </span>
                     </td>
-                    <td>
+                    <td className="status">
                         {this._renderEvalResult()}
+                    </td>
+                    <td className="num">
+                        {this.props.baseRatio}<strong>%</strong>
                     </td>
                 </tr>
             );
@@ -98,12 +101,23 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
 
         render : function () {
             return (
-                <table>
+                <table className="data subcmixer-ratios">
                     <tbody>
+                        <tr>
+                            <th />
+                            <th>{this.translate('ucnk_subc__ratios_th_expression')}</th>
+                            <th>{this.translate('ucnk_subc__ratios_th_required_ratio')}</th>
+                            <th>{this.translate('ucnk_subc__ratios_th_status')}</th>
+                            <th>{this.translate('ucnk_subc__ratios_th_orig_ratio')}</th>
+                        </tr>
                         {this.props.items.map((item, i) => (
-                            <ValueShare key={i} rowId={i + 1} attrName={item.attrName}
+                            <ValueShare key={i}
+                                    rowId={i + 1}
+                                    attrName={item.attrName}
                                     hasResults={this.props.hasResults}
-                                    attrValue={item.attrValue} ratio={item.ratio}
+                                    attrValue={item.attrValue}
+                                    baseRatio={item.baseRatio}
+                                    ratio={item.ratio}
                                     result={this.props.currentResults ? this.props.currentResults['attrs'].get(i) : null} />
                         ))}
                     </tbody>
@@ -321,10 +335,10 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
             const hasResults = !!this.props.currentResults;
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
-                    <layoutViews.PopupBox customClass="subcmixer-widget"
-                            onCloseClick={this.props.closeClickHandler}>
+                    <layoutViews.CloseableFrame onCloseClick={this.props.closeClickHandler}
+                            customClass="subcmixer-widget"
+                            label={this.translate('ucnk_subcm__widget_header')}>
                         <div>
-                            <h3>{this.translate('ucnk_subcm__widget_header')}</h3>
                             <ValuesTable items={this.props.selectedValues}
                                     currentResults={this.props.currentResults}
                                     hasResults={hasResults} />
@@ -347,7 +361,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                                     currentSubcname={this.props.currentSubcname}
                                     usedAttributes={this.props.usedAttributes} />
                         </div>
-                    </layoutViews.PopupBox>
+                    </layoutViews.CloseableFrame>
                 </layoutViews.ModalOverlay>
             );
         }

@@ -2,7 +2,7 @@
   "en-US": {
     "ucnk_subcm__define_proportions": "Custom text type proportions",
     "ucnk_subcm__widget_header": "Proportions of selected text types in the resulting subcorpus",
-    "ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}": "Sum of proportions in {struct_name} cannot exceed 100% ({over_val}% over)",
+    "ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}": "Sum of proportions in {struct_name} must be 100% (difference: {over_val}%)",
     "ucnk_subcm__invalid_value": "Invalid value",
     "ucnk_subcm__set_shares": "Mix documents to match custom text type proportions",
     "ucnk_subcm__calculate": "Find a matching selection",
@@ -17,12 +17,17 @@
     "ucnk_subc__condition_failed_{actual_val}": "Condition failed (calculated proportion: {actual_val}%)",
     "ucnk_subc__modify_params_btn": "Change parameters",
     "ucnk_subc__error_tolerance": "Tolerated result range",
-    "ucnk_subcm__currently_disabled_refine_to_enable": "Button disabled. Refine a text type selection to enable it."
+    "ucnk_subcm__currently_disabled_refine_to_enable": "Button disabled. Refine a text type selection to enable it.",
+    "ucnk_subc__ratios_th_expression": "Text type",
+    "ucnk_subc__ratios_th_required_ratio": "Required ratio",
+    "ucnk_subc__ratios_th_status": "Status",
+    "ucnk_subc__ratios_th_orig_ratio": "Original ratio"
+
   },
   "cs-CZ": {
     "ucnk_subcm__define_proportions": "Vlastní poměry typů textu",
 	  "ucnk_subcm__widget_header": "Podíly vybraných typů textu na výsledném korpusu",
-    "ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}": "Součet podílů v {struct_name} nemůže překročit 100% (přebývá {over_val}%)",
+    "ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}": "Součet podílů v {struct_name} musí být 100% (rozdíl: {over_val}%)",
     "ucnk_subcm__invalid_value": "Neplatná hodnota",
     "ucnk_subcm__set_shares": "Namíchat dokumenty v určených poměrech typů textu",
     "ucnk_subcm__calculate": "Najít odpovídající výběr",
@@ -37,6 +42,10 @@
     "ucnk_subc__condition_failed_{actual_val}": "Podmínka nesplněna (vypočtený podíl: {actual_val}%)",
     "ucnk_subc__modify_params_btn": "Změnit parametry",
     "ucnk_subc__error_tolerance": "Tolerovaný interval výsledku",
-    "ucnk_subcm__currently_disabled_refine_to_enable": "Tlačítko je neaktivní. Proveďte zúžení výběru pro aktivaci."
+    "ucnk_subcm__currently_disabled_refine_to_enable": "Tlačítko je neaktivní. Proveďte zúžení výběru pro aktivaci.",
+    "ucnk_subc__ratios_th_expression": "Typ textu",
+    "ucnk_subc__ratios_th_required_ratio": "Požadovaný podíl",
+    "ucnk_subc__ratios_th_status": "Status",
+    "ucnk_subc__ratios_th_orig_ratio": "Původní podíl"
   }
 }
