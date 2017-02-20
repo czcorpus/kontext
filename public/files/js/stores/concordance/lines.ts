@@ -92,8 +92,6 @@ export interface ViewConfiguration {
 
     CorporaColumns:Array<{n:string; label:string}>;
 
-    WideCtxGlobals:Array<Array<string>>;
-
     SortIdx:Array<{page:number; label:string}>;
 
     NumItemsInLockedGroups:number;
@@ -168,6 +166,8 @@ export interface ViewConfiguration {
      * A structure used to show whole document. It is optional (null is ok).
      */
     StructCtx:string;
+
+    WideCtxGlobals:Array<[string,string]>;
 
     onReady?:()=>void;
 
@@ -245,8 +245,6 @@ export class ConcLineStore extends SimplePageStore {
     private kwicCorps:Immutable.List<string>;
 
     private corporaColumns:Immutable.List<{n:string; label:string}>;
-
-    private wideCtxGlobals:Array<Array<string>>;
 
     private baseCorpname:string;
 

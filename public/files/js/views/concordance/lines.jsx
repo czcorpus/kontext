@@ -487,7 +487,6 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          baseCorpname={this.props.baseCorpname}
                          mainCorp={this.props.mainCorp}
                          corpsWithKwic={this.props.KWICCorps}
-                         wideCtxGlobals={this.props.WideCtxGlobals}
                          showLineNumbers={this.props.ShowLineNumbers}
                          lineSelMode={this.state.lineSelMode}
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}

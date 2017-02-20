@@ -93,7 +93,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     <td>
                         <select value={this.props.queryType} onChange={this._handleSelection}>
                             <option value="iquery">Basic</option>
-                            <option value="lemma">Lemma</option>
+                            {this.props.hasLemmaAttr ? <option value="lemma">Lemma</option> : null}
                             <option value="phrase">Phrase</option>
                             <option value="word">Word form</option>
                             <option value="char">Character</option>

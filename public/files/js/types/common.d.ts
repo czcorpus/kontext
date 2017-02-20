@@ -343,6 +343,7 @@ declare module Kontext {
      * It is mostly used to carry URL arguments.
      */
     export interface IMultiDict {
+        getFirst(key:string):string;
         getList(key:string):Array<string>;
         set(key:string, value:any):void;
         replace(key:string, values:Array<string>):void;
@@ -710,6 +711,12 @@ declare module TextTypes {
          * Returns a (typically) numeric summary for a specific attribute.
          */
         getAttrSummary():Immutable.Map<string, AttrSummary>;
+
+        /**
+         * Return the total number of tokens in all the
+         * possible attribute values groups.
+         */
+        getAttrSize(attrName:string):number;
 
         /**
          * Activate a support for attaching an extended information
