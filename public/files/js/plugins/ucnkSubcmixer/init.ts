@@ -152,15 +152,37 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
         });
     }
 
+    /**
+     * Parse attr value expression strings like
+     * "doc_txtype == 'LEI: journalism'"
+     * into elements: ['doc.txtype', 'LEI: journalism']
+     *
+     */
+    private parseServerExpression(ex:string):[string, string] {
+        const srch = /^([\w_]+)\s+==\s+'([^']+)'/.exec(ex);
+        if (srch) {
+            return [srch[1].replace('_', '.'), srch[2]];
+        }
+        return [null, null];
+    }
+
     private importResults(data:Array<[string, number]>):Immutable.List<[string, number, boolean]> {
         const evalDist = (v, idx) => {
             const userRatio = parseFloat(this.shares.get(idx).ratio) / 100;
             return Math.abs(v - userRatio) < this.errorTolerance / 100;
-        }
+        };
+
+        const mappedData:Array<{sharesIdx:number, data:[string, number]}> = data.map(item => {
+                const ans = this.parseServerExpression(item[0]);
+                return {
+                    data: item,
+                    sharesIdx: this.shares.findIndex(x => x.attrName === ans[0] && x.attrValue === ans[1] && !x.zeroFixed)
+                };
+        });
         return Immutable.List<[string, number, boolean]>(
-            data.slice(0, this.shares.size).map((item, i) => {
-                return [item[0], item[1] * 100, evalDist(item[1], i)];
-            })
+            mappedData
+                .filter(x => x.sharesIdx > - 1 && !this.shares.get(x.sharesIdx).zeroFixed)
+                .map((item, _) => [item.data[0], item.data[1] * 100, evalDist(item.data[1], item.sharesIdx)])
         );
     }
 
@@ -230,7 +252,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                         total: data.total,
                         ids: Immutable.List<string>(data.ids),
                         structs: Immutable.List<string>(data.structs)
-                    }
+                    };
 
                 } else {
                     throw new Error(data.messages[0]);
