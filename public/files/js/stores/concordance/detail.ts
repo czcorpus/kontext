@@ -409,6 +409,10 @@ export class ConcDetailStore extends SimplePageStore {
         return mergeOverlaps(tmp);
     }
 
+    setWideCtxGlobals(data:Array<[string, string]>):void {
+        this.wideCtxGlobals = data;
+    }
+
     /**
      *
      */
