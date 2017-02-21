@@ -201,4 +201,8 @@ declare module AjaxResponse {
         sample:SampleFormArgs;
     }
 
+    export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
+        widectx_globals:Array<[string, string]>;
+    }
+
 }

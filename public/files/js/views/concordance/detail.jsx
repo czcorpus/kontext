@@ -120,7 +120,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         render: function () {
             return (
-                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail">
+                <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail"
+                        takeFocus={true}>
                     {this._renderContents()}
                 </layoutViews.PopupBox>
             );

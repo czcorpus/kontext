@@ -56,7 +56,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private attrAllpos:string; // kw/all
 
-    private updateHandlers:Immutable.List<()=>void>;
+    private updateHandlers:Immutable.List<(data:AjaxResponse.SaveViewAttrsOptionsResponse)=>void>;
 
     private isWaiting:boolean;
 
@@ -127,7 +127,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                         (data) => {
                             this.isWaiting = false;
                             this.notifyChangeListeners();
-                            this.updateHandlers.forEach(fn => fn());
+                            this.updateHandlers.forEach(fn => fn(data));
                         },
                         (err) => {
                             this.isWaiting = false;
@@ -165,11 +165,11 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
         return ans;
     }
 
-    private saveSettings():RSVP.Promise<any> {
+    private saveSettings():RSVP.Promise<AjaxResponse.SaveViewAttrsOptionsResponse> {
         const corpname = this.layoutModel.getConf<string>('corpname');
         const urlArgs = `corpname=${corpname}&format=json`;
         const formArgs = this.serialize();
-        return this.layoutModel.ajax(
+        return this.layoutModel.ajax<AjaxResponse.SaveViewAttrsOptionsResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewattrsx') + '?' + urlArgs,
             formArgs,
@@ -187,6 +187,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
             this.layoutModel.replaceConcArg('attr_vmode', [this.getAttrsVmode()]);
             this.layoutModel.replaceConcArg('structs', [formArgs['setstructs'].join(',')]);
             this.layoutModel.replaceConcArg('refs', [formArgs['setrefs'].join(',')]);
+            return data;
         });
     }
 

@@ -15,8 +15,9 @@ import settings
 from controller import exposed
 from kontext import Kontext, MainMenu
 from translation import ugettext as _
-import plugins
 import corplib
+from argmapping import WidectxArgsMapping
+
 
 class Options(Kontext):
 
@@ -117,7 +118,7 @@ class Options(Kontext):
                                 structattrs=structattrs)
         self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
         if self.args.format == 'json':
-            return {}
+            return dict(widectx_globals=self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts())))
         elif self.args.q:
             self._redirect_to_conc()
         else:

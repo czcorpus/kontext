@@ -1080,7 +1080,8 @@ export function init(conf):ViewPage {
             lineViewProps,
             layoutModel.getConf<Array<ServerLineData>>('Lines')
     );
-    stores.viewOptionsStore.addOnSave(() => stores.lineViewStore.updateOnViewOptsChange());
+    stores.viewOptionsStore.addOnSave((_) => stores.lineViewStore.updateOnViewOptsChange());
+    stores.viewOptionsStore.addOnSave((data) => stores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
     stores.lineSelectionStore = new LineSelectionStore(
             layoutModel,
             layoutModel.dispatcher,
