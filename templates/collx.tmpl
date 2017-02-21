@@ -116,8 +116,8 @@ $_("Collocations")#slurp
             #else
               #set $hs = ''
             #end if
-            ><a href="collx?$join_params($Globals, [('cattr', $cattr), ('cbgrfns', $cbgrfns),
-                    ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw),
+            ><a href="collx?$join_params($Globals, [('cbgrfns', $cb) for $cb in $cbgrfns],
+                    [('cattr', $cattr), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw),
                     ('ctow', $ctow), ('csortfn', $hs)])">#if $h.n #$_($h.n)#else# #end if#</a>
             </th>
           #end for
