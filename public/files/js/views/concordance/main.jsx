@@ -73,7 +73,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         render : function () {
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
-                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
+                        takeFocus={true}>
                     {this._renderContents()}
                 </layoutViews.PopupBox>
             );

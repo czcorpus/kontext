@@ -291,7 +291,8 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
             if (this.state.isLoading) {
                 return (
                     <PopupBoxComponent customClass="centered"
-                            onCloseClick={this._handleCloseClick}>
+                            onCloseClick={this._handleCloseClick}
+                            takeFocus={true}>
                         <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader.gif')}
                                 alt={this.translate('global__loading')} title={this.translate('global__loading')} />
                     </PopupBoxComponent>
