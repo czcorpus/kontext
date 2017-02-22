@@ -31,6 +31,7 @@ export function create(pluginApi:Kontext.PluginApi,
 
     return function (box:TooltipBox, finalize:()=>void) {
         let contentElm = window.document.createElement('div');
+        contentElm.className = 'tag-widget-mount';
         box.getRootElement().appendChild(contentElm);
         pluginApi.renderReactComponent(
             viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(), tagHelperStore).TagBuilder,

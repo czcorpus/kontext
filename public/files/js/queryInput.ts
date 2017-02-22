@@ -144,7 +144,8 @@ export class QueryFormTweaks {
                 closeIcon: true,
                 timeout: null,
                 onClose: function () {
-                    self.pluginApi.unmountReactComponent(this.getRootElement());
+                    const mountElm = $(this.getRootElement()).find('div.tag-widget-mount').get(0);
+                    self.pluginApi.unmountReactComponent(mountElm);
                 }
             }
         );
