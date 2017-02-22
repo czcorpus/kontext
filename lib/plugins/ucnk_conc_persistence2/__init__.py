@@ -49,6 +49,8 @@ import sqlite3
 
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
+from controller import exposed, UserActionException
+import actions.concordance
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
@@ -66,6 +68,10 @@ def id_exists(id):
     # currently we assume that id (= prefix of md5 hash with 52^6 possible values)
     #  conflicts are very unlikely
     return False
+
+
+def mk_key(code):
+    return 'concordance:%s' % (code, )
 
 
 def mk_short_id(s, min_length=6):
@@ -91,6 +97,35 @@ def mk_short_id(s, min_length=6):
     return ans[:i]
 
 
+def create_arch_conc_action(concdb, archdb):
+
+    @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
+    def archive_concordance(ctrl, request):
+        conc_key = request.args.get('conc_key')
+
+        if request.method == 'POST':
+            data = concdb.get(mk_key(conc_key))
+            if data:
+                save_time = int(round(time.time()))
+                cursor = archdb.cursor()
+                cursor.execute('INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
+                               [conc_key, json.dumps(data), save_time, 0])
+                archdb.commit()
+            else:
+                raise UserActionException('Concordance key \'%s\' not found.' % (conc_key,))
+            return dict(save_time=save_time, conc_key=conc_key)
+        elif request.method == 'GET':
+            cursor = archdb.cursor()
+            cursor.execute('SELECT * FROM archive WHERE id = ?', [conc_key])
+            row = cursor.fetchone()
+            return dict(data=json.loads(row[1]) if row is not None else None)
+        else:
+            ctrl._set_not_found()
+            return {}
+
+    return archive_concordance
+
+
 class ConcPersistence(AbstractConcPersistence):
     """
     This class stores user's queries in their internal form (see Kontext.q attribute).
@@ -113,9 +148,6 @@ class ConcPersistence(AbstractConcPersistence):
         self._auth = auth
         self._archive = sqlite3.connect(settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
         self._settings = settings
-
-    def _mk_key(self, code):
-        return 'concordance:%s' % (code, )
 
     def _get_ttl_for(self, user_id):
         if self._auth.is_anonymous(user_id):
@@ -153,7 +185,7 @@ class ConcPersistence(AbstractConcPersistence):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
-        data = self.db.get(self._mk_key(data_id))
+        data = self.db.get(mk_key(data_id))
         if data is None:
             tmp = self._execute_sql('SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
             if tmp:
@@ -186,7 +218,7 @@ class ConcPersistence(AbstractConcPersistence):
             data_id = mk_short_id('%s' % time_created, min_length=self.DEFAULT_CONC_ID_LENGTH)
             curr_data[ID_KEY] = data_id
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
-            data_key = self._mk_key(data_id)
+            data_key = mk_key(data_id)
             self.db.set(data_key, curr_data)
             self.db.set_ttl(data_key, self._get_ttl_for(user_id))
             latest_id = curr_data[ID_KEY]
@@ -206,6 +238,10 @@ class ConcPersistence(AbstractConcPersistence):
                               dry_run=dry_run, persist_level_key=PERSIST_LEVEL_KEY, key_alphabet=KEY_ALPHABET)
             return ans
         return archive_concordance,
+
+    def export_actions(self):
+        return {actions.concordance.Actions: [create_arch_conc_action(self.db, self._archive)]}
+
 
 
 @inject('db', 'auth')
