@@ -208,7 +208,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 currDefaultAttrValues: queryFormArgs.curr_default_attr_values,
                 subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
                 currentSubcorp: this.layoutModel.getConf<string>('CurrentSubcorp'),
-                tagBuilderSupport: this.layoutModel.getConf<{[corpname:string]:boolean}>('TagBuilderSupport'),
+                tagBuilderSupport: queryFormArgs.tag_builder_support,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
