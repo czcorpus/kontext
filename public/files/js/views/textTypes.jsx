@@ -657,8 +657,22 @@ export function init(dispatcher, mixins, textTypesStore) {
             }
         },
 
+        _renderAttrInfo : function () {
+            if (this.props.attrObj.attrInfo.doc) {
+                return (
+                    <span className="info-link">{'\u00a0'}(
+                        <a target="_blank" href={this.props.attrObj.attrInfo.doc}
+                                title={this.translate('query__tt_click_to_see_attr_info')}>
+                            {this.props.attrObj.attrInfo.docLabel}
+                        </a>)
+                    </span>
+                );
+            }
+            return null;
+        },
+
         render : function () {
-            let classes = ['envelope'];
+            const classes = ['envelope'];
             if (this.props.attrObj.isLocked()) {
                 classes.push('locked');
             }
@@ -666,7 +680,10 @@ export function init(dispatcher, mixins, textTypesStore) {
                 <table className={classes.join(' ')}>
                     <tbody>
                         <tr className="attrib-name">
-                            <th>{this.props.attrObj.name}</th>
+                            <th>
+                                {this.props.attrObj.name}
+                                {this._renderAttrInfo()}
+                            </th>
                         </tr>
                         <tr>
                             <td>

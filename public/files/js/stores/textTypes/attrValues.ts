@@ -238,7 +238,6 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     'query__tt_multiple_items_same_name_{num_items}',
                     {num_items: attr.getValues().get(itemIdx).numGrouped}
             );
-            console.log('message: ', message);
             this.setExtendedInfo(attrName, itemIdx, Immutable.Map({__message__: message}));
             return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
                 resolve(null);
@@ -295,8 +294,17 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         if (mergedBlocks.length > 0) {
             return mergedBlocks.map((attrItem:BlockLine) => {
                 if (attrItem.textboxlength) {
-                    return new TextInputAttributeSelection(attrItem.name, attrItem.label, attrItem.numeric,
-                        !!attrItem.is_interval, null, Immutable.List([]), Immutable.List([]));
+                    return new TextInputAttributeSelection(
+                        attrItem.name,
+                        attrItem.label,
+                        attrItem.numeric,
+                        !!attrItem.is_interval,
+                        {
+                            doc: attrItem.attr_doc,
+                            docLabel: attrItem.attr_doc_label
+                        },
+                        null,
+                        Immutable.List([]), Immutable.List([]));
 
                 } else {
                     const checkedInfo:Array<string> = checkedValues[attrItem.name] || [];
@@ -312,8 +320,17 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                             };
                         }
                     );
-                    return new FullAttributeSelection(attrItem.name, attrItem.label, attrItem.numeric,
-                            !!attrItem.is_interval, Immutable.List(values));
+                    return new FullAttributeSelection(
+                        attrItem.name,
+                        attrItem.label,
+                        attrItem.numeric,
+                        !!attrItem.is_interval,
+                        {
+                            doc: attrItem.attr_doc,
+                            docLabel: attrItem.attr_doc_label
+                        },
+                        Immutable.List(values)
+                    );
                 }
             });
         }

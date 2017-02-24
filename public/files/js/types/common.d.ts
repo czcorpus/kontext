@@ -492,6 +492,19 @@ declare module TextTypes {
         [key:string]:Array<string>;
     }
 
+    export interface AttrInfo {
+
+        /**
+         * a URL link leading to a documentation for the attribute
+         */
+        doc:string;
+
+        /**
+         * ??
+         */
+        docLabel:string;
+    }
+
     /**
      * An object representing an abstract selection
      * of attribute values.
@@ -508,9 +521,7 @@ declare module TextTypes {
      */
     export interface AttributeSelection {
 
-        attrDoc:string;  // ??
-
-        attrDocLabel:string; // ??
+        attrInfo:AttrInfo;
 
         isInterval:boolean;
 
