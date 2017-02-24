@@ -252,6 +252,15 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     private inputLanguages:Immutable.Map<string, string>;
 
+    /**
+     * This does not equal to URL param shuffle=0/1.
+     * If false then the decision is up to server
+     * (= user settings). If true then shuffle is
+     * set to '0' no matter what value is in user's
+     * settings. By default this is set to false.
+     */
+    private shuffleForbidden:boolean = false;
+
 
     // ----------------------
 
@@ -477,6 +486,12 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         } else {
             args.remove('shuffle');
         }
+
+        // default shuffling
+        if (this.shuffleForbidden) {
+            args.set('shuffle', 0);
+        }
+
         return args;
     }
 
@@ -573,6 +588,10 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     getInputLanguages():Immutable.Map<string, string> {
         return this.inputLanguages;
+    }
+
+    disableDefaultShuffling():void {
+        this.shuffleForbidden = true;
     }
 }
 
