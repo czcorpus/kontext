@@ -1166,6 +1166,26 @@ table.envelope {
     tr.attrib-name {
         th {
             padding: 0.6em 1em;
+
+            span.info-link {
+
+                font-size: 0.9em;
+                color: @color-light-text;
+
+                a {
+                    font-weight: normal;
+                    background-image: url('../img/external-link.png');
+                    background-repeat: no-repeat;
+                    background-position: 100% 0;
+                    padding-right: 12px;
+                    color: @color-light-text;
+                    text-decoration: none;
+                }
+
+                a:hover {
+                    text-decoration: underline;
+                }
+            }
         }
 
         th.focused {
