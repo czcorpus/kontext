@@ -22,7 +22,7 @@
 
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');
-import {openAt as openPopupBox, TooltipBox} from '../../popupbox';
+import {extended as initPopupboxLib, Api as PopupBoxApi, TooltipBox} from '../../popupbox';
 import {createGenerator} from './ucnkTreeView';
 
 
@@ -32,10 +32,13 @@ class SyntaxTreeViewer {
 
     private popupBox:TooltipBox;
 
+    private popupBoxApi:PopupBoxApi;
+
     private resizeHandler:()=>void;
 
     constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
+        this.popupBoxApi = initPopupboxLib(this.pluginApi);
     }
 
     private createRenderFunction(tokenId:string, kwicLength:number,
@@ -124,7 +127,7 @@ class SyntaxTreeViewer {
             $(overlay).attr('id', 'modal-overlay');
             $('body').append(overlay);
 
-            this.popupBox = openPopupBox(
+            this.popupBox = this.popupBoxApi.openAt(
                 overlay,
                 this.createRenderFunction(tokenId, kwicLength, overlay),
                 {left: 0, top: 0},

@@ -133,6 +133,20 @@ export function init(dispatcher, mixins, sampleStore) {
                             alt={this.translate('global__loading')} /></div>;
         },
 
+        _renderDefaultState : function () {
+            return (
+                <div>
+                    <p>{this.translate('query__shuffle_form_no_params_to_change')}.</p>
+                    <p>
+                        <button type="button" className="default-button"
+                                    onClick={()=>this.props.shuffleSubmitFn()}>
+                            {this.translate('global__proceed')}
+                        </button>
+                    </p>
+                </div>
+            );
+        },
+
         componentDidMount : function () {
             if (this.state.isAutoSubmit) {
                 window.setTimeout(() => {
@@ -149,7 +163,7 @@ export function init(dispatcher, mixins, sampleStore) {
                 return this._renderAutoSubmitState();
 
             } else {
-                return <div>{this.translate('query__shuffle_form_no_params_to_change')}.</div>;
+                return this._renderDefaultState();
             }
         },
 

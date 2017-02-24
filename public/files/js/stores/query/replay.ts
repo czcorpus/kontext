@@ -368,6 +368,10 @@ export class QueryReplayStore extends SimplePageStore {
                 this.pageModel.replaceConcArg('q', []); // !!! 'q' must be cleared as it contains current encoded query
                 return prepareFormData().then(
                     () => {
+                        // no implicit shuffle during replay as optional shuffle
+                        // is already "materialized" as a separate operation here
+                        // and we don't want a double shuffle
+                        this.queryStore.disableDefaultShuffling();
                         const url = this.queryStore.getSubmitUrl();
                         if (opIdx < numOps - 1) {
                             return this.pageModel.ajax(
@@ -375,11 +379,7 @@ export class QueryReplayStore extends SimplePageStore {
                                 url,
                                 {
                                     format: 'json',
-                                    async: 0,
-                                    // no implicit shuffle during replay as optional shuffle
-                                    // is already "materialized" as a separate operation here
-                                    // and we don't want a double shuffle
-                                    shuffle: 0
+                                    async: 0
                                 }
                             );
 
