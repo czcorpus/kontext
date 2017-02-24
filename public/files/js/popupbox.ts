@@ -69,6 +69,7 @@ export type TooltipBoxContent = Finalize | string | HTMLElement | JQuery;
 
 export interface Api {
     open(contents: any, position: Position, options: Options);
+    openAt(where:HTMLElement, contents:TooltipBoxContent, position:Position, options:Options):TooltipBox;
     bind(elm:HTMLElement|JQuery, contents:TooltipBoxContent, options:Options):void;
     abbr(context?: any); // TODO type
     hasAttachedPopupBox(elm: any); // TODO type
@@ -383,8 +384,8 @@ export class TooltipBox implements Legacy.IPopupBox {
         this.contentElm = window.document.createElement('div');
         $(this.rootElm).append(this.contentElm);
         if (fetchOption('closeIcon', false)) {
-            this.jqCloseIcon = $('<a class="close-link" title="' +
-                    mixins.translate('close') + '"></a>');
+            this.jqCloseIcon = $(
+                `<button class="close-link" title="${mixins.translate('close')}"></button>`);
         }
         if (boxId) {
             this.rootElm.setAttribute('id', boxId);
@@ -628,6 +629,7 @@ export function extended(layoutModel):Api {
     return {
         bind: bind,
         open: open,
+        openAt: openAt,
         close: close,
         hasAttachedPopupBox: hasAttachedPopupBox,
         abbr: abbr

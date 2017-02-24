@@ -225,10 +225,17 @@ fieldset.query-exec-opts {
 
         li {
             margin: 0;
+            padding: 0.2em 0;
 
             label {
-                color: @color-light-text;
+                color: @color-default-text;
                 white-space: nowrap;
+
+                input[type="radio"] {
+                    margin: 0 0.3em 0.1em 0;
+                    padding: 0;
+                    vertical-align: middle;
+                }
             }
 
             label.active {
@@ -894,11 +901,6 @@ section > .bonito-pagination form {
 .highlighted {
     color: @color-logo-pink;
     font-weight: 700;
-}
-
-.indent {
-    /* filter_form page */
-    margin-left: 3em;
 }
 
 .no-wrap {
