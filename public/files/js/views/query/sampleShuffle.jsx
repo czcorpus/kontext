@@ -149,7 +149,7 @@ export function init(dispatcher, mixins, sampleStore) {
                 return this._renderAutoSubmitState();
 
             } else {
-                return <div>{this.translate('query__shuffle_form_no_params_to_change')}</div>;
+                return <div>{this.translate('query__shuffle_form_no_params_to_change')}.</div>;
             }
         },
 
