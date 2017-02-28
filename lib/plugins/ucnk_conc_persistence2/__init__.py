@@ -27,6 +27,10 @@ element conc_persistence {
     attribute extension-by { "ucnk" }
     { text } # a path to a sqlite3 database (see SQL below)
   }
+  element archive_queue_key {
+    attribute extension-by { "ucnk" }
+    { text } # a key used in Redis to access the archive processing queue
+  }
 }
 
 archive db:
@@ -143,6 +147,7 @@ class ConcPersistence(AbstractConcPersistence):
         self.ttl = ttl_days * 24 * 3600
         anonymous_user_ttl_days = int(plugin_conf.get('default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
         self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
+        self._archive_queue_key = plugin_conf['ucnk:archive_queue_key']
 
         self.db = db
         self._auth = auth
@@ -221,6 +226,8 @@ class ConcPersistence(AbstractConcPersistence):
             data_key = mk_key(data_id)
             self.db.set(data_key, curr_data)
             self.db.set_ttl(data_key, self._get_ttl_for(user_id))
+            if not self._auth.is_anonymous(user_id):
+                self.db.list_append(self._archive_queue_key, dict(key=data_key))
             latest_id = curr_data[ID_KEY]
         else:
             latest_id = prev_data[ID_KEY]
@@ -231,12 +238,9 @@ class ConcPersistence(AbstractConcPersistence):
         """
         Export tasks for Celery worker(s)
         """
-        def archive_concordance(cron_interval, key_prefix, dry_run):
+        def archive_concordance(num_proc, dry_run):
             import archive
-            from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
-            ans = archive.run(conf=self._settings, key_prefix=key_prefix, cron_interval=cron_interval,
-                              dry_run=dry_run, persist_level_key=PERSIST_LEVEL_KEY, key_alphabet=KEY_ALPHABET)
-            return ans
+            return archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
         return archive_concordance,
 
     def export_actions(self):
