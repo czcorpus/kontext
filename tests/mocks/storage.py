@@ -27,10 +27,13 @@ class TestingKeyValueStorage(KeyValueStorage):
     def list_get(self, key, from_idx=0, to_idx=-1):
         return self._data[key][from_idx:to_idx]
 
-    def list_push(self, key, value):
+    def list_append(self, key, value):
         if key not in self._data:
             self._data[key] = []
         self._data[key].append(value)
+
+    def list_pop(self, key):
+        return self._data[key].pop(0)
 
     def list_len(self, key):
         if key not in self._data:

@@ -70,15 +70,18 @@ class RedisDb(KeyValueStorage):
         """
         return [json.loads(s) for s in self.redis.lrange(key, from_idx, to_idx)]
 
-    def list_push(self, key, value):
+    def list_append(self, key, value):
         """
-        Push a value at the end of a list
+        Add a value at the end of a list
 
         arguments:
         key -- data access key
         value -- value to be pushed
         """
         self.redis.rpush(key, json.dumps(value))
+
+    def list_pop(self, key):
+        return self.redis.lpop(key)
 
     def list_len(self, key):
         """
