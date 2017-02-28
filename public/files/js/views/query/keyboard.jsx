@@ -33,7 +33,7 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
         },
 
         render : function () {
-            return <a onClick={this._handleClick}>{this.props.value}</a>;
+            return <button type="button" onClick={this._handleClick}>{this.props.value}</button>;
         }
     });
 
@@ -55,7 +55,16 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
             if (this.props.shiftOn) {
                 classes.push('active');
             }
-            return <a className={classes.join(' ')} onClick={this.props.handleShift}>{'\u21E7'}</a>;
+            return <button type="button" className={classes.join(' ')} onClick={this.props.handleShift}>{'\u21E7'}</button>;
+        }
+    });
+
+    // -------------------- <SpaceKey /> ----------------------------
+
+    const SpaceKey = React.createClass({
+
+        render : function () {
+            return <button type="button" className="space" onClick={this.props.handleClick}>Space</button>;
         }
     });
 
@@ -85,6 +94,9 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                                 key={`${item[0]}-${i}`}
                                 value={this._selectValue(item)} />;
                 }
+
+            } else if (item[0] === ' ') {
+                return <SpaceKey key="space-k" />;
 
             } else {
                 return <Key
@@ -125,7 +137,8 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                 props: {
                     sourceId: this.props.sourceId,
                     query: v,
-                    prependSpace: false
+                    prependSpace: false,
+                    closeWhenDone: false
                 }
             });
         },

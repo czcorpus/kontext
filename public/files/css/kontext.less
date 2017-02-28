@@ -2424,15 +2424,22 @@ p.boxed-par {
         display: block;
         white-space: nowrap;
         margin-bottom: 0.3em;
-        font-size: 1.7em;
+        text-align: center;
 
-        .dummy, a {
+        .dummy, button {
             display: inline-block;
             margin-left: 0.2em;
+            padding: 0.1em 0.3em;
             text-align: center;
             border-radius: @input-border-radius;
             text-decoration: none;
             cursor: pointer;
+            font-size: 1.5em;
+            border: none;
+        }
+
+        .space {
+            width: 10em;
         }
 
         .spec {
@@ -2455,8 +2462,8 @@ p.boxed-par {
             cursor: default;
         }
 
-        a {
-            width: 1.3em;
+        button {
+            width: 1.5em;
             background-color: @color-logo-blue-opaque;
             color: #fefefe;
         }
