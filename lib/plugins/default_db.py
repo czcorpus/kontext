@@ -79,10 +79,16 @@ class DefaultDb(KeyValueStorage):
             data = data[from_idx:(len(data) + 1 + to_idx)]
         return data
 
-    def list_push(self, key, value):
+    def list_append(self, key, value):
         data = self.list_get(key)
         data.append(value)
         self.set(key, data)
+
+    def list_pop(self, key):
+        data = self.list_get(key)
+        ans = data.pop(0)
+        self.set(key, data)
+        return ans
 
     def list_len(self, key):
         return len(self.list_get(key))

@@ -81,7 +81,7 @@ class QueryStorage(AbstractQueryStorage):
             'query_type': query_type,
             'created': self._current_timestamp()
         }
-        self.db.list_push(data_key, item)
+        self.db.list_append(data_key, item)
         if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(data_key)
 

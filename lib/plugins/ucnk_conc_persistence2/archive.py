@@ -26,13 +26,9 @@ import sys
 import argparse
 import time
 import json
-import logging
 
 import redis
 import sqlite3
-
-MAX_NUM_SHOW_ERRORS = 10
-MAX_INTERVAL_BETWEEN_ITEM_VISITS = 3600 * 24 * 3   # empirical value
 
 
 def redis_connection(host, port, db_id):
@@ -67,159 +63,81 @@ class Archiver(object):
     from fast database (Redis) to a slow one (SQLite3)
     """
 
-    def __init__(self, from_db, to_db, count, ttl_range, persist_level_key,
-                 key_alphabet):
+    def __init__(self, from_db, to_db, archive_queue_key):
         """
         arguments:
         from_db -- a Redis connection
         to_db -- a SQLite3 connection
-        count -- ???
-        ttl_range -- a tuple (min_accepted_ttl, max_accepted_ttl)
-        persist_level_key -- ???
-        key_alphabet -- ???
+        archive_queue_key -- a Redis key used to access archive queue
         """
         self._from_db = from_db
         self._to_db = to_db
-        self._count = count
-        self._ttl_range = ttl_range
-        self._num_processed = 0
-        self._num_new_type = 0  # just to check old type records ratio
-        self._num_archived = 0
-        self._errors = []
-        self._persist_level_key = persist_level_key
-        self._key_alphabet = key_alphabet
+        self._archive_queue_key = archive_queue_key
 
-    def time_based_prefix(self, interval):
-        """
-        Generates a single character key prefix for chunked key processing.
-        The calculation is based on expected execution interval (typically controlled
-        by crond) and on the size of an alphabet used for keys.
+    def _get_queue_size(self):
+        return self._from_db.llen(self._archive_queue_key)
 
-        For example (a simplified one - as the script itself operates with UNIX timestamps)
-        if the alphabet is {A,B,C,D,E} and the interval is 10 minutes then:
-            at 00:00 hours, A is returned
-            at 00:10 hours, B is returned
-            ...
-            at 00:40 hours, E is returned
-            at 00:50 hours, A (again) is returned
-            ...
-
-        arguments:
-        interval -- interval in MINUTES
-
-        returns:
-        a character from alphabet (here a,...,z,A,...,Z,0,...,9) used for keys
-        """
-        return self._key_alphabet[int(time.time() / (interval * 60)) % len(self._key_alphabet)]
-
-    def _is_new_type(self, data):
-        return self._persist_level_key in data
-
-    def _is_archivable(self, data, item_ttl):
-        if self._is_new_type(data):
-            # current calc. method
-            return data[self._persist_level_key] == 1 and item_ttl < MAX_INTERVAL_BETWEEN_ITEM_VISITS
-        else:
-            # legacy calc. method
-            return self._ttl_range[0] <= item_ttl <= self._ttl_range[1]
-
-    def _process_chunk(self, data_keys, dry_run):
-        rows = []
-        del_keys = []
-        curr_time = time.time()
-        prefix = 'concordance:'
-
-        for key in data_keys:
-            self._num_processed += 1
-            ttl = self._from_db.ttl(key)
-            data = json.loads(self._from_db.get(key))
-            if self._is_new_type(data):
-                self._num_new_type += 1
-            if self._is_archivable(data, item_ttl=ttl):
-                if key.startswith(prefix):
-                    del_keys.append(key)
-                rows.append((key[len(prefix):], json.dumps(data), curr_time, 0))
-                self._num_archived += 1
-        if len(rows) > 0:
-            try:
-                if not dry_run:
-                    self._to_db.executemany(
-                        'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)', rows)
-                    for k in del_keys:
-                        self._from_db.delete(k)
-                logging.getLogger(__name__).debug('archived block of %s items' % (len(rows),))
-            except Exception as e:
-                self._errors.append(e)
-
-    def run(self, key_prefix, cron_interval, dry_run):
+    def run(self, num_proc, dry_run):
         """
         Performs actual archiving process according to the parameters passed
         in constructor.
 
+        Please note that dry-run is not 100% error-prone as it also pops the items
+        from the queue and them inserts them again.
+
         arguments:
-        dry_run -- if True then on writing operations are performed
+        num_proc -- how many items per run should be processed
+        dry_run -- if True then no writing operations are performed
 
         returns:
         a dict containing some information about processed data (num_processed,
-         num_archived, num_errors, match)
+        error, dry_run, queue_size)
         """
-        if key_prefix:
-            match_prefix = 'concordance:%s*' % key_prefix
-        elif cron_interval:
-            match_prefix = 'concordance:%s*' % self.time_based_prefix(cron_interval)
-        else:
-            match_prefix = 'concordance:*'
+        curr_time = time.time()
+        conc_prefix = 'concordance:'
+        inserts = []
+        i = 0
+        try:
+            while i < num_proc:
+                qitem = self._from_db.lpop(self._archive_queue_key)
+                if qitem is None:
+                    break
+                qitem = json.loads(qitem)
+                data = self._from_db.get(qitem['key'])
+                inserts.append((qitem['key'][len(conc_prefix):], json.dumps(data), curr_time, 0))
+                i += 1
 
-        cursor, data = self._from_db.scan(match=match_prefix, count=self._count)
-        self._process_chunk(data, dry_run)
-        while cursor > 0:
-            cursor, data = self._from_db.scan(cursor=cursor, match=match_prefix, count=self._count)
-            self._process_chunk(data, dry_run)
-        if not dry_run:
-            self._to_db.commit()
+            if not dry_run:
+                self._to_db.executemany(
+                    'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)', inserts)
+                self._to_db.commit()
+            else:
+                for ins in reversed(inserts):
+                    self._from_db.lpush(self._archive_queue_key, json.dumps(dict(key=conc_prefix + ins[0])))
+        except Exception as ex:
+            for item in inserts:
+                self._from_db.rpush(self._archive_queue_key, json.dumps(dict(key=conc_prefix + item[0])))
+            return dict(
+                num_processed=i,
+                error=ex,
+                dry_run=dry_run,
+                queue_size=self._get_queue_size())
+        return dict(
+            num_processed=i,
+            error=None,
+            dry_run=dry_run,
+            queue_size=self._get_queue_size())
 
-        return {
-            'num_processed': self._num_processed,
-            'num_archived': self._num_archived,
-            'num_new_type': self._num_new_type,
-            'num_errors': len(self._errors),
-            'match': match_prefix,
-            'dry_run': dry_run
-        }
 
-    def get_errors(self):
-        return self._errors
-
-
-def run(conf, key_prefix, cron_interval, dry_run, persist_level_key, key_alphabet):
+def run(conf, num_proc, dry_run):
     from_db = redis_connection(conf.get('plugins', 'db')['default:host'],
                                conf.get('plugins', 'db')['default:port'],
                                conf.get('plugins', 'db')['default:id'])
-
     to_db = SQLite3Ops(conf.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
-    default_ttl = conf.get('plugins', 'conc_persistence')['default:ttl_days']
-    try:
-        # if 1/3 of TTL is reached then archiving is possible
-        default_ttl = int(int(default_ttl) * 24 * 3600 / 3.)
-        min_ttl = 3600 * 24 * 7  # smaller TTL then this is understood as non-preserved; TODO: this is a weak concept
-    except Exception as e:
-        print(e)
-        default_ttl = int(3600 * 24 * 7 / 3.)
-        min_ttl = 3600 * 24 * 1
 
-    archiver = Archiver(from_db=from_db, to_db=to_db, count=50, ttl_range=(min_ttl, default_ttl),
-                        persist_level_key=persist_level_key, key_alphabet=key_alphabet)
-    info = archiver.run(key_prefix, cron_interval, dry_run)
-    logging.getLogger(__name__).info(json.dumps(info))
-    errors = archiver.get_errors()
-    for err in errors[:MAX_NUM_SHOW_ERRORS]:
-        logging.getLogger(__name__).error(err)
-    if len(errors) > MAX_NUM_SHOW_ERRORS:
-        logging.getLogger(__name__).warn('More than %d errors occured.' % MAX_NUM_SHOW_ERRORS)
-    if len(errors) == 0:
-        return info
-    else:
-        return errors
+    archive_queue_key = conf.get('plugins')['conc_persistence']['ucnk:archive_queue_key']
+    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
+    return archiver.run(num_proc, dry_run)
 
 
 if __name__ == '__main__':
@@ -234,20 +152,10 @@ if __name__ == '__main__':
     initializer.init_plugin('sessions')
     initializer.init_plugin('auth')
 
-    from plugins.ucnk_conc_persistence2 import KEY_ALPHABET, PERSIST_LEVEL_KEY
-
     parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
-    parser.add_argument('-k', '--key-prefix', type=str,
-                        help='Processes just keys with defined prefix')
-    parser.add_argument('-c', '--cron-interval', type=int,
-                        help='Non-empty values initializes partial processing with '
-                        'defined interval between chunks')
+    parser.add_argument('num_proc', metavar='NUM_PROC', type=int)
     parser.add_argument('-d', '--dry-run', action='store_true',
-                        help='allows running without affecting storage data')
-    parser.add_argument('-l', '--log-file', type=str,
-                        help='A file used for logging. If omitted then stdout is used')
+                        help='allows running without affecting storage data (not 100% error prone as it reads/writes to Redis)')
     args = parser.parse_args()
-
-    autoconf.setup_logger(log_path=args.log_file, logger_name='conc_archive')
-    run(conf=settings, key_prefix=args.key_prefix, cron_interval=args.cron_interval, dry_run=args.dry_run,
-        persist_level_key=PERSIST_LEVEL_KEY, key_alphabet=KEY_ALPHABET)
+    ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
+    print(ans)
