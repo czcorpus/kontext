@@ -20,26 +20,21 @@ Coding style
 
 ### Client-side code in general
 
-* prefer *TypeScript* over *JavaScript*
-  * *React* views are an exception - use JSX there
+* any non-JSX code must be written in *TypeScript*
+  * *React* views use JSX
 * action models/stores are located in *public/files/js/tpl*
 * *React* views are located in *public/files/js/views*
 * plugin-related modules are in *public/files/js/plugins*
+* use TypeScript/ES6 style modules
 
-### JavaScript
-
-* use [AMD](http://requirejs.org/docs/whyamd.html#amd) modules
-* new *JavaScript* modules should be accompanied with a *.d.ts* file 
-  (see [Writing .d.ts files](http://www.typescriptlang.org/Handbook#writing-dts-files))
 
 ### TypeScript
 
-* constructs from versions up to *1.4* (included) are supported
+* constructs from versions up to *1.8.x* (included) are supported
   * changes in support towards newer versions will be announced here
 * try to minimize use of the *any* type
 * prefer existing types from *ts/declarations/common.d.ts* and *tpl/document.ts* over defining 
   your own ones
-
 
 
 License

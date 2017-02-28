@@ -19,7 +19,6 @@ This module wraps application's configuration (as specified in config.xml) and
 provides some additional helper methods.
 """
 
-import sys
 import os
 from lxml import etree
 import json
@@ -142,7 +141,7 @@ def set(section, key, value):
     Sets a configuration value. Please note that this action is neither
     persistent nor shared between users/requests.
     """
-    if not section in _conf:
+    if section not in _conf:
         _conf[section] = {}
     _conf[section][key] = value
 
