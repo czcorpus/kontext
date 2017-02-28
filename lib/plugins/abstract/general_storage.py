@@ -29,13 +29,21 @@ class KeyValueStorage(object):
         """
         raise NotImplementedError()
 
-    def list_push(self, key, value):
+    def list_append(self, key, value):
         """
-        Push a value at the end of a list
+        Add a value at the end of a list
 
         arguments:
         key -- data access key
         value -- value to be pushed
+        """
+        raise NotImplementedError()
+
+    def list_pop(self, key):
+        """
+        Remove and return an element from the
+        beginning of the list.
+
         """
         raise NotImplementedError()
 
