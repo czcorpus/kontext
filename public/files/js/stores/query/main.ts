@@ -73,7 +73,7 @@ export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 /**
  *
  */
-export class GeneralQueryStore extends SimplePageStore {
+export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected pageModel:PageModel;
 
@@ -132,7 +132,26 @@ export class GeneralQueryStore extends SimplePageStore {
         this.onAddParallelCorpActions = Immutable.List<(corpname:string)=>void>();
         this.onBeforeRemoveParallelCorpActions = Immutable.List<(corpname:string)=>void>();
         this.onRemoveParallelCorpAction = Immutable.List<(corpname:string)=>void>();
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
+                    this.setActiveWidget(payload.props['sourceId'], payload.props['value']);
+                    this.notifyChangeListeners();
+                break;
+            }
+        });
     }
+
+    /**
+     * Returns a currently active widget identifier
+     * (one of 'tag', 'keyboard', 'within', 'history')
+     */
+    abstract getActiveWidget(sourceId:string):string;
+
+    /**
+     * Sets a currently active widget.
+     */
+    abstract setActiveWidget(sourceId:string, ident:string):void;
 
     registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {
         this.onSubcorpChangeActions = this.onSubcorpChangeActions.push(fn);
@@ -252,6 +271,8 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     private inputLanguages:Immutable.Map<string, string>;
 
+    private activeWidgets:Immutable.Map<string, string>;
+
     /**
      * This does not equal to URL param shuffle=0/1.
      * If false then the decision is up to server
@@ -281,6 +302,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
+        this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
         this.setUserValues(props);
         this.currentAction = 'first_form';
 
@@ -308,6 +330,9 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                     const currQuery = self.queries.get(payload.props['sourceId'])
                     const newQuery = currQuery + (currQuery && payload.props['prependSpace'] ? ' ' : '') + payload.props['query'];
                     self.queries = self.queries.set(payload.props['sourceId'], newQuery);
+                    if (payload.props['closeWhenDone']) {
+                        self.activeWidgets = self.activeWidgets.set(payload.props['sourceId'], null);
+                    }
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_LPOS':
@@ -350,6 +375,14 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 break;
             }
         });
+    }
+
+    getActiveWidget(sourceId:string):string {
+        return this.activeWidgets.get(sourceId);
+    }
+
+    setActiveWidget(sourceId:string, ident:string):void {
+        this.activeWidgets = this.activeWidgets.set(sourceId, ident);
     }
 
     private setUserValues(data:QueryFormUserEntries):void {

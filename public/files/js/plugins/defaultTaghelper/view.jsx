@@ -79,7 +79,8 @@ export function init(dispatcher, mixins, tagHelperStore) {
                     props: {
                         query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`,
                         sourceId: this.props.sourceId,
-                        prependSpace: true
+                        prependSpace: true,
+                        closeWhenDone: true
                     }
                 });
                 dispatcher.dispatch({

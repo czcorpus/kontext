@@ -42,6 +42,15 @@ export class VirtualKeyboardStore extends SimplePageStore {
 
     private currLayout:number;
 
+    private externalKeyHit:number;
+
+    private keyCodes:Array<Array<number>> = [
+        [192, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 189, 187],
+        [null, 81, 87, 69, 82, 84, 89, 85, 73, 79, 80, 219, 221, 220],
+        [null, 65, 83, 68, 70, 71, 72, 74, 75, 76, 186, 222, 18],
+        [null, 90, 88, 67, 86, 66, 78, 77, 188, 190, 191, 18]
+    ];
+
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
@@ -51,6 +60,17 @@ export class VirtualKeyboardStore extends SimplePageStore {
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
 
             switch (payload.actionType) {
+                case 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY':
+                    self.externalKeyHit = payload.props['keyCode'];
+                    self.notifyChangeListeners();
+                    let timeout;
+                    const clickSim = () => {
+                        self.externalKeyHit = null;
+                        self.notifyChangeListeners();
+                        window.clearTimeout(timeout);
+                    };
+                    timeout = window.setTimeout(clickSim, 200);
+                break;
                 case 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT':
                     self.currLayout = payload.props['idx'];
                     self.notifyChangeListeners();
@@ -107,5 +127,16 @@ export class VirtualKeyboardStore extends SimplePageStore {
 
     getCurrentLayoutIdx():number {
         return this.currLayout;
+    }
+
+    getActiveKey():[number, number] {
+        for (let i = 0; i < this.keyCodes.length; i += 1) {
+            for (let j = 0; j < this.keyCodes[i].length; j += 1) {
+                if (this.keyCodes[i][j] === this.externalKeyHit) {
+                    return [i, j];
+                }
+            }
+        }
+        return [null, null];
     }
 }

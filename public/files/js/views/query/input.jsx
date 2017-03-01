@@ -220,7 +220,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 props: {
                     sourceId: this.props.sourceId,
                     query: this.state.exportedQuery,
-                    prependSpace: true
+                    prependSpace: true,
+                    closeWhenDone: true
                 }
             });
         },
@@ -274,11 +275,22 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
 
     const KeyboardWidget = React.createClass({
 
+        _keyHandler : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
+                props: {
+                    keyCode: evt.keyCode
+                }
+            });
+        },
+
         render : function () {
             return (
                 <layoutViews.PopupBox
                         onCloseClick={this.props.closeClickHandler}
-                        customStyle={{marginTop: '3.5em'}}>
+                        customStyle={{marginTop: '3.5em'}}
+                        takeFocus={true}
+                        keyPressHandler={this._keyHandler}>
                     <keyboardViews.Keyboard sourceId={this.props.sourceId}
                             inputLanguage={this.props.inputLanguage}
                             actionPrefix={this.props.actionPrefix} />
@@ -312,7 +324,13 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
         },
 
         _handleWidgetTrigger : function (name) {
-            this.setState({activeWidget: name});
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+                props: {
+                    sourceId: this.props.sourceId,
+                    value: name
+                }
+            });
         },
 
         _handleHistoryWidget : function () {
@@ -321,7 +339,13 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
         },
 
         _handleCloseWidget : function () {
-            this.setState({activeWidget: null});
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
+                props: {
+                    sourceId: this.props.sourceId,
+                    value: null
+                }
+            });
         },
 
         _renderWidget : function () {
@@ -344,11 +368,11 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
         },
 
         getInitialState : function () {
-            return {activeWidget: null};
+            return {activeWidget: queryStore.getActiveWidget(this.props.sourceId)};
         },
 
         _handleQueryStoreChange : function () {
-            this.setState({activeWidget: null});
+            this.setState({activeWidget: queryStore.getActiveWidget(this.props.sourceId)});
         },
 
         componentDidMount : function () {

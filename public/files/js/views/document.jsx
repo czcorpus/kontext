@@ -70,6 +70,10 @@ export function init(dispatcher, mixins, storeProvider) {
      * onCloseClick -- custom action to be performed when user clicks 'close'
      * onReady -- a custom action to be performed once the component is mounted
      *            (signature: onReady(DOMNode) )
+     * takeFocus (boolean) -- if true then the "close" button will take the focus
+     *                        allowing instant closing by ESC or handling keys
+     *                        by a custom handler (see the next prop)
+     * keyPressHandler -- an optional function called in case of a 'onKeyDown' event
      */
     const PopupBox = React.createClass({
 
@@ -120,6 +124,9 @@ export function init(dispatcher, mixins, storeProvider) {
         _handleKeyPress : function (evt) {
             if (evt.keyCode === 27) {
                  this.closeClickHandler();
+            }
+            if (typeof this.props.keyPressHandler === 'function') {
+                this.props.keyPressHandler(evt);
             }
             evt.preventDefault();
             evt.stopPropagation();
