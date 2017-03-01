@@ -32,8 +32,15 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
             this.props.handleClick(this.props.value);
         },
 
+        componentDidUpdate : function (prevProps, prevState) {
+            if (!prevProps.triggered && this.props.triggered) {
+                this._handleClick();
+            }
+        },
+
         render : function () {
-            return <button type="button" onClick={this._handleClick}>{this.props.value}</button>;
+            const htmlClass = this.props.triggered ? 'active' : null;
+            return <button type="button" onClick={this._handleClick} className={htmlClass}>{this.props.value}</button>;
         }
     });
 
@@ -96,13 +103,14 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                 }
 
             } else if (item[0] === ' ') {
-                return <SpaceKey key="space-k" />;
+                return <SpaceKey key="space-k" triggered={i === this.props.passTriggerIdx} />;
 
             } else {
                 return <Key
                             key={item[0]}
                             value={this._selectValue(item)}
-                            handleClick={this.props.handleClick} />;
+                            handleClick={this.props.handleClick}
+                            triggered={i === this.props.passTriggerIdx} />;
             }
         },
 
@@ -127,7 +135,8 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                 shiftOn: false,
                 layout: null,
                 layoutNames: null,
-                currentLayoutIdx: null
+                currentLayoutIdx: null,
+                triggeredKey: null
             };
         },
 
@@ -138,7 +147,8 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                     sourceId: this.props.sourceId,
                     query: v,
                     prependSpace: false,
-                    closeWhenDone: false
+                    closeWhenDone: false,
+                    triggeredKey: this.state.triggeredKey
                 }
             });
         },
@@ -148,7 +158,8 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                 shiftOn: !this.state.shiftOn,
                 layout: this.state.layout,
                 layoutNames: this.state.layoutNames,
-                currentLayoutIdx: this.state.currentLayoutIdx
+                currentLayoutIdx: this.state.currentLayoutIdx,
+                triggeredKey: this.state.triggeredKey
             });
         },
 
@@ -164,7 +175,8 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                 shiftOn: this.state.shiftOn,
                 layout: virtualKeyboardStore.getCurrentLayout(),
                 layoutNames: virtualKeyboardStore.getLayoutNames(),
-                currentLayoutIdx: virtualKeyboardStore.getCurrentLayoutIdx()
+                currentLayoutIdx: virtualKeyboardStore.getCurrentLayoutIdx(),
+                triggeredKey: virtualKeyboardStore.getActiveKey()
             });
         },
 
@@ -194,8 +206,13 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                         </select>
                     </div>
                     {this.state.layout.keys.map((item, i) => {
-                        return <KeysRow key={`row${i}`} data={item} handleClick={this._handleClick}
-                                shiftOn={this.state.shiftOn} handleShift={this._handleShift} />;
+                        const passTriggerIdx =  i === this.state.triggeredKey[0] ? this.state.triggeredKey[1] : null;
+                        return <KeysRow key={`row${i}`}
+                                    data={item}
+                                    handleClick={this._handleClick}
+                                    shiftOn={this.state.shiftOn}
+                                    handleShift={this._handleShift}
+                                    passTriggerIdx={passTriggerIdx} />;
                     })}
                 </div>
             );
