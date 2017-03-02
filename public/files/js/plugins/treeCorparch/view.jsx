@@ -144,6 +144,7 @@ export function init(dispatcher, mixins, treeStore) {
             return (
                 <div className="corp-tree-widget">
                     <button className="switch" type="button" onClick={this._buttonClickHandler}>{this.props.currentCorpus}</button>
+                    <input type="hidden" name="corpname" value={this.props.corpname} />
                     {this.state.active ? <ItemList htmlClass="corp-tree"
                         corplist={this.state.data['corplist']} /> : null}
                 </div>
