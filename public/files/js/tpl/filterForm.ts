@@ -176,8 +176,11 @@ export function init(conf:Kontext.Conf) {
                 }
             );
             return prom;
-        },
+        }
+    ).then(
+        (_) => undefined,
         (err) => {
+            console.error(err);
             layoutModel.showMessage('error', err);
         }
     );

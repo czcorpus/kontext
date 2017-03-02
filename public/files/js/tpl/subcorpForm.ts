@@ -260,8 +260,11 @@ export class SubcorpForm implements Kontext.CorpusSetupHandler {
                 this.initSubcCreationVariantSwitch();
                 this.sizeUnitsSafeSwitch();
                 this.initHints();
-            },
+            }
+        ).then(
+            (_) => undefined,
             (err) => {
+                console.error(err);
                 this.layoutModel.showMessage('error', err);
             }
         );

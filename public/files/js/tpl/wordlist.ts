@@ -115,6 +115,12 @@ export class WordlistPage {
                     this.startWatching();
                 }
             }
+        ).then(
+            (_) => undefined,
+            (err) => {
+                console.error(err);
+                this.pageModel.showMessage('error', err);
+            }
         );
     }
 }
