@@ -154,7 +154,10 @@ export function create(selectElm:HTMLElement, targetAction:string, pluginApi:Kon
     pluginApi.renderReactComponent(
         viewsLib.CorptreeWidget,
         widgetWrapper,
-        {currentCorpus: pluginApi.getConf<string>('humanCorpname')}
+        {
+            currentCorpus: pluginApi.getConf<string>('humanCorpname'),
+            corpname: pluginApi.getConf<string>('corpname')
+        }
     );
 }
 
@@ -181,7 +184,6 @@ export class CorplistPage implements Customized.CorplistPage {
     createList(targetElm:HTMLElement, properties:any):void {
         let wrapper = window.document.createElement('div');
         $('section.corplist').append(wrapper);
-
         this.pluginApi.renderReactComponent(
             this.viewsLib.CorptreePageComponent,
             wrapper,
