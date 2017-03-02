@@ -526,8 +526,11 @@ export class ViewPage {
                 this.setStateUrl();
                 this.updateLocalAlignedCorpora();
                 syntaxViewer.create(this.layoutModel.pluginApi());
-            },
+            }
+        ).then(
+            (_) => undefined,
             (err) => {
+                console.error(err);
                 this.layoutModel.showMessage('error', err);
             }
         );

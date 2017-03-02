@@ -449,9 +449,6 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                         wPoSList: this.layoutModel.getConf<any>('Wposlist')
                     }
                 );
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
             }
         );
     }
@@ -487,8 +484,11 @@ export class FirstFormPage implements Kontext.CorpusSetupHandler {
                         resolve(plugin);
                 });
                 return prom;
-            },
+            }
+        ).then(
+            (_) => undefined,
             (err) => {
+                console.error(err);
                 this.layoutModel.showMessage('error', err);
             }
         );

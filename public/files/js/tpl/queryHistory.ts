@@ -150,6 +150,11 @@ class QueryHistoryPage {
                 this.addExpandLink();
                 this.dynamizeFormControls();
             }
+        ).then(
+            (_) => undefined,
+            (err) => {
+                console.error(err);
+            }
         );
     }
 

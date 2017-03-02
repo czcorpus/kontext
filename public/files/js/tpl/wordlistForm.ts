@@ -285,6 +285,13 @@ class WordlistFormPage {
                 );
                 this.registerSubcorpChange();
                 this.initOutputTypeForms();
+
+            }
+        ).then(
+            (_) => undefined,
+            (err) => {
+                console.error(err);
+                this.layoutModel.showMessage('error', err);
             }
         )
     }
