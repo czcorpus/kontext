@@ -21,7 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import Immutable = require('vendor/immutable');
+import * as Immutable from 'vendor/immutable';
 
 /**
  * This class represents a text input-based selection of values for a specific structural

@@ -23,11 +23,10 @@
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import util = require('../../util');
-import tplDocument = require('../../tpl/document');
-import RSVP = require('vendor/rsvp');
-import textTypesStore = require('../../stores/textTypes/attrValues');
-import Immutable = require('vendor/immutable');
+import {SimplePageStore} from '../../stores/base';
+import * as RSVP from 'vendor/rsvp';
+import * as textTypesStore from '../../stores/textTypes/attrValues';
+import * as Immutable from 'vendor/immutable';
 
 
 interface ServerBibData {
@@ -102,7 +101,7 @@ function isArr(v) {
  * attr2: v2#3 [OK]
  * attr3: v3#1 v3#2 [WRONG]
  */
-export class LiveAttrsStore extends util.SimplePageStore implements LiveAttributesInit.AttrValueTextInputListener {
+export class LiveAttrsStore extends SimplePageStore implements LiveAttributesInit.AttrValueTextInputListener {
 
     private pluginApi:Kontext.PluginApi;
 

@@ -22,7 +22,7 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 import {MultiDict} from '../../util';
 

@@ -24,7 +24,7 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 
 

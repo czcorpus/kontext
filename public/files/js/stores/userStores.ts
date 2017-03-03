@@ -22,7 +22,7 @@
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import {SimplePageStore} from '../util';
+import {SimplePageStore} from './base';
 import {PageModel} from '../tpl/document';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'vendor/immutable';

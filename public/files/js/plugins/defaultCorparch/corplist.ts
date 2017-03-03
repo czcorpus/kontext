@@ -19,15 +19,16 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
 
-import $ = require('jquery');
-import util = require('../../util');
-import common = require('./common');
+import * as $ from 'jquery';
+import {SimplePageStore} from '../../stores/base';
+import * as util from '../../util';
+import * as common from './common';
 
 
 /**
  * A general store for processing corpus listing queries
  */
-export class QueryProcessingStore extends util.SimplePageStore {
+export class QueryProcessingStore extends SimplePageStore {
 
     protected tagPrefix:string;
 
@@ -201,7 +202,7 @@ export interface CorplistData {
 /**
  * This store handles table dataset
  */
-export class CorplistTableStore extends util.SimplePageStore {
+export class CorplistTableStore extends SimplePageStore {
 
     protected pluginApi:Kontext.PluginApi;
 

@@ -26,7 +26,8 @@
 /// <reference path="../../../ts/declarations/modernizr.d.ts" />
 
 
-import {SimplePageStore, MultiDict} from '../../util';
+import {MultiDict} from '../../util';
+import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 import * as Immutable from 'vendor/immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';

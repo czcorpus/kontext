@@ -22,7 +22,8 @@
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import {SimplePageStore, MultiDict} from '../../util';
+import {MultiDict} from '../../util';
+import {SimplePageStore} from '../base';
 import conclines = require('../../conclines');
 import tplDocument = require('../../tpl/document');
 import {ConcLineStore} from './lines';

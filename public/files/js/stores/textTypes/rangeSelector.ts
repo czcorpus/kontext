@@ -23,8 +23,8 @@
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 
-import RSVP = require('vendor/rsvp');
-import Immutable = require('vendor/immutable');
+import * as RSVP from 'vendor/rsvp';
+import * as Immutable from 'vendor/immutable';
 
 
 enum IntervalChar {

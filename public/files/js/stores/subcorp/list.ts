@@ -30,7 +30,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from '../../tpl/document';
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../base';
 
 
 

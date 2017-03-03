@@ -23,7 +23,7 @@
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import {SimplePageStore} from '../util';
+import {SimplePageStore} from './base';
 import Immutable = require('vendor/immutable');
 import {PageModel} from '../tpl/document';
 import RSVP = require('vendor/rsvp');

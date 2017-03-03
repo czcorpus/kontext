@@ -23,7 +23,7 @@
 /// <reference path="../../types/plugins/subcmixer.d.ts" />
 
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../../stores/base';
 import {init as viewInit} from './view';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
