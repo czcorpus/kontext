@@ -23,7 +23,7 @@
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import rangeSelector = require('./rangeSelector');

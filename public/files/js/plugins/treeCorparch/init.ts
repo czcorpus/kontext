@@ -25,9 +25,9 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import util = require('../../util');
-import Immutable = require('vendor/immutable');
-import $ = require('jquery');
+import {SimplePageStore} from '../../stores/base';
+import * as Immutable from 'vendor/immutable';
+import * as $ from 'jquery';
 import {init as viewInit} from './view';
 
 
@@ -41,7 +41,7 @@ export interface Node {
 /**
  *
  */
-export class TreeWidgetStore extends util.SimplePageStore {
+export class TreeWidgetStore extends SimplePageStore {
 
     static DispatchToken:string;
 

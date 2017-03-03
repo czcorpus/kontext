@@ -24,7 +24,7 @@
 
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 import {QueryStore, QueryFormUserEntries} from './main';
 import {FilterStore} from './filter';

@@ -21,7 +21,8 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import {SimplePageStore, MultiDict} from '../../util';
+import {SimplePageStore} from '../base';
+import {MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
 
 /**

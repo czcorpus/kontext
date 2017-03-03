@@ -23,11 +23,11 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import $ = require('jquery');
-import RSVP = require('vendor/rsvp');
-import toolbar = require('plugins/applicationBar/toolbar');
+import * as $ from 'jquery';
+import * as RSVP from 'vendor/rsvp';
+import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../tpl/document';
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../../stores/base';
 
 
 export class AppBarStore extends SimplePageStore {

@@ -22,7 +22,7 @@
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../base';
 
 
 export class WithinLine {

@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import $ = require('jquery');
-import util = require('../../util');
-import common = require('./common');
-import corplistDefault = require('../defaultCorparch/corplist');
+import * as $ from 'jquery';
+import {SimplePageStore} from '../../stores/base';
+import * as common from './common';
+import * as corplistDefault from '../defaultCorparch/corplist';
 
 /**
  * This store handles corplist 'filter' form
@@ -138,7 +138,7 @@ export class CorplistTableStore extends corplistDefault.CorplistTableStore {
     }
 }
 
-export class CorpusAccessRequestStore extends util.SimplePageStore {
+export class CorpusAccessRequestStore extends SimplePageStore {
 
     private pluginApi:Kontext.PluginApi;
 

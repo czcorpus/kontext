@@ -21,7 +21,8 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import {SimplePageStore, MultiDict, importColor} from '../../util';
+import {MultiDict, importColor} from '../../util';
+import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';

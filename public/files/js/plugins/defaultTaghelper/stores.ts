@@ -21,8 +21,8 @@
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 
-import util = require('../../util');
-import Immutable = require('vendor/immutable');
+import {SimplePageStore} from '../../stores/base';
+import * as Immutable from 'vendor/immutable';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -62,7 +62,7 @@ export interface PositionOptions {
 /**
  * This store handles a single tag-builder instance.
  */
-export class TagHelperStore extends util.SimplePageStore {
+export class TagHelperStore extends SimplePageStore {
 
     static DispatchToken:string;
 

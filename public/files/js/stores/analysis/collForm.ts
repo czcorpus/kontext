@@ -21,7 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {SimplePageStore} from '../../util';
+import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 
 
