@@ -169,6 +169,8 @@ export interface ViewConfiguration {
 
     WideCtxGlobals:Array<[string,string]>;
 
+    catColors:Array<string>;
+
     onReady?:()=>void;
 
     onPageUpdate?:()=>void;

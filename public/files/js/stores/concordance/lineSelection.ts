@@ -79,7 +79,7 @@ export class LineSelectionStore extends SimplePageStore {
             switch (payload.actionType) {
                 case 'LINE_SELECTION_SELECT_LINE':
                     let val = payload.props['value'];
-                    if (!isNaN(val)) {
+                    if (self.validateGroupId(val)) {
                         self.selectLine(val, payload.props['tokenNumber'], payload.props['kwicLength']);
                         self.notifyChangeListeners();
 
@@ -181,6 +181,17 @@ export class LineSelectionStore extends SimplePageStore {
         });
     }
 
+    private validateGroupId(value:string|number):boolean {
+        const v = typeof value === 'string' ? parseInt(value) : value;
+        if (isNaN(v)) {
+            return false;
+        }
+        if (this.mode === 'groups') {
+            return v >= 1 && v <= this.maxGroupId || v === -1;
+        }
+        return v === 1 || v === null;
+    }
+
     private selectLine(value:number, tokenNumber:number, kwiclen:number) {
         if (this.mode === 'simple') {
             if (value === 1) {
@@ -213,7 +224,7 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     private renameLineGroup(srcGroupNum:number, dstGroupNum:number):RSVP.Promise<MultiDict> {
-        if (isNaN(srcGroupNum) || isNaN(dstGroupNum)) {
+        if (!this.validateGroupId(srcGroupNum) || !this.validateGroupId(dstGroupNum)) {
             return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
                 reject(this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
                         {max_group: this.maxGroupId}));

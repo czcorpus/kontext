@@ -1068,7 +1068,8 @@ export function init(conf):ViewPage {
         SpeechOverlapVal: layoutModel.getConf<string>('SpeechOverlapVal'),
         SpeechAttrs: layoutModel.getConf<Array<string>>('SpeechAttrs'),
         StructCtx: layoutModel.getConf<string>('StructCtx'),
-        WideCtxGlobals: layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals')
+        WideCtxGlobals: layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
+        catColors: d3.schemeCategory20
     };
     const stores = new ViewPageStores();
     stores.userInfoStore = layoutModel.getStores().userInfoStore;

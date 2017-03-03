@@ -23,6 +23,7 @@
 import React from 'vendor/react';
 
 import {init as initMediaViews} from './media';
+import {calcTextColorFromBg, color2str} from '../../util';
 
 
 export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore) {
@@ -367,20 +368,10 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         }
     }
 
-    function calcTextColorFromBg(bgColor) {
-        const color = bgColor ? bgColor : [255, 255, 255, 1];
-        const lum = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2];
-        return lum > 128 ? [1, 1, 1, 1] : [231, 231, 231, 1];
-    }
-
     function renderSpeech(data, key) {
         return data.map((item, i) => {
             return <span key={`${key}-${i}`} className={item.class ? item.class : null}>{item.str + ' '}</span>;
         });
-    }
-
-    function color2str(c) {
-        return c !== null ? `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})` : 'transparent';
     }
 
     // ------------------------- <SpeechText /> ---------------------------
