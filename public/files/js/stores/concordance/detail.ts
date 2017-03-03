@@ -21,7 +21,7 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import {SimplePageStore, MultiDict} from '../../util';
+import {SimplePageStore, MultiDict, importColor} from '../../util';
 import {PageModel} from '../../tpl/document';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';
@@ -33,8 +33,6 @@ import * as Immutable from 'vendor/immutable';
 export type ConcDetailText = Array<{str:string; class:string}>;
 
 
-export type RGBColor = [number, number, number, number];
-
 /**
  *
  */
@@ -42,7 +40,7 @@ export interface Speech {
     text:ConcDetailText;
     speakerId:string;
     segments:Immutable.List<string>;
-    colorCode:RGBColor;
+    colorCode:Kontext.RGBAColor;
     metadata:Immutable.Map<string, string>;
 }
 
@@ -65,35 +63,6 @@ export interface SpeechOptions {
     speechAttrs:Array<string>;
     speechOverlapAttr:[string, string];
     speechOverlapVal:string;
-}
-
-function importColor(color:string, opacity:number):RGBColor {
-    const fromHex = pos => parseInt(color.substr(2 * pos + 1, 2), 16);
-    if (color.substr(0, 1) === '#') {
-        return [
-            fromHex(0),
-            fromHex(1),
-            fromHex(2),
-            parseFloat(opacity.toFixed(1))
-        ];
-
-    } else if (color.toLowerCase().indexOf('rgb') === 0) {
-        const srch = /rgb\((\d+),\s*(\d+),\s*(\d+)\s*(,\s*[\d\.]+)*\)/i.exec(color);
-        if (srch) {
-            return [
-                parseInt(srch[1]),
-                parseInt(srch[2]),
-                parseInt(srch[3]),
-                parseFloat(opacity.toFixed(1))
-            ];
-
-        } else {
-            throw new Error('Cannot import color ' + color);
-        }
-
-    } else {
-        throw new Error('Cannot import color ' + color);
-    }
 }
 
 /**
@@ -131,7 +100,7 @@ export class ConcDetailStore extends SimplePageStore {
 
     private playingRowIdx:number;
 
-    private speakerColors:Immutable.List<RGBColor>;
+    private speakerColors:Immutable.List<Kontext.RGBAColor>;
 
     private wideCtxGlobals:Array<[string, string]>;
 
@@ -141,7 +110,7 @@ export class ConcDetailStore extends SimplePageStore {
      * changed into red one after a context expasion due to
      * some new incoming or outcoming users.
      */
-    private speakerColorsAttachments:Immutable.Map<string, RGBColor>;
+    private speakerColorsAttachments:Immutable.Map<string, Kontext.RGBAColor>;
 
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore, structCtx:string,
@@ -157,8 +126,8 @@ export class ConcDetailStore extends SimplePageStore {
         this.lineIdx = null;
         this.playingRowIdx = -1;
         this.wholeDocumentLoaded = false;
-        this.speakerColors = Immutable.List<RGBColor>(speakerColors.map(item => importColor(item, ConcDetailStore.SPK_LABEL_OPACITY)));
-        this.speakerColorsAttachments = Immutable.Map<string, RGBColor>();
+        this.speakerColors = Immutable.List<Kontext.RGBAColor>(speakerColors.map(item => importColor(item, ConcDetailStore.SPK_LABEL_OPACITY)));
+        this.speakerColorsAttachments = Immutable.Map<string, Kontext.RGBAColor>();
         this.expandLeftArgs = Immutable.List<ExpandArgs>();
         this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.audioPlayer = new AudioPlayer(
@@ -315,7 +284,7 @@ export class ConcDetailStore extends SimplePageStore {
             return null;
         }
 
-        function createNewSpeech(speakerId:string, colorCode:RGBColor, metadata:{[attr:string]:string}):Speech {
+        function createNewSpeech(speakerId:string, colorCode:Kontext.RGBAColor, metadata:{[attr:string]:string}):Speech {
             const importedMetadata = Immutable.Map<string, string>(metadata)
                     .filter((val, attr) => attr !== self.speechOpts.speechSegment[1] &&
                                 attr !== self.speechOpts.speakerIdAttr[1])

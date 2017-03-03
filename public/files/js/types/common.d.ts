@@ -378,6 +378,8 @@ declare module Kontext {
         replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void;
         setOnPopState(fn:(event:{state: any})=>void):void;
     }
+
+    export type RGBAColor = [number, number, number, number];
 }
 
 

@@ -23,6 +23,7 @@
 import React from 'vendor/react';
 
 import {init as initMediaViews} from './media';
+import {calcTextColorFromBg, color2str, importColor} from '../../util';
 
 
 export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
@@ -209,8 +210,15 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         render : function () {
+            const css = {};
+            if (this.props.catTextColor) {
+                css['color'] = this.props.catTextColor
+            }
+            if (this.props.catBgColor) {
+                css['backgroundColor'] = this.props.catBgColor;
+            }
             return (
-                <td className="manual-selection">
+                <td className="manual-selection" style={css}>
                     {this._renderInput()}
                 </td>
             );
@@ -396,7 +404,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         shouldComponentUpdate : function (nextProps, nextState) {
             return this.props.data !== nextProps.data
                     || this.props.lineSelMode !== nextProps.lineSelMode
-                    || this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible;
+                    || this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible
+                    || this.props.catBgColor != nextProps.catBgColor;
         },
 
         render : function () {
@@ -416,7 +425,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                         tokenNumber={primaryLang.tokenNumber}
                         lineNumber={this.props.data.lineNumber}
                         mode={this.props.lineSelMode}
-                        lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null} />
+                        lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null}
+                        catBgColor={this.props.catBgColor}
+                        catTextColor={this.props.catTextColor} />
                     <td className="syntax-tree">
                     </td>
                     {this._renderText(primaryLang, 0)}
@@ -441,7 +452,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             }
         },
 
-        _storeChangeListener : function () {
+        _storeChangeListener : function (store) {
             this.setState({
                 lines: lineStore.getLines(),
                 lineSelMode: this._getLineSelMode(),
@@ -478,7 +489,18 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             }
         },
 
+        _getCatColors : function (itemData) {
+            const tmp = lineSelectionStore.getLine(itemData.languages.first().tokenNumber);
+            if (tmp && tmp[1] >= 1) {
+                const bgColor = this.props.catColors[(tmp[1] - 1) % this.props.catColors.length];
+                const fgColor = color2str(calcTextColorFromBg(importColor(bgColor, 0)));
+                return [color2str(importColor(bgColor, 0.9)), fgColor];
+            }
+            return [null, null];
+        },
+
         _renderLine : function (item, i) {
+            const colors = this._getCatColors(item);
             return <Line key={String(i) + ':' + item.languages.first().tokenNumber}
                          lineIdx={i}
                          data={item}
@@ -492,7 +514,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                          audioPlayerIsVisible={this.state.audioPlayerIsVisible}
                          concDetailClickHandler={this.props.concDetailClickHandler}
-                         refsDetailClickHandler={this.props.refsDetailClickHandler} />;
+                         refsDetailClickHandler={this.props.refsDetailClickHandler}
+                         catBgColor={colors[0]}
+                         catTextColor={colors[1]} />;
         },
 
         render : function () {
