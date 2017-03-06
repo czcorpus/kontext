@@ -42,22 +42,46 @@ class MetadataModel:
 
     meta_db -- a Database instance
     category_tree -- a tree holding the user input
+    id_attr -- an unique identifier of a 'bibliography' item (defined in corpora.xml).
     """
 
-    def __init__(self, meta_db, category_tree):
+    def __init__(self, meta_db, category_tree, id_attr):
         self._db = meta_db
         self.c_tree = category_tree
+        self._id_attr = id_attr
 
-        self._db.execute('SELECT COUNT(*), MIN(id) FROM %s WHERE corpus_id = ?' % self.c_tree.table_name,
-                         (self._db.corpus_id,))
-        tmp = self._db.fetchone()
-        self.num_texts = tmp[0]
-        self.min_id = tmp[1]
+        self.text_sizes, self._id_map = self._get_text_sizes()
+        self.num_texts = len(self.text_sizes)
         self.b = [0] * (self.c_tree.num_categories - 1)
         self.A = np.zeros((self.c_tree.num_categories, self.num_texts))
         self._init_ab(self.c_tree.root_node)
-        self.text_sizes = [row[0] for row in self._db.execute(
-            'SELECT %s FROM item WHERE corpus_id = ?' % self._db.count_col, (self._db.corpus_id,))]
+
+    def _get_text_sizes(self):
+        """
+        List all the texts matching main corpus and optional
+        aligned corpora. This will be the base for the 'A'
+        matrix in the optimization problem.
+
+        Also generate a map "db_ID -> row index" to be able
+        to work with db-fetched subsets of the texts and
+        matching them with the 'A' matrix (i.e. in a filtered
+        result a record has a different index then in
+        all the records list).
+        """
+        sql = 'SELECT m1.{cc}, m1.{item_id} FROM {tn} AS m1 '.format(cc=self._db.count_col,
+                                                                     item_id=self._id_attr, tn=self.c_tree.table_name)
+        args = []
+        sql, args = self._db.append_aligned_corp_sql(sql, args)
+        sql += ' WHERE m1.corpus_id = ? ORDER BY m1.id'
+        args.append(self._db.corpus_id)
+        sizes = []
+        id_map = {}
+        i = 0
+        for row in self._db.execute(sql, args):
+            sizes.append(row[0])
+            id_map[row[1]] = i
+            i += 1
+        return sizes, id_map
 
     def _init_ab(self, node):
         """
@@ -68,16 +92,32 @@ class MetadataModel:
         :param node: currently processed node of the categoryTree
         """
         if node.metadata_condition is not None:
-            sql_items = [u'%s %s ?' % (mc.attr, mc.op) for subl in node.metadata_condition for mc in subl]
-            sql_args = [mc.value for subl in node.metadata_condition for mc in subl] + [self._db.corpus_id]
-            for row in self._db.execute(u'SELECT id, %s FROM %s WHERE %s AND corpus_id = ? ' % (
-                    self._db.count_col, self.c_tree.table_name, u' AND '.join(sql_items)), sql_args):
-                self.A[node.node_id - 1][row[0] - self.min_id] = row[1]
+            sql_items = [u'm1.%s %s ?' % (mc.attr, mc.op) for subl in node.metadata_condition for mc in subl]
+            sql_args = []
+            sql = u'SELECT m1.{id_attr}, m1.{cc} FROM {tn} AS m1 '.format(
+                    id_attr=self._id_attr, cc=self._db.count_col, tn=self.c_tree.table_name)
+
+            sql, sql_args = self._db.append_aligned_corp_sql(sql, sql_args)
+
+            sql += u' WHERE {where} AND m1.corpus_id = ?'.format(where=u' AND '.join(sql_items))
+            sql_args += [mc.value for subl in node.metadata_condition for mc in subl]
+            sql_args.append(self._db.corpus_id)
+
+            for row in self._db.execute(sql, sql_args):
+                self.A[node.node_id - 1][self._id_map[row[0]]] = row[1]
             self.b[node.node_id - 1] = node.size
 
         if len(node.children) > 0:
             for child in node.children:
                 self._init_ab(child)
+
+    def translate_vars_to_doc_ids(self, vars):
+        """
+        Transform matrix 'A' row indices back to
+        database row identifiers.
+        """
+        tmp = dict((v, k) for k, v in self._id_map.items())
+        return [tmp[i] for i in vars]
 
     def solve(self):
         """
