@@ -45,13 +45,14 @@ class MetadataModel:
     """
 
     def __init__(self, meta_db, category_tree):
-        import logging
         self._db = meta_db
         self.c_tree = category_tree
 
-        self._db.execute('SELECT COUNT(*) FROM %s WHERE corpus_id = ?' % self.c_tree.table_name,
+        self._db.execute('SELECT COUNT(*), MIN(id) FROM %s WHERE corpus_id = ?' % self.c_tree.table_name,
                          (self._db.corpus_id,))
-        self.num_texts = self._db.fetchone()[0]
+        tmp = self._db.fetchone()
+        self.num_texts = tmp[0]
+        self.min_id = tmp[1]
         self.b = [0] * (self.c_tree.num_categories - 1)
         self.A = np.zeros((self.c_tree.num_categories, self.num_texts))
         self._init_ab(self.c_tree.root_node)
@@ -71,7 +72,7 @@ class MetadataModel:
             sql_args = [mc.value for subl in node.metadata_condition for mc in subl] + [self._db.corpus_id]
             for row in self._db.execute(u'SELECT id, %s FROM %s WHERE %s AND corpus_id = ? ' % (
                     self._db.count_col, self.c_tree.table_name, u' AND '.join(sql_items)), sql_args):
-                self.A[node.node_id - 1][row[0] - 1] = row[1]
+                self.A[node.node_id - 1][row[0] - self.min_id] = row[1]
             self.b[node.node_id - 1] = node.size
 
         if len(node.children) > 0:

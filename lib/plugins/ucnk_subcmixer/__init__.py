@@ -18,6 +18,7 @@
 import json
 import sqlite3
 from collections import defaultdict
+import logging
 
 from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
@@ -32,12 +33,8 @@ import corplib
 
 @exposed(return_type='json', acess_level=1)
 def subcmixer_run_calc(ctrl, request):
-    try:
-        return plugins.get('subcmixer').process(ctrl._plugin_api, ctrl.corp, request.form['corpname'],
-                                                json.loads(request.form['expression']))
-    except Exception as e:
-        ctrl.add_system_message('error', unicode(e))
-        return {}
+    return plugins.get('subcmixer').process(ctrl._plugin_api, ctrl.corp, request.form['corpname'],
+                                            json.loads(request.form['expression']))
 
 
 @exposed(return_type='json', access_level=1)
