@@ -331,6 +331,18 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
             subcMixerStore.removeChangeListener(this._handleStoreChange);
         },
 
+        _renderAlignedCorpInfo : function () {
+            return (
+                <p>
+                    <img src={this.createStaticUrl('img/info-icon.svg')}
+                            style={{width: '1em', marginRight: '0.3em', verticalAlign: 'middle'}}
+                            alt={this.translate('global__info_icon')} />
+                    {this.translate('ucnk_subcm__there_are_aligned_corpora_msg')}:{'\u00a0'}
+                    <strong>{this.props.alignedCorpora.map(v => v.label).join(', ')}</strong>
+                </p>
+            );
+        },
+
         render : function () {
             const hasResults = !!this.props.currentResults;
             return (
@@ -339,6 +351,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                             customClass="subcmixer-widget"
                             label={this.translate('ucnk_subcm__widget_header')}>
                         <div>
+                            {this.props.alignedCorpora.size > 0 ? this._renderAlignedCorpInfo() : null}
                             <ValuesTable items={this.props.selectedValues}
                                     currentResults={this.props.currentResults}
                                     hasResults={hasResults} />
@@ -380,7 +393,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 currentResults: subcMixerStore.getCurrentCalculationResults(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
                 usedAttributes: subcMixerStore.getUsedAttributes(),
-                errorTolerance: subcMixerStore.getErrorTolerance()
+                errorTolerance: subcMixerStore.getErrorTolerance(),
+                alignedCorpora: subcMixerStore.getAlignedCorpora()
             });
         },
 
@@ -396,7 +410,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 numErrors: 0,
                 currentSubcname: null,
                 usedAttributes: null,
-                errorTolerance: null
+                errorTolerance: null,
+                alignedCorpora: subcMixerStore.getAlignedCorpora()
             });
         },
 
@@ -408,7 +423,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 numErrors: subcMixerStore.getNumOfErrors(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
                 usedAttributes: subcMixerStore.getUsedAttributes(),
-                errorTolerance: subcMixerStore.getErrorTolerance()
+                errorTolerance: subcMixerStore.getErrorTolerance(),
+                alignedCorpora: subcMixerStore.getAlignedCorpora()
             };
         },
 
@@ -420,7 +436,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 numErrors: subcMixerStore.getNumOfErrors(),
                 currentSubcname: subcMixerStore.getCurrentSubcname(),
                 usedAttributes: subcMixerStore.getUsedAttributes(),
-                errorTolerance: subcMixerStore.getErrorTolerance()
+                errorTolerance: subcMixerStore.getErrorTolerance(),
+                alignedCorpora: subcMixerStore.getAlignedCorpora()
             });
         },
 
@@ -463,7 +480,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                                 numErrors={this.state.numErrors}
                                 currentSubcname={this.state.currentSubcname}
                                 usedAttributes={this.state.usedAttributes}
-                                errorTolerance={this.state.errorTolerance} />
+                                errorTolerance={this.state.errorTolerance}
+                                alignedCorpora={this.state.alignedCorpora} />
                         : null}
                 </div>
             );

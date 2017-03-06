@@ -21,7 +21,8 @@
     "ucnk_subc__ratios_th_expression": "Text type",
     "ucnk_subc__ratios_th_required_ratio": "Required ratio",
     "ucnk_subc__ratios_th_status": "Status",
-    "ucnk_subc__ratios_th_orig_ratio": "Original ratio"
+    "ucnk_subc__ratios_th_orig_ratio": "Original ratio",
+    "ucnk_subcm__there_are_aligned_corpora_msg": "The calculation will be performed only within items aligned with the following corpora"
 
   },
   "cs-CZ": {
@@ -46,6 +47,7 @@
     "ucnk_subc__ratios_th_expression": "Typ textu",
     "ucnk_subc__ratios_th_required_ratio": "Požadovaný podíl",
     "ucnk_subc__ratios_th_status": "Status",
-    "ucnk_subc__ratios_th_orig_ratio": "Původní podíl"
+    "ucnk_subc__ratios_th_orig_ratio": "Původní podíl",
+    "ucnk_subcm__there_are_aligned_corpora_msg": "Výpočet proběhne pouze na položkách, které jsou zarovnané s následujícími korpusy"
   }
 }

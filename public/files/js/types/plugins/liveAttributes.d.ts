@@ -22,8 +22,16 @@
 /// <reference path="../../types/plugins/subcmixer.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/react.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 declare module LiveAttributesInit {
+
+    export interface AlignedLanguageItem {
+        value:string;
+        label:string;
+        selected:boolean;
+        locked:boolean;
+    }
 
     /**
      * Represents an object which is able to provide
@@ -36,6 +44,7 @@ declare module LiveAttributesInit {
         getTextInputPlaceholder():string; // a text displayed in a respective text field
         addUpdateListener(fn:()=>void):void;
         removeUpdateListener(fn:()=>void):void;
+        getAlignedCorpora():Immutable.List<AlignedLanguageItem>;
     }
 
     export function create(pluginApi:Kontext.PluginApi,
