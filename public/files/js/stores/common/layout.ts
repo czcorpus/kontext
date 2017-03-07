@@ -37,20 +37,23 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
     pluginApi:Kontext.PluginApi;
 
     addMessage(messageType:string, messageText:string, onClose:()=>void) {
-        let msgId = String(Math.random());
-        let self = this;
+        const msgId = String(Math.random());
+        const baseInterval = this.pluginApi.getConf<number>('messageAutoHideInterval');
 
         let viewTime;
-        if (messageType === 'warning') {
-            viewTime = self.pluginApi.getConf<number>('messageAutoHideInterval') * 1.5;
-
-        } else if (messageType !== 'error' && messageType !== 'mail') {
-            viewTime = self.pluginApi.getConf<number>('messageAutoHideInterval');
-
-        } else {
-            viewTime = -1;
+        switch (messageType) {
+            case 'error':
+            case 'mail':
+                viewTime = 3 * baseInterval;
+            break;
+            case 'warning':
+                viewTime = 2 * baseInterval;
+            break;
+            case 'info':
+            default:
+                viewTime = baseInterval;
         }
-
+        console.log('viewTime: ', viewTime);
         this.messages.push({
             messageType: messageType,
             messageText: messageText,
@@ -62,11 +65,11 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
         }
 
         if (viewTime > 0) {
-            let timeout = window.setTimeout(function () {
-                self.removeMessage(msgId);
+            const timeout = window.setTimeout(() => {
+                this.removeMessage(msgId);
                 window.clearTimeout(timeout);
-                self.notifyChangeListeners();
-            }, self.pluginApi.getConf('messageAutoHideInterval'));
+                this.notifyChangeListeners();
+            }, this.pluginApi.getConf<number>('messageAutoHideInterval'));
         }
         this.notifyChangeListeners();
     }
@@ -76,9 +79,9 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
     }
 
     removeMessage(messageId:string) {
-        this.messages = this.messages.filter(function (x) { return x.messageId !== messageId; });
+        this.messages = this.messages.filter(x => x.messageId !== messageId);
         if (typeof this.onClose[messageId] === 'function') {
-            let fn = this.onClose[messageId];
+            const fn = this.onClose[messageId];
             delete(this.onClose[messageId]);
             fn();
         }
@@ -86,17 +89,16 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
 
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
-        var self = this;
         this.messages = [];
         this.onClose = {};
         this.pluginApi = pluginApi;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'MESSAGE_CLOSED':
-                    self.removeMessage(payload.props['messageId']);
-                    self.notifyChangeListeners();
-                    break;
+                    this.removeMessage(payload.props['messageId']);
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
