@@ -206,6 +206,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                         this.layoutModel.pluginApi(),
                         this.textTypesStore,
                         () => $('#subcname').val(),
+                        () => liveAttrsStore.getAlignedCorpora(),
                         this.layoutModel.getConf<string>('CorpusIdAttr')
                     );
                     liveAttrsStore.addUpdateListener(subcmixerStore.refreshData.bind(subcmixerStore));

@@ -76,13 +76,6 @@ interface FilterResponseValue {
     availItems?:number;
 }
 
-export interface AlignedLanguageItem {
-    value:string;
-    label:string;
-    selected:boolean;
-    locked:boolean;
-}
-
 function isArr(v) {
     return Object.prototype.toString.call(v) === '[object Array]';
 }
@@ -111,9 +104,9 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
 
     private selectionSteps:Immutable.List<SelectionStep>;
 
-    private alignedCorpora:Immutable.List<AlignedLanguageItem>;
+    private alignedCorpora:Immutable.List<LiveAttributesInit.AlignedLanguageItem>;
 
-    private initialAlignedCorpora:Immutable.List<AlignedLanguageItem>;
+    private initialAlignedCorpora:Immutable.List<LiveAttributesInit.AlignedLanguageItem>;
 
     private bibliographyAttribute:string;
 
@@ -162,7 +155,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                     let item = self.alignedCorpora.get(payload.props['idx']);
                     if (item) {
                         let idx = self.alignedCorpora.indexOf(item);
-                        let newItem:AlignedLanguageItem = {
+                        let newItem:LiveAttributesInit.AlignedLanguageItem = {
                             value: item.value,
                             label: item.label,
                             locked: item.locked,
@@ -254,7 +247,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                         this.textTypesStore.filter(k, (item) => item !== null);
                     }
                     this.alignedCorpora = this.alignedCorpora.map((value) => {
-                        let newVal:AlignedLanguageItem = {
+                        let newVal:LiveAttributesInit.AlignedLanguageItem = {
                             label: value.label,
                             value: value.value,
                             locked: value.selected ? true : false,
@@ -329,7 +322,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
         }
     }
 
-    getAlignedCorpora():Immutable.List<AlignedLanguageItem> {
+    getAlignedCorpora():Immutable.List<LiveAttributesInit.AlignedLanguageItem> {
         return this.alignedCorpora;
     }
 

@@ -22,12 +22,15 @@ plug-in which provides input arguments used by 'subcmixer'.
 
 class AbstractSubcMixer(object):
 
-    def process(self, plugin_api, corpus, corpname, args):
+    def process(self, plugin_api, corpus, corpname, aligned_corpora, args):
         """
         arguments:
             plugin_api -- kontext.PluginApi instance
             corpus -- a manatee.Corpus instance
             corpname -- a corpus name
+            aligned_corpora -- corpora we want our result to respect as aligned ones
+                            (i.e. only results witch matching items in these corpora
+                            can be included)
             args -- required text types ratios
         """
         raise NotImplementedError()

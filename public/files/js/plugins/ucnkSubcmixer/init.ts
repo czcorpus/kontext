@@ -20,6 +20,7 @@
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../types/plugins/subcmixer.d.ts" />
 
 
@@ -74,6 +75,8 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     getCurrentSubcnameFn:()=>string;
 
+    getAlignedCorporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>;
+
     private currentSubcname:string;
 
     private corpusIdAttr:string;
@@ -84,12 +87,13 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
-            corpusIdAttr:string) {
+            getAlignedCorporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>, corpusIdAttr:string) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.textTypesStore = textTypesStore;
         this.shares = Immutable.List<SubcMixerExpression>();
         this.getCurrentSubcnameFn = getCurrentSubcnameFn; // connects us with and old, non-React form
+        this.getAlignedCorporaFn = getAlignedCorporaFn;
         this.corpusIdAttr = corpusIdAttr;
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -233,6 +237,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
         const args = {};
         args['corpname'] = this.pluginApi.getConf<string>('corpname');
         args['subcname'] = this.currentSubcname;
+        args['aligned_corpora'] = this.getAlignedCorporaFn().map(item => item.value).toArray();
         args['expression'] = JSON.stringify(
                 this.shares.map(item => ({
                     attrName: item.attrName,
@@ -352,6 +357,10 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
     getErrorTolerance():number {
         return this.errorTolerance;
     }
+
+    getAlignedCorpora():Immutable.List<LiveAttributesInit.AlignedLanguageItem> {
+        return this.getAlignedCorporaFn();
+    }
 }
 
 
@@ -362,10 +371,18 @@ export function getViews(dispatcher:Kontext.FluxDispatcher,
 }
 
 
-export function create(pluginApi:Kontext.PluginApi,
+export function create(
+        pluginApi:Kontext.PluginApi,
         textTypesStore:TextTypes.ITextTypesStore,
         getCurrentSubcnameFn:()=>string,
+        getAlignedCorporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>,
         corpusIdAttr:string):Subcmixer.ISubcMixerStore {
-    return new SubcMixerStore(pluginApi.dispatcher(), pluginApi,
-            textTypesStore, getCurrentSubcnameFn, corpusIdAttr);
+    return new SubcMixerStore(
+        pluginApi.dispatcher(),
+        pluginApi,
+        textTypesStore,
+        getCurrentSubcnameFn,
+        getAlignedCorporaFn,
+        corpusIdAttr
+    );
 }

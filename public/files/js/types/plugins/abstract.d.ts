@@ -111,5 +111,6 @@ declare module "plugins/subcmixer/init" {
     export function create(pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore,
             getCurrentSubcnameFn:()=>string,
+            getAlignedCoroporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>,
             corpusIdAttr:string):Subcmixer.ISubcMixerStore;
 }

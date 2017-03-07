@@ -140,21 +140,28 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
         _changeHandler : function () {
             this.setState({
                 selectionSteps: liveAttrsStore.getSelectionSteps(),
+                alignedCorpora: liveAttrsStore.getAlignedCorpora(),
                 isLoading: false
             })
         },
 
-        componentDidMount: function () {
+        componentDidMount : function () {
             textTypesStore.addChangeListener(this._changeHandler);
         },
 
-        componentWillUnmount: function () {
+        componentWillUnmount : function () {
             textTypesStore.removeChangeListener(this._changeHandler);
+        },
+
+        _widgetIsActive : function () {
+            return this.state.alignedCorpora.size > 0 && this.state.selectionSteps.length > 1
+                || this.state.alignedCorpora.size === 0 && this.state.selectionSteps.length > 0;
         },
 
         getInitialState : function () {
             return {
-                selectionSteps: [],
+                selectionSteps: liveAttrsStore.getSelectionSteps(),
+                alignedCorpora: liveAttrsStore.getAlignedCorpora(),
                 isLoading: false
             };
         },
@@ -171,7 +178,7 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                         </li>
                         {subcMixerViews.Widget ?
                             (<li>
-                                <subcMixerViews.Widget isActive={this.state.selectionSteps.length > 0} />
+                                <subcMixerViews.Widget isActive={this._widgetIsActive()} />
                             </li>)
                         : null}
                     </ul>

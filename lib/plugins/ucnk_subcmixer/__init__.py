@@ -18,6 +18,7 @@
 import json
 import sqlite3
 from collections import defaultdict
+import logging
 
 from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
@@ -32,12 +33,10 @@ import corplib
 
 @exposed(return_type='json', acess_level=1)
 def subcmixer_run_calc(ctrl, request):
-    try:
-        return plugins.get('subcmixer').process(ctrl._plugin_api, ctrl.corp, request.form['corpname'],
-                                                json.loads(request.form['expression']))
-    except Exception as e:
-        ctrl.add_system_message('error', unicode(e))
-        return {}
+    return plugins.get('subcmixer').process(plugin_api=ctrl._plugin_api, corpus=ctrl.corp,
+                                            corpname=request.form['corpname'],
+                                            aligned_corpora=request.form.getlist('aligned_corpora'),
+                                            args=json.loads(request.form['expression']))
 
 
 @exposed(return_type='json', access_level=1)
@@ -58,10 +57,18 @@ class Database(object):
     """
     Provides database operations on the 'metadata' database
     as required by category_tree and metadata_model.
+
+    db_path -- path to a sqlite3 database file where structural metadata are stored
+    table_name -- name of table where structural metadata are stored
+    corpus_id -- main corpus identifier
+    id_attr -- an unique identifier of bibliography items
+    aligned_corpora -- a list of corpora identifiers we require the primary corpus to be aligned to
     """
 
-    def __init__(self, db_path, corpus_id, id_attr):
+    def __init__(self, db_path, table_name, corpus_id, id_attr, aligned_corpora):
         self._db_path = db_path
+        self._table_name = table_name
+        self._aligned_corpora = aligned_corpora
         self._conn = sqlite3.connect(db_path)
         self._cur = self._conn.cursor()
         self._count_col = self._find_count_col()
@@ -96,6 +103,40 @@ class Database(object):
     def close(self):
         return self._conn.close()
 
+    def append_aligned_corp_sql(self, sql, args):
+        """
+        This function adds one or more JOINs attaching
+        required aligned corpora to a partial SQL query
+        (query without WHERE and following parts).
+
+        Please note that table is self-joined via
+        an artificial attribute 'item_id' which identifies
+        a single bibliography item across all the languages
+        (i.e. it is language-independent). In case of
+        the Czech Nat. Corpus and its InterCorp series
+        this is typically achieved by modifying
+        id_attr value by stripping its language identification
+        prefix (e.g. 'en:Adams-Holisticka_det_k:0' transforms
+        into 'Adams-Holisticka_det_k:0').
+
+        arguments:
+        sql -- a CQL prefix in form 'SELECT ... FROM ...'
+               (i.e. no WHERE, LIIMIT, HAVING...)
+        args -- arguments passed to this partial SQL
+
+        returns:
+        a 2-tuple (extended SQL string, extended args list)
+        """
+        i = 1
+        ans_sql = sql
+        ans_args = args[:]
+        for ac in self._aligned_corpora:
+            ans_sql += ' JOIN {tn} AS m{t2} ON m{t1}.item_id = m{t2}.item_id AND m{t2}.corpus_id = ?'.format(
+                tn=self._table_name, t1=1, t2=i + 1)
+            ans_args.append(ac)
+            i += 1
+        return ans_sql, ans_args
+
     def _find_count_col(self):
         data = self._cur.execute('PRAGMA table_info(\'item\')').fetchall()
         try:
@@ -122,12 +163,6 @@ class SubcMixer(AbstractSubcMixer):
         for i, expression in enumerate(expressions):
             ans['attrs'].append((unicode(expression), float(sizes[i]) / float(total_size),))
         return ans
-
-    @staticmethod
-    def _get_opus_ids(db, db_ids):
-        db.execute('SELECT %s FROM item WHERE id IN (%s) AND corpus_id = ?' % (
-            db.id_attr, ', '.join([str(x) for x in db_ids])), (db.corpus_id,))
-        return map(lambda x: x[0], db.fetchall())
 
     @staticmethod
     def _import_task_args(args):
@@ -160,23 +195,23 @@ class SubcMixer(AbstractSubcMixer):
                 ret.append(subitem)
         return ret
 
-    def process(self, plugin_api, corpus, corpname, args):
+    def process(self, plugin_api, corpus, corpname, aligned_corpora, args):
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
             raise SubcMixerException('Subcorpora based on more than a single structure are not supported at the moment.')
         corpus_info = self._corparch.get_corpus_info(plugin_api, corpname)
-        db = Database(corpus_info.metadata.database, corpus_info.id,
-                      corpus_info.metadata.id_attr)
+        db = Database(db_path=corpus_info.metadata.database, table_name='item', corpus_id=corpus_info.id,
+                      id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
         conditions = self._import_task_args(args)
         cat_tree = CategoryTree(conditions, db, 'item', SubcMixer.CORPUS_MAX_SIZE)
-        mm = MetadataModel(db, cat_tree)
+        mm = MetadataModel(meta_db=db, category_tree=cat_tree, id_attr=corpus_info.metadata.id_attr.replace('.', '_'))
         corpus_items = mm.solve()
 
         if corpus_items.size_assembled > 0:
             variables = map(lambda item: item[0],
                             filter(lambda item: item[1] > 0,
-                                   [x for x in enumerate(corpus_items.variables, 1)]))
-            opus_ids = self._get_opus_ids(db, variables)
+                                   [x for x in enumerate(corpus_items.variables)]))
+            opus_ids = mm.translate_vars_to_doc_ids(variables)
             ans = {}
             ans.update(self._calculate_real_sizes(cat_tree, corpus_items.category_sizes, corpus_items.size_assembled))
             ans['ids'] = opus_ids,

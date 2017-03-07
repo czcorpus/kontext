@@ -205,8 +205,12 @@ class CategoryTree(object):
             category_size = self._get_category_size(node.metadata_condition)
             node.size = category_size
 
-        sql = 'SELECT SUM(%s) FROM item WHERE corpus_id = ? ' % self._db.count_col
-        self._db.execute(sql, (self._db.corpus_id,))
+        sql = 'SELECT SUM(m1.{0}) FROM item AS m1 '.format(self._db.count_col)
+        args = []
+        sql, args = self._db.append_aligned_corp_sql(sql, args)
+        sql += ' WHERE m1.corpus_id = ?'
+        args.append(self._db.corpus_id)
+        self._db.execute(sql, args)
         max_available = self._db.fetchone()[0]
         if not max_available:
             raise CategoryTreeException('Failed to initialize bounds')
