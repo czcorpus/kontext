@@ -1286,7 +1286,10 @@ class Kontext(Controller):
                 r = app.AsyncResult(at.ident)
                 at.status = r.status
                 if at.status == 'FAILURE':
-                    at.error = unicode(r.result)
+                    if hasattr(r.result, 'message'):
+                        at.error = r.result.message
+                    else:
+                        at.error = str(r.result)
             self._set_async_tasks(at_list)
             return {'data': [d.to_dict() for d in at_list]}
         else:

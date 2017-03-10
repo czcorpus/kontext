@@ -31,6 +31,10 @@ class CategoryTreeNode(object):
         self.computed_bounds = None
         self.children = []
 
+    def __repr__(self):
+        return 'CategoryTreeNode(id: {0}, parent: {1}, ratio: {2}, metadata: {3}, size: {4})'.format(
+            self.node_id, self.parent_id, self.ratio, self.metadata_condition, self.size)
+
 
 class ExpressionJoin(object):
 
@@ -202,8 +206,7 @@ class CategoryTree(object):
     def initialize_bounds(self):
         for i in range(1, len(self.category_list)):
             node = self._get_node_by_id(self.root_node, i)
-            category_size = self._get_category_size(node.metadata_condition)
-            node.size = category_size
+            node.size = self._get_category_size(node.metadata_condition)
 
         sql = 'SELECT SUM(m1.{0}) FROM item AS m1 '.format(self._db.count_col)
         args = []
@@ -226,9 +229,15 @@ class CategoryTree(object):
         arguments:
         mc -- A list of metadata sql conditions that determines if texts belongs to this category
         """
-        args = [expr.value for subl in mc for expr in subl] + [self._db.corpus_id]
-        sql_items = [u'%s %s ?' % (expr.attr, expr.op) for subl in mc for expr in subl]
-        self._db.execute(u'SELECT SUM(%s) FROM item WHERE %s AND corpus_id = ?' % (
-            self._db.count_col, ' AND '.join(sql_items),), args)
+        sql = u'SELECT SUM(m1.{0}) FROM item as m1'.format(self._db.count_col)
+        args = []
+
+        sql, args = self._db.append_aligned_corp_sql(sql, args)
+
+        where_items = [u'm1.{0} {1} ?'.format(expr.attr, expr.op) for subl in mc for expr in subl]
+        sql += u' WHERE {0} AND m1.corpus_id = ?'.format(u' AND '.join(where_items))
+        args += [expr.value for subl in mc for expr in subl]
+        args.append(self._db.corpus_id)
+        self._db.execute(sql, args)
         size = self._db.fetchone()[0]
         return size if size is not None else 0

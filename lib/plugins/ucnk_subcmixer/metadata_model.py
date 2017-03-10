@@ -21,7 +21,8 @@ import pulp
 
 class CorpusComposition(object):
 
-    def __init__(self, variables, size_assembled, category_sizes, used_bounds, num_texts):
+    def __init__(self, status, variables, size_assembled, category_sizes, used_bounds, num_texts=None):
+        self.status = status
         self.variables = variables
         self.size_assembled = size_assembled
         self.category_sizes = category_sizes
@@ -29,8 +30,8 @@ class CorpusComposition(object):
         self.used_bounds = [np.round(b) for b in used_bounds]
 
     def __repr__(self):
-        return 'CorpusComposition(size: %s, num_texts: %s, num_vars: %s)' % (
-            self.size_assembled, self.num_texts, len(self.variables)
+        return 'CorpusComposition(status: %s, size: %s, num_texts: %s, num_vars: %s)' % (
+            self.status, self.size_assembled, self.num_texts, len(self.variables)
             if self.variables is not None else None)
 
 
@@ -51,16 +52,26 @@ class MetadataModel:
         self._id_attr = id_attr
 
         self.text_sizes, self._id_map = self._get_text_sizes()
+        # text_sizes and _id_map both contain all the documents from the corpus
+        # no matter whether they have matching aligned counterparts
         self.num_texts = len(self.text_sizes)
         self.b = [0] * (self.c_tree.num_categories - 1)
         self.A = np.zeros((self.c_tree.num_categories, self.num_texts))
-        self._init_ab(self.c_tree.root_node)
+        used_ids = set()
+        self._init_ab(self.c_tree.root_node, used_ids)
+        # for items without aligned counterparts we create
+        # conditions fulfillable only for x[i] = 0
+        self._init_ab_nonalign(used_ids)
 
     def _get_text_sizes(self):
         """
-        List all the texts matching main corpus and optional
-        aligned corpora. This will be the base for the 'A'
-        matrix in the optimization problem.
+        List all the texts matching main corpus. This will be the
+        base for the 'A' matrix in the optimization problem.
+        In case we work with aligned corpora we still want
+        the same result here as the non-aligned items from
+        the primary corpus will not be selected in
+        _init_ab() due to applied self JOIN
+        (append_aligned_corp_sql())
 
         Also generate a map "db_ID -> row index" to be able
         to work with db-fetched subsets of the texts and
@@ -68,56 +79,58 @@ class MetadataModel:
         result a record has a different index then in
         all the records list).
         """
-        sql = 'SELECT m1.{cc}, m1.{item_id} FROM {tn} AS m1 '.format(cc=self._db.count_col,
-                                                                     item_id=self._id_attr, tn=self.c_tree.table_name)
+        sql = 'SELECT m1.id, m1.{cc} FROM {tn} AS m1 '.format(cc=self._db.count_col, tn=self.c_tree.table_name)
         args = []
-        sql, args = self._db.append_aligned_corp_sql(sql, args)
         sql += ' WHERE m1.corpus_id = ? ORDER BY m1.id'
         args.append(self._db.corpus_id)
         sizes = []
         id_map = {}
         i = 0
         for row in self._db.execute(sql, args):
-            sizes.append(row[0])
-            id_map[row[1]] = i
+            sizes.append(row[1])
+            id_map[row[0]] = i
             i += 1
         return sizes, id_map
 
-    def _init_ab(self, node):
+    def _init_ab_nonalign(self, used_ids):
+        # Now we process items with no aligned counterparts.
+        # In this case we must define a condition which will be
+        # fulfilled iff X[i] == 0
+        for k, v in self._id_map.items():
+            if k not in used_ids:
+                for i in range(1, len(self.b)):
+                    self.A[i][v] = self.b[i] * 2 if self.b[i] > 0 else 10000
+
+    def _init_ab(self, node, used_ids):
         """
         Initialization method for coefficient matrix (A) and vector of bounds (b)
         Recursively traverses all nodes of given categoryTree starting from its root.
         Each node is processed in order to generate one inequality constraint.
 
-        :param node: currently processed node of the categoryTree
+        args:
+        node -- currently processed node of the categoryTree
+        used_ids -- a set of ids used in previous nodes
         """
         if node.metadata_condition is not None:
-            sql_items = [u'm1.%s %s ?' % (mc.attr, mc.op) for subl in node.metadata_condition for mc in subl]
+            sql_items = [u'm1.{0} {1} ?'.format(mc.attr, mc.op) for subl in node.metadata_condition for mc in subl]
             sql_args = []
-            sql = u'SELECT m1.{id_attr}, m1.{cc} FROM {tn} AS m1 '.format(
-                    id_attr=self._id_attr, cc=self._db.count_col, tn=self.c_tree.table_name)
+            sql = u'SELECT m1.id, m1.{cc} FROM {tn} AS m1 '.format(cc=self._db.count_col,
+                                                                   tn=self.c_tree.table_name)
 
             sql, sql_args = self._db.append_aligned_corp_sql(sql, sql_args)
 
             sql += u' WHERE {where} AND m1.corpus_id = ?'.format(where=u' AND '.join(sql_items))
-            sql_args += [mc.value for subl in node.metadata_condition for mc in subl]
+            sql_args += [mc.value for subl in node.metadata_condition for mc in subl]  # 'WHERE' args
             sql_args.append(self._db.corpus_id)
-
-            for row in self._db.execute(sql, sql_args):
+            self._db.execute(sql, sql_args)
+            for row in self._db.fetchall():
                 self.A[node.node_id - 1][self._id_map[row[0]]] = row[1]
+                used_ids.add(row[0])
             self.b[node.node_id - 1] = node.size
 
         if len(node.children) > 0:
             for child in node.children:
-                self._init_ab(child)
-
-    def translate_vars_to_doc_ids(self, vars):
-        """
-        Transform matrix 'A' row indices back to
-        database row identifiers.
-        """
-        tmp = dict((v, k) for k, v in self._id_map.items())
-        return [tmp[i] for i in vars]
+                self._init_ab(child, used_ids)
 
     def solve(self):
         """
@@ -142,12 +155,13 @@ class MetadataModel:
             condition = pulp.lpSum([self.A[i][j] * x[j] for j in range(self.num_texts)]) <= self.b[i]
             lp_prob += condition, label
 
-        lp_prob.solve()
+        stat = lp_prob.solve()
 
         variables = [0] * self.num_texts
-        # kind of ugly
+        # transform Pulp's variables (x_[number]) back to
+        # the indices we need
         for v in lp_prob.variables():
-            if v.name == "__dummy":
+            if v.name == '__dummy':
                 continue
             i = int(v.name[2:len(v.name)])
             variables[i] = np.round(v.varValue, decimals=0)
@@ -158,7 +172,8 @@ class MetadataModel:
             category_sizes.append(cat_size)
         size_assembled = self._get_assembled_size(variables)
 
-        return CorpusComposition(variables, size_assembled, category_sizes, self.b, sum(variables))
+        return CorpusComposition(status=pulp.LpStatus[stat], variables=variables, size_assembled=size_assembled,
+                                 category_sizes=category_sizes, used_bounds=self.b, num_texts=sum(variables))
 
     def _get_assembled_size(self, results):
         return np.dot(results, self.text_sizes)
@@ -166,5 +181,3 @@ class MetadataModel:
     def _get_category_size(self, results, cat_id):
         category_sizes = self.A[cat_id][:]
         return np.dot(results, category_sizes)
-
-
