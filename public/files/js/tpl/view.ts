@@ -99,6 +99,7 @@ type LineGroupChartData = Array<{group:string; count:number}>;
 
 type LineGroupStats = {[groupId:number]:number};
 
+
 /**
  * This is the concordance viewing and operating model with
  * all attached subsequent form components (filters, sorting,...)
@@ -1087,9 +1088,9 @@ export function init(conf):ViewPage {
             layoutModel,
             layoutModel.dispatcher,
             stores.lineViewStore,
-            conclines.openStorage(()=>{}),
-            'simple'
+            conclines.openStorage(()=>{})
     );
+    stores.lineSelectionStore.registerQuery(layoutModel.getConf<Array<string>>('compiledQuery'));
     stores.concDetailStore = new ConcDetailStore(
         layoutModel,
         layoutModel.dispatcher,
