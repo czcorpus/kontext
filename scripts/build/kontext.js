@@ -268,4 +268,9 @@
         });
     }
 
+    module.exports.minifyJSONFile = function (srcPath, dstPath) {
+        let data = fs.readFileSync(srcPath);
+        fs.writeFileSync(dstPath, JSON.stringify(JSON.parse(data), null, ''));
+    }
+
 }(module));

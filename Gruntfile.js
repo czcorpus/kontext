@@ -259,6 +259,11 @@
                 production: {
                     targetFile: './public/files/js/optimized/translations.js'
                 }
+            },
+            keymaps: {
+                any: {
+                    targetFile: './public/files/misc/kb-layouts.min.json'
+                }
             }
         });
 
@@ -267,21 +272,25 @@
             kontext.mergeTranslations('./public', this.data.targetFile);
         });
 
+        grunt.registerMultiTask('keymaps', function () {
+            kontext.minifyJSONFile('./scripts/build/kb-layouts.json', this.data.targetFile);
+        });
+
         // generates development-ready project (i.e. no minimizations/optimizations)
         grunt.registerTask('devel', ['clean:all', 'less:devel', 'exec:cql_grammar',
-                'ts:devel', 'babel', 'copy:dummyCompile', 'copy:devel',
+                'keymaps:any', 'ts:devel', 'babel', 'copy:dummyCompile', 'copy:devel',
                 'requirejs:vendor', 'translations:devel', 'clean:cleanup', 'exec:tmpl']);
 
         // regenerates JavaScript files for development-ready project (i.e. no min./optimizations
         // and no Cheetah templates compiled)
         grunt.registerTask('develjs', ['clean:jsKeepVendor', 'less:devel', 'exec:cql_grammar',
-                'ts:devel', 'babel', 'copy:dummyCompile',
+                'keymaps:any', 'ts:devel', 'babel', 'copy:dummyCompile',
                 'copy:dummyOptimize', 'translations:devel', 'clean:cleanup']);
 
         // generates production-ready project with additional optimization of JavaScript files
         // (RequireJS optimizer)
         grunt.registerTask('production', ['clean:all', 'less', 'exec:cql_grammar',
-                'ts:production', 'babel', 'copy:dummyCompile',
+                'keymaps:any', 'ts:production', 'babel', 'copy:dummyCompile',
                 'uglify:compiled', 'copy:preMinified',
                 'translations:production', 'requirejs:production',
                 'clean:production', 'exec:tmpl']);

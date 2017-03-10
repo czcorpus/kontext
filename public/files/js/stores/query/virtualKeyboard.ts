@@ -78,7 +78,7 @@ export class VirtualKeyboardStore extends SimplePageStore {
                 case 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS':
                     self.pageModel.ajax<VirtualKeyboardLayouts>(
                         'GET',
-                        self.pageModel.createStaticUrl('misc/kb-layouts.json'),
+                        self.pageModel.createStaticUrl('misc/kb-layouts.min.json'),
                         {}
                     ).then(
                         (data) => {
