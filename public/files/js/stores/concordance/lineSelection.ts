@@ -24,10 +24,10 @@
 
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
-import conclines = require('../../conclines');
-import tplDocument = require('../../tpl/document');
+import {ConcLinesStorage} from '../../conclines';
+import {PageModel} from '../../tpl/document';
 import {ConcLineStore} from './lines';
-import RSVP = require('vendor/rsvp');
+import * as RSVP from 'vendor/rsvp';
 
 
 interface ReenableEditResponse extends Kontext.AjaxConcResponse {
@@ -50,11 +50,11 @@ export class LineSelectionStore extends SimplePageStore {
 
     static FILTER_POSITIVE = 'p';
 
-    private layoutModel:tplDocument.PageModel;
+    private layoutModel:PageModel;
 
     private mode:string;
 
-    private clStorage:conclines.ConcLinesStorage;
+    private clStorage:ConcLinesStorage;
 
     private actionFinishHandlers:Array<()=>void>;
 
@@ -64,8 +64,8 @@ export class LineSelectionStore extends SimplePageStore {
 
     private maxGroupId:number;
 
-    constructor(layoutModel:tplDocument.PageModel, dispatcher:Kontext.FluxDispatcher,
-            concLineStore:ConcLineStore, clStorage:conclines.ConcLinesStorage, mode:string) {
+    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
+            concLineStore:ConcLineStore, clStorage:ConcLinesStorage) {
         super(dispatcher);
         let self = this;
         this.layoutModel = layoutModel;
@@ -386,6 +386,15 @@ export class LineSelectionStore extends SimplePageStore {
         this.finishAjaxActionWithRedirect(prom);
     }
 
+    private queryChecksum(q:string):number {
+        let cc = 0;
+        for(let i = 0; i < q.length; i += 1) {
+            cc = (cc << 5) - cc + q.charCodeAt(i);
+            cc &= cc;
+        }
+        return cc;
+    }
+
     private reenableEdit():RSVP.Promise<MultiDict> {
         return this.layoutModel.ajax<ReenableEditResponse>(
             'POST',
@@ -398,6 +407,7 @@ export class LineSelectionStore extends SimplePageStore {
 
         ).then<MultiDict>(
             (data) => {
+                this.registerQuery(data.Q);
                 this.importData(data.selection);
                 this.updateGlobalArgs(data);
                 return this.concLineStore.reloadPage();
@@ -422,6 +432,15 @@ export class LineSelectionStore extends SimplePageStore {
             }
         );
         this.finishAjaxActionWithRedirect(prom);
+    }
+
+    /**
+     * Pair the store with a concrete query. This ensures
+     * that visiting a different query view will reset
+     * the selection.
+     */
+    registerQuery(query:Array<string>):void {
+        this.clStorage.init(this.queryChecksum(query.join('')));
     }
 
     addActionFinishHandler(fn:()=>void):void {
@@ -482,10 +501,8 @@ export class LineSelectionStore extends SimplePageStore {
     }
 
     private importData(data:Array<[number, number, number]>):void {
-        let self = this;
-        this.clear();
         data.forEach((item) => {
-            self.addLine(String(item[0]), item[1], item[2]);
+            this.addLine(String(item[0]), item[1], item[2]);
         });
         this.mode = this.clStorage.getMode();
         this.clStorage.serialize();

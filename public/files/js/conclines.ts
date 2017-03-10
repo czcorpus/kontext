@@ -18,14 +18,14 @@
 
 
 
-let accessKey = 'concLines';
+const accessKey = 'concLines';
+const queryKey = '__query__';
 
 /**
  * Loads all the selection data from local storage.
  * If nothing is found then new entry is created
  *
-    * @returns {*}
-    */
+ */
 function loadAll() {
     var data;
 
@@ -44,17 +44,14 @@ function loadAll() {
  * browser's sessionStorage. Individual changes (via addLine(), removeLine())
  * are not stored immediately. It is up to programmer to use method serialize()
  * (e.g. using window's unload event) to make changes session-permanent.
- *
-    * @constructor
-    * @param {function} [errorHandler] error handler with signature fn(error), 'this' refers to current ConcLinesStorage
-    */
+ */
 export class ConcLinesStorage {
 
     /**
      * Selected lines information. Encoding is as follows:
      * [kwic_token_id, [line_number, ]]
      */
-    data:{[key:string]:Array<number>};
+    data:{[key:string]:[number, number]};
 
     errorHandler:any; // TODO type
 
@@ -63,6 +60,14 @@ export class ConcLinesStorage {
     constructor(errorHandler) {
         this.data = loadAll();
         this.errorHandler = errorHandler;
+    }
+
+    init(queryId:number):void {
+        if (this.data[queryKey] && this.data[queryKey][0] !== queryId) {
+            this.clear();
+        }
+        this.data[queryKey] = [queryId, -1];
+        this.serialize();
     }
 
     /**
@@ -101,20 +106,26 @@ export class ConcLinesStorage {
         return this.data[id] || null;
     }
 
+    private iterateItems(fn:(ident:string, value:[number, number])=>boolean):void {
+        for (let p in this.data) {
+            if (this.data.hasOwnProperty(p) && p !== queryKey) {
+                if (!fn(p, this.data[p])) {
+                    break;
+                }
+            }
+        }
+    }
+
     /**
      * Returns all the selected lines. Each line
      * is encoded like this: [kwic_token_id, kwic_len, line_number, category].
      */
     getAll():any {
-        let ans = [];
-        let item;
-
-        for (let p in this.data) {
-            if (this.data.hasOwnProperty(p)) {
-                item = this.data[p];
-                ans.push([parseInt(p, 10)].concat(item.slice(0)));
-            }
-        }
+        const ans = [];
+        this.iterateItems((p, val) => {
+            ans.push([parseInt(p, 10)].concat(val.slice(0)));
+            return true;
+        });
         return ans;
     }
 
@@ -135,46 +146,43 @@ export class ConcLinesStorage {
         let total = 0;
 
         if (!Object.keys) {  // let IE8 and his older friends suffer
-            for (let p in this.data) {
-                if (this.data.hasOwnProperty(p)) {
-                    total += 1;
-                }
-            }
+            this.iterateItems((p, val) => {
+                total += 1;
+                return true;
+            });
 
         } else {
             total = Object.keys(this.data).length;
+            if (this.data.hasOwnProperty(queryKey)) {
+                total -= 1;
+            }
         }
         return total;
     }
 
     getMode():string {
-        for (let p in this.data) {
-            if (this.data.hasOwnProperty(p)) {
-                if (this.data[p][1] != null) {
-                    return 'groups';
-
-                } else {
-                    return 'simple';
-                }
+        let ans = 'simple';
+        this.iterateItems((p, val) => {
+            if (val[1] != null) {
+                ans = 'groups';
+                return false;
             }
-        }
-        return 'simple';  // default mode
+        });
+        return ans;
     }
 
     setMode(mode:string):void {
         if (mode === 'simple') {
-            for (let p in this.data) {
-                if (this.data.hasOwnProperty(p)) {
-                    this.data[p][1] = null;
-                }
-            }
+            this.iterateItems((p, _) => {
+                this.data[p][1] = null;
+                return true;
+            });
 
         } else if (mode === 'groups') {
-            for (let p in this.data) {
-                if (this.data.hasOwnProperty(p)) {
-                    this.data[p][1] = ConcLinesStorage.DEFAULT_GROUP_ID;
-                }
-            }
+            this.iterateItems((p, _) => {
+                this.data[p][1] = ConcLinesStorage.DEFAULT_GROUP_ID;
+                return true;
+            });
         }
     }
 
