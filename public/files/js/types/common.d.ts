@@ -92,7 +92,6 @@ declare module Kontext {
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date, timeFormat?:number):string;
-        applySelectAll(elm:HTMLElement, context:HTMLElement);
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         exportMixins(...mixins:any[]):any[];

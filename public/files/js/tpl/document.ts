@@ -488,57 +488,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.messageStore.addMessage(msgType, outMsg, onClose);
     }
 
-    /**
-     * @param {HTMLElement|String|jQuery} elm
-     * @param {String|jQuery} context checkbox context selector (parent element or list of checkboxes)
-     */
-    applySelectAll(elm, context):void {
-        const self = this;
-        const jqElm = $(elm);
-        const jqContext = $(context);
-        let jqCheckboxes;
-        let updateButtonStatus;
-
-        if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
-            jqCheckboxes = jqContext.find('input[type="checkbox"]:not(.select-all):not(:disabled)');
-
-        } else {
-            jqCheckboxes = jqContext;
-        }
-
-        updateButtonStatus = function () {
-            let numChecked = jqCheckboxes.filter(':checked').length;
-
-            if (jqCheckboxes.length > numChecked) {
-                self.toggleSelectAllTrigger(elm, '1');
-
-            } else {
-                self.toggleSelectAllTrigger(elm, '2');
-            }
-        };
-
-        jqCheckboxes.on('click', updateButtonStatus);
-        updateButtonStatus();
-
-        jqElm.off('click');
-        jqElm.on('click', function (event) {
-            const evtTarget = event.target;
-
-            if ($(evtTarget).attr('data-status') === '1') {
-                jqCheckboxes.each(function () {
-                    this.checked = true;
-                });
-                self.toggleSelectAllTrigger(<HTMLInputElement>evtTarget);
-
-            } else if ($(evtTarget).attr('data-status') === '2') {
-                jqCheckboxes.each(function () {
-                    this.checked = false;
-                });
-                self.toggleSelectAllTrigger(<HTMLInputElement>evtTarget);
-            }
-        });
-    }
-
     bindLangSwitch():void {
         // Footer's language switch
         $('#switch-language-box a').each(function () {
@@ -999,10 +948,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     formatDate(d:Date, timeFormat:number=0):string {
         return this.pageModel.formatDate(d, timeFormat);
-    }
-
-    applySelectAll(elm, context) {
-        this.pageModel.applySelectAll(elm, context);
     }
 
     userIsAnonymous():boolean {
