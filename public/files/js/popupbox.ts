@@ -590,8 +590,7 @@ export function abbr(context?:string|HTMLElement|JQuery):void {
             let supElm = $(window.document.createElement('sup'));
             $(this).after(supElm);
             let linkElm = $('<a class="context-help"><img class="over-img" ' +
-                'src="' + mixins.createStaticUrl('img/question-mark.svg') + '" ' +
-                'data-alt-img="' + mixins.createStaticUrl('img/question-mark_s.svg') + '" /></a>');
+                'src="' + mixins.createStaticUrl('img/question-mark.svg') + '" /></a>');
             bind(linkElm, $(this).attr('title'), {calculatePosition : true});
             $(this).attr('title', null);
             supElm.append(linkElm);

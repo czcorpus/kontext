@@ -678,7 +678,6 @@ class FavoritesTab implements WidgetTab {
             + 'title="' + this.pageModel.translate('defaultCorparch__click_to_unlock_removal') + '" '
             + 'alt="' + this.pageModel.translate('defaultCorparch__click_to_unlock_removal') + '" '
             + 'src="' + this.pageModel.createStaticUrl('img/config-icon_16x16.png') + '" '
-            + 'data-alt-img="' + this.pageModel.createStaticUrl('img/config-icon_16x16_s.png') + '" '
             + ' />'
             + '</th></tr>');
         $(this.tablesWrapper).append(this.wrapperFav);
@@ -826,7 +825,6 @@ class FavoritesTab implements WidgetTab {
                         + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
                         + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
                         + 'src="' + self.pageModel.createStaticUrl('img/close-icon.svg') + '" '
-                        + 'data-alt-img="' + self.pageModel.createStaticUrl('img/close-icon_s.svg') + '" />'
                         + '</td></tr>');
                 }
             });

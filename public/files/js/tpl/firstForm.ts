@@ -332,15 +332,12 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 }
 
 
-export function init(conf:Kontext.Conf):FirstFormPage {
-    let layoutModel = new PageModel(conf);
-    let clStorage:ConcLinesStorage = openStorage((err) => {
+export function init(conf:Kontext.Conf):void {
+    const layoutModel = new PageModel(conf);
+    const clStorage:ConcLinesStorage = openStorage((err) => {
         layoutModel.showMessage('error', err);
     });
     clStorage.clear();
-    let pageModel = new FirstFormPage(layoutModel, clStorage);
+    const pageModel = new FirstFormPage(layoutModel, clStorage);
     pageModel.init();
-
-    layoutModel.mouseOverImages();
-    return pageModel;
 }

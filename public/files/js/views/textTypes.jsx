@@ -124,10 +124,9 @@ export function init(dispatcher, mixins, textTypesStore) {
                                 <option value="strict">{this.translate('query__tt_strict_interval')}</option>
                             </select>
                             <a className="context-help">
-                                <img data-alt-img="../files/img/question-mark_s.svg"
-                                    src="../files/img/question-mark.svg"
-                                    className="over-img"
-                                    onClick={this._helpClickHandler} />
+                                <img src="../files/img/question-mark.svg"
+                                     className="over-img"
+                                     onClick={this._helpClickHandler} />
                             </a>
                             {this.state.showHelp
                                 ? <layoutViews.PopupBox onCloseClick={this._helpCloseHandler}

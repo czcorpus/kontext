@@ -359,7 +359,6 @@ declare module Kontext {
 
     export interface IConcArgsHandler {
         getConcArgs():IMultiDict;
-        setConcArg(name:string, value:any);
         replaceConcArg(name:string, values:Array<string>):void;
 
         /**

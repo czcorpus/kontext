@@ -184,16 +184,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
     }
 
-    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
-        if (!this.confChangeHandlers.has(key)) {
-            this.confChangeHandlers = this.confChangeHandlers.set(key, Immutable.List<(v:any)=>void>());
-        }
-        this.confChangeHandlers = this.confChangeHandlers.set(
-            key,
-            this.confChangeHandlers.get(key).push(handler)
-        );
-    }
-
     /**
      * Returns layout stores (i.e. the stores used virtually on any page)
      */
@@ -267,34 +257,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     unmountReactComponent(element:HTMLElement):boolean {
         return ReactDOM.unmountComponentAtNode(element);
-    }
-
-    /**
-     * @param selectAllElm
-     * @param forceStatus
-     */
-    private toggleSelectAllTrigger(selectAllElm:HTMLInputElement, forceStatus?:string) {
-        if (!$(selectAllElm).attr('data-status')) {
-            $(selectAllElm).attr('data-status', '1');
-        }
-        let currValue = $(selectAllElm).attr('data-status');
-        let newValue;
-        if (forceStatus) {
-            newValue = forceStatus;
-
-        } else if (currValue === '1') {
-            newValue = '2';
-
-        } else if (currValue === '2') {
-            newValue = '1';
-        }
-
-        if (currValue !== newValue) {
-            $(selectAllElm).attr('data-status', newValue);
-            if (newValue === '1') {
-                selectAllElm.checked = false;
-            }
-        }
     }
 
     /**
@@ -488,8 +450,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.messageStore.addMessage(msgType, outMsg, onClose);
     }
 
+    /**
+     * Initialize language switching widget located in footer
+     */
     bindLangSwitch():void {
-        // Footer's language switch
+        //
         $('#switch-language-box a').each(function () {
             let lang = $(this).data('lang');
             let form = $('#language-switch-form');
@@ -501,6 +466,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         });
     }
 
+    /**
+     *
+     */
     timeoutMessages() {
         let timeout;
         let jqMessage = $('.message');
@@ -516,40 +484,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
     }
 
+    /**
+     *
+     */
     initNotifications() {
         this.renderReactComponent(
             this.layoutViews.Messages, $('#content .messages-mount').get(0));
 
         (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
             this.messageStore.addMessage(msg[0], msg[1], null);
-        });
-    }
-
-    mouseOverImages(context?) {
-        context = context || window.document;
-
-        $(context).find('.over-img').each(function () {
-            let tmp;
-            let activeElm;
-            let img = this;
-            let wrappingLink = $(img).closest('a');
-            if (wrappingLink.length > 0) {
-                activeElm = wrappingLink.get(0);
-
-            } else {
-                activeElm = img;
-            }
-            if ($(img).attr('data-alt-img')) {
-                $(activeElm).off('mouseover.overimg');
-                $(activeElm).on('mouseover.overimg', function () {
-                    tmp = $(img).attr('src');
-                    $(img).attr('src', $(img).attr('data-alt-img'));
-                });
-                $(activeElm).off('mouseout.overimg');
-                $(activeElm).on('mouseout.overimg', function () {
-                    $(img).attr('src', tmp);
-                });
-            }
         });
     }
 
@@ -566,20 +509,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             };
 
             $(this).replaceWith('<a href="' + findSignInUrl() + '">' + text + '</a>');
-        });
-    }
-
-    /**
-     *
-     */
-    externalHelpLinks() {
-        let self = this;
-
-        $('a.external-help').each(function () {
-            let href = $(this).attr('href');
-            let message = self.translate('global__more_info_at')
-                    + ' <a href="' + href + '" target="_blank">' + href + '</a>';
-            popupbox.bind(this, message, {});
         });
     }
 
@@ -639,18 +568,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * note: must preserve 'this'
-     */
-    createSmallAjaxLoader:()=>JQuery = () => {
-        const elm = window.document.createElement('img');
-        return $(elm)
-            .attr('src', this.createStaticUrl('img/ajax-loader-bar.gif'))
-            .attr('alt', this.translate('global__loading'))
-            .attr('title', this.translate('global__loading'))
-            .css({width: '16px', height: '11px'});
-    }
-
-    /**
      * Create a URL for a static resource (e.g. img/close-icon.svg)
      */
     createStaticUrl(path):string {
@@ -689,6 +606,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.conf['rootPath'] + path + (urlArgs ? '?' + urlArgs : '');
     }
 
+    /**
+     * Creates a temporary form with passed args and submits it
+     * via POST method.
+     *
+     * @param path
+     * @param args
+     */
     setLocationPost(path:string, args?:Array<[string,string]>):void {
         const body = window.document.getElementsByTagName('body')[0];
         const form = window.document.createElement('form');
@@ -722,10 +646,36 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }).join('&');
     }
 
+    /**
+     * Return page configuration item
+     *
+     * @param item
+     */
     getConf<T>(item:string):T {
         return this.conf[item];
     }
 
+    /**
+     * Register a handler triggered when configuration is
+     * changed via setConf(), replaceConcArg() functions.
+     *
+     * @param key
+     * @param handler
+     */
+    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
+        if (!this.confChangeHandlers.has(key)) {
+            this.confChangeHandlers = this.confChangeHandlers.set(key, Immutable.List<(v:any)=>void>());
+        }
+        this.confChangeHandlers = this.confChangeHandlers.set(
+            key,
+            this.confChangeHandlers.get(key).push(handler)
+        );
+    }
+
+    /**
+     * Set page configuration item. Setting an item
+     * triggers a configuration change event.
+     */
     setConf<T>(key:string, value:T):void {
         this.conf[key] = value;
         if (this.confChangeHandlers.has(key)) {
@@ -742,16 +692,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
     }
 
-    setConcArg(name:string, value:any) {
-        let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
-        tmp.set(name, value);
-        this.conf['currentArgs'] = tmp.items();
-    }
-
+    /**
+     *
+     * @param name
+     * @param values
+     */
     replaceConcArg(name:string, values:Array<string>):void {
         let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
         tmp.replace(name, values);
-        this.conf['currentArgs'] = tmp.items();
+        this.setConf('currentArgs', tmp.items());
     }
 
     /**
@@ -790,6 +739,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.encodeURLParameters(tmp);
     }
 
+    /**
+     * Export a new instance of PluginApi object
+     */
     pluginApi():PluginApi {
         return new PluginApi(this);
     }
@@ -804,10 +756,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         });
     }
 
+    /**
+     *
+     * @param name
+     */
     hasPlugin(name:string):boolean {
         return this.getConf<Array<string>>('activePlugins').indexOf(name) > -1;
     }
 
+    /**
+     *
+     */
     private initMainMenu():void {
         const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this,
                 this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
@@ -818,6 +777,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         );
     }
 
+    /**
+     *
+     */
     private initOverviewArea():void {
         const overviewViews = overviewAreaViewsInit(
             this.dispatcher,
@@ -836,7 +798,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     *
+     * Page layout initialization. Any concrete page should
+     * call this before it runs its own initialization.
+     * To prevent syncing issues, the page initialization
+     * should be chained to the returned promise.
      */
     init():RSVP.Promise<any> {
         return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
@@ -856,9 +821,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.initOverviewArea();
                 this.bindLangSwitch();
                 this.timeoutMessages();
-                this.mouseOverImages();
                 this.enhanceMessages();
-                this.externalHelpLinks();
                 this.initNotifications();
                 this.asyncTaskChecker.init();
 
