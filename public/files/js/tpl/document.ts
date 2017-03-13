@@ -115,7 +115,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     confChangeHandlers:Immutable.Map<string, Immutable.List<(v:any)=>void>>;
 
     /**
-     * Flux Dispatcher (currently not used across the app)
+     * Flux Dispatcher
      */
     dispatcher:Dispatcher<Kontext.DispatcherPayload>;
 
@@ -150,13 +150,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     /**
      * This is intended for React components to make them able register key
-     * events (e.g. the 'ESC' key).
+     * events (e.g. the 'ESC' key). But it is always a preferred approach
+     * to focus a suitable element and catch event via that.
      */
     private globalKeyHandlers:Immutable.List<(evt:Event)=>void>;
 
     /**
      *
-     * @param conf
+     * @param conf page configuration
      */
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
@@ -181,16 +182,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             this.getConf<any>('asyncTasks') || []
         );
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
-    }
-
-    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
-        if (!this.confChangeHandlers.has(key)) {
-            this.confChangeHandlers = this.confChangeHandlers.set(key, Immutable.List<(v:any)=>void>());
-        }
-        this.confChangeHandlers = this.confChangeHandlers.set(
-            key,
-            this.confChangeHandlers.get(key).push(handler)
-        );
     }
 
     /**
@@ -260,36 +251,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         ReactDOM.render(React.createElement(reactClass, props), target);
     }
 
+    /**
+     *
+     * @param element An element the component will be removed from
+     */
     unmountReactComponent(element:HTMLElement):boolean {
         return ReactDOM.unmountComponentAtNode(element);
-    }
-
-    /**
-     * @param selectAllElm
-     * @param forceStatus
-     */
-    private toggleSelectAllTrigger(selectAllElm:HTMLInputElement, forceStatus?:string) {
-        if (!$(selectAllElm).attr('data-status')) {
-            $(selectAllElm).attr('data-status', '1');
-        }
-        let currValue = $(selectAllElm).attr('data-status');
-        let newValue;
-        if (forceStatus) {
-            newValue = forceStatus;
-
-        } else if (currValue === '1') {
-            newValue = '2';
-
-        } else if (currValue === '2') {
-            newValue = '1';
-        }
-
-        if (currValue !== newValue) {
-            $(selectAllElm).attr('data-status', newValue);
-            if (newValue === '1') {
-                selectAllElm.checked = false;
-            }
-        }
     }
 
     /**
@@ -318,7 +285,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     *
+     * Register a function interested in a task status.
+     * Multiple functions can be set to listen a single
+     * task.
      */
     registerTask(task:Kontext.AsyncTaskInfo):void {
         this.asyncTaskChecker.registerTask(task);
@@ -482,58 +451,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * @param {HTMLElement|String|jQuery} elm
-     * @param {String|jQuery} context checkbox context selector (parent element or list of checkboxes)
+     * Initialize language switching widget located in footer
      */
-    applySelectAll(elm, context):void {
-        const self = this;
-        const jqElm = $(elm);
-        const jqContext = $(context);
-        let jqCheckboxes;
-        let updateButtonStatus;
-
-        if (jqContext.length === 1 && jqContext.get(0).nodeName !== 'INPUT') {
-            jqCheckboxes = jqContext.find('input[type="checkbox"]:not(.select-all):not(:disabled)');
-
-        } else {
-            jqCheckboxes = jqContext;
-        }
-
-        updateButtonStatus = function () {
-            let numChecked = jqCheckboxes.filter(':checked').length;
-
-            if (jqCheckboxes.length > numChecked) {
-                self.toggleSelectAllTrigger(elm, '1');
-
-            } else {
-                self.toggleSelectAllTrigger(elm, '2');
-            }
-        };
-
-        jqCheckboxes.on('click', updateButtonStatus);
-        updateButtonStatus();
-
-        jqElm.off('click');
-        jqElm.on('click', function (event) {
-            const evtTarget = event.target;
-
-            if ($(evtTarget).attr('data-status') === '1') {
-                jqCheckboxes.each(function () {
-                    this.checked = true;
-                });
-                self.toggleSelectAllTrigger(<HTMLInputElement>evtTarget);
-
-            } else if ($(evtTarget).attr('data-status') === '2') {
-                jqCheckboxes.each(function () {
-                    this.checked = false;
-                });
-                self.toggleSelectAllTrigger(<HTMLInputElement>evtTarget);
-            }
-        });
-    }
-
     bindLangSwitch():void {
-        // Footer's language switch
+        //
         $('#switch-language-box a').each(function () {
             let lang = $(this).data('lang');
             let form = $('#language-switch-form');
@@ -545,6 +466,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         });
     }
 
+    /**
+     *
+     */
     timeoutMessages() {
         let timeout;
         let jqMessage = $('.message');
@@ -560,40 +484,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
     }
 
+    /**
+     *
+     */
     initNotifications() {
         this.renderReactComponent(
             this.layoutViews.Messages, $('#content .messages-mount').get(0));
 
         (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
             this.messageStore.addMessage(msg[0], msg[1], null);
-        });
-    }
-
-    mouseOverImages(context?) {
-        context = context || window.document;
-
-        $(context).find('.over-img').each(function () {
-            let tmp;
-            let activeElm;
-            let img = this;
-            let wrappingLink = $(img).closest('a');
-            if (wrappingLink.length > 0) {
-                activeElm = wrappingLink.get(0);
-
-            } else {
-                activeElm = img;
-            }
-            if ($(img).attr('data-alt-img')) {
-                $(activeElm).off('mouseover.overimg');
-                $(activeElm).on('mouseover.overimg', function () {
-                    tmp = $(img).attr('src');
-                    $(img).attr('src', $(img).attr('data-alt-img'));
-                });
-                $(activeElm).off('mouseout.overimg');
-                $(activeElm).on('mouseout.overimg', function () {
-                    $(img).attr('src', tmp);
-                });
-            }
         });
     }
 
@@ -616,40 +515,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     /**
      *
      */
-    externalHelpLinks() {
-        let self = this;
-
-        $('a.external-help').each(function () {
-            let href = $(this).attr('href');
-            let message = self.translate('global__more_info_at')
-                    + ' <a href="' + href + '" target="_blank">' + href + '</a>';
-            popupbox.bind(this, message, {});
-        });
-    }
-
-    /**
-     *
-     */
     reload():void {
         window.document.location.reload();
-    }
-
-    /**
-     * Creates unbound HTML tree containing message 'loading...'
-     *
-     * @returns {jQuery}
-     */
-    createAjaxLoader():JQuery {
-        let loader = $(window.document.createElement('div'));
-        loader
-            .addClass('ajax-loading-msg')
-            .css({
-                'bottom' : '50px',
-                'position' : 'fixed',
-                'left' : ($(window).width() / 2 - 50) + 'px'
-            })
-            .append('<span>' + this.translate('global__loading') + '</span>');
-        return loader;
     }
 
     /**
@@ -701,18 +568,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * note: must preserve 'this'
-     */
-    createSmallAjaxLoader:()=>JQuery = () => {
-        const elm = window.document.createElement('img');
-        return $(elm)
-            .attr('src', this.createStaticUrl('img/ajax-loader-bar.gif'))
-            .attr('alt', this.translate('global__loading'))
-            .attr('title', this.translate('global__loading'))
-            .css({width: '16px', height: '11px'});
-    }
-
-    /**
      * Create a URL for a static resource (e.g. img/close-icon.svg)
      */
     createStaticUrl(path):string {
@@ -751,6 +606,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.conf['rootPath'] + path + (urlArgs ? '?' + urlArgs : '');
     }
 
+    /**
+     * Creates a temporary form with passed args and submits it
+     * via POST method.
+     *
+     * @param path
+     * @param args
+     */
     setLocationPost(path:string, args?:Array<[string,string]>):void {
         const body = window.document.getElementsByTagName('body')[0];
         const form = window.document.createElement('form');
@@ -784,10 +646,36 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }).join('&');
     }
 
+    /**
+     * Return page configuration item
+     *
+     * @param item
+     */
     getConf<T>(item:string):T {
         return this.conf[item];
     }
 
+    /**
+     * Register a handler triggered when configuration is
+     * changed via setConf(), replaceConcArg() functions.
+     *
+     * @param key
+     * @param handler
+     */
+    addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
+        if (!this.confChangeHandlers.has(key)) {
+            this.confChangeHandlers = this.confChangeHandlers.set(key, Immutable.List<(v:any)=>void>());
+        }
+        this.confChangeHandlers = this.confChangeHandlers.set(
+            key,
+            this.confChangeHandlers.get(key).push(handler)
+        );
+    }
+
+    /**
+     * Set page configuration item. Setting an item
+     * triggers a configuration change event.
+     */
     setConf<T>(key:string, value:T):void {
         this.conf[key] = value;
         if (this.confChangeHandlers.has(key)) {
@@ -804,16 +692,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
     }
 
-    setConcArg(name:string, value:any) {
-        let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
-        tmp.set(name, value);
-        this.conf['currentArgs'] = tmp.items();
-    }
-
+    /**
+     *
+     * @param name
+     * @param values
+     */
     replaceConcArg(name:string, values:Array<string>):void {
         let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
         tmp.replace(name, values);
-        this.conf['currentArgs'] = tmp.items();
+        this.setConf('currentArgs', tmp.items());
     }
 
     /**
@@ -852,6 +739,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.encodeURLParameters(tmp);
     }
 
+    /**
+     * Export a new instance of PluginApi object
+     */
     pluginApi():PluginApi {
         return new PluginApi(this);
     }
@@ -866,10 +756,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         });
     }
 
+    /**
+     *
+     * @param name
+     */
     hasPlugin(name:string):boolean {
         return this.getConf<Array<string>>('activePlugins').indexOf(name) > -1;
     }
 
+    /**
+     *
+     */
     private initMainMenu():void {
         const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this,
                 this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
@@ -880,6 +777,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         );
     }
 
+    /**
+     *
+     */
     private initOverviewArea():void {
         const overviewViews = overviewAreaViewsInit(
             this.dispatcher,
@@ -898,7 +798,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     *
+     * Page layout initialization. Any concrete page should
+     * call this before it runs its own initialization.
+     * To prevent syncing issues, the page initialization
+     * should be chained to the returned promise.
      */
     init():RSVP.Promise<any> {
         return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
@@ -918,9 +821,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.initOverviewArea();
                 this.bindLangSwitch();
                 this.timeoutMessages();
-                this.mouseOverImages();
                 this.enhanceMessages();
-                this.externalHelpLinks();
                 this.initNotifications();
                 this.asyncTaskChecker.init();
 
@@ -945,7 +846,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 }
 
 
-
+/**
+ * PluginApi exports some essential functions from PageModel
+ * to plug-ins while preventing them from accessing whole
+ * PageModel.
+ */
 export class PluginApi implements Kontext.PluginApi {
 
     pageModel:PageModel;
@@ -970,14 +875,6 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.ajax.call(this.pageModel, method, url, args, options);
     }
 
-    ajaxAnim() {
-        return this.pageModel.createAjaxLoader.apply(this.pageModel, arguments);
-    }
-
-    ajaxAnimSmall() {
-        return this.pageModel.createSmallAjaxLoader.apply(this.pageModel, arguments);
-    }
-
     showMessage(type, message, onClose) {
         return this.pageModel.showMessage(type, message, onClose);
     }
@@ -992,10 +889,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     formatDate(d:Date, timeFormat:number=0):string {
         return this.pageModel.formatDate(d, timeFormat);
-    }
-
-    applySelectAll(elm, context) {
-        this.pageModel.applySelectAll(elm, context);
     }
 
     userIsAnonymous():boolean {

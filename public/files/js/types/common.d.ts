@@ -86,13 +86,10 @@ declare module Kontext {
         createStaticUrl(path:string):string;
         createActionUrl(path:string, args?:Array<[string,string]>|IMultiDict):string;
         ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
-        ajaxAnim(): JQuery;
-        ajaxAnimSmall();
         showMessage(type:string, message:any, onClose?:()=>void);
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date, timeFormat?:number):string;
-        applySelectAll(elm:HTMLElement, context:HTMLElement);
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         exportMixins(...mixins:any[]):any[];
@@ -362,7 +359,6 @@ declare module Kontext {
 
     export interface IConcArgsHandler {
         getConcArgs():IMultiDict;
-        setConcArg(name:string, value:any);
         replaceConcArg(name:string, values:Array<string>):void;
 
         /**

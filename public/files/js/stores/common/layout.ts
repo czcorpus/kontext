@@ -53,7 +53,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
             default:
                 viewTime = baseInterval;
         }
-        console.log('viewTime: ', viewTime);
+
         this.messages.push({
             messageType: messageType,
             messageText: messageText,

@@ -193,7 +193,7 @@ export class RangeSelector {
 
     /**
      * @param attribArgs Custom attributes overwriting the implicit ones plug-in collects itself
-     * @param ajaxAnimation An animation object notyfying that the operation is in progress
+     * @param alignedCorpnames Optional list of aligned corpora
      */
     loadData(attribArgs:{[key:string]:any}, alignedCorpnames?:Array<string>):RSVP.Promise<any> { // TODO type
         let self = this;

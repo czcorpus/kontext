@@ -63,11 +63,3 @@ export interface AttributesMap {
     //[attr: string]: AvailAttrValues;
 }
 
-/**
- *
- */
-export interface AjaxAnimation {
-    start(): void;
-    stop(): void;
-    animElm:HTMLElement;
-}
