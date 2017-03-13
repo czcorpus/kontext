@@ -349,6 +349,7 @@ declare module Kontext {
         items():Array<Array<string>>;
         toDict():{[key:string]:string};
         has(key:string):boolean;
+        size():number;
     }
 
     export interface IURLHandler {

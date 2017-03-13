@@ -871,6 +871,10 @@ export class QueryReplayStore extends SimplePageStore {
     editIsLocked():boolean {
         return this._editIsLocked;
     }
+
+    getNumOperations():number {
+        return this.currEncodedOperations.size;
+    }
 }
 
 

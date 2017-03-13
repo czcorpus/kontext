@@ -41,6 +41,7 @@ export function dictToPairs<T>(d:{[key:string]:T|Array<T>}):Array<[string, T]> {
     return ans;
 }
 
+
 /**
  * Parse a URL args string (k1=v1&k2=v2&...&kN=vN) into
  * a list of pairs [[k1, v1], [k2, v2],...,[kN, vN]]
@@ -127,6 +128,32 @@ export function getCaretPosition(inputElm) {
     return 0;
 }
 
+/**
+ * Update a general key-value object with an incoming one.
+ * The function does not modify its parameters and returns
+ * a new object with shallow copies of original values where
+ * applicable (objects).
+ *
+ * @param myProps target properties
+ * @param incomingProps incoming properties (these will rewrite
+ *        the target in case of a property collision)
+ */
+export function updateProps(myProps:Kontext.GeneralProps,
+        incomingProps:Kontext.GeneralProps):Kontext.GeneralProps {
+    const ans = {};
+    for (let p in myProps) {
+        if (myProps.hasOwnProperty(p)) {
+            ans[p] = myProps[p];
+        }
+    }
+    for (let p in incomingProps) {
+        if (incomingProps.hasOwnProperty(p)) {
+            ans[p] = incomingProps[p];
+        }
+    }
+    return ans;
+}
+
 
 /**
  * A dictionary which mimics Werkzeug's Multidict
@@ -156,6 +183,16 @@ export class MultiDict implements Kontext.IMultiDict {
                 this[k] = v;
             }
         }
+    }
+
+    size():number {
+        let ans = 0;
+        for (let p in this._data) {
+            if (this._data.hasOwnProperty(p)) {
+                ans += 1;
+            }
+        }
+        return ans;
     }
 
     getFirst(key:string):string {
@@ -240,13 +277,23 @@ export class MultiDict implements Kontext.IMultiDict {
     }
 }
 
+/**
+ * NullHistory is a fallback object to be used
+ * in browsers where HTML5 history is not available.
+ * (but the truth is, it won't help much anyway
+ * as many different issues remain unsolved in
+ * case of outdated browsers)
+ */
 export class NullHistory implements Kontext.IHistory {
     replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
     pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
     setOnPopState(fn:(event:{state: any})=>void):void {}
 }
 
-
+/**
+ * A simple wrapper around window.history object
+ * with more convenient API.
+ */
 export class History implements Kontext.IHistory {
 
     private h:Kontext.IURLHandler;
