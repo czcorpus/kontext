@@ -115,7 +115,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     confChangeHandlers:Immutable.Map<string, Immutable.List<(v:any)=>void>>;
 
     /**
-     * Flux Dispatcher (currently not used across the app)
+     * Flux Dispatcher
      */
     dispatcher:Dispatcher<Kontext.DispatcherPayload>;
 
@@ -150,13 +150,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     /**
      * This is intended for React components to make them able register key
-     * events (e.g. the 'ESC' key).
+     * events (e.g. the 'ESC' key). But it is always a preferred approach
+     * to focus a suitable element and catch event via that.
      */
     private globalKeyHandlers:Immutable.List<(evt:Event)=>void>;
 
     /**
      *
-     * @param conf
+     * @param conf page configuration
      */
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
@@ -260,6 +261,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         ReactDOM.render(React.createElement(reactClass, props), target);
     }
 
+    /**
+     *
+     * @param element An element the component will be removed from
+     */
     unmountReactComponent(element:HTMLElement):boolean {
         return ReactDOM.unmountComponentAtNode(element);
     }
@@ -318,7 +323,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     *
+     * Register a function interested in a task status.
+     * Multiple functions can be set to listen a single
+     * task.
      */
     registerTask(task:Kontext.AsyncTaskInfo):void {
         this.asyncTaskChecker.registerTask(task);
