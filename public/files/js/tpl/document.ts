@@ -591,24 +591,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * Creates unbound HTML tree containing message 'loading...'
-     *
-     * @returns {jQuery}
-     */
-    createAjaxLoader():JQuery {
-        let loader = $(window.document.createElement('div'));
-        loader
-            .addClass('ajax-loading-msg')
-            .css({
-                'bottom' : '50px',
-                'position' : 'fixed',
-                'left' : ($(window).width() / 2 - 50) + 'px'
-            })
-            .append('<span>' + this.translate('global__loading') + '</span>');
-        return loader;
-    }
-
-    /**
      *
      * @param msg
      * @returns {*}
@@ -901,7 +883,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 }
 
 
-
+/**
+ * PluginApi exports some essential functions from PageModel
+ * to plug-ins while preventing them from accessing whole
+ * PageModel.
+ */
 export class PluginApi implements Kontext.PluginApi {
 
     pageModel:PageModel;
@@ -924,14 +910,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     ajax<T>(method:string, url:string, args:any, options:Kontext.AjaxOptions):RSVP.Promise<T> {
         return this.pageModel.ajax.call(this.pageModel, method, url, args, options);
-    }
-
-    ajaxAnim() {
-        return this.pageModel.createAjaxLoader.apply(this.pageModel, arguments);
-    }
-
-    ajaxAnimSmall() {
-        return this.pageModel.createSmallAjaxLoader.apply(this.pageModel, arguments);
     }
 
     showMessage(type, message, onClose) {

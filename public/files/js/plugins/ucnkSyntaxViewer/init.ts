@@ -20,12 +20,29 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import $ = require('jquery');
-import RSVP = require('vendor/rsvp');
+import * as $ from 'jquery';
+import * as RSVP from 'vendor/rsvp';
 import {extended as initPopupboxLib, Api as PopupBoxApi, TooltipBox} from '../../popupbox';
 import {createGenerator} from './ucnkTreeView';
 
 
+function createAjaxLoader():JQuery {
+    let loader = $(window.document.createElement('div'));
+    loader
+        .addClass('ajax-loading-msg')
+        .css({
+            'bottom' : '50px',
+            'position' : 'fixed',
+            'left' : ($(window).width() / 2 - 50) + 'px'
+        })
+        .append('<span>' + this.translate('global__loading') + '</span>');
+    return loader;
+}
+
+
+/**
+ *
+ */
 class SyntaxTreeViewer {
 
     private pluginApi:Kontext.PluginApi;
@@ -80,7 +97,7 @@ class SyntaxTreeViewer {
         }
 
         return (box:TooltipBox, finalize:()=>void) => {
-            let ajaxAnim = this.pluginApi.ajaxAnim();
+            const ajaxAnim = createAjaxLoader();
             $('body').append(ajaxAnim);
 
             this.pluginApi.ajax(
