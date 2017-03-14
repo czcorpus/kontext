@@ -30,7 +30,7 @@
 
 import * as $ from 'jquery';
 import {PageModel} from './document';
-import {MultiDict, parseUrlArgs} from '../util';
+import {MultiDict, parseUrlArgs, updateProps} from '../util';
 import * as popupBox from '../popupbox';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
@@ -152,13 +152,11 @@ export class ViewPage {
     private viewOptionsViews:StructsAndAttrsViews;
 
     /**
-     * An action encoded as a fragment part of the current URL.
-     * This is used to open specific components after redirected
-     * from other pages (e.g. collocations moves user back to
-     * the concordance view due to main menu click).
+     *
+     * @param layoutModel
+     * @param stores
+     * @param hasLockedGroups
      */
-    private hashedAction:Kontext.DispatcherPayload;
-
     constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
         this.viewStores = stores;
@@ -173,27 +171,32 @@ export class ViewPage {
 
     private deserializeHashAction(v:string):Kontext.DispatcherPayload {
         const tmp = v.substr(1).split('/');
-        const args = new MultiDict(tmp[1] ? parseUrlArgs(tmp[1]) : []);
-        switch (tmp[0]) {
+        const args = tmp[1] ? new MultiDict(parseUrlArgs(tmp[1])) : undefined;
+        return this.createFormAction(tmp[0], args);
+    }
+
+    private createFormAction(actionName:string, args:Kontext.IMultiDict):Kontext.DispatcherPayload {
+        switch (actionName) {
             case 'filter':
                 return {
                     actionType: 'MAIN_MENU_SHOW_FILTER',
                     props: args.toDict()
                 };
             case 'sort':
+            case 'sortx':
                 return {
                     actionType: 'MAIN_MENU_SHOW_SORT',
-                    props: {}
+                    props: args.toDict()
                 };
             case 'sample':
                 return {
                     actionType: 'MAIN_MENU_SHOW_SAMPLE',
-                    props: {}
+                    props: args.toDict()
                 };
             case 'shuffle':
                 return {
                     actionType: 'MAIN_MENU_APPLY_SHUFFLE',
-                    props: {}
+                    props: args.toDict()
                 };
             case 'edit_op':
                 return {
@@ -205,6 +208,11 @@ export class ViewPage {
         }
     }
 
+    /**
+     *
+     * @param rootElm
+     * @param usePrevData
+     */
     showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
         const self = this;
 
@@ -395,41 +403,24 @@ export class ViewPage {
     }
 
     /**
-     * Fills in thousands separator ',' (comma) character into a number string
      *
-     * @param {string|number} nStr number string (/\d+(.\d*)?)
-     * @return {string} number string with thousands separated by the ',' (comma) character
      */
-    addCommas(nStr:string):string {
-        let x;
-        let x1;
-        let x2;
-        const rgx = /(\d+)(\d{3})/;
-
-        nStr += '';
-        x = nStr.split('.');
-        x1 = x[0];
-        x2 = x.length > 1 ? '.' + x[1] : '';
-        while (rgx.test(x1)) {
-            x1 = x1.replace(rgx, '$1' + ',' + '$2');
-        }
-        return x1 + x2;
-    }
-
-    /**
-     * @todo refactor this
-     */
-    private setupLineActions():void {
+    private setupHistoryOnPopState():void {
         // register event to load lines via ajax in case user hits back
         this.layoutModel.history.setOnPopState((event) => {
-            if (event.state && event.state['pagination']) {
-                this.layoutModel.dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_REVISIT_PAGE',
-                    props: {
-                        action: 'customPage',
-                        pageNum: event.state['pageNum']
-                    }
-                });
+            if (event.state) {
+                if (event.state['modalAction']) {
+                    this.layoutModel.dispatcher.dispatch(event.state['modalAction']);
+
+                } else if (event.state['pagination']) {
+                    this.layoutModel.dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_REVISIT_PAGE',
+                        props: {
+                            action: 'customPage',
+                            pageNum: event.state['pageNum']
+                        }
+                    });
+                }
             }
         });
     }
@@ -515,19 +506,57 @@ export class ViewPage {
      * guaranteed implicitly - e.g. in case the form was submitted via POST
      * method).
      */
-    private setStateUrl():void {
+    private updateHistory():void {
         if (window.location.hash) {
-            this.hashedAction = this.deserializeHashAction(window.location.hash);
+            const hashedAction = this.deserializeHashAction(window.location.hash);
+            if (hashedAction) {
+                this.layoutModel.dispatcher.dispatch(hashedAction);
+                return;
+            }
         }
-        this.layoutModel.history.replaceState(
-            'view',
-            this.layoutModel.getConcArgs(),
-            {
-                pagination: true,
-                pageNum: this.viewStores.lineViewStore.getCurrentPage()
-            },
-            window.document.title
-        );
+
+        const currAction = this.layoutModel.getConf<string>('currentAction');
+        switch (currAction) {
+            case 'filter':
+            case 'sortx':
+            case 'shuffle':
+            case 'reduce':
+                const formArgs = this.layoutModel.getConf<AjaxResponse.ConcFormArgs>('ConcFormsArgs')['__latest__'];
+                this.layoutModel.history.replaceState(
+                    'view',
+                    this.layoutModel.getConcArgs(),
+                    {
+                        modalAction: {
+                            actionType: 'EDIT_QUERY_OPERATION',
+                            props: {
+                                operationIdx: this.queryStores.queryReplayStore.getNumOperations() - 1
+                            }
+                        }
+                    },
+                    window.document.title
+                );
+                this.layoutModel.history.pushState(
+                    'view',
+                    this.layoutModel.getConcArgs(),
+                    {
+                        pagination: true,
+                        pageNum: this.viewStores.lineViewStore.getCurrentPage()
+                    },
+                    window.document.title
+                );
+            break;
+            default:
+                this.layoutModel.history.replaceState(
+                    'view',
+                    this.layoutModel.getConcArgs(),
+                    {
+                        pagination: true,
+                        pageNum: this.viewStores.lineViewStore.getCurrentPage()
+                    },
+                    window.document.title
+                );
+            break;
+        }
     }
 
     private updateLocalAlignedCorpora():void {
@@ -553,20 +582,22 @@ export class ViewPage {
         const k = this.fetchQueryFormKey(data);
         if (k !== null) {
             return <AjaxResponse.QueryFormArgsResponse>data[k];
+
+        } else {
+            return {
+                contains_errors: false,
+                messages: [],
+                form_type: 'query',
+                op_key: '__new__',
+                curr_query_types: {},
+                curr_queries: {},
+                curr_pcq_pos_neg_values: {},
+                curr_lpos_values: {},
+                curr_qmcase_values: {},
+                curr_default_attr_values: {},
+                tag_builder_support: {}
+            };
         }
-        return {
-            contains_errors: false,
-            messages: [],
-            form_type: 'query',
-            op_key: '__new__',
-            curr_query_types: {},
-            curr_queries: {},
-            curr_pcq_pos_neg_values: {},
-            curr_lpos_values: {},
-            curr_qmcase_values: {},
-            curr_default_attr_values: {},
-            tag_builder_support: {}
-        };
     }
 
     private initQueryForm():void {
@@ -681,8 +712,7 @@ export class ViewPage {
             (args:Kontext.GeneralProps) => {
                 return this.queryStores.filterStore.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.FilterFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        this.concFormsInitialArgs.filter.pnfilter = args['pnfilter'];
-                        resolve(this.concFormsInitialArgs.filter);
+                        resolve(updateProps(this.concFormsInitialArgs.filter, args));
                     });
                 });
             }
@@ -735,13 +765,13 @@ export class ViewPage {
             (args:Kontext.GeneralProps) => {
                 return this.queryStores.sortStore.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(this.concFormsInitialArgs.sort);
+                        resolve(updateProps(this.concFormsInitialArgs.sort, args));
                     });
                 }).then(
                     () => {
                         this.queryStores.multiLevelSortStore.syncFrom(() => {
                             return new RSVP.Promise<AjaxResponse.SortFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                                resolve(this.concFormsInitialArgs.sort);
+                                resolve(updateProps(this.concFormsInitialArgs.sort, args));
                             });
                         });
                     }
@@ -776,7 +806,7 @@ export class ViewPage {
             (args:Kontext.GeneralProps) => {
                 return this.queryStores.sampleStore.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.SampleFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(this.concFormsInitialArgs.sample);
+                        resolve(updateProps(this.concFormsInitialArgs.sample, args));
                     });
                 });
             }
@@ -999,12 +1029,11 @@ export class ViewPage {
             }
         ).then(
             () => {
-                this.setupLineActions();
+                this.setupHistoryOnPopState();
                 if (this.layoutModel.getConf('anonymousUser')) {
                     this.anonymousUserWarning();
                 }
                 this.onBeforeUnloadAsk();
-                this.setStateUrl();
                 this.updateLocalAlignedCorpora();
                 syntaxViewer.create(this.layoutModel.pluginApi());
             }
@@ -1026,9 +1055,7 @@ export class ViewPage {
                 this.initAnalysisViews();
                 this.updateMainMenu();
                 this.initViewOptions();
-                if (this.hashedAction) {
-                    this.layoutModel.dispatcher.dispatch(this.hashedAction);
-                }
+                this.updateHistory();
             }
         );
     }
