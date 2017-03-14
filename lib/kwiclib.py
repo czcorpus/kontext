@@ -535,8 +535,9 @@ class Kwic(object):
 
         i = args.fromline
         while kl.nextline():
-            linegroup = str(kl.get_linegroup() or '_')
-            linegroup = labelmap.get(linegroup, '#' + linegroup)
+            linegroup = kl.get_linegroup()
+            if not linegroup:  # manatee returns 0 in case of no group (but None will work too here)
+                linegroup = -1  # client-side uses -1 as "no group"
             if args.speech_segment:
                 leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
             else:
