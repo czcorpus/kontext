@@ -57,7 +57,7 @@ export interface SingleCorpServerLineData {
     Kwic:Array<ServerTextChunk>;
     rightsize:number;
     hitlen:string;
-    linegroup:string;
+    linegroup:number;
     leftsize:number;
     ref:string;
     rightspace:string;
@@ -220,7 +220,7 @@ function importData(data:Array<ServerLineData>):Immutable.List<Line> {
             );
         }));
 
-        let ansItem:Line = new Line();
+        const ansItem:Line = new Line();
         ansItem.lineNumber = item.linenum;
         ansItem.lineGroup = item.linegroup;
         ansItem.kwicLength = item.kwiclen;

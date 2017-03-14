@@ -196,7 +196,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderInput : function () {
             if (this.props.lockedGroupId) {
-                return <span className="group-id">{this.props.lockedGroupId}</span>;
+                const groupLabel = this.props.lockedGroupId > -1 ? `#${this.props.lockedGroupId}` : '';
+                return <span className="group-id">{groupLabel}</span>;
 
             } else if (this.props.mode === 'simple') {
                 return <LineSelCheckbox {...this.props} />;
@@ -405,6 +406,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             return this.props.data !== nextProps.data
                     || this.props.lineSelMode !== nextProps.lineSelMode
                     || this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible
+                    || this.props.data.lineGroup !== nextProps.data.lineGroup
                     || this.props.catBgColor != nextProps.catBgColor;
         },
 
@@ -489,10 +491,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             }
         },
 
-        _getCatColors : function (itemData) {
-            const tmp = lineSelectionStore.getLine(itemData.languages.first().tokenNumber);
-            if (tmp && tmp[1] >= 1) {
-                const bgColor = this.props.catColors[(tmp[1] - 1) % this.props.catColors.length];
+        _getCatColors : function (dataItem) {
+            const tmp = lineSelectionStore.getLine(dataItem.languages.first().tokenNumber);
+            const cat = tmp ? tmp[1] : dataItem.lineGroup;
+            if (cat >= 1) {
+                const bgColor = this.props.catColors[(cat - 1) % this.props.catColors.length];
                 const fgColor = color2str(calcTextColorFromBg(importColor(bgColor, 0)));
                 return [color2str(importColor(bgColor, 0.9)), fgColor];
             }
@@ -500,7 +503,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _renderLine : function (item, i) {
-            const colors = this._getCatColors(item);
+            const catColor = this._getCatColors(item);
             return <Line key={String(i) + ':' + item.languages.first().tokenNumber}
                          lineIdx={i}
                          data={item}
@@ -515,8 +518,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          audioPlayerIsVisible={this.state.audioPlayerIsVisible}
                          concDetailClickHandler={this.props.concDetailClickHandler}
                          refsDetailClickHandler={this.props.refsDetailClickHandler}
-                         catBgColor={colors[0]}
-                         catTextColor={colors[1]} />;
+                         catBgColor={catColor[0]}
+                         catTextColor={catColor[1]} />;
         },
 
         render : function () {

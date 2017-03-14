@@ -80,7 +80,7 @@ export class SentSection extends LangSection {
 
 
 export class Line {
-    lineGroup:string;
+    lineGroup:number;
     lineNumber:number;
     kwicLength:number;
     hasFocus:boolean;
