@@ -155,13 +155,16 @@ class CentralAuth(AbstractRemoteAuth):
         connection = httplib.HTTPConnection(self._toolbar_conf.server,
                                             port=self._toolbar_conf.port,
                                             timeout=self._auth_conf.toolbar_server_timeout)
-        connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
-        response = connection.getresponse()
-        if response and response.status == 200:
-            return response.read().decode('utf-8')
-        else:
-            raise Exception('Failed to load data from authentication server (UCNK toolbar): %s' % (
-                'status %s' % response.status if response else 'unknown error'))
+        try:
+            connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
+            response = connection.getresponse()
+            if response and response.status == 200:
+                return response.read().decode('utf-8')
+            else:
+                raise Exception('Failed to load data from authentication server (UCNK toolbar): %s' % (
+                    'status %s' % response.status if response else 'unknown error'))
+        finally:
+            connection.close()
 
     def revalidate(self, plugin_api):
         """
