@@ -213,7 +213,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                                 {this.translate('query__sort_th_backward')}
                                 </label>
                                 <a className="context-help" onClick={this._enableBackwardLabelHelp}>
-                                    <img className="over-img" src="/files/img/question-mark.svg" />
+                                    <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')} />
                                 </a>
                                 <span>
                                     {this.state.backwardLabelHelpVisible ?
