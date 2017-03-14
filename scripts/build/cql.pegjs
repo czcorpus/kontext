@@ -11,14 +11,14 @@
  */
 
 Query =
-    Sequence _ (BINAND GlobPart)? (NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* SEMI
+    Sequence _ (BINAND _ GlobPart)? (NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* SEMI
 
 
 GlobPart =
-    GlobCond (_ BINAND GlobCond)*
+    GlobCond (_ BINAND _ GlobCond)*
 
 GlobCond =
-    NUMBER DOT ATTR NOT? EQ NUMBER DOT ATTR
+    NUMBER DOT ATTR (_ NOT)? _ EQ _ NUMBER DOT ATTR
     / KW_FREQ LPAREN NUMBER DOT ATTR RPAREN NOT? ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) NUMBER
 
 Position =
