@@ -128,7 +128,7 @@ def _cancel_async_task(cache_map, cachefile, pidfile, subchash, q):
 def _del_silent(path):
     try:
         os.remove(path)
-    except OSError:
+    except (OSError, TypeError):
         pass
 
 
