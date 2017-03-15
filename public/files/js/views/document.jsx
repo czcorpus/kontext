@@ -351,6 +351,11 @@ export function init(dispatcher, mixins, storeProvider) {
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
+    /**
+     * Props:
+     * - humanCorpname
+     * - usesubcorp
+     */
     const CorpnameInfoTrigger = React.createClass({
 
         mixins : mixins,
@@ -374,6 +379,22 @@ export function init(dispatcher, mixins, storeProvider) {
             });
         },
 
+        _renderSubcorp : function () {
+            if (this.props.usesubcorp) {
+                return (
+                    <span>
+                        <a className="subcorpus" title={this.translate('global__subcorpus')}
+                                    onClick={this._handleSubcnameClick}>
+                            {this.props.usesubcorp}
+                        </a>
+                    </span>
+                );
+
+            } else {
+                return null;
+            }
+        },
+
         render : function () {
             return (
                 <li id="active-corpus">
@@ -382,11 +403,7 @@ export function init(dispatcher, mixins, storeProvider) {
                                 onClick={this._handleCorpnameClick}>
                         {this.props.humanCorpname}
                     </a>
-                    {this.props.usesubcorp ? (
-                        <a className="subcorpus" title={this.translate('global__subcorpus')}
-                                onClick={this.props._handleSubcnameClick}>
-                        {this.props.usesubcorp}
-                    </a>) : null}
+                    {this._renderSubcorp()}
                 </li>
             );
         }

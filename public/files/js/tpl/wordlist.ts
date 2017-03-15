@@ -24,11 +24,13 @@ import {PageModel} from './document';
 import * as $ from 'jquery';
 import {bind as bindPopupBox} from '../popupbox';
 import {MultiDict} from '../util';
+import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
+import {SimplePageStore} from '../stores/base';
 
 /**
  *
  */
-export class WordlistPage {
+export class WordlistPage extends SimplePageStore  {
 
     private pageModel:PageModel;
 
@@ -43,6 +45,7 @@ export class WordlistPage {
     static MAX_NUM_NO_CHANGE = 20;
 
     constructor(pageModel:PageModel) {
+        super(pageModel.dispatcher);
         this.pageModel = pageModel;
     }
 
@@ -94,17 +97,35 @@ export class WordlistPage {
         );
     }
 
-    startWatching():void {
+    private startWatching():void {
         this.numNoChange = 0;
         this.checkIntervalId = window.setInterval(this.checkStatus.bind(this), 2000);
     }
 
-    stopWatching():void {
+    private stopWatching():void {
         clearTimeout(this.checkIntervalId);
     }
 
-    setupContextHelp(message):void {
+    private setupContextHelp(message):void {
         bindPopupBox($('#progress_message a.context-help'), message, {width: 'nice'});
+    }
+
+    private initCorpInfoToolbar():void {
+        const views:WordlistFormViews = wordlistFormInit(
+            this.pageModel.dispatcher,
+            this.pageModel.exportMixins(),
+            this.pageModel.layoutViews,
+            this
+        );
+        this.pageModel.renderReactComponent(
+            views.CorpInfoToolbar,
+            window.document.getElementById('query-overview-mount'),
+            {
+                corpname: this.pageModel.getConf<string>('corpname'),
+                humanCorpname: this.pageModel.getConf<string>('humanCorpname'),
+                usesubcorp: this.pageModel.getConf<string>('subcorpname')
+            }
+        );
     }
 
     init():void {
@@ -114,6 +135,7 @@ export class WordlistPage {
                 if (this.pageModel.getConf<boolean>('IsUnfinished')) {
                     this.startWatching();
                 }
+                this.initCorpInfoToolbar();
             }
         );
     }

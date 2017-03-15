@@ -131,6 +131,18 @@ declare module "views/menu" {
             layoutViews:Kontext.LayoutViews):MainMenuViews;
 }
 
+declare module "views/query/corpSel" {
+
+    export interface CorpusSelectionViews {
+        TRCorpusField:React.ReactClass;
+    }
+
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        mixins:any
+    ):CorpusSelectionViews;
+}
+
 
 declare module "views/query/main" {
 
@@ -231,14 +243,26 @@ declare module "views/query/overview" {
 }
 
 
-declare module "views/wordlist/forms" {
+declare module "views/wordlist/save" {
 
-    export interface WordlistFormViews {
+    export interface WordlistSaveViews {
         SaveWlForm:React.ReactClass;
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher,
-            mixins:any):WordlistFormViews;
+            mixins:any):WordlistSaveViews;
+}
+
+
+declare module "views/wordlist/form" {
+
+    export interface WordlistFormViews {
+        WordlistCorpSelection:React.ReactClass;
+        CorpInfoToolbar:React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher,
+            mixins:any, layoutViews:Kontext.LayoutViews, wordlistPageStore:any):WordlistFormViews;
 }
 
 

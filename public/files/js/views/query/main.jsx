@@ -24,6 +24,7 @@ import {init as inputInit} from './input';
 import {init as alignedInit} from './aligned';
 import {init as contextInit} from './context';
 import {init as ttViewsInit} from '../textTypes';
+import {init as corpSelInit} from './corpSel';
 
 
 export function init(
@@ -35,45 +36,7 @@ export function init(
     const alignedViews = alignedInit(dispatcher, mixins, layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
     const contextViews = contextInit(dispatcher, mixins, queryContextStore);
     const ttViews = ttViewsInit(dispatcher, mixins, textTypesStore);
-
-    // ------------------- <TRCorpusField /> -----------------------------
-
-    const TRCorpusField = React.createClass({
-
-        mixins : mixins,
-
-        _handleSubcorpChange : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_SELECT_SUBCORP',
-                props: {
-                    subcorp: evt.target.value
-                }
-            });
-        },
-
-        render : function () {
-            return (
-                <tr>
-                    <th>{this.translate('global__corpus')}:</th>
-                    <td>
-                        <div id="corparch-mount" />
-                        {this.props.subcorpList.size > 0 ?
-                            (<span id="subcorp-selector-wrapper">
-                                <strong>{'\u00a0'}:{'\u00a0'}</strong>
-                                <select id="subcorp-selector" name="usesubcorp" value={this.props.currentSubcorp}
-                                        onChange={this._handleSubcorpChange}>
-                                    {this.props.subcorpList.map(item => {
-                                        return <option key={item.v} value={item.v}>{item.n}</option>;
-                                    })}
-                                </select>
-                            </span>)
-                            : null}
-                        <div className="starred" />
-                    </td>
-                </tr>
-            );
-        }
-    });
+    const corpSelViews = corpSelInit(dispatcher, mixins);
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
@@ -188,7 +151,7 @@ export function init(
                     <table className="form primary-language">
                         <tbody>
                             {this.props.allowCorpusSelection ?
-                                <TRCorpusField corpname={primaryCorpname} subcorpList={this.state.subcorpList}
+                                <corpSelViews.TRCorpusField corpname={primaryCorpname} subcorpList={this.state.subcorpList}
                                         currentSubcorp={this.state.currentSubcorp} />
                                 : null}
                             <inputViews.TRQueryTypeField
