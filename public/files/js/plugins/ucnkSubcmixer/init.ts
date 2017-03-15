@@ -65,7 +65,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     static DispatchToken:string;
 
-    static CATEGORY_SIZE_ERROR_TOLERANCE = 0.5; // in %
+    static CATEGORY_SIZE_ERROR_TOLERANCE = 1.0; // in %
 
     pluginApi:Kontext.PluginApi;
 
