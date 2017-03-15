@@ -27,6 +27,7 @@ $_("Word List Form")#slurp
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, conf) {
     conf.wltype = "$wltype";
+    conf.SubcorpList = $to_json($SubcorpList);
     wordlistForm.init(conf);
 });
 #end def
@@ -38,20 +39,14 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, c
     <h2>$_("Word list")</h2>
 
     <form action="$create_action('wordlist')" id="wordlist_form" method="post" enctype="multipart/form-data">
-
-    #filter None
-    $input_hidden(('usesubcorp',))
-    #end filter
       <input type="hidden" name="wlmaxitems" value="100" />
       <input type="hidden" name="wlsort" value="f" />
       <input type="hidden" name="subcnorm" value="freq" />
+      <input id="hidden-subcorp-sel" type="hidden" name="usesubcorp" />
     <table class="form">
     <tr>
-        <th>
-            $_('Corpus'):
-        </th>
-        <td>
-            <div id="corparch-mount"></div>
+        <td colspan="2">
+            <table id="corpus-select-mount"></table>
         </td>
     </tr>
     <tr class="required">

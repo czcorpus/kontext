@@ -21,9 +21,8 @@
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
 
-import $ = require('jquery');
 import {PageModel} from './document';
-import {init as initFormViews} from 'views/wordlist/forms';
+import {init as initSaveForms} from 'views/wordlist/save';
 
 
 class SaveWordlistForm {
@@ -36,8 +35,10 @@ class SaveWordlistForm {
 
     init():void {
         this.layoutModel.init();
-        let uiComponents = initFormViews(this.layoutModel.dispatcher,
-                this.layoutModel.exportMixins());
+        const uiComponents = initSaveForms(
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins()
+        );
 
         this.layoutModel.renderReactComponent(
             uiComponents.SaveWlForm,
@@ -51,6 +52,6 @@ class SaveWordlistForm {
 
 
 export function init(conf:Kontext.Conf):void {
-    let page = new SaveWordlistForm(new PageModel(conf));
+    const page = new SaveWordlistForm(new PageModel(conf));
     page.init();
 }
