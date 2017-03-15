@@ -1293,7 +1293,6 @@ table.envelope {
 } // table.envelope
 
 table.envelope.aligned {
-    max-width: 17em;
 
     th,
     td {
@@ -1303,6 +1302,11 @@ table.envelope.aligned {
     }
 
     td.note {
+        p {
+            max-width: 17em;
+            padding: 0;
+            margin: 0.4em 0 0 0;
+        }
         color: @color-light-text;
         white-space: normal;
         font-size: 0.8em;

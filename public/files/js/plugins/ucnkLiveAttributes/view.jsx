@@ -273,7 +273,7 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                             </tr>
                             <tr>
                                 <td className="note">
-                                ({this.translate('ucnkLA__subcorp_consider_aligned_corpora')})
+                                    <p>({this.translate('ucnkLA__subcorp_consider_aligned_corpora')})</p>
                                 </td>
                             </tr>
                             <tr>
