@@ -26,7 +26,7 @@ import * as $ from 'jquery';
 import {create as createCorparch} from 'plugins/corparch/init';
 import {bind as bindPopupBox} from '../popupbox';
 import * as Immutable from 'vendor/immutable';
-import {init as wordlistFormInit} from 'views/wordlist/form';
+import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {SimplePageStore} from '../stores/base';
 
 /**
@@ -41,6 +41,9 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
     private onSubcorpChangeActions:Array<(subcname:string)=>void> = [];
 
     private currentSubcorpus:string;
+
+    private views:WordlistFormViews;
+
 
     constructor(layoutModel:PageModel) {
         super(layoutModel.dispatcher);
@@ -231,17 +234,13 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
     }
 
     private initSubcSelector():void {
-        const views = wordlistFormInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this
-        );
+
         const currSubcorp = this.layoutModel.getConf<string>('subcorpname');
         const input = <HTMLInputElement>window.document.getElementById('hidden-subcorp-sel');
         input.value = currSubcorp ? currSubcorp : '';
 
         this.layoutModel.renderReactComponent(
-            views.WordlistCorpSelection,
+            this.views.WordlistCorpSelection,
             window.document.getElementById('corpus-select-mount'),
             {
                 subcorpList: Immutable.List<Array<string>>(this.layoutModel.getConf<Array<string>>('SubcorpList'))
@@ -249,20 +248,52 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
         );
     }
 
+    private initCorpInfoToolbar():void {
+        this.layoutModel.renderReactComponent(
+            this.views.CorpInfoToolbar,
+            window.document.getElementById('query-overview-mount'),
+            {
+                corpname: this.layoutModel.getConf<string>('corpname'),
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                usesubcorp: this.layoutModel.getConf<string>('subcorpname')
+            }
+        );
+    }
+
+    private initCorparchPlugin():void {
+        this.corplistComponent = createCorparch(
+            window.document.getElementById('corparch-mount'),
+            'wordlist_form',
+            this.layoutModel.pluginApi(),
+            this,
+            {submitMethod: 'GET'}
+        );
+    }
+
+    private initActiveAttributeHighlight():void {
+        $('.current-wlattr').on('mouseover', (evt) => {
+            $('#srch-attrib-label').addClass('highlighted-label');
+        });
+        $('.current-wlattr').on('mouseout', (evt) => {
+            $('#srch-attrib-label').removeClass('highlighted-label');
+        });
+    }
 
     init():void {
         this.layoutModel.init().then(
             (d) => {
                 this.bindStaticElements();
-                this.initSubcSelector();
-                this.corplistComponent = createCorparch(
-                        window.document.getElementById('corparch-mount'),
-                        'wordlist_form',
-                        this.layoutModel.pluginApi(),
-                        this,
-                        {submitMethod: 'GET'}
+                this.views = wordlistFormInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.exportMixins(),
+                    this.layoutModel.layoutViews,
+                    this
                 );
+                this.initSubcSelector();
+                this.initCorparchPlugin();
                 this.initOutputTypeForms();
+                this.initCorpInfoToolbar();
+                this.initActiveAttributeHighlight();
             }
         ).then(
             () => undefined,

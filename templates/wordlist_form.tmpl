@@ -32,63 +32,70 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, c
 });
 #end def
 
-
 #def main
 #filter WebSafe
 <section>
     <h2>$_("Word list")</h2>
-
     <form action="$create_action('wordlist')" id="wordlist_form" method="post" enctype="multipart/form-data">
       <input type="hidden" name="wlmaxitems" value="100" />
       <input type="hidden" name="wlsort" value="f" />
       <input type="hidden" name="subcnorm" value="freq" />
       <input id="hidden-subcorp-sel" type="hidden" name="usesubcorp" />
     <table class="form">
-    <tr>
-        <td colspan="2">
-            <table id="corpus-select-mount"></table>
-        </td>
-    </tr>
-    <tr class="required">
-    <th>$_("Search attribute"):</th>
-      <td><select class="wlattr-sel" name="wlattr">
-      <optgroup label="Positional Attributes">
-      #for $a in $AttrList
-        #set $selected = ($a.n == $wlattr) and 'selected' or ''
-        <option value="$a.n" $selected>$a.label</option>
-      #end for
-      </optgroup>
-      <optgroup label="Text Types">
-      #for $a in $StructAttrList
-        #set $selected = ($a.n == $wlattr) and 'selected' or ''
-        <option value="$a.n" $selected>$a.label</option>
-      #end for
-      </optgroup>
-      </select></td>
-    </tr></table>
-
+        <tr>
+            <td colspan="2">
+                <table id="corpus-select-mount"></table>
+            </td>
+        </tr>
+    </table>
     <fieldset>
         <legend>$_("Filter wordlist by")</legend>
-        <table class="form"><tr>
-          <th></th><td title="$_('Regular expression pattern')">$_("RE pattern"):</td>
+        <table class="form">
+        <tr>
+            <td id="srch-attrib-label">$_("Search attribute"):</td>
+            <td>
+                <select class="wlattr-sel" name="wlattr">
+                <optgroup label="Positional Attributes">
+                #for $a in $AttrList
+                #set $selected = ($a.n == $wlattr) and 'selected' or ''
+                <option value="$a.n" $selected>$a.label</option>
+                #end for
+                </optgroup>
+                <optgroup label="Text Types">
+                #for $a in $StructAttrList
+                #set $selected = ($a.n == $wlattr) and 'selected' or ''
+                <option value="$a.n" $selected>$a.label</option>
+                #end for
+                </optgroup>
+                </select>
+            </td>
+        </tr>
+        <tr>
+          <td title="$_('Regular expression pattern')">$_("RE pattern"):</td>
           <td><input type="text" name="wlpat" size="50" value="$wlpat" id="wlpat" /></td>
-        </tr><tr>
-          <td></td><td>$_("Minimum frequency"):</td>
+        </tr>
+        <tr>
+          <td>$_("Minimum frequency"):</td>
           <td><input type="text" name="wlminfreq" size="10" value="$wlminfreq" /></td>
-        </tr><tr>
-          <td></td><td>$_("Whitelist"):</td>
+        </tr>
+        <tr>
+          <td>$_("Whitelist"):</td>
           <td><input type="file" name="wlfile" size="30" id="wlfile" /></td>
-        </tr><tr>
-          <td></td><td>$_("Blacklist"):</td>
+        </tr>
+        <tr>
+          <td>$_("Blacklist"):</td>
           <td><input type="file" name="wlblacklist" size="30" id="wlblacklist" />
             <a id="show-help-format-link" href="">
                 <img src="${files_path}/img/info-icon.svg" alt="info" />$_("required file format")</a>
             <td></td>
           </td>
-        </tr><tr><td colspan="3">
-        #set $checked = $int($include_nonwords) and 'checked' or ''
-        <label><input type="checkbox" name="include_nonwords" value="1" $checked />$_("Include non-words")</label>
-        </td></tr>
+        </tr>
+        <tr>
+            <td colspan="2">
+            #set $checked = $int($include_nonwords) and 'checked' or ''
+            <label><input type="checkbox" name="include_nonwords" value="1" $checked />$_("Include non-words")</label>
+            </td>
+         </tr>
         </table>
     </fieldset>
     <fieldset>

@@ -258,10 +258,11 @@ declare module "views/wordlist/form" {
 
     export interface WordlistFormViews {
         WordlistCorpSelection:React.ReactClass;
+        CorpInfoToolbar:React.ReactClass;
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher,
-            mixins:any, wordlistPageStore:any):WordlistFormViews;
+            mixins:any, layoutViews:Kontext.LayoutViews, wordlistPageStore:any):WordlistFormViews;
 }
 
 

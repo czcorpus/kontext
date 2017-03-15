@@ -23,11 +23,11 @@ import React from 'vendor/react';
 import {init as corpSelViewsInit} from '../query/corpSel';
 
 
-export function init(dispatcher, mixins, wordlistPageStore) {
+export function init(dispatcher, mixins, layoutViews, wordlistPageStore) {
 
     const corpSelViews = corpSelViewsInit(dispatcher, mixins);
 
-// ------------------- <WordListCorpSel /> -----------------------------
+    // ------------------- <WordListCorpSel /> -----------------------------
 
     const WordlistCorpSelection = React.createClass({
 
@@ -61,8 +61,22 @@ export function init(dispatcher, mixins, wordlistPageStore) {
         }
     });
 
+    // ------------------- <CorpInfoToolbar /> -----------------------------
+
+    const CorpInfoToolbar = React.createClass({
+        render : function () {
+            return (
+                <ul id="query-overview-bar">
+                    <layoutViews.CorpnameInfoTrigger corpname={this.props.corpname}
+                            humanCorpname={this.props.humanCorpname}
+                            usesubcorp={this.props.usesubcorp} />
+                </ul>
+            );
+        }
+    });
 
     return {
-        WordlistCorpSelection: WordlistCorpSelection
+        WordlistCorpSelection: WordlistCorpSelection,
+        CorpInfoToolbar: CorpInfoToolbar
     };
 }
