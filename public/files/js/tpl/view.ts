@@ -853,7 +853,7 @@ export class ViewPage {
             {
                 corpname: this.layoutModel.getConf<string>('corpname'),
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
+                usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
                 queryFormProps: {
                     corpname: this.layoutModel.getConf<string>('corpname'),
                     tagHelperViews: tagHelperPlugin.getViews(),
