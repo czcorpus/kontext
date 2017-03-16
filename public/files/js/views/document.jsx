@@ -383,6 +383,7 @@ export function init(dispatcher, mixins, storeProvider) {
             if (this.props.usesubcorp) {
                 return (
                     <span>
+                        <strong>:</strong>
                         <a className="subcorpus" title={this.translate('global__subcorpus')}
                                     onClick={this._handleSubcnameClick}>
                             {this.props.usesubcorp}
