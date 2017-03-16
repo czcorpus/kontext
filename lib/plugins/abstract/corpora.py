@@ -48,6 +48,9 @@ class DictLike(object):
     def to_json(self):
         return json.dumps(self, cls=CorpInfoEncoder)
 
+    def to_dict(self):
+        return CorpInfoEncoder().default(self)
+
 
 class CorpusMetadata(DictLike):
     def __init__(self):
