@@ -152,8 +152,6 @@ class Querying(Kontext):
                 if 'lempos' in attrlist:
                     poslist = self.cm.corpconf_pairs(alcorp, 'LPOSLIST')
                 tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                tpl_out['has_lemmaattr_' + al] = 'lempos' in attrlist \
-                                                 or 'lemma' in attrlist
                 tpl_out['input_languages'][al] = self.get_corpus_info(al).collator_locale
 
     def _export_subcorpora_list(self, corpname, out):

@@ -995,6 +995,14 @@ class Kontext(Controller):
             # in production mode, all the styles are packed into a single file
             data['theme']['css'] = None
 
+    def _configure_auth_urls(self, out):
+        if plugins.has_plugin('auth') and isinstance(plugins.get('auth'), AbstractInternalAuth):
+            out['login_url'] = plugins.get('auth').get_login_url(self.return_url)
+            out['logout_url'] = plugins.get('auth').get_logout_url(self.get_root_url())
+        else:
+            out['login_url'] = None
+            out['logout_url'] = None
+
     def _add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -1034,12 +1042,7 @@ class Kontext(Controller):
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
 
-        if plugins.has_plugin('auth') and isinstance(plugins.get('auth'), AbstractInternalAuth):
-            result['login_url'] = plugins.get('auth').get_login_url(self.return_url)
-            result['logout_url'] = plugins.get('auth').get_logout_url(self.get_root_url())
-        else:
-            result['login_url'] = None
-            result['logout_url'] = None
+        self._configure_auth_urls(result)
 
         if plugins.has_plugin('application_bar'):
             application_bar = plugins.get('application_bar')

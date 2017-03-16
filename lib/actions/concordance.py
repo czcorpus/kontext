@@ -18,7 +18,7 @@ import re
 import json
 from collections import defaultdict
 
-from kontext import MainMenu, LinesGroups, Kontext
+from kontext import MainMenu, LinesGroups, Kontext, ConcArgsMapping
 from controller import UserActionException, exposed
 from query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs, LgroupOpArgs,
                    LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
@@ -37,6 +37,7 @@ from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 from query import CQLDetectWithin
+import templating
 
 
 class ConcError(Exception):
@@ -1820,6 +1821,31 @@ class Actions(Querying):
             return {'total': conc.fullsize() if conc else None}
         else:
             return {'total': None}
+
+    @exposed(return_type='json')
+    def ajax_switch_corpus(self, request):
+        global_var_val = self._get_attrs(ConcArgsMapping)
+        avail_al_corp = []
+        for al in filter(lambda x: len(x) > 0, self.corp.get_conf('ALIGNED').split(',')):
+            alcorp = corplib.open_corpus(al)
+            avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
+
+        ans = dict(
+            corpname=self.args.corpname,
+            subcorpname=self.args.usesubcorp,
+            baseAttr=Kontext.BASE_ATTR,
+            humanCorpname=self._human_readable_corpname(),
+            bibConf=self.get_corpus_info(self.args.corpname).metadata.to_dict(),
+            currentArgs=templating.StateGlobals(global_var_val).export(),
+            compiledQuery=[],
+            concPersistenceOpId=None,
+            alignedCorpora=self.args.align,
+            availableAlignedCorpora=avail_al_corp,
+            queryOverview=[],
+            numQueryOps=0
+        )
+        self._configure_auth_urls(ans)
+        return ans
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, request):
