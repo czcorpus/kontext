@@ -364,12 +364,8 @@ export class ViewPage {
      * case she is not logged-in.
      */
     private anonymousUserWarning():void {
-        let left:number;
-        let top:number;
-        let box:popupBox.TooltipBox;
-        let self = this;
-
-        box = popupBox.open(
+        const self = this;
+        const box = popupBox.extended(this.layoutModel).open(
             this.translate('global__anonymous_user_warning',
             {login_url: this.layoutModel.getConf('loginUrl')}),
             {top: 0, left: 0},
@@ -387,8 +383,8 @@ export class ViewPage {
                 }
             }
         );
-        left = $(window).width() / 2 - box.getPosition().width / 2;
-        top = $('#conc-wrapper').offset().top + 40;
+        const left = $(window).width() / 2 - box.getPosition().width / 2;
+        const top = $('#conc-wrapper').offset().top + 40;
         box.setCss('left', left + 'px');
         box.setCss('top', top + 'px');
         box.setCss('font-size', '120%');
