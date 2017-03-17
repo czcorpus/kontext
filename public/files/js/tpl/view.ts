@@ -38,7 +38,7 @@ import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
 import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary} from '../stores/concordance/lines';
 import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} from '../stores/query/main';
-import {QueryReplayStore, QueryOperation, LocalQueryFormData} from '../stores/query/replay';
+import {QueryReplayStore, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
 import {SampleStore, SampleFormProperties, fetchSampleFormArgs} from '../stores/query/sample';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
@@ -157,9 +157,8 @@ export class ViewPage {
      * @param stores
      * @param hasLockedGroups
      */
-    constructor(layoutModel:PageModel, stores:ViewPageStores, hasLockedGroups:boolean) {
+    constructor(layoutModel:PageModel, hasLockedGroups:boolean) {
         this.layoutModel = layoutModel;
-        this.viewStores = stores;
         this.queryStores = new QueryStores();
         this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
@@ -829,7 +828,7 @@ export class ViewPage {
                 mlSortStore: this.queryStores.multiLevelSortStore,
                 sampleStore: this.queryStores.sampleStore
             },
-            this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || [],
+            this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
         );
         this.queryOverviewViews = queryOverviewInit(
@@ -996,15 +995,93 @@ export class ViewPage {
                 return this.layoutModel.getStores().viewOptionsStore.loadData();
             }
         );
+    }
 
+    private initStores():ViewConfiguration {
+        const concSummaryProps:ConcSummary = {
+            concSize: this.layoutModel.getConf<number>('ConcSize'),
+            fullSize: this.layoutModel.getConf<number>('FullSize'),
+            sampledSize: this.layoutModel.getConf<number>('SampledSize'),
+            ipm: this.layoutModel.getConf<number>('ResultIpm'),
+            arf: this.layoutModel.getConf<number>('ResultArf'),
+            isShuffled: this.layoutModel.getConf<boolean>('ResultShuffled')
+        };
+        const lineViewProps:ViewConfiguration = {
+            ViewMode: this.layoutModel.getConf<string>('ViewMode'),
+            ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
+            KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
+            CorporaColumns: this.layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
+            SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
+            NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
+            baseCorpname: this.layoutModel.getConf<string>('corpname'),
+            subCorpName: this.layoutModel.getConf<string>('subcorpname'),
+            pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
+            currentPage: this.layoutModel.getConf<number>('FromPage'),
+            mainCorp: this.layoutModel.getConcArgs()['maincorp'],
+            concSummary: concSummaryProps,
+            Unfinished: this.layoutModel.getConf<boolean>('Unfinished'),
+            canSendEmail: this.layoutModel.getConf<boolean>('can_send_mail'),
+            ContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
+            ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
+            SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
+            SpeakerColors: d3.schemeCategory20,
+            SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
+            SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
+            SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
+            SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
+            StructCtx: this.layoutModel.getConf<string>('StructCtx'),
+            WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
+            catColors: d3.schemeCategory20
+        };
+        this.viewStores = new ViewPageStores();
+        this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
+        this.viewStores.viewOptionsStore = this.layoutModel.getStores().viewOptionsStore;
+        this.viewStores.mainMenuStore = this.layoutModel.getStores().mainMenuStore;
+        this.viewStores.lineViewStore = new ConcLineStore(
+                this.layoutModel,
+                this.layoutModel.dispatcher,
+                lineViewProps,
+                this.layoutModel.getConf<Array<ServerLineData>>('Lines')
+        );
+        this.viewStores.viewOptionsStore.addOnSave((_) => this.viewStores.lineViewStore.updateOnViewOptsChange());
+        this.viewStores.viewOptionsStore.addOnSave((data) => this.viewStores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
+        this.viewStores.lineSelectionStore = new LineSelectionStore(
+                this.layoutModel,
+                this.layoutModel.dispatcher,
+                this.viewStores.lineViewStore,
+                conclines.openStorage(()=>{})
+        );
+        this.viewStores.lineSelectionStore.registerQuery(this.layoutModel.getConf<Array<string>>('compiledQuery'));
+        this.viewStores.concDetailStore = new ConcDetailStore(
+            this.layoutModel,
+            this.layoutModel.dispatcher,
+            this.viewStores.lineViewStore,
+            lineViewProps.StructCtx,
+            {
+                speakerIdAttr: lineViewProps.SpeakerIdAttr,
+                speechSegment: lineViewProps.SpeechSegment,
+                speechAttrs: lineViewProps.SpeechAttrs,
+                speechOverlapAttr: lineViewProps.SpeechOverlapAttr,
+                speechOverlapVal: lineViewProps.SpeechOverlapVal
+            },
+            lineViewProps.SpeakerColors,
+            lineViewProps.WideCtxGlobals
+        );
+        this.viewStores.refsDetailStore = new RefsDetailStore(
+            this.layoutModel,
+            this.layoutModel.dispatcher,
+            this.viewStores.lineViewStore
+        );
+        return lineViewProps;
     }
 
     /**
      *
      */
-    init(lineViewProps:ViewConfiguration):RSVP.Promise<any> {
+    init():RSVP.Promise<any> {
         return this.layoutModel.init().then(
             () => {
+                const lineViewProps = this.initStores();
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
                     let frame = window.document.getElementById('selection-actions');
@@ -1059,89 +1136,12 @@ export class ViewPage {
 
 export function init(conf):ViewPage {
     const layoutModel = new PageModel(conf);
-
-    const concSummaryProps:ConcSummary = {
-        concSize: layoutModel.getConf<number>('ConcSize'),
-        fullSize: layoutModel.getConf<number>('FullSize'),
-        sampledSize: layoutModel.getConf<number>('SampledSize'),
-        ipm: layoutModel.getConf<number>('ResultIpm'),
-        arf: layoutModel.getConf<number>('ResultArf'),
-        isShuffled: layoutModel.getConf<boolean>('ResultShuffled')
-    };
-    const lineViewProps:ViewConfiguration = {
-        ViewMode: layoutModel.getConf<string>('ViewMode'),
-        ShowLineNumbers: layoutModel.getConf<boolean>('ShowLineNumbers'),
-        KWICCorps: layoutModel.getConf<Array<string>>('KWICCorps'),
-        CorporaColumns: layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
-        SortIdx: layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
-        NumItemsInLockedGroups: layoutModel.getConf<number>('NumLinesInGroups'),
-        baseCorpname: layoutModel.getConf<string>('corpname'),
-        subCorpName: layoutModel.getConf<string>('subcorpname'),
-        pagination: layoutModel.getConf<ServerPagination>('Pagination'),
-        currentPage: layoutModel.getConf<number>('FromPage'),
-        mainCorp: layoutModel.getConcArgs()['maincorp'],
-        concSummary: concSummaryProps,
-        Unfinished: layoutModel.getConf<boolean>('Unfinished'),
-        canSendEmail: layoutModel.getConf<boolean>('can_send_mail'),
-        ContainsWithin: layoutModel.getConf<boolean>('ContainsWithin'),
-        ShowConcToolbar: layoutModel.getConf<boolean>('ShowConcToolbar'),
-        SpeakerIdAttr: layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
-        SpeakerColors: d3.schemeCategory20,
-        SpeechSegment: layoutModel.getConf<[string, string]>('SpeechSegment'),
-        SpeechOverlapAttr: layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
-        SpeechOverlapVal: layoutModel.getConf<string>('SpeechOverlapVal'),
-        SpeechAttrs: layoutModel.getConf<Array<string>>('SpeechAttrs'),
-        StructCtx: layoutModel.getConf<string>('StructCtx'),
-        WideCtxGlobals: layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
-        catColors: d3.schemeCategory20
-    };
-    const stores = new ViewPageStores();
-    stores.userInfoStore = layoutModel.getStores().userInfoStore;
-    stores.viewOptionsStore = layoutModel.getStores().viewOptionsStore;
-    stores.mainMenuStore = layoutModel.getStores().mainMenuStore;
-    stores.lineViewStore = new ConcLineStore(
-            layoutModel,
-            layoutModel.dispatcher,
-            lineViewProps,
-            layoutModel.getConf<Array<ServerLineData>>('Lines')
-    );
-    stores.viewOptionsStore.addOnSave((_) => stores.lineViewStore.updateOnViewOptsChange());
-    stores.viewOptionsStore.addOnSave((data) => stores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
-    stores.lineSelectionStore = new LineSelectionStore(
-            layoutModel,
-            layoutModel.dispatcher,
-            stores.lineViewStore,
-            conclines.openStorage(()=>{})
-    );
-    stores.lineSelectionStore.registerQuery(layoutModel.getConf<Array<string>>('compiledQuery'));
-    stores.concDetailStore = new ConcDetailStore(
-        layoutModel,
-        layoutModel.dispatcher,
-        stores.lineViewStore,
-        lineViewProps.StructCtx,
-        {
-            speakerIdAttr: lineViewProps.SpeakerIdAttr,
-            speechSegment: lineViewProps.SpeechSegment,
-            speechAttrs: lineViewProps.SpeechAttrs,
-            speechOverlapAttr: lineViewProps.SpeechOverlapAttr,
-            speechOverlapVal: lineViewProps.SpeechOverlapVal
-        },
-        lineViewProps.SpeakerColors,
-        lineViewProps.WideCtxGlobals
-    );
-    stores.refsDetailStore = new RefsDetailStore(
-        layoutModel,
-        layoutModel.dispatcher,
-        stores.lineViewStore
-    );
-
     const pageModel = new ViewPage(
         layoutModel,
-        stores,
         layoutModel.getConf<number>('NumLinesInGroups') > 0
     );
-    pageModel.init(lineViewProps).then(
-        () => {},
+    pageModel.init().then(
+        _ => undefined,
         (err) => {
             console.error(err);
             layoutModel.showMessage('error', err);

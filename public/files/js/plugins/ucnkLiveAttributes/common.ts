@@ -36,14 +36,6 @@ export interface CheckboxLists {
 }
 
 /**
- * Specifies a bibliography item
- */
-export interface BibConf {
-    id_attr: string;
-    label_attr: string;
-}
-
-/**
  * This is just a pre-1.4 way to specify either
  * an array (= list of attributes) or an object with length property
  * (= too long list replacement)

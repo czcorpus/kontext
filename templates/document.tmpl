@@ -162,7 +162,6 @@ define('conf', [], function () {
     conf.humanCorpname = "$human_corpname";
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
-    conf.bibConf = $bib_conf.to_json();
     conf.currentArgs = $Globals.to_json();
     conf.compiledQuery = $to_json($Q);
     conf.concPersistenceOpId = $to_json($conc_persistence_op_id);

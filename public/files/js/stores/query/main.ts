@@ -236,14 +236,20 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         }
         return mismatch;
     }
+}
 
+/**
+ *
+ */
+export interface CorpusSwitchPreserved {
+    query:string;
 }
 
 
 /**
  *
  */
-export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupHandler {
+export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupHandler, Kontext.ICorpusSwitchAware<CorpusSwitchPreserved> {
 
     private corpora:Immutable.List<string>;
 
@@ -375,6 +381,20 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 break;
             }
         });
+    }
+
+    exportState():CorpusSwitchPreserved {
+        return {
+            query: this.queries.get(this.corpora.get(0))
+        };
+    }
+
+    setState(state:CorpusSwitchPreserved):void {
+        this.queries = this.queries.set(this.corpora.get(0), state.query);
+    }
+
+    getStateKey():string {
+        return 'query-storage';
     }
 
     getActiveWidget(sourceId:string):string {
