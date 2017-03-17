@@ -166,15 +166,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
         this.history = Modernizr.history ? new History(this) : new NullHistory();
-        this.corpusInfoStore = new docStores.CorpusInfoStore(this.dispatcher, this.pluginApi());
-        this.messageStore = new docStores.MessageStore(this.dispatcher, this.pluginApi());
-        this.userInfoStore = new UserInfo(this.dispatcher, this);
-        this.viewOptionsStore = new ViewOptionsStore(this.dispatcher, this);
-        this.mainMenuStore = new MainMenuStore(
-            this.dispatcher,
-            this,
-            this.getConf<InitialMenuData>('menuData')
-        );
         this.translations = translations[this.conf['uiLang']] || {};
         this.asyncTaskChecker = new AsyncTaskChecker(
             this.dispatcher,
@@ -806,6 +797,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     init():RSVP.Promise<any> {
         return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             try {
+                this.corpusInfoStore = new docStores.CorpusInfoStore(this.dispatcher, this.pluginApi());
+                this.messageStore = new docStores.MessageStore(this.dispatcher, this.pluginApi());
+                this.userInfoStore = new UserInfo(this.dispatcher, this);
+                this.viewOptionsStore = new ViewOptionsStore(this.dispatcher, this);
+                this.mainMenuStore = new MainMenuStore(
+                    this.dispatcher,
+                    this,
+                    this.getConf<InitialMenuData>('menuData')
+                );
 
                 this.layoutViews = documentViewsInit(
                     this.dispatcher,
