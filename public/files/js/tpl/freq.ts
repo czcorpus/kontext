@@ -28,7 +28,7 @@ import {MultiDict, dictToPairs} from '../util';
 import {bind as bindPopupBox} from '../popupbox';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/analysis/freqForms';
-import {QueryReplayStore, QueryOperation, IndirectQueryReplayStore} from '../stores/query/replay';
+import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
@@ -154,7 +154,7 @@ class FreqPage {
         this.queryReplayStore = new IndirectQueryReplayStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.layoutModel.getConf<Array<QueryOperation>>('queryOverview') || []
+            this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || []
         );
         const queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,

@@ -44,7 +44,9 @@ import {init as queryFormInit} from 'views/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 
-
+/**
+ *
+ */
 export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private clStorage:ConcLinesStorage;
@@ -140,7 +142,23 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             'first_form',
             this.layoutModel.pluginApi(),
             this,
-            {}
+            {
+                itemClickAction: (corpusId) => {
+                    let corpora = corpusId.split('+');
+                    const firstCorp = corpora[0].split(':');
+                    corpora = [firstCorp[0]].concat(corpora.slice(1));
+                    this.layoutModel.switchCorpus(corpora, firstCorp[1]).then(
+                        () => {
+                            // all the components must be deleted to prevent memory leaks
+                            // and unwanted action handlers from previous instance
+                            this.layoutModel.unmountReactComponent(window.document.getElementById('view-options-mount'));
+                            this.layoutModel.unmountReactComponent(window.document.getElementById('query-form-mount'));
+                            this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
+                            this.init();
+                        }
+                    )
+                }
+            }
         );
     }
 
@@ -221,6 +239,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
             }
         );
+        this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),

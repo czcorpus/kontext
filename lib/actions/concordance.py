@@ -37,7 +37,7 @@ from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 from query import CQLDetectWithin
-import templating
+from main_menu import MenuGenerator
 
 
 class ConcError(Exception):
@@ -1824,25 +1824,69 @@ class Actions(Querying):
 
     @exposed(return_type='json')
     def ajax_switch_corpus(self, request):
-        global_var_val = self._get_attrs(ConcArgsMapping)
+        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.VIEW('kwic-sentence'))
+
         avail_al_corp = []
         for al in filter(lambda x: len(x) > 0, self.corp.get_conf('ALIGNED').split(',')):
             alcorp = corplib.open_corpus(al)
             avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
+
+        tmp_out = dict(
+            uses_corp_instance=True,
+            corpname=self.args.corpname,
+            usesubcorp=self.args.usesubcorp,
+            undo_q=[]
+        )
+
+        attrlist = corpus_get_conf(self.corp, 'ATTRLIST').split(',')
+        tmp_out['AttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n} for n in attrlist if n]
+        sref = corpus_get_conf(self.corp, 'SHORTREF')
+        tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
+
+        if corpus_get_conf(self.corp, 'FREQTTATTRS'):
+            ttcrit_attrs = corpus_get_conf(self.corp, 'FREQTTATTRS')
+        else:
+            ttcrit_attrs = corpus_get_conf(self.corp, 'SUBCORPATTRS')
+        tmp_out['ttcrit'] = [('fcrit', '%s 0' % a) for a in ttcrit_attrs.replace('|', ',').split(',') if a]
+
+        poslist = self.cm.corpconf_pairs(self.corp, 'WPOSLIST')
+        lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
+
+        self.add_conc_form_args(QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False),
+                                              persist=False))
+        self._attach_query_params(tmp_out)
+        self._attach_aligned_query_params(tmp_out)
+        self._export_subcorpora_list(self.args.corpname, tmp_out)
 
         ans = dict(
             corpname=self.args.corpname,
             subcorpname=self.args.usesubcorp,
             baseAttr=Kontext.BASE_ATTR,
             humanCorpname=self._human_readable_corpname(),
-            bibConf=self.get_corpus_info(self.args.corpname).metadata.to_dict(),
-            currentArgs=templating.StateGlobals(global_var_val).export(),
+            currentArgs=[],
             compiledQuery=[],
             concPersistenceOpId=None,
             alignedCorpora=self.args.align,
             availableAlignedCorpora=avail_al_corp,
             queryOverview=[],
-            numQueryOps=0
+            numQueryOps=0,
+            textTypesData=get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False),
+            menuData=MenuGenerator(tmp_out, self.args).generate(disabled_items=self.disabled_menu_items,
+                                                                save_items=self.save_menu,
+                                                                corpus_dependent=tmp_out['uses_corp_instance'],
+                                                                ui_lang=self.ui_lang),
+
+            Wposlist=[{'n': x[0], 'v': x[1]} for x in poslist],
+            Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
+            AttrList=tmp_out['AttrList'],
+            TagsetDocUrl=corpus_get_conf(self.corp, 'TAGSETDOC'),
+            InputLanguages=tmp_out['input_languages'],
+            hasLemmaAttr='lempos' in attrlist or 'lemma' in attrlist,
+            ConcFormsArgs=tmp_out['conc_forms_args'],
+            CurrentSubcorp=self.args.usesubcorp,
+            SubcorpList=tmp_out['SubcorpList']
         )
         self._configure_auth_urls(ans)
         return ans

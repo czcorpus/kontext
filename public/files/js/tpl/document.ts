@@ -155,6 +155,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     private globalKeyHandlers:Immutable.List<(evt:Event)=>void>;
 
+    private switchCorpAwareObjects:Immutable.List<Kontext.ICorpusSwitchAware<any>>;
+
+    private switchCorpStateStorage:Immutable.Map<string, any>;
+
     /**
      *
      * @param conf page configuration
@@ -162,17 +166,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
         this.confChangeHandlers = Immutable.Map<string, Immutable.List<(v:any)=>void>>();
-        this.dispatcher = new Dispatcher<Kontext.DispatcherPayload>();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
         this.history = Modernizr.history ? new History(this) : new NullHistory();
         this.translations = translations[this.conf['uiLang']] || {};
-        this.asyncTaskChecker = new AsyncTaskChecker(
-            this.dispatcher,
-            this.pluginApi(),
-            this.getConf<any>('asyncTasks') || []
-        );
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
+        this.switchCorpAwareObjects = Immutable.List<Kontext.ICorpusSwitchAware<any>>();
+        this.switchCorpStateStorage = Immutable.Map<string, any>();
     }
 
     /**
@@ -282,6 +282,59 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     registerTask(task:Kontext.AsyncTaskInfo):void {
         this.asyncTaskChecker.registerTask(task);
+    }
+
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
+        this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
+        // now we look at the possible previous stored state
+        const v = this.switchCorpStateStorage.get(obj.getStateKey());
+        if (v) {
+            obj.setState(v);
+        }
+    }
+
+    switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
+        this.switchCorpAwareObjects.forEach((item, key) => {
+            this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.getStateKey(), item.exportState());
+        });
+        this.switchCorpAwareObjects = this.switchCorpAwareObjects.clear();
+        return this.ajax<AjaxResponse.CorpusSwitchResponse>(
+            'POST',
+            this.createActionUrl('ajax_switch_corpus'),
+            {corpname: corpora[0]}
+
+        ).then(
+            (data) => {
+                const args = new MultiDict();
+                args.set('corpname', data.corpname);
+                args.set('usesubcorp', data.subcorpname);
+                this.history.pushState('first_form', args);
+
+                this.setConf<string>('corpname', data.corpname);
+                this.setConf<string>('subcorpname', data.subcorpname);
+                this.setConf<string>('humanCorpname', data.humanCorpname);
+                this.setConf<string>('baseAttr', data.baseAttr);
+                this.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
+                this.setConf<Array<string>>('compiledQuery', data.compiledQuery);
+                this.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
+                this.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
+                this.setConf<Array<{n:string; label:string}>>('availableAlignedCorpora', data.availableAlignedCorpora);
+                this.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
+                this.setConf<number>('numQueryOps', data.numQueryOps);
+                this.setConf<any>('textTypesData', data.textTypesData); // TODO type
+                this.setConf<any>('menuData', data.menuData); // TODO type
+                this.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
+                this.setConf<Array<any>>('Lposlist', data.Lposlist); // TODO type
+                this.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
+                this.setConf<string>('TagsetDocUrl', data.TagsetDocUrl);
+                this.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
+                this.setConf<boolean>('hasLemmaAttr', data.hasLemmaAttr);
+                this.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
+                this.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
+                this.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
+                return this.init();
+            }
+        );
     }
 
     /**
@@ -797,6 +850,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     init():RSVP.Promise<any> {
         return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             try {
+                this.dispatcher = new Dispatcher<Kontext.DispatcherPayload>();
+                this.asyncTaskChecker = new AsyncTaskChecker(
+                    this.dispatcher,
+                    this.pluginApi(),
+                    this.getConf<any>('asyncTasks') || []
+                );
+
                 this.corpusInfoStore = new docStores.CorpusInfoStore(this.dispatcher, this.pluginApi());
                 this.messageStore = new docStores.MessageStore(this.dispatcher, this.pluginApi());
                 this.userInfoStore = new UserInfo(this.dispatcher, this);
@@ -930,5 +990,9 @@ export class PluginApi implements Kontext.PluginApi {
 
     getConcArgs():MultiDict {
         return this.pageModel.getConcArgs();
+    }
+
+    switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
+        return this.pageModel.switchCorpus(corpora, subcorpus);
     }
 }
