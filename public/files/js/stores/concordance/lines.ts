@@ -296,7 +296,6 @@ export class ConcLineStore extends SimplePageStore {
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
-                self.setStopStatus();
                 self.notifyChangeListeners();
             },
             this.setStopStatus.bind(this),
@@ -474,7 +473,7 @@ export class ConcLineStore extends SimplePageStore {
     }
 
     private changeMainCorpus(corpusId:string) {
-        let args:MultiDict = this.layoutModel.getConcArgs();
+        const args:MultiDict = this.layoutModel.getConcArgs();
         let link;
 
         if (this.hasKwic(corpusId)) {
@@ -496,9 +495,8 @@ export class ConcLineStore extends SimplePageStore {
             this.audioPlayer.stop();
             this.playerAttachedChunk.showAudioPlayer = false;
         }
-        let availChunks = this.lines.get(lineIdx).languages.get(0).getAllChunks();
-        let triggerIdx = availChunks.indexOf(chunks[chunks.length - 1]);
-        let line = this.lines.get(lineIdx);
+        const availChunks = this.lines.get(lineIdx).languages.get(0).getAllChunks();
+        const triggerIdx = availChunks.indexOf(chunks[chunks.length - 1]);
         availChunks.get(triggerIdx).showAudioPlayer = true;
         this.playerAttachedChunk = availChunks.get(triggerIdx);
         this.audioPlayer.start(chunks.map(item => this.createAudioLink(item)).filter(item => !!item));
