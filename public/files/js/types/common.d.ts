@@ -101,7 +101,6 @@ declare module Kontext {
         getUserSettings():Kontext.IUserSettings;
         hasPlugin(name:string):boolean;
         getConcArgs():IMultiDict;
-        switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any>
     }
 
     /**
@@ -430,11 +429,31 @@ declare module Kontext {
     }
 
     /**
-     *
+     * ICorpusSwitchAware represents an object which keeps
+     * some of its properties persistent even when KonText
+     * switches active corpus (which deletes most of the
+     * client-side objects - typically all the stores and views).
+     * I.e. the object stores some of the attributes and
+     * its successor will use these values to set the
+     * same properties.
      */
     export interface ICorpusSwitchAware<T> {
+
+        /**
+         * Export desired properties packed into
+         * a single object T
+         */
         exportState():T;
+
+        /**
+         * Import desired properties from object T
+         */
         setState(state:T):void;
+
+        /**
+         * Return a key under which the data will
+         * be stored.
+         */
         getStateKey():string;
     }
 }

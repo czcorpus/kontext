@@ -284,6 +284,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.asyncTaskChecker.registerTask(task);
     }
 
+    /**
+     * Register an object to store and restore data during corpus switch
+     * procedure.
+     */
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
         this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
         // now we look at the possible previous stored state
@@ -293,6 +297,19 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
     }
 
+    /**
+     * Change the current corpus used by KonText. Please note
+     * that this basically reinitializes all the page's stores
+     * and views (both layout and page init() method are called
+     * again).
+     *
+     * Objects you want to preserve must implement ICorpusSwitchAware<T>
+     * interface and must be registered via registerSwitchCorpAwareObject()
+     * (see below).
+     *
+     * A concrete page must ensure that its init() is also called
+     * as a promise chained after the one returned by this method.
+     */
     switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
         this.switchCorpAwareObjects.forEach((item, key) => {
             this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.getStateKey(), item.exportState());
@@ -990,9 +1007,5 @@ export class PluginApi implements Kontext.PluginApi {
 
     getConcArgs():MultiDict {
         return this.pageModel.getConcArgs();
-    }
-
-    switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
-        return this.pageModel.switchCorpus(corpora, subcorpus);
     }
 }
