@@ -152,6 +152,16 @@ export class ViewPage {
     private viewOptionsViews:StructsAndAttrsViews;
 
     /**
+     * Color scheme derived from d3.schemeCategory20
+     * by changing the order.
+     */
+    private static catColorScheme = [
+        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+        "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
+        "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5"
+    ];
+    /**
      *
      * @param layoutModel
      * @param stores
@@ -219,7 +229,7 @@ export class ViewPage {
             const width = 200;
             const height = 200;
             const radius = Math.min(width, height) / 2;
-            const color = d3.schemeCategory20;
+            const color = ViewPage.catColorScheme;
             const arc = d3.arc()
                 .outerRadius(radius - 10)
                 .innerRadius(0);
@@ -1024,14 +1034,14 @@ export class ViewPage {
             ContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
-            SpeakerColors: d3.schemeCategory20,
+            SpeakerColors: ViewPage.catColorScheme,
             SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
             SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
             SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
             SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
-            catColors: d3.schemeCategory20
+            catColors: ViewPage.catColorScheme
         };
         this.viewStores = new ViewPageStores();
         this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
