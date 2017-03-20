@@ -1822,7 +1822,7 @@ class Actions(Querying):
         else:
             return {'total': None}
 
-    @exposed(return_type='json')
+    @exposed(return_type='json', http_method='POST')
     def ajax_switch_corpus(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
