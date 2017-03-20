@@ -147,6 +147,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                     let corpora = corpusId.split('+');
                     const firstCorp = corpora[0].split(':');
                     corpora = [firstCorp[0]].concat(corpora.slice(1));
+                    this.corplistComponent.setButtonLoader();
                     this.layoutModel.switchCorpus(corpora, firstCorp[1]).then(
                         () => {
                             // all the components must be deleted to prevent memory leaks

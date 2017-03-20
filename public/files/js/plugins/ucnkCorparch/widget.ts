@@ -1449,6 +1449,13 @@ export class Corplist implements CorpusArchive.Widget {
         this.switchComponentVisibility(Visibility.VISIBLE);
     }
 
+    setButtonLoader():void {
+        $(this.triggerButton)
+            .empty()
+            .append(`<img class="button-loader" src="${this.pageModel.createStaticUrl('img/ajax-loader-bar.gif')}"
+                        alt="${this.pageModel.translate('global__loading')}" />`);
+    }
+
     /**
      *
      */
