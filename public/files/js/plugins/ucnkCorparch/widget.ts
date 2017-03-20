@@ -620,10 +620,14 @@ class SearchTab implements WidgetTab {
     }
 }
 
+export interface CorpusSwitchFavData {
+    dataFav:Array<common.CorplistItemUcnk>;
+}
+
 /**
  * This class represents the FavoritesTab (= user item) tab
  */
-class FavoritesTab implements WidgetTab {
+class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitchFavData> {
 
     pageModel:Kontext.PluginApi;
 
@@ -697,6 +701,20 @@ class FavoritesTab implements WidgetTab {
         } else {
             this.customListFilter = (item:any) => true;
         }
+    }
+
+    exportState():CorpusSwitchFavData {
+        return {
+            dataFav: this.dataFav
+        };
+    }
+
+    setState(state:CorpusSwitchFavData):void {
+        this.reinit(state.dataFav);
+    }
+
+    getStateKey():string {
+        return 'ucnk-corparch-corpus-switch-fav-data';
     }
 
     registerChangeListener(fn:(trigger:FavoritesTab)=>void) {
@@ -789,9 +807,6 @@ class FavoritesTab implements WidgetTab {
             (favItems:any) => { // TODO !!!
                 if (favItems && !favItems.error) {
                     this.reinit(favItems);
-                    this.onListChange.forEach((fn:(trigger:FavoritesTab)=>void) => {
-                        fn.call(this, this);
-                    });
 
                 } else {
                     this.pageModel.showMessage('error', this.pageModel.translate('defaultCorparch__failed_to_fetch_fav'));
@@ -904,6 +919,9 @@ class FavoritesTab implements WidgetTab {
         this.dataFav = newData;
         $(this.wrapperFeat).find('tr.data-item').remove();
         this.init();
+        this.onListChange.forEach((fn:(trigger:FavoritesTab)=>void) => {
+            fn.call(this, this);
+        });
     }
 
     show():void {
@@ -1017,6 +1035,9 @@ class StarComponent {
     onFavTabListChange = (trigger:FavoritesTab) => {
         if (!trigger.containsItem(this.extractItemFromPage())) {
             this.starSwitch.setStarState(false);
+
+        } else {
+            this.starSwitch.setStarState(true);
         }
     };
 
@@ -1062,7 +1083,6 @@ class StarComponent {
         let newItem:common.CorplistItemUcnk;
         let message:string;
         let postDispatch:(data:any)=>void;
-        let updateStar:()=>void;
 
         if (flag === commonDefault.Favorite.FAVORITE) {
             newItem = this.extractItemFromPage(flag);
@@ -1074,7 +1094,6 @@ class StarComponent {
             );
             message = this.pageModel.translate('defaultCorparch__item_added_to_fav');
             postDispatch = (data) => this.starSwitch.setItemId(data.id);
-            updateStar = () => this.starSwitch.setStarState(true);
 
         } else {
             prom = this.pageModel.ajax(
@@ -1085,7 +1104,6 @@ class StarComponent {
             );
             message = this.pageModel.translate('defaultCorparch__item_removed_from_fav');
             postDispatch = (data) => this.starSwitch.setItemId(null);
-            updateStar = () => this.starSwitch.setStarState(false);
         }
 
         prom.then<Array<common.CorplistItemUcnk>>(
@@ -1093,7 +1111,6 @@ class StarComponent {
                 if (!data.contains_errors) {
                     this.pageModel.showMessage('info', message);
                     postDispatch(data);
-                    updateStar();
 
                 } else {
                     if (data['error_code']) {
@@ -1117,7 +1134,7 @@ class StarComponent {
         ).then(
             (favItems:Array<common.CorplistItemUcnk>) => {
                 if (favItems) {
-                    if (!favItems['error']) { // currently, this cannot happen - an array is returned (i.e. custom attributes at all)
+                    if (!favItems['error']) {
                         this.favoriteItemsTab.reinit(favItems);
 
                     } else {
@@ -1242,9 +1259,6 @@ class StarComponent {
         this.starSwitch.setStarState(this.favoriteItemsTab.containsItem(this.extractItemFromPage()));
     }
 }
-
-
-
 
 
 /**
@@ -1536,5 +1550,9 @@ export class Corplist implements CorpusArchive.Widget {
 
     getWrapperElm():HTMLElement {
         return this.widgetWrapper;
+    }
+
+    getCorpusSwitchAwareObjects():Array<Kontext.ICorpusSwitchAware<any>> {
+        return [this.favoritesBox];
     }
 }

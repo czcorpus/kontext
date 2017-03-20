@@ -101,6 +101,7 @@ declare module Kontext {
         getUserSettings():Kontext.IUserSettings;
         hasPlugin(name:string):boolean;
         getConcArgs():IMultiDict;
+        registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
     }
 
     /**

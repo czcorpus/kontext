@@ -287,6 +287,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     /**
      * Register an object to store and restore data during corpus switch
      * procedure.
+     *
+     * Please avoid calling this method in page model's init() method
+     * as it would lead to an infinite recursion.
      */
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
         this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
@@ -1007,5 +1010,9 @@ export class PluginApi implements Kontext.PluginApi {
 
     getConcArgs():MultiDict {
         return this.pageModel.getConcArgs();
+    }
+
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
+        return this.pageModel.registerSwitchCorpAwareObject(obj);
     }
 }

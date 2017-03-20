@@ -83,5 +83,6 @@ export function create(
         options
     );
     corplist.bind(selectElm);
+    corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
     return corplist;
 }
