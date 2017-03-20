@@ -103,86 +103,85 @@ export class SubcorpListStore extends SimplePageStore {
             }
         });
 
-        const self = this;
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'SUBCORP_LIST_SELECT_LINE':
-                    self.selectLine(payload.props['idx']);
-                    self.notifyChangeListeners();
+                    this.selectLine(payload.props['idx']);
+                    this.notifyChangeListeners();
                 break;
                 case 'SUBCORP_LIST_SORT_LINES':
-                    self.sortItems(payload.props['colName'], payload.props['reverse']).then(
+                    this.sortItems(payload.props['colName'], payload.props['reverse']).then(
                         (data) => {
-                            self.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.notifyChangeListeners();
-                            self.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     )
                 break;
                 case 'SUBCORP_LIST_DELETE_SELECTED_SUBCORPORA':
-                    self.deleteSelectedSubcorpora().then(
+                    this.deleteSelectedSubcorpora().then(
                         (data) => {
-                            self.notifyChangeListeners();
-                            self.layoutModel.showMessage(
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage(
                                 'info',
-                                self.layoutModel.translate('subclist__sel_subcorpora_deleted')
+                                this.layoutModel.translate('subclist__sel_subcorpora_deleted')
                             );
                         },
                         (err) => {
-                            self.notifyChangeListeners();
-                            self.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_UPDATE_FILTER':
-                    self.filterItems(<SubcListFilter>payload.props).then(
+                    this.filterItems(<SubcListFilter>payload.props).then(
                         (data) => {
-                            self.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.notifyChangeListeners();
-                            self.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     )
                 break;
                 case 'SUBCORP_LIST_WIPE_SUBCORPUS':
-                    self.wipeSubcorpus(payload.props['idx']).then(
+                    this.wipeSubcorpus(payload.props['idx']).then(
                         (data) => {
-                            self.layoutModel.showMessage('info',
-                                    self.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
-                            self.notifyChangeListeners();
+                            this.layoutModel.showMessage('info',
+                                    this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
-                            self.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_RESTORE_SUBCORPUS':
-                    self.createSubcorpus(payload.props['idx']).then(
+                    this.createSubcorpus(payload.props['idx']).then(
                         (data) => {
-                            self.layoutModel.showMessage('info',
-                                    self.layoutModel.translate('subclist__subc_restore_confirm_msg'));
-                            self.notifyChangeListeners();
+                            this.layoutModel.showMessage('info',
+                                    this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
-                            self.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
                         }
                     );
                 break;
                 case 'SUBCORP_LIST_REUSE_QUERY':
-                    self.createSubcorpus(payload.props['idx'], payload.props['newName'], payload.props['newCql']).then(
+                    this.createSubcorpus(payload.props['idx'], payload.props['newName'], payload.props['newCql']).then(
                         (data) => {
-                            self.layoutModel.showMessage('info',
-                                    self.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
-                            self.notifyChangeListeners();
+                            this.layoutModel.showMessage('info',
+                                    this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
-                            self.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
                         }
                     );
                 break;
