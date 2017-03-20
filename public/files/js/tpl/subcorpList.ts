@@ -21,10 +21,10 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 
-import $ = require('jquery');
+import * as $ from 'jquery';
 import {PageModel, PluginApi} from './document';
-import corplist = require('plugins/corparch/init');
-import popupBox = require('../popupbox');
+import * as corplist from 'plugins/corparch/init';
+import * as popupBox from '../popupbox';
 import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';
 import {init as listViewInit} from 'views/subcorp/list';
 
@@ -59,9 +59,8 @@ class SubcorpListPage {
 
     private subcorpListStore:SubcorpListStore;
 
-    constructor(layoutModel:PageModel, subcorpListStore:SubcorpListStore) {
+    constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-        this.subcorpListStore = subcorpListStore;
     }
 
     private renderView():void {
@@ -75,13 +74,26 @@ class SubcorpListPage {
         );
     }
 
-
     init():void {
         this.layoutModel.init().then(
             (data) => {
+                this.subcorpListStore = new SubcorpListStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    this.layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
+                    this.layoutModel.getConf<SortKey>('SortKey'),
+                    this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
+                    this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('UnfinishedSubcorpora'),
+                    this.layoutModel.getConf<SubcListFilter>('Filter')
+                );
                 this.renderView();
             }
-        );
+        ).then(
+            _ => undefined,
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        )
     }
 }
 
@@ -90,15 +102,6 @@ class SubcorpListPage {
  */
 export function init(conf) {
     const layoutModel = new PageModel(conf);
-    const subcorpListStore = new SubcorpListStore(
-        layoutModel.dispatcher,
-        layoutModel,
-        layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
-        layoutModel.getConf<SortKey>('SortKey'),
-        layoutModel.getConf<Array<string>>('RelatedCorpora'),
-        layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('UnfinishedSubcorpora'),
-        layoutModel.getConf<SubcListFilter>('Filter')
-    );
-    const pageModel = new SubcorpListPage(layoutModel, subcorpListStore);
+    const pageModel = new SubcorpListPage(layoutModel);
     pageModel.init();
 }
