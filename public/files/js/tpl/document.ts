@@ -294,9 +294,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
         this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
         // now we look at the possible previous stored state
-        const v = this.switchCorpStateStorage.get(obj.getStateKey());
+        const v = this.switchCorpStateStorage.get(obj.csGetStateKey());
         if (v) {
-            obj.setState(v);
+            obj.csSetState(v);
         }
     }
 
@@ -315,7 +315,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
         this.switchCorpAwareObjects.forEach((item, key) => {
-            this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.getStateKey(), item.exportState());
+            this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.csGetStateKey(), item.csExportState());
         });
         this.switchCorpAwareObjects = this.switchCorpAwareObjects.clear();
         return this.ajax<AjaxResponse.CorpusSwitchResponse>(

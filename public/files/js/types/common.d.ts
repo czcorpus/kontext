@@ -444,18 +444,18 @@ declare module Kontext {
          * Export desired properties packed into
          * a single object T
          */
-        exportState():T;
+        csExportState():T;
 
         /**
          * Import desired properties from object T
          */
-        setState(state:T):void;
+        csSetState(state:T):void;
 
         /**
          * Return a key under which the data will
          * be stored.
          */
-        getStateKey():string;
+        csGetStateKey():string;
     }
 }
 

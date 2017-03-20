@@ -385,7 +385,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         });
     }
 
-    exportState():CorpusSwitchPreserved {
+    csExportState():CorpusSwitchPreserved {
         const corp = this.corpora.get(0);
         return {
             query: this.queries.get(corp),
@@ -394,14 +394,14 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         };
     }
 
-    setState(state:CorpusSwitchPreserved):void {
+    csSetState(state:CorpusSwitchPreserved):void {
         const corp = this.corpora.get(0);
         this.queries = this.queries.set(corp, state.query);
         this.queryTypes = this.queryTypes.set(corp, state.queryType);
         this.matchCaseValues = this.matchCaseValues.set(corp, state.matchCase);
     }
 
-    getStateKey():string {
+    csGetStateKey():string {
         return 'query-storage';
     }
 

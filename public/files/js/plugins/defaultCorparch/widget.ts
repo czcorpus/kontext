@@ -686,17 +686,17 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
         }
     }
 
-    exportState():CorpusSwitchFavData {
+    csExportState():CorpusSwitchFavData {
         return {
             dataFav: this.dataFav
         };
     }
 
-    setState(state:CorpusSwitchFavData):void {
+    csSetState(state:CorpusSwitchFavData):void {
         this.reinit(state.dataFav);
     }
 
-    getStateKey():string {
+    csGetStateKey():string {
         return 'default-corparch-corpus-switch-fav-data';
     }
 
