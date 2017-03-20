@@ -48,20 +48,6 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
     constructor(layoutModel:PageModel) {
         super(layoutModel.dispatcher);
         this.layoutModel = layoutModel;
-        this.layoutModel.dispatcher.register((payload:Kontext.DispatcherPayload) => {
-            switch (payload.actionType) {
-                case 'QUERY_INPUT_SELECT_SUBCORP':
-                    const subcname:string = payload.props['subcorp'];
-                    const input = <HTMLInputElement>window.document.getElementById('hidden-subcorp-sel');
-                    input.value = subcname;
-                    this.currentSubcorpus = subcname;
-                    this.onSubcorpChangeActions.forEach(fn => {
-                        fn.call(this, subcname);
-                    });
-                    this.notifyChangeListeners();
-                break;
-            }
-        });
     }
 
     registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
@@ -279,9 +265,27 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
         });
     }
 
+    private initActionHandling():void {
+        this.layoutModel.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'QUERY_INPUT_SELECT_SUBCORP':
+                    const subcname:string = payload.props['subcorp'];
+                    const input = <HTMLInputElement>window.document.getElementById('hidden-subcorp-sel');
+                    input.value = subcname;
+                    this.currentSubcorpus = subcname;
+                    this.onSubcorpChangeActions.forEach(fn => {
+                        fn.call(this, subcname);
+                    });
+                    this.notifyChangeListeners();
+                break;
+            }
+        });
+    }
+
     init():void {
         this.layoutModel.init().then(
             (d) => {
+                this.initActionHandling();
                 this.bindStaticElements();
                 this.views = wordlistFormInit(
                     this.layoutModel.dispatcher,
