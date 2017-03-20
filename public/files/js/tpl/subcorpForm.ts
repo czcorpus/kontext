@@ -61,14 +61,13 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
         this.layoutModel = pageModel;
         const subcForm = $('#subcorp-form');
-        const corplist = corplistComponent.create(
+        this.corplistComponent = corplistComponent.create(
             window.document.getElementById('corparch-mount'),
             'subcorpus/subcorp_form',
             this.layoutModel.pluginApi(),
             this,
             {editable: false}
         );
-        this.corplistComponent = corplistComponent;
         this.viewComponents = viewComponents;
         this.subcorpFormStore = subcorpFormStore;
     }
