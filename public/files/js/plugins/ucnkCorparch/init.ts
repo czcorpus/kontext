@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,7 +33,7 @@ import * as $ from 'jquery';
 import {CorplistItemUcnk} from './common';
 import * as widget from './widget';
 import {CorplistPage} from './corplist';
-import {init as viewsInit} from './view';
+import {init as viewInit} from './view';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
 import {QueryStore} from '../../stores/query/main';
@@ -49,7 +51,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
         pluginApi.getViews().PopupBox
     );
     const initViews = (formStore:CorplistFormStore, listStore:CorplistTableStore) => {
-        const ans:any = viewsInit(
+        const ans:any = viewInit(
             pluginApi.dispatcher(),
             pluginApi.exportMixins(),
             pluginApi.getViews(),
@@ -84,5 +86,6 @@ export function create(selectElm:HTMLElement, targetAction:string, pluginApi:Kon
         options
     );
     corplist.bind(selectElm);
+    corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
     return corplist;
 }

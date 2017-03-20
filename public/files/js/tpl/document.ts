@@ -284,18 +284,38 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.asyncTaskChecker.registerTask(task);
     }
 
+    /**
+     * Register an object to store and restore data during corpus switch
+     * procedure.
+     *
+     * Please avoid calling this method in page model's init() method
+     * as it would lead to an infinite recursion.
+     */
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
         this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
         // now we look at the possible previous stored state
-        const v = this.switchCorpStateStorage.get(obj.getStateKey());
+        const v = this.switchCorpStateStorage.get(obj.csGetStateKey());
         if (v) {
-            obj.setState(v);
+            obj.csSetState(v);
         }
     }
 
+    /**
+     * Change the current corpus used by KonText. Please note
+     * that this basically reinitializes all the page's stores
+     * and views (both layout and page init() method are called
+     * again).
+     *
+     * Objects you want to preserve must implement ICorpusSwitchAware<T>
+     * interface and must be registered via registerSwitchCorpAwareObject()
+     * (see below).
+     *
+     * A concrete page must ensure that its init() is also called
+     * as a promise chained after the one returned by this method.
+     */
     switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
         this.switchCorpAwareObjects.forEach((item, key) => {
-            this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.getStateKey(), item.exportState());
+            this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.csGetStateKey(), item.csExportState());
         });
         this.switchCorpAwareObjects = this.switchCorpAwareObjects.clear();
         return this.ajax<AjaxResponse.CorpusSwitchResponse>(
@@ -992,7 +1012,7 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.getConcArgs();
     }
 
-    switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
-        return this.pageModel.switchCorpus(corpora, subcorpus);
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
+        return this.pageModel.registerSwitchCorpAwareObject(obj);
     }
 }
