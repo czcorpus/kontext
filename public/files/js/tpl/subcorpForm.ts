@@ -31,7 +31,7 @@ import * as RSVP from 'vendor/rsvp';
 import {PageModel} from './document';
 import * as popupBox from '../popupbox';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
-import * as subcorpFormStoreModule from '../stores/subcorp/form';
+import {SubcorpFormStore} from '../stores/subcorp/form';
 import * as liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer = require('plugins/subcmixer/init');
 import {UserSettings} from '../userSettings';
@@ -53,12 +53,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     private viewComponents:any; // TODO types
 
-    private subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore;
+    private subcorpFormStore:SubcorpFormStore;
 
     private textTypesStore:TextTypesStore;
 
-    constructor(pageModel:PageModel, viewComponents,
-            subcorpFormStore:subcorpFormStoreModule.SubcorpFormStore) {
+    constructor(pageModel:PageModel) {
         this.layoutModel = pageModel;
         const subcForm = $('#subcorp-form');
         this.corplistComponent = corplistComponent.create(
@@ -66,10 +65,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             'subcorpus/subcorp_form',
             this.layoutModel.pluginApi(),
             this,
-            {editable: false}
+            {editable: true}
         );
-        this.viewComponents = viewComponents;
-        this.subcorpFormStore = subcorpFormStore;
     }
 
     registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {}
@@ -249,8 +246,19 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         const getStoredAlignedCorp = () => {
             return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
         };
+
         this.layoutModel.init().then(
             () => {
+                this.subcorpFormStore = new SubcorpFormStore(
+                    this.layoutModel.dispatcher,
+                    Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
+                    this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
+                );
+                this.viewComponents = subcorpViewsInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.exportMixins(),
+                    this.subcorpFormStore
+                );
                 this.initSubcCreationVariantSwitch();
                 this.sizeUnitsSafeSwitch();
                 this.initHints();
@@ -266,20 +274,6 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
 export function init(conf:Kontext.Conf) {
     const layoutModel:PageModel = new PageModel(conf);
-    const subcorpFormStore = new subcorpFormStoreModule.SubcorpFormStore(
-        layoutModel.dispatcher,
-        Object.keys(layoutModel.getConf('structsAndAttrs'))[0],
-        layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
-    );
-    const subcorpFormComponents = subcorpViewsInit(
-        layoutModel.dispatcher,
-        layoutModel.exportMixins(),
-        subcorpFormStore
-    );
-    const pageModel = new SubcorpForm(
-        layoutModel,
-        subcorpFormComponents,
-        subcorpFormStore
-    );
+    const pageModel = new SubcorpForm(layoutModel);
     pageModel.init(conf);
 }
