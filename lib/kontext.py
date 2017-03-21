@@ -298,6 +298,20 @@ class Kontext(Controller):
     def _get_available_aligned_corpora(self):
         return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
 
+    def _get_valid_settings(self):
+        """
+        Return all the settings valid for actual
+        KonText version (i.e. deprecated values
+        are filtered out).
+        """
+        if self._user_has_persistent_settings():
+            data = plugins.get('settings_storage').load(self._session_get('user', 'id'))
+        else:
+            data = self._session_get('settings')
+            if not data:
+                data = {}
+        return [x for x in data.items() if x[0] != 'queryselector']
+
     def _load_user_settings(self):
         """
         Loads user settings via settings_storage plugin. The settings are divided
@@ -310,13 +324,7 @@ class Kontext(Controller):
         """
         options = {}
         corp_options = {}
-        if self._user_has_persistent_settings():
-            data = plugins.get('settings_storage').load(self._session_get('user', 'id'))
-        else:
-            data = self._session_get('settings')
-            if not data:
-                data = {}
-        for k, v in data.items():
+        for k, v in self._get_valid_settings():
             if ':' not in k:
                 options[k] = v
             else:
