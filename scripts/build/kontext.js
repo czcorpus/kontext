@@ -166,6 +166,7 @@
             'vendor/react-dom': reactDomModule,
             'vendor/immutable': 'vendor/immutable.min',
             'vendor/d3': 'vendor/d3.min',
+            'vendor/d3-color': 'vendor/d3-color.min',
             'SoundManager' : 'vendor/soundmanager2.min',
         };
         let pluginBuildConf = findAllPluginBuildConf(pluginsPath, doc);
@@ -198,7 +199,8 @@
             'vendor/typeahead',
             'vendor/bloodhound',
             'vendor/intl-messageformat',
-            'vendor/d3'
+            'vendor/d3',
+            'vendor/d3-color'
         ];
         if (isProduction) {
             modules.push('translations');

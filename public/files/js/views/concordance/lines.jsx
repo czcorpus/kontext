@@ -495,7 +495,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             const tmp = lineSelectionStore.getLine(dataItem.languages.first().tokenNumber);
             const cat = tmp ? tmp[1] : dataItem.lineGroup;
             if (cat >= 1) {
-                const bgColor = this.props.catColors[(cat - 1) % this.props.catColors.length];
+                const bgColor = this.props.catColors[cat % this.props.catColors.length];
                 const fgColor = color2str(calcTextColorFromBg(importColor(bgColor, 0)));
                 return [color2str(importColor(bgColor, 0.9)), fgColor];
             }
