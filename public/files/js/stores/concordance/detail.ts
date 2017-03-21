@@ -254,6 +254,11 @@ export class ConcDetailStore extends SimplePageStore {
                         }).toArray()
                     );
                 break;
+                case 'CONCORDANCE_STOP_SPEECH':
+                    self.playingRowIdx = null;
+                    self.audioPlayer.stop();
+                    self.notifyChangeListeners();
+                break;
             }
         });
     }

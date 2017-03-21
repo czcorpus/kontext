@@ -374,6 +374,79 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         });
     }
 
+    // ------------------------- <PlaybackIcon /> ---------------------------
+
+    const PlaybackIcon = React.createClass({
+
+        mixins : mixins,
+
+        _interval : null,
+
+        getInitialState : function () {
+            return {
+                img: 0
+            };
+        },
+
+        componentDidUpdate : function () {
+            if (this.props.isPlaying && this._interval === null) {
+                this._interval = window.setInterval(() => {
+                    this.setState({
+                        img: (this.state.img + 1) % 4
+                    });
+                }, 250);
+
+            } else if (!this.props.isPlaying && this._interval !== null) {
+                window.clearInterval(this._interval);
+                this._interval = null;
+                this.setState({
+                    img: 0
+                });
+            }
+        },
+
+        componentWillUnmount : function () {
+            if (this._interval !== null) {
+                window.clearInterval(this._interval);
+            }
+        },
+
+        _handleMouseOver : function () {
+            this.props.setFocusFn(true);
+        },
+
+        _handleMouseOut : function () {
+            this.props.setFocusFn(false);
+        },
+
+        _getTitle : function () {
+            if (this.props.isPlaying) {
+                return this.translate('concview__playing');
+
+            } else {
+                return this.translate('concview__click_to_play_audio');
+            }
+        },
+
+        _getClickHandler : function () {
+            if (this.props.isPlaying) {
+                return this.props.handleStopClick;
+
+            } else {
+                return this.props.handleClick;
+            }
+        },
+
+        render : function () {
+            return (
+                <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
+                    <img src={this.createStaticUrl(`img/audio-${this.state.img}w.svg`)} title={this._getTitle()}
+                            onClick={this._getClickHandler()} />
+                </span>
+            );
+        }
+    });
+
     // ------------------------- <SpeechText /> ---------------------------
 
     const SpeechText = React.createClass({
@@ -384,12 +457,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return {hasFocus: false};
         },
 
-        _handleMouseOver : function () {
-            this.setState({hasFocus: true});
-        },
-
-        _handleMouseOut : function () {
-            this.setState({hasFocus: false});
+        _setFocus : function (focus) {
+            this.setState({hasFocus: focus});
         },
 
         render : function () {
@@ -399,15 +468,10 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     {this.props.data.map((item, i) => {
                         return <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>;
                     })}
-                    <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
-                        {this.props.waitsForPlay ?
-                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                    alt={this.translate('global__loading')} />
-                        : <img src={this.createStaticUrl('img/audio.svg')}
-                             onClick={this.props.handleClick}
-                             title={this.translate('concview__click_to_play_audio')} />
-                        }
-                    </span>
+                    <PlaybackIcon handleClick={this.props.handleClick}
+                                handleStopClick={this.props.handleStopClick}
+                                isPlaying={this.props.isPlaying}
+                                setFocusFn={this._setFocus} />
                 </div>
             );
         }
@@ -434,7 +498,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                         <SpeechText data={this.props.speech.text} key={this.props.idx}
                                 bulletColor={color2str(this.props.speech.colorCode)}
                                 handleClick={this.props.handlePlayClick}
-                                waitsForPlay={this.props.waitsForPlay} />
+                                handleStopClick={this.props.handleStopClick}
+                                isPlaying={this.props.isPlaying} />
                     </td>
                 </tr>
             );
@@ -470,9 +535,11 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     </th>
                     <td className="text overlapping-block">
                         {this.props.speeches.map((speech, i) => <SpeechText data={speech.text}
-                                    key={`${this.props.idx}:${i}`} bulletColor={color2str(speech.colorCode)}
+                                    key={`${this.props.idx}:${i}`}
+                                    bulletColor={color2str(speech.colorCode)}
                                     handleClick={this.props.handlePlayClick}
-                                    waitsForPlay={this.props.waitsForPlay} />)}
+                                    handleStopClick={this.props.handleStopClick}
+                                    isPlaying={this.props.isPlaying} />)}
                     </td>
                 </tr>
             );
@@ -504,6 +571,13 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             });
         },
 
+        _handleStopClick : function () {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_STOP_SPEECH',
+                props: {}
+            });
+        },
+
         _storeChangeHandler : function () {
             this.setState({
                 data: concDetailStore.getSpeechesDetail(),
@@ -529,7 +603,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 speech={item[0]}
                                 idx={i}
                                 handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
-                                waitsForPlay={this.state.playerWaitingIdx === i} />;
+                                handleStopClick={this._handleStopClick}
+                                isPlaying={this.state.playerWaitingIdx === i} />;
 
                 } else if (item.length > 1) {
                     return <TROverlappingSpeeches
@@ -538,7 +613,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 idx={i}
                                 speechOverlapVal={this.props.speechOverlapVal}
                                 handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
-                                waitsForPlay={this.state.playerWaitingIdx === i} />;
+                                handleStopClick={this._handleStopClick}
+                                isPlaying={this.state.playerWaitingIdx === i} />;
 
                 } else {
                     return null;
