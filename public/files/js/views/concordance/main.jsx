@@ -461,6 +461,10 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         _handleDetailCloseClick : function () {
             this.setState(React.addons.update(this.state, {concDetailMetadata: {$set: null}}));
             dispatcher.dispatch({
+                actionType: 'CONCORDANCE_STOP_SPEECH',
+                props: {}
+            });
+            dispatcher.dispatch({
                 actionType: 'CONCORDANCE_RESET_DETAIL',
                 props: {}
             });

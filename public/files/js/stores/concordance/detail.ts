@@ -247,6 +247,11 @@ export class ConcDetailStore extends SimplePageStore {
                     }
                 break;
                 case 'CONCORDANCE_PLAY_SPEECH':
+                    if (self.playingRowIdx > -1) {
+                        self.playingRowIdx = null;
+                        self.audioPlayer.stop();
+                        self.notifyChangeListeners();
+                    }
                     self.playingRowIdx = payload.props['rowIdx'];
                     self.audioPlayer.start(
                         (<Immutable.List<string>>payload.props['segments']).map(item => {
@@ -255,9 +260,11 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_STOP_SPEECH':
-                    self.playingRowIdx = null;
-                    self.audioPlayer.stop();
-                    self.notifyChangeListeners();
+                    if (self.playingRowIdx > -1) {
+                        self.playingRowIdx = null;
+                        self.audioPlayer.stop();
+                        self.notifyChangeListeners();
+                    }
                 break;
             }
         });
