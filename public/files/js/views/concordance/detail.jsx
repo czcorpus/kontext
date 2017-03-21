@@ -731,7 +731,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
         _storeChangeHandler : function () {
             this.setState({
-                isWaiting: false
+                isWaiting: false,
+                mode: concDetailStore.getDefaultViewMode()
             });
         },
 
