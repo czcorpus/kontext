@@ -265,13 +265,15 @@ class Actions(Querying):
         else:
             self.args.align = [ac for ac in self.args.align if ac in self._get_available_aligned_corpora()]
         out['aligned_corpora'] = self.args.align
-
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
         self._attach_aligned_query_params(out)
-        self.add_conc_form_args(QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False),
-                                              persist=False))
+
+        qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False), persist=False)
+        if self.args.queryselector:
+            qf_args.curr_query_types[self.args.corpname] = self.args.queryselector[:-3]
+        self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
         return out
@@ -636,8 +638,7 @@ class Actions(Querying):
     @exposed(template='view.tmpl', page_model='view')
     def first(self, request):
         self._clear_prev_conc_params()
-        self._store_semi_persistent_attrs(('align', 'corpname'))
-        self._save_options(['queryselector'])
+        self._store_semi_persistent_attrs(('align', 'corpname', 'queryselector'))
 
         ans = {}
         # 1) store query forms arguments for later reuse on client-side
