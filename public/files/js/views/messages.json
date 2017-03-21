@@ -580,7 +580,7 @@
         "query__sort_label_left_context": "levý kontext",
         "query__sort_label_node": "KWIC",
         "query__sort_label_right_context": "pravý kontext",
-        "query__sort_th_num_of_tokens_to_sort": "Pofreq__remove_level_btnčet tokenů k třídění",
+        "query__sort_th_num_of_tokens_to_sort": "Počet tokenů k třídění",
         "query__sort_th_ignore_case": "Nerozlišovat velikost",
         "query__sort_th_backward": "Retrográdně",
         "query__sort_th_position": "Pozice",
