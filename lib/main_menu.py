@@ -423,9 +423,7 @@ class MenuGenerator(object):
         )
 
         self.query_undo = (
-            HideOnCustomCondItem(MainMenu.CONCORDANCE('undo'), _('Undo'), 'view')
-            .add_args(
-                ('q', self._args['undo_q']))
+            EventTriggeringItem(MainMenu.CONCORDANCE('undo'), _('Undo'), 'MAIN_MENU_UNDO_LAST_QUERY_OP')
             .enable_if(lambda d: len(d.get('undo_q', [])) > 0)
         )
 

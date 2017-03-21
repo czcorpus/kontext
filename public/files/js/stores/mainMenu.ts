@@ -153,6 +153,16 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         return this.activeItem;
     }
 
+    /**
+     * Typically, it is expected that UI components reacting to main menu changes
+     * will listen to MainMenuStore updates and update themselves accordingly.
+     * But sometimes it is necessary to perform an action before the actual change
+     * is "published" (e.g. load fresh data from server) which is why it is possible
+     * to register a custom function to a specific menu action.
+     *
+     * @param actionName
+     * @param fn
+     */
     addItemActionPrerequisite(actionName:string, fn:(args:Kontext.GeneralProps)=>RSVP.Promise<any>) {
         const fnList = this.selectionListeners.has(actionName) ?
                 this.selectionListeners.get(actionName)
