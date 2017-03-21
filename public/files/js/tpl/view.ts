@@ -1007,6 +1007,17 @@ export class ViewPage {
         );
     }
 
+    private initUndoFunction():void {
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_UNDO_LAST_QUERY_OP',
+            (args:Kontext.GeneralProps) => {
+                return new RSVP.Promise((resolve:(v)=>void, reject:(e)=>void) => {
+                    window.history.back();
+                });
+            }
+        )
+    }
+
     private initStores():ViewConfiguration {
         const concSummaryProps:ConcSummary = {
             concSize: this.layoutModel.getConf<number>('ConcSize'),
@@ -1100,6 +1111,7 @@ export class ViewPage {
                 lineViewProps.onPageUpdate = () => {
                     syntaxViewer.create(this.layoutModel.pluginApi());
                 };
+                this.initUndoFunction();
 
             	this.concViews = concViewsInit(
                     this.layoutModel.dispatcher,
