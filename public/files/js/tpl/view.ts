@@ -25,6 +25,7 @@
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/soundmanager.d.ts" />
 /// <reference path="../../ts/declarations/d3.d.ts" />
+/// <reference path="../../ts/declarations/d3-color.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
@@ -52,6 +53,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
 import * as d3 from 'vendor/d3';
+import * as d3Color from 'vendor/d3-color';
 import * as syntaxViewer from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
@@ -95,10 +97,9 @@ export class QueryStores {
     sampleStore:SampleStore;
 }
 
-type LineGroupChartData = Array<{group:string; count:number}>;
+type LineGroupChartData = Array<{groupId:number; group:string; count:number}>;
 
 type LineGroupStats = {[groupId:number]:number};
-
 
 /**
  * This is the concordance viewing and operating model with
@@ -155,12 +156,11 @@ export class ViewPage {
      * Color scheme derived from d3.schemeCategory20
      * by changing the order.
      */
-    private static catColorScheme = [
+    private static BASE_COLOR_SCHEME = [
         "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-        "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
-        "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5"
+        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
     ];
+
     /**
      *
      * @param layoutModel
@@ -172,6 +172,22 @@ export class ViewPage {
         this.queryStores = new QueryStores();
         this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
+    }
+
+    /**
+     * @todo this must be tuned quite a bit to make
+     * categories and chart elements distinguishable
+     */
+    private extendBaseColorPalette():Array<string> {
+        const ans:Array<string> = ['RGB(0, 0, 0)']; // we don't use the first color
+        const coeff = [0, 0.7, 1.2, 1.8, 2.1, 2.2, 2.3, 2.3, 2.3, 2.3];
+        for (let i = 0; i < 10; i += 1) {
+            ViewPage.BASE_COLOR_SCHEME.forEach((color, j) => {
+                const c = d3Color.color(color);
+                ans.push(c.brighter(coeff[i]).toString());
+            });
+        }
+        return ans;
     }
 
     private translate(s:string, values?:any):string {
@@ -229,7 +245,7 @@ export class ViewPage {
             const width = 200;
             const height = 200;
             const radius = Math.min(width, height) / 2;
-            const color = ViewPage.catColorScheme;
+            const color = self.extendBaseColorPalette();
             const arc = d3.arc()
                 .outerRadius(radius - 10)
                 .innerRadius(0);
@@ -240,7 +256,7 @@ export class ViewPage {
                 .value((d) => d['count'])
                 .sort(null);
 
-            data = pie(data);
+            const pieData = pie(data);
             const wrapper = d3.select(rootElm).append('svg')
                 .attr('width', width)
                 .attr('height', height)
@@ -250,15 +266,15 @@ export class ViewPage {
                     .attr('class', 'chart-wrapper');
 
             const g = wrapper.selectAll('.arc')
-                .data(data).enter()
+                .data(pieData).enter()
                     .append('g')
                     .attr('class', 'arc');
 
             g.append('path')
                 .attr('d', arc)
-                .style('fill', (d, i:any) => color[i]);
+                .style('fill', (d:any) => color[d.data['groupId']]);
 
-            if (data.length <= 5) { // direct labels only for small num of portions
+            if (pieData.length <= 5) { // direct labels only for small num of portions
                 g.append('text')
                     .attr('transform', (d:any) => ('translate(' + labelArc.centroid(d) + ')'))
                     .text((d:any) => d.data['group']);
@@ -286,33 +302,35 @@ export class ViewPage {
                 .addClass('chart-label')
                 .append(tbody);
 
-            data.forEach((item, i) => {
-                const trElm = addElm('tr', tbody);
-                const td1Elm = addElm('td', trElm);
-                const td2Elm = addElm('th', trElm);
-                const td3Elm = addElm('td', trElm);
-                const td4Elm = addElm('td', trElm);
-                $(td1Elm)
-                    .addClass('label-text')
-                    .css({'background-color': colors[i]})
-                    .addClass('color-code')
-                    .text('\u00A0');
-                $(td2Elm)
-                    .addClass('num')
-                    .append(item['group']);
-                $(td3Elm)
-                    .addClass('num')
-                    .append(percentage(item));
-                $(td4Elm)
-                    .addClass('num')
-                    .append('(' + item['count'] + 'x)');
-            });
+            data
+                .sort((x1, x2) => x1.groupId > x2.groupId ? 1 : -1)
+                .forEach((item, i) => {
+                    const trElm = addElm('tr', tbody);
+                    const td1Elm = addElm('td', trElm);
+                    const td2Elm = addElm('th', trElm);
+                    const td3Elm = addElm('td', trElm);
+                    const td4Elm = addElm('td', trElm);
+                    $(td1Elm)
+                        .addClass('label-text')
+                        .css({'background-color': colors[item.groupId]})
+                        .addClass('color-code')
+                        .text('\u00A0');
+                    $(td2Elm)
+                        .addClass('num')
+                        .append(item['group']);
+                    $(td3Elm)
+                        .addClass('num')
+                        .append(percentage(item));
+                    $(td4Elm)
+                        .addClass('num')
+                        .append('(' + item['count'] + 'x)');
+                });
             $(rootElm).append(labelWrapper);
         }
-        let prom;
 
+        let prom:RSVP.Promise<LineGroupStats>;
         if (this.lastGroupStats && usePrevData) {
-            prom = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+            prom = new RSVP.Promise<LineGroupStats>((resolve:(v:any)=>void, reject:(e:any)=>void) => {
                 resolve(this.lastGroupStats);
             });
 
@@ -338,7 +356,11 @@ export class ViewPage {
             (data) => {
                 const chartData:LineGroupChartData = [];
                 for (let p in data) {
-                    chartData.push({group: '#' + p, count: data[p]}); // TODO group '#' should be implicit
+                    chartData.push({
+                        groupId: parseInt(p, 10),
+                        group: `#${p}`,
+                        count: data[p]
+                    });
                 }
                 $(rootElm).empty(); // remove loader
                 $(rootElm).append(
@@ -1045,14 +1067,14 @@ export class ViewPage {
             ContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
-            SpeakerColors: ViewPage.catColorScheme,
+            SpeakerColors: this.extendBaseColorPalette(),
             SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
             SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
             SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
             SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
-            catColors: ViewPage.catColorScheme
+            catColors: this.extendBaseColorPalette()
         };
         this.viewStores = new ViewPageStores();
         this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
@@ -1100,6 +1122,7 @@ export class ViewPage {
      *
      */
     init():RSVP.Promise<any> {
+        this.extendBaseColorPalette();
         return this.layoutModel.init().then(
             () => {
                 const lineViewProps = this.initStores();

@@ -94,9 +94,7 @@ export function importColor(color:string, opacity:number):Kontext.RGBAColor {
     }
 }
 
-
 // ------------------------------------------------------------
-
 
 /**
  * Returns position (in number of characters) of cursor in a text input

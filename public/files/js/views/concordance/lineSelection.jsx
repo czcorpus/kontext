@@ -184,8 +184,8 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_GROUP_RENAME',
                 props: {
-                    srcGroupNum: this.state.srcGroupNum,
-                    dstGroupNum: this.state.dstGroupNum
+                    srcGroupNum: Number(this.state.srcGroupNum),
+                    dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
                 }
             });
         },
@@ -205,7 +205,7 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
         },
 
         getInitialState : function () {
-            return {srcGroupNum: null, dstGroupNum: null, waiting: false};
+            return {srcGroupNum: '', dstGroupNum: '', waiting: false};
         },
 
         _handleSrcInputChange : function (evt) {
