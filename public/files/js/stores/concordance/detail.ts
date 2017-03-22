@@ -253,11 +253,17 @@ export class ConcDetailStore extends SimplePageStore {
                         self.notifyChangeListeners();
                     }
                     self.playingRowIdx = payload.props['rowIdx'];
-                    self.audioPlayer.start(
-                        (<Immutable.List<string>>payload.props['segments']).map(item => {
+                    const itemsToPlay = (<Immutable.List<string>>payload.props['segments']).map(item => {
                             return self.layoutModel.createActionUrl(`audio?corpname=${self.corpusId}&chunk=${item}`);
-                        }).toArray()
-                    );
+                        }).toArray();
+                    if (itemsToPlay.length > 0) {
+                        self.audioPlayer.start(itemsToPlay);
+
+                    } else {
+                        self.playingRowIdx = -1;
+                        self.layoutModel.showMessage('error', self.layoutModel.translate('concview__nothing_to_play'));
+                        self.notifyChangeListeners();
+                    }
                 break;
                 case 'CONCORDANCE_STOP_SPEECH':
                     if (self.playingRowIdx > -1) {
