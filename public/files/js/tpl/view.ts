@@ -178,7 +178,7 @@ export class ViewPage {
      * @todo this must be tuned quite a bit to make
      * categories and chart elements distinguishable
      */
-    private extendBaseColorPalette():Array<string> {
+    private extendBaseColorPalette(offset:number=0):Array<string> {
         const ans:Array<string> = ['RGB(0, 0, 0)']; // we don't use the first color
         const coeff = [0, 0.7, 1.2, 1.8, 2.1, 2.2, 2.3, 2.3, 2.3, 2.3];
         for (let i = 0; i < 10; i += 1) {
@@ -187,7 +187,7 @@ export class ViewPage {
                 ans.push(c.brighter(coeff[i]).toString());
             });
         }
-        return ans;
+        return ans.slice(offset);
     }
 
     private translate(s:string, values?:any):string {
@@ -1067,7 +1067,7 @@ export class ViewPage {
             ContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
-            SpeakerColors: this.extendBaseColorPalette(),
+            SpeakerColors: this.extendBaseColorPalette(1),
             SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
             SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
             SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
