@@ -352,9 +352,9 @@ class QuickFilterArgsConv(object):
 
     @staticmethod
     def _parse(q):
-        srch = re.search(r'^([pPnN])(-?\d+)([\s-]\d+|\s\d>\d)([\s-]\d+)(.*)', q)
+        srch = re.search(r'^([pPnN])(-?\d)([<>]\d)?\s(-?\d)([<>]\d)?\s(\d+)\s(.*)', q)
         if srch:
-            return tuple(x.strip() for x in srch.groups())
+            return tuple(x.strip() if x is not None else x for x in srch.groups())
         else:
             logging.getLogger(__name__).warning('Failed to parse quick filter query: %s' % (q,))
             return 'p', '', '', ''
@@ -371,9 +371,9 @@ class QuickFilterArgsConv(object):
         ff_args.query = elms[-1]
         ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
         ff_args.pnfilter = elms[0].lower()
-        ff_args.filfl = elms[3]
+        ff_args.filfl = elms[5]
         ff_args.filfpos = elms[1]
-        ff_args.filtpos = '0' if elms[2] == '0>0' else elms[2]  # TODO !!!!
+        ff_args.filtpos = elms[3]
         ff_args.inclkwic = self._incl_kwic(elms[0])
         ff_args.qmcase = True
         ff_args.default_attr = self.args.default_attr
