@@ -71,7 +71,15 @@ export class LineSelectionStore extends SimplePageStore {
         this.layoutModel = layoutModel;
         this.concLineStore = concLineStore;
         this.clStorage = clStorage;
-        this.mode = this.clStorage.getMode();
+        if (clStorage.size() > 0) {
+            this.mode = this.clStorage.getMode();
+
+        } else if (concLineStore.getNumItemsInLockedGroups() > 0) {
+            this.mode = 'groups';
+
+        } else {
+            this.mode = 'simple';
+        }
         this.actionFinishHandlers = [];
         this.currentGroupIds = this.layoutModel.getConf<Array<number>>('LinesGroupsNumbers');
         this.maxGroupId = this.layoutModel.getConf<number>('concLineMaxGroupNum');

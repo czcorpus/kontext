@@ -1801,8 +1801,8 @@ class Actions(Querying):
         return ans
 
     @exposed(return_type='json', legacy=True)
-    def ajax_rename_line_group(self, from_num=0, to_num=0):
-        new_groups = filter(lambda v: v[2] != from_num or to_num != 0, self._lines_groups)
+    def ajax_rename_line_group(self, from_num=0, to_num=-1):
+        new_groups = filter(lambda v: v[2] != from_num or to_num != -1, self._lines_groups)
         if to_num > 0:
             new_groups = map(lambda v: v if v[2] != from_num else (v[0], v[1], to_num), new_groups)
         self._lines_groups = LinesGroups(data=new_groups)
