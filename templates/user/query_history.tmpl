@@ -47,8 +47,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <option value="iquery" #if $getVar('query_type', '') == 'iquery'#selected="selected"#end if#>$_('Basic')</option>
             <option value="lemma" #if $getVar('query_type', '') == 'lemma'#selected="selected"#end if#>$_('Lemma')</option>
             <option value="phrase" #if $getVar('query_type', '') == 'phrase'#selected="selected"#end if#>$_('Phrase')</option>
-            <option value="word" #if $getVar('query_type', '') == 'word'#selected="selected"#end if#>$_('Word Form')</option>
-            <option value="char" #if $getVar('query_type', '') == 'char'#selected="selected"#end if#>$_('Character')</option>
+            <option value="word" #if $getVar('query_type', '') == 'word'#selected="selected"#end if#>$_('Word form')</option>
+            <option value="char" #if $getVar('query_type', '') == 'char'#selected="selected"#end if#>$_('Word part')</option>
             <option value="cql" #if $getVar('query_type', '') == 'cql'#selected="selected"#end if#>CQL</option>
         </select>
         <button class="default-button" type="submit">$_('Filter list')</button>

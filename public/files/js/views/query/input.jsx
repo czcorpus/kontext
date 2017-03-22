@@ -92,12 +92,12 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     <th>{this.translate('query__select_type')}:</th>
                     <td>
                         <select value={this.props.queryType} onChange={this._handleSelection}>
-                            <option value="iquery">Basic</option>
-                            {this.props.hasLemmaAttr ? <option value="lemma">Lemma</option> : null}
-                            <option value="phrase">Phrase</option>
-                            <option value="word">Word form</option>
-                            <option value="char">Character</option>
-                            <option value="cql">CQL</option>
+                            <option value="iquery">{this.translate('query__qt_basic')}</option>
+                            {this.props.hasLemmaAttr ? <option value="lemma">{this.translate('query__qt_lemma')}</option> : null}
+                            <option value="phrase">{this.translate('query__qt_phrase')}</option>
+                            <option value="word">{this.translate('query__qt_word_form')}</option>
+                            <option value="char">{this.translate('query__qt_word_part')}</option>
+                            <option value="cql">{this.translate('query__qt_cql')}</option>
                         </select>
                     </td>
                 </tr>
