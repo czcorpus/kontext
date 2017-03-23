@@ -32,10 +32,14 @@ from database import Database
 
 @exposed(return_type='json', acess_level=1)
 def subcmixer_run_calc(ctrl, request):
-    return plugins.get('subcmixer').process(plugin_api=ctrl._plugin_api, corpus=ctrl.corp,
-                                            corpname=request.form['corpname'],
-                                            aligned_corpora=request.form.getlist('aligned_corpora'),
-                                            args=json.loads(request.form['expression']))
+    try:
+        return plugins.get('subcmixer').process(plugin_api=ctrl._plugin_api, corpus=ctrl.corp,
+                                                corpname=request.form['corpname'],
+                                                aligned_corpora=request.form.getlist('aligned_corpora'),
+                                                args=json.loads(request.form['expression']))
+    except ResultNotFoundException as ex:
+        ctrl.add_system_message('error', ex.message)
+        return {}
 
 
 @exposed(return_type='json', access_level=1)
@@ -64,6 +68,10 @@ def subcmixer_create_subcorpus(ctrl, request):
 
 
 class SubcMixerException(PluginException):
+    pass
+
+
+class ResultNotFoundException(SubcMixerException):
     pass
 
 
@@ -135,8 +143,7 @@ class SubcMixer(AbstractSubcMixer):
             return ans
 
         else:
-            raise SubcMixerException('Corpus composition failed. '
-                                     'One of the provided conditions generates no data.')
+            raise ResultNotFoundException('ucnk_subcm__failed_to_find_suiteable_mix')
 
     def export_actions(self):
         return {actions.subcorpus.Subcorpus: [subcmixer_run_calc, subcmixer_create_subcorpus]}

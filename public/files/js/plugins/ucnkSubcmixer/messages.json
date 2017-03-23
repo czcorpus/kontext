@@ -22,7 +22,8 @@
     "ucnk_subc__ratios_th_required_ratio": "Required ratio",
     "ucnk_subc__ratios_th_status": "Status",
     "ucnk_subc__ratios_th_orig_ratio": "Original ratio",
-    "ucnk_subcm__there_are_aligned_corpora_msg": "The calculation will be performed only within items aligned with the following corpora"
+    "ucnk_subcm__there_are_aligned_corpora_msg": "The calculation will be performed only within items aligned with the following corpora",
+    "ucnk_subcm__failed_to_find_suiteable_mix": "Failed to find a suitable mix of texts. Try to reduce the number of conditions and/or set ratios closer to their original value."
 
   },
   "cs-CZ": {
@@ -48,6 +49,7 @@
     "ucnk_subc__ratios_th_required_ratio": "Požadovaný podíl",
     "ucnk_subc__ratios_th_status": "Status",
     "ucnk_subc__ratios_th_orig_ratio": "Původní podíl",
-    "ucnk_subcm__there_are_aligned_corpora_msg": "Výpočet proběhne pouze na položkách, které jsou zarovnané s následujícími korpusy"
+    "ucnk_subcm__there_are_aligned_corpora_msg": "Výpočet proběhne pouze na položkách, které jsou zarovnané s následujícími korpusy",
+    "ucnk_subcm__failed_to_find_suiteable_mix": "Nepodařilo se najít vyhovující mix textů. Zkuste omezit počet podmínek a/nebo nastavit podíly blíže jejich původním hodnotám."
   }
 }

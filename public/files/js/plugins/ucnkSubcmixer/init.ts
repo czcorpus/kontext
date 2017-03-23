@@ -260,7 +260,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                     };
 
                 } else {
-                    throw new Error(data.messages[0]);
+                    throw this.pluginApi.unpackServerError(data);
                 }
             }
         );
