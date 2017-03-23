@@ -44,6 +44,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 <section>
 <h2>$_('New subcorpus')</h2>
     <form id="subcorp-form" action="subcorp" method="POST">
+        <input type="hidden" name="corpname" value="${corpname}" />
         <table class="form">
         <tbody>
         <tr>
