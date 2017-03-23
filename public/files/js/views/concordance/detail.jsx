@@ -83,8 +83,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             });
         },
 
-        componentDidMount : function () {
-            refsDetailStore.addChangeListener(this._storeChangeHandler);
+        _loadData : function () {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_SHOW_REF_DETAIL',
                 props: {
@@ -95,8 +94,21 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             });
         },
 
+        componentDidMount : function () {
+            refsDetailStore.addChangeListener(this._storeChangeHandler);
+            this._loadData();
+        },
+
         componentWillUnmount : function () {
             refsDetailStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        componentDidUpdate : function (prevProps, prevState) {
+            if (prevProps.corpusId !== this.props.corpusId
+                    || prevProps.tokenNumber !== this.props.tokenNumber
+                    || prevProps.lineIdx !== this.props.lineIdx) {
+                this._loadData();
+            }
         },
 
         _renderContents : function () {
