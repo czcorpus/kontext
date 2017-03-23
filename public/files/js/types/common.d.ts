@@ -87,6 +87,7 @@ declare module Kontext {
         createActionUrl(path:string, args?:Array<[string,string]>|IMultiDict):string;
         ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
         showMessage(type:string, message:any, onClose?:()=>void);
+        unpackServerError(resp:Kontext.AjaxResponse):Error;
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date, timeFormat?:number):string;
@@ -803,8 +804,14 @@ declare module TextTypes {
         getAttrSummary():Immutable.Map<string, AttrSummary>;
 
         /**
-         * Return the total number of tokens in all the
-         * possible attribute values groups.
+         * Return the total number of tokens in
+         * texts matching all the attribute values
+         * belonging to the provided attrName.
+         *
+         * Please note that individual sizes
+         * (and thus the total size) may change
+         * during the existence of the object
+         * (e.g. by interactive text type selection).
          */
         getAttrSize(attrName:string):number;
 

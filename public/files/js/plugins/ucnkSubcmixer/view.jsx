@@ -61,7 +61,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 }
 
             } else {
-                return null;
+                return <span>-</span>;
             }
         },
 
@@ -82,11 +82,11 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                             <strong>%</strong>
                         </span>
                     </td>
-                    <td className="status">
-                        {this._renderEvalResult()}
-                    </td>
                     <td className="num">
                         {this.props.baseRatio}<strong>%</strong>
+                    </td>
+                    <td className="status">
+                        {this._renderEvalResult()}
                     </td>
                 </tr>
             );
@@ -107,8 +107,8 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                             <th />
                             <th>{this.translate('ucnk_subc__ratios_th_expression')}</th>
                             <th>{this.translate('ucnk_subc__ratios_th_required_ratio')}</th>
-                            <th>{this.translate('ucnk_subc__ratios_th_status')}</th>
                             <th>{this.translate('ucnk_subc__ratios_th_orig_ratio')}</th>
+                            <th>{this.translate('ucnk_subc__ratios_th_status')}</th>
                         </tr>
                         {this.props.items.map((item, i) => (
                             <ValueShare key={i}

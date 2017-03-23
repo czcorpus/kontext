@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
@@ -101,6 +102,7 @@ function getLocalStorage():Storage {
  * Possible types for PageModel's ajax method request args
  */
 export type AjaxArgs = MultiDict|{[key:string]:any}|string;
+
 
 /**
  *
@@ -460,6 +462,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         );
     }
 
+    unpackServerError(resp:Kontext.AjaxResponse):Error {
+        if (resp.contains_errors) {
+            return new Error(resp.messages
+                .filter(item => item[0] === 'error')
+                .map(item => this.translate(item[1])).join(', '));
+        }
+        return undefined;
+    }
+
     /**
      * Pops-up a user message at the center of page. It is able
      * to handle process error-returned XMLHttpRequest objects
@@ -500,9 +511,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
             } else if (message instanceof Error) {
                 outMsg = message.message || this.translate('global__unknown_error');
-
-            } else if (typeof message === 'object') {
-                outMsg = (message['messages'] || ['Unknown error'])[0];
 
             } else {
                 outMsg = String(message);
@@ -957,6 +965,10 @@ export class PluginApi implements Kontext.PluginApi {
 
     showMessage(type, message, onClose) {
         return this.pageModel.showMessage(type, message, onClose);
+    }
+
+    unpackServerError(resp:Kontext.AjaxResponse):Error {
+        return this.pageModel.unpackServerError(resp);
     }
 
     translate(msg, values?) {

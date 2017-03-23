@@ -393,7 +393,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     }
 
     getAttrSize(attrName:string):number {
-        const item = this.initialAttributes.find(item => item.name === attrName);
+        const item = this.attributes.find(item => item.name === attrName);
         if (item) {
             return item.getValues().reduce((prev, curr) => prev + curr.availItems, 0);
         }
