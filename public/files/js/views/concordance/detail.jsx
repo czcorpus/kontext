@@ -83,31 +83,35 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             });
         },
 
-        _loadData : function () {
+        _loadData : function (props) {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_SHOW_REF_DETAIL',
                 props: {
-                    corpusId: this.props.corpusId,
-                    tokenNumber: this.props.tokenNumber,
-                    lineIdx: this.props.lineIdx
+                    corpusId: props.corpusId,
+                    tokenNumber: props.tokenNumber,
+                    lineIdx: props.lineIdx
                 }
             });
         },
 
         componentDidMount : function () {
             refsDetailStore.addChangeListener(this._storeChangeHandler);
-            this._loadData();
+            this._loadData(this.props);
         },
 
         componentWillUnmount : function () {
             refsDetailStore.removeChangeListener(this._storeChangeHandler);
         },
 
-        componentDidUpdate : function (prevProps, prevState) {
-            if (prevProps.corpusId !== this.props.corpusId
-                    || prevProps.tokenNumber !== this.props.tokenNumber
-                    || prevProps.lineIdx !== this.props.lineIdx) {
-                this._loadData();
+        componentWillReceiveProps : function (nextProps) {
+            if (nextProps.corpusId !== this.props.corpusId
+                    || nextProps.tokenNumber !== this.props.tokenNumber
+                    || nextProps.lineIdx !== this.props.lineIdx) {
+                this.setState({
+                     isWaiting: true,
+                     data: this.state.data
+                });
+                this._loadData(nextProps);
             }
         },
 
