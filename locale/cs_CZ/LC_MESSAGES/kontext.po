@@ -1945,6 +1945,12 @@ msgstr "Upravit dotaz"
 msgid "Relative frequencies (i.p.m.) shown below are related to the size of the respective category as a whole."
 msgstr "Níže uváděné relativní frekvence (i.p.m.) jsou vztažené k velikosti příslušné kategorie jako celku."
 
+msgid "Please note that selecting more attributes at once causes the calculation to take more time compared with the single attribute variant."
+msgstr "Berte prosím na vědomí, že vybráním více atributů současně bude výpočet probíhat déle ve srovnání s použitím jediného atributu."
+
+msgid "Output options"
+msgstr "Nastavení výstupu"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

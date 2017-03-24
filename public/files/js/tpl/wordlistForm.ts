@@ -24,7 +24,7 @@
 import {PageModel, PluginApi} from './document';
 import * as $ from 'jquery';
 import {create as createCorparch} from 'plugins/corparch/init';
-import {bind as bindPopupBox} from '../popupbox';
+import {extended as popupBox} from '../popupbox';
 import * as Immutable from 'vendor/immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {SimplePageStore} from '../stores/base';
@@ -158,7 +158,7 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
      *
      */
     bindStaticElements():void {
-        bindPopupBox(
+        popupBox(this.layoutModel).bind(
             $('#show-help-format-link'),
             this.layoutModel.translate('global__wl_white_lists'),
             {
