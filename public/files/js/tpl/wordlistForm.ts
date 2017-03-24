@@ -224,6 +224,7 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
         const currSubcorp = this.layoutModel.getConf<string>('subcorpname');
         const input = <HTMLInputElement>window.document.getElementById('hidden-subcorp-sel');
         input.value = currSubcorp ? currSubcorp : '';
+        this.currentSubcorpus = input.value;
 
         this.layoutModel.renderReactComponent(
             this.views.WordlistCorpSelection,

@@ -20,13 +20,13 @@
  * Common types and functions used by plug-in objects
  */
 
-import defaultCorparch = require('../defaultCorparch/common');
+import {CorplistItem} from '../defaultCorparch/common';
 
 /**
  * Generalized corplist item which may refer to a single
  * corpus, subcorpus, corpus with aligned corpora.
  */
-export interface CorplistItemUcnk extends defaultCorparch.CorplistItem {
+export interface CorplistItemUcnk extends CorplistItem {
     requestable: boolean;
 }
 

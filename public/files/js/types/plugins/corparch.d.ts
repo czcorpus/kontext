@@ -18,18 +18,30 @@
 
 /// <reference path="../../types/common.d.ts" />
 
-module CorpusArchive {
+/**
+ * CorparchCommon module contains all the general
+ * types used by KonText independently on which
+ * specific 'corparch' implementation is in use.
+ *
+ */
+declare module CorparchCommon {
+
+    export interface Item {
+        corpus_id:string;
+    }
 
     export interface Options {
+        // TODO ...
     }
 
     export interface Widget {
         setButtonLoader():void;
+        disableButtonLoader():void;
     }
 
     export interface Module {
         create(selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-                       options:CorpusArchive.Options):CorpusArchive.Widget;
+                        options:Options):Widget;
     }
 
 }

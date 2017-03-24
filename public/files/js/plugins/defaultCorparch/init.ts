@@ -22,6 +22,7 @@
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../types/plugins/abstract.d.ts" />
+/// <reference path="../../types/plugins/corparch.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../types/views.d.ts" />
 
@@ -73,7 +74,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
 export function create(
         selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
         querySetupHandler:Kontext.QuerySetupHandler,
-        options:CorpusArchive.Options):CorpusArchive.Widget {
+        options:CorparchCommon.Options):CorparchCommon.Widget {
 
     const corplist:Corplist = new Corplist(
         targetAction,

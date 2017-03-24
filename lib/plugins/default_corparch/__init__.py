@@ -334,6 +334,7 @@ class DeafultCorplistProvider(CorplistProvider):
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                     corp['found_in'] = found_in
                     corp['user_item'] = is_fav(corp['id'])
+                    corp['corpus_id'] = corp['id']   # because of client-side fav/feat/search items compatibility
                     self._corparch.customize_search_result_item(self._plugin_api, corp, permitted_corpora,
                                                                 full_data)
                     ans['rows'].append(corp)
