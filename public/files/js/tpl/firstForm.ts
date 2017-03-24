@@ -22,7 +22,7 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
-/// <reference path="../types/plugins/corparch.ts" />
+/// <reference path="../types/plugins/corparch.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
@@ -51,7 +51,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private clStorage:ConcLinesStorage;
 
-    private corplistComponent:CorpusArchive.Widget;
+    private corplistComponent:CorparchCommon.Widget;
 
     private layoutModel:PageModel;
 

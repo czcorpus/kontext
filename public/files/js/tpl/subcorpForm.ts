@@ -20,7 +20,7 @@
 
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
-/// <reference path="../types/plugins/corparch.ts" />
+/// <reference path="../types/plugins/corparch.d.ts" />
 /// <reference path="../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
@@ -49,7 +49,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     private layoutModel:PageModel;
 
-    private corplistComponent:CorpusArchive.Widget;
+    private corplistComponent:CorparchCommon.Widget;
 
     private viewComponents:any; // TODO types
 

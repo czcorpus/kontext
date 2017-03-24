@@ -17,6 +17,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/corparch.d.ts" />
 
 /*
  * Common types and functions used by plug-in objects
@@ -40,7 +41,7 @@ export class CorplistItemType {
  * Generalized corplist item which may refer to a single
  * corpus, subcorpus, corpus with aligned corpora.
  */
-export interface CorplistItem {
+export interface CorplistItem extends CorparchCommon.Item {
     id?: string;
     name: string;
     type: string;

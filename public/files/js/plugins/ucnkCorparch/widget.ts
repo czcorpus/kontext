@@ -21,7 +21,7 @@
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/plugins/corparch.ts" />
+/// <reference path="../../types/plugins/corparch.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/typeahead.d.ts" />
 
@@ -85,7 +85,7 @@ interface SearchResponse {
 /**
  *
  */
-export interface Options extends CorpusArchive.Options {
+export interface Options extends CorparchCommon.Options {
 
     /**
      * Handles click on favorite/featured/searched item.
@@ -1263,7 +1263,7 @@ class StarComponent {
  * Corplist widget class. In most situations it is easier
  * to instantiate this via an exported function create().
  */
-export class Corplist implements CorpusArchive.Widget {
+export class Corplist implements CorparchCommon.Widget {
 
     selectElm:HTMLElement;
 
