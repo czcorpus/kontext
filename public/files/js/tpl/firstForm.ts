@@ -26,7 +26,7 @@
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import * as $ from 'jquery';
+
 import * as corplistComponent from 'plugins/corparch/init';
 import {PageModel} from './document';
 import * as liveAttributes from 'plugins/liveAttributes/init';

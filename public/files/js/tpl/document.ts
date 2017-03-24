@@ -314,6 +314,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *
      * A concrete page must ensure that its init() is also called
      * as a promise chained after the one returned by this method.
+     *
+     * @param corpora - a primary corpus plus possible aligned corpora
+     * @param subcorpus - an optional subcorpus
      */
     switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
         this.switchCorpAwareObjects.forEach((item, key) => {
@@ -323,7 +326,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return this.ajax<AjaxResponse.CorpusSwitchResponse>(
             'POST',
             this.createActionUrl('ajax_switch_corpus'),
-            {corpname: corpora[0]}
+            {
+                corpname: corpora[0],
+                usesubcorp: subcorpus,
+                align: corpora.slice(1)
+            }
 
         ).then(
             (data) => {
