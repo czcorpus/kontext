@@ -106,6 +106,13 @@ export class ConcDetailStore extends SimplePageStore {
     private wideCtxGlobals:Array<[string, string]>;
 
     /**
+     * Either 'default' or 'speech'.
+     * An initial mode is inferred from speechOpts
+     * (see constructor).
+     */
+    private mode:string;
+
+    /**
      * Speaker colors attachments must survive context expansion.
      * Otherwise it would confusing if e.g. green speaker '01'
      * changed into red one after a context expasion due to
@@ -122,6 +129,7 @@ export class ConcDetailStore extends SimplePageStore {
         this.linesStore = linesStore;
         this.structCtx = structCtx;
         this.speechOpts = speechOpts;
+        this.mode = this.speechOpts.speakerIdAttr ? 'speech' : 'default';
         this.speechAttrs = speechOpts.speechAttrs;
         this.wideCtxGlobals = wideCtxGlobals;
         this.lineIdx = null;
@@ -169,6 +177,7 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
+                    self.mode = 'default';
                     self.expandLeftArgs = Immutable.List<ExpandArgs>();
                     self.expandRightArgs = Immutable.List<ExpandArgs>();
                     self.loadConcDetail(
@@ -198,6 +207,7 @@ export class ConcDetailStore extends SimplePageStore {
                     );
                 break;
                 case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
+                    self.mode = 'speech';
                     self.expandLeftArgs = Immutable.List<ExpandArgs>();
                     self.expandRightArgs = Immutable.List<ExpandArgs>();
                     self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
@@ -529,10 +539,7 @@ export class ConcDetailStore extends SimplePageStore {
     }
 
     getDefaultViewMode():string {
-        if (this.speechOpts.speakerIdAttr) {
-            return 'speech';
-        }
-        return 'default';
+        return this.mode;
     }
 }
 
