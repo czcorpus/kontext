@@ -33,24 +33,10 @@ import {CorplistTableStore} from './corplist';
 
 
 /**
- *
- */
-interface CorplistSrchItemClick {
-    (corpId:string, corpName:string):void;
-}
-
-/**
- *
- */
-interface CorplistFavItemClick {
-    (itemId:string, itemName:string, href:string):void;
-}
-
-/**
  * A general click action performed on featured/favorite/searched item
  */
 export interface CorplistItemClick {
-    (itemId:string, itemName:string, widget:Corplist):void;
+    (item:common.CorplistItemUcnk):void;
 }
 
 /**
@@ -303,7 +289,7 @@ class SearchTab implements WidgetTab {
 
     widgetWrapper:HTMLElement;
 
-    itemClickCallback:CorplistSrchItemClick;
+    itemClickCallback:CorplistItemClick;
 
     wrapper:HTMLElement;
 
@@ -327,7 +313,7 @@ class SearchTab implements WidgetTab {
      *
      * @param widgetWrapper
      */
-    constructor(pluginApi:Kontext.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistSrchItemClick) {
+    constructor(pluginApi:Kontext.PluginApi, widgetWrapper:HTMLElement, itemClickCallback:CorplistItemClick) {
         this.pluginApi = pluginApi;
         this.widgetWrapper = widgetWrapper;
         this.itemClickCallback = itemClickCallback;
@@ -547,7 +533,7 @@ class SearchTab implements WidgetTab {
         this.loaderKiller = null;
 
         $(this.srchField).on('typeahead:selected', function (x, suggestion:{[k:string]:any}) {
-            self.itemClickCallback.call(self, suggestion['id'], suggestion['name']);
+            self.itemClickCallback.call(self, suggestion);
         });
 
         $(this.srchField).on('typeahead:asyncrequest', function () {
@@ -645,7 +631,7 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
 
     private wrapperFeat:HTMLElement;
 
-    itemClickCallback:CorplistFavItemClick;
+    itemClickCallback:CorplistItemClick;
 
     editMode:boolean;
 
@@ -658,7 +644,7 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
      */
     constructor(targetAction:string, pageModel:Kontext.PluginApi, widgetWrapper:HTMLElement,
                 dataFav:Array<common.CorplistItemUcnk>, dataFeat:Array<FeaturedItem>,
-                itemClickCallback?:CorplistFavItemClick,
+                itemClickCallback?:CorplistItemClick,
                 customListFilter?:(item:common.CorplistItemUcnk)=>boolean) {
         const self = this;
         this.editMode = false;
@@ -735,6 +721,24 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
             }
         }
         return false;
+    }
+
+    getFavItemById(id:string):common.CorplistItemUcnk {
+        for (let i = 0; i < this.dataFav.length; i += 1) {
+            if (this.dataFav[i].id === id) {
+                return this.dataFav[i];
+            }
+        }
+        return undefined;
+    }
+
+    getFeatItemById(id:string):common.CorplistItemUcnk {
+        for (let i = 0; i < this.dataFav.length; i += 1) {
+            if (this.dataFeat[i].id === id) {
+                return this.dataFav[i];
+            }
+        }
+        return undefined;
     }
 
     /**
@@ -853,12 +857,8 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
             jqWrapper.find('a.corplist-item').each(function () {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
-                        self.itemClickCallback.call(
-                            self,
-                            $(e.currentTarget).data('id'),
-                            $(e.currentTarget).text(),
-                            $(e.currentTarget).attr('href')
-                            );
+                        const favitem = self.getFavItemById($(e.currentTarget).data('id'));
+                        self.itemClickCallback.call(self, favitem);
                         e.stopPropagation();
                         e.preventDefault();
                     }
@@ -899,10 +899,8 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
             $(self.wrapperFeat).find('a.featured-item').each(function () {
                 $(this).on('click', function (e:Event) {
                     if (typeof self.itemClickCallback === 'function') {
-                        self.itemClickCallback.call(self,
-                            $(e.currentTarget).data('id'),
-                            $(e.currentTarget).text(),
-                            $(e.currentTarget).attr('href'));
+                        const item = self.getFeatItemById($(e.currentTarget).data('id'));
+                        self.itemClickCallback.call(self, item);
                         e.stopPropagation();
                         e.preventDefault();
                     }
@@ -1311,9 +1309,9 @@ export class Corplist implements CorpusArchive.Widget {
 
     onShow:(widget:Corplist)=>void;
 
-    private onSrchItemClick:CorplistSrchItemClick;
+    private onSrchItemClick:CorplistItemClick;
 
-    private onFavItemClick:CorplistFavItemClick;
+    private onFavItemClick:CorplistItemClick;
 
     /**
      *
@@ -1334,16 +1332,21 @@ export class Corplist implements CorpusArchive.Widget {
         this.onHide = this.options.onHide ? this.options.onHide : null;
         this.onShow = this.options.onShow ? this.options.onShow : null;
 
-        const defaultHandleClick = (corpusId:string, corpusName:string) => {
+        const defaultHandleClick = (item:common.CorplistItemUcnk) => {
+            console.dir(item);
             const form = $(this.parentForm);
-            this.setCurrentValue(corpusId, corpusName);
-            form.find('select[name="usesubcorp"]')
-                .val('');
+            this.setCurrentValue(item.corpus_id, item.name);
+            if (item.type === 'subcorpus') {
+                form.find('select[name="usesubcorp"]').val(item.subcorpus_id);
+
+            } else {
+                form.find('select[name="usesubcorp"]').val('');
+            }
             const corpnameElm = $(window.document.createElement('input'));
             corpnameElm
                 .attr('type', 'hidden')
                 .attr('name', 'corpname')
-                .attr('value', corpusId);
+                .attr('value', item.corpus_id);
             form.append(corpnameElm);
             form
                 .attr('action', this.pageModel.createActionUrl(this.targetAction))
@@ -1351,22 +1354,22 @@ export class Corplist implements CorpusArchive.Widget {
                 .submit();
 		};
 
-        this.onSrchItemClick = (corpusId:string, corpusName:string) => {
+        this.onSrchItemClick = (item:common.CorplistItemUcnk) => {
             if (this.options.itemClickAction) {
-                this.options.itemClickAction.call(this, corpusId, corpusName);
+                this.options.itemClickAction.call(this, item);
 
             } else {
-                defaultHandleClick.call(this, corpusId, corpusName);
+                defaultHandleClick.call(this, item);
             }
         };
 
-        this.onFavItemClick = (itemId:string, itemName:string, href:string) => {
+        this.onFavItemClick = (item:common.CorplistItemUcnk) => {
             if (this.options.itemClickAction) {
-                this.options.itemClickAction.call(this, itemId, itemName, href);
+                this.options.itemClickAction.call(this, item);
 
             } else {
                 this.pageModel.getUserSettings().set('active_parallel_corpora', undefined);
-                window.location.href = href;
+                defaultHandleClick.call(this, item);
             }
         };
     }
@@ -1454,6 +1457,12 @@ export class Corplist implements CorpusArchive.Widget {
             .empty()
             .append(`<img class="button-loader" src="${this.pageModel.createStaticUrl('img/ajax-loader-bar.gif')}"
                         alt="${this.pageModel.translate('global__loading')}" />`);
+    }
+
+    disableButtonLoader():void {
+        $(this.triggerButton)
+            .empty()
+            .text(this.currCorpname);
     }
 
     /**

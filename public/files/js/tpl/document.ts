@@ -334,6 +334,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
         ).then(
             (data) => {
+                if (data.contains_errors) {
+                    throw this.unpackServerError(data);
+                }
                 const args = new MultiDict();
                 args.set('corpname', data.corpname);
                 args.set('usesubcorp', data.subcorpname);

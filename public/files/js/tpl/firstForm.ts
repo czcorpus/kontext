@@ -143,12 +143,14 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             this.layoutModel.pluginApi(),
             this,
             {
-                itemClickAction: (corpusId) => {
-                    let corpora = corpusId.split('+');
-                    const firstCorp = corpora[0].split(':');
-                    corpora = [firstCorp[0]].concat(corpora.slice(1));
+                itemClickAction: (item) => {
+                    const corpora = [item.corpus_id];
+                    (item.corpora || []).forEach(corp => {
+                        corpora.push(corp.corpus_id);
+                    });
+                    const subcorpId = item.type === 'subcorpus' ? item.subcorpus_id : undefined;
                     this.corplistComponent.setButtonLoader();
-                    this.layoutModel.switchCorpus(corpora, firstCorp[1]).then(
+                    this.layoutModel.switchCorpus(corpora, subcorpId).then(
                         () => {
                             // all the components must be deleted to prevent memory leaks
                             // and unwanted action handlers from previous instance
@@ -156,6 +158,10 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                             this.layoutModel.unmountReactComponent(window.document.getElementById('query-form-mount'));
                             this.layoutModel.unmountReactComponent(window.document.getElementById('query-overview-mount'));
                             this.init();
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                            this.corplistComponent.disableButtonLoader();
                         }
                     )
                 }

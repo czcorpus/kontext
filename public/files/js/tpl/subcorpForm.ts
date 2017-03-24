@@ -26,7 +26,7 @@
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 
-import $ = require('jquery');
+import * as $ from 'jquery';
 import * as RSVP from 'vendor/rsvp';
 import {PageModel} from './document';
 import * as popupBox from '../popupbox';

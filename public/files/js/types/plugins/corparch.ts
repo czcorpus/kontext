@@ -25,6 +25,7 @@ module CorpusArchive {
 
     export interface Widget {
         setButtonLoader():void;
+        disableButtonLoader():void;
     }
 
     export interface Module {
