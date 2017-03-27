@@ -84,7 +84,7 @@ def cached(f):
     return wrapper
 
 
-@exposed(return_type='json')
+@exposed(return_type='json', http_method='POST')
 def filter_attributes(self, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
