@@ -175,19 +175,33 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             const userRatio = parseFloat(this.shares.get(idx).ratio) / 100;
             return Math.abs(v - userRatio) < this.errorTolerance / 100;
         };
+        // We must first merge the tree-copied conditions back to
+        // single ones. Here we assume that the conditions are split
+        // in a way ensuring the sum of ratios for each key is actually 100%.
+        let tmp = Immutable.OrderedMap<string, number>();
+        data.forEach(item => {
+            if (!tmp.has(item[0])) {
+                tmp = tmp.set(item[0], item[1]);
 
-        const mappedData:Array<{sharesIdx:number, data:[string, number]}> = data.map(item => {
-                const ans = this.parseServerExpression(item[0]);
-                return {
-                    data: item,
-                    sharesIdx: this.shares.findIndex(x => x.attrName === ans[0] && x.attrValue === ans[1] && !x.zeroFixed)
-                };
+            } else {
+                tmp = tmp.set(item[0], tmp.get(item[0]) + item[1]);
+            }
         });
-        return Immutable.List<[string, number, boolean]>(
-            mappedData
+
+        const mappedData:Immutable.List<[string, number, boolean]> =
+            tmp.entrySeq()
+                .map((item:[string, number]) => {
+                    const ans = this.parseServerExpression(item[0]);
+                    return {
+                        data: item,
+                        sharesIdx: this.shares.findIndex(x => x.attrName === ans[0] && x.attrValue === ans[1] && !x.zeroFixed)
+                    };
+                })
                 .filter(x => x.sharesIdx > - 1 && !this.shares.get(x.sharesIdx).zeroFixed)
-                .map((item, _) => [item.data[0], item.data[1] * 100, evalDist(item.data[1], item.sharesIdx)])
-        );
+                .map<[string, number, boolean]>((item, _) => [item.data[0], item.data[1] * 100, evalDist(item.data[1], item.sharesIdx)])
+                .toList();
+
+        return Immutable.List<[string, number, boolean]>(mappedData);
     }
 
     private submitCreateSubcorpus():RSVP.Promise<any> {
