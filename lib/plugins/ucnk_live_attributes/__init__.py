@@ -86,8 +86,8 @@ def cached(f):
 
 @exposed(return_type='json', http_method='POST')
 def filter_attributes(self, request):
-    attrs = json.loads(request.args.get('attrs', '{}'))
-    aligned = json.loads(request.args.get('aligned', '[]'))
+    attrs = json.loads(request.form.get('attrs', '{}'))
+    aligned = json.loads(request.form.get('aligned', '[]'))
     return plugins.get('live_attributes').get_attr_values(corpus=self.corp, attr_map=attrs, aligned_corpora=aligned)
 
 
