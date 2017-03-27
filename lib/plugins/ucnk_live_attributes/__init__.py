@@ -84,11 +84,11 @@ def cached(f):
     return wrapper
 
 
-@exposed(return_type='json')
-def filter_attributes(ctrl, request):
+@exposed(return_type='json', http_method='POST')
+def filter_attributes(self, request):
     attrs = json.loads(request.args.get('attrs', '{}'))
     aligned = json.loads(request.args.get('aligned', '[]'))
-    return plugins.get('live_attributes').get_attr_values(corpus=ctrl.corp, attr_map=attrs, aligned_corpora=aligned)
+    return plugins.get('live_attributes').get_attr_values(corpus=self.corp, attr_map=attrs, aligned_corpora=aligned)
 
 
 @exposed(return_type='json')

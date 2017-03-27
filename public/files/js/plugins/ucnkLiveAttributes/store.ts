@@ -380,7 +380,7 @@ export class LiveAttrsStore extends util.SimplePageStore implements LiveAttribut
     private loadFilteredData(selections:any):RSVP.Promise<any> {
         let aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
         return this.pluginApi.ajax(
-            'GET',
+            'POST',
             this.pluginApi.createActionUrl('filter_attributes'),
             {
                 corpname: this.pluginApi.getConf<string>('corpname'),
