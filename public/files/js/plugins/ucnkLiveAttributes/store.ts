@@ -404,7 +404,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
     private loadAutocompleteHint(pattern:string, patternAttr:string, selections:any):RSVP.Promise<any> {
         let aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
         return this.pluginApi.ajax(
-            'GET',
+            'POST',
             this.pluginApi.createActionUrl('attr_val_autocomplete'),
             {
                 corpname: this.pluginApi.getConf<string>('corpname'),

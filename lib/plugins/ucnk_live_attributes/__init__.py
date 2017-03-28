@@ -86,20 +86,20 @@ def cached(f):
 
 @exposed(return_type='json', http_method='POST')
 def filter_attributes(self, request):
-    attrs = json.loads(request.args.get('attrs', '{}'))
-    aligned = json.loads(request.args.get('aligned', '[]'))
+    attrs = json.loads(request.form.get('attrs', '{}'))
+    aligned = json.loads(request.form.get('aligned', '[]'))
     return plugins.get('live_attributes').get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
                                                           aligned_corpora=aligned)
 
 
-@exposed(return_type='json')
+@exposed(return_type='json', http_method='POST')
 def attr_val_autocomplete(self, request):
-    attrs = json.loads(request.args.get('attrs', '{}'))
-    aligned = json.loads(request.args.get('aligned', '[]'))
-    attrs[request.args['patternAttr']] = '%%%s%%' % request.args['pattern']
+    attrs = json.loads(request.form.get('attrs', '{}'))
+    aligned = json.loads(request.form.get('aligned', '[]'))
+    attrs[request.form['patternAttr']] = '%%%s%%' % request.form['pattern']
     return plugins.get('live_attributes').get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
                                                           aligned_corpora=aligned,
-                                                          autocomplete_attr=request.args['patternAttr'])
+                                                          autocomplete_attr=request.form['patternAttr'])
 
 
 class LiveAttributes(AbstractLiveAttributes):
