@@ -88,6 +88,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
 
         componentWillUnmount : function () {
             queryStorageStore.removeChangeListener(this._handleStoreChange);
+            this.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
         },
 
         _handleStoreChange : function () {
@@ -114,9 +115,28 @@ export function init(dispatcher, mixins, queryStorageStore) {
             return ans.join(', ');
         },
 
+        _globalKeyEventHandler : function (evt) {
+            if (evt.keyCode === 27) {
+                this.props.onCloseTrigger();
+            }
+        },
+
+        _handleBlurEvent : function (evt) {
+            this.addGlobalKeyEventHandler(this._globalKeyEventHandler);
+        },
+
+        _handleFocusEvent : function (evt) {
+            this.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
+        },
+
         render : function () {
             return (
-                <ol className="rows" onKeyDown={this._keyPressHandler} tabIndex={0} ref={item => item ? item.focus() : null}>
+                <ol className="rows"
+                        onKeyDown={this._keyPressHandler}
+                        tabIndex={0}
+                        ref={item => item ? item.focus() : null}
+                        onBlur={this._handleBlurEvent}
+                        onFocus={this._handleFocusEvent}>
                     {this.state.data.map((item, i) => {
                         return (
                             <li key={i} title={item.created} className={i === this.state.currentItem ? 'selected' : null}

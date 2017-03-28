@@ -604,14 +604,13 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     getSupportedWidgets():WidgetsMap {
         const userIsAnonymous = () => this.pageModel.getConf<boolean>('anonymousUser');
-        const getWidgets = (corpname:string, queryType:string):Array<string> => {
+        const getCorpWidgets = (corpname:string, queryType:string):Array<string> => {
             const ans = ['keyboard'];
             if (!userIsAnonymous()) {
                 ans.push('history');
             }
             if (queryType === 'cql') {
                 ans.push('within');
-                console.log('tag sup, ', corpname, this.tagBuilderSupport.get(corpname));
                 if (this.tagBuilderSupport.get(corpname)) {
                     ans.push('tag');
                 }
@@ -620,7 +619,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         }
         const ans = Immutable.Map<string, Immutable.List<string>>();
         return Immutable.Map<string, Immutable.List<string>>(this.corpora.map(corpname => {
-            return [corpname, Immutable.List<string>(getWidgets(corpname, this.queryTypes.get(corpname)))];
+            return [corpname, Immutable.List<string>(getCorpWidgets(corpname, this.queryTypes.get(corpname)))];
         }));
     }
 
