@@ -603,25 +603,22 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
     }
 
     getSupportedWidgets():WidgetsMap {
-
+        const userIsAnonymous = () => this.pageModel.getConf<boolean>('anonymousUser');
         const getWidgets = (corpname:string, queryType:string):Array<string> => {
-            switch (queryType) {
-                case 'iquery':
-                case 'lemma':
-                case 'phrase':
-                case 'word':
-                case 'char':
-                    return ['keyboard', 'history'];
-                case 'cql':
-                    const ans = ['keyboard', 'history', 'within'];
-                    if (this.tagBuilderSupport.get(corpname)) {
-                        ans.push('tag');
-                    }
-                    return ans;
+            const ans = ['keyboard'];
+            if (!userIsAnonymous()) {
+                ans.push('history');
             }
+            if (queryType === 'cql') {
+                ans.push('within');
+                console.log('tag sup, ', corpname, this.tagBuilderSupport.get(corpname));
+                if (this.tagBuilderSupport.get(corpname)) {
+                    ans.push('tag');
+                }
+            }
+            return ans;
         }
         const ans = Immutable.Map<string, Immutable.List<string>>();
-
         return Immutable.Map<string, Immutable.List<string>>(this.corpora.map(corpname => {
             return [corpname, Immutable.List<string>(getWidgets(corpname, this.queryTypes.get(corpname)))];
         }));
