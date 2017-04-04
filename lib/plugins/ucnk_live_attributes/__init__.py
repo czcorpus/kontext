@@ -72,13 +72,13 @@ def cached(f):
     def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         db = self.db(plugin_api, canonical_corpname(corpus.corpname))
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora, autocomplete_attr)
             ans = self.from_cache(db, key)
             if ans:
                 return ans
         ans = f(self, plugin_api, corpus, attr_map, aligned_corpora, autocomplete_attr)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora, autocomplete_attr)
             self.to_cache(db, key, ans)
         return self.export_num_strings(ans)
     return wrapper
@@ -189,6 +189,7 @@ class LiveAttributes(AbstractLiveAttributes):
         values -- a dictionary with arbitrary nesting level
         """
         value = json.dumps(values)
+        self.execute_sql(db, 'BEGIN IMMEDIATE')
         self.execute_sql(db, "INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
         db.commit()
 
