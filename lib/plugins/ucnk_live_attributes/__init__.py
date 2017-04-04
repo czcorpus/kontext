@@ -72,13 +72,13 @@ def cached(f):
     def wrapper(self, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         db = self.db(vanilla_corpname(corpus.corpname))
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora, autocomplete_attr)
             ans = self.from_cache(db, key)
             if ans:
                 return ans
         ans = f(self, corpus, attr_map, aligned_corpora, autocomplete_attr)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus, aligned_corpora, autocomplete_attr)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora, autocomplete_attr)
             self.to_cache(db, key, ans)
         return self.export_num_strings(ans)
     return wrapper
