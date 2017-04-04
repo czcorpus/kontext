@@ -189,6 +189,7 @@ class LiveAttributes(AbstractLiveAttributes):
         values -- a dictionary with arbitrary nesting level
         """
         value = json.dumps(values)
+        self.execute_sql(db, 'BEGIN IMMEDIATE')
         self.execute_sql(db, "INSERT INTO cache (key, value) VALUES (?, ?)", (key, value))
         db.commit()
 
