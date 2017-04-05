@@ -150,13 +150,33 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         """
         Export tasks for Celery worker(s)
         """
-        from cleanup import run
+        from cleanup import run as run_cleanup
+        from monitor import run as run_monitor
 
         def conc_cache_cleanup(ttl, subdir, dry_run):
-            return run(root_dir=self._cache_dir,
-                       corpus_id=None, ttl=ttl, subdir=subdir, dry_run=dry_run,
-                       db_plugin=self._db, entry_key_gen=lambda c: RedisCacheMapping.KEY_TEMPLATE % c)
-        return conc_cache_cleanup,
+            return run_cleanup(root_dir=self._cache_dir,
+                               corpus_id=None, ttl=ttl, subdir=subdir, dry_run=dry_run,
+                               db_plugin=self._db, entry_key_gen=lambda c: RedisCacheMapping.KEY_TEMPLATE % c)
+
+        def conc_cache_monitor(min_file_age, free_capacity_goal, free_capacity_trigger, elastic_conf):
+            """
+            This function is exported as a Celery task within KonText's worker and
+            is intended to be used via Celery Beat as an additional monitoring and
+            protection in situations when system load jumps high.
+
+            arguments:
+            min_file_age -- a minimum age a cache file must be of to be deletable (in seconds)
+            free_capacity_goal -- a minimum capacity the task will try to free up in a single run (in bytes)
+            free_capacity_trigger -- a maximum disk free capacity which triggers file removal process
+            elastic_conf -- a tuple (URL, index, type) containing ElasticSearch server, index and document type
+                            configuration for storing monitoring info; if None then the function is disabled
+            """
+            return run_monitor(root_dir=self._cache_dir, db_plugin=self._db,
+                               entry_key_gen=lambda c: RedisCacheMapping.KEY_TEMPLATE % c,
+                               min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
+                               free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
+
+        return conc_cache_cleanup, conc_cache_monitor
 
 
 @inject('db')
