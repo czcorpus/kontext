@@ -114,7 +114,7 @@ class CacheCleanup(CacheFiles):
            2.2 find an cache map entry in Redis and iterate over records found there
              2.2.1 if a record matches a file which is waiting to be deleted, then both the
                     file and the record are removed
-             2.2.2 if a record does not match even any existing file than it is removed with
+             2.2.2 if a record does not match any existing file than it is removed with
                    logged warning about a stale record
            2.3 if there are still some files to be deleted it means that they are 'unbound'
                (= there is no record in the respective cache map file);
