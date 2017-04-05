@@ -1817,7 +1817,7 @@ class Actions(Querying):
             query_pref = m.groups()[0]
             query_suff = m.groups()[1]
             self.args.q[0] = u'%s[] %s' % (query_pref, CQLDetectWithin().get_within_part(query_suff))
-            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')))
+            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')), async=0)
             conc.sync()
             return {'total': conc.fullsize() if conc else None}
         else:
