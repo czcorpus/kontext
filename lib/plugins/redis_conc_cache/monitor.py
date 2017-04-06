@@ -104,7 +104,7 @@ class Monitor(object):
         return time.strftime('%Y-%m-%dT%H:%M:%S', datetime.fromtimestamp(self._time).timetuple())
 
     def get_10_largest_items_size(self):
-        return sum(x.size for x in sorted(self._data, key=lambda x: x.size)[:10])
+        return sum(x.size for x in sorted(self._data, key=lambda x: x.size, reverse=True)[:10])
 
     def parse_conc_code(self, path):
         return self.entry_key_gen(os.path.basename(os.path.dirname(path))), os.path.basename(path)[:-len('.conc')]
