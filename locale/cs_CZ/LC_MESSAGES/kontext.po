@@ -1951,6 +1951,9 @@ msgstr "Berte prosím na vědomí, že vybráním více atributů současně bud
 msgid "Output options"
 msgstr "Nastavení výstupu"
 
+msgid "translation not available"
+msgstr "překlad není k dispozici"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

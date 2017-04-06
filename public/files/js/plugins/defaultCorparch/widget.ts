@@ -815,19 +815,40 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
 
         this.editMode = false;
 
+        function createItem(data:common.CorplistItem):HTMLElement {
+            const trElm = window.document.createElement('tr');
+            trElm.className = 'data-item';
+
+            const td1Elm = window.document.createElement('td');
+            trElm.appendChild(td1Elm);
+            const aElm = window.document.createElement('a');
+            aElm.className = 'corplist-item';
+            aElm.setAttribute('title', data.description || '');
+            aElm.setAttribute('href', self.generateItemUrl(data));
+            aElm.setAttribute('data-id', data.id);
+            aElm.textContent = data.name;
+            td1Elm.appendChild(aElm);
+
+            const td2Elm = window.document.createElement('td');
+            td2Elm.className = 'num';
+            td2Elm.textContent = data.size_info;
+            trElm.appendChild(td2Elm);
+
+            const td3Elm = window.document.createElement('td');
+            td3Elm.className = 'tools';
+            const imgElm = window.document.createElement('img');
+            imgElm.className = 'remove over-img disabled';
+            imgElm.setAttribute('alt', self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav'));
+            imgElm.setAttribute('title', self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav'));
+            imgElm.setAttribute('src', self.pageModel.createStaticUrl('img/close-icon.svg'));
+
+            return trElm;
+        }
+
         if (!this.pageModel.getConf('anonymousUser')) {
             this.dataFav.forEach(item => {
                 if (self.customListFilter(item)) {
-                    jqWrapper.append('<tr class="data-item"><td><a class="corplist-item"'
-                        + ' title="' + (item.description || '') + '"'
-                        + ' href="' + self.generateItemUrl(item)
-                        + '" data-id="' + item.id + '">' + item.name + '</a></td>'
-                        + '<td class="num">' + item.size_info + '</td>'
-                        + '<td class="tools"><img class="remove over-img disabled" '
-                        + 'alt="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
-                        + 'title="' + self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav') + '" '
-                        + 'src="' + self.pageModel.createStaticUrl('img/close-icon.svg') + '" '
-                        + '</td></tr>');
+                    jqWrapper.append(createItem(item));
                 }
             });
 
