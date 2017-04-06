@@ -80,7 +80,7 @@ def setup_plugins():
     init_plugin('menu_items')
 
     init_plugin('getlang', optional=True)
-    init_plugin('corparch', optional=True)
+    init_plugin('corparch')
     init_plugin('query_storage', optional=True)
     init_plugin('application_bar', optional=True)
     init_plugin('footer_bar', optional=True)
