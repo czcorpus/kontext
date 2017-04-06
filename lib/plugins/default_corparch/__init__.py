@@ -364,7 +364,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     LABEL_OVERLAY_TRANSPARENCY = 0.15
 
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
-                 max_page_size):
+                 max_page_size, registry_lang):
         super(CorpusArchive, self).__init__()
         self._auth = auth
         self._user_items = user_items
@@ -374,6 +374,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         self._tag_prefix = tag_prefix
         self._max_num_hints = int(max_num_hints)
         self._max_page_size = max_page_size
+        self._registry_lang = registry_lang
         self._messages = {}
         self._keywords = None  # keyword (aka tags) database for corpora; None = not loaded yet
         self._colors = {}
@@ -656,6 +657,12 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def _get_iso639lang(self, lang):
         return lang.split('_')[0]
 
+    def _export_untranslated_label(self, plugin_api, text):
+        if self._registry_lang[:2] == plugin_api.user_lang[:2]:
+            return text
+        else:
+            return u'{0} [{1}]'.format(text, _('translation not available'))
+
     def _export_featured(self, plugin_api):
         user_id = plugin_api.user_id
         permitted_corpora = self._auth.permitted_corpora(user_id)
@@ -670,14 +677,23 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                     'id': permitted_corpora[x['id']],
                     'name': self._manatee_corpora.get_info(x['id']).name,
                     'size': l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size),
-                    'description': self._manatee_corpora.get_info(x['id']).description
+                    'description': self._export_untranslated_label(
+                        plugin_api, self._manatee_corpora.get_info(x['id']).description)
                 })
         return featured
 
+    def _export_favorite(self, plugin_api):
+        ans = []
+        for item in plugins.get('user_items').get_user_items(plugin_api):
+            tmp = item.to_dict()
+            tmp['description'] = self._export_untranslated_label(
+                plugin_api, self._manatee_corpora.get_info(item.canonical_id).description)
+            ans.append(tmp)
+        return ans
+
     def export(self, plugin_api):
         return dict(
-            favorite=[c.to_dict()
-                      for c in plugins.get('user_items').get_user_items(plugin_api)],
+            favorite=self._export_favorite(plugin_api),
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
@@ -714,4 +730,5 @@ def create_instance(conf, auth, user_items):
                          tag_prefix=conf.get('plugins', 'corparch')['default:tag_prefix'],
                          max_num_hints=conf.get('plugins', 'corparch')['default:max_num_hints'],
                          max_page_size=conf.get('plugins', 'corparch').get('default:default_page_list_size',
-                                                                           None))
+                                                                           None),
+                         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
