@@ -131,10 +131,11 @@ class UcnkCorpArch(CorpusArchive):
 
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
                  max_page_size, access_req_sender, access_req_smtp_server,
-                 access_req_recipients, default_label):
+                 access_req_recipients, default_label, registry_lang):
         super(UcnkCorpArch, self).__init__(auth=auth, user_items=user_items, file_path=file_path,
                                            root_xpath=root_xpath, tag_prefix=tag_prefix,
-                                           max_num_hints=max_num_hints, max_page_size=max_page_size)
+                                           max_num_hints=max_num_hints, max_page_size=max_page_size,
+                                           registry_lang=registry_lang)
         self.access_req_sender = access_req_sender
         self.access_req_smtp_server = access_req_smtp_server
         self.access_req_recipients = access_req_recipients
@@ -281,4 +282,5 @@ def create_instance(conf, auth, user_items):
                         access_req_sender=conf.get('plugins', 'corparch')['ucnk:access_req_sender'],
                         access_req_recipients=conf.get('plugins',
                                                        'corparch')['ucnk:access_req_recipients'],
-                        default_label=conf.get('plugins', 'corparch')['ucnk:default_label'])
+                        default_label=conf.get('plugins', 'corparch')['ucnk:default_label'],
+                        registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
