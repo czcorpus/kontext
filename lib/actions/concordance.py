@@ -275,7 +275,9 @@ class Actions(Querying):
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False), persist=False)
         if self.args.queryselector:
-            qf_args.curr_query_types[self.args.corpname] = self.args.queryselector[:-3]
+            q_type = self.args.queryselector[:-3]
+            qf_args.curr_query_types[self.args.corpname] = q_type
+            qf_args.curr_queries[self.args.corpname] = getattr(self.args, q_type)
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
