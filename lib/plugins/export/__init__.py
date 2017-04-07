@@ -51,7 +51,12 @@ class AbstractExport(object):
 
 def lang_row_to_list(row):
     ans = []
-    for key in ('linegroup', 'ref', 'left_context', 'kwic', 'right_context'):
+    if 'linegroup' in row:
+        ans.append(row['linegroup'])
+    if 'ref' in row:
+        for item in row['ref']:
+            ans.append(item)
+    for key in ('left_context', 'kwic', 'right_context'):
         if key in row:
             ans.append(row[key])
     return ans

@@ -152,7 +152,9 @@ class ConcDocument(GeneralDocument):
             lng_elm = etree.SubElement(elm, 'line_group')
             lng_elm.text = data['linegroup']
         ref_elm = etree.SubElement(elm, 'ref')
-        ref_elm.text = data.get('ref', '')
+        for item in data.get('ref', []):
+            item_elm = etree.SubElement(ref_elm, 'item')
+            item_elm.text = item
         left_context_elm = etree.SubElement(elm, 'left_context')
         left_context_elm.text = data.get('left_context', '')
         kwic_elm = etree.SubElement(elm, 'kwic')

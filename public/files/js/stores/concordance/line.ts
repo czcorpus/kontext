@@ -37,9 +37,9 @@ export class TextChunk {
 export abstract class LangSection {
     tokenNumber:number;
     lineNumber:number;
-    ref:string;
+    ref:Array<string>;
 
-    constructor(tokenNumber:number, lineNumber:number, ref:string) {
+    constructor(tokenNumber:number, lineNumber:number, ref:Array<string>) {
         this.tokenNumber = tokenNumber;
         this.lineNumber = lineNumber;
         this.ref = ref;
@@ -54,7 +54,7 @@ export class KWICSection extends LangSection {
     kwic:Immutable.List<TextChunk>;
     right:Immutable.List<TextChunk>;
 
-    constructor(tokenNumber:number, lineNumber:number, ref:string,
+    constructor(tokenNumber:number, lineNumber:number, ref:Array<string>,
             left:Immutable.List<TextChunk>, kwic:Immutable.List<TextChunk>,
             right:Immutable.List<TextChunk>) {
         super(tokenNumber, lineNumber, ref);

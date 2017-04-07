@@ -1625,6 +1625,8 @@ class Actions(Querying):
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
                     mkfilename('txt'),)
                 output.update(data)
+                for item in data['Lines']:
+                    item['ref'] = ', '.join(item['ref'])
                 # we must set contains_within = False as it is impossible (in the current user interface)
                 # to offer a custom i.p.m. calculation before the download starts
                 output['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(contains_within=False)

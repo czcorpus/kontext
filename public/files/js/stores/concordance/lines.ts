@@ -59,7 +59,7 @@ export interface SingleCorpServerLineData {
     hitlen:string;
     linegroup:number;
     leftsize:number;
-    ref:string;
+    ref:Array<string>;
     rightspace:string;
     linenum:number;
     leftspace:string;
