@@ -709,8 +709,8 @@ msgid "password"
 msgstr "heslo"
 
 #: cmpltmpl/first_form.py:89
-msgid "Concordance - First query form"
-msgstr "Konkordance - formulář prvního dotazu"
+msgid "query form"
+msgstr "formulář dotazu"
 
 #: cmpltmpl/first_form.py:141
 msgid "Cancel"
