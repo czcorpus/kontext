@@ -105,6 +105,9 @@ class Actions(Querying):
         result['globals'] += '&' + self.urlencode(args)
         result['Globals'] = result['Globals'].update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
+        if len(result['query_overview']) > 0:
+            result['page_title'] = u'{0} / {1}'.format(self.args.corpname,
+                                                       result['query_overview'][0].get('nicearg'))
 
     def _apply_linegroups(self, conc):
         """

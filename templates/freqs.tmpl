@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #extends document
 
 #def title
-$_("Frequency list")#slurp
+KonText - $getVar('page_title', '') ($_("Frequency list").lower())#slurp
 #end def
 
 #def bodyonload
