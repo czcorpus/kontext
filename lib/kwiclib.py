@@ -579,11 +579,10 @@ class Kwic(object):
                     rightsize += len(w['str']) + 1
             if rightsize > maxrightsize:
                 maxrightsize = rightsize
-
             line_data = dict(toknum=kl.get_pos(),
                              hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
                              kwiclen=kl.get_kwiclen(),
-                             ref=self.import_string(kl.get_refs()),
+                             ref=[self.import_string(s) for s in kl.get_ref_list()],
                              Kwic=kwicwords,
                              linegroup=linegroup,
                              leftsize=leftsize,

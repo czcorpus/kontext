@@ -378,12 +378,11 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         _renderText : function (corpusOutput, corpusIdx) {
             const corpname = this.props.cols[corpusIdx].n;
-
             const ans = [
                 <td key="ref" className="ref" title={this.translate('concview__click_for_details')}
                         onClick={this._handleRefsClick.bind(this, corpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
-                    {corpusOutput.ref}
+                    {corpusOutput.ref.join(', ')}
                 </td>
             ];
             if (this.props.viewMode === 'kwic') {
