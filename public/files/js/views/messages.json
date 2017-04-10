@@ -351,7 +351,7 @@
         "coll__sort_by_legend": "Sort by",
         "coll__make_candidate_list": "Make candidate list",
         "freq__h2_freq_distr": "Frequency distribution",
-        "freq__sel_form_type_ml": "Regular",
+        "freq__sel_form_type_ml": "Standard",
         "freq__sel_form_type_tt": "According to text types",
         "freq__make_freq_list_btn": "Make frequency list",
         "freq__freq_limit_label": "Frequency limit",
