@@ -149,7 +149,7 @@ export class CollFormStore extends SimplePageStore {
     }
 
     private validateNumber(s:string):boolean {
-        return !!/^-?([1-9]\d*)?$/.exec(s);
+        return !!/^-?([1-9]\d*|0)?$/.exec(s);
     }
 
     private validateGzNumber(s:string):boolean {

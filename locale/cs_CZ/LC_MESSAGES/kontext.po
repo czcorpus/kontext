@@ -152,7 +152,7 @@ msgstr "Vyberte pozitivní nebo negativní filtr"
 
 #: lib/actions.py:874
 msgid "Empty list"
-msgstr "Žádný výsledek."
+msgstr "Prázdný výsledek"
 
 #: lib/actions.py:1054
 msgid "No text type selected"
