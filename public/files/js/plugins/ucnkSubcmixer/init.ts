@@ -324,6 +324,15 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
         return this.shares.filter(item => item.zeroFixed === false).toList();
     }
 
+    /**
+     * Avoids splitting to problematic values like 1/3, 1/6 etc.
+     * by modifying the last element.
+     */
+    safeCalcInitialRatio(numItems:number, currIdx:number):number {
+        const r = Math.round(100 / numItems * 10) / 10;
+        return currIdx < numItems - 1 ? r : 100 - (numItems - 1) * r;
+    }
+
     refreshData():void {
         const availableValues = this.getAvailableValues();
         const numValsPerGroup = availableValues
@@ -335,14 +344,14 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
                 },
                 Immutable.Map<string, number>()
             );
-        this.shares = availableValues.map<SubcMixerExpression>((item, _, arr) => {
+        this.shares = availableValues.map<SubcMixerExpression>((item, i, arr) => {
             const attrVal = this.textTypesStore.getAttribute(item.attrName).getValues()
                     .find(item2 => item2.value == item.attrValue);
             const total = this.textTypesStore.getAttrSize(item.attrName);
             return {
                 attrName: item.attrName,
                 attrValue: item.attrValue,
-                ratio: item.isSelected ? (100 / numValsPerGroup.get(item.attrName)).toFixed(1) : '0',
+                ratio: item.isSelected ? this.safeCalcInitialRatio(numValsPerGroup.get(item.attrName), i).toFixed(1) : '0',
                 baseRatio: attrVal ? (attrVal.availItems / total * 100).toFixed(1) : '?',
                 zeroFixed: !item.isSelected
             }
