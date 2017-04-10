@@ -1362,8 +1362,8 @@ msgid "Alignment"
 msgstr "Zarovnání"
 
 #: cmpltmpl/document.py:2460
-msgid "Attributes, structures and references"
-msgstr "Atributy, struktury a metainformace"
+msgid "Corpus-specific settings"
+msgstr "Korpusová nastavení"
 
 #: cmpltmpl/document.py:2487
 msgid "Application help and tutorials"
