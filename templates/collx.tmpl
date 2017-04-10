@@ -102,34 +102,43 @@ KonText - $getVar('page_title', '') ($_("Collocations").lower())#slurp
 
         <table class="data">
         #set $rowNum = 1
-          <tr><th></th><th>$_('Filter')</th>
-          #for $h in $Head
-            <th
-            #if $h.has_key('style')
-              $h.style
-            #end if
-            #if $h.has_key('s')
-              #set $hs = $h.s
-            #else
-              #set $hs = ''
-            #end if
-            ><a href="collx?$join_params($Globals, [('cbgrfns', $cb) for $cb in $cbgrfns],
-                    [('cattr', $cattr), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw),
-                    ('ctow', $ctow), ('csortfn', $hs)])">#if $h.n #$_($h.n)#else# #end if#</a>
-            </th>
-          #end for
-          </tr>
-          #for $i in $Items
+            <tr>
+                <th></th>
+                <th>$_('Filter')</th>
+                #for $h in $Head
+                <th
+                    #if $h.has_key('style')
+                    $h.style
+                    #end if
+                    #if $h.has_key('s')
+                        #set $hs = $h.s
+                    #else
+                        #set $hs = ''
+                    #end if
+                >
+                    <a href="collx?$join_params($Globals, [('cbgrfns', $cb) for $cb in $cbgrfns],
+                            [('cattr', $cattr), ('cminfreq', $cminfreq), ('cminbgr', $cminbgr), ('cfromw', $cfromw),
+                            ('ctow', $ctow), ('csortfn', $hs)])">#if $h.n #$_($h.n)#else# #end if#</a>
+                </th>
+                #end for
+            </tr>
+            #if $len($Items) > 0
+            #for $i in $Items
             <tr>
                 <td style="text-align: right">$($collstart + $rowNum).</td>
-            #set $rowNum += 1
-              <td><a href="quick_filter?$join_params($Globals, $i.pfilter)" title="$_('positive filter')">p</a>/<a href="quick_filter?$join_params($Globals, $i.nfilter)" title="$_('negative filter')">n</a></td>
-              <td class='left monospace'>$i.str</td><td class="num"> $i.freq</td>
-              #for $s in $i.Stats
-                <td class="num"> $s.s</td>
-              #end for
+                #set $rowNum += 1
+                <td><a href="quick_filter?$join_params($Globals, $i.pfilter)" title="$_('positive filter')">p</a>/<a href="quick_filter?$join_params($Globals, $i.nfilter)" title="$_('negative filter')">n</a></td>
+                <td class='left monospace'>$i.str</td><td class="num"> $i.freq</td>
+                #for $s in $i.Stats
+                    <td class="num"> $s.s</td>
+                #end for
             </tr>
-          #end for
+           #end for
+           #else
+           <tr>
+                <td class="empty-result-cell" colspan="${2 + $len($Head)}">-- $_('Empty list') --</td>
+            </tr>
+           #end if
         </table>
         #filter None
         $collx_navigation("next2")
