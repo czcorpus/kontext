@@ -29,10 +29,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.StructAttrList = $to_json($getVar('StructAttrList', []));
     conf.CollFormArgs = $to_json($coll_form_args);
     conf.workerTasks = $to_json($getVar('tasks', []));
-    var page = pageSelf.init(conf);
-    #if $processing is not None
-    page.startWatching();
-    #end if
+    pageSelf.init(conf, $to_json($processing));
 });
 #end def
 
@@ -47,7 +44,7 @@ KonText - $getVar('page_title', '') ($_("Collocations").lower())#slurp
     #filter WebSafe
     <h2>$_("Collocation candidates")</h2>
 
-    #if $processing is not None
+    #if $processing == 1
         <div id="progress_message">
            <div class="progress-info">
                 <div>$_('calculating ...')

@@ -51,13 +51,22 @@ export class CollPage {
 
     private queryReplayStore:IndirectQueryReplayStore;
 
-    static MAX_NUM_NO_CHANGE = 20;
+    /**
+     * Specifies after how many checks should client
+     * give-up on watching the status.
+     */
+    static MAX_NUM_NO_CHANGE = 240;
+
+    static CHECK_INTERVAL_SEC = 2;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
 
-    private stopWithError():void {
+    private stopWithError(customMsg?:string):void {
+        if (!customMsg) {
+            customMsg = '';
+        }
         this.stopWatching();
         this.layoutModel.showMessage(
                 'error',
@@ -92,7 +101,7 @@ export class CollPage {
                         this.layoutModel.reload();
 
                     } else if (this.numNoChange >= CollPage.MAX_NUM_NO_CHANGE) {
-                        this.stopWithError();
+                        this.stopWithError('global__bg_calculation_waiting_failed');
 
                     } else if (data['status'] === this.lastStatus) {
                         this.numNoChange += 1;
@@ -108,7 +117,8 @@ export class CollPage {
 
     startWatching():void {
         this.numNoChange = 0;
-        this.checkIntervalId = setInterval(this.checkStatus.bind(this), 2000);
+        this.checkIntervalId = setInterval(this.checkStatus.bind(this),
+                CollPage.CHECK_INTERVAL_SEC * 1000);
     }
 
     stopWatching():void {
@@ -302,7 +312,10 @@ export class CollPage {
 }
 
 
-export function init(conf:Kontext.Conf):void {
+export function init(conf:Kontext.Conf, runningInBg:boolean):void {
     const model = new CollPage(new PageModel(conf));
     model.init();
+    if (runningInBg) {
+        model.startWatching();
+    }
 }

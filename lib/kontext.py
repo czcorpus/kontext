@@ -192,8 +192,7 @@ class Kontext(Controller):
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
                        'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers')
 
-    LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'collpage', 'cbgrfns',
-                          'csortfn')
+    LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
     BASE_ATTR = 'word'
 

@@ -114,15 +114,13 @@ def calculate_colls_bg(coll_args):
             item['pfilter'] = [('q2', item['pfilter'])]
             item['nfilter'] = [('q2', item['nfilter'])]
             item['str'] = import_string(item['str'], from_encoding=coll_args.corpus_encoding)
-        return dict(data=collocs, processing=None, tasks=[])
+        return dict(data=collocs, processing=0, tasks=[])
     except corplib.MissingSubCorpFreqFile as e:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
         out = freq_calc.build_arf_db(e.args[0], coll_args.cattr)
         if type(out) is list:
-            processing = 0
+            processing = 1
             ans['tasks'].extend(out)
-        elif out:
-            processing = out
         else:
             processing = 0
         ans['processing'] = processing
@@ -177,7 +175,7 @@ def calculate_colls(coll_args):
         elif backend == 'multiprocessing':
             ans = calculate_colls_mp(coll_args)
     else:
-        ans = dict(data=collocs, processing=None)
+        ans = dict(data=collocs, processing=0)
     result = dict(
         Head=ans['data']['Head'],
         attrname=coll_args.cattr,
