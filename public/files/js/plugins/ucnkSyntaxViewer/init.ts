@@ -26,20 +26,6 @@ import {extended as initPopupboxLib, Api as PopupBoxApi, TooltipBox} from '../..
 import {createGenerator} from './ucnkTreeView';
 
 
-function createAjaxLoader():JQuery {
-    let loader = $(window.document.createElement('div'));
-    loader
-        .addClass('ajax-loading-msg')
-        .css({
-            'bottom' : '50px',
-            'position' : 'fixed',
-            'left' : ($(window).width() / 2 - 50) + 'px'
-        })
-        .append('<span>' + this.translate('global__loading') + '</span>');
-    return loader;
-}
-
-
 /**
  *
  */
@@ -56,6 +42,19 @@ class SyntaxTreeViewer {
     constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
         this.popupBoxApi = initPopupboxLib(this.pluginApi);
+    }
+
+    private createAjaxLoader():JQuery {
+        const loader = $(window.document.createElement('div'));
+        loader
+            .addClass('ajax-loading-msg')
+            .css({
+                'bottom' : '50px',
+                'position' : 'fixed',
+                'left' : ($(window).width() / 2 - 50) + 'px'
+            })
+            .append('<span>' + this.pluginApi.translate('global__loading') + '</span>');
+        return loader;
     }
 
     private createRenderFunction(tokenId:string, kwicLength:number,
@@ -97,7 +96,7 @@ class SyntaxTreeViewer {
         }
 
         return (box:TooltipBox, finalize:()=>void) => {
-            const ajaxAnim = createAjaxLoader();
+            const ajaxAnim = this.createAjaxLoader();
             $('body').append(ajaxAnim);
 
             this.pluginApi.ajax(
