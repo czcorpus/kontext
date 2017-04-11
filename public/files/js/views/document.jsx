@@ -206,9 +206,6 @@ export function init(dispatcher, mixins, storeProvider) {
             return (
                 <section className={htmlClass}>
                     <div className="heading">
-                        <h2>
-                            {this.props.label}
-                        </h2>
                         <div className="control">
                             <img className="close-icon"
                                     src={this.state.isMouseover ? this.createStaticUrl('img/close-icon_s.svg')
@@ -219,6 +216,9 @@ export function init(dispatcher, mixins, storeProvider) {
                                     onMouseOver={this._handleCloseMouseover}
                                     onMouseOut={this._handleCloseMouseout}  />
                         </div>
+                        <h2>
+                            {this.props.label}
+                        </h2>
                     </div>
                     {this.props.children}
                 </section>
