@@ -2,8 +2,7 @@
 
 [![Build status](https://travis-ci.org/czcorpus/kontext.svg?branch=master)](https://travis-ci.org/czcorpus/kontext)
 
-Introduction
-------------
+## Introduction
 
 KonText is a **fully featured corpus query interface** for the [Manatee open](http://nlp.fi.muni.cz/trac/noske)
 corpus search engine. It started as a fork of the Bonito 2.68 web interface and while still sharing
@@ -14,42 +13,49 @@ It is maintained by the
 Current version contains all the key features of the Bonito 2.98.3 (primarily a support for parallel
 corpora).
 
-Features
---------
-
-### internal changes
-
-* rewritten as a **WSGI application** (Bonito-open is CGI-based)
-* modular code design with dynamically loadable plug-ins providing custom functionality implementation
-* fully **decoupled background concordance calculation** based on the [Celery task queue](http://www.celeryproject.org/)  (alternatively, the *multiprocessing* package can be used)
-* completely **rewritten client-side code** (AMD modules, code separated from templates)
-* improved logging, error processing and debugging support
-* improved code documentation
+## Features
 
 ### new features
 
-* support for **spoken corpora** - defined segments can be played back as audio
+* fully **editable query chain**
+    * any operation from a user defined sequence (e.g. query -&gt; filter -&gt; sample -&gt; sorting) can be changed 
+    and the whole sequence is then re-executed.
+* support for **spoken corpora**
+    * defined concordance segments can be played back as audio
+    * KWIC detail provides a custom rendering with easily distinguishable speeches
 * support for **user-defined line groups**
+    * user can define custom numeric tags attached to concordance lines, filter out other lines, review groups ratios
+* **improved subcorpus creation**
+    * user can easily examine corpus structure by selecting some text types and see how other text type attributes 
+      availability changed ("which publishers are there in case only *fiction* is selected?")
+    * a custom text types ratio can be defined ("give me 20% fiction and 80% journalism") 
+    * a sub-corpus can be created by a custom CQL expression
+    * subcorpora are backed up as CQL queries which makes further modification/restoring possible
+* **frequency distribution**
+    * result caching decreases time required to navigate between pages
+    * on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
 * **persistent URLs for large queries** - you can send a link to someone even if the query was in megabytes
 * access to **previous queries**
-* easy **access to favorite corpora** (subcorpora, aligned corpora)
-* **interactive subcorpus selection** - you can select text types and see how other attributes' available values changed
+* **access to favorite corpora** (subcorpora, aligned corpora)
 * **interactive PoS tag tool** - in case of positional PoS tag formats an interactive tool can be used to write tag queries
 * a concordance/frequency/collocation listing can be **saved in Excel format** (xlsx)
 * a correct (i.e. the one calculating only with selected text types) i.p.m. can be calculated on-demand for ad-hoc subcorpora
-
-### enhanced user interface
-
-* improved user interface and design
-* extended corpora information (size, structures, attributes, citation information)
-* concordance results contain also the [Average Reduced Frequency](http://lrec.elra.info/proceedings/lrec2006/pdf/11_pdf.pdf)
-* sub-corpus can be created by a custom CQL expression
-* on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
 * result shuffling can be pre-set
+* less full page reloads 
+
+### internal changes
+
+* server-side rewritten as a **WSGI application** (Bonito-open is CGI-based)
+* completely **rewritten client-side code** (React+Flux architecture, TypeScript + ES6, modularized)
+* modular code design with dynamically loadable plug-ins providing custom functionality implementation (e.g. custom database
+adapters, authentication method, corpus listing widgets, HTTP session management)
+* fully **decoupled background concordance/frequency/collocation calculation** based on the 
+[Celery task queue](http://www.celeryproject.org/)  (alternatively, Python's *multiprocessing* package can be used)
+* improved logging, error processing and debugging support
+* improved code documentation
 
 
-Requirements
-------------
+## Requirements
 
 * a WSGI-compatible server
     * recommended setup: [Gunicorn](http://gunicorn.org/) + a reverse proxy (e.g. [Nginx](http://nginx.org/) or Apache2)
@@ -68,13 +74,11 @@ Requirements
 * (optional) [Celery task queue](http://www.celeryproject.org/) task queue for background concordance calculation and maintenance tasks
 
 
-Build and installation
------------------------
+## Build and installation
 
 Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details.
 
 
-Customization and contribution
-------------------------------
+## Customization and contribution
 
 Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-and-customization).
