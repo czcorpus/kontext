@@ -335,6 +335,14 @@
                         This one is very important.</a:documentation>
                         <text />
                     </element>
+                    <optional>
+                        <element name="manatee_registry_locale">
+                            <a:documentation>A language used in corpora registry files for labels etc. This
+                                allows KonText to warn user with a different UI language that a specific text (e.g.
+                                a corpus description) is not available translated.</a:documentation>
+                            <text />
+                        </element>
+                    </optional>
                     <element name="users_subcpath">
                         <a:documentation>A directory where user subcorpora are stored</a:documentation>
                         <text />
