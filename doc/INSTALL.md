@@ -1,8 +1,7 @@
-Installation instructions
-=========================
+# Installation instructions
 
-Install dependencies
---------------------
+## Install dependencies
+
 
 ```
 pip install -r requirements.txt
@@ -23,13 +22,12 @@ sudo apt-get install libxml2-dev libxslt-dev python-dev
 ```
 
 
-Configure KonText (config.xml)
-------------------------------
+## Configure KonText (config.xml)
 
-Before you can build KonText, a proper configuration must be ready (especially plug-ins).
+Before you can build KonText, a proper configuration must be ready (especially the *plugins* section).
 
-KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one from scratch a sample
-configuration *conf/config.sample.xml* can be used to start with.
+KonText is configured via an XML configuration file *conf/config.xml*. To avoid writing one 
+from scratch, use a sample configuration *conf/config.sample.xml* as a starting point.
 
 :bulb: You can always check the configuration using *scripts/validate_setup.py*:
 
@@ -39,34 +37,14 @@ python scripts/validate_setup.py conf/config.xml
 (use --help for more information)
 
 The configuration file has mostly two-level structure: *sections* and *key-value items*. Values can be either strings
-or list of items. The structure can be understood from the following example:
-
-```xml
-<kontext>
-  <global>
-    <key1>value1</key>
-  </global>
-  <some_other_section>
-    <key2>value2</key>
-    <key3>
-      <!-- list value -->
-      <item>value3a</item>
-      <item>value3b</item>
-    </key3>
-  </some_other_section>
-  <plugins>
-    <db>
-    ...
-    </db>
-  ...
-  </plugins>
-</kontext>
-```
+or list of items. Configuration values are documented in *conf/config.rng* (a RelaxNG schema which describes
+kontext configuration XML)
 
 ### Plug-ins
 
-Section named *plugins* is a bit specific as it contains a configuration for custom implementations of
-specific KonText modules. To configure plug-ins properly please refer to *conf/config.sample.xml* and plug-ins
+Configuration section *plugins* is kind of specific as it contains a configuration for custom implementations of
+concrete KonText modules (i.e. it determines which objects are instantiated to serve 
+configurable/replaceable functions). To configure plug-ins properly please refer to *conf/config.sample.xml* and plug-ins
 source codes which should always contain configuration description in
 [RelaxNG compact syntax](http://www.relaxng.org/compact-tutorial-20030326.html).
 
@@ -112,48 +90,15 @@ for testing and development purposes. The application can be activated by the fo
 (*--address* and *--port* parameters are optional; default serving address is 127.0.0.1:5000)
 
 
-WSGI application
-----------------
+<a name="wsgi_application"></a>
+## WSGI application within a dedicated web-server
 
-KonText can be run within a WSGI-enabled web server (e.g. Apache 2.x +
-[mod_wsgi](https://code.google.com/p/modwsgi/)). This is the recommended mode for production
-deployments. Here we show two tested, production-ready setups.
-
-### mod_wsgi
-
-Assuming you want to define a separate virtual host for KonText running within Apache, you have to define a loadable
-configuration file for your Apache 2 installation (e.g. in Debian and derived GNU/Linux distributions it
-is */etc/apache2/sites-enabled/my_config*):
-
-```
-<VirtualHost *:80>
-    ServerName my.domain
-    DocumentRoot /path/to/kontext/public
-
-    Alias /files /path/to/kontext/public/files
-    <Directory /path/to/kontext/public/files>
-        Order deny,allow
-        Allow from all
-    </Directory>
-
-    WSGIScriptAlias / /path/to/kontext/public/app.py
-    WSGIDaemonProcess kontext_app processes=2 threads=15 display-name=%{GROUP}
-    WSGIProcessGroup %{GLOBAL}
-</VirtualHost>
-```
-
-**Important note**: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this
-concrete form as in other case you may experience occasional error responses from Apache server
-(see [mod_wsgi documentation](https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API)
-for details). Also note that such a configuration does not provide the best performance *mod_wsgi* can offer.
-
-Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also
-possible. Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
-
+This is the recommended mode for production deployments. 
 
 ### Gunicorn + reverse proxy (Apache, Nginx)
 
-This configuration is best suited for high load environments.
+This configuration is best suited for production, is easy to configure and
+scales well.
 
 Let's assume you are going to install KonText into */opt/kontext-production*.
 
@@ -164,16 +109,17 @@ First, define your Gunicorn configuration file */opt/kontext-production/conf/gun
 import multiprocessing
 
 workers = multiprocessing.cpu_count() * 2 + 1
-bind = "127.0.0.1:8099"
+bind = "127.0.0.1:8090"
 timeout = 300
 accesslog = "/var/log/kontext/gunicorn.log"
 errorlog = "/var/log/kontext/gunicorn-error.log"
 ```
 
-Then define an Upstart configuration file */etc/init/kontext.conf*:
+
+Then define an Upstart configuration file */etc/init/gunicorn-kontext.conf*:
 
 ```
-description "kontext"
+description "gunicorn-kontext"
 start on (filesystem)
 stop on runlevel [016]
 respawn
@@ -183,6 +129,32 @@ chdir /opt/kontext-production/public
 exec /usr/local/bin/gunicorn app:application -c /opt/kontext-production/conf/gunicorn-conf.py
 ```
 
+Or in case of systemd create file */etc/systemd/system/gunicorn-kontext.service*:
+
+```
+[Unit]
+Description=KonText Gunicorn daemon
+#Requires=gunicorn.socket
+After=network.target
+
+[Service]
+PIDFile=/run/gunicorn-kontext/pid
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/kontext-production/public
+ExecStart=/usr/local/bin/gunicorn --pid /run/gunicorn-kontext/pid -c /opt/kontext/production/conf/gunicorn-conf.py app:application
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+PermissionsStartOnly=true
+ExecStartPre=-/bin/mkdir /var/run/gunicorn-kontext
+ExecStartPre=/bin/chown -R www-data:root /var/run/gunicorn-kontext
+
+[Install]
+WantedBy=multi-user.target
+```
+
+
 Then configure Apache:
 
 ```
@@ -191,8 +163,8 @@ Then configure Apache:
 
   ProxyPreserveHost On
   ProxyPass /files/ !
-  ProxyPass "/" "http://127.0.0.1:8099/" timeout=30
-  ProxyPassReverse "/" "http://127.0.0.1:8099/"
+  ProxyPass "/" "http://127.0.0.1:8090/" timeout=30
+  ProxyPassReverse "/" "http://127.0.0.1:8090/"
   RequestHeader set X-Forwarded-Proto "http"
   SetEnv proxy-initial-not-pooled 1
   SetEnv force-proxy-request-1.0 1
@@ -207,56 +179,210 @@ Then configure Apache:
 </VirtualHost>
 ```
 
+Or use Nginx:
+
+```
+upstream app_server {
+    server localhost:8090 fail_timeout=0;
+}
+server {
+    listen 80;
+    location /files/ {
+        alias /path/to/kontext/public/files/;
+    }
+    location / {
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        proxy_pass http://app_server;
+        proxy_read_timeout 120;
+    }
+}
+
+```
+
 Now you can start Gunicorn:
 
 ```
 service kontext start
 ```
 
-And reload Apache configuration:
+or
 
 ```
-service apache2 graceful
+systemctl start gunicorn-kontext
 ```
 
-Please always keep in mind to have only *public* directory accessible by web clients to prevent them viewing
-configuration files, source code and other sensitive data.
 
+### Apache mod_wsgi
 
-Deployment and running
-----------------------
+Running KonText within *Apache* webserver is possible with some [limitations](#limitation_note). 
+We recommend considering [Gunicorn + Proxy](#wsgi_application) variant for serious 
+production deployment.
 
-To be able to be deployed and run, *KonText* requires some additional file post-processing to be performed. These
-steps also depend on whether the *KonText* runs in *debugging* or *production* mode.
+Assuming you want to define a separate virtual host for KonText running within Apache, you have to define a loadable
+configuration file for your Apache 2 installation (e.g. in Debian and derived GNU/Linux distributions it
+is */etc/apache2/sites-enabled/my_config*):
 
-All the required tasks are configured to be performed by [Grunt](http://gruntjs.com/) task automater (see file
-*Gruntfile.js*).
+```
+<VirtualHost *:80>
+    ServerName my.domain
+    DocumentRoot /opt/kontext-production/public
 
-### Debugging mode
+    Alias /files /opt/kontext-production/public/files
+    <Directory /opt/kontext-production/public/files>
+        Order deny,allow
+        Allow from all
+    </Directory>
 
-This can be set in *config.xml*'s */kontext/global/debug* by putting *true* or *1* or *2* (which adds app profiling).
-
-* file post-processing:
-    * \*.tmpl files must be compiled by Cheetah templating compiler
-    * LESS dynamic stylesheets are translated to CSS on client-side
-* server-side errors are displayed in a raw form (i.e. page layout disappears and Python stack-trace is shown with some
-  description)
-
-
-### Production mode
-
-This can be set in *config.xml*'s */kontext/global/debug* by setting the value *false* (or *0*).
-
-* file post-processing:
-    * \*.tmpl files must be compiled by Cheetah templating compiler
-    * LESS dynamic stylesheets must be compiled (optionally minified) and merged into a single CSS file
-    * optionally, JavaScript can be minimized
-
-If you have a working node.js and Grunt (grunt-cli package) installation, you can prepare KonText for deployment just by
-running *grunt* command in application's root directory. E.g.:
-
-```bash
-grunt production
+    WSGIScriptAlias / /opt/kontext-production/public/app.py
+    WSGIDaemonProcess kontext_app processes=2 threads=15 display-name=%{GROUP}
+    WSGIProcessGroup %{GLOBAL}
+</VirtualHost>
 ```
 
-generates files required for the production mode along with some additional RequireJS optimizations (merged libraries).
+<a name="limitation_note"></a>
+**Important note**: please note that the line *WSGIProcessGroup %{GLOBAL}* must be always present in this
+concrete form as in other case you may experience occasional error responses from Apache server
+(see [mod_wsgi documentation](https://code.google.com/p/modwsgi/wiki/ApplicationIssues#Python_Simplified_GIL_State_API)
+for details). Also note that such a configuration does not provide the best performance *mod_wsgi* can offer.
+
+Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/core.html#location) is also
+possible. Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
+
+
+## Celery worker
+
+KonText uses [Celery](http://www.celeryproject.org/) worker queue for many 
+computing-intensive tasks (many of them asynchronous). It can run on the same
+machine as the main application but it can also run on a dedicated server
+(as long as the servers share a disk storage).
+
+```
+sudo pip install Celery
+```
+
+```
+sudo useradd -r -s /bin/false celery
+adduser celery www-data
+```
+
+### Celery configuration
+
+* in case of *systemd* use path */etc/conf.d/celery*
+* in case of *upstart* use path */etc/default/celeryd*
+
+```
+CELERYD_NODES="worker1"
+
+CELERY_BIN="/usr/local/bin/celery"
+
+CELERY_APP="worker:app"
+
+CELERYD_CHDIR="/opt/kontext-production/"
+
+CELERYD_LOG_FILE="/var/log/celery/%N.log"
+CELERYD_PID_FILE="/var/run/celery/%N.pid"
+
+CELERYD_USER="celery"
+CELERYD_GROUP="www-data"
+
+CELERY_CREATE_DIRS=1
+
+CELERYD_OPTS="--time-limit=480 --concurrency=8"
+```
+
+Also define a KonText-specific configuration */opt/kontext-production/conf/celeryconfig.py*:
+
+```
+BROKER_URL = 'redis://127.0.0.1:6379/2'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/2'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'Europe/Prague'
+```
+
+
+### Systemd configuration
+
+File */etc/systemd/system/celeryd.service*:
+
+```ini
+
+[Unit]
+Description=Celery Service
+After=network.target
+
+[Service]
+Type=forking
+User=celery
+Group=www-data
+EnvironmentFile=/etc/conf.d/celery
+WorkingDirectory=/opt/kontext-production
+ExecStart=/bin/sh -ec '${CELERY_BIN} multi start $CELERYD_NODES -A $CELERY_APP --logfile=${CELERYD_LOG_FILE} --pidfile=${CELERYD_PID_FILE} $CELERYD_OPTS'
+ExecStop=/bin/sh '${CELERY_BIN} multi stopwait $CELERYD_NODES --pidfile=${CELERYD_PID_FILE}'
+ExecReload=/bin/sh '${CELERY_BIN} multi restart $CELERYD_NODES -A $CELERY_APP --pidfile=${CELERYD_PID_FILE} --logfile=${CELERYD_LOG_FILE} --loglevel="${CELERYD_LOG_LEVEL}" $CELERYD_OPTS'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+File */usr/lib/tmpfiles.d/celery.conf*:
+
+```
+d /var/run/celery 0755 celery www-data -
+d /var/log/celery 0755 celery www-data -
+```
+
+## Celery Beat
+
+Celery Beat allows cron-like task management within Celery. It is used by
+KonText especially to remove old cache files (concordance, frequency, collocations).
+ 
+### Systemd configuration
+
+File */etc/systemd/system/celerybeat.service*:
+
+```
+[Unit]
+Description=Celery Beat Service
+After=network.target celery.service
+
+[Service]
+Type=forking
+User=celery
+Group=www-data
+PIDFile=/var/run/celerybeat/beat.pid
+EnvironmentFile=/etc/conf.d/celerybeat
+WorkingDirectory=/opt/kontext/production/scripts/celery
+ExecStart=/bin/sh -c '${CELERY_BIN} --app=${CELERY_APP} beat ${CELERYBEAT_OPTS} --workdir=${CELERYBEAT_CHDIR} --detach --pidfile=${CELERYBEAT_PID_FILE} --logfile=${CELERYBEAT_LOGFILE} --loglevel=${CELERYBEAT_LOGLEVEL}'
+ExecStop=/bin/kill -s TERM $MAINPID
+PermissionsStartOnly=true
+ExecStartPre=-/bin/mkdir /var/run/celerybeat
+ExecStartPre=/bin/chown -R celery:root /var/run/celerybeat
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then define a KonText-specific configuration 
+*/opt/kontext-production/conf/beatconfig.py*:
+
+```
+from celery.schedules import crontab
+from datetime import timedelta
+
+BROKER_URL = 'redis://127.0.0.1:6379/2'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_ENABLE_UTC = True
+CELERY_TIMEZONE = 'Europe/Prague'
+
+CELERYBEAT_SCHEDULE = {
+    'conc-cache-cleanup': {
+        'task': 'conc_cache.conc_cache_cleanup',
+        'schedule': crontab(hour='0,12', minute=1),
+        'kwargs': dict(ttl=120, subdir=None, dry_run=False)
+    }
+}
+```
+
