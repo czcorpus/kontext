@@ -675,6 +675,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             if x['id'] in permitted_corpora and is_featured(x):
                 featured.append({
                     'id': permitted_corpora[x['id']],
+                    'canonical_id': self._auth.canonical_corpname(x['id']),
                     'name': self._manatee_corpora.get_info(x['id']).name,
                     'size': l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size),
                     'description': self._export_untranslated_label(
