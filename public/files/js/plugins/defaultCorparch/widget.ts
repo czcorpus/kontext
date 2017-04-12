@@ -44,6 +44,7 @@ enum Visibility {
 
 interface FeaturedItem {
     id: string;
+    canonical_id: string;
     name: string;
     size: string; // rough size (100G, 1T etc.)
     description: string;
@@ -717,13 +718,28 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
     }
 
     getFeatItemById(id:string):common.CorplistItem {
-        for (let i = 0; i < this.dataFav.length; i += 1) {
-            if (this.dataFeat[i].id === id) {
-                return this.dataFav[i];
+        for (let i = 0; i < this.dataFeat.length; i += 1) {
+            if (this.dataFeat[i].canonical_id === id) {
+                const tmp = this.dataFeat[i];
+                return {
+                    id: tmp.id,
+                    name: tmp.name,
+                    type: 'corpus',
+                    corpus_id: tmp.id,
+                    canonical_id: tmp.canonical_id,
+                    subcorpus_id: null,
+                    corpora: [],
+                    description: null,
+                    featured: 1,
+                    user_item: false,
+                    size: null,
+                    size_info: null
+                };
             }
         }
         return undefined;
     }
+
     /**
      * Switches widget edit mode from 'on' to 'off' and from 'off' to 'on'.
      * When 'on' then user can remove her favorite items.
@@ -889,7 +905,7 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
                     + '<a class="featured-item"'
                     + ' href="' + self.pageModel.createActionUrl(this.targetAction)
                     + '?corpname=' + item.id + '"'
-                    + ' data-id="' + item.id + '"'
+                    + ' data-id="' + item.canonical_id + '"'
                     + ' title="' + item.description + '"'
                     + ' >'
                     + item.name + '</a></td>'
