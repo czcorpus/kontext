@@ -162,6 +162,63 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
         }
     });
 
+
+    // -------------------- <CTFreqForm /> --------------------------------------------
+
+    const CTFreqForm = React.createClass({
+
+        mixins: mixins,
+
+        render : function () {
+            return (
+                <table className="form">
+                    <tbody>
+                        <tr>
+                            <th>
+                                1. dimension
+                            </th>
+                            <td>
+                                <label>
+                                    Data type
+                                    <select>
+                                        <option>Positional attribute</option>
+                                        <option>Structural attribute</option>
+                                    </select>
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    Value
+                                    <select>
+                                        <option>
+                                        </option>
+                                    </select>
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    Interpret as year
+                                    <input type="checkbox" />
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>
+                                2. dimension
+                            </th>
+                            <td>
+                                <select>
+                                    <option>
+                                    </option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            );
+        }
+    });
+
     // -------------------- <MLAttrSelection /> --------------------------------------------
 
     const MLAttrSelection = React.createClass({
@@ -506,6 +563,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                     return <MLFreqForm />;
                 case 'tt':
                     return <TTFreqForm />;
+                case 'ct':
+                    return <CTFreqForm />;
                 default:
                      return null;
             }
@@ -522,6 +581,9 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                 </option>
                                 <option value="tt">
                                     {this.translate('freq__sel_form_type_tt')}
+                                </option>
+                                <option value="ct">
+                                    {this.translate('freq__sel_form_type_ct')}
                                 </option>
                             </select>
                         </legend>
