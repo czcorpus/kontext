@@ -72,7 +72,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                             <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
                                     value={this.props.pcqPosNegValue} actionPrefix="" />
                             <inputViews.TRQueryTypeField queryType={this.props.queryType}
-                                    sourceId={this.props.corpname} />
+                                    sourceId={this.props.corpname}
+                                    actionPrefix="" />
                             <inputViews.TRQueryInputField
                                 sourceId={this.props.corpname}
                                 queryType={this.props.queryType}
