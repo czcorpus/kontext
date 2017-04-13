@@ -35,12 +35,23 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
     const ConcColsHeading = React.createClass({
 
         _handleSetMainCorpClick : function (corpusId) {
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_CHANGE_MAIN_CORPUS',
-                props: {
-                    maincorp: corpusId
-                }
-            });
+            if (this.props.corpsWithKwic.indexOf(corpusId) > -1) {
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_CHANGE_MAIN_CORPUS',
+                    props: {
+                        maincorp: corpusId
+                    }
+                });
+
+            } else {
+                dispatcher.dispatch({
+                    actionType: 'MAIN_MENU_SHOW_FILTER',
+                    props: {
+                        within: 1,
+                        maincorp: corpusId
+                    }
+                });
+            }
         },
 
         _renderCol : function (corpInfo) {
