@@ -487,6 +487,7 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
                 <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
                     <layoutViews.CloseableFrame
                             customClass="query-replay-box"
+                            scrollable={true}
                             onCloseClick={this._handleCloseClick}
                             label={this.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.humanCorpname})}>
                         <StructsAndAttrsForm

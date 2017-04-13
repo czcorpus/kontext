@@ -204,7 +204,7 @@ export function init(dispatcher, mixins, storeProvider) {
             };
             const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
             return (
-                <section className={htmlClass}>
+                <section className={htmlClass} style={this.props.scrollable ? {overflowY: 'auto'} : {}}>
                     <div className="heading">
                         <div className="control">
                             <img className="close-icon"
