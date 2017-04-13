@@ -713,6 +713,7 @@ export class ViewPage {
             currFiltposValues: fetchArgs<string>(item => item.filtpos),
             currInclkwicValues: fetchArgs<boolean>(item => item.inclkwic),
             tagBuilderSupport: fetchArgs<boolean>(item => item.tag_builder_support),
+            withinArgValues: fetchArgs<number>(item => item.within),
             lposlist: this.layoutModel.getConf<Array<{v:string; n:string}>>('Lposlist'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
@@ -722,7 +723,6 @@ export class ViewPage {
             hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
-            isWithin: this.layoutModel.getConf<boolean>('IsWithin'),
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked')
         }
 
@@ -737,6 +737,9 @@ export class ViewPage {
         this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_FILTER',
             (args:Kontext.GeneralProps) => {
+                if (args['within'] === 1) {
+                    this.layoutModel.replaceConcArg('maincorp', [args['maincorp']]);
+                }
                 return this.queryStores.filterStore.syncFrom(() => {
                     return new RSVP.Promise<AjaxResponse.FilterFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
                         resolve(updateProps(this.concFormsInitialArgs.filter, args));

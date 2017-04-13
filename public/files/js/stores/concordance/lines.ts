@@ -474,20 +474,16 @@ export class ConcLineStore extends SimplePageStore {
 
     private changeMainCorpus(corpusId:string) {
         const args:MultiDict = this.layoutModel.getConcArgs();
-        let link;
 
         if (this.hasKwic(corpusId)) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');
             args.add('q', 'x-' + corpusId);
-            link = this.layoutModel.createActionUrl('view') + '?' + this.layoutModel.encodeURLParameters(args);
+            window.location.href = this.layoutModel.createActionUrl('view', args.items());
 
         } else {
-            args.set('maincorp', corpusId);
-            args.set('within', 1); // forces server to ask for a positive filter (see filter_form action)
-            link = this.layoutModel.createActionUrl('filter_form') + '?' + this.layoutModel.encodeURLParameters(args);
+            throw new Error('Cannot set corpus as main - no KWIC');
         }
-        window.location.href = link; // TODO (should go through a router of some kind)
     }
 
     private playAudio(lineIdx:number, chunks:Array<TextChunk>) {
