@@ -56,7 +56,8 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                 filtposValue: filterStore.getFiltposValues().get(this.props.filterId),
                 filflValue: filterStore.getFilflValues().get(this.props.filterId),
                 inclKwicValue: filterStore.getInclKwicValues().get(this.props.filterId),
-                isLocked: filterStore.getOpLocks().get(this.props.filterId)
+                isLocked: filterStore.getOpLocks().get(this.props.filterId),
+                withinArg: filterStore.getWithinArgs().get(this.props.filterId)
             };
         },
 
@@ -158,6 +159,48 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
         },
 
         _renderForm : function () {
+            if (this.state.withinArg === 1) {
+                return this._renderSwitchMaincorpForm();
+
+            } else {
+                return this._renderFullForm();
+            }
+        },
+
+        _renderSwitchMaincorpForm : function () {
+            return (
+                <form className="query-form" onKeyDown={this._keyEventHandler}>
+                    <table className="form">
+                        <tbody>
+                            <inputViews.TRQueryInputField
+                                queryType={this.state.queryTypes.get(this.props.filterId)}
+                                widgets={this.state.supportedWidgets.get(this.props.filterId)}
+                                sourceId={this.props.filterId}
+                                lposlist={this.state.lposlist}
+                                lposValue={this.state.lposValues.get(this.props.filterId)}
+                                matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
+                                forcedAttr={this.state.forcedAttr}
+                                defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
+                                attrList={this.state.attrList}
+                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                tagHelperViews={this.props.tagHelperViews}
+                                queryStorageViews={this.props.queryStorageViews}
+                                inputLanguage={this.state.inputLanguage}
+                                actionPrefix={this.props.actionPrefix} />
+                        </tbody>
+                    </table>
+                    <div className="buttons">
+                        <button type="button" className="default-button" onClick={this._handleSubmit}>
+                            {this.props.operationIdx !== undefined ?
+                                this.translate('global__proceed')
+                                : this.translate('query__search_btn')}
+                        </button>
+                    </div>
+                </form>
+            );
+        },
+
+        _renderFullForm : function () {
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form">

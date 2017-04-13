@@ -334,6 +334,10 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         return this.opLocks;
     }
 
+    getWithinArgs():Immutable.Map<string, number> {
+        return this.withinArgs;
+    }
+
     getSupportedWidgets():FilterWidgetsMap {
         const getWidgets = (filterId:string):Array<string> => {
             switch (this.queryTypes.get(filterId)) {
