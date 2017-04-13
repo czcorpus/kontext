@@ -490,7 +490,7 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
         _createActionBasedForm : function () {
             switch (this.props.menuActiveItem.actionName) {
                 case 'MAIN_MENU_SHOW_FILTER':
-                    return <viewDeps.FilterFormView {...this.props.filterFormProps} filterId="__new__"  />;
+                    return <viewDeps.FilterFormView {...this.props.filterFormProps} filterId="__new__" />;
                 case 'MAIN_MENU_SHOW_SORT':
                     return <viewDeps.SortFormView sortId="__new__" />;
                 case 'MAIN_MENU_SHOW_SAMPLE':
