@@ -330,3 +330,23 @@ declare module "views/analysis/freq" {
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             layoutViews:any, mlFreqStore:any, ttFreqStore:any);
 }
+
+
+declare module "views/freqs/dataRows" {
+
+    export interface FreqsDataRowsViews {
+        DataTable: React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, freqDataRowsStore:any);
+}
+
+
+declare module "views/freqs/main" {
+
+    export interface FreqsResultViews {
+        FreqResultView: React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, freqDataRowsStore:any):FreqsResultViews;
+}

@@ -92,7 +92,8 @@ class PyConc(manatee.Concordance):
             elif action == 's':
                 # stored in _conc_dir
                 manatee.Concordance.__init__(self, corp,
-                                             os.path.join(self.pycorp._conc_dir, corp.corpname, params + '.conc'))
+                                             os.path.join(self.pycorp._conc_dir, corp.corpname,
+                                                          params + '.conc'))
             else:
                 raise RuntimeError(_('Unknown action: %s') % action)
         except UnicodeEncodeError:
@@ -184,12 +185,14 @@ class PyConc(manatee.Concordance):
 
     def get_attr_values_sizes(self, full_attr_name):
         """
-        Returns all values of provided structural attribute and their corresponding sizes in positions.
+        Returns all values of provided structural attribute and their corresponding
+        sizes in positions.
 
         arguments:
-        full_attr_name -- fully qualified structural attribute name (e.g. "opus.srclang", "doc.id" etc.).
-                          Method allows this name to be suffixed if this suffix starts with at least one whitespace.
-                          In such case the suffix is ignored.
+        full_attr_name -- fully qualified structural attribute name (e.g. "opus.srclang",
+                          "doc.id" etc.). Method allows this name to be suffixed if this
+                          suffix starts with at least one whitespace. In such case the suffix
+                          is ignored.
 
         returns:
         a dictionary (key = "structural attribute value" and value = "size in positions")
@@ -220,8 +223,8 @@ class PyConc(manatee.Concordance):
 
         arguments:
         crit -- specified criteria (CQL)
-        limit -- str type!, minimal frequency accepted, this value is exclusive! (i.e. accepted values must be
-                greater than the limit)
+        limit -- str type!, minimal frequency accepted, this value is exclusive! (i.e. accepted
+                 values must be greater than the limit)
         sortkey -- a key according to which the distribution will be sorted
         ml -- str, if non-empty then multi-level freq. distribution is generated
         ftt_include_empty -- str, TODO
@@ -265,7 +268,7 @@ class PyConc(manatee.Concordance):
         attrs = crit.split()
         head = [dict(n=label(attrs[x]), s=x / 2)
                 for x in range(0, len(attrs), 2)]
-        head.append(dict(n=_('Freq'), s='freq'))
+        head.append(dict(n=_('Freq'), s='freq', title=_('Frequency')))
 
         tofbar, tonbar = compute_corrections(freqs, norms)
         if tonbar and not ml:
@@ -306,7 +309,6 @@ class PyConc(manatee.Concordance):
                     0: int(normwidth_freq * float(f) / (maxf - minf + 1) + 1),
                     1: 10
                 }[rel_mode]
-
                 lines.append(dict(
                     Word=[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
                     freq=f,
@@ -326,7 +328,8 @@ class PyConc(manatee.Concordance):
                     Word=[{'n': '  '.join(n.split('\v'))} for n in w.split('\t')],
                     freq=f,
                     fbar=int(f * tofbar) + 1,
-                    norel=1
+                    norel=1,
+                    relbar=None
                 ))
 
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:

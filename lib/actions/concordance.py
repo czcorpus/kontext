@@ -818,7 +818,8 @@ class Actions(Querying):
             rel_mode = 1
         else:
             rel_mode = 0
-        result['freq_ipm_warn_enabled'] = not fcrit_is_all_nonstruct and self._query_contains_within()
+        result['freq_ipm_warn_enabled'] = (
+            not fcrit_is_all_nonstruct and self._query_contains_within())
         corp_info = self.get_corpus_info(self.args.corpname)
 
         args = freq_calc.FreqCalsArgs()
@@ -924,13 +925,15 @@ class Actions(Querying):
                         corrs += item['freq']
             freq = calc_result['conc_size'] - errs - corrs
             if freq > 0 and err_block > -1 and corr_block > -1:
-                pfilter = [('q',  'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
-                cc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
+                pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
+                cc = self.call_function(conclib.get_conc,
+                                        (self.corp, self._session_get('user', 'user')),
                                         q=self.args.q + [pfilter[0][1]])
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
                 if freq != calc_result['conc_size']:
-                    err_nfilter = ('q', 'p0 0 1 ([] within <err/>) within ! <corr/>')  # err/corr stuff is untested
+                    # TODO err/corr stuff is untested
+                    err_nfilter = ('q', 'p0 0 1 ([] within <err/>) within ! <corr/>')
                     corr_nfilter = ('q', 'p0 0 1 ([] within ! <err/>) within <corr/>')
                 result['Blocks'][err_block]['Items'].append(
                     {'Word': [{'n': 'no error'}], 'freq': freq,
@@ -946,7 +949,9 @@ class Actions(Querying):
                 ('to_line', self.FREQ_QUICK_SAVE_MAX_LINES),
                 ('ml', self.args.ml),
                 ('flimit', self.args.flimit),
-                ('fcrit', fcrit),  # cannot use self.args.fcrit as freqs() is also called directly by other actions
+                # cannot use self.args.fcrit as this action (freqs)
+                # is also called directly by other actions
+                ('fcrit', fcrit),
                 ('freq_sort', self.args.freq_sort),
                 ('fpage', self.args.fpage),
                 ('ftt_include_empty', self.args.ftt_include_empty)
@@ -960,6 +965,7 @@ class Actions(Querying):
         result['freq_form_args'] = dict(
             fttattr=self._request.args.getlist('fttattr'),
             flimit=self.args.flimit,
+            freq_sort=self.args.freq_sort,
             ftt_include_empty=self.args.ftt_include_empty
         )
         return result
@@ -1069,6 +1075,7 @@ class Actions(Querying):
             tmp['mlxpos'].append(kwargs.get('ml{0}pos'.format(i), 1))
             tmp['mlxicase'].append(kwargs.get('ml{0}icase'.format(i), ''))
             tmp['flimit'] = flimit
+            tmp['freq_sort'] = self.args.freq_sort
         result['freq_form_args'] = tmp
         return result
 

@@ -179,26 +179,11 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                             </th>
                             <td>
                                 <label>
-                                    Data type
-                                    <select>
-                                        <option>Positional attribute</option>
-                                        <option>Structural attribute</option>
-                                    </select>
-                                </label>
-                            </td>
-                            <td>
-                                <label>
-                                    Value
+                                    Attribute
                                     <select>
                                         <option>
                                         </option>
                                     </select>
-                                </label>
-                            </td>
-                            <td>
-                                <label>
-                                    Interpret as year
-                                    <input type="checkbox" />
                                 </label>
                             </td>
                         </tr>

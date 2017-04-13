@@ -142,10 +142,17 @@ export function init(dispatcher, mixins, layoutViews, subcorpLinesStore) {
             });
         },
 
+        _getTitle : function () {
+            if (this.props.sortKey) {
+                return this.translate('global__sorted_click_change');
+            }
+            return this.translate('global__click_to_sort');
+        },
+
         render : function () {
             return (
                 <th>
-                    <a onClick={this._handleSortClick}>
+                    <a onClick={this._handleSortClick} title={this._getTitle()}>
                         {this.props.label}
                         {this._renderSortFlag()}
                     </a>
