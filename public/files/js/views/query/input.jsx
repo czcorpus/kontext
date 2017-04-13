@@ -115,7 +115,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_PCQ_POS_NEG',
                 props: {
-                    corpname: this.props.corpname,
+                    corpname: this.props.sourceId,
                     value: evt.target.value
                 }
             })
