@@ -230,5 +230,47 @@ declare module AjaxResponse {
         CurrentSubcorp:string;
         SubcorpList:Array<{v:string; n:string}>;
     }
+}
 
+
+declare module FreqResultResponse {
+
+    export interface Item {
+        Word:Array<{n:string}>;
+        pfilter:Array<[string, string]>;
+        nfilter:Array<[string, string]>;
+        fbar:number;
+        freqbar:number;
+        rel:number;
+        relbar:number;
+        freq:number;
+        nbar:number;
+        norm:number;
+        norel:number; // 0|1 (TODO bool?)
+    }
+
+    export interface Header {
+        s:string;
+        n:string;
+    }
+
+    export interface Block {
+        TotalPages:number;
+        Items:Array<Item>;
+        Head:Array<Header>;
+        Total:number;
+    }
+
+    export interface FreqResultResponse extends Kontext.AjaxConcResponse {
+        Blocks:Array<Block>;
+        lastpage:number; // 0|1 TODO type
+        paging:number;
+        quick_to_line:number; // TODO type?
+        quick_from_line:number;
+        freq_ipm_warn_enabled:boolean;
+        FCrit:Array<{fcrit:string}>;
+        fcrit:Array<{fcrit:string}>;
+        fmaxitems:number;
+        concsize:number;
+    }
 }

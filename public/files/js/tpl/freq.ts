@@ -20,6 +20,7 @@
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 
 import * as $ from 'jquery';
@@ -34,6 +35,8 @@ import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
+import {init as resultViewInit, FreqsResultViews} from 'views/freqs/main';
+import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
 
 /**
  *
@@ -185,6 +188,20 @@ class FreqPage {
         );
     }
 
+    private initFreqResult():void {
+        const freqResultStore = new FreqDataRowsStore(this.layoutModel.dispatcher, this.layoutModel);
+        freqResultStore.importData(
+            this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
+            this.layoutModel.getConf<number>('FreqItemsPerPage')
+        );
+        const freqResultView = resultViewInit(this.layoutModel.dispatcher, this.layoutModel.getComponentTools(), freqResultStore);
+        this.layoutModel.renderReactComponent(
+            freqResultView.FreqResultView,
+            window.document.getElementById('result-mount'),
+            {}
+        );
+    }
+
     init() {
         this.layoutModel.init().then(
             () => {
@@ -235,6 +252,7 @@ class FreqPage {
                 this.initViewOptions();
                 this.initAnalysisViews();
                 this.initQueryOpNavigation();
+                this.initFreqResult();
             }
         ).then(
             () => undefined,

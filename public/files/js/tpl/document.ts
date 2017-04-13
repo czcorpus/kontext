@@ -161,6 +161,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private switchCorpStateStorage:Immutable.Map<string, any>;
 
+    private componentTools:Kontext.ComponentCoreMixins;
+
     /**
      *
      * @param conf page configuration
@@ -175,6 +177,36 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
         this.switchCorpAwareObjects = Immutable.List<Kontext.ICorpusSwitchAware<any>>();
         this.switchCorpStateStorage = Immutable.Map<string, any>();
+
+        this.componentTools = {
+            translate:(s:string, values?:any):string => {
+                return this.translate(s, values);
+            },
+            getConf:(k:string):any => {
+                return this.getConf(k);
+            },
+            createActionLink:(path:string, args?:Array<[string,string]>):string => {
+                return this.createActionUrl(path, args);
+            },
+            createStaticUrl:(path:string):string => {
+                return this.createStaticUrl(path);
+            },
+            formatNumber:(value:number):string => {
+                return this.formatNumber(value);
+            },
+            formatDate:(d:Date, timeFormat:number=0):string => {
+                return this.formatDate(d, timeFormat);
+            },
+            getLayoutViews:():Kontext.LayoutViews => {
+                return this.layoutViews;
+            },
+            addGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {
+                this.addGlobalKeyEventHandler(fn);
+            },
+            removeGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {
+                this.removeGlobalKeyEventHandler(fn);
+            }
+        };
     }
 
     /**
@@ -191,6 +223,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         };
     }
 
+    getComponentTools():Kontext.ComponentCoreMixins {
+        return this.componentTools;
+    }
+
     /**
      * Exports a list of default + (optional custom) mixins
      * for a React component.
@@ -199,37 +235,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @returns a list of mixins
      */
     exportMixins(...mixins:any[]):any[] {
-        let self = this;
-        let componentTools:Kontext.ComponentCoreMixins = {
-            translate(s:string, values?:any):string {
-                return self.translate(s, values);
-            },
-            getConf(k:string):any {
-                return self.getConf(k);
-            },
-            createActionLink(path:string, args?:Array<[string,string]>):string {
-                return self.createActionUrl(path, args);
-            },
-            createStaticUrl(path:string):string {
-                return self.createStaticUrl(path);
-            },
-            formatNumber(value:number):string {
-                return self.formatNumber(value);
-            },
-            formatDate(d:Date, timeFormat:number=0):string {
-                return self.formatDate(d, timeFormat);
-            },
-            getLayoutViews():Kontext.LayoutViews {
-                return self.layoutViews;
-            },
-            addGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
-                self.addGlobalKeyEventHandler(fn);
-            },
-            removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
-                self.removeGlobalKeyEventHandler(fn);
-            }
-        };
-        return mixins ? mixins.concat([componentTools]) : [componentTools];
+        return mixins ? mixins.concat([this.componentTools]) : [this.componentTools];
     }
 
     /**
@@ -999,6 +1005,10 @@ export class PluginApi implements Kontext.PluginApi {
 
     dispatcher() {
         return this.pageModel.dispatcher;
+    }
+
+    getComponentTools():Kontext.ComponentCoreMixins {
+        return this.pageModel.getComponentTools();
     }
 
     exportMixins(...mixins:any[]):any[] {
