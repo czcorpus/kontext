@@ -138,7 +138,7 @@ export class CollPage {
             attrList: attrs,
             mlxattr: [attrs[0].n],
             mlxicase: [false],
-            mlxctx: ['0~0>0'],  // = "Node'"
+            mlxctx: ['0>0'],  // = "Node'"
             alignType: ['left']
         }
 
