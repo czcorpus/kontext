@@ -78,9 +78,9 @@ export class MLFreqFormStore extends SimplePageStore {
 
     private maxNumLevels:number;
 
-    private static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0~0>0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
+    private static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
 
-    private static POSITION_RA = ['-6>0', '-5>0', '-4>0', '-3>0', '-2>0', '-1>0', '0~0>0', '1>0', '2>0', '3>0', '4>0', '5>0', '6>0'];
+    private static POSITION_RA = ['-6>0', '-5>0', '-4>0', '-3>0', '-2>0', '-1>0', '0>0', '1>0', '2>0', '3>0', '4>0', '5>0', '6>0'];
 
     private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
@@ -181,7 +181,7 @@ export class MLFreqFormStore extends SimplePageStore {
     private addLevel():void {
         this.mlxattr = this.mlxattr.push(this.attrList.get(0).n);
         this.mlxicase = this.mlxicase.push(false);
-        this.mlxctxIndices = this.mlxctxIndices.push(this.importMlxctxValue('0~0>0'));
+        this.mlxctxIndices = this.mlxctxIndices.push(this.importMlxctxValue('0>0'));
         this.alignType = this.alignType.push('left');
     }
 
