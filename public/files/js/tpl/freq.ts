@@ -63,7 +63,7 @@ class FreqPage {
             flimit: freqFormInputs.flimit || '0',
             mlxattr: freqFormInputs.mlxattr || [attrs[0].n],
             mlxicase: freqFormInputs.mlxicase || [false],
-            mlxctx: freqFormInputs.mlxctx || ['0~0>0'],
+            mlxctx: freqFormInputs.mlxctx || ['0>0'],
             alignType: freqFormInputs.alignType || ['left'],
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList')
