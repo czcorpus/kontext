@@ -852,11 +852,14 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
 
             const td3Elm = window.document.createElement('td');
             td3Elm.className = 'tools';
+            trElm.appendChild(td3Elm);
+
             const imgElm = window.document.createElement('img');
             imgElm.className = 'remove over-img disabled';
             imgElm.setAttribute('alt', self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav'));
             imgElm.setAttribute('title', self.pageModel.translate('defaultCorparch__click_to_remove_item_from_fav'));
             imgElm.setAttribute('src', self.pageModel.createStaticUrl('img/close-icon.svg'));
+            td3Elm.appendChild(imgElm);
 
             return trElm;
         }
