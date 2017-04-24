@@ -66,12 +66,61 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
         }
     });
 
+    // -------------------- <CapsKey /> ----------------------------
+
+    const CapsKey = React.createClass({
+
+        componentDidUpdate : function (prevProps, prevState) {
+            if (!prevProps.triggered && this.props.triggered) {
+                this.props.handleCaps();
+            }
+        },
+
+        render : function () {
+            const classes = ['spec', 'caps'];
+            if (this.props.capsOn) {
+                classes.push('active');
+            }
+            return <button type="button" className={classes.join(' ')} onClick={this.props.handleCaps}>Caps</button>;
+        }
+
+    });
+
     // -------------------- <SpaceKey /> ----------------------------
 
     const SpaceKey = React.createClass({
 
+        componentDidUpdate : function (prevProps, prevState) {
+            if (!prevProps.triggered && this.props.triggered) {
+                this.props.handleClick(this.props.value);
+            }
+        },
+
         render : function () {
-            return <button type="button" className="space" onClick={this.props.handleClick}>Space</button>;
+           const htmlClasses = ['space', 'spec'];
+            if (this.props.triggered) {
+                htmlClasses.push('active');
+            }
+            return <button type="button" className={htmlClasses.join(' ')} onClick={this.props.handleClick}>Space</button>;
+        }
+    });
+
+    // -------------------- <SpaceKey /> ----------------------------
+
+    const BackspaceKey = React.createClass({
+
+        componentDidUpdate : function (prevProps, prevState) {
+            if (!prevProps.triggered && this.props.triggered) {
+                this.props.handleBackspace();
+            }
+        },
+
+        render : function () {
+            const htmlClasses = ['backspace', 'spec'];
+            if (this.props.triggered) {
+                htmlClasses.push('active');
+            }
+            return <button type="button" className={htmlClasses.join(' ')} onClick={this.props.handleBackspace}>Bksp</button>;
         }
     });
 
@@ -80,7 +129,7 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
     const KeysRow = React.createClass({
 
         _selectValue : function (v) {
-            if (this.props.shiftOn) {
+            if (this.props.shiftOn || this.props.capsOn) {
                 return v[1];
 
             } else {
@@ -90,20 +139,32 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
 
         _selectKeyType : function (item, i) {
             if (item[0].length > 1) {
-                if (item[0] === 'Shift') {
-                    return <ShiftKey
-                                key={`${item[0]}-${i}`}
-                                handleShift={this.props.handleShift}
-                                shiftOn={this.props.shiftOn} />;
+                switch (item[0]) {
+                    case 'Shift':
+                        return <ShiftKey
+                                    key={`${item[0]}-${i}`}
+                                    handleShift={this.props.handleShift}
+                                    shiftOn={this.props.shiftOn} />;
 
-                } else {
-                    return <DummyKey
-                                key={`${item[0]}-${i}`}
-                                value={this._selectValue(item)} />;
+                    case 'Caps':
+                        return <CapsKey key={`${item[0]}-${i}`}
+                                    handleCaps={this.props.handleCaps}
+                                    capsOn={this.props.capsOn}
+                                    triggered={i === this.props.passTriggerIdx} />;
+
+                    case 'Bksp':
+                        return <BackspaceKey key={`${item[0]}-${i}`}
+                                    handleBackspace={this.props.handleBackspace}
+                                    triggered={i === this.props.passTriggerIdx} />;
+                    default:
+                        return <DummyKey
+                                    key={`${item[0]}-${i}`}
+                                    value={this._selectValue(item)} />;
                 }
 
             } else if (item[0] === ' ') {
-                return <SpaceKey key="space-k" triggered={i === this.props.passTriggerIdx} />;
+                return <SpaceKey key="space-k" triggered={i === this.props.passTriggerIdx} value=" "
+                                handleClick={this.props.handleClick} />;
 
             } else {
                 return <Key
@@ -133,8 +194,9 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
         getInitialState : function () {
             return {
                 shiftOn: false,
+                capsOn: false,
                 layout: null,
-                layoutNames: null,
+                layoutNamepassTriggerIdxs: null,
                 currentLayoutIdx: null,
                 triggeredKey: null
             };
@@ -151,11 +213,48 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                     triggeredKey: this.state.triggeredKey
                 }
             });
+            this.setState({
+                shiftOn: false,
+                capsOn: this.state.capsOn,
+                layout: this.state.layout,
+                layoutNames: this.state.layoutNames,
+                currentLayoutIdx: this.state.currentLayoutIdx,
+                triggeredKey: this.state.triggeredKey
+            });
         },
 
         _handleShift : function () {
             this.setState({
                 shiftOn: !this.state.shiftOn,
+                capsOn: false,
+                layout: this.state.layout,
+                layoutNames: this.state.layoutNames,
+                currentLayoutIdx: this.state.currentLayoutIdx,
+                triggeredKey: this.state.triggeredKey
+            });
+        },
+
+        _handleCaps : function () {
+            this.setState({
+                shiftOn: false,
+                capsOn: !this.state.capsOn,
+                layout: this.state.layout,
+                layoutNames: this.state.layoutNames,
+                currentLayoutIdx: this.state.currentLayoutIdx,
+                triggeredKey: this.state.triggeredKey
+            });
+        },
+
+        _handleBackspace : function () {
+            dispatcher.dispatch({
+                actionType: this.props.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR',
+                props: {
+                    sourceId: this.props.sourceId
+                }
+            });
+            this.setState({
+                shiftOn: false,
+                capsOn: this.state.capsOn,
                 layout: this.state.layout,
                 layoutNames: this.state.layoutNames,
                 currentLayoutIdx: this.state.currentLayoutIdx,
@@ -173,6 +272,7 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
         _storeChangeListener : function () {
             this.setState({
                 shiftOn: this.state.shiftOn,
+                capsOn: this.state.capsOn,
                 layout: virtualKeyboardStore.getCurrentLayout(),
                 layoutNames: virtualKeyboardStore.getLayoutNames(),
                 currentLayoutIdx: virtualKeyboardStore.getCurrentLayoutIdx(),
@@ -212,6 +312,9 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                                     handleClick={this._handleClick}
                                     shiftOn={this.state.shiftOn}
                                     handleShift={this._handleShift}
+                                    capsOn={this.state.capsOn}
+                                    handleCaps={this._handleCaps}
+                                    handleBackspace={this._handleBackspace}
                                     passTriggerIdx={passTriggerIdx} />;
                     })}
                 </div>

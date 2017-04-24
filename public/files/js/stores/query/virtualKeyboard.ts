@@ -45,10 +45,11 @@ export class VirtualKeyboardStore extends SimplePageStore {
     private externalKeyHit:number;
 
     private keyCodes:Array<Array<number>> = [
-        [192, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 189, 187],
+        [192, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 189, 187, 8],
         [null, 81, 87, 69, 82, 84, 89, 85, 73, 79, 80, 219, 221, 220],
-        [null, 65, 83, 68, 70, 71, 72, 74, 75, 76, 186, 222, 18],
-        [null, 90, 88, 67, 86, 66, 78, 77, 188, 190, 191, 18]
+        [20, 65, 83, 68, 70, 71, 72, 74, 75, 76, 186, 222, 18],
+        [null, 90, 88, 67, 86, 66, 78, 77, 188, 190, 191, 18],
+        [32]
     ];
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
