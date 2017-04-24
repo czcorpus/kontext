@@ -1259,13 +1259,18 @@ class Kontext(Controller):
         def nicearg(arg):
             args = arg.split('"')
             niceargs = []
+            prev_val = ''
+            prev_other = ''
             for i in range(len(args)):
                 if i % 2:
                     tmparg = args[i].strip('\\').replace('(?i)', '')
-                    niceargs.append(tmparg)
+                    if tmparg != prev_val or '|' not in prev_other:
+                        niceargs.append(tmparg)
+                    prev_val = tmparg
                 else:
                     if args[i].startswith('within'):
                         niceargs.append('within')
+                    prev_other = args[i]
             return ', '.join(niceargs)
 
         for o, a, u1, u2, s, opid in conc_desc:
