@@ -335,11 +335,18 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                     self.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_APPEND_QUERY':
-                    const currQuery = self.queries.get(payload.props['sourceId'])
+                    const currQuery = self.queries.get(payload.props['sourceId']);
                     const newQuery = currQuery + (currQuery && payload.props['prependSpace'] ? ' ' : '') + payload.props['query'];
                     self.queries = self.queries.set(payload.props['sourceId'], newQuery);
                     if (payload.props['closeWhenDone']) {
                         self.activeWidgets = self.activeWidgets.set(payload.props['sourceId'], null);
+                    }
+                    self.notifyChangeListeners();
+                break;
+                case 'QUERY_INPUT_REMOVE_LAST_CHAR':
+                    const currQuery2 = self.queries.get(payload.props['sourceId']);
+                    if (currQuery2.length > 0) {
+                        self.queries = self.queries.set(payload.props['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
                     }
                     self.notifyChangeListeners();
                 break;
