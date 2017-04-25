@@ -81,7 +81,7 @@ class Actions(Querying):
             str: segment name if speech_segment is configured in 'corpora.xml' and it actually exists; else None
         """
         speech_struct = self.get_corpus_info(self.args.corpname).get('speech_segment')
-        if speech_struct in corpus_get_conf(self.corp, 'STRUCTATTRLIST').split(','):
+        if speech_struct is not None:
             return tuple(speech_struct.split('.'))
         else:
             return None

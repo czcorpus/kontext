@@ -343,8 +343,7 @@ class Kwic(object):
         for i, line in enumerate(result.Lines):
             line['Align'] = aligns[i]
 
-    @staticmethod
-    def separate_speech_struct_from_tag(speech_segment, text):
+    def separate_speech_struct_from_tag(self, speech_segment, text):
         """
         Removes structural attribute related to speech file identification.
         E.g. getting input "<seg foo=bar speechfile=1234.wav time=1234>lorem ipsum</seg>" and
@@ -360,12 +359,11 @@ class Kwic(object):
         """
         import re
 
-        speech_struct, speech_struct_attr = speech_segment if speech_segment else (None, None)
-        pattern = r"^(<%s\s+.*)%s=([^\s>]+)(\s.+|>)$" % (
-            speech_struct, speech_struct_attr)
-        srch = re.search(pattern, text)
-        if srch is not None:
-            return srch.group(1).rstrip() + srch.group(3), srch.group(2)
+        if self.speech_segment_has_audio(speech_segment):
+            pattern = r"^(<%s\s+.*)%s=([^\s>]+)(\s.+|>)$" % tuple(speech_segment)
+            srch = re.search(pattern, text)
+            if srch is not None:
+                return srch.group(1).rstrip() + srch.group(3), srch.group(2)
         return text, ''
 
     @staticmethod
@@ -488,6 +486,9 @@ class Kwic(object):
         rightwords = moveleft + rightwords
         return leftwords, rightwords
 
+    def speech_segment_has_audio(self, s):
+        return s and s[1]
+
     def kwiclines(self, args):
         """
         Generates list of 'kwic' (= keyword in context) lines according to
@@ -503,13 +504,13 @@ class Kwic(object):
 
         # add structures needed to render speech playback information
         all_structs = args.structs
-        if args.speech_segment:
+        if self.speech_segment_has_audio(args.speech_segment):
             speech_struct_attr_name = '.'.join(args.speech_segment)
             speech_struct_attr = self.corpus.get_attr(speech_struct_attr_name)
             if speech_struct_attr_name not in args.structs:
                 all_structs += ',' + speech_struct_attr_name
         else:
-            speech_struct_attr_name = None
+            speech_struct_attr_name = ''
             speech_struct_attr = None
 
         lines = []
@@ -538,7 +539,7 @@ class Kwic(object):
             linegroup = kl.get_linegroup()
             if not linegroup:  # manatee returns 0 in case of no group (but None will work too here)
                 linegroup = -1  # client-side uses -1 as "no group"
-            if args.speech_segment:
+            if self.speech_segment_has_audio(args.speech_segment):
                 leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
             else:
                 leftmost_speech_id = None

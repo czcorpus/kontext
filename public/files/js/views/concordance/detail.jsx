@@ -484,10 +484,12 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     {this.props.data.map((item, i) => {
                         return <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>;
                     })}
+                    {this.props.canStartPlayback ?
                     <PlaybackIcon handleClick={this.props.handleClick}
                                 handleStopClick={this.props.handleStopClick}
                                 isPlaying={this.props.isPlaying}
                                 setFocusFn={this._setFocus} />
+                    : null}
                 </div>
             );
         }
@@ -515,7 +517,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 bulletColor={color2str(this.props.speech.colorCode)}
                                 handleClick={this.props.handlePlayClick}
                                 handleStopClick={this.props.handleStopClick}
-                                isPlaying={this.props.isPlaying} />
+                                isPlaying={this.props.isPlaying}
+                                canStartPlayback={this.props.canStartPlayback} />
                     </td>
                 </tr>
             );
@@ -555,7 +558,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                     bulletColor={color2str(speech.colorCode)}
                                     handleClick={this.props.handlePlayClick}
                                     handleStopClick={this.props.handleStopClick}
-                                    isPlaying={this.props.isPlaying} />)}
+                                    isPlaying={this.props.isPlaying}
+                                    canStartPlayback={this.props.canStartPlayback} />)}
                     </td>
                 </tr>
             );
@@ -620,7 +624,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 idx={i}
                                 handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
                                 handleStopClick={this._handleStopClick}
-                                isPlaying={this.state.playerWaitingIdx === i} />;
+                                isPlaying={this.state.playerWaitingIdx === i}
+                                canStartPlayback={this.props.speechSegment && this.props.speechSegment[1]} />;
 
                 } else if (item.length > 1) {
                     return <TROverlappingSpeeches
@@ -630,7 +635,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 speechOverlapVal={this.props.speechOverlapVal}
                                 handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
                                 handleStopClick={this._handleStopClick}
-                                isPlaying={this.state.playerWaitingIdx === i} />;
+                                isPlaying={this.state.playerWaitingIdx === i}
+                                canStartPlayback={this.props.speechSegment && this.props.speechSegment[1]} />;
 
                 } else {
                     return null;
@@ -794,7 +800,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     return <SpeechView corpusId={this.props.corpusId} tokenNumber={this.props.tokenNumber}
                                 lineIdx={this.props.lineIdx}
                                 speechOverlapAttr={this.props.speechOverlapAttr}
-                                speechOverlapVal={this.props.speechOverlapVal} />;
+                                speechOverlapVal={this.props.speechOverlapVal}
+                                speechSegment={this.props.speechSegment} />;
             }
         },
 
