@@ -1373,7 +1373,6 @@ export class Corplist implements CorparchCommon.Widget {
         this.onShow = this.options.onShow ? this.options.onShow : null;
 
         const defaultHandleClick = (item:common.CorplistItemUcnk) => {
-            console.dir(item);
             const form = $(this.parentForm);
             this.setCurrentValue(item.corpus_id, item.name);
             if (item.type === 'subcorpus') {
