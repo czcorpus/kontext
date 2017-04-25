@@ -328,7 +328,7 @@ export class ConcDetailStore extends SimplePageStore {
         }
 
         function isOverlap(s1:Speech, s2:Speech):boolean {
-            if (s1 && s2) {
+            if (s1 && s2 && self.speechOpts.speechOverlapAttr) {
                 const flag1 = s1.metadata.get(self.speechOpts.speechOverlapAttr[1]);
                 const flag2 = s2.metadata.get(self.speechOpts.speechOverlapAttr[1]);
                 if (flag1 === flag2
