@@ -132,7 +132,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
 
         _fetchStateValues : function () {
             return {
-                availAttrs: sortStore.getAvailAttrs(),
+                availAttrs: sortStore.getAllAvailAttrs(),
                 sattr: sortStore.getSattrValues().get(this.props.sortId),
                 skey: sortStore.getSkeyValues().get(this.props.sortId),
                 spos: sortStore.getSposValues().get(this.props.sortId),
@@ -502,7 +502,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
 
         _fetchStateValues : function () {
              return {
-                availAttrs: multiLevelSortStore.getAvailAttrs(),
+                availAttrs: multiLevelSortStore.getAllAvailAttrs(),
                 levels: multiLevelSortStore.getLevelIndices(this.props.sortId),
                 maxNumLevels: multiLevelSortStore.getMaxNumLevels(this.props.sortId),
                 mlxattrValues: multiLevelSortStore.getMlxattrValues(this.props.sortId),
