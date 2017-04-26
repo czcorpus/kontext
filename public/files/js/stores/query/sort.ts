@@ -31,6 +31,7 @@ export type AttrItem = {n:string; label:string};
 
 export interface SortFormProperties {
     attrList:Array<AttrItem>;
+    structAttrList:Array<AttrItem>;
     sbward:Array<[string, string]>;
     skey:Array<[string, string]>;
     spos:Array<[string, string]>;
@@ -88,6 +89,16 @@ export interface ISubmitableSortStore {
     submit(sortId:string):void;
 }
 
+const sortAttrVals = (x1:AttrItem, x2:AttrItem) => {
+    if (x1.label < x2.label) {
+        return -1;
+    }
+    if (x1.label > x2.label) {
+        return 1;
+    }
+    return 0;
+};
+
 /**
  *
  */
@@ -96,6 +107,8 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
     private pageModel:PageModel;
 
     private availAttrList:Immutable.List<AttrItem>;
+
+    private availStructAttrList:Immutable.List<AttrItem>;
 
     private sattrValues:Immutable.Map<string, string>;
 
@@ -119,6 +132,7 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<AttrItem>(props.attrList);
+        this.availStructAttrList = Immutable.List<AttrItem>(props.structAttrList);
         this.sattrValues = Immutable.Map<string, string>(props.sattr);
         this.skeyValues = Immutable.Map<string, string>(props.skey);
         this.sbwardValues = Immutable.Map<string, string>(props.sbward);
@@ -215,8 +229,13 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
         return args;
     }
 
-    getAvailAttrs():Immutable.List<AttrItem> {
-        return this.availAttrList;
+    /**
+     * Return both positional and structural attributes
+     * as a single list (positional first).
+     */
+    getAllAvailAttrs():Immutable.List<AttrItem> {
+        return this.availAttrList
+                .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
     }
 
     getSattrValues():Immutable.Map<string, string> {
@@ -257,6 +276,8 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
 
     private availAttrList:Immutable.List<AttrItem>;
 
+    private availStructAttrList:Immutable.List<AttrItem>;
+
     private sortlevelValues:Immutable.Map<string, number>;
 
     private mlxattrValues:Immutable.Map<string, Immutable.List<string>>;
@@ -285,6 +306,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<AttrItem>(props.attrList);
+        this.availStructAttrList = Immutable.List<AttrItem>(props.structAttrList);
         this.sortlevelValues = Immutable.Map<string, number>(props.sortlevel);
         this.mlxattrValues = Immutable.Map<string, Immutable.List<string>>(
             props.mlxattr.map(item => [item[0], Immutable.List<string>(item[1])]));
@@ -502,8 +524,13 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
         );
     }
 
-    getAvailAttrs():Immutable.List<AttrItem> {
-        return this.availAttrList;
+    /**
+     * Return both positional and structural attributes
+     * as a single list (positional first).
+     */
+    getAllAvailAttrs():Immutable.List<AttrItem> {
+        return this.availAttrList
+                .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
     }
 
     getMlxattrValues(sortId:string):Immutable.List<string> {
