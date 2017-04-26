@@ -46,7 +46,7 @@ import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
-import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
+import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg, AttrItem} from '../stores/query/sort';
 import {CollFormStore, CollFormProps} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormProps} from '../stores/analysis/freqForms';
 import tagHelperPlugin from 'plugins/taghelper/init';
@@ -762,10 +762,11 @@ export class ViewPage {
     private initSortForm():void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>fetchSortFormArgs(concFormsArgs, key);
-        const availAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        const availAttrs = this.layoutModel.getConf<Array<AttrItem>>('AttrList');
 
         const sortStoreProps:SortFormProperties = {
-            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+            attrList: this.layoutModel.getConf<Array<AttrItem>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<AttrItem>>('StructAttrList'),
             sattr: fetchArgs<string>(item => item.sattr),
             sbward: fetchArgs<string>(item => item.sbward),
             sicase: fetchArgs<string>(item => item.sicase),
