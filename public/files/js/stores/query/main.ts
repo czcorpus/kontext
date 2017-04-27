@@ -476,6 +476,12 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
             if (!this.queryTypes.has(corpname)) {
                 this.queryTypes = this.queryTypes.set(corpname, 'iquery'); // TODO what about some session-stored stuff?
             }
+            if (!this.pcqPosNegValues.has(corpname)) {
+                this.pcqPosNegValues = this.pcqPosNegValues.set(corpname, 'pos');
+            }
+            if (!this.defaultAttrValues.has(corpname)) {
+                this.defaultAttrValues = this.defaultAttrValues.set(corpname, 'word');
+            }
 
         } else {
             // TODO error
@@ -559,7 +565,6 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         if (this.shuffleForbidden) {
             args.set('shuffle', 0);
         }
-
         return args;
     }
 
