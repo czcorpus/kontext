@@ -253,7 +253,8 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                             <inputViews.TRQueryTypeField
                                 queryType={this.state.queryTypes.get(this.props.filterId)}
                                 sourceId={this.props.filterId}
-                                actionPrefix={this.props.actionPrefix} />
+                                actionPrefix={this.props.actionPrefix}
+                                hasLemmaAttr={this.state.hasLemmaAttr} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
