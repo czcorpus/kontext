@@ -29,6 +29,9 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.AttrList = $to_json($getVar('AttrList', []));
     conf.StructAttrList = $to_json($getVar('StructAttrList', []));
     conf.FreqFormProps = $to_json($freq_form_args);
+    conf.FreqResultData = $to_json($Blocks);
+    conf.FreqItemsPerPage = $to_json($fmaxitems);
+    conf.FreqCrit = $to_json($fcrit);
     pageSelf.init(conf);
 });
 #end def
@@ -36,132 +39,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
 #def main
 <section>
-    #filter WebSafe
     <h2>$_("Frequency list")</h2>
-
-    #block freqs_navigation($navid="next")
-    #set $allhref = 'freqs?' + $join_params($Globals, $fcrit, [('flimit', $flimit),
-            ('freq_sort', $freq_sort), ('ml', $ml)])
-    #if $paging and ($fpage > 1 or not $lastpage)
-    <div class="bonito-pagination">
-        <form action="freqs">
-            #if $fpage > 1
-            <div class="bonito-pagination-left">
-                <a href="$allhref"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("<< First")" title="$_("<< First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
-                <a href="$allhref&amp;fpage=$(int($fpage) - 1)"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="${files_path}/img/prev-page.svg" /></a>
-            </div>
-            #end if
-
-            <div class="bonito-pagination-core">
-                #filter None
-                $input_hidden
-                #end filter
-                #for $fcr in $FCrit
-                <input type="hidden" name="fcrit" value="$fcr.fcrit" />
-                #end for
-                <input type="hidden" name="flimit" value='$flimit' />
-                <input type="hidden" name="freq_sort" value='$freq_sort' />
-                <input type="hidden" name="ml" value='$ml' />
-
-                $_("Page")
-                <input type="text" name="fpage" value="$fpage" size="4" />
-            </div>
-
-            #if not $lastpage
-            <div class="bonito-pagination-right">
-                <a href="$allhref&amp;fpage=$(int($fpage) + 1)" id="$navid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next >")" title="$_("Next >")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
-            </div>
-            #else
-            <a id="$navid"></a>
-            #end if
-        </form>
-    </div>
-    #end if
-    #end block
-
-    <form action="freqs">
-        #filter None
-            $input_hidden
-        #end filter
-        #for $f in $FCrit
-        <input type="hidden" name="fcrit" value="$f.fcrit" />
-        #end for
-        <input type="hidden" name="ml" value="$ml" />
-        <input type="hidden" name="ftt_include_empty" value="$ftt_include_empty" />
-        $_("Frequency limit"): <input type="text" name="flimit" value="$flimit" size="7" />
-        <input type="submit" value="$_("Set limit")" />
-    </form>
-
-    #if $getVar('freq_ipm_warn_enabled', False)
-    <p class="freq-ipm-warning">
-        <img class="warning-icon" src="${files_path}/img/warning-icon.svg" alt="warning icon" />
-        $_('Relative frequencies (i.p.m.) shown below are related to the size of the respective category as a whole.')
-    </p>
-    #end if
-
-
-    #for $b in $Blocks
-    #if 'Total' in $b
-    <p><strong>$_('Total'):</strong> $b.Total ($b.TotalPages $_('pages'))</p>
-    #end if
-
-    <table class="data">
-        #set $rowNum = 1
-        <thead>
-        <tr>
-            <th></th>
-            <th>$_('Filter')</th>
-            #for $h in $b.Head
-            <th colspan="2">
-                <a href="freqs?$join_params($Globals, $fcrit, [('flimit', $flimit),
-                    ('freq_sort', $h.s), ('ftt_include_empty', $ftt_include_empty)])"
-                #if 'title' in $h# title="$h.title" #end if#>
-                $_($h.n)</a>
-            </th>
-            #end for
-        </tr>
-        </thead>
-        <tbody>
-        #for $i in $b.get('Items', [])
-        <tr>
-            <td style="text-align: right">$($rowNum +  ($fpage - 1) * $fmaxitems).</td>
-            #set $rowNum += 1
-            <td class="nowrap">
-                #if $i.get('pfilter', '')
-                <a href="quick_filter?$join_params($Globals, $i.get('pfilter'))" title="$_('positive filter')">p</a>/#slurp
-                #if $len($b.get('Head')) < 3 and $i.get('nfilter', '')
-                <a href="quick_filter?$join_params($Globals, $i.get('nfilter'))" title="$_('negative filter')">n</a>
-            </td>
-                #else
-                <span class="disabled" title="Negative filters are disabled for multilevel freqs">n</span>
-                #end if
-                #end if
-            #for $w in $i.Word
-            <td class="word monospace">$w.n</td>
-            <td></td>
-            #end for
-            <td class="num" class="frequency">
-                $format_number($i.freq, mask='%d')
-            </td>
-            <td>
-            </td>
-            #if $i.has_key('rel')
-            <td class="num">$i.rel</td>
-            <td>
-            <div class="bar" style="height:10px;width:${i['relbar']}px;"></div><img src="$files_path/img/red.png" class="hidden" alt="${i['relbar']}" />
-            </td>
-            #end if
-
-        </tr>
-        #end for
-        </tbody>
-     </table>
-    #end for
-
-    #filter none
-    $freqs_navigation("next2")
-    #end filter
-
-    #end filter
+    <div id="result-mount" class="no-margin"></div>
 </section>
 #end def

@@ -20,6 +20,7 @@
 
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 
 import * as $ from 'jquery';
@@ -27,13 +28,15 @@ import {PageModel} from './document';
 import {MultiDict, dictToPairs} from '../util';
 import {bind as bindPopupBox} from '../popupbox';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/analysis/freqForms';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
+import {init as resultViewInit, FreqsResultViews} from 'views/freqs/main';
+import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
 
 /**
  *
@@ -61,6 +64,7 @@ class FreqPage {
             fttattr: freqFormInputs.fttattr || [],
             ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '0',
+            freq_sort: 'freq',
             mlxattr: freqFormInputs.mlxattr || [attrs[0].n],
             mlxicase: freqFormInputs.mlxicase || [false],
             mlxctx: freqFormInputs.mlxctx || ['0>0'],
@@ -185,6 +189,26 @@ class FreqPage {
         );
     }
 
+    private initFreqResult():void {
+        const freqResultStore = new FreqDataRowsStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
+            this.layoutModel.getConf<FreqFormInputs>('FreqFormProps')
+        );
+        freqResultStore.importData(
+            this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
+            this.layoutModel.getConf<number>('FreqItemsPerPage'),
+            1
+        );
+        const freqResultView = resultViewInit(this.layoutModel.dispatcher, this.layoutModel.getComponentTools(), freqResultStore);
+        this.layoutModel.renderReactComponent(
+            freqResultView.FreqResultView,
+            window.document.getElementById('result-mount'),
+            {}
+        );
+    }
+
     init() {
         this.layoutModel.init().then(
             () => {
@@ -235,6 +259,7 @@ class FreqPage {
                 this.initViewOptions();
                 this.initAnalysisViews();
                 this.initQueryOpNavigation();
+                this.initFreqResult();
             }
         ).then(
             () => undefined,

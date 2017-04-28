@@ -34,6 +34,7 @@ export interface FreqFormInputs {
     fttattr:Array<string>;
     ftt_include_empty:boolean;
     flimit:string;
+    freq_sort:string;
 
     mlxattr:Array<string>;
     mlxicase:Array<boolean>;
@@ -68,6 +69,8 @@ export class MLFreqFormStore extends SimplePageStore {
 
     private flimit:string;
 
+    private freqSort:string;
+
     private mlxattr:Immutable.List<string>;
 
     private mlxicase:Immutable.List<boolean>;
@@ -89,6 +92,7 @@ export class MLFreqFormStore extends SimplePageStore {
         this.pageModel = pageModel;
         this.attrList = Immutable.List<AttrValue>(props.attrList);
         this.flimit = props.flimit;
+        this.freqSort = props.freq_sort;
         this.mlxattr = Immutable.List<string>(props.mlxattr);
         this.mlxicase = Immutable.List<boolean>(props.mlxicase);
         this.mlxctxIndices = Immutable.List<number>(props.mlxctx.map(item => this.importMlxctxValue(item)));
@@ -219,6 +223,7 @@ export class MLFreqFormStore extends SimplePageStore {
             args.set(`ml${i+1}ctx`, val);
         });
         args.set('freqlevel', this.mlxattr.size);
+        args.set('freq_sort', this.freqSort);
         window.location.href = this.pageModel.createActionUrl('freqml', args.items());
     }
 
@@ -274,6 +279,8 @@ export class TTFreqFormStore extends SimplePageStore {
 
     private flimit:string;
 
+    private freqSort:string;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
@@ -281,6 +288,7 @@ export class TTFreqFormStore extends SimplePageStore {
         this.fttattr = Immutable.Set<string>(props.fttattr);
         this.fttIncludeEmpty = props.ftt_include_empty;
         this.flimit = props.flimit;
+        this.freqSort = props.freq_sort;
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -319,6 +327,7 @@ export class TTFreqFormStore extends SimplePageStore {
         args.replace('fttattr', this.fttattr.toArray());
         args.set('ftt_include_empty', this.fttIncludeEmpty ? '1' : '0');
         args.set('flimit', this.flimit);
+        args.set('freq_sort', this.freqSort);
         window.location.href = this.pageModel.createActionUrl('freqtt', args.items());
     }
 

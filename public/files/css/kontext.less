@@ -50,6 +50,10 @@ section > * {
     margin: 1em;
 }
 
+section > .no-margin {
+    margin: 0;
+}
+
 fieldset {
     margin: 0px;
     padding: 10px;
@@ -79,11 +83,18 @@ img {
 }
 
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+span.input-like {
     border: @input-border-style;
     border-radius: @input-border-radius;
     display: inline-block;
     vertical-align: middle;
+}
+
+span.input-like {
+    background-color: #FFFFFF;
+    display: inline-block;
+    text-align: center;
 }
 
 input[type="number"] {
@@ -822,15 +833,16 @@ form.query-form {
     background-color: @color-light-frame;
 }
 
-section > .bonito-pagination {
+section > .bonito-pagination,
+section #result-mount .bonito-pagination {
     margin: 0;
     text-align: right;
-}
 
-section > .bonito-pagination form {
-    margin: 0 20px;
-    padding-bottom: 5px;
-    padding-top: 5px;
+    form {
+        margin: 0 20px;
+        padding-bottom: 5px;
+        padding-top: 5px;
+    }
 }
 
 #conc-wrapper .bonito-pagination {
@@ -1829,6 +1841,10 @@ form .wl-option-list {
     .hint {
         width: 60%;
     }
+}
+
+.freq-blocks {
+    margin: 1em;
 }
 
 button {

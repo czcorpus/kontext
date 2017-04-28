@@ -28,6 +28,10 @@ declare module React {
     export interface ReactClass {
     }
 
+    export interface Component {
+        state:any;
+    }
+
     export interface Props {
         [key:string]:any;
     }

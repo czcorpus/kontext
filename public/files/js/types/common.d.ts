@@ -94,6 +94,7 @@ declare module Kontext {
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         exportMixins(...mixins:any[]):any[];
+        getComponentTools():Kontext.ComponentCoreMixins;
         renderReactComponent(reactClass:React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;

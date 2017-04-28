@@ -48,7 +48,8 @@ import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg, AttrItem} from '../stores/query/sort';
 import {CollFormStore, CollFormProps} from '../stores/analysis/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormProps} from '../stores/analysis/freqForms';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormProps} from '../stores/freqs/freqForms';
+import {ContingencyTableStore} from '../stores/freqs/ctable';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -147,6 +148,8 @@ export class ViewPage {
     private mlFreqStore:MLFreqFormStore;
 
     private ttFreqStore:TTFreqFormStore;
+
+    private ctableStore:ContingencyTableStore;
 
     private freqFormViews:FreqFormViews;
 
@@ -946,6 +949,7 @@ export class ViewPage {
             fttattr: [structAttrs[0].n],
             ftt_include_empty: false,
             flimit: '0',
+            freq_sort: 'freq',
             attrList: attrs,
             mlxattr: [attrs[0].n],
             mlxicase: [false],
@@ -962,7 +966,11 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel,
             freqFormProps
-        )
+        );
+        this.ctableStore = new ContingencyTableStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel
+        );
         this.freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),

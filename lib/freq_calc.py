@@ -296,6 +296,9 @@ def calculate_freqs(args):
                     Items=data[0]['Items'][fstart:fmaxitems - 1] if 'Items' in data[0] else [],
                     Head=data[0].get('Head', []))]
     else:
+        for item in data:
+            item['Total'] = len(item['Items']) if 'Items' in item else 0
+            item['TotalPages'] = None
         ans = data
         fstart = None
     return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fmaxitems, conc_size=conc_size)

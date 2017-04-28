@@ -22,7 +22,7 @@ import {PageModel} from './document';
 import * as $ from 'jquery';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/analysis/freqForms';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
@@ -135,6 +135,7 @@ export class CollPage {
             fttattr: [structAttrs[0].n],
             ftt_include_empty: false,
             flimit: '0',
+            freq_sort: 'freq',
             attrList: attrs,
             mlxattr: [attrs[0].n],
             mlxicase: [false],
