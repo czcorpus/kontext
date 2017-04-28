@@ -72,7 +72,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                             <inputViews.TRPcqPosNegField sourceId={this.props.corpname}
                                     value={this.props.pcqPosNegValue} actionPrefix="" />
                             <inputViews.TRQueryTypeField queryType={this.props.queryType}
-                                    sourceId={this.props.corpname} actionPrefix="" />
+                                    sourceId={this.props.corpname}
+                                    actionPrefix=""
+                                    hasLemmaAttr={this.props.hasLemmaAttr} />
                             <inputViews.TRQueryInputField
                                 sourceId={this.props.corpname}
                                 queryType={this.props.queryType}
@@ -152,7 +154,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 tagsetDocUrl={this.props.tagsetDocUrl}
                                 pcqPosNegValue={this.props.pcqPosNegValues.get(item)}
                                 inputLanguage={this.props.inputLanguages.get(item)}
-                                queryStorageViews={this.props.queryStorageViews} />;
+                                queryStorageViews={this.props.queryStorageViews}
+                                hasLemmaAttr={this.props.hasLemmaAttr} />;
                     })}
                 </fieldset>
             );
