@@ -142,8 +142,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         this.opLocks = Immutable.Map<string, boolean>(props.opLocks);
         this.activeWidgets = Immutable.Map<string, string>(props.filters.map(item => null));
         this.withinArgs = Immutable.Map<string, number>(props.withinArgValues);
-
-
+        this.hasLemmaAttr = props.hasLemmaAttr;
         this.inputLanguage = props.inputLanguage;
         this.currentAction = 'filter_form';
 

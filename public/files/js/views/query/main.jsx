@@ -194,7 +194,8 @@ export function init(
                                 pcqPosNegValues={this.state.pcqPosNegValues}
                                 inputLanguages={this.state.inputLanguages}
                                 queryStorageViews={this.props.queryStorageViews}
-                                actionPrefix={this.props.actionPrefix} />
+                                actionPrefix={this.props.actionPrefix}
+                                hasLemmaAttr={this.state.hasLemmaAttr} />
                         : null
                     }
                     <fieldset id="specify-context">
