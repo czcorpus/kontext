@@ -265,7 +265,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         } else {
             args.remove('within');
         }
-        args.replace(this.queryTypes.get(filterId), [this.queries.get(filterId)]);
+        args.set(this.queryTypes.get(filterId), this.sanitizeQuery(this.queries.get(filterId)));
         return args;
     }
 
