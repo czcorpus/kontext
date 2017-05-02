@@ -64,33 +64,22 @@ class GeneralWorker(object):
         self._lock_factory = plugins.get('locking')
         self._task_id = task_id
 
-    @staticmethod
-    def _update_pidfile(file_path, **kwargs):
-        with open(file_path, 'r') as pf:
-            data = pickle.load(pf)
-        data.update(kwargs)
-        with open(file_path, 'w') as pf:
-            pickle.dump(data, pf)
-
-    def _create_pid_file(self):
-        pidfile = os.path.normpath('%s/%s.pid' % (settings.get('corpora', 'calc_pid_dir'),
-                                                  uuid.uuid1()))
-        with open(pidfile, 'wb') as pf:
-            pickle.dump(
-                {
-                    'task_id': self._task_id,
-                    'pid': os.getpid(),
-                    'last_upd': int(time.time()),
-                    # in case we check status before any calculation (represented by the
-                    # BackgroundCalc class) starts (the calculation updates curr_wait as it
-                    # runs), we want to be sure the limit is big enough for BackgroundCalc to
-                    # be considered alive
-                    'curr_wait': 100,
-                    'error': None
-                },
-                pf)
-        os.chmod(pidfile, 0o664)
-        return pidfile
+    def _create_pid_record(self):
+        return {
+            'task_id': self._task_id,
+            'pid': os.getpid(),
+            'last_upd': int(time.time()),
+            # in case we check status before any calculation (represented by the
+            # BackgroundCalc class) starts (the calculation updates curr_wait as it
+            # runs), we want to be sure the limit is big enough for BackgroundCalc to
+            # be considered alive
+            'curr_wait': 100,
+            'concsize': 0,
+            'fullsize': 0,
+            'relconcsize': 0,
+            'error': None,
+            'finished': False
+        }
 
     def get_cached_conc_sizes(self, corp, q=None, cachefile=None):
         """
