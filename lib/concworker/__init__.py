@@ -23,63 +23,23 @@ try:
 except ImportError:
     import pickle
 import os
-import settings
-import uuid
+import sys
+from plugins.abstract import conc_cache
 
 import plugins
 from conclib import PyConc
-
-
-class Sender(object):
-    """
-    Sends initial calculation data (pidfile etc.). This is
-    used by the worker process to inform KonText that the
-    calculation started (or failed to start).
-    """
-    def send(self, data):
-        raise NotImplementedError()
-
-
-class Receiver(object):
-    """
-    Receives calculation data from worker.
-    """
-    def receive(self):
-        raise NotImplementedError()
-
-
-class InitialNotifierFactory(object):
-    """
-    A factory returning a 2-tuple containing receiver and sender. This is
-    in fact a generalization of multiprocessing's Pipe function.
-    """
-    def __call__(self):
-        return Receiver(), Sender()
+from corplib import CorpusManager
 
 
 class GeneralWorker(object):
 
-    def __init__(self, task_id=None):
-        self._cache_factory = plugins.get('conc_cache')
+    def __init__(self, task_id=None, cache_factory=None):
+        self._cache_factory = cache_factory if cache_factory is not None else plugins.get('conc_cache')
         self._lock_factory = plugins.get('locking')
         self._task_id = task_id
 
     def _create_pid_record(self):
-        return {
-            'task_id': self._task_id,
-            'pid': os.getpid(),
-            'last_upd': int(time.time()),
-            # in case we check status before any calculation (represented by the
-            # BackgroundCalc class) starts (the calculation updates curr_wait as it
-            # runs), we want to be sure the limit is big enough for BackgroundCalc to
-            # be considered alive
-            'curr_wait': 100,
-            'concsize': 0,
-            'fullsize': 0,
-            'relconcsize': 0,
-            'error': None,
-            'finished': False
-        }
+        return conc_cache.CalcStatus(task_id=self._task_id)
 
     def get_cached_conc_sizes(self, corp, q=None, cachefile=None):
         """
@@ -138,3 +98,89 @@ class GeneralWorker(object):
         logging.getLogger(__name__).debug('compute_conc(%s, [%s]) -> %01.4f' %
                                           (corp.corpname, ','.join(q), time.time() - start_time))
         return ans_conc
+
+
+class TaskRegistration(GeneralWorker):
+    def __init__(self, task_id):
+        super(TaskRegistration, self).__init__(task_id=task_id)
+
+    def __call__(self, corpus_name, subc_name, subchash, query, samplesize):
+        corpus_manager = CorpusManager()
+        corpus_obj = corpus_manager.get_Corpus(corpus_name)
+        cache_map = self._cache_factory.get_mapping(corpus_obj)
+        pid_record = self._create_pid_record()
+        cachefile, stored_pid_record = cache_map.add_to_map(subchash, query, 0, pid_record)
+        return dict(
+            cachefile=cachefile,
+            already_running=stored_pid_record is not None)
+
+
+class ConcCalculation(GeneralWorker):
+
+    def __init__(self, task_id, cache_factory=None):
+        """
+        """
+        super(ConcCalculation, self).__init__(task_id=task_id, cache_factory=cache_factory)
+
+    def __call__(self, initial_args, subc_dir, corpus_name, subc_name, subchash, query, samplesize):
+        """
+        initial_args -- a dict(cachefile=..., already_running=...)
+        subc_dir -- a directory where user's subcorpora are stored
+        corpus -- a corpus identifier
+        subc_name -- subcorpus name (should be None if not present)
+        subchash -- an identifier of current subcorpus (None if no subcorpus is in use)
+        query -- a tuple/list containing current query
+        samplesize -- row limit
+        """
+        sleeptime = None
+        cache_map = None
+        try:
+            corpus_manager = CorpusManager(subcpath=(subc_dir,))
+            corpus_obj = corpus_manager.get_Corpus(corpus_name, subc_name)
+            cache_map = self._cache_factory.get_mapping(corpus_obj)
+
+            if not initial_args['already_running']:
+                # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
+                # not be ready yet (this is checked by the 'finished()' method).
+                conc = self.compute_conc(corpus_obj, query, samplesize)
+                sleeptime = 0.1
+                time.sleep(sleeptime)
+                conc.save(initial_args['cachefile'], False, True, False)  # partial
+
+                while not conc.finished():
+                    # TODO it looks like append=True does not work with Manatee 2.121.1 properly
+                    tmp_cachefile = initial_args['cachefile'] + '.tmp'
+                    conc.save(tmp_cachefile, False, True, False)
+                    os.rename(tmp_cachefile, initial_args['cachefile'])
+                    time.sleep(sleeptime)
+                    sleeptime += 0.1
+                    sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
+                    cache_map.update_pid_record(subchash, query, dict(
+                        curr_wait=sleeptime,
+                        finished=sizes['finished'],
+                        concsize=sizes['concsize'],
+                        fullsize=sizes['fullsize'],
+                        relconcsize=sizes['relconcsize'],
+                        task_id=self._task_id))
+                sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
+                cache_map.update_pid_record(subchash, query, dict(
+                    curr_wait=sleeptime,
+                    finished=sizes['finished'],
+                    concsize=sizes['concsize'],
+                    fullsize=sizes['fullsize'],
+                    relconcsize=sizes['relconcsize'],
+                    task_id=self._task_id))
+                tmp_cachefile = initial_args['cachefile'] + '.tmp'
+                conc.save(tmp_cachefile)  # whole
+                os.rename(tmp_cachefile, initial_args['cachefile'])
+                # update size in map file
+                cache_map.add_to_map(subchash, query, conc.size())
+        except Exception as e:
+            # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
+            # here as this is performed by _get_cached_conc()
+            # function in case it detects a problem.
+            import traceback
+            logging.getLogger(__name__).error('Background calculation error: %s' % e)
+            logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
+            if cache_map is not None:
+                cache_map.update_pid_record(subchash, query, dict(curr_wait=sleeptime, error=str(e)))

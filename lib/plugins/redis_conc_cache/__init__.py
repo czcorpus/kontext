@@ -36,7 +36,7 @@ import os
 import hashlib
 import json
 
-from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory
+from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
 from plugins import inject
 
 
@@ -76,11 +76,13 @@ class RedisCacheMapping(AbstractConcCache):
     def _get_entry(self, subchash, q):
         val = self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
         if val:
-            return json.loads(val)
+            tmp = json.loads(val)
+            return [tmp[0], CalcStatus().update(tmp[1]), tmp[2]]
         return None
 
     def _set_entry(self, subchash, q, data):
-        self._db.hash_set(self._mk_key(), _uniqname(subchash, q), json.dumps(data))
+        tmp = [data[0], data[1].to_dict(), data[2]]
+        self._db.hash_set(self._mk_key(), _uniqname(subchash, q), json.dumps(tmp))
 
     def _mk_key(self):
         return RedisCacheMapping.KEY_TEMPLATE % self._corpus.corpname
@@ -94,6 +96,9 @@ class RedisCacheMapping(AbstractConcCache):
         return val[0] if val else None
 
     def refresh_map(self):
+        """
+        TODO change the name to something meaningful
+        """
         cache_dir = self._cache_dir_path()
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
@@ -133,9 +138,8 @@ class RedisCacheMapping(AbstractConcCache):
             if pid_record is not None:
                 stored_pid_record.update(pid_record)
             else:
-                stored_pid_record = {}
+                stored_pid_record = CalcStatus()
             self._set_entry(subchash, query, [storedsize, stored_pid_record, q0hash])
-
 
     def del_entry(self, subchash, q):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
@@ -161,6 +165,9 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
 
     def get_mapping(self, corpus):
         return RedisCacheMapping(self._cache_dir, corpus, self._db)
+
+    def fork(self):
+        return CacheMappingFactory(self._cache_dir, self._db.fork())
 
     def export_tasks(self):
         """
