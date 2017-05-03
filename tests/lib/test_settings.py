@@ -162,7 +162,6 @@ class SettingsSampleTest(unittest.TestCase):
         self.assertTrue(settings.contains('plugins', 'footer_bar'))
         self.assertTrue(settings.contains('plugins', 'getlang'))
         self.assertTrue(settings.contains('plugins', 'live_attributes'))
-        self.assertTrue(settings.contains('plugins', 'locking'))
         self.assertTrue(settings.contains('plugins', 'menu_items'))
         self.assertTrue(settings.contains('plugins', 'query_storage'))
         self.assertTrue(settings.contains('plugins', 'settings_storage'))

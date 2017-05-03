@@ -35,7 +35,6 @@ class GeneralWorker(object):
 
     def __init__(self, task_id=None, cache_factory=None):
         self._cache_factory = cache_factory if cache_factory is not None else plugins.get('conc_cache')
-        self._lock_factory = plugins.get('locking')
         self._task_id = task_id
 
     def _create_new_calc_status(self):
@@ -69,13 +68,12 @@ class GeneralWorker(object):
             cachefile = cache_map.cache_file_path(subchash, q)
 
         if cachefile and os.path.isfile(cachefile):
-            with self._lock_factory.create(cachefile):
-                cache = open(cachefile, 'rb')
-                cache.seek(15)
-                finished = bool(ord(cache.read(1)))
-                (fullsize,) = struct.unpack('q', cache.read(8))
-                cache.seek(32)
-                (concsize,) = struct.unpack('i', cache.read(4))
+            cache = open(cachefile, 'rb')
+            cache.seek(15)
+            finished = bool(ord(cache.read(1)))
+            (fullsize,) = struct.unpack('q', cache.read(8))
+            cache.seek(32)
+            (concsize,) = struct.unpack('i', cache.read(4))
 
             if fullsize > 0:
                 relconcsize = 1000000.0 * fullsize / corp.search_size()

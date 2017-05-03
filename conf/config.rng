@@ -579,15 +579,6 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
-                    <element name="locking">
-                        <optional>
-                            <a:documentation>Internal locking mechanism used when calculating a concordance</a:documentation>
-                            <element name="module">
-                                <text />
-                            </element>
-                            <ref name="customPluginConfiguration" />
-                        </optional>
-                    </element>
                     <element name="taghelper">
                         <a:documentation>An interactive builder of positional tags</a:documentation>
                         <ref name="plugin_common" />
