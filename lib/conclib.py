@@ -71,7 +71,7 @@ def _min_conc_unfinished(cache_map, q, subchash, minsize):
     In case the calculation finished due to an error
     the function throws a ConcCalculationControlException.
     """
-    status = cache_map.get_pid_record(subchash, q)
+    status = cache_map.get_calc_status(subchash, q)
     if status is None:
         raise ConcCalculationControlException('Missing status information')
 
@@ -98,7 +98,7 @@ def _contains_shuffle_seq(q_ops):
 
 def _cancel_async_task(cache_map, subchash, q):
     cachefile = cache_map.cache_file_path(subchash, q)
-    status = cache_map.get_pid_record(subchash, q)
+    status = cache_map.get_calc_status(subchash, q)
     backend, conf = settings.get_full('global', 'calc_backend')
     if backend == 'multiprocessing':
         logging.getLogger(__name__).warning('Unable to cancel async task in multiprocessing mode')

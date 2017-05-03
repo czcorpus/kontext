@@ -38,7 +38,7 @@ class GeneralWorker(object):
         self._lock_factory = plugins.get('locking')
         self._task_id = task_id
 
-    def _create_pid_record(self):
+    def _create_new_calc_status(self):
         return conc_cache.CalcStatus(task_id=self._task_id)
 
     def get_cached_conc_sizes(self, corp, q=None, cachefile=None):
@@ -108,11 +108,11 @@ class TaskRegistration(GeneralWorker):
         corpus_manager = CorpusManager()
         corpus_obj = corpus_manager.get_Corpus(corpus_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
-        pid_record = self._create_pid_record()
-        cachefile, stored_pid_record = cache_map.add_to_map(subchash, query, 0, pid_record)
+        new_status = self._create_new_calc_status()
+        cachefile, prev_status = cache_map.add_to_map(subchash, query, 0, new_status)
         return dict(
             cachefile=cachefile,
-            already_running=stored_pid_record is not None)
+            already_running=prev_status is not None)
 
 
 class ConcCalculation(GeneralWorker):
@@ -155,7 +155,7 @@ class ConcCalculation(GeneralWorker):
                     time.sleep(sleeptime)
                     sleeptime += 0.1
                     sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
-                    cache_map.update_pid_record(subchash, query, dict(
+                    cache_map.update_calc_status(subchash, query, dict(
                         curr_wait=sleeptime,
                         finished=sizes['finished'],
                         concsize=sizes['concsize'],
@@ -163,7 +163,7 @@ class ConcCalculation(GeneralWorker):
                         relconcsize=sizes['relconcsize'],
                         task_id=self._task_id))
                 sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
-                cache_map.update_pid_record(subchash, query, dict(
+                cache_map.update_calc_status(subchash, query, dict(
                     curr_wait=sleeptime,
                     finished=sizes['finished'],
                     concsize=sizes['concsize'],
@@ -183,4 +183,4 @@ class ConcCalculation(GeneralWorker):
             logging.getLogger(__name__).error('Background calculation error: %s' % e)
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
             if cache_map is not None:
-                cache_map.update_pid_record(subchash, query, dict(curr_wait=sleeptime, error=str(e)))
+                cache_map.update_calc_status(subchash, query, dict(curr_wait=sleeptime, error=str(e)))

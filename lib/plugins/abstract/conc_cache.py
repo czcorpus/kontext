@@ -129,7 +129,7 @@ class AbstractConcCache(object):
         """
         raise NotImplementedError()
 
-    def add_to_map(self, subchash, query, size, pid_file=None):
+    def add_to_map(self, subchash, query, size, calc_status=None):
         """
         Add or update a cache map entry
 
@@ -138,14 +138,11 @@ class AbstractConcCache(object):
         query -- a list/tuple of query elements
         size -- current size of a respective concordance (the one defined by corpus, subchash
                 and query)
-        pid_file -- any value passed here is stored to cache if and only if there
-                    is no matching entry present in cache (i.e. a new entry is created)
-                    - default is None
+        calc_status -- an instance of CalcStatus
         returns:
         2-tuple
             cache_file_path -- path to a respective cache file
-            stored_pidfile -- path to a file storing calculation details; it may be present
-                              even if the calculation already finished
+            previous_status -- an instance of CalcStatus storing previous calc. state
         """
         raise NotImplementedError()
 

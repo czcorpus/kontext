@@ -63,7 +63,7 @@ class RedisCacheMapping(AbstractConcCache):
     pickle-serialized mapping file).
 
     Mapping looks like this:
-    md5(subchash, q) => [stored_conc_size, pid_record, hash_of(subchash, q[0])]
+    md5(subchash, q) => [stored_conc_size, calc_status, hash_of(subchash, q[0])]
     """
 
     KEY_TEMPLATE = 'conc_cache:%s'
@@ -87,7 +87,7 @@ class RedisCacheMapping(AbstractConcCache):
     def _mk_key(self):
         return RedisCacheMapping.KEY_TEMPLATE % self._corpus.corpname
 
-    def get_stored_pid_record(self, subchash, q):
+    def get_stored_calc_status(self, subchash, q):
         val = self._get_entry(subchash, q)
         return val[1] if val else None
 
@@ -115,31 +115,31 @@ class RedisCacheMapping(AbstractConcCache):
             return self._create_cache_file_path(subchash, q)
         return None
 
-    def add_to_map(self, subchash, query, size, pid_record=None):
+    def add_to_map(self, subchash, query, size, calc_status=None):
         stored_data = self._get_entry(subchash, query)
         if stored_data:
-            storedsize, stored_pid_record, q0hash = stored_data
+            storedsize, stored_calc_status, q0hash = stored_data
             if storedsize < size:
-                self._set_entry(subchash, query, [size, stored_pid_record, q0hash])
+                self._set_entry(subchash, query, [size, stored_calc_status, q0hash])
         else:
-            stored_pid_record = None
-            self._set_entry(subchash, query, [size, pid_record, _uniqname(subchash, query[:1])])
-        return self._create_cache_file_path(subchash, query), stored_pid_record
+            stored_calc_status = None
+            self._set_entry(subchash, query, [size, calc_status, _uniqname(subchash, query[:1])])
+        return self._create_cache_file_path(subchash, query), stored_calc_status
 
-    def get_pid_record(self, subchash, query):
+    def get_calc_status(self, subchash, query):
         stored_data = self._get_entry(subchash, query)
         if stored_data:
             return stored_data[1]
 
-    def update_pid_record(self, subchash, query, pid_record):
+    def update_calc_status(self, subchash, query, calc_status):
         stored_data = self._get_entry(subchash, query)
         if stored_data:
-            storedsize, stored_pid_record, q0hash = stored_data
-            if pid_record is not None:
-                stored_pid_record.update(pid_record)
+            storedsize, stored_calc_status, q0hash = stored_data
+            if calc_status is not None:
+                stored_calc_status.update(calc_status)
             else:
-                stored_pid_record = CalcStatus()
-            self._set_entry(subchash, query, [storedsize, stored_pid_record, q0hash])
+                stored_calc_status = CalcStatus()
+            self._set_entry(subchash, query, [storedsize, stored_calc_status, q0hash])
 
     def del_entry(self, subchash, q):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))

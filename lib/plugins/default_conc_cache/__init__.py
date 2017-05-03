@@ -129,7 +129,7 @@ class CacheMapping(AbstractConcCache):
     def _cache_map_path(self):
         return os.path.normpath('%s/%s' % (self._cache_dir_path(), self.CACHE_FILENAME))
 
-    def add_to_map(self, subchash, query, size, pid_file=None):
+    def add_to_map(self, subchash, query, size, calc_status=None):
         with self._lock_factory.create(self._cache_map_path()):
             if not os.path.exists(self._cache_map_path()):
                 with open(self._cache_map_path(), 'wb') as f_new:
@@ -145,7 +145,7 @@ class CacheMapping(AbstractConcCache):
                 else:
                     stored_pidfile = None
                     ret = _uniqname(subchash, query)
-                    kmap[subchash, query] = (ret, size, pid_file)
+                    kmap[subchash, query] = (ret, size, calc_status.to_dict())
                     f.seek(0)
                     pickle.dump(kmap, f)
                 return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), ret)), stored_pidfile
