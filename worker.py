@@ -55,7 +55,6 @@ os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 initializer.init_plugin('db')
 initializer.init_plugin('sessions')
 initializer.init_plugin('auth')
-initializer.init_plugin('locking', optional=True)
 initializer.init_plugin('conc_cache')
 initializer.init_plugin('conc_persistence')
 initializer.init_plugin('sessions')
@@ -63,7 +62,7 @@ initializer.init_plugin('sessions')
 translation.load_translations(settings.get('global', 'translations'))
 translation.activate('en_US')  # background jobs do not need localization
 
-from concworker import wcelery
+import concworker
 import task
 import freq_calc
 import subc_calc
@@ -182,9 +181,9 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
-    reg_fn = wcelery.TaskRegistration(task_id=self.request.id)
+    reg_fn = concworker.TaskRegistration(task_id=self.request.id)
     initial_args = reg_fn(corpus_id, subc_name, subchash, query, samplesize)
-    if not initial_args.get('stored_pidfile'):   # we are first trying to calc this
+    if not initial_args['already_running']:   # we are first trying to calc this
         conc_calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
     return initial_args
 
@@ -204,7 +203,7 @@ def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash
     query -- a query tuple
     samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
     """
-    task = wcelery.CeleryCalculation(task_id=self.request.id)
+    task = concworker.ConcCalculation(task_id=self.request.id)
     subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
     return task(initial_args, subc_path, corpus_name, subc_name, subchash, query, samplesize)
 

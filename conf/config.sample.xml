@@ -116,7 +116,6 @@
             <fallback_lang extension-by="default">en_US</fallback_lang>
         </getlang>
         <live_attributes />
-        <locking />
         <menu_items>
             <module>default_menu_items</module>
             <data_path extension-by="default">/home/tomas/work/kontext.dev/conf/main-menu.sample.json</data_path>

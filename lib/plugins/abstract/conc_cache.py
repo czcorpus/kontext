@@ -24,6 +24,58 @@ of AbstractCacheMappingFactory (i.e. not AbstractConcCache) because
 the instance of AbstractConcCache is request-dependent.
 """
 
+import os
+import time
+import math
+
+
+class CalcStatusException(Exception):
+    pass
+
+
+class CalcStatus(object):
+
+    def __init__(self, task_id=None):
+        self.task_id = task_id
+        self.pid = os.getpid()
+        self.last_upd = int(time.time())
+        # in case we check status before any calculation (represented by the
+        # BackgroundCalc class) starts (the calculation updates curr_wait as it
+        # runs), we want to be sure the limit is big enough for BackgroundCalc to
+        # be considered alive
+        self.curr_wait = 100
+        self.concsize = 0
+        self.fullsize = 0
+        self.relconcsize = 0
+        self.error = None
+        self.finished = False
+
+    def to_dict(self):
+        return dict(self.__dict__)
+
+    def test_error(self):
+        if self.error is not None:
+            raise CalcStatusException(self.error)
+        if math.ceil(self.last_upd + self.curr_wait) < math.floor(time.time()):
+            raise CalcStatusException('Wait limit for initial data exceeded')
+
+    def has_some_result(self, minsize):
+        if minsize == -1:
+            if self.finished == 1:  # whole conc
+                return True
+        elif self.concsize >= minsize:
+            return True
+        return False
+
+    def update(self, data):
+        for k, v in data.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+            else:
+                raise CalcStatusException('Unknow calc. attribute: %s' % (k,))
+        self.last_upd = int(time.time())
+        return self
+
 
 class AbstractConcCache(object):
 
@@ -77,7 +129,7 @@ class AbstractConcCache(object):
         """
         raise NotImplementedError()
 
-    def add_to_map(self, subchash, query, size, pid_file=None):
+    def add_to_map(self, subchash, query, size, calc_status=None):
         """
         Add or update a cache map entry
 
@@ -86,14 +138,11 @@ class AbstractConcCache(object):
         query -- a list/tuple of query elements
         size -- current size of a respective concordance (the one defined by corpus, subchash
                 and query)
-        pid_file -- any value passed here is stored to cache if and only if there
-                    is no matching entry present in cache (i.e. a new entry is created)
-                    - default is None
+        calc_status -- an instance of CalcStatus
         returns:
         2-tuple
             cache_file_path -- path to a respective cache file
-            stored_pidfile -- path to a file storing calculation details; it may be present
-                              even if the calculation already finished
+            previous_status -- an instance of CalcStatus storing previous calc. state
         """
         raise NotImplementedError()
 
@@ -129,5 +178,13 @@ class AbstractCacheMappingFactory(object):
         """
         returns:
         an AbstractConcCache compatible instance
+        """
+        raise NotImplementedError()
+
+    def fork(self):
+        """
+        Create a new instance with forked db plug-in. This is 
+        used only in case 'multiprocessing' is defined for
+        background/asynchronous tasks.
         """
         raise NotImplementedError()

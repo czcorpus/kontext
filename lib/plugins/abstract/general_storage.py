@@ -172,3 +172,14 @@ class KeyValueStorage(object):
         (please note that update actions may reset the timer to zero)
         """
         pass
+
+    def fork(self):
+        """
+        Return a new instance of the plug-in with the same connection
+        parameters.
+
+        This method is used only in case multiprocessing is configured
+        for asynchronous tasks (i.e. in case 'celery' is used, it is
+        never called).
+        """
+        raise NotImplementedError()

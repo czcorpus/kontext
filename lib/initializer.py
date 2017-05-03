@@ -73,7 +73,6 @@ def setup_plugins():
     init_plugin('settings_storage')
     init_plugin('auth')
     init_plugin('conc_persistence')  # TODO make this optional
-    init_plugin('locking', optional=True)
     init_plugin('conc_cache')
     init_plugin('export', module=plugins.export)
     init_plugin('user_items')

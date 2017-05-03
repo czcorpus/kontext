@@ -53,9 +53,26 @@ class RedisDb(KeyValueStorage):
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
-        self.redis = redis.StrictRedis(
-            host=conf['default:host'], port=int(conf['default:port']), db=int(conf['default:id']))
+        self._host = conf['default:host']
+        self._port = int(conf['default:port'])
+        self._db = int(conf['default:id'])
+        self.redis = redis.StrictRedis(host=self._host, port=self._port, db=self._db)
         self._scan_chunk_size = 50
+
+    def fork(self):
+        """
+        Return a new instance of the plug-in with the same connection
+        parameters.
+
+        This method is used only in case multiprocessing is configured
+        for asynchronous tasks (i.e. in case 'celery' is used, it is
+        never called).
+        """
+        return RedisDb({
+            'default:host': self._host,
+            'default:port': self._port,
+            'default:id': self._db
+        })
 
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
