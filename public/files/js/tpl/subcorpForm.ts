@@ -183,7 +183,12 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         );
         let liveAttrsProm;
         if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(this.layoutModel.pluginApi(), this.textTypesStore, textTypesData['bib_attr']);
+            liveAttrsProm = liveAttributes.create(
+                this.layoutModel.pluginApi(),
+                this.textTypesStore,
+                textTypesData['bib_attr'],
+                true
+            );
 
         } else {
             liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
@@ -232,7 +237,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                         liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
                         liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
                         attributes: this.textTypesStore.getAttributes(),
-                        alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora')
+                        alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
+                        manualAlignCorporaMode: true
                     }
                 );
             },
