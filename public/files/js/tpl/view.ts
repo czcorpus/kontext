@@ -673,7 +673,8 @@ export class ViewPage {
             posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-            inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
+            inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
+            textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes')
         };
 
         this.queryStores.queryStore = new QueryStore(
