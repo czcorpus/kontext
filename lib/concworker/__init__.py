@@ -37,7 +37,7 @@ class GeneralWorker(object):
         self._cache_factory = cache_factory if cache_factory is not None else plugins.get('conc_cache')
         self._task_id = task_id
 
-    def _create_new_calc_status(self):
+    def create_new_calc_status(self):
         return conc_cache.CalcStatus(task_id=self._task_id)
 
     def get_cached_conc_sizes(self, corp, q=None, cachefile=None):
@@ -106,7 +106,7 @@ class TaskRegistration(GeneralWorker):
         corpus_manager = CorpusManager()
         corpus_obj = corpus_manager.get_Corpus(corpus_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
-        new_status = self._create_new_calc_status()
+        new_status = self.create_new_calc_status()
         cachefile, prev_status = cache_map.add_to_map(subchash, query, 0, new_status)
         return dict(
             cachefile=cachefile,
