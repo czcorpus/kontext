@@ -271,6 +271,9 @@ class Actions(Querying):
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
+
+        corp_info = self.get_corpus_info(self.args.corpname)
+        out['text_types_notes'] = corp_info.metadata.desc
         self._attach_aligned_query_params(out)
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False), persist=False)
@@ -1867,6 +1870,7 @@ class Actions(Querying):
         self._attach_query_params(tmp_out)
         self._attach_aligned_query_params(tmp_out)
         self._export_subcorpora_list(self.args.corpname, tmp_out)
+        corpus_info = self.get_corpus_info(self.args.corpname)
 
         ans = dict(
             corpname=self.args.corpname,
@@ -1894,7 +1898,8 @@ class Actions(Querying):
             hasLemmaAttr='lempos' in attrlist or 'lemma' in attrlist,
             ConcFormsArgs=tmp_out['conc_forms_args'],
             CurrentSubcorp=self.args.usesubcorp,
-            SubcorpList=tmp_out['SubcorpList']
+            SubcorpList=tmp_out['SubcorpList'],
+            TextTypesNotes=corpus_info.metadata.desc
         )
         self._configure_auth_urls(ans)
         return ans

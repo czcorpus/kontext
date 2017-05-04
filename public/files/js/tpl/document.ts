@@ -364,6 +364,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
                 this.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
                 this.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
+                this.setConf<string>('TextTypesNotes', data.TextTypesNotes);
                 return this.init();
             }
         );
