@@ -114,13 +114,16 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
 
     private updateListeners:Immutable.List<()=>void>;
 
+    private manualAlignCorporaMode:boolean;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
-            textTypesStore:TextTypes.ITextTypesStore, bibAttr:string) {
+            textTypesStore:TextTypes.ITextTypesStore, bibAttr:string, manualAlignCorporaMode:boolean) {
         super(dispatcher);
         let self = this;
         this.pluginApi = pluginApi;
         this.userData = null;
         this.bibliographyAttribute = bibAttr;
+        this.manualAlignCorporaMode = manualAlignCorporaMode;
         this.textTypesStore = textTypesStore;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
         this.alignedCorpora = Immutable.List(this.pluginApi.getConf<Array<any>>('availableAlignedCorpora')
@@ -129,7 +132,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                                 value: item.n,
                                 label: item.label,
                                 selected: false,
-                                locked: false
+                                locked: this.manualAlignCorporaMode ? item.locked : true
                             };
                         }));
         this.bibliographyIds = Immutable.List<string>();
@@ -175,6 +178,20 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                 break;
             }
         });
+    }
+
+    selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean) {
+        this.alignedCorpora = this.alignedCorpora.map(item => {
+            return {
+                value: item.value,
+                label: item.label,
+                selected: languages.indexOf(item.value) > -1,
+                locked: true
+            };
+        }).toList();
+        if (notifyListeners) {
+            this.notifyChangeListeners();
+        }
     }
 
     private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {

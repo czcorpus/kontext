@@ -192,6 +192,8 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
 
     let AlignedLangItem = React.createClass({
 
+        mixins : mixins,
+
         _clickHandler : function () {
             dispatcher.dispatch({
                 actionType: 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED',
@@ -210,7 +212,8 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                     }
                     <input type="checkbox" className="aligned-lang" name="aligned_corpora"
                             onChange={this._clickHandler} checked={this.props.item.selected}
-                            value={this.props.item.value} disabled={this.props.item.locked} />
+                            value={this.props.item.value} disabled={this.props.item.locked}
+                            title={this.props.manualAlignCorporaMode ? '' : this.translate('ucnkLA__aligned_lang_cannot_be_set_here') } />
                     {'\u00a0'}{this.props.item.label}
                 </label>
             );
@@ -285,7 +288,8 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                                                     return (
                                                         <tr key={item.value}>
                                                             <td>
-                                                                <AlignedLangItem item={item} itemIdx={i} />
+                                                                <AlignedLangItem item={item} itemIdx={i}
+                                                                    manualAlignCorporaMode={this.props.manualAlignCorporaMode} />
                                                             </td>
                                                             <td />
                                                         </tr>

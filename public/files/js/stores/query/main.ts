@@ -60,6 +60,7 @@ export interface QueryFormUserEntries {
 export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFormUserEntries {
     corpora:Array<string>;
     availableAlignedCorpora:Array<{n:string; label:string}>;
+    textTypesNotes:string;
     subcorpList:Array<string>;
     currentSubcorp:string;
     tagBuilderSupport:{[corpname:string]:boolean};
@@ -286,6 +287,12 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
     private activeWidgets:Immutable.Map<string, string>;
 
     /**
+     * Text descriptions of text type structure for end user.
+     * (applies for the main corpus)
+     */
+    private textTypesNotes:string;
+
+    /**
      * This does not equal to URL param shuffle=0/1.
      * If false then the decision is up to server
      * (= user settings). If true then shuffle is
@@ -314,6 +321,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
+        this.textTypesNotes = props.textTypesNotes;
         this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
         this.setUserValues(props);
         this.currentAction = 'first_form';
@@ -669,6 +677,10 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     disableDefaultShuffling():void {
         this.shuffleForbidden = true;
+    }
+
+    getTextTypesNotes():string {
+        return this.textTypesNotes;
     }
 }
 

@@ -69,12 +69,23 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private viewOptionsViews:StructsAndAttrsViews;
 
+    private onQueryStoreReady:Immutable.List<(qs:QueryStore)=>void>;
+
+    private onAlignedCorporaChanged:Immutable.List<(corpora:Immutable.List<string>)=>void>;
+
+
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
         this.layoutModel = layoutModel;
+        this.onQueryStoreReady = Immutable.List<(qs:QueryStore)=>void>();
+        this.onAlignedCorporaChanged = Immutable.List<(corpora:Immutable.List<string>)=>void>();
     }
 
     getConf<T>(name:string):T {
         return this.layoutModel.getConf<T>(name);
+    }
+
+    addOnQueryStoreReady(fn:(qs:QueryStore)=>void):void {
+        this.onQueryStoreReady = this.onQueryStoreReady.push(fn);
     }
 
     translate(msg:string, values?:{[k:string]:string}):string {
@@ -181,7 +192,12 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         let liveAttrsProm;
         let ttTextInputCallback;
         if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(this.layoutModel.pluginApi(), this.textTypesStore, textTypesData['bib_attr']);
+            liveAttrsProm = liveAttributes.create(
+                this.layoutModel.pluginApi(),
+                this.textTypesStore,
+                textTypesData['bib_attr'],
+                false
+            );
 
         } else {
             liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
@@ -191,6 +207,10 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return liveAttrsProm.then(
             (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
                 if (liveAttrsStore) {
+                    this.addOnQueryStoreReady(qs => liveAttrsStore.selectLanguages(qs.getCorpora().rest().toList(), false));
+                    this.onAlignedCorporaChanged = this.onAlignedCorporaChanged.push(corpora => {
+                        liveAttrsStore.selectLanguages(corpora, true);
+                    });
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
                 }
                 const subcmixerViews = {
@@ -243,9 +263,17 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
-                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
+                inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
+                textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes')
             }
         );
+        this.queryStore.registerOnAddParallelCorpAction(corpname => {
+            this.onAlignedCorporaChanged.forEach(fn => fn(this.queryStore.getCorpora().rest().toList()));
+        });
+        this.queryStore.registerOnRemoveParallelCorpAction(corpname => {
+            this.onAlignedCorporaChanged.forEach(fn => fn(this.queryStore.getCorpora().rest().toList()));
+        });
+        this.onQueryStoreReady.forEach(fn => fn(this.queryStore));
         this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
@@ -344,6 +372,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 props['tagHelperViews'] = tagHelperPlugin.getViews();
                 props['queryStorageViews'] = queryStoragePlugin.getViews();
                 props['allowCorpusSelection'] = true;
+                props['manualAlignCorporaMode'] = false;
                 props['actionPrefix'] = '';
                 this.attachQueryForm(props);
                 this.initCorplistComponent(); // non-React world here
