@@ -144,7 +144,6 @@ class ConcCalculation(GeneralWorker):
                 sleeptime = 0.1
                 time.sleep(sleeptime)
                 conc.save(initial_args['cachefile'], False, True, False)  # partial
-
                 while not conc.finished():
                     # TODO it looks like append=True does not work with Manatee 2.121.1 properly
                     tmp_cachefile = initial_args['cachefile'] + '.tmp'
@@ -160,6 +159,9 @@ class ConcCalculation(GeneralWorker):
                         fullsize=sizes['fullsize'],
                         relconcsize=sizes['relconcsize'],
                         task_id=self._task_id))
+                tmp_cachefile = initial_args['cachefile'] + '.tmp'
+                conc.save(tmp_cachefile)  # whole
+                os.rename(tmp_cachefile, initial_args['cachefile'])
                 sizes = self.get_cached_conc_sizes(corpus_obj, query, initial_args['cachefile'])
                 cache_map.update_calc_status(subchash, query, dict(
                     curr_wait=sleeptime,
@@ -168,9 +170,6 @@ class ConcCalculation(GeneralWorker):
                     fullsize=sizes['fullsize'],
                     relconcsize=sizes['relconcsize'],
                     task_id=self._task_id))
-                tmp_cachefile = initial_args['cachefile'] + '.tmp'
-                conc.save(tmp_cachefile)  # whole
-                os.rename(tmp_cachefile, initial_args['cachefile'])
                 # update size in map file
                 cache_map.add_to_map(subchash, query, conc.size())
         except Exception as e:

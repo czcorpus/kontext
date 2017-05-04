@@ -73,7 +73,8 @@ def _min_conc_unfinished(cache_map, q, subchash, minsize):
     """
     status = cache_map.get_calc_status(subchash, q)
     if status is None:
-        raise ConcCalculationControlException('Missing status information')
+        cache_map.del_full_entry(subchash, q)
+        raise ConcCalculationControlException('Missing status information (invalid cache entry has been removed).')
 
     status.test_error()
     return not status.has_some_result(minsize=minsize)
@@ -193,8 +194,9 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
     elif backend == 'celery':
         import task
         app = task.get_celery_app(conf['conf'])
-        app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
-                                               subchash, q, samplesize))
+        ans = app.send_task('worker.conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
+                            subchash, q, samplesize))
+        ans.get()  # = wait for task registration
     else:
         raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
