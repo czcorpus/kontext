@@ -350,7 +350,8 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
             last_user_op_idx = i - 1
             while is_align_op:
                 if last_user_op_idx >= 0:
-                    desc[last_user_op_idx] = desc[last_user_op_idx][:-1] + (size,)  # update previous op. size
+                    tmp = desc[last_user_op_idx]
+                    desc[last_user_op_idx] = tmp[:4] + (size,) + tmp[-1:]
                 i += 3  # ignore aligned corpus operation, i is now the next valid operation
                 is_align_op, size = detect_internal_op(q, i)
             if i > len(q) - 1:
