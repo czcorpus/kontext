@@ -12,7 +12,8 @@
         "ucnkLA__subcorp_consider_aligned_corpora": "Include only texts found also in the corpora selected here.",
         "ucnkLA__refine_selection_btn": "Refine selection",
         "ucnkLA__reset_selection_btn": "Reset selection",
-        "ucnkLA__start_writing_for_suggestions": "Start writing\u2026"
+        "ucnkLA__start_writing_for_suggestions": "Start writing\u2026",
+        "ucnkLA__aligned_lang_cannot_be_set_here": "The list of checked aligned corpora is determined automatically by corpora added to the query form"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -27,6 +28,7 @@
         "ucnkLA__subcorp_consider_aligned_corpora": "Zahrnout pouze texty, které se vyskytují také ve všech zde označených korpusech",
         "ucnkLA__refine_selection_btn": "Zúžit výběr",
         "ucnkLA__reset_selection_btn": "Zrušit výběr",
-        "ucnkLA__start_writing_for_suggestions": "Začněte psát\u2026"
+        "ucnkLA__start_writing_for_suggestions": "Začněte psát\u2026",
+        "ucnkLA__aligned_lang_cannot_be_set_here": "Seznam zaškrtnutých zarovnaných korpusů je dán automaticky korpusy přidanými do formuláře dotazu."
 	}
 }

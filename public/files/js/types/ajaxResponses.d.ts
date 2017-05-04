@@ -229,6 +229,7 @@ declare module AjaxResponse {
         ConcFormsArgs:any; // TODO type
         CurrentSubcorp:string;
         SubcorpList:Array<{v:string; n:string}>;
+        TextTypesNotes:string;
     }
 }
 

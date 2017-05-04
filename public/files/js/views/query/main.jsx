@@ -58,6 +58,28 @@ export function init(
         }
     });
 
+    // ------------------- <TextTypesNote /> -----------------------------
+
+    const TextTypesNotes = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            if (this.props.description) {
+                return (
+                    <div style={{paddingLeft: '1em', paddingRight: '25%'}}>
+                        <img src={this.createStaticUrl('img/info-icon.svg')}
+                                style={{width: '1em', verticalAlign: 'middle', marginRight: '0.7em'}} />
+                        <div dangerouslySetInnerHTML={{__html: this.props.description}} />
+                    </div>
+                );
+
+            } else {
+                return <span />;
+            }
+        }
+    });
+
     // ------------------- <QueryForm /> -----------------------------
 
     const QueryForm = React.createClass({
@@ -87,7 +109,8 @@ export function init(
                 wPoSList: queryStore.getwPoSList(),
                 contextFormVisible: false, // TODO use data from session?
                 textTypesFormVisible: false, // dtto,
-                inputLanguages: queryStore.getInputLanguages()
+                inputLanguages: queryStore.getInputLanguages(),
+                textTypesNotes: queryStore.getTextTypesNotes()
             };
         },
 
@@ -220,8 +243,10 @@ export function init(
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
                                         liveAttrsCustomTT={this.props.liveAttrsCustomTT}
-                                        attributes={this.props.attributes} />
-                                : null}
+                                        attributes={this.props.attributes}
+                                        manualAlignCorporaMode={this.props.manualAlignCorporaMode} />
+                                : <TextTypesNotes description={this.state.textTypesNotes} />
+                        }
                     </fieldset>
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
