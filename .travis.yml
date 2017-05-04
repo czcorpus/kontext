@@ -5,9 +5,9 @@ python:
 env:
   - PYTHONPATH=./tests/mocks
 before_install:
-  - sudo apt-get install libxml2-dev libxslt-dev python-dev
+  - sudo apt-get install libxml2-dev libxslt-dev python-dev python-pyicu
 install:
-  - pip install -r requirements.txt
+  - xargs -a requirements.txt -n 1 pip install
 script:
   - python tests/runtests.py
 
