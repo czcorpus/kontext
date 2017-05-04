@@ -23,7 +23,6 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-import math
 
 import manatee
 import settings
@@ -32,6 +31,7 @@ from pyconc import PyConc
 from kwiclib import tokens2strclass
 from l10n import import_string
 import plugins
+from concworker import GeneralWorker
 
 
 class ConcCalculationControlException(Exception):
@@ -209,13 +209,15 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
     return PyConc(corp, 'l', cache_map.cache_file_path(subchash, q))
 
 
-def _get_sync_conc(corp, q, save, subchash, samplesize):
-    from concworker import GeneralWorker
-    conc = GeneralWorker().compute_conc(corp, q, samplesize)
+def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
+    status = worker.create_new_calc_status()
+    conc = worker.compute_conc(corp, q, samplesize)
     conc.sync()  # wait for the computation to finish
+    status.finished = True
+    status.concsize = conc.size()
     if save:
         cache_map = plugins.get('conc_cache').get_mapping(corp)
-        cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:1], conc.size())
+        cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:1], conc.size(), calc_status=status)
         conc.save(cachefile)
         # update size in map file
         cache_map.add_to_map(subchash, q[:1], conc.size())
@@ -272,21 +274,24 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
                                    samplesize=samplesize, fullsize=fullsize, minsize=minsize)
 
         else:
-            conc = _get_sync_conc(corp=corp, q=q, save=save, subchash=subchash,
+            worker = GeneralWorker()
+            conc = _get_sync_conc(worker=worker, corp=corp, q=q, save=save, subchash=subchash,
                                   samplesize=samplesize)
-    # process subsequent concordance actions (e.g. sample)
-    for act in range(calc_from, len(q)):
-        command, args = q[act][0], q[act][1:]
-        conc.exec_command(command, args)
-        if command in 'gae':  # user specific/volatile actions, cannot save
-            save = 0
-        if save:
-            cache_map = plugins.get('conc_cache').get_mapping(corp)
-            cachefile, stored_status = cache_map.add_to_map(subchash, q[:act + 1], conc.size())
-            if not stored_status['finished']:
-                _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:act + 1], minsize=-1)
-            else:
-                conc.save(cachefile)
+            # save additional concordance actions to cache (e.g. sample)
+            for act in range(calc_from, len(q)):
+                command, args = q[act][0], q[act][1:]
+                conc.exec_command(command, args)
+                if command in 'gae':  # user specific/volatile actions, cannot save
+                    save = 0
+                if save:
+                    cache_map = plugins.get('conc_cache').get_mapping(corp)
+                    cachefile, stored_status = cache_map.add_to_map(subchash, q[:act + 1], conc.size(),
+                                                                    calc_status=worker.create_new_calc_status())
+                    if stored_status and not stored_status.finished:
+                        _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q[:act + 1], minsize=-1)
+                    elif not stored_status:
+                        conc.save(cachefile)
+                        cache_map.update_calc_status(subchash, q[:act + 1], dict(finished=True, concsize=conc.size()))
     return conc
 
 

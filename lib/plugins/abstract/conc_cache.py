@@ -133,6 +133,13 @@ class AbstractConcCache(object):
         """
         Add or update a cache map entry
 
+        ------
+        TODO: the current implementation has serious issues
+        regarding hidden arguments and cache status relationships
+        user cannot possibly understand. I.e. if a record is
+        not present yet then calc_status cannot be None.
+        ------
+
         arguments:
         subchash -- a subcorpus identifier hash (see corplib.CorpusManager.get_Corpus)
         query -- a list/tuple of query elements

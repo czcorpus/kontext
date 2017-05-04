@@ -116,6 +116,12 @@ class RedisCacheMapping(AbstractConcCache):
         return None
 
     def add_to_map(self, subchash, query, size, calc_status=None):
+        """
+        TODO: the current implementation has serious issues
+        regarding hidden arguments and cache status relationships
+        user cannot possibly understand. I.e. if a record is
+        not present yet then calc_status cannot be None.
+        """
         stored_data = self._get_entry(subchash, query)
         if stored_data:
             storedsize, stored_calc_status, q0hash = stored_data
