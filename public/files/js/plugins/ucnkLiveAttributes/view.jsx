@@ -116,6 +116,45 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
         }
     });
 
+    // ----------------------------- <RefineButton /> --------------------------
+
+    const RefineButton = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            if (this.props.enabled) {
+                return (
+                    <a className="util-button" onClick={this.props.clickHandler('refine')}>
+                        {this.translate('ucnkLA__refine_selection_btn')}
+                    </a>
+                );
+
+            } else {
+                return <a className="util-button disabled">{this.translate('ucnkLA__refine_selection_btn')}</a>
+            }
+        }
+    });
+
+    // ----------------------------- <ResetButton /> --------------------------
+
+    const ResetButton = React.createClass({
+
+        mixins : mixins,
+
+        render : function () {
+            if (this.props.enabled) {
+                return (
+                    <a className="util-button cancel" onClick={this.props.clickHandler('reset')}>
+                        {this.translate('ucnkLA__reset_selection_btn')}
+                    </a>
+                );
+
+            } else {
+                return <a className="util-button cancel disabled">{this.translate('ucnkLA__reset_selection_btn')}</a>
+            }
+        }
+    });
 
     // ----------------------------- <LiveAttrsView /> --------------------------
 
@@ -141,16 +180,19 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
             this.setState({
                 selectionSteps: liveAttrsStore.getSelectionSteps(),
                 alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLoading: false
+                isLoading: false,
+                controlsEnabled: liveAttrsStore.getControlsEnabled()
             })
         },
 
         componentDidMount : function () {
             textTypesStore.addChangeListener(this._changeHandler);
+            liveAttrsStore.addChangeListener(this._changeHandler);
         },
 
         componentWillUnmount : function () {
             textTypesStore.removeChangeListener(this._changeHandler);
+            liveAttrsStore.removeChangeListener(this._changeHandler);
         },
 
         _widgetIsActive : function () {
@@ -162,7 +204,8 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
             return {
                 selectionSteps: liveAttrsStore.getSelectionSteps(),
                 alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLoading: false
+                isLoading: false,
+                controlsEnabled: liveAttrsStore.getControlsEnabled()
             };
         },
 
@@ -171,10 +214,10 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                 <div className="live-attributes">
                     <ul className="controls">
                         <li>
-                            <a className="util-button" onClick={this._mkClickHandler('refine')}>{this.translate('ucnkLA__refine_selection_btn')}</a>
+                            <RefineButton enabled={this.state.controlsEnabled} clickHandler={this._mkClickHandler} />
                         </li>
                         <li>
-                            <a className="util-button cancel" onClick={this._mkClickHandler('reset')}>{this.translate('ucnkLA__reset_selection_btn')}</a>
+                            <ResetButton enabled={this.state.controlsEnabled} clickHandler={this._mkClickHandler} />
                         </li>
                         {subcMixerViews.Widget ?
                             (<li>
@@ -227,25 +270,16 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
         mixins : mixins,
 
         _changeHandler : function (store, action) {
-            if (action === '$LIVE_ATTRIBUTES_REFINE_DONE'
-                    || action == '$LIVE_ATTRIBUTES_VALUES_RESET') {
-                this.setState({
-                    alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                    isLocked: store.hasSelectedAlignedLanguages()
-                });
-
-            } else {
-                this.setState({
-                    alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                    isLocked: this.state.isLocked
-                });
-            }
+            this.setState({
+                alignedCorpora: liveAttrsStore.getAlignedCorpora(),
+                isLocked: store.hasLockedAlignedLanguages()
+            });
         },
 
         getInitialState : function () {
             return {
                 alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLocked: false
+                isLocked: liveAttrsStore.hasLockedAlignedLanguages()
             };
         },
 

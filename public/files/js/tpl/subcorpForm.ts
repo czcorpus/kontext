@@ -186,8 +186,9 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             liveAttrsProm = liveAttributes.create(
                 this.layoutModel.pluginApi(),
                 this.textTypesStore,
-                textTypesData['bib_attr'],
-                true
+                null, // no corplist provider => manual aligned corp. selection mode
+                () => this.textTypesStore.hasSelectedItems(),
+                textTypesData['bib_attr']
             );
 
         } else {
@@ -199,6 +200,10 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
+                    this.textTypesStore.addSelectionChangeListener(target => {
+                        liveAttrsStore.setControlsEnabled(target.hasSelectedItems() ||
+                                liveAttrsStore.hasSelectedLanguages());
+                    });
                 }
                 let subcmixerViews;
                 if (this.layoutModel.getConf<boolean>('HasSubcmixer')
