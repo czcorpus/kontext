@@ -7,7 +7,7 @@ env:
 before_install:
   - sudo apt-get install libxml2-dev libxslt-dev python-dev python-pyicu
 install:
-  - xargs -a requirements.txt -n 1 pip install
+  - pip install -r dev-requirements.txt
 script:
   - python tests/runtests.py
 
