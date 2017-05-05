@@ -114,13 +114,35 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
 
     private updateListeners:Immutable.List<()=>void>;
 
+    private manualAlignCorporaMode:boolean;
+
+    private controlsEnabled:boolean;
+
+    private selectedCorporaProvider:()=>Immutable.List<string>;
+
+    /**
+     * Provides an indication of at least one checked item selected
+     * wihin Text types form.
+     */
+    private ttCheckStatusProvider:()=>boolean;
+
+    /**
+     * @param dispatcher a Flux dispatcher instance
+     * @param pluginApi KonText plugin-api provider
+     * @param textTypesStore
+     * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
+     * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
+     * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
+     */
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
-            textTypesStore:TextTypes.ITextTypesStore, bibAttr:string) {
+            textTypesStore:TextTypes.ITextTypesStore, selectedCorporaProvider:()=>Immutable.List<string>,
+            ttCheckStatusProvider:()=>boolean, bibAttr:string) {
         super(dispatcher);
         let self = this;
         this.pluginApi = pluginApi;
         this.userData = null;
         this.bibliographyAttribute = bibAttr;
+        this.controlsEnabled = false; // it is enabled when user selects one or more items (via )
         this.textTypesStore = textTypesStore;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
         this.alignedCorpora = Immutable.List(this.pluginApi.getConf<Array<any>>('availableAlignedCorpora')
@@ -129,12 +151,14 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                                 value: item.n,
                                 label: item.label,
                                 selected: false,
-                                locked: false
+                                locked: selectedCorporaProvider ? true : item.locked
                             };
                         }));
         this.bibliographyIds = Immutable.List<string>();
         this.initialAlignedCorpora = this.alignedCorpora;
         this.updateListeners = Immutable.List<()=>void>();
+        this.selectedCorporaProvider = selectedCorporaProvider;
+        this.ttCheckStatusProvider = ttCheckStatusProvider;
         textTypesStore.setTextInputPlaceholder(this.getTextInputPlaceholder());
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
@@ -142,8 +166,8 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                     self.processRefine().then(
                         (v) => {
                             self.updateListeners.forEach(item => item());
-                            self.textTypesStore.notifyChangeListeners('$TT_VALUES_FILTERED');
-                            self.notifyChangeListeners('$LIVE_ATTRIBUTES_REFINE_DONE');
+                            self.textTypesStore.notifyChangeListeners();
+                            self.notifyChangeListeners();
                         },
                         (err) => {
                             console.error(err);
@@ -163,18 +187,37 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                         };
                         self.alignedCorpora = self.alignedCorpora.set(idx, newItem);
                     }
-                    self.updateListeners.forEach(item => item());
-                    self.notifyChangeListeners('$LIVE_ATTRIBUTES_VALUE_CHECKBOX_CLICKED');
+                    self.setControlsEnabled(self.ttCheckStatusProvider() || self.hasSelectedLanguages());
+                    self.updateListeners.forEach(fn => fn());
+                    self.notifyChangeListeners();
                 break;
                 case 'LIVE_ATTRIBUTES_RESET_CLICKED':
                     self.textTypesStore.reset();
                     self.reset();
+                    if (self.selectedCorporaProvider) {
+                        self.selectLanguages(self.selectedCorporaProvider().rest().toList(), false);
+                    }
                     self.updateListeners.forEach(item => item());
                     self.textTypesStore.notifyChangeListeners('VALUES_RESET');
-                    self.notifyChangeListeners('$LIVE_ATTRIBUTES_VALUES_RESET');
+                    self.notifyChangeListeners();
                 break;
             }
         });
+    }
+
+    selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean) {
+        this.alignedCorpora = this.alignedCorpora.map(item => {
+            return {
+                value: item.value,
+                label: item.label,
+                selected: languages.indexOf(item.value) > -1,
+                locked: true
+            };
+        }).toList();
+        if (notifyListeners) {
+            this.setControlsEnabled(this.ttCheckStatusProvider() || this.hasSelectedLanguages());
+            this.notifyChangeListeners();
+        }
     }
 
     private attachBibData(filterData:{[k:string]:Array<FilterResponseValue>}) {
@@ -310,10 +353,14 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
         }
     }
 
+    /**
+     * Note: be careful when wiring-up this store with TextTypes store
+     * as they listen to each other for different actions which is
+     * a possible source of a infinite callback loop.
+     */
     addUpdateListener(fn:()=>void):void {
         this.updateListeners = this.updateListeners.push(fn);
     }
-
 
     removeUpdateListener(fn:()=>void):void {
         const idx = this.updateListeners.indexOf(fn);
@@ -343,8 +390,12 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
         return this.selectionSteps.toArray();
     }
 
-    hasSelectedAlignedLanguages():boolean {
+    hasSelectedLanguages():boolean {
         return this.alignedCorpora.find((item)=>item.selected) !== undefined;
+    }
+
+    hasLockedAlignedLanguages():boolean {
+        return this.hasSelectedLanguages() && this.selectionSteps.size > 0;
     }
 
     private importFilter(data:{[ident:string]:Array<any>}):{[k:string]:Array<FilterResponseValue>} {
@@ -456,5 +507,13 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
 
     getTextInputPlaceholder():string {
         return this.pluginApi.translate('ucnkLA__start_writing_for_suggestions');
+    }
+
+    getControlsEnabled():boolean {
+        return this.controlsEnabled;
+    }
+
+    setControlsEnabled(v:boolean):void {
+        this.controlsEnabled = v;
     }
 }

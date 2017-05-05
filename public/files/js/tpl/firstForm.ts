@@ -69,6 +69,10 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private viewOptionsViews:StructsAndAttrsViews;
 
+    private onQueryStoreReady:(qs:QueryStore)=>void;
+
+    private onAlignedCorporaChanged:(corpora:Immutable.List<string>)=>void;
+
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
         this.layoutModel = layoutModel;
     }
@@ -181,7 +185,13 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         let liveAttrsProm;
         let ttTextInputCallback;
         if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(this.layoutModel.pluginApi(), this.textTypesStore, textTypesData['bib_attr']);
+            liveAttrsProm = liveAttributes.create(
+                this.layoutModel.pluginApi(),
+                this.textTypesStore,
+                () => this.queryStore.getCorpora(),
+                () => this.textTypesStore.hasSelectedItems(),
+                textTypesData['bib_attr']
+            );
 
         } else {
             liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
@@ -191,12 +201,26 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return liveAttrsProm.then(
             (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
                 if (liveAttrsStore) {
+                    // Complicated dependencies between QueryStore, TextTypesStore and LiveAttrsStore
+                    // cause that LiveAttrs store needs QueryStore data but it is not available
+                    // here yet. That's the reason we have to define a callback here to configure
+                    // required values later.
+                    this.onQueryStoreReady = (qs => {
+                        liveAttrsStore.selectLanguages(qs.getCorpora().rest().toList(), false);
+                    });
+                    this.onAlignedCorporaChanged = (corpora => {
+                        liveAttrsStore.selectLanguages(corpora, true);
+                    });
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
+                    this.textTypesStore.addSelectionChangeListener(target => {
+                        liveAttrsStore.setControlsEnabled(target.hasSelectedItems() ||
+                                liveAttrsStore.hasSelectedLanguages());
+                    });
                 }
                 const subcmixerViews = {
                     Widget: null
                 };
-                let liveAttrsViews = liveAttributes.getViews(
+                const liveAttrsViews = liveAttributes.getViews(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     subcmixerViews,
@@ -246,6 +270,13 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')
             }
         );
+        this.queryStore.registerOnAddParallelCorpAction(corpname => {
+            this.onAlignedCorporaChanged(this.queryStore.getCorpora().rest().toList())
+        });
+        this.queryStore.registerOnRemoveParallelCorpAction(corpname => {
+            this.onAlignedCorporaChanged(this.queryStore.getCorpora().rest().toList())
+        });
+        this.onQueryStoreReady(this.queryStore);
         this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,

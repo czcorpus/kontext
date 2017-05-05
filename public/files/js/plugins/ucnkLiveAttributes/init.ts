@@ -44,14 +44,24 @@ export function getViews(
 }
 
 
+/**
+ * @param pluginApi KonText plugin-api provider
+ * @param textTypesStore
+ * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
+ * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
+ * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
+ */
 export function create(pluginApi:Kontext.PluginApi, textTypesStore:TextTypes.ITextTypesStore,
-        bibAttr:string):RSVP.Promise<Kontext.PageStore> {
+        selectedCorporaProvider:()=>Immutable.List<string>,
+        ttCheckStatusProvider:()=>boolean, bibAttr:string):RSVP.Promise<Kontext.PageStore> {
     return new RSVP.Promise(function (resolve, reject) {
         try {
             resolve(new liveAttrsStore.LiveAttrsStore(
                 pluginApi.dispatcher(),
                 pluginApi,
                 textTypesStore,
+                selectedCorporaProvider,
+                ttCheckStatusProvider,
                 bibAttr
             ));
 
