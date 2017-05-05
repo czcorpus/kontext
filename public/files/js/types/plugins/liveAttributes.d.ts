@@ -46,12 +46,15 @@ declare module LiveAttributesInit {
         removeUpdateListener(fn:()=>void):void;
         getAlignedCorpora():Immutable.List<AlignedLanguageItem>;
         selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean);
+        hasSelectedLanguages():boolean;
+        setControlsEnabled(v:boolean):void;
     }
 
     export function create(pluginApi:Kontext.PluginApi,
                      textTypesStore:TextTypes.ITextTypesStore,
-                     bibAttr:string,
-                     manualAlignCorporaMode:boolean):RSVP.Promise<AttrValueTextInputListener>;
+                     selectedCorporaProvider:()=>Immutable.List<string>,
+                     ttCheckStatusProvider:()=>boolean,
+                     bibAttr:string):RSVP.Promise<AttrValueTextInputListener>;
 
 
     export interface LiveAttrsViews {

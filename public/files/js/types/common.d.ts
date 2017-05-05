@@ -170,7 +170,11 @@ declare module Kontext {
 
         removeChangeListener(fn:()=>void):void;
 
-        notifyChangeListeners(eventType:string, error?:Error):void;
+        /**
+         * NOTE: both arguments are deprecated. There should
+         * be only a single source of state - Flux stores.
+         */
+        notifyChangeListeners(eventType?:string, error?:Error):void;
     }
 
     /**
@@ -784,10 +788,10 @@ declare module TextTypes {
         setAutoComplete(attrName:string, values:Array<AutoCompleteItem>):void;
 
         /**
-         * Returns true if a specific attribute contains at least one selected
-         * value.
+         * Returns true if a specific attribute (or at least one attribute
+         * if attrName is undefined) contains at least one selected value.
          */
-        hasSelectedItems(attrName:string):boolean;
+        hasSelectedItems(attrName?:string):boolean;
 
         /**
          * Returns a list of attribute names passing 'hasSelectedItems' test.
@@ -846,6 +850,12 @@ declare module TextTypes {
         setRangeMode(attrName:string, rangeIsOn:boolean);
 
         getRangeModes():Immutable.Map<string, boolean>;
+
+        /**
+         * Other stores may listen for selection changes and update
+         * themselves accordingly.
+         */
+        addSelectionChangeListener(fn:(target:TextTypes.ITextTypesStore)=>void):void;
     }
 
     /**
