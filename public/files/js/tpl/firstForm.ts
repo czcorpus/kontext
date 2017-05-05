@@ -69,23 +69,17 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private viewOptionsViews:StructsAndAttrsViews;
 
-    private onQueryStoreReady:Immutable.List<(qs:QueryStore)=>void>;
+    private onQueryStoreReady:(qs:QueryStore)=>void;
 
-    private onAlignedCorporaChanged:Immutable.List<(corpora:Immutable.List<string>)=>void>;
+    private onAlignedCorporaChanged:(corpora:Immutable.List<string>)=>void;
 
 
     constructor(layoutModel:PageModel, clStorage:ConcLinesStorage) {
         this.layoutModel = layoutModel;
-        this.onQueryStoreReady = Immutable.List<(qs:QueryStore)=>void>();
-        this.onAlignedCorporaChanged = Immutable.List<(corpora:Immutable.List<string>)=>void>();
     }
 
     getConf<T>(name:string):T {
         return this.layoutModel.getConf<T>(name);
-    }
-
-    addOnQueryStoreReady(fn:(qs:QueryStore)=>void):void {
-        this.onQueryStoreReady = this.onQueryStoreReady.push(fn);
     }
 
     translate(msg:string, values?:{[k:string]:string}):string {
@@ -195,8 +189,9 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             liveAttrsProm = liveAttributes.create(
                 this.layoutModel.pluginApi(),
                 this.textTypesStore,
-                textTypesData['bib_attr'],
-                false
+                () => this.queryStore.getCorpora(),
+                () => this.textTypesStore.hasSelectedItems(),
+                textTypesData['bib_attr']
             );
 
         } else {
@@ -207,16 +202,26 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return liveAttrsProm.then(
             (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
                 if (liveAttrsStore) {
-                    this.addOnQueryStoreReady(qs => liveAttrsStore.selectLanguages(qs.getCorpora().rest().toList(), false));
-                    this.onAlignedCorporaChanged = this.onAlignedCorporaChanged.push(corpora => {
+                    // Complicated dependencies between QueryStore, TextTypesStore and LiveAttrsStore
+                    // cause that LiveAttrs store needs QueryStore data but it is not available
+                    // here yet. That's the reason we have to define a callback here to configure
+                    // required values later.
+                    this.onQueryStoreReady = (qs => {
+                        liveAttrsStore.selectLanguages(qs.getCorpora().rest().toList(), false);
+                    });
+                    this.onAlignedCorporaChanged = (corpora => {
                         liveAttrsStore.selectLanguages(corpora, true);
                     });
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
+                    this.textTypesStore.addSelectionChangeListener(target => {
+                        liveAttrsStore.setControlsEnabled(target.hasSelectedItems() ||
+                                liveAttrsStore.hasSelectedLanguages());
+                    });
                 }
                 const subcmixerViews = {
                     Widget: null
                 };
-                let liveAttrsViews = liveAttributes.getViews(
+                const liveAttrsViews = liveAttributes.getViews(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     subcmixerViews,
@@ -268,12 +273,12 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             }
         );
         this.queryStore.registerOnAddParallelCorpAction(corpname => {
-            this.onAlignedCorporaChanged.forEach(fn => fn(this.queryStore.getCorpora().rest().toList()));
+            this.onAlignedCorporaChanged(this.queryStore.getCorpora().rest().toList())
         });
         this.queryStore.registerOnRemoveParallelCorpAction(corpname => {
-            this.onAlignedCorporaChanged.forEach(fn => fn(this.queryStore.getCorpora().rest().toList()));
+            this.onAlignedCorporaChanged(this.queryStore.getCorpora().rest().toList())
         });
-        this.onQueryStoreReady.forEach(fn => fn(this.queryStore));
+        this.onQueryStoreReady(this.queryStore);
         this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
