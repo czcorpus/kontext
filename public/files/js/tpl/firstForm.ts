@@ -217,6 +217,10 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                         liveAttrsStore.setControlsEnabled(target.hasSelectedItems() ||
                                 liveAttrsStore.hasSelectedLanguages());
                     });
+
+                } else {
+                    this.onQueryStoreReady = () => undefined;
+                    this.onAlignedCorporaChanged = (_) => undefined;
                 }
                 const subcmixerViews = {
                     Widget: null
