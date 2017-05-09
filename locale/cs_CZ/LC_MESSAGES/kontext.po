@@ -1954,6 +1954,9 @@ msgstr "Nastavení výstupu"
 msgid "translation not available"
 msgstr "překlad není k dispozici"
 
+msgid "Corpus not found"
+msgstr "Korpus nebyl nalezen"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

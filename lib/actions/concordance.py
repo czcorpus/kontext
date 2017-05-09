@@ -18,7 +18,7 @@ import re
 import json
 from collections import defaultdict
 
-from kontext import MainMenu, LinesGroups, Kontext, ConcArgsMapping
+from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
 from query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs, LgroupOpArgs,
                    LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
@@ -40,7 +40,7 @@ from query import CQLDetectWithin
 from main_menu import MenuGenerator
 
 
-class ConcError(Exception):
+class ConcError(UserActionException):
     pass
 
 
