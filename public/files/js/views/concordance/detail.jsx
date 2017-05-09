@@ -615,6 +615,13 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             concDetailStore.removeChangeListener(this._storeChangeHandler);
         },
 
+        _canStartPlayback : function (speechPart) {
+            return this.props.speechSegment
+                && this.props.speechSegment[1]
+                && speechPart.segments.size > 0
+                && speechPart.segments.find(v => !!v);
+        },
+
         _renderSpeechLines : function () {
             return (this.state.data || []).map((item, i) => {
                 if (item.length === 1) {
@@ -625,7 +632,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
                                 handleStopClick={this._handleStopClick}
                                 isPlaying={this.state.playerWaitingIdx === i}
-                                canStartPlayback={this.props.speechSegment && this.props.speechSegment[1]} />;
+                                canStartPlayback={this._canStartPlayback(item[0])} />;
 
                 } else if (item.length > 1) {
                     return <TROverlappingSpeeches
@@ -636,7 +643,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
                                 handleStopClick={this._handleStopClick}
                                 isPlaying={this.state.playerWaitingIdx === i}
-                                canStartPlayback={this.props.speechSegment && this.props.speechSegment[1]} />;
+                                canStartPlayback={this._canStartPlayback(item[0])} />;
 
                 } else {
                     return null;
