@@ -39,6 +39,7 @@ import hashlib
 
 import werkzeug.urls
 import werkzeug.http
+import manatee
 
 import plugins
 import settings
@@ -173,7 +174,7 @@ class UserActionException(Exception):
     """
     This exception should cover general errors occurring in Controller's action methods'
     """
-    def __init__(self, message, code=200, error_code=None, error_args=None):
+    def __init__(self, message, code=400, error_code=None, error_args=None):
         super(UserActionException, self).__init__(message)
         self.code = code
         self.error_code = error_code
@@ -714,22 +715,28 @@ class Controller(object):
     def is_action(self, action_name):
         return callable(getattr(self, action_name, None))
 
-    def _analyze_error(self, err):
+    def _normalize_error(self, err):
         """
-        This method is intended to extract details about (some) errors via their
-        messages and return more specific type with fixed text message.
+        This method is intended to extract as much details as possible
+        from a broad range of errors and rephrase them in a more
+        specific ones (including exception object type).
         It is quite a lame solution but it appears that in case of
         syntax errors, attribute errors etc. Manatee raises only RuntimeError
         without further type distinction.
 
-        Please note that in some cases passed exception object may be returned too.
+        Please note that some of the decoding is dependent on how Manatee
+        outputs phrases its errors which may change between versions
+        (as it probably happened in 2.150.x).
 
         arguments:
-        err -- an instance of Exception (or a subclass)
+        err -- an instance of Exception
 
         returns:
-        user-readable text of the error
+        a (possibly different) instance of Exception with
+        (possibly) rephrased error message.
         """
+        if isinstance(err, UserActionException):
+            return err
         if err.message:
             if type(err.message) == unicode:
                 text = err.message
@@ -738,8 +745,8 @@ class Controller(object):
         else:
             text = unicode(err)
             err.message = text  # in case we return the original error
-        if 'Query evaluation error' in text:
-            srch = re.match(r'.+ at position (\d+):', text)
+        if 'syntax error' in text.lower():
+            srch = re.match(r'.+ position (\d+)', text)
             if srch:
                 text = _('Query failed: Syntax error at position %s.') % srch.groups()[0]
             else:
@@ -791,10 +798,9 @@ class Controller(object):
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
 
-        except (UserActionException, RuntimeError) as ex:
-            if hasattr(ex, 'code'):
-                self._status = ex.code
-            self.add_system_message('error', fetch_exception_msg(ex))
+        except manatee.CorpInfoNotFound:
+            self._status = 404
+            self.add_system_message('error', _('Corpus not found'))
             methodname, tmpl, result = self.process_method('message', path, named_args)
 
         except Exception as ex:  # we assume that this means some kind of a fatal error
@@ -832,15 +838,14 @@ class Controller(object):
         pos_args -- positional arguments of the action method
         named_args -- key=>value arguments of the action method
         """
-        e2 = self._analyze_error(ex)
+        e2 = self._normalize_error(ex)
         if not isinstance(e2, UserActionException):
             logging.getLogger(__name__).error(''.join(get_traceback()))
             self._status = 500
         else:
             self._status = getattr(e2, 'code', 500)
-
-        if settings.is_debug_mode() or type(ex) is UserActionException:
-            user_msg = str(e2).decode('utf-8')
+        if settings.is_debug_mode() or isinstance(e2, UserActionException):
+            user_msg = e2.message if type(e2.message) is unicode else str(e2).decode('utf-8')
         else:
             user_msg = _('Failed to process your request. '
                          'Please try again later or contact system support.')
@@ -900,7 +905,7 @@ class Controller(object):
             else:
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
-        except Exception as ex:
+        except (UserActionException, RuntimeError) as ex:
             return self.process_error(ex, methodname, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
