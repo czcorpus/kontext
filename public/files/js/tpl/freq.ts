@@ -60,7 +60,7 @@ class FreqPage {
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
             ftt_include_empty: freqFormInputs.ftt_include_empty || false,
-            flimit: freqFormInputs.flimit || '0',
+            flimit: freqFormInputs.flimit || '1',
             mlxattr: freqFormInputs.mlxattr || [attrs[0].n],
             mlxicase: freqFormInputs.mlxicase || [false],
             mlxctx: freqFormInputs.mlxctx || ['0>0'],

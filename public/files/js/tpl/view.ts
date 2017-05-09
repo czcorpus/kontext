@@ -946,7 +946,7 @@ export class ViewPage {
             structAttrList: structAttrs,
             fttattr: [structAttrs[0].n],
             ftt_include_empty: false,
-            flimit: '0',
+            flimit: '1',
             attrList: attrs,
             mlxattr: [attrs[0].n],
             mlxicase: [false],
