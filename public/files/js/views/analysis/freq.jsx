@@ -445,12 +445,13 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 <table className="form">
                     <tbody>
                         <tr>
-                            <th>
-                                {this.translate('freq__freq_limit_label')}:
-                            </th>
                             <td>
-                                <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_ML" />
+                                <label style={{fontWeight: 'bold'}}>
+                                    {this.translate('freq__freq_limit_label')}:{'\u00a0'}
+                                    <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_ML" />
+                                </label>
                             </td>
+                            <td />
                         </tr>
                         <tr>
                             <td colSpan="2">
