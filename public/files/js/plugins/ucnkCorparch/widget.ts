@@ -590,7 +590,13 @@ class SearchTab implements WidgetTab {
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
-            .attr('placeholder', this.pluginApi.translate('defaultCorparch__name_or_description'));
+            .attr('placeholder', this.pluginApi.translate('defaultCorparch__name_or_description'))
+            .on('keydown', (evt) => {
+                if (evt.keyCode === 13) { // prevent form submit and let Typeahead select the item
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                }
+            });
         $(inputWrapper)
             .addClass('input-wrapper')
             .append(this.srchField);
@@ -735,7 +741,6 @@ class FavoritesTab implements WidgetTab, Kontext.ICorpusSwitchAware<CorpusSwitch
 
     getFeatItemById(id:string):common.CorplistItemUcnk {
         for (let i = 0; i < this.dataFeat.length; i += 1) {
-            console.log(this.dataFeat[i], id);
             if (this.dataFeat[i].canonical_id === id) {
                 const tmp = this.dataFeat[i];
                 return {
