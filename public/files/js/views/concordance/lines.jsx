@@ -409,7 +409,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _handleKwicClick : function (corpusId, tokenNumber, lineIdx) {
-            this.props.concDetailClickHandler(corpusId, tokenNumber, lineIdx);
+            this.props.concDetailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
         },
 
         shouldComponentUpdate : function (nextProps, nextState) {
