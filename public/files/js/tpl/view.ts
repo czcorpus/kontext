@@ -947,7 +947,7 @@ export class ViewPage {
         const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
-            fttattr: [structAttrs[0].n],
+            fttattr: [],
             ftt_include_empty: false,
             flimit: '1',
             freq_sort: 'freq',
