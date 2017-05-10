@@ -1884,7 +1884,7 @@ class Actions(Querying):
             subcorpname=self.args.usesubcorp,
             baseAttr=Kontext.BASE_ATTR,
             humanCorpname=self._human_readable_corpname(),
-            currentArgs=[],
+            currentArgs=[['corpname', self.args.corpname]],
             compiledQuery=[],
             concPersistenceOpId=None,
             alignedCorpora=self.args.align,
