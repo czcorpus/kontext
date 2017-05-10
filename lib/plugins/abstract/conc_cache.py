@@ -61,9 +61,9 @@ class CalcStatus(object):
 
     def has_some_result(self, minsize):
         if minsize == -1:
-            if self.finished == 1:  # whole conc
+            if self.finished:  # whole conc
                 return True
-        elif self.concsize >= minsize:
+        elif self.concsize >= minsize or self.finished:
             return True
         return False
 
