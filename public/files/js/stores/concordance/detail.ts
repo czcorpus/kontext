@@ -87,6 +87,8 @@ export class ConcDetailStore extends SimplePageStore {
 
     private tokenNum:number;
 
+    private kwicLength:number;
+
     private lineIdx:number;
 
     private wholeDocumentLoaded:boolean;
@@ -163,9 +165,11 @@ export class ConcDetailStore extends SimplePageStore {
                     self.loadConcDetail(
                             self.corpusId,
                             self.tokenNum,
+                            self.kwicLength,
                             self.lineIdx,
                             [],
-                            payload.props['position']).then(
+                            payload.props['position']
+                    ).then(
                         () => {
                             self.linesStore.setLineFocus(self.lineIdx, true);
                             self.linesStore.notifyChangeListeners();
@@ -183,9 +187,11 @@ export class ConcDetailStore extends SimplePageStore {
                     self.loadConcDetail(
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
+                            payload.props['kwicLength'],
                             payload.props['lineIdx'],
                             [],
-                            self.expandLeftArgs.size > 1 && self.expandRightArgs.size > 1 ? 'reload' : null).then(
+                            self.expandLeftArgs.size > 1 && self.expandRightArgs.size > 1 ? 'reload' : null
+                    ).then(
                         () => {
                             self.linesStore.setLineFocus(payload.props['lineIdx'], true);
                             self.linesStore.notifyChangeListeners();
@@ -214,6 +220,7 @@ export class ConcDetailStore extends SimplePageStore {
                     self.loadSpeechDetail(
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
+                            payload.props['kwicLength'],
                             payload.props['lineIdx'],
                             self.expandLeftArgs.size > 1 && self.expandRightArgs.size > 1 ? 'reload' : null).then(
                         () => {
@@ -230,6 +237,7 @@ export class ConcDetailStore extends SimplePageStore {
                     self.loadSpeechDetail(
                             self.corpusId,
                             self.tokenNum,
+                            self.kwicLength,
                             self.lineIdx,
                             payload.props['position']).then(
                         () => {
@@ -248,6 +256,7 @@ export class ConcDetailStore extends SimplePageStore {
                         self.lineIdx = null;
                         self.corpusId = null;
                         self.tokenNum = null;
+                        self.kwicLength = null;
                         self.wholeDocumentLoaded = false;
                         self.expandLeftArgs = self.expandLeftArgs.clear();
                         self.expandRightArgs = self.expandRightArgs.clear();
@@ -444,20 +453,22 @@ export class ConcDetailStore extends SimplePageStore {
     /**
      *
      */
-    private loadSpeechDetail(corpusId:string, tokenNum:number, lineIdx:number, expand?:string):RSVP.Promise<any> {
+    private loadSpeechDetail(corpusId:string, tokenNum:number, kwicLength:number, lineIdx:number, expand?:string):RSVP.Promise<any> {
         const structs = this.layoutModel.getConcArgs().getList('structs');
         const args = this.speechAttrs
                 .map(x => `${this.speechOpts.speakerIdAttr[0]}.${x}`)
                 .concat([this.speechOpts.speechSegment.join('.')]);
-        return this.loadConcDetail(corpusId, tokenNum, lineIdx, args, expand);
+        return this.loadConcDetail(corpusId, tokenNum, kwicLength, lineIdx, args, expand);
     }
 
     /**
      *
      */
-    private loadConcDetail(corpusId:string, tokenNum:number, lineIdx:number, structs:Array<string>, expand?:string):RSVP.Promise<any> {
+    private loadConcDetail(corpusId:string, tokenNum:number, kwicLength:number, lineIdx:number, structs:Array<string>,
+                expand?:string):RSVP.Promise<any> {
         this.corpusId = corpusId;
         this.tokenNum = tokenNum;
+        this.kwicLength = kwicLength;
         this.lineIdx = lineIdx;
         this.wholeDocumentLoaded = false;
 
@@ -467,7 +478,10 @@ export class ConcDetailStore extends SimplePageStore {
         // and in case of an aligned corpus it even produces an error
         args.remove('usesubcorp');
         args.set('pos', String(tokenNum));
-        args.set('format', 'json')
+        args.set('format', 'json');
+        if (this.kwicLength && this.kwicLength > 1) {
+            args.set('hitlen', this.kwicLength);
+        }
 
         if (structs) {
             args.add('structs', (args.getFirst('structs') || '').split(',').concat(structs).join(','));

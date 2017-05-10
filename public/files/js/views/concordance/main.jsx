@@ -470,11 +470,12 @@ export function init(dispatcher, mixins, layoutViews, stores) {
             });
         },
 
-        _detailClickHandler : function (corpusId, tokenNumber, lineIdx) {
+        _detailClickHandler : function (corpusId, tokenNumber, kwicLength, lineIdx) {
             this.setState(React.addons.update(this.state, {
                 concDetailMetadata: {$set: {
                     corpusId: corpusId,
                     tokenNumber: tokenNumber,
+                    kwicLength: kwicLength,
                     lineIdx: lineIdx,
                     speakerIdAttr: this.props.baseCorpname === corpusId ? this.props.SpeakerIdAttr : null,
                     speechOverlapAttr: this.props.baseCorpname === corpusId ? this.props.SpeechOverlapAttr : null,
@@ -489,6 +490,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     props: {
                         corpusId: corpusId,
                         tokenNumber: tokenNumber,
+                        kwicLength: kwicLength,
                         lineIdx: lineIdx
                     }
                 });
@@ -499,6 +501,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     props: {
                         corpusId: corpusId,
                         tokenNumber: tokenNumber,
+                        kwicLength: kwicLength,
                         lineIdx: lineIdx
                     }
                 });
@@ -544,6 +547,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                             closeClickHandler={this._handleDetailCloseClick}
                             corpusId={this.state.concDetailMetadata.corpusId}
                             tokenNumber={this.state.concDetailMetadata.tokenNumber}
+                            kwicLength={this.state.concDetailMetadata.kwicLength}
                             lineIdx={this.state.concDetailMetadata.lineIdx}
                             speakerIdAttr={this.state.concDetailMetadata.speakerIdAttr}
                             speechOverlapAttr={this.state.concDetailMetadata.speechOverlapAttr}
