@@ -141,7 +141,7 @@ class GlobalArgs(object):
     concarf = Parameter(u'')
     concsize = Parameter(u'')
     Lines = Parameter([])
-    fromp = Parameter(u'1')
+    fromp = Parameter(1)
     numofpages = Parameter(0)
     pnfilter = Parameter(u'p')
     filfl = Parameter(u'f')
