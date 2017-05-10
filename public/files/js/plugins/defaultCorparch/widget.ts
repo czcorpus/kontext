@@ -575,7 +575,13 @@ class SearchTab implements WidgetTab {
         $(this.srchField)
             .addClass('corp-search')
             .attr('type', 'text')
-            .attr('placeholder', this.pluginApi.translate('defaultCorparch__name_or_description'));
+            .attr('placeholder', this.pluginApi.translate('defaultCorparch__name_or_description'))
+            .on('keydown', (evt) => {
+                if (evt.keyCode === 13) { // prevent form submit and let Typeahead select the item
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                }
+            });
         $(inputWrapper)
             .addClass('input-wrapper')
             .append(this.srchField);
