@@ -132,7 +132,7 @@ export class CollPage {
 
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
-            fttattr: [structAttrs[0].n],
+            fttattr: [],
             ftt_include_empty: false,
             flimit: '1',
             freq_sort: 'freq',
