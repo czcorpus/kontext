@@ -773,6 +773,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                         props: {
                             corpusId: this.props.corpusId,
                             tokenNumber: this.props.tokenNumber,
+                            kwicLength: this.props.kwicLength,
                             lineIdx: this.props.lineIdx
                         }
                     });
@@ -783,6 +784,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                         props: {
                             corpusId: this.props.corpusId,
                             tokenNumber: this.props.tokenNumber,
+                            kwicLength: this.props.kwicLength,
                             lineIdx: this.props.lineIdx
                         }
                     });
@@ -801,10 +803,16 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
         _renderContents : function () {
             switch (this.state.mode) {
                 case 'default':
-                    return <DefaultView corpusId={this.props.corpusId} tokenNumber={this.props.tokenNumber}
+                    return <DefaultView
+                                corpusId={this.props.corpusId}
+                                tokenNumber={this.props.tokenNumber}
+                                kwicLength={this.props.kwicLength}
                                 lineIdx={this.props.lineIdx} />;
                 case 'speech':
-                    return <SpeechView corpusId={this.props.corpusId} tokenNumber={this.props.tokenNumber}
+                    return <SpeechView
+                                corpusId={this.props.corpusId}
+                                tokenNumber={this.props.tokenNumber}
+                                kwicLength={this.props.kwicLength}
                                 lineIdx={this.props.lineIdx}
                                 speechOverlapAttr={this.props.speechOverlapAttr}
                                 speechOverlapVal={this.props.speechOverlapVal}
