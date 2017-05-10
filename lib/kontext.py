@@ -802,6 +802,14 @@ class Kontext(Controller):
         enc = corpus_get_conf(self.corp, 'ENCODING')
         return enc if enc else 'iso-8859-1'
 
+    def handle_dispatch_error(self, ex):
+        if isinstance(self.corp, fallback_corpus.ErrorCorpus):
+            self._status = 404
+            self.add_system_message('error', _('Failed to open corpus {0}').format(self.args.corpname))
+        else:
+            self._status = 500
+            super(Kontext, self).handle_dispatch_error(ex)
+
     @property
     def corp(self):
         """

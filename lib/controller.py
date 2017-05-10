@@ -39,12 +39,12 @@ import hashlib
 
 import werkzeug.urls
 import werkzeug.http
-import manatee
 
 import plugins
 import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
+import fallback_corpus
 
 
 codecs.register_error('replacedot', lambda err: (u'.', err.end))
@@ -134,7 +134,10 @@ def get_traceback():
 def fetch_exception_msg(ex):
     msg = getattr(ex, 'message', None)
     if not msg:
-        msg = '%r' % ex
+        try:
+            msg = unicode(ex)
+        except:
+            msg = '%r' % ex
     return msg
 
 
@@ -794,25 +797,19 @@ class Controller(object):
             if self.is_action(path[0]) and self._method_is_exposed(action_metadata):
                 path, named_args = self._pre_dispatch(path, named_args, action_metadata)
                 self._pre_action_validate()
-                methodname, tmpl, result = self.process_method(path[0], path, named_args)
+                methodname, tmpl, result = self.process_action(path[0], path, named_args)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
-
-        except manatee.CorpInfoNotFound:
-            self._status = 404
-            self.add_system_message('error', _('Corpus not found'))
-            methodname, tmpl, result = self.process_method('message', path, named_args)
-
-        except Exception as ex:  # we assume that this means some kind of a fatal error
-            self._status = 500
+        except Exception as ex:
+            # an error outside the action itself (i.e. pre_dispatch, action validation,
+            # post_dispatch etc.)
             logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
             if settings.is_debug_mode():
+                self._status = 500
                 self.add_system_message('error', fetch_exception_msg(ex))
             else:
-                self.add_system_message('error',
-                                        _('Failed to process your request. '
-                                          'Please try again later or contact system support.'))
-            methodname, tmpl, result = self.process_method('message', path, named_args)
+                self.handle_dispatch_error(ex)
+            methodname, tmpl, result = self.process_action('message', path, named_args)
         # Let's test whether process_method actually invoked requested method.
         # If not (e.g. there was an error and a fallback has been used) then reload action metadata
         if methodname != path[0]:
@@ -830,7 +827,7 @@ class Controller(object):
         output.close()
         return self._export_status(), headers, self._uses_valid_sid, ans_body
 
-    def process_error(self, ex, action_name, pos_args, named_args):
+    def handle_action_error(self, ex, action_name, pos_args, named_args):
         """
         arguments:
         ex -- a risen exception
@@ -871,9 +868,20 @@ class Controller(object):
             self._pre_dispatch(self._exceptmethod, named_args,
                                self._get_method_metadata(self._exceptmethod))
             em, self._exceptmethod = self._exceptmethod, None
-            return self.process_method(em, pos_args, named_args)
+            return self.process_action(em, pos_args, named_args)
 
-    def process_method(self, methodname, pos_args, named_args):
+    def handle_dispatch_error(self, ex):
+        """
+        Handles error in a production-ready manner which means that
+        user-understandable errors should be presented while the internal
+        ones should be hidden behind "server error, please contact admin".
+        """
+        self._status = 500
+        self.add_system_message('error',
+                                _('Failed to process your request. '
+                                  'Please try again later or contact system support.'))
+
+    def process_action(self, methodname, pos_args, named_args):
         """
         This method handles mapping between HTTP actions and Controller's methods.
         The method expects 'methodname' argument to be a valid @exposed method.
@@ -895,7 +903,7 @@ class Controller(object):
             if methodname != 'subcorp':
                 reload_template = methodname + '_form'
                 if self.is_template(reload_template):
-                    return self.process_method(reload_template, pos_args, named_args)
+                    return self.process_action(reload_template, pos_args, named_args)
         method = getattr(self, methodname)
         try:
             default_tpl_path = '%s/%s.tmpl' % (self.get_mapping_url_prefix()[1:], methodname)
@@ -906,7 +914,7 @@ class Controller(object):
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
         except (UserActionException, RuntimeError) as ex:
-            return self.process_error(ex, methodname, pos_args, named_args)
+            return self.handle_action_error(ex, methodname, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
         """
