@@ -375,8 +375,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
         return this.layoutModel.ajax(
             'GET',
             this.layoutModel.createActionUrl('options/viewattrs'),
-            args,
-            {contentType : 'application/x-www-form-urlencoded'}
+            args
 
         ).then(
             (data:any) => {
