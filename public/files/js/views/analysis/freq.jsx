@@ -22,7 +22,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFormStore) {
+export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFormStore, ctFreqStore) {
 
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
@@ -169,34 +169,89 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
 
         mixins: mixins,
 
+        getInitialState : function () {
+            return {
+                allAttrs: ctFreqStore.getAllAvailAttrs(),
+                attr1: ctFreqStore.getAttr1(),
+                attr2: ctFreqStore.getAttr2()
+            };
+        },
+
+        componentDidMount : function () {
+            ctFreqStore.addChangeListener(this._storeChangeHandler);
+        },
+
+        componentWillUnmount : function () {
+            ctFreqStore.removeChangeListener(this._storeChangeHandler);
+        },
+
+        _storeChangeHandler : function () {
+            this.setState({
+                allAttrs: ctFreqStore.getAllAvailAttrs(),
+                attr1: ctFreqStore.getAttr1(),
+                attr2: ctFreqStore.getAttr2()
+            });
+        },
+
+        _handleAttrSelChange : function (dimension, evt) {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_FORM_SET_DIMENSION_ATTR',
+                props: {
+                    dimension: dimension,
+                    value: evt.target.value
+                }
+            });
+        },
+
         render : function () {
             return (
-                <table className="form">
+                <table className="form CTFreqForm">
                     <tbody>
                         <tr>
-                            <th>
-                                1. dimension
-                            </th>
                             <td>
+                            </td>
+                            <td colSpan="4">
                                 <label>
-                                    Attribute
-                                    <select>
-                                        <option>
-                                        </option>
+                                    {this.translate('freq__ct_dim2')}:{'\u00a0'}
+                                    <select onChange={this._handleAttrSelChange.bind(this, 2)}
+                                            value={this.state.attr2}>
+                                        {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
                                     </select>
                                 </label>
                             </td>
                         </tr>
                         <tr>
-                            <th>
-                                2. dimension
-                            </th>
-                            <td>
-                                <select>
-                                    <option>
-                                    </option>
-                                </select>
+                            <td rowSpan="4">
+                                <label>
+                                    {this.translate('freq__ct_dim1')}:<br />
+                                    <select onChange={this._handleAttrSelChange.bind(this, 1)}
+                                            value={this.state.attr1}>
+                                        {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
+                                    </select>
+                                </label>
                             </td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                        </tr>
+                        <tr>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                        </tr>
+                        <tr>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                        </tr>
+                        <tr>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
+                            <td className="data"><div /></td>
                         </tr>
                     </tbody>
                 </table>
@@ -523,18 +578,15 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
         },
 
         _handleSubmitClick : function () {
-            if (this.state.formType === 'ml') {
-                dispatcher.dispatch({
-                    actionType: 'FREQ_ML_SUBMIT',
-                    props: {}
-                });
-
-            } else if (this.state.formType === 'tt') {
-                dispatcher.dispatch({
-                    actionType: 'FREQ_TT_SUBMIT',
-                    props: {}
-                });
-            }
+            const actions = {
+                ml: 'FREQ_ML_SUBMIT',
+                tt: 'FREQ_TT_SUBMIT',
+                ct: 'FREQ_CT_SUBMIT'
+            };
+            dispatcher.dispatch({
+                actionType: actions[this.state.formType],
+                props: {}
+            });
         },
 
         getInitialState : function () {

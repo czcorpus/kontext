@@ -328,7 +328,7 @@ declare module "views/analysis/freq" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:any, mlFreqStore:any, ttFreqStore:any);
+            layoutViews:any, mlFreqStore:any, ttFreqStore:any, ctFreqStore:any);
 }
 
 
@@ -349,4 +349,14 @@ declare module "views/freqs/main" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, freqDataRowsStore:any):FreqsResultViews;
+}
+
+
+declare module "views/freqs/ctResult" {
+
+    export interface CTFreqsResultViews {
+        CTFreqResultView: React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, ctFreqDataRowsStore:any):CTFreqsResultViews;
 }

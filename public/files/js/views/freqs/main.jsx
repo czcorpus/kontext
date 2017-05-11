@@ -236,7 +236,6 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
                 </div>
             );
         }
-
     }
 
     return {

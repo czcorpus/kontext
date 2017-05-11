@@ -22,7 +22,7 @@
 import {PageModel} from './document';
 import * as popupBox from '../popupbox';
 import * as $ from 'jquery';
-import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg, AttrItem} from '../stores/query/sort';
+import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 
 
@@ -47,11 +47,11 @@ class SortPage {
         this.layoutModel.init().then(
             () => {
                 const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-                const availAttrs = this.layoutModel.getConf<Array<AttrItem>>('AttrList');
+                const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
                 const fetchArgs = <T>(key:(item:AjaxResponse.SortFormArgs)=>T):Array<[string, T]>=>fetchSortFormArgs(concFormsArgs, key);
                 const sortStoreProps:SortFormProperties = {
                     attrList: availAttrs,
-                    structAttrList: this.layoutModel.getConf<Array<AttrItem>>('StructAttrList'),
+                    structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
                     sattr: fetchArgs<string>(item => item.sattr ? item.sattr : availAttrs[0].n),
                     sbward: fetchArgs<string>(item => item.sbward),
                     sicase: fetchArgs<string>(item => item.sicase),

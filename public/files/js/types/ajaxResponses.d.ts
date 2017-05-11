@@ -274,4 +274,8 @@ declare module FreqResultResponse {
         fmaxitems:number;
         concsize:number;
     }
+
+    export type CTFreqResultData = Array<[string, string, number, number]>;
+
+
 }

@@ -227,7 +227,7 @@ class PyConc(manatee.Concordance):
         self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
         ans = []
         for w, f, nf in zip(words, freqs, norms):
-            ans.append((w, f, nf))
+            ans.append((self.import_string(w), f, nf))
         return ans
 
     def xfreq_dist(self, crit, limit=1, sortkey='f', ml='', ftt_include_empty='', rel_mode=0,

@@ -1,5 +1,7 @@
 #*
-Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -16,7 +18,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
-#from translation import ugettext as _
 #from cmpltmpl.document import document
 #extends document
 
@@ -29,9 +30,16 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.AttrList = $to_json($getVar('AttrList', []));
     conf.StructAttrList = $to_json($getVar('StructAttrList', []));
     conf.FreqFormProps = $to_json($freq_form_args);
+    #if $freq_type == 'default':
     conf.FreqResultData = $to_json($Blocks);
     conf.FreqItemsPerPage = $to_json($fmaxitems);
     conf.FreqCrit = $to_json($fcrit);
+    #elif $freq_type == 'ct':
+    conf.CTFreqResultData = $to_json($data);
+    conf.Attr1 = $to_json($attr1);
+    conf.Attr2 = $to_json($attr2);
+    #end if
+    conf.FreqType = $to_json($freq_type);
     pageSelf.init(conf);
 });
 #end def
@@ -39,7 +47,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 
 #def main
 <section>
-    <h2>$_("Frequency list")</h2>
+    <h2>#if $freq_type == 'ct'#$_('Two-attribute interrelationship')#else#$_("Frequency list")#end if#</h2>
     <div id="result-mount" class="no-margin"></div>
 </section>
 #end def
