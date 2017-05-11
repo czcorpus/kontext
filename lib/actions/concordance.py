@@ -1089,6 +1089,21 @@ class Actions(Querying):
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
+    @exposed(access_level=1, page_model='freq', return_type='json')
+    def freqct(self, request):
+        """
+        """
+        args = freq_calc.CLFreqCalcArgs()
+        args.corpname = self.corp.corpname
+        args.subcname = getattr(self.corp, 'subcname', None)
+        args.subcpath = self.subcpath
+        args.user_id = self._session_get('user', 'user')
+        args.minsize = None
+        args.q = self.args.q
+        args.flimit = int(request.args.get('flimit', '1'))
+        args.fcrit = request.args.get('fcrit')
+        return freq_calc.calculate_freqs_ct(args)
+
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
     def collx(self, line_offset=0, num_lines=0):
         """
