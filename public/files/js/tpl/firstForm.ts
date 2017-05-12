@@ -210,6 +210,11 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                         liveAttrsStore.selectLanguages(qs.getCorpora().rest().toList(), false);
                     });
                     this.onAlignedCorporaChanged = (corpora => {
+                        if (liveAttrsStore.hasSelectionSteps()) {
+                            liveAttrsStore.reset();
+                            liveAttrsStore.notifyChangeListeners();
+                            this.textTypesStore.notifyChangeListeners();
+                        }
                         liveAttrsStore.selectLanguages(corpora, true);
                     });
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
