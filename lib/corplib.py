@@ -261,12 +261,13 @@ def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                     items.append((round(frq, 1), id))
                 else:
                     items.append((frq, id))
-    if wlsort == 'f':
-        items.sort()
-        del items[:-wlmaxitems]
-        items.reverse()
     if not words or wlpat != '.*':
         items = [(f, dec_string(attr.id2str(i))) for (f, i) in items]
+    if wlsort == 'f':
+        items = sorted(items, key=lambda x: x[0], reverse=True)
+    else:
+        items = sorted(items, key=lambda x: x[1])
+    del items[wlmaxitems:]
     return add_block_items([{'str': w, 'freq': f}
                             for f, w in items])
 
