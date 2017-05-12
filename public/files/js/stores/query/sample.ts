@@ -27,7 +27,7 @@ import {MultiDict} from '../../util';
 
 
 export interface SampleFormProperties {
-    rlines:Array<[string, number]>;
+    rlines:Array<[string, string]>;
 }
 
 
@@ -47,22 +47,19 @@ export class SampleStore extends SimplePageStore {
 
     private pageModel:PageModel;
 
-    private rlinesValues:Immutable.Map<string, number>;
+    private rlinesValues:Immutable.Map<string, string>;
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SampleFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.rlinesValues = Immutable.Map<string, number>(props.rlines);
+        this.rlinesValues = Immutable.Map<string, string>(props.rlines);
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'SAMPLE_FORM_SET_RLINES':
                     const v = payload.props['value'];
                     if (/^([1-9]\d*)?$/.exec(v)) {
-                        this.rlinesValues = this.rlinesValues.set(
-                            payload.props['sampleId'],
-                            parseInt(v)
-                        );
+                        this.rlinesValues = this.rlinesValues.set(payload.props['sampleId'], v);
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('query__sample_value_must_be_gt_zero'));
@@ -110,7 +107,7 @@ export class SampleStore extends SimplePageStore {
         return this.pageModel.createActionUrl('reduce', this.createSubmitArgs(sortId).items());
     }
 
-    getRlinesValues():Immutable.Map<string, number> {
+    getRlinesValues():Immutable.Map<string, string> {
         return this.rlinesValues;
     }
 }

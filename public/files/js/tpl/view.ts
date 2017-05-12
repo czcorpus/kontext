@@ -825,7 +825,7 @@ export class ViewPage {
         const fetchArgs = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>fetchSampleFormArgs(concFormsArgs, key);
 
         const sampleStoreProps:SampleFormProperties = {
-            rlines: fetchArgs<number>(item => item.rlines)
+            rlines: fetchArgs<string>(item => item.rlines)
         };
 
         this.queryStores.sampleStore = new SampleStore(
@@ -843,7 +843,6 @@ export class ViewPage {
                 });
             }
         );
-
         this.sampleFormViews = sampleFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
