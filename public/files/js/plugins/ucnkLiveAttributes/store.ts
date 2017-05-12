@@ -192,13 +192,8 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                     self.notifyChangeListeners();
                 break;
                 case 'LIVE_ATTRIBUTES_RESET_CLICKED':
-                    self.textTypesStore.reset();
                     self.reset();
-                    if (self.selectedCorporaProvider) {
-                        self.selectLanguages(self.selectedCorporaProvider().rest().toList(), false);
-                    }
-                    self.updateListeners.forEach(item => item());
-                    self.textTypesStore.notifyChangeListeners('VALUES_RESET');
+                    self.textTypesStore.notifyChangeListeners();
                     self.notifyChangeListeners();
                 break;
             }
@@ -313,10 +308,19 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
         );
     }
 
-    private reset():void {
+    reset():void {
+        this.textTypesStore.reset();
         this.selectionSteps = this.selectionSteps.clear();
         this.alignedCorpora = this.initialAlignedCorpora;
         this.bibliographyIds = this.bibliographyIds.clear();
+        if (this.selectedCorporaProvider) {
+            this.selectLanguages(this.selectedCorporaProvider().rest().toList(), false);
+        }
+        this.updateListeners.forEach(item => item());
+    }
+
+    hasSelectionSteps():boolean {
+        return this.selectionSteps.size > 0;
     }
 
     private updateSelectionSteps(data:any):void {
