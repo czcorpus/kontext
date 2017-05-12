@@ -179,16 +179,12 @@ declare module AjaxResponse {
 
     export interface SortFormArgsResponse extends SortFormArgs, Kontext.AjaxResponse {}
 
-    export interface SampleFormArgs extends ConcFormArgs {
-    // TODO:fill in args
-    }
-
     export interface BranchQuery extends Kontext.AjaxResponse {
         ops:Array<{id:string; form_args:any}>;
     }
 
     export interface SampleFormArgs extends ConcFormArgs {
-        rlines:number;
+        rlines:string;
     }
 
     export interface SampleFormArgsResponse extends SampleFormArgs, Kontext.AjaxResponse {}
