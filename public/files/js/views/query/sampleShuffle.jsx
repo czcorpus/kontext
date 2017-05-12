@@ -54,7 +54,7 @@ export function init(dispatcher, mixins, sampleStore) {
         },
 
         _handleSubmitEvent : function (evt) {
-            if (!evt.keyCode || evt.keyCode === 13) {
+            if (evt.keyCode === undefined || evt.keyCode === 13) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
                         actionType: 'BRANCH_QUERY',
