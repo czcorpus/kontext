@@ -53,18 +53,22 @@ export function init(dispatcher, mixins, sampleStore) {
             });
         },
 
-        _handleSubmitClick : function () {
-            if (this.props.operationIdx !== undefined) {
-                dispatcher.dispatch({
-                    actionType: 'BRANCH_QUERY',
-                    props: {operationIdx: this.props.operationIdx}
-                });
+        _handleSubmitEvent : function (evt) {
+            if (evt.keyCode === undefined || evt.keyCode === 13) {
+                if (this.props.operationIdx !== undefined) {
+                    dispatcher.dispatch({
+                        actionType: 'BRANCH_QUERY',
+                        props: {operationIdx: this.props.operationIdx}
+                    });
 
-            } else {
-                dispatcher.dispatch({
-                    actionType: 'SAMPLE_FORM_SUBMIT',
-                    props: {sampleId: this.props.sampleId}
-                });
+                } else {
+                    dispatcher.dispatch({
+                        actionType: 'SAMPLE_FORM_SUBMIT',
+                        props: {sampleId: this.props.sampleId}
+                    });
+                }
+                evt.preventDefault();
+                evt.stopPropagation();
             }
         },
 
@@ -78,7 +82,7 @@ export function init(dispatcher, mixins, sampleStore) {
 
         render : function () {
             return (
-                <form>
+                <form onKeyDown={this._handleSubmitEvent}>
                     <p>{this.translate('query__create_sample_desc')}.</p>
                     <p>
                         {this.translate('query__create_sample_rlines_label')}:
@@ -87,7 +91,7 @@ export function init(dispatcher, mixins, sampleStore) {
                     </p>
                     <div className="buttons">
                         <button type="button" className="default-button"
-                                onClick={this._handleSubmitClick}>
+                                onClick={this._handleSubmitEvent}>
                             {this.translate('query__create_sample_submit_btn')}
                         </button>
                     </div>
