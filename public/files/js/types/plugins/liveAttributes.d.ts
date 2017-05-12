@@ -47,7 +47,9 @@ declare module LiveAttributesInit {
         getAlignedCorpora():Immutable.List<AlignedLanguageItem>;
         selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean);
         hasSelectedLanguages():boolean;
+        hasSelectionSteps():boolean;
         setControlsEnabled(v:boolean):void;
+        reset():void;
     }
 
     export function create(pluginApi:Kontext.PluginApi,
