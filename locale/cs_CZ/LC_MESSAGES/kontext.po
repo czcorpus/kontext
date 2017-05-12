@@ -1957,6 +1957,9 @@ msgstr "překlad není k dispozici"
 msgid "Failed to open corpus {0}"
 msgstr "Nepodařilo se otevřít korpus {0}"
 
+msgid "Two-attribute interrelationship"
+msgstr "Vzájemný vztah dvou atributů"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

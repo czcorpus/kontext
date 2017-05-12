@@ -215,6 +215,21 @@ class PyConc(manatee.Concordance):
             ans[self.import_string(value)] = cnt
         return ans
 
+    def ct_dist(self, crit, limit=1):
+        """
+        Calculate join distribution (contingency table).
+
+        TODO: unfinished, untested
+        """
+        words = manatee.StrVector()
+        freqs = manatee.NumVector()
+        norms = manatee.NumVector()
+        self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
+        ans = []
+        for w, f, nf in zip(words, freqs, norms):
+            ans.append((self.import_string(w), f, nf))
+        return ans
+
     def xfreq_dist(self, crit, limit=1, sortkey='f', ml='', ftt_include_empty='', rel_mode=0,
                    collator_locale='en_US'):
         """

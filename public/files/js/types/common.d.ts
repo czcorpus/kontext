@@ -463,6 +463,8 @@ declare module Kontext {
          */
         csGetStateKey():string;
     }
+
+    export type AttrItem = {n:string; label:string};
 }
 
 

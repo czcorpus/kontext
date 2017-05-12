@@ -348,3 +348,48 @@ def calculate_freqs_mp(args):
     if cache_ans:
         multiprocessing.Process(target=cache_results, args=(cache_ans,)).start()
     return ans
+
+
+# ------------------ Contingency table freq. distribution --------------
+
+
+class CLFreqCalcArgs(FixedDict):
+    q = None
+    user_id = None
+    corpname = None
+    collator_locale = None
+    subcname = None
+    subcpath = None
+    minsize = None
+    flimit = None
+    fcrit = None
+    cache_path = None
+
+
+def calc_freqs_ct_bg(args):
+    """
+    note: this is called by Celery worker
+    """
+    cm = corplib.CorpusManager(subcpath=args.subcpath)
+    corp = cm.get_Corpus(args.corpname, args.subcname)
+    conc = conclib.get_conc(corp=corp, user_id=args.user_id, minsize=args.minsize, q=args.q,
+                            fromp=0, pagesize=0, async=0, save=0, samplesize=0)
+    # TODO limit?
+    return [tuple(x[0].split('\t')) + x[1:] for x in conc.ct_dist(args.fcrit, limit=1)]
+
+
+def calculate_freqs_ct(args):
+    """
+    note: this is called by webserver
+    """
+    backend, conf = settings.get_full('global', 'calc_backend')
+    if backend == 'celery':
+        import task
+        app = task.get_celery_app(conf['conf'])
+        res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),))
+        calc_result = res.get()
+    elif backend == 'multiprocessing':
+        calc_result = calculate_freqs_mp(args)
+    else:
+        raise ValueError('Invalid backend')
+    return calc_result

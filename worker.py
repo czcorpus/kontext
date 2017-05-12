@@ -273,6 +273,12 @@ def calculate_freqs(args):
 
 
 @app.task
+def calculate_freqs_ct(args):
+    args = freq_calc.CLFreqCalcArgs(**args)
+    return freq_calc.calc_freqs_ct_bg(args)
+
+
+@app.task
 def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
 

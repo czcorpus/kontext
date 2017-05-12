@@ -965,6 +965,7 @@ class Actions(Querying):
             self._add_save_menu_item('TXT', 'savefreq', save_params, save_format='text')
             save_params = save_params[:1] + save_params[2:]
             self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_params)
+        result['freq_type'] = 'default'
         result['freq_form_args'] = dict(
             fttattr=self._request.args.getlist('fttattr'),
             flimit=self.args.flimit,
@@ -1088,6 +1089,28 @@ class Actions(Querying):
             self._exceptmethod = 'freq'
             raise ConcError(_('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
+
+    @exposed(access_level=1, page_model='freq', template='freqs.tmpl')
+    def freqct(self, request):
+        """
+        """
+        args = freq_calc.CLFreqCalcArgs()
+        args.corpname = self.corp.corpname
+        args.subcname = getattr(self.corp, 'subcname', None)
+        args.subcpath = self.subcpath
+        args.user_id = self._session_get('user', 'user')
+        args.minsize = None
+        args.q = self.args.q
+        args.flimit = int(request.args.get('flimit', '1'))
+        args.fcrit = request.args.get('fcrit')
+        ans = freq_calc.calculate_freqs_ct(args)
+        return dict(
+            freq_type='ct',
+            attr1=request.args.get('attr1'),
+            attr2=request.args.get('attr2'),
+            data=ans,
+            freq_form_args={}
+        )
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
     def collx(self, line_offset=0, num_lines=0):

@@ -29,6 +29,7 @@ import {MultiDict, dictToPairs} from '../util';
 import {bind as bindPopupBox} from '../popupbox';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
+import {ContingencyTableStore, ContingencyTableFormProperties} from '../stores/freqs/ctable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
@@ -36,6 +37,7 @@ import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/fram
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as resultViewInit, FreqsResultViews} from 'views/freqs/main';
+import {init as ctResultViewInit, CTFreqsResultViews} from 'views/freqs/ctResult';
 import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
 
 /**
@@ -49,6 +51,8 @@ class FreqPage {
 
     private ttFreqStore:TTFreqFormStore;
 
+    private ctFreqStore:ContingencyTableStore;
+
     private collFormStore:CollFormStore;
 
     private queryReplayStore:IndirectQueryReplayStore;
@@ -58,7 +62,7 @@ class FreqPage {
     }
 
     private initAnalysisViews():void {
-        const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
@@ -70,7 +74,7 @@ class FreqPage {
             mlxctx: freqFormInputs.mlxctx || ['0>0'],
             alignType: freqFormInputs.alignType || ['left'],
             attrList: attrs,
-            structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList')
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };
 
         this.mlFreqStore = new MLFreqFormStore(
@@ -86,12 +90,27 @@ class FreqPage {
             freqFormProps
         );
 
+        const ctFormProps:ContingencyTableFormProperties = {
+            attrList: attrs,
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            attr1: this.layoutModel.getConf<string>('Attr1') || attrs[0].n,
+            attr2: this.layoutModel.getConf<string>('Attr2') || attrs[0].n
+        };
+
+
+        this.ctFreqStore = new ContingencyTableStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            ctFormProps
+        );
+
         const freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
             this.mlFreqStore,
-            this.ttFreqStore
+            this.ttFreqStore,
+            this.ctFreqStore
         );
 
         this.collFormStore = new CollFormStore(
@@ -190,23 +209,44 @@ class FreqPage {
     }
 
     private initFreqResult():void {
-        const freqResultStore = new FreqDataRowsStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
-            this.layoutModel.getConf<FreqFormInputs>('FreqFormProps')
-        );
-        freqResultStore.importData(
-            this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
-            this.layoutModel.getConf<number>('FreqItemsPerPage'),
-            1
-        );
-        const freqResultView = resultViewInit(this.layoutModel.dispatcher, this.layoutModel.getComponentTools(), freqResultStore);
-        this.layoutModel.renderReactComponent(
-            freqResultView.FreqResultView,
-            window.document.getElementById('result-mount'),
-            {}
-        );
+        switch (this.layoutModel.getConf<string>('FreqType')) {
+            case 'default':
+                const freqResultStore = new FreqDataRowsStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
+                    this.layoutModel.getConf<FreqFormInputs>('FreqFormProps')
+                );
+                freqResultStore.importData(
+                    this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
+                    this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                    1
+                );
+                const freqResultView = resultViewInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.getComponentTools(),
+                    freqResultStore
+                );
+                this.layoutModel.renderReactComponent(
+                    freqResultView.FreqResultView,
+                    window.document.getElementById('result-mount'),
+                    {}
+                );
+            break;
+            case 'ct':
+                this.ctFreqStore.importData(this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>('CTFreqResultData'));
+                const ctFreqResultView = ctResultViewInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.getComponentTools(),
+                    this.ctFreqStore
+                );
+                this.layoutModel.renderReactComponent(
+                    ctFreqResultView.CTFreqResultView,
+                    window.document.getElementById('result-mount'),
+                    {}
+                );
+            break;
+        }
     }
 
     init() {

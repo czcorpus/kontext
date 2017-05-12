@@ -23,6 +23,7 @@ import * as $ from 'jquery';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
+import {ContingencyTableStore, ContingencyTableFormProperties} from '../stores/freqs/ctable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
@@ -48,6 +49,8 @@ export class CollPage {
     private mlFreqStore:MLFreqFormStore;
 
     private ttFreqStore:TTFreqFormStore;
+
+    private ctFreqStore:ContingencyTableStore;
 
     private queryReplayStore:IndirectQueryReplayStore;
 
@@ -126,7 +129,7 @@ export class CollPage {
     }
 
     initAnalysisViews():void {
-        const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const currArgs = this.layoutModel.getConf<CollFormInputs>('CollFormArgs');
         const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
 
@@ -156,12 +159,27 @@ export class CollPage {
             freqFormProps
         );
 
+        const ctFormProps:ContingencyTableFormProperties = {
+            attrList: attrs,
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            attr1: attrs[0].n,
+            attr2: attrs[0].n
+        };
+
+
+        this.ctFreqStore = new ContingencyTableStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            ctFormProps
+        );
+
         const freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
             this.mlFreqStore,
-            this.ttFreqStore
+            this.ttFreqStore,
+            this.ctFreqStore
         );
 
         this.collFormStore = new CollFormStore(
