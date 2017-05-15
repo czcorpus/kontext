@@ -73,6 +73,8 @@ export class ConcDetailStore extends SimplePageStore {
 
     private static SPK_LABEL_OPACITY:number = 0.8;
 
+    private static ATTR_NAME_ALLOWED_CHARS:string = 'a-zA-Z0-9_';
+
     private layoutModel:PageModel;
 
     private linesStore:ConcLineStore;
@@ -310,13 +312,16 @@ export class ConcDetailStore extends SimplePageStore {
         function parseTag(name:string, s:string):{[key:string]:string} {
             const srch = new RegExp(`<${name}(\\s+.*)>`).exec(s);
             if (srch) {
+                const ignoreAttr = self.speechOpts.speechSegment[0] == name
+                        ? self.speechOpts.speechSegment[1] : null;
                 const ans:{[key:string]:string} = {};
-                srch[1].trim().split(/\s+/)
-                    .map(item => new RegExp('([a-zA-Z0-9_]+)=([^\\s^>]+)').exec(item))
-                    .filter(item => !!item)
-                    .forEach(item => {
-                        ans[item[1]] = item[2];
-                    });
+                const items = srch[1].trim()
+                    .split(new RegExp(`([${ConcDetailStore.ATTR_NAME_ALLOWED_CHARS}]+)=`)).slice(1);
+                for (let i = 0; i < items.length; i += 2) {
+                    if (items[i] !== ignoreAttr) {
+                        ans[items[i]] = (items[i+1] || '').trim();
+                    }
+                }
                 return ans;
             }
             return null;
