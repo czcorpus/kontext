@@ -365,16 +365,19 @@ class MenuGenerator(object):
         )
 
         self.recent_queries = (
-            MenuItemInternal(MainMenu.NEW_QUERY('recent-queries'), _('Recent queries'), 'user/query_history')
+            HideOnCustomCondItem(MainMenu.NEW_QUERY('history'), _('Recent queries'), 'user/query_history')
             .add_args(
                 ('corpname', self._args['corpname']))
             .mark_indirect()
         )
 
-        self.word_list = MenuItemInternal(MainMenu.NEW_QUERY('word-list'), _('Word List'), 'wordlist_form').add_args(
-            ('corpname', self._args['corpname']),
-            ('include_nonwords', 1)
-        ).mark_indirect()
+        self.word_list = (
+            HideOnCustomCondItem(MainMenu.NEW_QUERY('wordlist'), _('Word List'), 'wordlist_form')
+            .add_args(
+                ('corpname', self._args['corpname']),
+                ('include_nonwords', 1))
+            .mark_indirect()
+        )
 
         # ---------------------------- menu-corpora -------------------------------------
 

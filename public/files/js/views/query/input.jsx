@@ -539,7 +539,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
         },
 
         _inputArrowKeyHandler : function (evt) {
-            if (evt.keyCode === 40 && !this.state.historyVisible) {
+            if (this.props.widgets.indexOf('history') > -1 &&
+                    evt.keyCode === 40 && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
             }
