@@ -77,11 +77,6 @@ def import_from_json(obj, recursive=False):
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
-def get_favorite_corpora(ctrl, request):
-    return [fc.to_dict() for fc in plugins.get('user_items').get_user_items(ctrl._plugin_api)]
-
-
-@exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def set_favorite_item(ctrl, request):
     """
     """
@@ -175,7 +170,7 @@ class UserItems(AbstractUserItems):
         return infer_item_key(corpname, usesubcorp, aligned_corpora)
 
     def export_actions(self):
-        return {UserController: [get_favorite_corpora, set_favorite_item, unset_favorite_item]}
+        return {UserController: [set_favorite_item, unset_favorite_item]}
 
 
 @inject('db', 'auth')

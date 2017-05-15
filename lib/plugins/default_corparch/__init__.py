@@ -147,6 +147,8 @@ from plugins.abstract.user_items import CorpusItem
 from plugins import inject
 import l10n
 import manatee
+from controller import exposed
+import actions.user
 from fallback_corpus import EmptyCorpus
 from translation import ugettext as _
 
@@ -347,6 +349,11 @@ class DeafultCorplistProvider(CorplistProvider):
         ans['current_keywords'] = query_keywords
         ans['filters'] = dict(filter_dict)
         return ans
+
+
+@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+def get_favorite_corpora(ctrl, request):
+    return plugins.get('corparch').export_favorite(ctrl._plugin_api)
 
 
 class CorpusArchive(AbstractSearchableCorporaArchive):
@@ -683,7 +690,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 })
         return featured
 
-    def _export_favorite(self, plugin_api):
+    def export_favorite(self, plugin_api):
         ans = []
         for item in plugins.get('user_items').get_user_items(plugin_api):
             tmp = item.to_dict()
@@ -694,7 +701,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
     def export(self, plugin_api):
         return dict(
-            favorite=self._export_favorite(plugin_api),
+            favorite=self.export_favorite(plugin_api),
             featured=self._export_featured(plugin_api),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in self.all_keywords(plugin_api.user_lang)],
@@ -717,6 +724,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 'name': query_substrs
             }
         }
+
+    def export_actions(self):
+        return {actions.user.User: [ask_corpus_access, get_favorite_corpora]}
 
 
 @inject('auth', 'user_items')
