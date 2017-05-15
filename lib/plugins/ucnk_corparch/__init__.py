@@ -109,6 +109,11 @@ class UcnkCorplistProvider(DeafultCorplistProvider):
         return len(ans['rows']) <= offset + limit
 
 
+@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+def get_favorite_corpora(ctrl, request):
+    return plugins.get('corparch').export_favorite(ctrl._plugin_api)
+
+
 @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
 def ask_corpus_access(ctrl, request):
     ans = {}
@@ -261,7 +266,7 @@ class UcnkCorpArch(CorpusArchive):
         return cl
 
     def export_actions(self):
-        return {actions.user.User: [ask_corpus_access]}
+        return {actions.user.User: [ask_corpus_access, get_favorite_corpora]}
 
 
 @inject('auth', 'user_items')
