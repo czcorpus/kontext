@@ -203,7 +203,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
     }
 
     protected sanitizeQuery(query:string):string {
-        return query.trim();
+        return query.replace(/\n/g, ' ');
     }
 
     protected validateQuery(query:string, queryType:string):boolean {
