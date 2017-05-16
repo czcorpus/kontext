@@ -191,8 +191,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             createStaticUrl:(path:string):string => {
                 return this.createStaticUrl(path);
             },
-            formatNumber:(value:number):string => {
-                return this.formatNumber(value);
+            formatNumber:(value:number, fractionDigits:number=2):string => {
+                return this.formatNumber(value, fractionDigits);
             },
             formatDate:(d:Date, timeFormat:number=0):string => {
                 return this.formatDate(d, timeFormat);
@@ -631,9 +631,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         return '';
     }
 
-    formatNumber(v:number):string {
+    formatNumber(v:number, fractionDigits:number=2):string {
         let format:any = new Intl.NumberFormat(this.conf['uiLang'], {
-            maximumFractionDigits: 2
+            maximumFractionDigits: fractionDigits
         });
         return format.format(v);
     }
@@ -992,8 +992,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.translate(msg, values);
     }
 
-    formatNumber(v) {
-        return this.pageModel.formatNumber(v);
+    formatNumber(v, fractionDigits:number=2) {
+        return this.pageModel.formatNumber(v, fractionDigits);
     }
 
     formatDate(d:Date, timeFormat:number=0):string {

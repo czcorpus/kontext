@@ -173,7 +173,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             return {
                 allAttrs: ctFreqStore.getAllAvailAttrs(),
                 attr1: ctFreqStore.getAttr1(),
-                attr2: ctFreqStore.getAttr2()
+                attr2: ctFreqStore.getAttr2(),
+                setupWarning: ctFreqStore.getSetupWarning()
             };
         },
 
@@ -189,7 +190,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             this.setState({
                 allAttrs: ctFreqStore.getAllAvailAttrs(),
                 attr1: ctFreqStore.getAttr1(),
-                attr2: ctFreqStore.getAttr2()
+                attr2: ctFreqStore.getAttr2(),
+                setupWarning: ctFreqStore.getSetupWarning()
             });
         },
 
@@ -203,58 +205,78 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             });
         },
 
+        _renderSetupWarning : function () {
+            if (this.state.setupWarning) {
+                return (
+                    <p className="setup-warning">
+                        <img src={this.createStaticUrl('img/warning-icon.svg')}
+                                alt={this.translate('global__warning')} />
+                        {this.state.setupWarning}
+                    </p>
+                );
+
+            } else {
+                return null;
+            }
+        },
+
         render : function () {
             return (
-                <table className="form CTFreqForm">
-                    <tbody>
-                        <tr>
-                            <td>
-                            </td>
-                            <td colSpan="4">
-                                <label>
-                                    {this.translate('freq__ct_dim2')}:{'\u00a0'}
-                                    <select onChange={this._handleAttrSelChange.bind(this, 2)}
-                                            value={this.state.attr2}>
-                                        {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
-                                    </select>
-                                </label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td rowSpan="4">
-                                <label>
-                                    {this.translate('freq__ct_dim1')}:<br />
-                                    <select onChange={this._handleAttrSelChange.bind(this, 1)}
-                                            value={this.state.attr1}>
-                                        {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
-                                    </select>
-                                </label>
-                            </td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                        </tr>
-                        <tr>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                        </tr>
-                        <tr>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                        </tr>
-                        <tr>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                            <td className="data"><div /></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div className="CTFreqForm">
+                    <div>
+                        {this._renderSetupWarning()}
+                    </div>
+                    <table className="form">
+                        <tbody>
+                            <tr>
+                                <td>
+                                </td>
+                                <td colSpan="4">
+                                    <label>
+                                        {this.translate('freq__ct_dim2')}:{'\u00a0'}
+                                        <select onChange={this._handleAttrSelChange.bind(this, 2)}
+                                                value={this.state.attr2}>
+                                            {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
+                                        </select>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td rowSpan="4">
+                                    <label>
+                                        {this.translate('freq__ct_dim1')}:<br />
+                                        <select onChange={this._handleAttrSelChange.bind(this, 1)}
+                                                value={this.state.attr1}>
+                                            {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
+                                        </select>
+                                    </label>
+                                </td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                            </tr>
+                            <tr>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                            </tr>
+                            <tr>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                            </tr>
+                            <tr>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                                <td className="data"><div /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             );
         }
     });

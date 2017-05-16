@@ -70,7 +70,7 @@ def cached(f):
     """
     @wraps(f)
     def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
-        db = self.db(plugin_api, canonical_corpname(corpus.corpname))
+        db = self.db(plugin_api.user_lang, canonical_corpname(corpus.corpname))
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora, autocomplete_attr)
             ans = self.from_cache(db, key)
@@ -116,16 +116,16 @@ class LiveAttributes(AbstractLiveAttributes):
     def export_actions(self):
         return {concordance.Actions: [filter_attributes, attr_val_autocomplete]}
 
-    def db(self, plugin_api, corpname):
+    def db(self, user_lang, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
 
         arguments:
-        plugin_api --
+        user_lang -- user language (e.g. en_US)
         corpname -- canonical corpus name
         """
         if corpname not in self.databases:
-            db_path = self.corparch.get_corpus_info(plugin_api, corpname).get('metadata', {}).get('database')
+            db_path = self.corparch.get_corpus_info(user_lang, corpname).get('metadata', {}).get('database')
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
@@ -137,7 +137,7 @@ class LiveAttributes(AbstractLiveAttributes):
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
-        return self.db(plugin_api, corpname) is not None
+        return self.db(plugin_api.user_lang, corpname) is not None
 
     def execute_sql(self, db, sql, args=()):
         cursor = db.cursor()
@@ -234,6 +234,42 @@ class LiveAttributes(AbstractLiveAttributes):
                 ans[label][1] = '@' + ans[label][2]
         data[bib_label] = ans.values()
 
+    def get_sattr_pair_sizes(self, corpname, sattr1, sattr2, sattr_values):
+
+        def convert_empty(s):
+            return s if s != '' else None
+
+        def mk_eq_expr(sattr, v, args):
+            if v != '':
+                args.append(v)
+                return '{0} = ?'.format(sattr)
+            else:
+                return '{0} is NULL'.format(sattr)
+
+        db = self.db('en_US', canonical_corpname(corpname))  # we don't care about info localization here
+        where_sql = []
+        where_args = []
+        sattr1, sattr2 = sattr1.replace('.', '_'), sattr2.replace('.', '_')
+        for pair in sattr_values:
+            expr1 = mk_eq_expr(sattr1, pair[0], where_args)
+            expr2 = mk_eq_expr(sattr2, pair[1], where_args)
+            where_sql.append('{0} AND {1}'.format(expr1, expr2))
+        cursor = self.execute_sql(db, 'SELECT {0}, {1}, SUM(poscount) FROM item WHERE {2} GROUP BY {0}, {1}'.format(
+                                  sattr1, sattr2, ' OR '.join(where_sql)), where_args)
+        mapping = {}
+        for row in cursor.fetchall():
+            if row[0] not in mapping:
+                mapping[row[0]] = {}
+            mapping[row[0]][row[1]] = row[2]
+        ans = []
+        for item in sattr_values:
+            ans.append(mapping.get(convert_empty(item[0]), {}).get(convert_empty(item[1]), 0))
+        return ans
+
+    def get_atom_structure(self, corpname):
+        corpus_info = self.corparch.get_corpus_info('en_US', corpname)
+        return corpus_info.metadata.id_attr.split('.')[0]
+
     @cached
     def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """
@@ -250,7 +286,7 @@ class LiveAttributes(AbstractLiveAttributes):
         a dictionary containing matching attributes and values
         """
         corpname = canonical_corpname(corpus.corpname)
-        corpus_info = self.corparch.get_corpus_info(plugin_api, corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_api.user_lang, corpname)
 
         srch_attrs = set(self._get_subcorp_attrs(corpus))
         expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
@@ -277,7 +313,7 @@ class LiveAttributes(AbstractLiveAttributes):
                                            aligned_corpora=aligned_corpora,
                                            autocomplete_attr=self.import_key(autocomplete_attr),
                                            empty_val_placeholder=self.empty_val_placeholder)
-        data_iterator = query.DataIterator(self.db(plugin_api, corpname), query_builder)
+        data_iterator = query.DataIterator(self.db(plugin_api.user_lang, corpname), query_builder)
 
         # initialize result dictionary
         ans = dict((attr, set()) for attr in srch_attrs)
@@ -326,10 +362,10 @@ class LiveAttributes(AbstractLiveAttributes):
         return exported
 
     def get_bibliography(self, plugin_api, corpus, item_id):
-        db = self.db(plugin_api, canonical_corpname(corpus.corpname))
+        db = self.db(plugin_api.user_lang, canonical_corpname(corpus.corpname))
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
-        corpus_info = self.corparch.get_corpus_info(plugin_api, corpus.corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_api.user_lang, corpus.corpname)
         if corpus_info.metadata.sort_attrs:
             col_rows = sorted(col_rows, key=lambda v: v[1])   # here we accept default collator as attr IDs are ASCII
         col_map = OrderedDict([(x[1], x[0]) for x in col_rows])
@@ -339,18 +375,6 @@ class LiveAttributes(AbstractLiveAttributes):
         else:
             ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
         return [(k, ans[i]) for k, i in col_map.items() if k != 'id']
-
-    def get_bib_size(self, corpus):
-        """
-        Returns total number of items in bibliography
-        """
-        db = self.db(canonical_corpname(corpus.corpname))
-        size = self.from_cache(db, 'bib_size')
-        if size is None:
-            ans = self.execute_sql(db, 'SELECT COUNT(*) FROM bibliography').fetchone()
-            size = ans[0]
-            self.to_cache(db, 'bib_size', size)
-        return size
 
 
 @inject('corparch')

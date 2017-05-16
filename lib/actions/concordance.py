@@ -1104,10 +1104,14 @@ class Actions(Querying):
         args.flimit = int(request.args.get('flimit', '1'))
         args.fcrit = request.args.get('fcrit')
         ans = freq_calc.calculate_freqs_ct(args)
+
+        attr1 = request.args.get('attr1')
+        attr2 = request.args.get('attr2')
+
         return dict(
             freq_type='ct',
-            attr1=request.args.get('attr1'),
-            attr2=request.args.get('attr2'),
+            attr1=attr1,
+            attr2=attr2,
             data=ans,
             freq_form_args={}
         )

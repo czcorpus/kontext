@@ -39,6 +39,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                 '#fa9fb5', '#f768a1', '#dd3497',
                 '#ae017e', '#7a0177', '#49006a'
             ];
+            this._handleClickTranspose.bind(this);
         }
 
         _fetchState() {
@@ -52,6 +53,13 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             };
         }
 
+        _handleClickTranspose(evt) {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_TRANSPOSE_TABLE',
+                props: {}
+            });
+        }
+
         _calcColor(v) {
             return this._heatmap[this.state.colorStepFn(v)];
         }
@@ -63,7 +71,10 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                         <tbody>
                             <tr>
                                 <th className="attr-label">
-                                    {this.state.attr1} {'\u005C'} {this.state.attr2}
+                                    <a title={mixins.translate('freq__ct_transpose_table')}
+                                            onClick={this._handleClickTranspose}>
+                                        {this.state.attr1} {'\u005C'} {this.state.attr2}
+                                    </a>
                                 </th>
                                 {this.state.d2Labels.map((label2, i) => <th key={`lab-${i}`} >{label2}</th>)}
                             </tr>
@@ -78,7 +89,12 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                                                 color: color2str(calcTextColorFromBg(importColor(bgColor, 1))),
                                                 backgroundColor: bgColor
                                             };
-                                            return <td key={`c-${i}:${j}`} className="data-cell" style={style}>{v}</td>;
+                                            return (
+                                                <td key={`c-${i}:${j}`} className="data-cell" style={style}
+                                                        title="i.p.m.">
+                                                    {mixins.formatNumber(v || 0, 0)}
+                                                </td>
+                                            );
                                         })}
                                     </tr>
                                 )

@@ -218,7 +218,7 @@ class Kontext(Controller):
         self._files_path = settings.get('global', 'static_files_prefix', u'../files')
         self._lines_groups = LinesGroups(data=[])
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
-        self.get_corpus_info = partial(plugins.get('corparch').get_corpus_info, self._plugin_api)
+        self.get_corpus_info = partial(plugins.get('corparch').get_corpus_info, self._plugin_api.user_lang)
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -1129,6 +1129,12 @@ class Kontext(Controller):
         result['can_send_mail'] = bool(settings.get('mailing'))
 
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
+
+        if plugins.has_plugin('live_attributes'):
+            result['multi_sattr_allowed_structs'] = [
+                plugins.get('live_attributes').get_atom_structure(self.args.corpname)]
+        else:
+            result['multi_sattr_allowed_structs'] = []
 
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)

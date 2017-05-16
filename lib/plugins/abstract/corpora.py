@@ -131,12 +131,12 @@ class AbstractCorporaArchive(object):
     not defined in a KonText core independent way.
     """
 
-    def get_corpus_info(self, plugin_api, corp_id):
+    def get_corpus_info(self, user_lang, corp_id):
         """
         Return a full available corpus information.
 
         arguments:
-        plugin_api --
+        user_lang -- user language (e.g. en_US)
         corp_id -- corpus identifier (both canonical and non-canonical should be accepted)
 
         returns:

@@ -46,6 +46,32 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
+    def get_sattr_pair_sizes(self, corpname, sattr1, sattr2, sattr_values):
+        """
+        Find token numbers for all the provided structural attribute
+        value pairs.
+
+        arguments:
+        corpname -- a corpus identifier
+        sattr1 -- the first structural attribute (e.g. 'doc.genre')
+        sattr2 -- the second structural attribute (e.g' 'doc.pubyear')
+        sattr_values -- a list of value pairs (e.g.: [('fiction', '1980'), ('fiction', '1981'),...])
+        
+        returns:
+        a list of sizes (in tokens) with an order matching sattr_values
+        """
+        raise NotImplementedError()
+
+    def get_atom_structure(self, corpname):
+        """
+        Return a structure name corresponding a single line within
+        metadata database (e.g. 'doc', 'opus').
+
+        arguments:
+        corpname -- a corpus identifier
+        """
+        raise NotImplementedError()
+
     def get_bibliography(self, plugin_api, corpus, item_id):
         """
         Returns a list of 2-tuples (attr_name, attr_value).
