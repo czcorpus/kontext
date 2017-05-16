@@ -58,6 +58,9 @@ initializer.init_plugin('auth')
 initializer.init_plugin('conc_cache')
 initializer.init_plugin('conc_persistence')
 initializer.init_plugin('sessions')
+initializer.init_plugin('user_items')
+initializer.init_plugin('corparch')
+initializer.init_plugin('live_attributes', optional=True)
 
 translation.load_translations(settings.get('global', 'translations'))
 translation.activate('en_US')  # background jobs do not need localization
@@ -275,7 +278,7 @@ def calculate_freqs(args):
 @app.task
 def calculate_freqs_ct(args):
     args = freq_calc.CLFreqCalcArgs(**args)
-    return freq_calc.calc_freqs_ct_bg(args)
+    return freq_calc.CTCalculation(args).run()
 
 
 @app.task

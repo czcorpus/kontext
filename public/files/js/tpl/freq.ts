@@ -94,7 +94,8 @@ class FreqPage {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             attr1: this.layoutModel.getConf<string>('Attr1') || attrs[0].n,
-            attr2: this.layoutModel.getConf<string>('Attr2') || attrs[0].n
+            attr2: this.layoutModel.getConf<string>('Attr2') || attrs[0].n,
+            multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs')
         };
 
 

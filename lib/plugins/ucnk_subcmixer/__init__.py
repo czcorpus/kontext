@@ -123,7 +123,7 @@ class SubcMixer(AbstractSubcMixer):
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
             raise SubcMixerException('Subcorpora based on more than a single structure are not supported at the moment.')
-        corpus_info = self._corparch.get_corpus_info(plugin_api, corpname)
+        corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
         db = Database(db_path=corpus_info.metadata.database, table_name='item', corpus_id=corpus_info.id,
                       id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
 

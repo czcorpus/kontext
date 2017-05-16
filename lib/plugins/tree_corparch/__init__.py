@@ -130,7 +130,7 @@ class TreeCorparch(AbstractCorporaArchive):
     def setup(self, controller_obj):
         pass
 
-    def get_corpus_info(self, plugin_api, corp_id):
+    def get_corpus_info(self, user_lang, corp_id):
         return BrokenCorpusInfo()
 
     def get_list(self, plugin_api, user_allowed_corpora):

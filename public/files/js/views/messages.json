@@ -381,7 +381,9 @@
         "freq__page_invalid_val": "Invalid value (use 1, 2, 3,...)",
         "freq__neg_filter_disabled": "Negative filter cannot be used here.",
         "freq__ct_dim1": "1st dimension",
-        "freq__ct_dim2": "2nd dimension"
+        "freq__ct_dim2": "2nd dimension",
+        "freq__ct_transpose_table": "Transpose table",
+        "freq__ct_only_some_sattr_allowed_{allowed_sattrs}": "In case two structural attributes are selected, only the ones from {allowed_sattrs} are allowed."
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -765,6 +767,8 @@
         "freq__page_invalid_val": "Neplatná hodnota (použijte 1, 2, 3,...)",
         "freq__neg_filter_disabled": "Negativní filtr zde nelze použít.",
         "freq__ct_dim1": "1. dimenze",
-        "freq__ct_dim2": "2. dimenze"
+        "freq__ct_dim2": "2. dimenze",
+        "freq__ct_transpose_table": "Transponovat tabulku",
+        "freq__ct_only_some_sattr_allowed_{allowed_sattrs}": "V případě, že jsou vybrány dva strukturní atributy, lze použít pouze ty, které náleží těmto strukturám: {allowed_sattrs}."
     }
 }

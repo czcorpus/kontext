@@ -240,7 +240,7 @@ class TextTypes(object):
             raise TextTypesException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
-        corpus_info = plugins.get('corparch').get_corpus_info(self._plugin_api, self._corpname)
+        corpus_info = plugins.get('corparch').get_corpus_info(self._plugin_api.user_lang, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
@@ -295,7 +295,7 @@ class TextTypes(object):
         return normslist
 
     def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.get('corparch').get_corpus_info(self._plugin_api, self._corpname)['metadata']
+        metadata = plugins.get('corparch').get_corpus_info(self._plugin_api.user_lang, self._corpname)['metadata']
         for line in tt:
             for item in line.get('Line', ()):
                 item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))

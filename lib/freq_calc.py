@@ -26,9 +26,11 @@ except ImportError:
     import pickle
 from structures import FixedDict
 
+import manatee
 import corplib
 import conclib
 import settings
+import plugins
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
@@ -366,16 +368,68 @@ class CLFreqCalcArgs(FixedDict):
     cache_path = None
 
 
-def calc_freqs_ct_bg(args):
-    """
-    note: this is called by Celery worker
-    """
-    cm = corplib.CorpusManager(subcpath=args.subcpath)
-    corp = cm.get_Corpus(args.corpname, args.subcname)
-    conc = conclib.get_conc(corp=corp, user_id=args.user_id, minsize=args.minsize, q=args.q,
-                            fromp=0, pagesize=0, async=0, save=0, samplesize=0)
-    # TODO limit?
-    return [tuple(x[0].split('\t')) + x[1:] for x in conc.ct_dist(args.fcrit, limit=1)]
+class CTCalculationError(Exception):
+    pass
+
+
+class CTCalculation(object):
+
+    def __init__(self, args):
+        self._args = args
+        self._corp = None
+        self._conc = None
+
+    def _get_num_structattrs(self, attrs):
+        return len([x for x in attrs if '.' in x])
+
+    def _calc_1sattr_norms(self, words, sattr, sattr_idx):
+        norms2_dict = self._conc.get_attr_values_sizes(sattr)
+        return [norms2_dict.get(x[sattr_idx], 0) for x in words]
+
+    def _calc_2sattr_norms(self, words, sattr1, sattr2):
+        if plugins.has_plugin('live_attributes'):
+            return plugins.get('live_attributes').get_sattr_pair_sizes(self._corp.corpname, sattr1, sattr2, words)
+        else:
+            return [1e6] * len(words)
+
+    def ct_dist(self, crit, limit=1):
+        """
+        Calculate join distribution (contingency table).
+        """
+        words = manatee.StrVector()
+        freqs = manatee.NumVector()
+        norms = manatee.NumVector()
+        self._corp.freq_dist(self._conc.RS(), crit, limit, words, freqs, norms)
+
+        crit_lx = re.split(r'\s+', crit)
+        attrs = []
+        for i in range(0, len(crit_lx), 2):
+            attrs.append(crit_lx[i])
+
+        if len(attrs) > 2:
+            raise CTCalculationError('Exactly two attributes (either positional or structural) can be used')
+
+        words = [tuple(self._conc.import_string(w).split('\t')) for w in words]
+
+        num_structattrs = self._get_num_structattrs(attrs)
+        if num_structattrs == 2:
+            norms = self._calc_2sattr_norms(words, attrs[0], attrs[1])
+        elif num_structattrs == 1:
+            sattr_idx = 0 if '.' in attrs[0] else 1
+            norms = self._calc_1sattr_norms(words, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
+        else:
+            norms = [self._corp.size()] * len(words)
+        return zip(words, freqs, norms)
+
+    def run(self):
+        """
+        note: this is called by Celery worker
+        """
+        cm = corplib.CorpusManager(subcpath=self._args.subcpath)
+        self._corp = cm.get_Corpus(self._args.corpname, self._args.subcname)
+        self._conc = conclib.get_conc(corp=self._corp, user_id=self._args.user_id, minsize=self._args.minsize,
+                                      q=self._args.q, fromp=0, pagesize=0, async=0, save=0, samplesize=0)
+        return [x[0] + x[1:] for x in self.ct_dist(self._args.fcrit, limit=1)]
 
 
 def calculate_freqs_ct(args):

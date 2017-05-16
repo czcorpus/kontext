@@ -311,21 +311,32 @@ table.envelope.locked .define-range {
     }
 }
 
+.CTFreqForm {
 
-table.CTFreqForm {
+    .setup-warning {
 
-    td {
-        border: 1px solid @color-light-frame;
-        padding: 0.5em;
+        img {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.7em;
+        }
     }
 
-    td.data {
-        padding: 0;
+    table.form {
 
-        div {
-            margin: 0.5em;
-            height: 1em;
-            background-color: @color-data-table-footer;
+        td {
+            border: 1px solid @color-light-frame;
+            padding: 0.5em;
+        }
+
+        td.data {
+            padding: 0;
+
+            div {
+                margin: 0.5em;
+                height: 1em;
+                background-color: @color-data-table-footer;
+            }
         }
     }
 }

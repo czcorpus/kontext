@@ -43,6 +43,7 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 export interface ContingencyTableFormProperties {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
+    multiSattrAllowedStructs:Array<string>;
     attr1:string;
     attr2:string;
 }
@@ -74,6 +75,10 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private colorStepFn:(v:number)=>number;
 
+    private multiSattrAllowedStructs:Immutable.List<string>;
+
+    private setupWarning:string;
+
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:ContingencyTableFormProperties) {
         super(dispatcher);
@@ -84,12 +89,19 @@ export class ContingencyTableStore extends SimplePageStore {
         this.attr2 = props.attr2;
         this.d1Labels = Immutable.List<string>();
         this.d2Labels = Immutable.List<string>();
+        this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
                     this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
+                    this.validateAttrs();
                     this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_TRANSPOSE_TABLE':
+                    [this.attr1, this.attr2] = [this.attr2, this.attr1];
+                    this.submitForm();
+                    // leaves page here
                 break;
                 case 'FREQ_CT_SUBMIT':
                     this.submitForm();
@@ -107,6 +119,21 @@ export class ContingencyTableStore extends SimplePageStore {
         return args;
     }
 
+    private validateAttrs():void {
+        const isStructAttr = (v:string) => v.indexOf('.') > -1;
+
+        if (isStructAttr(this.attr1) && isStructAttr(this.attr2)
+            && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
+                || this.multiSattrAllowedStructs.indexOf(this.attr2.split('.')[0]) === -1)) {
+            this.setupWarning =
+                this.pageModel.translate('freq__ct_only_some_sattr_allowed_{allowed_sattrs}',
+                                         {allowed_sattrs: this.multiSattrAllowedStructs.join(', ')});
+
+        } else {
+            this.setupWarning = '';
+        }
+    }
+
 
     submitForm():void {
         const args = this.getSubmitArgs();
@@ -117,8 +144,9 @@ export class ContingencyTableStore extends SimplePageStore {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
         const tableData:Data2DTable = {};
-        let fMin = data[0][2];
-        let fMax = data[0][2];
+        const calcIpm = (v:FreqResultResponse.CTFreqResultItem) => v[2] / v[3] * 1e6;
+        let fMin = calcIpm(data[0]);
+        let fMax = calcIpm(data[0]);
 
         data.forEach(item => {
             d1Labels[item[0]] = true;
@@ -127,13 +155,14 @@ export class ContingencyTableStore extends SimplePageStore {
             if (tableData[item[0]] === undefined) {
                 tableData[item[0]] = {};
             }
-            tableData[item[0]][item[1]] = item[2];
+            const ipm = calcIpm(item);
+            tableData[item[0]][item[1]] = ipm;
 
-            if (item[2] > fMax) {
-                fMax = item[2];
+            if (ipm > fMax) {
+                fMax = ipm;
             }
-            if (item[2] < fMin) {
-                fMin = item[2];
+            if (ipm < fMin) {
+                fMin = ipm;
             }
         });
 
@@ -192,5 +221,9 @@ export class ContingencyTableStore extends SimplePageStore {
 
     getAttr2():string {
         return this.attr2;
+    }
+
+    getSetupWarning():string {
+        return this.setupWarning;
     }
 }

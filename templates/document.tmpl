@@ -190,6 +190,7 @@ define('conf', [], function () {
     conf.numQueryOps = $to_json($len($getVar('query_overview', [])));
     conf.ShuffleMinResultWarning = $to_json($shuffle_min_result_warning);
     conf.multilevelFreqDistMaxLevels = $multilevel_freq_dist_max_levels;
+    conf.multiSattrAllowedStructs = $to_json($multi_sattr_allowed_structs);
 
     return conf;
 });

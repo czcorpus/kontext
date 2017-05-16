@@ -311,7 +311,7 @@ class DeafultCorplistProvider(CorplistProvider):
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
         for corp in self._corparch.get_list(plugin_api, permitted_corpora):
-            full_data = self._corparch.get_corpus_info(plugin_api, corp['id'])
+            full_data = self._corparch.get_corpus_info(plugin_api.user_lang, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 keywords = [k for k in full_data['metadata']['keywords'].keys()]
                 tests = []
@@ -625,17 +625,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.metadata.keywords = translated_k
         return ans
 
-    def get_corpus_info(self, plugin_api, corp_name):
+    def get_corpus_info(self, user_lang, corp_name):
         if corp_name:
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
-            language = plugin_api.user_lang
-            if corp_name in self._raw_list(language):
-                if language is not None:
-                    return self._localize_corpus_info(self._raw_list(language)[corp_name],
-                                                      lang_code=language)
+            if corp_name in self._raw_list(user_lang):
+                if user_lang is not None:
+                    return self._localize_corpus_info(self._raw_list(user_lang)[corp_name],
+                                                      lang_code=user_lang)
                 else:
-                    return self._raw_list(language)[corp_name]
+                    return self._raw_list(user_lang)[corp_name]
             return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()

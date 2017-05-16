@@ -148,7 +148,7 @@ class UCNKSubcRestore(AbstractSubcRestore):
             try:
                 corpus_name = subc_queries_map[dk]['corpname']
                 if corpname_matches(corpus_name):
-                    corpus_info = self._corparch.get_corpus_info(plugin_api, corpus_name)
+                    corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpus_name)
                     deleted_items.append({
                         'name': '{0}:{1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
                         'size': None,

@@ -271,7 +271,8 @@ declare module FreqResultResponse {
         concsize:number;
     }
 
-    export type CTFreqResultData = Array<[string, string, number, number]>;
+    export type CTFreqResultItem = [string, string, number, number];
+    export type CTFreqResultData = Array<CTFreqResultItem>;
 
 
 }
