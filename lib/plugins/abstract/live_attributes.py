@@ -62,13 +62,16 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
-    def get_atom_structure(self, corpname):
+    def get_supported_structures(self, corpname):
         """
-        Return a structure name corresponding a single line within
-        metadata database (e.g. 'doc', 'opus').
+        Return a list of structure names the plug-in
+        and its data support for the 'corpname' corpus.
 
         arguments:
         corpname -- a corpus identifier
+
+        returns:
+        a list of structures (e.g. ['doc', 'p'])
         """
         raise NotImplementedError()
 

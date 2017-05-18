@@ -44,6 +44,7 @@ export interface ContingencyTableFormProperties {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
     multiSattrAllowedStructs:Array<string>;
+    queryContainsWithin:boolean;
     attr1:string;
     attr2:string;
 }
@@ -77,7 +78,9 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private multiSattrAllowedStructs:Immutable.List<string>;
 
-    private setupWarning:string;
+    private setupError:string;
+
+    private queryContainsWithin:boolean;
 
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:ContingencyTableFormProperties) {
@@ -90,6 +93,7 @@ export class ContingencyTableStore extends SimplePageStore {
         this.d1Labels = Immutable.List<string>();
         this.d2Labels = Immutable.List<string>();
         this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
+        this.queryContainsWithin = props.queryContainsWithin;
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -104,8 +108,14 @@ export class ContingencyTableStore extends SimplePageStore {
                     // leaves page here
                 break;
                 case 'FREQ_CT_SUBMIT':
-                    this.submitForm();
-                    // leaves page here
+                    if (!this.setupError) {
+                        this.submitForm();
+                        // leaves page here
+
+                    } else {
+                        this.pageModel.showMessage('error', this.setupError);
+                        this.notifyChangeListeners();
+                    }
                 break;
             }
         });
@@ -125,12 +135,14 @@ export class ContingencyTableStore extends SimplePageStore {
         if (isStructAttr(this.attr1) && isStructAttr(this.attr2)
             && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
                 || this.multiSattrAllowedStructs.indexOf(this.attr2.split('.')[0]) === -1)) {
-            this.setupWarning =
-                this.pageModel.translate('freq__ct_only_some_sattr_allowed_{allowed_sattrs}',
-                                         {allowed_sattrs: this.multiSattrAllowedStructs.join(', ')});
+            this.setupError =
+                this.multiSattrAllowedStructs.size > 0 ?
+                    this.pageModel.translate('freq__ct_only_some_sattr_allowed_{allowed_sattrs}',
+                                             {allowed_sattrs: this.multiSattrAllowedStructs.join(', ')}) :
+                    this.pageModel.translate('freq__ct_two_sattrs_not_allowed');
 
         } else {
-            this.setupWarning = '';
+            this.setupError = '';
         }
     }
 
@@ -165,9 +177,6 @@ export class ContingencyTableStore extends SimplePageStore {
                 fMin = ipm;
             }
         });
-
-        console.log('min: ', fMin, ', max: ', fMax);
-
 
         this.colorStepFn = (v) => ~~Math.floor((v - fMin) * 8 / (fMax - fMin));
 
@@ -223,7 +232,11 @@ export class ContingencyTableStore extends SimplePageStore {
         return this.attr2;
     }
 
-    getSetupWarning():string {
-        return this.setupWarning;
+    getSetupError():string {
+        return this.setupError;
+    }
+
+    getQueryContainsWithin():boolean {
+        return this.queryContainsWithin;
     }
 }

@@ -1131,8 +1131,8 @@ class Kontext(Controller):
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
 
         if plugins.has_plugin('live_attributes'):
-            result['multi_sattr_allowed_structs'] = [
-                plugins.get('live_attributes').get_atom_structure(self.args.corpname)]
+            result['multi_sattr_allowed_structs'] = (
+                plugins.get('live_attributes').get_supported_structures(self.args.corpname))
         else:
             result['multi_sattr_allowed_structs'] = []
 
