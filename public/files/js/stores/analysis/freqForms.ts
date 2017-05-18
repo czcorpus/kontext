@@ -34,6 +34,7 @@ export interface FreqFormInputs {
     fttattr:Array<string>;
     ftt_include_empty:boolean;
     flimit:string;
+    freq_sort:string;
 
     mlxattr:Array<string>;
     mlxicase:Array<boolean>;
