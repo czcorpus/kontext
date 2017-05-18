@@ -519,7 +519,7 @@ class Actions(Querying):
             return '[tag="%s"]' % self.args.tag
         else:
             self._save_query(cql, 'cql')
-            return cql
+            return re.sub(r'[\n\r]+', ' ', cql).strip()
 
     def _compile_query(self, qtype=None, cname=''):
         if self._is_err_corpus():
