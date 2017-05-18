@@ -240,6 +240,7 @@ class CentralAuth(AbstractRemoteAuth):
         else:
             logging.getLogger(__name__).error(
                 'Failed to synchronize corpora for user {0}: empty list. Keeping user\'s current list.'.format(user_id))
+        cursor.close()
         src_db.close()
 
     def get_user_info(self, user_id):
