@@ -49,7 +49,8 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                 data: ctFreqDataRowsStore.getData(),
                 colorStepFn: ctFreqDataRowsStore.getColorStepFn(),
                 attr1: ctFreqDataRowsStore.getAttr1(),
-                attr2: ctFreqDataRowsStore.getAttr2()
+                attr2: ctFreqDataRowsStore.getAttr2(),
+                adHocSubcWarning: ctFreqDataRowsStore.getQueryContainsWithin()
             };
         }
 
@@ -64,9 +65,22 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             return this._heatmap[this.state.colorStepFn(v)];
         }
 
+        _renderWarning() {
+            if (this.state.adHocSubcWarning) {
+                return (
+                    <p className="warning">
+                        <img src={mixins.createStaticUrl('img/warning-icon.svg')}
+                                alt={mixins.translate('global__warning')} />
+                        {mixins.translate('freq__ct_uses_ad_hoc_subcorpus_warn')}
+                    </p>
+                );
+            }
+        }
+
         render() {
             return (
                 <div className="CTFreqResultView">
+                    {this._renderWarning()}
                     <table>
                         <tbody>
                             <tr>

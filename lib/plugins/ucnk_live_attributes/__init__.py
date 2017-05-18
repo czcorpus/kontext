@@ -266,9 +266,10 @@ class LiveAttributes(AbstractLiveAttributes):
             ans.append(mapping.get(convert_empty(item[0]), {}).get(convert_empty(item[1]), 0))
         return ans
 
-    def get_atom_structure(self, corpname):
+    def get_supported_structures(self, corpname):
         corpus_info = self.corparch.get_corpus_info('en_US', corpname)
-        return corpus_info.metadata.id_attr.split('.')[0]
+        id_attr = corpus_info.metadata.id_attr
+        return [id_attr.split('.')[0]] if id_attr else []
 
     @cached
     def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):

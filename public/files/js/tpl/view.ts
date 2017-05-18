@@ -974,7 +974,8 @@ export class ViewPage {
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             attr1: attrs[0].n,
             attr2: attrs[0].n,
-            multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs')
+            multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
+            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin')
         };
 
 

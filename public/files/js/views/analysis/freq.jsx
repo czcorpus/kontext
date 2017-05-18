@@ -174,7 +174,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 allAttrs: ctFreqStore.getAllAvailAttrs(),
                 attr1: ctFreqStore.getAttr1(),
                 attr2: ctFreqStore.getAttr2(),
-                setupWarning: ctFreqStore.getSetupWarning()
+                setupError: ctFreqStore.getSetupError()
             };
         },
 
@@ -191,7 +191,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 allAttrs: ctFreqStore.getAllAvailAttrs(),
                 attr1: ctFreqStore.getAttr1(),
                 attr2: ctFreqStore.getAttr2(),
-                setupWarning: ctFreqStore.getSetupWarning()
+                setupError: ctFreqStore.getSetupError()
             });
         },
 
@@ -205,13 +205,13 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             });
         },
 
-        _renderSetupWarning : function () {
-            if (this.state.setupWarning) {
+        _rendersetupError : function () {
+            if (this.state.setupError) {
                 return (
                     <p className="setup-warning">
                         <img src={this.createStaticUrl('img/warning-icon.svg')}
                                 alt={this.translate('global__warning')} />
-                        {this.state.setupWarning}
+                        {this.state.setupError}
                     </p>
                 );
 
@@ -224,7 +224,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             return (
                 <div className="CTFreqForm">
                     <div>
-                        {this._renderSetupWarning()}
+                        {this._rendersetupError()}
                     </div>
                     <table className="form">
                         <tbody>

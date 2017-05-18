@@ -965,6 +965,7 @@ class Actions(Querying):
             self._add_save_menu_item('TXT', 'savefreq', save_params, save_format='text')
             save_params = save_params[:1] + save_params[2:]
             self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_params)
+        result['query_contains_within'] = self._query_contains_within()
         result['freq_type'] = 'default'
         result['freq_form_args'] = dict(
             fttattr=self._request.args.getlist('fttattr'),
@@ -1113,6 +1114,7 @@ class Actions(Querying):
             attr1=attr1,
             attr2=attr2,
             data=ans,
+            query_contains_within=self._query_contains_within(),
             freq_form_args={}
         )
 
@@ -1166,6 +1168,7 @@ class Actions(Querying):
         self._add_save_menu_item('%s...' % _('Custom'), 'savecoll_form', save_args)
 
         ans = coll_calc.calculate_colls(calc_args)
+        ans['query_contains_within'] = self._query_contains_within()
         ans['coll_form_args'] = dict(
             cattr=self.args.cattr,
             cfromw=self.args.cfromw,
