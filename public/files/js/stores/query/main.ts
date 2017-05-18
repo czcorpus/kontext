@@ -202,10 +202,6 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         return this.wPoSList;
     }
 
-    protected sanitizeQuery(query:string):string {
-        return query.replace(/\n/g, ' ');
-    }
-
     protected validateQuery(query:string, queryType:string):boolean {
         let parseFn;
         switch (queryType) {
@@ -538,7 +534,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
             // characters as while the client's cql parser and CQL widget are ok with that
             // server is unable to parse this
             args.add(createArgname(this.queryTypes.get(corpname), corpname),
-                    this.sanitizeQuery(this.queries.get(corpname)));
+                     this.queries.get(corpname));
 
             if (this.lposValues.get(corpname)) {
                 args.add(createArgname('lpos', corpname), this.lposValues.get(corpname));
