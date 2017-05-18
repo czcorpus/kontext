@@ -222,7 +222,7 @@ def build_conc_form_args(data, op_key):
     """
     A factory method to create a conc form args
     instance based on deserialized data from
-    conc_persistnece database.
+    conc_persistence database.
     """
     tp = data['form_type']
     if tp == 'query':

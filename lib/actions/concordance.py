@@ -20,9 +20,9 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs, LgroupOpArgs,
-                   LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
-from querying import Querying
+from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
+                              LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
+from querying import Querying, CQLDetectWithin
 import settings
 import conclib
 import corplib
@@ -36,7 +36,6 @@ from l10n import import_string, corpus_get_conf
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
-from query import CQLDetectWithin
 from main_menu import MenuGenerator
 
 
