@@ -22,6 +22,7 @@ from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
+from argmapping.analytics import CollFormArgs, FreqFormArgs
 from querying import Querying, CQLDetectWithin
 import settings
 import conclib
@@ -245,6 +246,8 @@ class Actions(Querying):
         out['text_types_data'] = json.dumps(tt_data)
         self._store_checked_text_types(self._request, out)
         self._attach_query_params(out)
+        out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
+        out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         self._export_subcorpora_list(self.args.corpname, out)
 
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
@@ -966,12 +969,8 @@ class Actions(Querying):
             self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_params)
         result['query_contains_within'] = self._query_contains_within()
         result['freq_type'] = 'default'
-        result['freq_form_args'] = dict(
-            fttattr=self._request.args.getlist('fttattr'),
-            flimit=self.args.flimit,
-            freq_sort=self.args.freq_sort,
-            ftt_include_empty=self.args.ftt_include_empty
-        )
+        result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
+        result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         return result
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
@@ -1168,15 +1167,8 @@ class Actions(Querying):
 
         ans = coll_calc.calculate_colls(calc_args)
         ans['query_contains_within'] = self._query_contains_within()
-        ans['coll_form_args'] = dict(
-            cattr=self.args.cattr,
-            cfromw=self.args.cfromw,
-            ctow=self.args.ctow,
-            cminfreq=self.args.cminfreq,
-            cminbgr=self.args.cminbgr,
-            csortfn=self.args.csortfn,
-            cbgrfns=self.args.cbgrfns
-        )
+        ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
+        ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         return ans
 
     @exposed(access_level=1, legacy=True)

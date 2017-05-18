@@ -130,15 +130,16 @@ export class CollPage {
 
     initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
-        const currArgs = this.layoutModel.getConf<CollFormInputs>('CollFormArgs');
+        const currArgs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
         const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
+        const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
 
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
-            fttattr: [],
-            ftt_include_empty: false,
-            flimit: '1',
-            freq_sort: 'freq',
+            fttattr: freqFormInputs.fttattr,
+            ftt_include_empty: freqFormInputs.ftt_include_empty,
+            flimit: freqFormInputs.flimit,
+            freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
             mlxattr: [attrs[0].n],
             mlxicase: [false],
