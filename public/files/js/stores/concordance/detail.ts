@@ -310,7 +310,7 @@ export class ConcDetailStore extends SimplePageStore {
         let spkId = null;
 
         function parseTag(name:string, s:string):{[key:string]:string} {
-            const srch = new RegExp(`<${name}(\\s+.*)>`).exec(s);
+            const srch = new RegExp(`<${name}(\\s+[^>]+)>`).exec(s);
             if (srch) {
                 const ignoreAttr = self.speechOpts.speechSegment[0] == name
                         ? self.speechOpts.speechSegment[1] : null;
