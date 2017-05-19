@@ -370,6 +370,11 @@ class Kontext(Controller):
     def _save_options(self, optlist=None, selector=''):
         """
         Saves user's options to a storage
+
+        Arguments:
+        optlist -- a list of options/arguments to be saved
+        selector -- a 'namespace' prefix (typically, a corpus name) used
+                    to attach an option to a specific corpus
         """
         if optlist is None:
             optlist = []

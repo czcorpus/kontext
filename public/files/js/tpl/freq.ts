@@ -63,6 +63,9 @@ class FreqPage {
 
     private initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
+
+        // -------------------- freq form -------------------
+
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
@@ -115,18 +118,21 @@ class FreqPage {
             this.ctFreqStore
         );
 
+        // -------------------- coll form -------------------
+
+        const collFormArgs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
         this.collFormStore = new CollFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
                 attrList: attrs,
                 cattr: attrs[0].n,
-                cfromw: '-1',
-                ctow: '0',
-                cminfreq: '5',
-                cminbgr: '3',
-                cbgrfns: ['t', 'm'],
-                csortfn: 't'
+                cfromw: collFormArgs.cfromw,
+                ctow: collFormArgs.ctow,
+                cminfreq: collFormArgs.cminfreq,
+                cminbgr: collFormArgs.cminbgr,
+                cbgrfns: collFormArgs.cbgrfns,
+                csortfn: collFormArgs.csortfn
             }
         );
 
