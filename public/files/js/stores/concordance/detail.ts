@@ -310,7 +310,7 @@ export class ConcDetailStore extends SimplePageStore {
         let spkId = null;
 
         function parseTag(name:string, s:string):{[key:string]:string} {
-            const srch = new RegExp(`<${name}(\\s+.*)>`).exec(s);
+            const srch = new RegExp(`<${name}(\\s+[^>]+)>`).exec(s);
             if (srch) {
                 const ans:{[key:string]:string} = {};
                 const items = srch[1].trim()
