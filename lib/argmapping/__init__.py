@@ -241,9 +241,10 @@ class GlobalArgs(object):
     cup_hl = Parameter(u'q', persistent=Parameter.PERSISTENT)
     structattrs = Parameter([], persistent=Parameter.PERSISTENT)
 
-    flimit = Parameter(0)
+    flimit = Parameter(1)
     freqlevel = Parameter(1)
     hidenone = Parameter(1)
+    fttattr = Parameter([])
 
     kwicleftctx = Parameter('-10', persistent=Parameter.PERSISTENT)
     kwicrightctx = Parameter('10', persistent=Parameter.PERSISTENT)

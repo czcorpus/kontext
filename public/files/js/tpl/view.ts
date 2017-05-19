@@ -47,8 +47,8 @@ import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg, AttrItem} from '../stores/query/sort';
-import {CollFormStore, CollFormProps} from '../stores/analysis/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormProps} from '../stores/analysis/freqForms';
+import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormProps, FreqFormInputs} from '../stores/analysis/freqForms';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -919,18 +919,19 @@ export class ViewPage {
     initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
         // ------------------ coll ------------
+        const collFormInputs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
         this.collFormStore = new CollFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
                 attrList: attrs,
                 cattr: attrs[0].n,
-                cfromw: '-1',
-                ctow: '0',
-                cminfreq: '5',
-                cminbgr: '3',
-                cbgrfns: ['t', 'm'],
-                csortfn: 't'
+                cfromw: collFormInputs.cfromw,
+                ctow: collFormInputs.ctow,
+                cminfreq: collFormInputs.cminfreq,
+                cminbgr: collFormInputs.cminbgr,
+                cbgrfns: collFormInputs.cbgrfns,
+                csortfn: collFormInputs.csortfn
             }
         );
         this.collFormViews = collFormInit(
@@ -940,12 +941,15 @@ export class ViewPage {
             this.collFormStore
         );
         // ------------------ freq ------------
-        const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
+        const structAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList');
+        const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
+
         const freqFormProps:FreqFormProps = {
             structAttrList: structAttrs,
-            fttattr: [],
-            ftt_include_empty: false,
-            flimit: '1',
+            fttattr: freqFormInputs.fttattr,
+            ftt_include_empty: freqFormInputs.ftt_include_empty,
+            flimit: freqFormInputs.flimit,
+            freq_sort: freqFormInputs.freq_sort,
             attrList: attrs,
             mlxattr: [attrs[0].n],
             mlxicase: [false],

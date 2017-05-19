@@ -20,9 +20,10 @@ from collections import defaultdict
 
 from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
-from query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs, LgroupOpArgs,
-                   LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
-from querying import Querying
+from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
+                              LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
+from argmapping.analytics import CollFormArgs, FreqFormArgs
+from querying import Querying, CQLDetectWithin
 import settings
 import conclib
 import corplib
@@ -36,7 +37,6 @@ from l10n import import_string, corpus_get_conf
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
-from query import CQLDetectWithin
 from main_menu import MenuGenerator
 
 
@@ -246,6 +246,8 @@ class Actions(Querying):
         out['text_types_data'] = json.dumps(tt_data)
         self._store_checked_text_types(self._request, out)
         self._attach_query_params(out)
+        out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
+        out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         self._export_subcorpora_list(self.args.corpname, out)
 
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
@@ -960,11 +962,10 @@ class Actions(Querying):
             self._add_save_menu_item('TXT', 'savefreq', save_params, save_format='text')
             save_params = save_params[:1] + save_params[2:]
             self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_params)
-        result['freq_form_args'] = dict(
-            fttattr=self._request.args.getlist('fttattr'),
-            flimit=self.args.flimit,
-            ftt_include_empty=self.args.ftt_include_empty
-        )
+
+        result['freq_type'] = 'default'
+        result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
+        result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         return result
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
@@ -1132,15 +1133,8 @@ class Actions(Querying):
         self._add_save_menu_item('%s...' % _('Custom'), 'savecoll_form', save_args)
 
         ans = coll_calc.calculate_colls(calc_args)
-        ans['coll_form_args'] = dict(
-            cattr=self.args.cattr,
-            cfromw=self.args.cfromw,
-            ctow=self.args.ctow,
-            cminfreq=self.args.cminfreq,
-            cminbgr=self.args.cminbgr,
-            csortfn=self.args.csortfn,
-            cbgrfns=self.args.cbgrfns
-        )
+        ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
+        ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         return ans
 
     @exposed(access_level=1, legacy=True)

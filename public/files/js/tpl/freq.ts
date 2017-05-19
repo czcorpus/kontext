@@ -55,12 +55,16 @@ class FreqPage {
     }
 
     private initAnalysisViews():void {
-        const attrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList');
+        const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
+
+        // -------------------- freq form -------------------
+
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
         const freqFormProps:FreqFormProps = {
             fttattr: freqFormInputs.fttattr || [],
             ftt_include_empty: freqFormInputs.ftt_include_empty || false,
             flimit: freqFormInputs.flimit || '1',
+            freq_sort: freqFormInputs.freq_sort || 'freq',
             mlxattr: freqFormInputs.mlxattr || [attrs[0].n],
             mlxicase: freqFormInputs.mlxicase || [false],
             mlxctx: freqFormInputs.mlxctx || ['0>0'],
@@ -90,18 +94,21 @@ class FreqPage {
             this.ttFreqStore
         );
 
+        // -------------------- coll form -------------------
+
+        const collFormArgs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
         this.collFormStore = new CollFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
             {
                 attrList: attrs,
                 cattr: attrs[0].n,
-                cfromw: '-1',
-                ctow: '0',
-                cminfreq: '5',
-                cminbgr: '3',
-                cbgrfns: ['t', 'm'],
-                csortfn: 't'
+                cfromw: collFormArgs.cfromw,
+                ctow: collFormArgs.ctow,
+                cminfreq: collFormArgs.cminfreq,
+                cminbgr: collFormArgs.cminbgr,
+                cbgrfns: collFormArgs.cbgrfns,
+                csortfn: collFormArgs.csortfn
             }
         );
 
