@@ -17,13 +17,13 @@
 
 import unittest
 
-import query
+from querying import CQLDetectWithin
 
 
 class CQLDetectWithinTest(unittest.TestCase):
 
     def setUp(self):
-        self.parser = query.CQLDetectWithin()
+        self.parser = CQLDetectWithin()
 
     def test_get_next_token(self):
         struct = ['foo', 'bar', '[', ' ', 'word', ' ', '!=', ' ', 'hit', ']']
