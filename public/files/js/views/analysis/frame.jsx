@@ -87,7 +87,7 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
                 return (
                     <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
                         <layoutViews.CloseableFrame onCloseClick={this._handleCloseClick}
-                                label={this._getTitle()}>
+                                label={this._getTitle()} scrollable={true}>
                             {this._renderContents()}
                         </layoutViews.CloseableFrame>
                     </layoutViews.ModalOverlay>
