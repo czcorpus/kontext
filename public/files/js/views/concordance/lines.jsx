@@ -469,7 +469,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 lines: lineStore.getLines(),
                 lineSelMode: this._getLineSelMode(),
                 numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
-                audioPlayerIsVisible: lineStore.audioPlayerIsVisible()
+                audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
+                useSafeFont: lineStore.getUseSafeFont()
             });
         },
 
@@ -478,7 +479,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 lines: lineStore.getLines(),
                 lineSelMode: this._getLineSelMode(),
                 numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
-                audioPlayerIsVisible: lineStore.audioPlayerIsVisible()
+                audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
+                useSafeFont: lineStore.getUseSafeFont()
             };
         },
 
@@ -534,7 +536,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
         render : function () {
             return (
-                <table id="conclines">
+                <table id="conclines" className={this.state.useSafeFont ? 'safe' : null}>
                     <tbody>
                         {this.props.CorporaColumns.length > 1 ?
                             <ConcColsHeading cols={this.props.CorporaColumns} corpsWithKwic={this.props.KWICCorps}
