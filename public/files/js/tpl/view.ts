@@ -1082,7 +1082,8 @@ export class ViewPage {
             SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
-            catColors: this.extendBaseColorPalette()
+            catColors: this.extendBaseColorPalette(),
+            useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont')
         };
         this.viewStores = new ViewPageStores();
         this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
