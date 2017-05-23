@@ -557,6 +557,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.bib_struct = node.attrib.get('bib_struct', None)
         ans.collator_locale = node.attrib.get('collator_locale', 'en_US')
         ans.sample_size = node.attrib.get('sample_size', -1)
+        ans.use_safe_font = self._decode_bool(node.attrib.get('use_safe_font', 'false'))
         self.customize_corpus_info(ans, node)
 
         ref_elm = node.find('reference')

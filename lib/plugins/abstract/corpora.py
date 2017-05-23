@@ -95,6 +95,7 @@ class CorpusInfo(DictLike):
         self.bib_struct = None
         self.sample_size = -1
         self.collator_locale = 'en_US'  # this does not apply for Manatee functions
+        self.use_safe_font = False
         self.citation_info = CitationInfo()
         self.metadata = CorpusMetadata()
 

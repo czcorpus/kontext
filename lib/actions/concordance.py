@@ -235,6 +235,7 @@ class Actions(Querying):
         out['speaker_id_attr'] = corpus_info.speaker_id_attr.split('.') if corpus_info.speaker_id_attr else None
         out['speech_overlap_attr'] = corpus_info.speech_overlap_attr.split('.') if corpus_info.speech_overlap_attr else None
         out['speech_overlap_val'] = corpus_info.speech_overlap_val
+        out['conc_use_safe_font'] = corpus_info.use_safe_font
         speaker_struct = corpus_info.speaker_id_attr.split('.')[0] if corpus_info.speaker_id_attr else None
         out['speech_attrs'] = map(lambda x: x[1],
                                   filter(lambda x: x[0] == speaker_struct,

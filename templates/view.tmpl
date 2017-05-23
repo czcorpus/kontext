@@ -63,6 +63,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.SpeechAttrs = $to_json($speech_attrs);
     conf.SpeechSegment = $to_json($speech_segment);
     conf.StructCtx = $to_json($struct_ctx);
+    conf.ConcUseSafeFont = $to_json($conc_use_safe_font);
     ## query form
     conf.textTypesData = $text_types_data;
     conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;

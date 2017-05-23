@@ -111,6 +111,8 @@ export interface ViewConfiguration {
 
     canSendEmail:boolean;
 
+    useSafeFont:boolean;
+
     /**
      * If true then client regularly fetches status
      * of the calculation until it is finished.
@@ -273,6 +275,8 @@ export class ConcLineStore extends SimplePageStore {
 
     private adHocIpm:number;
 
+    private useSafeFont:boolean;
+
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
             lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
@@ -293,6 +297,7 @@ export class ConcLineStore extends SimplePageStore {
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
         this.containsWithin = lineViewProps.ContainsWithin;
+        this.useSafeFont = lineViewProps.useSafeFont;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -610,6 +615,10 @@ export class ConcLineStore extends SimplePageStore {
 
     getAudioPlayerStatus():string {
         return ['stop', 'pause', 'play'][this.audioPlayer.getStatus()];
+    }
+
+    getUseSafeFont():boolean {
+        return this.useSafeFont;
     }
 
 }
