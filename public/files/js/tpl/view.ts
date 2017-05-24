@@ -928,7 +928,7 @@ export class ViewPage {
             this.layoutModel,
             {
                 attrList: attrs,
-                cattr: attrs[0].n,
+                cattr: collFormInputs.cattr || attrs[0].n,
                 cfromw: collFormInputs.cfromw,
                 ctow: collFormInputs.ctow,
                 cminfreq: collFormInputs.cminfreq,
