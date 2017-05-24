@@ -190,7 +190,7 @@ export class CollPage {
             this.layoutModel,
             {
                 attrList: attrs,
-                cattr: currArgs.cattr,
+                cattr: currArgs.cattr || attrs[0].n,
                 cfromw: currArgs.cfromw,
                 ctow: currArgs.ctow,
                 cminfreq: currArgs.cminfreq,

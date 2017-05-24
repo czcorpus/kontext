@@ -126,7 +126,7 @@ class FreqPage {
             this.layoutModel,
             {
                 attrList: attrs,
-                cattr: attrs[0].n,
+                cattr: collFormArgs.cattr || attrs[0].n,
                 cfromw: collFormArgs.cfromw,
                 ctow: collFormArgs.ctow,
                 cminfreq: collFormArgs.cminfreq,
