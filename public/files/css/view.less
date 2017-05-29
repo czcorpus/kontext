@@ -501,12 +501,17 @@ tr.even {
 
 /* spoken corpus */
 
-a.speech-link {
+a.speech-link,
+span.speech-link {
     font-size: 120%;
     color: #9ce;
     font-weight: bold;
     text-decoration: none;
     padding: 0 0.1em 0 0.1em;
+}
+
+span.speech-link.disabled {
+    color: @color-light-grey;
 }
 
 .active a.speech-link {
