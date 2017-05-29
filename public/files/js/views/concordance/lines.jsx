@@ -82,6 +82,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     const AudioLink = React.createClass({
 
+        mixins,
+
         _getChar : function () {
             return {'L': '\u00A0[\u00A0', '+': '\u00A0+\u00A0', 'R': '\u00A0]\u00A0'}[this.props.t];
         },
@@ -96,6 +98,19 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
             });
         },
 
+        _canStartPlayback : function () {
+            const chunks = (this.props.chunks || []);
+            for (let i = 0; i < chunks.length; i += 1) {
+                if (chunks[i].openLink && chunks[i].openLink.speechPath) {
+                    return true;
+                }
+                if (chunks[i].closeLink && chunks[i].closeLink.speechPath) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
         render : function () {
             if (this.props.chunks.length == 1
                     && this.props.chunks[this.props.chunks.length - 1].showAudioPlayer) {
@@ -106,8 +121,13 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                     </span>
                 );
 
+            } else if (this._canStartPlayback()) {
+                return <a className="speech-link" onClick={this._handleClick}
+                            title={this.translate('concview__click_to_play_audio')}>{this._getChar()}</a>;
+
             } else {
-                return <a className="speech-link" onClick={this._handleClick}>{this._getChar()}</a>;
+                return <span className="speech-link disabled"
+                            title={this.translate('concview__segment_has_no_playback_data')}>{this._getChar(0)}</span>;
             }
         }
     });
@@ -281,7 +301,6 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
     const Line = React.createClass({
 
         mixins : mixins,
-
 
         _renderLeftChunk : function (item, i, itemList) {
             const ans = [];
