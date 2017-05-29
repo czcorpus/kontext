@@ -103,7 +103,7 @@ PhraseQuery =
 // ---------------- Regular expression with balanced parentheses --------
 
 RegExp =
-    QUOT RegExpRaw QUOT
+    QUOT RegExpRaw QUOT / QUOT QUOT
 
 RegExpRaw =
     (RgGrouped / RgSimple)+
