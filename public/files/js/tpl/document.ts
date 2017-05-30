@@ -685,7 +685,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         let urlArgs = '';
         if (args !== undefined) {
             urlArgs = args
-                .filter(item => item[1] !== null && item[1] !== undefined && item[1] !== '')
+                .filter(item => item[1] !== null && item[1] !== undefined)
                 .map(item => encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]))
                 .join('&');
         }

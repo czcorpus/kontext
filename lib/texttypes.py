@@ -172,7 +172,6 @@ class TextTypeCollector(object):
             a list of tuples (struct, condition); strings are encoded to the encoding current
             corpus uses!
             """
-
             scas = [(a[4:], self._access_fn(self._src_obj, a))
                     for a in self._attr_producer_fn(self._src_obj) if a.startswith('sca_')]
             structs = {}
@@ -183,10 +182,7 @@ class TextTypeCollector(object):
                 if type(v) is list:
                     expr_items = []
                     for v1 in v:
-                        if v1 != '':
-                            if v1 == TextTypeCollector.EMPTY_VAL_PLACEHOLDER:
-                                v1 = ''
-                            expr_items.append('%s="%s"' % (a, l10n.escape(v1)))
+                        expr_items.append('%s="%s"' % (a, l10n.escape(v1)))
                     if len(expr_items) > 0:
                         query = '(%s)' % ' | '.join(expr_items)
                     else:
