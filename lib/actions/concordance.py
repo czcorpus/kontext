@@ -1114,7 +1114,8 @@ class Actions(Querying):
             attr2=attr2,
             data=ans,
             query_contains_within=self._query_contains_within(),
-            freq_form_args={}
+            freq_form_args=FreqFormArgs().update(self.args).to_dict(),
+            coll_form_args=CollFormArgs().update(self.args).to_dict()
         )
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
