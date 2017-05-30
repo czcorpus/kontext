@@ -584,9 +584,7 @@ class Kontext(Controller):
             json_data = json.loads(req_args.getvalue('json'))
             named_args.update(json_data)
         for k in req_args.keys():
-            # must remove empty values, this should be achieved by
-            # keep_blank_values=0, but it does not work for POST requests
-            if len(req_args.getvalue(k)) > 0:
+            if len(req_args.getlist(k)) > 0:
                 key = str(k)
                 val = req_args.getvalue(k)
                 if key in self.PARAM_TYPES:
