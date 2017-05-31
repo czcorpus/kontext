@@ -39,8 +39,12 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
     return 0;
 };
 
+export interface ContingencyTableFormInputs {
+    ctminfreq:string;
+}
 
-export interface ContingencyTableFormProperties {
+
+export interface ContingencyTableFormProperties extends ContingencyTableFormInputs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
     multiSattrAllowedStructs:Array<string>;
@@ -82,6 +86,8 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private queryContainsWithin:boolean;
 
+    private minAbsFreq:string;
+
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:ContingencyTableFormProperties) {
         super(dispatcher);
@@ -94,6 +100,7 @@ export class ContingencyTableStore extends SimplePageStore {
         this.d2Labels = Immutable.List<string>();
         this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
         this.queryContainsWithin = props.queryContainsWithin;
+        this.minAbsFreq = props.ctminfreq;
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -117,8 +124,21 @@ export class ContingencyTableStore extends SimplePageStore {
                         this.notifyChangeListeners();
                     }
                 break;
+                case 'FREQ_CT_SET_MIN_ABS_FREQ':
+                    if (this.validateMinAbsFreqAttr(payload.props['value'])) {
+                        this.minAbsFreq = payload.props['value'];
+
+                    } else {
+                        this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
+                    }
+                    this.notifyChangeListeners();
+                break;
             }
         });
+    }
+
+    private validateMinAbsFreqAttr(v:string):boolean {
+        return /^(0?|([1-9][0-9]*))$/.exec(v) !== null;
     }
 
     private getSubmitArgs():MultiDict {
@@ -238,5 +258,9 @@ export class ContingencyTableStore extends SimplePageStore {
 
     getQueryContainsWithin():boolean {
         return this.queryContainsWithin;
+    }
+
+    getMinAbsFreq():string {
+        return this.minAbsFreq;
     }
 }

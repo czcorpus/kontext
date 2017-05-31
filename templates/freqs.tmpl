@@ -31,6 +31,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.AttrList = $to_json($getVar('AttrList', []));
     conf.StructAttrList = $to_json($getVar('StructAttrList', []));
     conf.FreqFormProps = $to_json($freq_form_args);
+    conf.CTFreqFormProps = $to_json($ctfreq_form_args);
     conf.CollFormProps = $to_json($coll_form_args);
     #if $freq_type == 'default':
     conf.FreqResultData = $to_json($Blocks);

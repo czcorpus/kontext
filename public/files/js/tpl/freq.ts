@@ -29,7 +29,7 @@ import {MultiDict, dictToPairs} from '../util';
 import {bind as bindPopupBox} from '../popupbox';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {ContingencyTableStore, ContingencyTableFormProperties} from '../stores/freqs/ctable';
+import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
@@ -93,13 +93,15 @@ class FreqPage {
             freqFormProps
         );
 
+        const ctFormInputs = this.layoutModel.getConf<ContingencyTableFormInputs>('CTFreqFormProps');
         const ctFormProps:ContingencyTableFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             attr1: this.layoutModel.getConf<string>('Attr1') || attrs[0].n,
             attr2: this.layoutModel.getConf<string>('Attr2') || attrs[0].n,
             multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
-            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin')
+            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
+            ctminfreq: ctFormInputs.ctminfreq
         };
 
 

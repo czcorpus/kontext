@@ -22,7 +22,7 @@ from kontext import MainMenu, LinesGroups, Kontext
 from controller import UserActionException, exposed
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
-from argmapping.analytics import CollFormArgs, FreqFormArgs
+from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from querying import Querying, CQLDetectWithin
 import settings
 import conclib
@@ -249,6 +249,7 @@ class Actions(Querying):
         self._attach_query_params(out)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
+        out['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         self._export_subcorpora_list(self.args.corpname, out)
 
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
@@ -972,6 +973,7 @@ class Actions(Querying):
         result['freq_type'] = 'default'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
+        result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         return result
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
@@ -1115,7 +1117,8 @@ class Actions(Querying):
             data=ans,
             query_contains_within=self._query_contains_within(),
             freq_form_args=FreqFormArgs().update(self.args).to_dict(),
-            coll_form_args=CollFormArgs().update(self.args).to_dict()
+            coll_form_args=CollFormArgs().update(self.args).to_dict(),
+            ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
         )
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
@@ -1171,6 +1174,7 @@ class Actions(Querying):
         ans['query_contains_within'] = self._query_contains_within()
         ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
+        ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         return ans
 
     @exposed(access_level=1, legacy=True)
