@@ -54,7 +54,47 @@ export interface ContingencyTableFormProperties extends ContingencyTableFormInpu
 }
 
 
-type Data2DTable = {[d1:string]:{[d2:string]:number}};
+
+interface CTFreqCell {
+    abs:number;
+    ipm:number;
+    domainSize:number;
+    bgColor:string;
+}
+
+type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
+
+
+const filterDataTable = (t:Data2DTable, cond:(cell:CTFreqCell)=>boolean):Data2DTable => {
+    const ans:Data2DTable = {};
+    for (let k1 in t) {
+        for (let k2 in t[k1]) {
+            if (ans[k1] === undefined) {
+                ans[k1] = {};
+            }
+            if (cond(t[k1][k2])) {
+                ans[k1][k2] = t[k1][k2];
+
+            } else {
+                ans[k1][k2] = undefined;
+            }
+        }
+    }
+    return ans;
+};
+
+const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTable => {
+    const ans:Data2DTable = {};
+    for (let k1 in t) {
+        for (let k2 in t[k1]) {
+            if (ans[k1] === undefined) {
+                ans[k1] = {};
+            }
+            ans[k1][k2] = fn(t[k1][k2]);
+        }
+    }
+    return ans;
+}
 
 
 /**
@@ -78,8 +118,6 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private d2Labels:Immutable.List<string>;
 
-    private colorStepFn:(v:number)=>number;
-
     private multiSattrAllowedStructs:Immutable.List<string>;
 
     private setupError:string;
@@ -87,6 +125,10 @@ export class ContingencyTableStore extends SimplePageStore {
     private queryContainsWithin:boolean;
 
     private minAbsFreq:string;
+
+    private static colorHeatmap = [
+        '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
+    ];
 
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:ContingencyTableFormProperties) {
@@ -172,6 +214,8 @@ export class ContingencyTableStore extends SimplePageStore {
         window.location.href = this.pageModel.createActionUrl('freqct', args.items());
     }
 
+
+
     importData(data:FreqResultResponse.CTFreqResultData):void {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
@@ -188,7 +232,12 @@ export class ContingencyTableStore extends SimplePageStore {
                 tableData[item[0]] = {};
             }
             const ipm = calcIpm(item);
-            tableData[item[0]][item[1]] = ipm;
+            tableData[item[0]][item[1]] = {
+                ipm: ipm,
+                abs: item[2],
+                domainSize: item[3],
+                bgColor: undefined
+            };
 
             if (ipm > fMax) {
                 fMax = ipm;
@@ -198,11 +247,16 @@ export class ContingencyTableStore extends SimplePageStore {
             }
         });
 
-        this.colorStepFn = (v) => ~~Math.floor((v - fMin) * 8 / (fMax - fMin));
-
         this.d1Labels = Immutable.List<string>(Object.keys(d1Labels).sort());
         this.d2Labels = Immutable.List<string>(Object.keys(d2Labels).sort());
-        this.data = tableData;
+        this.data = mapDataTable(tableData, (cell) => {
+            return {
+                ipm: cell.ipm,
+                abs: cell.abs,
+                domainSize: cell.domainSize,
+                bgColor: ContingencyTableStore.colorHeatmap[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))]
+            };
+        });
     }
 
     getData():any {
@@ -215,10 +269,6 @@ export class ContingencyTableStore extends SimplePageStore {
 
     getD2Labels():Immutable.List<string> {
         return this.d2Labels;
-    }
-
-    getColorStepFn():(v:number)=>number {
-        return this.colorStepFn;
     }
 
     /**

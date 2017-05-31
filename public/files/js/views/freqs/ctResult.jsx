@@ -29,16 +29,34 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
     /**
      *
      */
+    class CTCell extends React.Component {
+
+        render() {
+            if (this.props.data) {
+                const style = {
+                    color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1))),
+                    backgroundColor: this.props.data.bgColor
+                };
+                return (
+                    <td className="data-cell" style={style} title="i.p.m.">
+                        {mixins.formatNumber(this.props.data.ipm || 0, 1)}
+                    </td>
+                );
+
+            } else {
+                return <td className="data-cell">-</td>;
+            }
+        }
+    }
+
+    /**
+     *
+     */
     class CTFreqResultView extends React.Component {
 
         constructor(props) {
             super(props);
             this.state = this._fetchState();
-            this._heatmap = [
-                '#fff7f3', '#fde0dd', '#fcc5c0',
-                '#fa9fb5', '#f768a1', '#dd3497',
-                '#ae017e', '#7a0177', '#49006a'
-            ];
             this._handleClickTranspose.bind(this);
         }
 
@@ -47,7 +65,6 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                 d1Labels: ctFreqDataRowsStore.getD1Labels(),
                 d2Labels: ctFreqDataRowsStore.getD2Labels(),
                 data: ctFreqDataRowsStore.getData(),
-                colorStepFn: ctFreqDataRowsStore.getColorStepFn(),
                 attr1: ctFreqDataRowsStore.getAttr1(),
                 attr2: ctFreqDataRowsStore.getAttr2(),
                 adHocSubcWarning: ctFreqDataRowsStore.getQueryContainsWithin()
@@ -59,10 +76,6 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                 actionType: 'FREQ_CT_TRANSPOSE_TABLE',
                 props: {}
             });
-        }
-
-        _calcColor(v) {
-            return this._heatmap[this.state.colorStepFn(v)];
         }
 
         _renderWarning() {
@@ -97,18 +110,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                                     <tr key={`row-${i}`}>
                                         <th className="vert">{label1}</th>
                                         {this.state.d2Labels.map((label2, j) => {
-                                            const v = this.state.data[label1][label2];
-                                            const bgColor = this._calcColor(v);
-                                            const style = {
-                                                color: color2str(calcTextColorFromBg(importColor(bgColor, 1))),
-                                                backgroundColor: bgColor
-                                            };
-                                            return (
-                                                <td key={`c-${i}:${j}`} className="data-cell" style={style}
-                                                        title="i.p.m.">
-                                                    {mixins.formatNumber(v || 0, 0)}
-                                                </td>
-                                            );
+                                            return <CTCell data={this.state.data[label1][label2]} key={`c-${i}:${j}`} />;
                                         })}
                                     </tr>
                                 )
