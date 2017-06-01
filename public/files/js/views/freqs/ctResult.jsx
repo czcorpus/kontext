@@ -206,18 +206,37 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
         }
 
         _getValue() {
-            switch (this.props.quantity) {
-                case 'ipm':
-                    return this.props.data.ipm;
-                case 'abs':
-                    return this.props.data.abs;
-                default:
-                    return NaN;
+            if (this._isNonEmpty()) {
+                switch (this.props.quantity) {
+                    case 'ipm':
+                        return mixins.formatNumber(this.props.data.ipm, 1);
+                    case 'abs':
+                        return mixins.formatNumber(this.props.data.abs, 0);
+                    default:
+                        return NaN;
+                }
+
+            } else {
+                return '';
             }
         }
 
+        _isNonEmpty() {
+            const v = (() => {
+                switch (this.props.quantity) {
+                    case 'ipm':
+                        return this.props.data ? this.props.data.ipm : 0;
+                    case 'abs':
+                        return this.props.data ? this.props.data.abs : 0;
+                    default:
+                        return NaN;
+                }
+            })();
+            return v > 0;
+        }
+
         render() {
-            if (this.props.data) {
+            if (this._isNonEmpty()) {
                 const style = {
                     color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1))),
                     backgroundColor: this.props.data.bgColor
@@ -226,12 +245,12 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                     <td className="data-cell" style={style} onMouseOut={this._onMouseOut}
                             onMouseOver={this._onMouseOver}>
                         {this._renderPFilter()}
-                        {mixins.formatNumber(this._getValue(), 1)}
+                        {this._getValue()}
                     </td>
                 );
 
             } else {
-                return <td className="data-cell">-</td>;
+                return <td className="empty-cell" />;
             }
         }
     }
