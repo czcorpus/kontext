@@ -312,7 +312,7 @@ export class ContingencyTableStore extends SimplePageStore {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
         const tableData:Data2DTable = {};
-        const calcIpm = (v:FreqResultResponse.CTFreqResultItem) => v[2] / v[3] * 1e6;
+        const calcIpm = (v:FreqResultResponse.CTFreqResultItem) => Math.round(v[2] / v[3] * 1e6 * 10) / 10;
         let fMin = calcIpm(data[0]);
         let fMax = calcIpm(data[0]);
 
