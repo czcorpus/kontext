@@ -391,7 +391,8 @@
         "freq__ct_min_freq_val_error": "Invalid value (use values 0, 1, 2,...)",
         "freq__ct_cell_pfilter_label": "View a respective concordance (positive filter)",
         "freq__ct_quantity_label": "Quantity",
-        "freq__ct_parameters_legend": "Parameters"
+        "freq__ct_parameters_legend": "Parameters",
+        "freq__ct_hide_zero_vectors": "Hide zero rows and columns"
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -785,6 +786,7 @@
         "freq__ct_min_freq_val_error": "Neplatná hodnota (použijte 0, 1, 2,...)",
         "freq__ct_cell_pfilter_label": "Zobrazit příslušnou konkordanci (pozitivní filtr)",
         "freq__ct_quantity_label": "Veličina",
-        "freq__ct_parameters_legend": "Parametry"
+        "freq__ct_parameters_legend": "Parametry",
+        "freq__ct_hide_zero_vectors": "Schovat nulové řádky a sloupce"
     }
 }

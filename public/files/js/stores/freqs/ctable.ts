@@ -118,9 +118,9 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private origData:Data2DTable;
 
-    private d1Labels:Immutable.List<string>;
+    private d1Labels:Immutable.List<[string, boolean]>;
 
-    private d2Labels:Immutable.List<string>;
+    private d2Labels:Immutable.List<[string, boolean]>;
 
     private multiSattrAllowedStructs:Immutable.List<string>;
 
@@ -129,6 +129,8 @@ export class ContingencyTableStore extends SimplePageStore {
     private queryContainsWithin:boolean;
 
     private minAbsFreq:string;
+
+    private filterZeroVectors:boolean;
 
     private static colorHeatmap = [
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
@@ -142,11 +144,13 @@ export class ContingencyTableStore extends SimplePageStore {
         this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
         this.attr1 = props.attr1;
         this.attr2 = props.attr2;
-        this.d1Labels = Immutable.List<string>();
-        this.d2Labels = Immutable.List<string>();
+        this.d1Labels = Immutable.List<[string, boolean]>();
+        this.d2Labels = Immutable.List<[string, boolean]>();
         this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
         this.queryContainsWithin = props.queryContainsWithin;
         this.minAbsFreq = props.ctminfreq;
+        this.filterZeroVectors = false;
+
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -158,12 +162,12 @@ export class ContingencyTableStore extends SimplePageStore {
                 case 'FREQ_CT_TRANSPOSE_TABLE':
                     [this.attr1, this.attr2] = [this.attr2, this.attr1];
                     this.submitForm();
-                    // leaves page here
+                    // leaves the page here
                 break;
                 case 'FREQ_CT_SUBMIT':
                     if (!this.setupError) {
                         this.submitForm();
-                        // leaves page here
+                        // leaves the page here
 
                     } else {
                         this.pageModel.showMessage('error', this.setupError);
@@ -174,9 +178,7 @@ export class ContingencyTableStore extends SimplePageStore {
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
                         this.minAbsFreq = payload.props['value'];
                         if (this.data) {
-                            this.data = filterDataTable(this.origData, (item) => {
-                                return item && item.abs >= parseInt(this.minAbsFreq || '0', 10);
-                            });
+                            this.updateData();
                         }
 
                     } else {
@@ -184,8 +186,63 @@ export class ContingencyTableStore extends SimplePageStore {
                     }
                     this.notifyChangeListeners();
                 break;
+                case 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY':
+                    this.filterZeroVectors = payload.props['value'];
+                    this.updateData();
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_QUICK_FILTER_CONCORDANCE':
+                    alert('NOT IMPLEMENTED YET :-(');
+                break;
             }
         });
+    }
+
+
+    private updateData():void {
+        this.data = filterDataTable(this.origData, (item) => {
+            return item && item.abs >= parseInt(this.minAbsFreq || '0', 10);
+        });
+        if (this.filterZeroVectors) {
+            this.removeZeroVectors();
+
+        } else {
+            this.d1Labels = this.d1Labels.map<[string, boolean]>(x => [x[0], true]).toList();
+            this.d2Labels = this.d2Labels.map<[string, boolean]>(x => [x[0], true]).toList();
+        }
+    }
+
+    private removeZeroVectors():void {
+        const counts1 = [];
+        for (let i = 0; i < this.d1Labels.size; i += 1) {
+            counts1.push(0);
+        }
+        const counts2 = [];
+        for (let i = 0; i < this.d2Labels.size; i += 1) {
+            counts2.push(0);
+        }
+
+        this.d1Labels.forEach((d1, i1) => {
+            this.d2Labels.forEach((d2, i2) => {
+                if (!this.data[d1[0]][d2[0]] || this.data[d1[0]][d2[0]].abs === 0) {
+                    counts1[i1] += 1;
+                    counts2[i2] += 1;
+                }
+            });
+        });
+        const remove1 = counts1.map(x => x === counts2.length);
+        this.d1Labels = this.d1Labels.map<[string, boolean]>((item, i) => {
+            return [item[0], !remove1[i]];
+        }).toList();
+        const remove2 = counts2.map(x => x === counts1.length);
+        this.d2Labels = this.d2Labels.map<[string, boolean]>((item, i) => {
+            return [item[0], !remove2[i]];
+        }).toList();
+    }
+
+
+    private resetData():void {
+        this.data = this.origData;
     }
 
     private getSubmitArgs():MultiDict {
@@ -283,8 +340,9 @@ export class ContingencyTableStore extends SimplePageStore {
             }
         });
 
-        this.d1Labels = Immutable.List<string>(Object.keys(d1Labels).sort());
-        this.d2Labels = Immutable.List<string>(Object.keys(d2Labels).sort());
+        this.d1Labels = Immutable.List<[string, boolean]>(Object.keys(d1Labels).sort().map(x => [x, true]));
+        this.d2Labels = Immutable.List<[string, boolean]>(Object.keys(d2Labels).sort().map(x => [x, true]));
+
         this.data = mapDataTable(tableData, (cell) => {
             return {
                 ipm: cell.ipm,
@@ -301,11 +359,11 @@ export class ContingencyTableStore extends SimplePageStore {
         return this.data;
     }
 
-    getD1Labels():Immutable.List<string> {
+    getD1Labels():Immutable.List<[string, boolean]> {
         return this.d1Labels;
     }
 
-    getD2Labels():Immutable.List<string> {
+    getD2Labels():Immutable.List<[string, boolean]> {
         return this.d2Labels;
     }
 
@@ -350,5 +408,9 @@ export class ContingencyTableStore extends SimplePageStore {
 
     getMinAbsFreq():string {
         return this.minAbsFreq;
+    }
+
+    getFilterZeroVectors():boolean {
+        return this.filterZeroVectors;
     }
 }

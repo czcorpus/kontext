@@ -42,10 +42,13 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
 
         render() {
             return (
-                <select value={this.props.currValue} onChange={this._handleSelectChange}>
-                    <option value="ipm">i.p.m.</option>
-                    <option value="abs">absolute freq.</option>
-                </select>
+                <label>
+                    {mixins.translate('freq__ct_quantity_label')}:{'\u00a0'}
+                    <select value={this.props.currValue} onChange={this._handleSelectChange}>
+                        <option value="ipm">i.p.m.</option>
+                        <option value="abs">absolute freq.</option>
+                    </select>
+                </label>
             );
         }
     }
@@ -68,8 +71,41 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
         }
 
         render() {
-            return  <input type="text" style={{width: '3em'}} value={this.props.currVal}
-                            onChange={this._handleInputChange} />;
+            return (
+                <label>
+                    {mixins.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                    <input type="text" style={{width: '3em'}} value={this.props.currVal}
+                            onChange={this._handleInputChange} />
+                </label>
+            );
+        }
+    }
+
+    /**
+     *
+     */
+    class EmptyVectorVisibilitySwitch extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._handleCheckboxChange = this._handleCheckboxChange.bind(this);
+        }
+
+        _handleCheckboxChange(evt) {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY',
+                props: {value: evt.target.checked}
+            });
+        }
+
+        render() {
+            return (
+                <label>
+                    {mixins.translate('freq__ct_hide_zero_vectors')}:{'\u00a0'}
+                    <input type="checkbox" onChange={this._handleCheckboxChange}
+                            checked={this.props.hideEmptyVectors} />
+                </label>
+            );
         }
     }
 
@@ -89,16 +125,13 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                         <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
                         <ul className="items">
                             <li>
-                                <label>
-                                    {mixins.translate('freq__ct_quantity_label')}:{'\u00a0'}
-                                    <QuantitySelect currVal={this.props.viewQuantity} changeQuantity={this.props.changeQuantity} />
-                                </label>
+                                <QuantitySelect currVal={this.props.viewQuantity} changeQuantity={this.props.changeQuantity} />
                             </li>
                             <li>
-                                <label>
-                                    {mixins.translate('freq__ct_min_freq_label')}:{'\u00a0'}
-                                    <MinFreqInput currVal={this.props.minAbsFreq} />
-                                </label>
+                                <MinFreqInput currVal={this.props.minAbsFreq} />
+                            </li>
+                            <li>
+                                <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
                             </li>
                         </ul>
                     </fieldset>
@@ -111,6 +144,11 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
      *
      */
     class CTCellPNFilter extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._handlePosClick = this._handlePosClick.bind(this);
+        }
 
         _handlePosClick(evt) {
             dispatcher.dispatch({
@@ -185,7 +223,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                     backgroundColor: this.props.data.bgColor
                 };
                 return (
-                    <td className="data-cell" style={style} title="i.p.m." onMouseOut={this._onMouseOut}
+                    <td className="data-cell" style={style} onMouseOut={this._onMouseOut}
                             onMouseOver={this._onMouseOver}>
                         {this._renderPFilter()}
                         {mixins.formatNumber(this._getValue(), 1)}
@@ -220,7 +258,8 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                 attr2: ctFreqDataRowsStore.getAttr2(),
                 adHocSubcWarning: ctFreqDataRowsStore.getQueryContainsWithin(),
                 minAbsFreq: ctFreqDataRowsStore.getMinAbsFreq(),
-                viewQuantity: 'ipm'
+                viewQuantity: 'ipm',
+                hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors()
             };
         }
 
@@ -238,7 +277,9 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
         }
 
         _handleStoreChange() {
-            this.setState(this._fetchState());
+            const newState = this._fetchState();
+            newState.viewQuantity = this.state.viewQuantity;
+            this.setState(newState);
         }
 
         componentDidMount() {
@@ -261,13 +302,24 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             }
         }
 
+        _labels1() {
+            return this.state.d1Labels.filter(x => x[1]).map(x => x[0]);
+        }
+
+        _labels2() {
+            return this.state.d2Labels.filter(x => x[1]).map(x => x[0]);
+        }
+
         render() {
             return (
                 <div className="CTFreqResultView">
                     {this._renderWarning()}
                     <div className="toolbar">
-                        <CTTableModForm minAbsFreq={this.state.minAbsFreq} viewQuantity={this.state.viewQuantity}
-                                changeQuantity={this._changeQuantity} />
+                        <CTTableModForm
+                                minAbsFreq={this.state.minAbsFreq}
+                                viewQuantity={this.state.viewQuantity}
+                                changeQuantity={this._changeQuantity}
+                                hideEmptyVectors={this.state.hideEmptyVectors} />
                     </div>
                     <table>
                         <tbody>
@@ -278,13 +330,13 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                                         {this.state.attr1} {'\u005C'} {this.state.attr2}
                                     </a>
                                 </th>
-                                {this.state.d2Labels.map((label2, i) => <th key={`lab-${i}`} >{label2}</th>)}
+                                {this._labels2().map((label2, i) => <th key={`lab-${i}`} >{label2}</th>)}
                             </tr>
-                            {this.state.d1Labels.map((label1, i) => {
+                            {this._labels1().map((label1, i) => {
                                 return (
                                     <tr key={`row-${i}`}>
                                         <th className="vert">{label1}</th>
-                                        {this.state.d2Labels.map((label2, j) => {
+                                        {this._labels2().map((label2, j) => {
                                             return <CTCell data={this.state.data[label1][label2]} key={`c-${i}:${j}`}
                                                             quantity={this.state.viewQuantity} />;
                                         })}
