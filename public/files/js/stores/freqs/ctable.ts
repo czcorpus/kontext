@@ -21,6 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
@@ -60,6 +61,7 @@ interface CTFreqCell {
     ipm:number;
     domainSize:number;
     bgColor:string;
+    pfilter:string;
 }
 
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
@@ -113,6 +115,8 @@ export class ContingencyTableStore extends SimplePageStore {
     private attr2:string;
 
     private data:Data2DTable;
+
+    private origData:Data2DTable;
 
     private d1Labels:Immutable.List<string>;
 
@@ -169,6 +173,11 @@ export class ContingencyTableStore extends SimplePageStore {
                 case 'FREQ_CT_SET_MIN_ABS_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
                         this.minAbsFreq = payload.props['value'];
+                        if (this.data) {
+                            this.data = filterDataTable(this.origData, (item) => {
+                                return item && item.abs >= parseInt(this.minAbsFreq || '0', 10);
+                            });
+                        }
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
@@ -179,16 +188,31 @@ export class ContingencyTableStore extends SimplePageStore {
         });
     }
 
-    private validateMinAbsFreqAttr(v:string):boolean {
-        return /^(0?|([1-9][0-9]*))$/.exec(v) !== null;
-    }
-
     private getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
         args.set('fcrit', `${this.attr1} 0 ${this.attr2} 0`);
         args.set('attr1', this.attr1);
         args.set('attr2', this.attr2);
         return args;
+    }
+
+    private reloadData():RSVP.Promise<any> { // TODO
+        const args = this.getSubmitArgs();
+        args.set('format', 'json');
+        return this.pageModel.ajax(
+            'GET',
+            this.pageModel.createActionUrl('freqct'),
+            args
+
+        ).then(
+            (data:any) => { // TODO type
+                this.importData(data);
+            }
+        )
+    }
+
+    private validateMinAbsFreqAttr(v:string):boolean {
+        return /^(0?|([1-9][0-9]*))$/.exec(v) !== null;
     }
 
     private validateAttrs():void {
@@ -214,6 +238,17 @@ export class ContingencyTableStore extends SimplePageStore {
         window.location.href = this.pageModel.createActionUrl('freqct', args.items());
     }
 
+    private generatePFilter(v1:string, v2:string):string {
+        if (this.attr1.indexOf('.') === -1) { // positional attr or a struct number
+            if (this.availAttrList.find(x => x.n === this.attr1)) {
+
+            }
+
+        } else { // structure
+
+        }
+        return ""; // TODO
+    }
 
 
     importData(data:FreqResultResponse.CTFreqResultData):void {
@@ -236,7 +271,8 @@ export class ContingencyTableStore extends SimplePageStore {
                 ipm: ipm,
                 abs: item[2],
                 domainSize: item[3],
-                bgColor: undefined
+                bgColor: undefined,
+                pfilter: this.generatePFilter(item[0], item[1]),
             };
 
             if (ipm > fMax) {
@@ -254,9 +290,11 @@ export class ContingencyTableStore extends SimplePageStore {
                 ipm: cell.ipm,
                 abs: cell.abs,
                 domainSize: cell.domainSize,
-                bgColor: ContingencyTableStore.colorHeatmap[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))]
+                bgColor: ContingencyTableStore.colorHeatmap[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))],
+                pfilter: cell.pfilter
             };
         });
+        this.origData = this.data;
     }
 
     getData():any {
