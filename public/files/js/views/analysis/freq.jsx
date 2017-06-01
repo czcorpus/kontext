@@ -162,6 +162,31 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
         }
     });
 
+    // -------------------- <CTFreqFormMinFreqInput /> --------------------------------------------
+
+    const CTFreqFormMinFreqInput = React.createClass({
+
+        mixins : mixins,
+
+        _handleInputChange : function (evt) {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_MIN_ABS_FREQ',
+                props: {
+                    value: evt.target.value
+                }
+            });
+        },
+
+        render : function () {
+            return (
+                <label>
+                    {this.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                    <input type="text" onChange={this._handleInputChange}
+                            value={this.props.value} style={{width: '3em'}} />
+                </label>
+            );
+        }
+    });
 
     // -------------------- <CTFreqForm /> --------------------------------------------
 
@@ -169,13 +194,18 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
 
         mixins: mixins,
 
-        getInitialState : function () {
+        _fetchState : function () {
             return {
                 allAttrs: ctFreqStore.getAllAvailAttrs(),
                 attr1: ctFreqStore.getAttr1(),
                 attr2: ctFreqStore.getAttr2(),
+                minAbsFreq: ctFreqStore.getMinAbsFreq(),
                 setupError: ctFreqStore.getSetupError()
             };
+        },
+
+        getInitialState : function () {
+            return this._fetchState();
         },
 
         componentDidMount : function () {
@@ -187,12 +217,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
         },
 
         _storeChangeHandler : function () {
-            this.setState({
-                allAttrs: ctFreqStore.getAllAvailAttrs(),
-                attr1: ctFreqStore.getAttr1(),
-                attr2: ctFreqStore.getAttr2(),
-                setupError: ctFreqStore.getSetupError()
-            });
+            this.setState(this._fetchState());
         },
 
         _handleAttrSelChange : function (dimension, evt) {
@@ -225,6 +250,9 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 <div className="CTFreqForm">
                     <div>
                         {this._rendersetupError()}
+                    </div>
+                    <div className="toolbar">
+                            <CTFreqFormMinFreqInput value={this.state.minAbsFreq} />
                     </div>
                     <table className="form">
                         <tbody>

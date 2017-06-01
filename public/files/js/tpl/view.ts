@@ -49,7 +49,7 @@ import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {ContingencyTableStore, ContingencyTableFormProperties} from '../stores/freqs/ctable';
+import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -972,13 +972,15 @@ export class ViewPage {
         );
 
         // ------------------ contingency table ----------
+        const ctFormInputs = this.layoutModel.getConf<ContingencyTableFormInputs>('CTFreqFormProps');
         const ctFormProps:ContingencyTableFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             attr1: attrs[0].n,
             attr2: attrs[0].n,
             multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
-            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin')
+            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
+            ctminfreq: ctFormInputs.ctminfreq
         };
 
 

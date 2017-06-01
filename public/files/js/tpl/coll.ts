@@ -23,7 +23,7 @@ import * as $ from 'jquery';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {ContingencyTableStore, ContingencyTableFormProperties} from '../stores/freqs/ctable';
+import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
@@ -160,13 +160,15 @@ export class CollPage {
             freqFormProps
         );
 
+        const ctFormInputs = this.layoutModel.getConf<ContingencyTableFormInputs>('CTFreqFormProps');
         const ctFormProps:ContingencyTableFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             attr1: attrs[0].n,
             attr2: attrs[0].n,
             multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
-            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin')
+            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
+            ctminfreq: ctFormInputs.ctminfreq
         };
 
 
