@@ -75,6 +75,10 @@ export class ConcDetailStore extends SimplePageStore {
 
     private static ATTR_NAME_ALLOWED_CHARS:string = 'a-zA-Z0-9_';
 
+    private static SPK_OVERLAP_MODE_FULL:string = 'full';
+
+    private static SPK_OVERLAP_MODE_SIMPLE:string = 'simple';
+
     private layoutModel:PageModel;
 
     private linesStore:ConcLineStore;
@@ -109,6 +113,8 @@ export class ConcDetailStore extends SimplePageStore {
 
     private wideCtxGlobals:Array<[string, string]>;
 
+    private spkOverlapMode:string;
+
     /**
      * Either 'default' or 'speech'.
      * An initial mode is inferred from speechOpts
@@ -141,6 +147,8 @@ export class ConcDetailStore extends SimplePageStore {
         this.wholeDocumentLoaded = false;
         this.speakerColors = Immutable.List<Kontext.RGBAColor>(speakerColors.map(item => importColor(item, ConcDetailStore.SPK_LABEL_OPACITY)));
         this.speakerColorsAttachments = Immutable.Map<string, Kontext.RGBAColor>();
+        this.spkOverlapMode = (speechOpts.speechOverlapAttr || [])[1] ?
+                ConcDetailStore.SPK_OVERLAP_MODE_FULL : ConcDetailStore.SPK_OVERLAP_MODE_SIMPLE;
         this.expandLeftArgs = Immutable.List<ExpandArgs>();
         this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.audioPlayer = new AudioPlayer(
@@ -338,7 +346,7 @@ export class ConcDetailStore extends SimplePageStore {
         }
 
         function isOverlap(s1:Speech, s2:Speech):boolean {
-            if (s1 && s2 && self.speechOpts.speechOverlapAttr) {
+            if (s1 && s2 && self.spkOverlapMode === ConcDetailStore.SPK_OVERLAP_MODE_FULL) {
                 const flag1 = s1.metadata.get(self.speechOpts.speechOverlapAttr[1]);
                 const flag2 = s2.metadata.get(self.speechOpts.speechOverlapAttr[1]);
                 if (flag1 === flag2
@@ -375,10 +383,10 @@ export class ConcDetailStore extends SimplePageStore {
             });
             return ans;
         }
-
         let currSpeech:Speech = createNewSpeech('\u2026', null, {});
         let prevSpeech:Speech = null;
         const tmp:Array<Speech> = [];
+
         this.concDetail.forEach((item, i) => {
             if (item.class === 'strc') {
                 const attrs = parseTag(this.speechOpts.speakerIdAttr[0], item.str);
@@ -401,6 +409,22 @@ export class ConcDetailStore extends SimplePageStore {
                     const attrs = parseTag(this.speechOpts.speechSegment[0], item.str);
                     if (attrs) {
                         currSpeech.segments = currSpeech.segments.push(attrs[this.speechOpts.speechSegment[1]]);
+                    }
+
+                }
+                if (this.spkOverlapMode === ConcDetailStore.SPK_OVERLAP_MODE_SIMPLE) {
+                    const overlapSrch = new RegExp(`</?(${this.speechOpts.speechOverlapAttr[0]})(>|[^>]+>)`, 'g');
+                    let srch;
+                    let i = 0;
+                    while ((srch = overlapSrch.exec(item.str)) !== null) {
+                        if (srch[0].indexOf('</') === 0
+                                && item.str.indexOf(`<${this.speechOpts.speakerIdAttr[0]}`) > 0) {
+                            prevSpeech.text.push({str: srch[0], class: item.class});
+
+                        } else {
+                            currSpeech.text.push({str: srch[0], class: item.class});
+                        }
+                        i += 1;
                     }
                 }
 
@@ -459,6 +483,17 @@ export class ConcDetailStore extends SimplePageStore {
         const args = this.speechAttrs
                 .map(x => `${this.speechOpts.speakerIdAttr[0]}.${x}`)
                 .concat([this.speechOpts.speechSegment.join('.')]);
+
+        const [overlapStruct, overlapAttr] = (this.speechOpts.speechOverlapAttr || [undefined, undefined]);
+        if (overlapStruct !== this.speechOpts.speakerIdAttr[0]
+                && structs.indexOf(overlapStruct) === -1) {
+            if (overlapStruct && overlapAttr) {
+                args.push(`${overlapStruct}.${overlapAttr}`);
+
+            } else if (overlapStruct) {
+                args.push(overlapStruct);
+            }
+        }
         return this.loadConcDetail(corpusId, tokenNum, kwicLength, lineIdx, args, expand);
     }
 
