@@ -118,7 +118,7 @@ RgAlt =
     LBRACKET (RgChar / DASH)+ RBRACKET
 
 RgChar =
-    RgEscaped / Letter / [,\-] / [0-9\?\*\+\.\|]
+    RgEscaped / Letter / [,\- ] / [0-9\?\*\+\.\|]
 
 RgEscaped =
     '\\{' / '\\}' / '\\(' / '\\)' / '\\[' / '\\]' / '\\?' / '\\!'
