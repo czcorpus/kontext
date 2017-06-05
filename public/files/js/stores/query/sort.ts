@@ -220,12 +220,14 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
     }
 
     private createSubmitArgs(sortId:string):MultiDict {
+        const val2List = (v) => v ? [v] : [];
+
         const args = this.pageModel.getConcArgs();
-        args.replace('sattr', [this.sattrValues.get(sortId)]);
-        args.replace('skey', [this.skeyValues.get(sortId)]);
-        args.replace('sbward', [this.sbwardValues.get(sortId)]);
-        args.replace('sicase', [this.sicaseValues.get(sortId)]);
-        args.replace('spos', [this.sposValues.get(sortId)]);
+        args.replace('sattr', val2List(this.sattrValues.get(sortId)));
+        args.replace('skey', val2List(this.skeyValues.get(sortId)));
+        args.replace('sbward', val2List(this.sbwardValues.get(sortId)));
+        args.replace('sicase', val2List(this.sicaseValues.get(sortId)));
+        args.replace('spos', val2List(this.sposValues.get(sortId)));
         return args;
     }
 
