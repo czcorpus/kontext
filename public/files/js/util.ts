@@ -217,8 +217,13 @@ export class MultiDict implements Kontext.IMultiDict {
      * with a provided list of values.
      */
     replace(key:string, values:Array<string>):void {
-        this[key] = values[0];
-        this._data[key] = values || [];
+        if (values.length > 0) {
+            this[key] = values[0];
+            this._data[key] = values || [];
+
+        } else {
+            this.remove(key);
+        }
     }
 
     remove(key:string):void {
