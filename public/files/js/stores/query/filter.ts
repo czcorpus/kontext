@@ -21,14 +21,12 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../../ts/declarations/cqlParser.d.ts" />
 
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 import {MultiDict} from '../../util';
-import {parse as parseQuery} from 'cqlParser/parser';
 import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';
 import {GeneralQueryFormProperties, GeneralQueryStore} from './main';
