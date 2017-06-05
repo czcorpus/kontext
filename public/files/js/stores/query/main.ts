@@ -203,28 +203,25 @@ export abstract class GeneralQueryStore extends SimplePageStore {
     }
 
     protected validateQuery(query:string, queryType:string):boolean {
-        let parseFn;
-        switch (queryType) {
-            case 'iquery':
-                parseFn = () => {
-                    if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
-                        throw new Error();
+        const parseFn = ((query:string) => {
+            switch (queryType) {
+                case 'iquery':
+                    return () => {
+                        if (!!(/^"[^\"]+"$/.exec(query) || /^(\[(\s*\w+\s*!?=\s*"[^"]*"(\s*[&\|])?)+\]\s*)+$/.exec(query))) {
+                            throw new Error();
+                        }
                     }
-                }
-            break;
-            case 'phrase':
-                parseFn = parseQuery.bind(null, query, {startRule: 'PhraseQuery'});
-            break;
-            case 'lemma':
-            case 'word':
-                parseFn = parseQuery.bind(null, query, {startRule: 'RegExpRaw'});
-            break;
-            case 'cql':
-                parseFn = parseQuery.bind(null, query + ';');
-            break;
-            default:
-                parseFn = () => {};
-        }
+                case 'phrase':
+                    return parseQuery.bind(null, query, {startRule: 'PhraseQuery'});
+                case 'lemma':
+                case 'word':
+                    return parseQuery.bind(null, query, {startRule: 'RegExpRaw'});
+                case 'cql':
+                    return parseQuery.bind(null, query + ';');
+                default:
+                    return () => {};
+            }
+        })(query.trim());
 
         let mismatch;
         try {
