@@ -24,194 +24,191 @@ import React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 
 
-export function init(dispatcher, mixins, ctFreqDataRowsStore) {
+export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
 
     /**
      *
      */
-    class QuantitySelect extends React.Component {
+    const QuantitySelect = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleSelectChange = this._handleSelectChange.bind(this);
-        }
+        const handleSelectChange = (evt) => {
+            props.changeQuantity(evt.target.value);
+        };
 
-        _handleSelectChange(evt) {
-            this.props.changeQuantity(evt.target.value);
-        }
-
-        render() {
-            return (
-                <label>
-                    {mixins.translate('freq__ct_quantity_label')}:{'\u00a0'}
-                    <select value={this.props.currValue} onChange={this._handleSelectChange}>
-                        <option value="ipm">i.p.m.</option>
-                        <option value="abs">absolute freq.</option>
-                    </select>
-                </label>
-            );
-        }
-    }
+        return (
+            <label>
+                {mixins.translate('freq__ct_quantity_label')}:{'\u00a0'}
+                <select value={props.currValue} onChange={handleSelectChange}>
+                    <option value="ipm">i.p.m.</option>
+                    <option value="abs">absolute freq.</option>
+                </select>
+            </label>
+        );
+    };
 
     /**
      *
      */
-    class MinFreqInput extends React.Component {
+    const MinFreqInput = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleInputChange = this._handleInputChange.bind(this);
-        }
-
-        _handleInputChange(evt) {
+        const handleInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_SET_MIN_ABS_FREQ',
                 props: {value: evt.target.value}
             });
-        }
+        };
 
-        render() {
-            return (
-                <label>
-                    {mixins.translate('freq__ct_min_freq_label')}:{'\u00a0'}
-                    <input type="text" style={{width: '3em'}} value={this.props.currVal}
-                            onChange={this._handleInputChange} />
-                </label>
-            );
-        }
-    }
+        return (
+            <label>
+                {mixins.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                <input type="text" style={{width: '3em'}} value={props.currVal}
+                        onChange={handleInputChange} />
+            </label>
+        );
+    };
 
     /**
      *
      */
-    class EmptyVectorVisibilitySwitch extends React.Component {
+    const EmptyVectorVisibilitySwitch = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleCheckboxChange = this._handleCheckboxChange.bind(this);
-        }
-
-        _handleCheckboxChange(evt) {
+        const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY',
                 props: {value: evt.target.checked}
             });
-        }
+        };
 
-        render() {
-            return (
-                <label>
-                    {mixins.translate('freq__ct_hide_zero_vectors')}:{'\u00a0'}
-                    <input type="checkbox" onChange={this._handleCheckboxChange}
-                            checked={this.props.hideEmptyVectors} />
-                </label>
-            );
-        }
-    }
+        return (
+            <label>
+                {mixins.translate('freq__ct_hide_zero_vectors')}:{'\u00a0'}
+                <input type="checkbox" onChange={handleCheckboxChange}
+                        checked={props.hideEmptyVectors} />
+            </label>
+        );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    const TransposeTableCheckbox = (props) => {
+        const handleClickTranspose = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_TRANSPOSE_TABLE',
+                props: {}
+            });
+        };
+
+        return (
+            <label>
+                {mixins.translate('freq__ct_transpose_table')}:{'\u00a0'}
+                <input type="checkbox" checked={props.isChecked} onChange={handleClickTranspose} />
+            </label>
+        );
+    };
 
     /**
      *
      */
-    class CTTableModForm extends React.Component {
+    const CTTableModForm = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
-
-        render() {
-            return (
-                <form>
-                    <fieldset>
-                        <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
-                        <ul className="items">
-                            <li>
-                                <QuantitySelect currVal={this.props.viewQuantity} changeQuantity={this.props.changeQuantity} />
-                            </li>
-                            <li>
-                                <MinFreqInput currVal={this.props.minAbsFreq} />
-                            </li>
-                            <li>
-                                <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
-                            </li>
-                        </ul>
-                    </fieldset>
-                </form>
-            );
-        }
-    }
+        return (
+            <form>
+                <fieldset>
+                    <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
+                    <ul className="items">
+                        <li>
+                            <QuantitySelect currVal={props.viewQuantity} changeQuantity={props.changeQuantity} />
+                        </li>
+                        <li>
+                            <MinFreqInput currVal={props.minAbsFreq} />
+                        </li>
+                        <li>
+                            <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
+                        </li>
+                        <li>
+                            <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
+                        </li>
+                    </ul>
+                </fieldset>
+            </form>
+        );
+    };
 
     /**
      *
      */
-    class CTCellPNFilter extends React.Component {
+    const CTCellMenu = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handlePosClick = this._handlePosClick.bind(this);
-        }
-
-        _handlePosClick(evt) {
+        const handlePosClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_QUICK_FILTER_CONCORDANCE',
                 props: {
-                    args: this.props.pfilter
+                    args: props.pfilter
                 }
             });
-        }
+        };
 
-        render() {
-            return (
-                <span>
-                    {'('}
-                    <a onClick={this._handlePosClick}
-                            title={mixins.translate('freq__ct_cell_pfilter_label')}>p</a>
-                    {')\u00a0'}
-                </span>
-            );
-        }
+        const handleCloseClick = () => {
+            props.onClose();
+        };
 
-    }
+        return (
+            <layoutViews.PopupBox onCloseClick={handleCloseClick} customClass="menu">
+                <fieldset className="detail">
+                    <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
+                    {mixins.translate('freq__ct_ipm_freq_label')}:
+                    {'\u00a0'}{mixins.formatNumber(props.data.ipm, 1)}
+                    <br />
+                    {mixins.translate('freq__ct_abs_freq_label')}:
+                    {'\u00a0'}{mixins.formatNumber(props.data.abs, 0)}
+                </fieldset>
+                <form>
+                    <fieldset>
+                        <legend>{mixins.translate('freq__ct_pfilter_legend')}</legend>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>
+                                        {props.attr1}:
+                                    </th>
+                                    <td>
+                                        <input type="text" readonly value={props.label1} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        {props.attr2}:
+                                    </th>
+                                    <td>
+                                        <input type="text" readonly value={props.label2} />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" className="default-button"
+                                onClick={handlePosClick}>
+                            {mixins.translate('freq__ct_pfilter_btn_label')}
+                        </button>
+                    </fieldset>
+                </form>
+            </layoutViews.PopupBox>
+        );
+    };
 
     /**
      *
      */
-    class CTCell extends React.Component {
+    const CTCell = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.state = {
-                pfilterVisible: false
-            };
-            this._onMouseOut = this._onMouseOut.bind(this);
-            this._onMouseOver = this._onMouseOver.bind(this);
-            this._mouseTimer = null;
-        }
-
-        _onMouseOver() {
-            window.clearTimeout(this._mouseTimer);
-            this.setState({pfilterVisible: true});
-        }
-
-        _onMouseOut() {
-            this._mouseTimer = window.setTimeout(() => {
-                this.setState({pfilterVisible: false});
-            }, 100);
-        }
-
-        _renderPFilter() {
-            if (this.state.pfilterVisible) {
-                return <CTCellPNFilter  />;
-            }
-            return null;
-        }
-
-        _getValue() {
-            if (this._isNonEmpty()) {
-                switch (this.props.quantity) {
+        const getValue = () => {
+            if (isNonEmpty()) {
+                switch (props.quantity) {
                     case 'ipm':
-                        return mixins.formatNumber(this.props.data.ipm, 1);
+                        return mixins.formatNumber(props.data.ipm, 1);
                     case 'abs':
-                        return mixins.formatNumber(this.props.data.abs, 0);
+                        return mixins.formatNumber(props.data.abs, 0);
                     default:
                         return NaN;
                 }
@@ -219,41 +216,55 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             } else {
                 return '';
             }
-        }
+        };
 
-        _isNonEmpty() {
+        const isNonEmpty = () => {
             const v = (() => {
-                switch (this.props.quantity) {
+                switch (props.quantity) {
                     case 'ipm':
-                        return this.props.data ? this.props.data.ipm : 0;
+                        return props.data ? props.data.ipm : 0;
                     case 'abs':
-                        return this.props.data ? this.props.data.abs : 0;
+                        return props.data ? props.data.abs : 0;
                     default:
                         return NaN;
                 }
             })();
             return v > 0;
-        }
+        };
 
-        render() {
-            if (this._isNonEmpty()) {
-                const style = {
-                    color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1))),
-                    backgroundColor: this.props.data.bgColor
-                };
-                return (
-                    <td className="data-cell" style={style} onMouseOut={this._onMouseOut}
-                            onMouseOver={this._onMouseOver}>
-                        {this._renderPFilter()}
-                        {this._getValue()}
-                    </td>
-                );
+        const handleItemClick = () => {
+            props.onClick();
+        };
+
+        if (isNonEmpty()) {
+            const bgStyle = {};
+            const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
+            const tdClasses = ['data-cell'];
+            if (props.isHighlighted) {
+                tdClasses.push('highlighted');
 
             } else {
-                return <td className="empty-cell" />;
+                bgStyle['backgroundColor'] = props.data.bgColor;
             }
+            return (
+                <td className={tdClasses.join(' ')} style={bgStyle}>
+                    <a onClick={handleItemClick} style={linkStyle}
+                            title={mixins.translate('freq__ct_click_for_details')}>
+                        {getValue()}
+                    </a>
+                    {props.isHighlighted ? <CTCellMenu onClose={props.onClose}
+                                                        data={props.data}
+                                                        attr1={props.attr1}
+                                                        label1={props.label1}
+                                                        attr2={props.attr2}
+                                                        label2={props.label2} /> : null}
+                </td>
+            );
+
+        } else {
+            return <td className="empty-cell" />;
         }
-    }
+    };
 
     /**
      *
@@ -263,9 +274,10 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
         constructor(props) {
             super(props);
             this.state = this._fetchState();
-            this._handleClickTranspose = this._handleClickTranspose.bind(this);
             this._changeQuantity = this._changeQuantity.bind(this);
             this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._highlightItem = this._highlightItem.bind(this);
+            this._resetHighlight = this._resetHighlight.bind(this);
         }
 
         _fetchState() {
@@ -278,6 +290,8 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                 adHocSubcWarning: ctFreqDataRowsStore.getQueryContainsWithin(),
                 minAbsFreq: ctFreqDataRowsStore.getMinAbsFreq(),
                 viewQuantity: 'ipm',
+                highlightedCoord: null,
+                transposeIsChecked: ctFreqDataRowsStore.getIsTransposed(),
                 hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors()
             };
         }
@@ -288,16 +302,10 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             this.setState(state);
         }
 
-        _handleClickTranspose(evt) {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_TRANSPOSE_TABLE',
-                props: {}
-            });
-        }
-
         _handleStoreChange() {
             const newState = this._fetchState();
             newState.viewQuantity = this.state.viewQuantity;
+            newState.highlightedCoord = this.state.highlightedCoord;
             this.setState(newState);
         }
 
@@ -310,7 +318,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
         }
 
         _renderWarning() {
-            if (this.state.adHocSubcWarning) {
+            if (this.state.adHocSpfilterVisibleubcWarning) {
                 return (
                     <p className="warning">
                         <img src={mixins.createStaticUrl('img/warning-icon.svg')}
@@ -329,6 +337,35 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             return this.state.d2Labels.filter(x => x[1]).map(x => x[0]);
         }
 
+        _resetHighlight() {
+            const newState = this._fetchState();
+            newState.viewQuantity = this.state.viewQuantity;
+            newState.highlightedCoord = null;
+            this.setState(newState);
+        }
+
+        _highlightItem(i, j) {
+            this._resetHighlight();
+            const newState = this._fetchState();
+            newState.viewQuantity = this.state.viewQuantity;
+            newState.highlightedCoord = [i, j];
+            this.setState(newState);
+        }
+
+        _isHighlighted(i, j) {
+            return this.state.highlightedCoord !== null &&
+                    this.state.highlightedCoord[0] === i &&
+                    this.state.highlightedCoord[1] === j;
+        }
+
+        _isHighlightedRow(i) {
+            return this.state.highlightedCoord !== null && this.state.highlightedCoord[0] === i;
+        }
+
+        _isHighlightedCol(j) {
+            return this.state.highlightedCoord !== null && this.state.highlightedCoord[1] === j;
+        }
+
         render() {
             return (
                 <div className="CTFreqResultView">
@@ -338,26 +375,37 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                                 minAbsFreq={this.state.minAbsFreq}
                                 viewQuantity={this.state.viewQuantity}
                                 changeQuantity={this._changeQuantity}
-                                hideEmptyVectors={this.state.hideEmptyVectors} />
+                                hideEmptyVectors={this.state.hideEmptyVectors}
+                                transposeIsChecked={this.state.transposeIsChecked} />
                     </div>
-                    <table>
+                    <table className="ct-data">
                         <tbody>
                             <tr>
                                 <th className="attr-label">
-                                    <a title={mixins.translate('freq__ct_transpose_table')}
-                                            onClick={this._handleClickTranspose}>
-                                        {this.state.attr1} {'\u005C'} {this.state.attr2}
-                                    </a>
+                                    {this.state.attr1} {'\u005C'} {this.state.attr2}
                                 </th>
-                                {this._labels2().map((label2, i) => <th key={`lab-${i}`} >{label2}</th>)}
+                                {this._labels2().map((label2, i) =>
+                                    <th key={`lab-${i}`} className={this._is}
+                                        className={this._isHighlightedCol(i) ? 'highlighted' : null}>{label2}</th>)}
                             </tr>
                             {this._labels1().map((label1, i) => {
+                                const htmlClass = ['vert'];
+                                if (this._isHighlightedRow(i)) {
+                                    htmlClass.push('highlighted');
+                                }
                                 return (
                                     <tr key={`row-${i}`}>
-                                        <th className="vert">{label1}</th>
+                                        <th className={htmlClass.join(' ')}><span>{label1}</span></th>
                                         {this._labels2().map((label2, j) => {
                                             return <CTCell data={this.state.data[label1][label2]} key={`c-${i}:${j}`}
-                                                            quantity={this.state.viewQuantity} />;
+                                                            quantity={this.state.viewQuantity}
+                                                            onClick={()=>this._highlightItem(i, j)}
+                                                            onClose={this._resetHighlight}
+                                                            attr1={this.state.attr1}
+                                                            label1={label1}
+                                                            attr2={this.state.attr2}
+                                                            label2={label2}
+                                                            isHighlighted={this._isHighlighted(i, j)} />;
                                         })}
                                     </tr>
                                 )

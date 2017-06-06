@@ -358,5 +358,6 @@ declare module "views/freqs/ctResult" {
         CTFreqResultView: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, ctFreqDataRowsStore:any):CTFreqsResultViews;
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
+            ctFreqDataRowsStore:any):CTFreqsResultViews;
 }

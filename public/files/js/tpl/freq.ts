@@ -248,6 +248,7 @@ class FreqPage {
                 const ctFreqResultView = ctResultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentTools(),
+                    this.layoutModel.layoutViews,
                     this.ctFreqStore
                 );
                 this.layoutModel.renderReactComponent(
