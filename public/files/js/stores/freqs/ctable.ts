@@ -149,7 +149,7 @@ export class ContingencyTableStore extends SimplePageStore {
         this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
         this.queryContainsWithin = props.queryContainsWithin;
         this.minAbsFreq = props.ctminfreq;
-        this.filterZeroVectors = false;
+        this.filterZeroVectors = true;
 
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
