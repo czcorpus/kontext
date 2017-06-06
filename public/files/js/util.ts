@@ -198,7 +198,7 @@ export class MultiDict implements Kontext.IMultiDict {
     }
 
     getList(key:string):Array<string> {
-        return this._data[key];
+        return this._data[key] !== undefined ? this._data[key] : [];
     }
 
     /**
