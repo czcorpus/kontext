@@ -111,6 +111,26 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
 
     /**
      *
+     * @param {*} props
+     */
+    const TransposeTableCheckbox = (props) => {
+        const handleClickTranspose = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_TRANSPOSE_TABLE',
+                props: {}
+            });
+        };
+
+        return (
+            <label>
+                {mixins.translate('freq__ct_transpose_table')}:{'\u00a0'}
+                <input type="checkbox" checked={props.isChecked} onChange={handleClickTranspose} />
+            </label>
+        );
+    }
+
+    /**
+     *
      */
     class CTTableModForm extends React.Component {
 
@@ -132,6 +152,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                             </li>
                             <li>
                                 <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
+                            </li>
+                            <li>
+                                <TransposeTableCheckbox isChecked={this.props.transposeIsChecked} />
                             </li>
                         </ul>
                     </fieldset>
@@ -295,7 +318,6 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
         constructor(props) {
             super(props);
             this.state = this._fetchState();
-            this._handleClickTranspose = this._handleClickTranspose.bind(this);
             this._changeQuantity = this._changeQuantity.bind(this);
             this._handleStoreChange = this._handleStoreChange.bind(this);
             this._highlightItem = this._highlightItem.bind(this);
@@ -313,6 +335,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                 minAbsFreq: ctFreqDataRowsStore.getMinAbsFreq(),
                 viewQuantity: 'ipm',
                 highlightedCoord: null,
+                transposeIsChecked: ctFreqDataRowsStore.getIsTransposed(),
                 hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors()
             };
         }
@@ -321,13 +344,6 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
             const state = this._fetchState();
             state.viewQuantity = q;
             this.setState(state);
-        }
-
-        _handleClickTranspose(evt) {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_TRANSPOSE_TABLE',
-                props: {}
-            });
         }
 
         _handleStoreChange() {
@@ -403,16 +419,14 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                                 minAbsFreq={this.state.minAbsFreq}
                                 viewQuantity={this.state.viewQuantity}
                                 changeQuantity={this._changeQuantity}
-                                hideEmptyVectors={this.state.hideEmptyVectors} />
+                                hideEmptyVectors={this.state.hideEmptyVectors}
+                                transposeIsChecked={this.state.transposeIsChecked} />
                     </div>
                     <table className="ct-data">
                         <tbody>
                             <tr>
                                 <th className="attr-label">
-                                    <a title={mixins.translate('freq__ct_transpose_table')}
-                                            onClick={this._handleClickTranspose}>
-                                        {this.state.attr1} {'\u005C'} {this.state.attr2}
-                                    </a>
+                                    {this.state.attr1} {'\u005C'} {this.state.attr2}
                                 </th>
                                 {this._labels2().map((label2, i) =>
                                     <th key={`lab-${i}`} className={this._is}

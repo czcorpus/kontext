@@ -132,6 +132,8 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private filterZeroVectors:boolean;
 
+    private isTransposed:boolean;
+
     private static colorHeatmap = [
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
@@ -150,6 +152,7 @@ export class ContingencyTableStore extends SimplePageStore {
         this.queryContainsWithin = props.queryContainsWithin;
         this.minAbsFreq = props.ctminfreq;
         this.filterZeroVectors = true;
+        this.isTransposed = false;
 
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -158,11 +161,6 @@ export class ContingencyTableStore extends SimplePageStore {
                     this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
                     this.validateAttrs();
                     this.notifyChangeListeners();
-                break;
-                case 'FREQ_CT_TRANSPOSE_TABLE':
-                    [this.attr1, this.attr2] = [this.attr2, this.attr1];
-                    this.submitForm();
-                    // leaves the page here
                 break;
                 case 'FREQ_CT_SUBMIT':
                     if (!this.setupError) {
@@ -191,6 +189,10 @@ export class ContingencyTableStore extends SimplePageStore {
                     this.updateData();
                     this.notifyChangeListeners();
                 break;
+                case 'FREQ_CT_TRANSPOSE_TABLE':
+                    this.transposeTable();
+                    this.notifyChangeListeners();
+                break;
                 case 'FREQ_CT_QUICK_FILTER_CONCORDANCE':
                     alert('NOT IMPLEMENTED YET :-(');
                 break;
@@ -210,6 +212,24 @@ export class ContingencyTableStore extends SimplePageStore {
             this.d1Labels = this.d1Labels.map<[string, boolean]>(x => [x[0], true]).toList();
             this.d2Labels = this.d2Labels.map<[string, boolean]>(x => [x[0], true]).toList();
         }
+    }
+
+    private transposeTable():void {
+        const ans:Data2DTable = {};
+        for (let k1 in this.origData) {
+            const tmp = this.origData[k1] || {};
+            for (let k2 in tmp) {
+                if (ans[k2] === undefined) {
+                    ans[k2] = {};
+                }
+                ans[k2][k1] = this.origData[k1][k2];
+            }
+        }
+        this.origData = ans;
+        [this.d1Labels, this.d2Labels] = [this.d2Labels, this.d1Labels];
+        [this.attr1, this.attr2] = [this.attr2, this.attr1];
+        this.isTransposed = !this.isTransposed;
+        this.updateData();
     }
 
     private removeZeroVectors():void {
@@ -412,5 +432,9 @@ export class ContingencyTableStore extends SimplePageStore {
 
     getFilterZeroVectors():boolean {
         return this.filterZeroVectors;
+    }
+
+    getIsTransposed():boolean {
+        return this.isTransposed;
     }
 }
