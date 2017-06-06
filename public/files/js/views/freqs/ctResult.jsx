@@ -24,7 +24,7 @@ import React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 
 
-export function init(dispatcher, mixins, ctFreqDataRowsStore) {
+export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
 
     /**
      *
@@ -143,11 +143,12 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
     /**
      *
      */
-    class CTCellPNFilter extends React.Component {
+    class CTCellMenu extends React.Component {
 
         constructor(props) {
             super(props);
             this._handlePosClick = this._handlePosClick.bind(this);
+            this._handleCloseClick = this._handleCloseClick.bind(this);
         }
 
         _handlePosClick(evt) {
@@ -159,14 +160,51 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             });
         }
 
+        _handleCloseClick() {
+            this.props.onClose();
+        }
+
         render() {
             return (
-                <span>
-                    {'('}
-                    <a onClick={this._handlePosClick}
-                            title={mixins.translate('freq__ct_cell_pfilter_label')}>p</a>
-                    {')\u00a0'}
-                </span>
+                <layoutViews.PopupBox onCloseClick={this._handleCloseClick} customClass="menu">
+                    <fieldset className="detail">
+                        <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
+                        {mixins.translate('freq__ct_ipm_freq_label')}:
+                        {'\u00a0'}{mixins.formatNumber(this.props.data.ipm, 1)}
+                        <br />
+                        {mixins.translate('freq__ct_abs_freq_label')}:
+                        {'\u00a0'}{mixins.formatNumber(this.props.data.abs, 0)}
+                    </fieldset>
+                    <form>
+                        <fieldset>
+                            <legend>{mixins.translate('freq__ct_pfilter_legend')}</legend>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <th>
+                                            {this.props.attr1}:
+                                        </th>
+                                        <td>
+                                            <input type="text" readonly value={this.props.label1} />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            {this.props.attr2}:
+                                        </th>
+                                        <td>
+                                            <input type="text" readonly value={this.props.label2} />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button type="button" className="default-button"
+                                    onClick={this._handlePosClick}>
+                                {mixins.translate('freq__ct_pfilter_btn_label')}
+                            </button>
+                        </fieldset>
+                    </form>
+                </layoutViews.PopupBox>
             );
         }
 
@@ -179,30 +217,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
 
         constructor(props) {
             super(props);
-            this.state = {
-                pfilterVisible: false
-            };
-            this._onMouseOut = this._onMouseOut.bind(this);
-            this._onMouseOver = this._onMouseOver.bind(this);
-            this._mouseTimer = null;
-        }
-
-        _onMouseOver() {
-            window.clearTimeout(this._mouseTimer);
-            this.setState({pfilterVisible: true});
-        }
-
-        _onMouseOut() {
-            this._mouseTimer = window.setTimeout(() => {
-                this.setState({pfilterVisible: false});
-            }, 100);
-        }
-
-        _renderPFilter() {
-            if (this.state.pfilterVisible) {
-                return <CTCellPNFilter  />;
-            }
-            return null;
+            this._handleItemClick = this._handleItemClick.bind(this);
         }
 
         _getValue() {
@@ -235,17 +250,34 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             return v > 0;
         }
 
+        _handleItemClick() {
+            this.props.onClick();
+        }
+
         render() {
             if (this._isNonEmpty()) {
-                const style = {
-                    color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1))),
-                    backgroundColor: this.props.data.bgColor
-                };
+                const bgStyle = {};
+                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
+                const tdClasses = ['data-cell'];
+                if (this.props.isHighlighted) {
+                    tdClasses.push('highlighted');
+
+                } else {
+                    bgStyle['backgroundColor'] = this.props.data.bgColor;
+                }
                 return (
-                    <td className="data-cell" style={style} onMouseOut={this._onMouseOut}
+                    <td className={tdClasses.join(' ')} style={bgStyle} onMouseOut={this._onMouseOut}
                             onMouseOver={this._onMouseOver}>
-                        {this._renderPFilter()}
-                        {this._getValue()}
+                        <a onClick={this._handleItemClick} style={linkStyle}
+                                title={mixins.translate('freq__ct_click_for_details')}>
+                            {this._getValue()}
+                        </a>
+                        {this.props.isHighlighted ? <CTCellMenu onClose={this.props.onClose}
+                                                            data={this.props.data}
+                                                            attr1={this.props.attr1}
+                                                            label1={this.props.label1}
+                                                            attr2={this.props.attr2}
+                                                            label2={this.props.label2} /> : null}
                     </td>
                 );
 
@@ -266,6 +298,8 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             this._handleClickTranspose = this._handleClickTranspose.bind(this);
             this._changeQuantity = this._changeQuantity.bind(this);
             this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._highlightItem = this._highlightItem.bind(this);
+            this._resetHighlight = this._resetHighlight.bind(this);
         }
 
         _fetchState() {
@@ -278,6 +312,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                 adHocSubcWarning: ctFreqDataRowsStore.getQueryContainsWithin(),
                 minAbsFreq: ctFreqDataRowsStore.getMinAbsFreq(),
                 viewQuantity: 'ipm',
+                highlightedCoord: null,
                 hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors()
             };
         }
@@ -298,6 +333,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
         _handleStoreChange() {
             const newState = this._fetchState();
             newState.viewQuantity = this.state.viewQuantity;
+            newState.highlightedCoord = this.state.highlightedCoord;
             this.setState(newState);
         }
 
@@ -310,7 +346,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
         }
 
         _renderWarning() {
-            if (this.state.adHocSubcWarning) {
+            if (this.state.adHocSpfilterVisibleubcWarning) {
                 return (
                     <p className="warning">
                         <img src={mixins.createStaticUrl('img/warning-icon.svg')}
@@ -329,6 +365,35 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
             return this.state.d2Labels.filter(x => x[1]).map(x => x[0]);
         }
 
+        _resetHighlight() {
+            const newState = this._fetchState();
+            newState.viewQuantity = this.state.viewQuantity;
+            newState.highlightedCoord = null;
+            this.setState(newState);
+        }
+
+        _highlightItem(i, j) {
+            this._resetHighlight();
+            const newState = this._fetchState();
+            newState.viewQuantity = this.state.viewQuantity;
+            newState.highlightedCoord = [i, j];
+            this.setState(newState);
+        }
+
+        _isHighlighted(i, j) {
+            return this.state.highlightedCoord !== null &&
+                    this.state.highlightedCoord[0] === i &&
+                    this.state.highlightedCoord[1] === j;
+        }
+
+        _isHighlightedRow(i) {
+            return this.state.highlightedCoord !== null && this.state.highlightedCoord[0] === i;
+        }
+
+        _isHighlightedCol(j) {
+            return this.state.highlightedCoord !== null && this.state.highlightedCoord[1] === j;
+        }
+
         render() {
             return (
                 <div className="CTFreqResultView">
@@ -340,7 +405,7 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                                 changeQuantity={this._changeQuantity}
                                 hideEmptyVectors={this.state.hideEmptyVectors} />
                     </div>
-                    <table>
+                    <table className="ct-data">
                         <tbody>
                             <tr>
                                 <th className="attr-label">
@@ -349,15 +414,28 @@ export function init(dispatcher, mixins, ctFreqDataRowsStore) {
                                         {this.state.attr1} {'\u005C'} {this.state.attr2}
                                     </a>
                                 </th>
-                                {this._labels2().map((label2, i) => <th key={`lab-${i}`} >{label2}</th>)}
+                                {this._labels2().map((label2, i) =>
+                                    <th key={`lab-${i}`} className={this._is}
+                                        className={this._isHighlightedCol(i) ? 'highlighted' : null}>{label2}</th>)}
                             </tr>
                             {this._labels1().map((label1, i) => {
+                                const htmlClass = ['vert'];
+                                if (this._isHighlightedRow(i)) {
+                                    htmlClass.push('highlighted');
+                                }
                                 return (
                                     <tr key={`row-${i}`}>
-                                        <th className="vert">{label1}</th>
+                                        <th className={htmlClass.join(' ')}><span>{label1}</span></th>
                                         {this._labels2().map((label2, j) => {
                                             return <CTCell data={this.state.data[label1][label2]} key={`c-${i}:${j}`}
-                                                            quantity={this.state.viewQuantity} />;
+                                                            quantity={this.state.viewQuantity}
+                                                            onClick={()=>this._highlightItem(i, j)}
+                                                            onClose={this._resetHighlight}
+                                                            attr1={this.state.attr1}
+                                                            label1={label1}
+                                                            attr2={this.state.attr2}
+                                                            label2={label2}
+                                                            isHighlighted={this._isHighlighted(i, j)} />;
                                         })}
                                     </tr>
                                 )
