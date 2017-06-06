@@ -29,85 +29,64 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
     /**
      *
      */
-    class QuantitySelect extends React.Component {
+    const QuantitySelect = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleSelectChange = this._handleSelectChange.bind(this);
-        }
+        const handleSelectChange = (evt) => {
+            props.changeQuantity(evt.target.value);
+        };
 
-        _handleSelectChange(evt) {
-            this.props.changeQuantity(evt.target.value);
-        }
-
-        render() {
-            return (
-                <label>
-                    {mixins.translate('freq__ct_quantity_label')}:{'\u00a0'}
-                    <select value={this.props.currValue} onChange={this._handleSelectChange}>
-                        <option value="ipm">i.p.m.</option>
-                        <option value="abs">absolute freq.</option>
-                    </select>
-                </label>
-            );
-        }
-    }
+        return (
+            <label>
+                {mixins.translate('freq__ct_quantity_label')}:{'\u00a0'}
+                <select value={props.currValue} onChange={handleSelectChange}>
+                    <option value="ipm">i.p.m.</option>
+                    <option value="abs">absolute freq.</option>
+                </select>
+            </label>
+        );
+    };
 
     /**
      *
      */
-    class MinFreqInput extends React.Component {
+    const MinFreqInput = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleInputChange = this._handleInputChange.bind(this);
-        }
-
-        _handleInputChange(evt) {
+        const handleInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_SET_MIN_ABS_FREQ',
                 props: {value: evt.target.value}
             });
-        }
+        };
 
-        render() {
-            return (
-                <label>
-                    {mixins.translate('freq__ct_min_freq_label')}:{'\u00a0'}
-                    <input type="text" style={{width: '3em'}} value={this.props.currVal}
-                            onChange={this._handleInputChange} />
-                </label>
-            );
-        }
-    }
+        return (
+            <label>
+                {mixins.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                <input type="text" style={{width: '3em'}} value={props.currVal}
+                        onChange={handleInputChange} />
+            </label>
+        );
+    };
 
     /**
      *
      */
-    class EmptyVectorVisibilitySwitch extends React.Component {
+    const EmptyVectorVisibilitySwitch = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleCheckboxChange = this._handleCheckboxChange.bind(this);
-        }
-
-        _handleCheckboxChange(evt) {
+        const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY',
                 props: {value: evt.target.checked}
             });
-        }
+        };
 
-        render() {
-            return (
-                <label>
-                    {mixins.translate('freq__ct_hide_zero_vectors')}:{'\u00a0'}
-                    <input type="checkbox" onChange={this._handleCheckboxChange}
-                            checked={this.props.hideEmptyVectors} />
-                </label>
-            );
-        }
-    }
+        return (
+            <label>
+                {mixins.translate('freq__ct_hide_zero_vectors')}:{'\u00a0'}
+                <input type="checkbox" onChange={handleCheckboxChange}
+                        checked={props.hideEmptyVectors} />
+            </label>
+        );
+    };
 
     /**
      *
@@ -127,129 +106,109 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                 <input type="checkbox" checked={props.isChecked} onChange={handleClickTranspose} />
             </label>
         );
-    }
+    };
 
     /**
      *
      */
-    class CTTableModForm extends React.Component {
+    const CTTableModForm = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
-
-        render() {
-            return (
-                <form>
-                    <fieldset>
-                        <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
-                        <ul className="items">
-                            <li>
-                                <QuantitySelect currVal={this.props.viewQuantity} changeQuantity={this.props.changeQuantity} />
-                            </li>
-                            <li>
-                                <MinFreqInput currVal={this.props.minAbsFreq} />
-                            </li>
-                            <li>
-                                <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
-                            </li>
-                            <li>
-                                <TransposeTableCheckbox isChecked={this.props.transposeIsChecked} />
-                            </li>
-                        </ul>
-                    </fieldset>
-                </form>
-            );
-        }
-    }
+        return (
+            <form>
+                <fieldset>
+                    <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
+                    <ul className="items">
+                        <li>
+                            <QuantitySelect currVal={props.viewQuantity} changeQuantity={props.changeQuantity} />
+                        </li>
+                        <li>
+                            <MinFreqInput currVal={props.minAbsFreq} />
+                        </li>
+                        <li>
+                            <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
+                        </li>
+                        <li>
+                            <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
+                        </li>
+                    </ul>
+                </fieldset>
+            </form>
+        );
+    };
 
     /**
      *
      */
-    class CTCellMenu extends React.Component {
+    const CTCellMenu = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handlePosClick = this._handlePosClick.bind(this);
-            this._handleCloseClick = this._handleCloseClick.bind(this);
-        }
-
-        _handlePosClick(evt) {
+        const handlePosClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_QUICK_FILTER_CONCORDANCE',
                 props: {
-                    args: this.props.pfilter
+                    args: props.pfilter
                 }
             });
-        }
+        };
 
-        _handleCloseClick() {
-            this.props.onClose();
-        }
+        const handleCloseClick = () => {
+            props.onClose();
+        };
 
-        render() {
-            return (
-                <layoutViews.PopupBox onCloseClick={this._handleCloseClick} customClass="menu">
-                    <fieldset className="detail">
-                        <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
-                        {mixins.translate('freq__ct_ipm_freq_label')}:
-                        {'\u00a0'}{mixins.formatNumber(this.props.data.ipm, 1)}
-                        <br />
-                        {mixins.translate('freq__ct_abs_freq_label')}:
-                        {'\u00a0'}{mixins.formatNumber(this.props.data.abs, 0)}
+        return (
+            <layoutViews.PopupBox onCloseClick={handleCloseClick} customClass="menu">
+                <fieldset className="detail">
+                    <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
+                    {mixins.translate('freq__ct_ipm_freq_label')}:
+                    {'\u00a0'}{mixins.formatNumber(props.data.ipm, 1)}
+                    <br />
+                    {mixins.translate('freq__ct_abs_freq_label')}:
+                    {'\u00a0'}{mixins.formatNumber(props.data.abs, 0)}
+                </fieldset>
+                <form>
+                    <fieldset>
+                        <legend>{mixins.translate('freq__ct_pfilter_legend')}</legend>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>
+                                        {props.attr1}:
+                                    </th>
+                                    <td>
+                                        <input type="text" readonly value={props.label1} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        {props.attr2}:
+                                    </th>
+                                    <td>
+                                        <input type="text" readonly value={props.label2} />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" className="default-button"
+                                onClick={handlePosClick}>
+                            {mixins.translate('freq__ct_pfilter_btn_label')}
+                        </button>
                     </fieldset>
-                    <form>
-                        <fieldset>
-                            <legend>{mixins.translate('freq__ct_pfilter_legend')}</legend>
-                            <table>
-                                <tbody>
-                                    <tr>
-                                        <th>
-                                            {this.props.attr1}:
-                                        </th>
-                                        <td>
-                                            <input type="text" readonly value={this.props.label1} />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>
-                                            {this.props.attr2}:
-                                        </th>
-                                        <td>
-                                            <input type="text" readonly value={this.props.label2} />
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <button type="button" className="default-button"
-                                    onClick={this._handlePosClick}>
-                                {mixins.translate('freq__ct_pfilter_btn_label')}
-                            </button>
-                        </fieldset>
-                    </form>
-                </layoutViews.PopupBox>
-            );
-        }
-
-    }
+                </form>
+            </layoutViews.PopupBox>
+        );
+    };
 
     /**
      *
      */
-    class CTCell extends React.Component {
+    const CTCell = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleItemClick = this._handleItemClick.bind(this);
-        }
-
-        _getValue() {
-            if (this._isNonEmpty()) {
-                switch (this.props.quantity) {
+        const getValue = () => {
+            if (isNonEmpty()) {
+                switch (props.quantity) {
                     case 'ipm':
-                        return mixins.formatNumber(this.props.data.ipm, 1);
+                        return mixins.formatNumber(props.data.ipm, 1);
                     case 'abs':
-                        return mixins.formatNumber(this.props.data.abs, 0);
+                        return mixins.formatNumber(props.data.abs, 0);
                     default:
                         return NaN;
                 }
@@ -257,58 +216,55 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
             } else {
                 return '';
             }
-        }
+        };
 
-        _isNonEmpty() {
+        const isNonEmpty = () => {
             const v = (() => {
-                switch (this.props.quantity) {
+                switch (props.quantity) {
                     case 'ipm':
-                        return this.props.data ? this.props.data.ipm : 0;
+                        return props.data ? props.data.ipm : 0;
                     case 'abs':
-                        return this.props.data ? this.props.data.abs : 0;
+                        return props.data ? props.data.abs : 0;
                     default:
                         return NaN;
                 }
             })();
             return v > 0;
-        }
+        };
 
-        _handleItemClick() {
-            this.props.onClick();
-        }
+        const handleItemClick = () => {
+            props.onClick();
+        };
 
-        render() {
-            if (this._isNonEmpty()) {
-                const bgStyle = {};
-                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
-                const tdClasses = ['data-cell'];
-                if (this.props.isHighlighted) {
-                    tdClasses.push('highlighted');
-
-                } else {
-                    bgStyle['backgroundColor'] = this.props.data.bgColor;
-                }
-                return (
-                    <td className={tdClasses.join(' ')} style={bgStyle} onMouseOut={this._onMouseOut}
-                            onMouseOver={this._onMouseOver}>
-                        <a onClick={this._handleItemClick} style={linkStyle}
-                                title={mixins.translate('freq__ct_click_for_details')}>
-                            {this._getValue()}
-                        </a>
-                        {this.props.isHighlighted ? <CTCellMenu onClose={this.props.onClose}
-                                                            data={this.props.data}
-                                                            attr1={this.props.attr1}
-                                                            label1={this.props.label1}
-                                                            attr2={this.props.attr2}
-                                                            label2={this.props.label2} /> : null}
-                    </td>
-                );
+        if (isNonEmpty()) {
+            const bgStyle = {};
+            const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
+            const tdClasses = ['data-cell'];
+            if (props.isHighlighted) {
+                tdClasses.push('highlighted');
 
             } else {
-                return <td className="empty-cell" />;
+                bgStyle['backgroundColor'] = props.data.bgColor;
             }
+            return (
+                <td className={tdClasses.join(' ')} style={bgStyle}>
+                    <a onClick={handleItemClick} style={linkStyle}
+                            title={mixins.translate('freq__ct_click_for_details')}>
+                        {getValue()}
+                    </a>
+                    {props.isHighlighted ? <CTCellMenu onClose={props.onClose}
+                                                        data={props.data}
+                                                        attr1={props.attr1}
+                                                        label1={props.label1}
+                                                        attr2={props.attr2}
+                                                        label2={props.label2} /> : null}
+                </td>
+            );
+
+        } else {
+            return <td className="empty-cell" />;
         }
-    }
+    };
 
     /**
      *
