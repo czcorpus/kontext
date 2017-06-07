@@ -325,9 +325,10 @@ table.envelope.locked .define-range {
 
     table.form {
 
-        td {
-            border: 1px solid @color-light-frame;
-            padding: 0.5em;
+        border: 1px solid @color-default-green;
+
+        td, th {
+            padding: 0.7em 1em;
         }
 
         td.data {
@@ -338,6 +339,22 @@ table.envelope.locked .define-range {
                 height: 1em;
                 background-color: @color-data-table-footer;
             }
+        }
+
+        tbody.dim1, tbody.dim2 {
+            th.main {
+                border-color: @color-default-green;
+                border-width: 0 1px 0 0;
+                border-style: solid;
+            }
+        }
+
+        tbody.dim1 {
+            background-color: @color-light-green;
+        }
+
+        tbody.dim2 {
+            background-color: #FFFFFF;
         }
     }
 }

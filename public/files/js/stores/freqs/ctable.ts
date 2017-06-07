@@ -134,9 +134,23 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private isTransposed:boolean;
 
-    private static colorHeatmap = [
+    private alignType1:string;
+
+    private ctxIndex1:number;
+
+    private alignType2:string;
+
+    private ctxIndex2:number;
+
+    private static COLOR_HEATMAP = [
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
+
+    private static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
+
+    private static POSITION_RA = ['-6>0', '-5>0', '-4>0', '-3>0', '-2>0', '-1>0', '0>0', '1>0', '2>0', '3>0', '4>0', '5>0', '6>0'];
+
+    private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:ContingencyTableFormProperties) {
@@ -153,6 +167,8 @@ export class ContingencyTableStore extends SimplePageStore {
         this.minAbsFreq = props.ctminfreq;
         this.filterZeroVectors = true;
         this.isTransposed = false;
+        this.ctxIndex1 = ~~Math.floor(ContingencyTableStore.POSITION_LABELS.length / 2);
+        this.ctxIndex2 = this.ctxIndex1;
 
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -160,6 +176,24 @@ export class ContingencyTableStore extends SimplePageStore {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
                     this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
                     this.validateAttrs();
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_CTX':
+                    if (payload.props['dim'] === 1) {
+                        this.ctxIndex1 = payload.props['value'];
+
+                    } else if (payload.props['dim'] === 2) {
+                        this.ctxIndex2 = payload.props['value'];
+                    }
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_ALIGN_TYPE':
+                    if (payload.props['dim'] === 1) {
+                        this.alignType1 = payload.props['value'];
+
+                    } else if (payload.props['dim'] === 2) {
+                        this.alignType2 = payload.props['value'];
+                    }
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SUBMIT':
@@ -292,10 +326,12 @@ export class ContingencyTableStore extends SimplePageStore {
         return /^(0?|([1-9][0-9]*))$/.exec(v) !== null;
     }
 
-    private validateAttrs():void {
-        const isStructAttr = (v:string) => v.indexOf('.') > -1;
+    private isStructAttr(v:string):boolean {
+        return v.indexOf('.') > -1;
+    }
 
-        if (isStructAttr(this.attr1) && isStructAttr(this.attr2)
+    private validateAttrs():void {
+        if (this.isStructAttr(this.attr1) && this.isStructAttr(this.attr2)
             && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
                 || this.multiSattrAllowedStructs.indexOf(this.attr2.split('.')[0]) === -1)) {
             this.setupError =
@@ -368,7 +404,7 @@ export class ContingencyTableStore extends SimplePageStore {
                 ipm: cell.ipm,
                 abs: cell.abs,
                 domainSize: cell.domainSize,
-                bgColor: ContingencyTableStore.colorHeatmap[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))],
+                bgColor: ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))],
                 pfilter: cell.pfilter
             };
         });
@@ -393,6 +429,7 @@ export class ContingencyTableStore extends SimplePageStore {
      */
     getAllAvailAttrs():Immutable.List<Kontext.AttrItem> {
         return this.availAttrList
+                .concat([{n: null, label: '--------------------'}])
                 .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
     }
 
@@ -418,6 +455,14 @@ export class ContingencyTableStore extends SimplePageStore {
         return this.attr2;
     }
 
+    getAttr1IsStruct():boolean {
+        return this.isStructAttr(this.attr1);
+    }
+
+    getAttr2IsStruct():boolean {
+        return this.isStructAttr(this.attr2);
+    }
+
     getSetupError():string {
         return this.setupError;
     }
@@ -437,4 +482,30 @@ export class ContingencyTableStore extends SimplePageStore {
     getIsTransposed():boolean {
         return this.isTransposed;
     }
+
+    getPositionRangeLabels():Array<string> {
+        return ContingencyTableStore.POSITION_LABELS;
+    }
+
+    getAlignType(dim:number):string {
+        if (dim === 1) {
+            return this.alignType1;
+
+        } else if (dim === 2) {
+            return this.alignType2;
+        }
+        return undefined;
+    }
+
+    getCtxIndex(dim:number):number {
+        if (dim === 1) {
+            return this.ctxIndex1;
+
+        } else if (dim === 2) {
+            return this.ctxIndex2;
+        }
+        return undefined;
+    }
+
+
 }
