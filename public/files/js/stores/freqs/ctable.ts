@@ -365,6 +365,7 @@ export class ContingencyTableStore extends SimplePageStore {
         args.set('ctfcrit2', this.generateCrit(this.attr2));
         args.set('ctattr1', this.attr1);
         args.set('ctattr2', this.attr2);
+        args.set('ctminfreq', this.minAbsFreq);
         return args;
     }
 
@@ -466,7 +467,7 @@ export class ContingencyTableStore extends SimplePageStore {
         this.d1Labels = Immutable.List<[string, boolean]>(Object.keys(d1Labels).sort().map(x => [x, true]));
         this.d2Labels = Immutable.List<[string, boolean]>(Object.keys(d2Labels).sort().map(x => [x, true]));
 
-        this.data = mapDataTable(tableData, (cell) => {
+        this.origData = mapDataTable(tableData, (cell) => {
             return {
                 ipm: cell.ipm,
                 abs: cell.abs,
@@ -475,7 +476,7 @@ export class ContingencyTableStore extends SimplePageStore {
                 pfilter: cell.pfilter
             };
         });
-        this.origData = this.data;
+        this.updateData();
     }
 
     getData():any {
