@@ -970,7 +970,7 @@ class Actions(Querying):
             save_params = save_params[:1] + save_params[2:]
             self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_params)
         result['query_contains_within'] = self._query_contains_within()
-        result['freq_type'] = 'default'
+        result['freq_type'] = 'ml' if ml > 0 else 'tt'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
@@ -1096,6 +1096,7 @@ class Actions(Querying):
     def freqct(self, request):
         """
         """
+
         args = freq_calc.CLFreqCalcArgs()
         args.corpname = self.corp.corpname
         args.subcname = getattr(self.corp, 'subcname', None)
@@ -1104,16 +1105,14 @@ class Actions(Querying):
         args.minsize = None
         args.q = self.args.q
         args.flimit = int(request.args.get('flimit', '1'))
-        args.fcrit = request.args.get('fcrit')
+        args.fcrit = '{0} {1} {2} {3}'.format(self.args.ctattr1, self.args.ctfcrit1,
+                                              self.args.ctattr2, self.args.ctfcrit2)
         ans = freq_calc.calculate_freqs_ct(args)
-
-        attr1 = request.args.get('attr1')
-        attr2 = request.args.get('attr2')
 
         return dict(
             freq_type='ct',
-            attr1=attr1,
-            attr2=attr2,
+            attr1=self.args.ctattr1,
+            attr2=self.args.ctattr2,
             data=ans,
             query_contains_within=self._query_contains_within(),
             freq_form_args=FreqFormArgs().update(self.args).to_dict(),

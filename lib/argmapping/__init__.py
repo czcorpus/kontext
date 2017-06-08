@@ -274,6 +274,10 @@ class GlobalArgs(object):
     # Contingency table
 
     ctminfreq = Parameter(1)
+    ctattr1 = Parameter('word')
+    ctattr2 = Parameter('word')
+    ctfcrit1 = Parameter('0<0')
+    ctfcrit2 = Parameter('0<0')
 
     # word list
 
