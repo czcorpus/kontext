@@ -90,7 +90,6 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
 
     /**
      *
-     * @param {*} props
      */
     const TransposeTableCheckbox = (props) => {
         const handleClickTranspose = (evt) => {
@@ -171,7 +170,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                             <tbody>
                                 <tr>
                                     <th>
-                                        {props.attr1}:
+                                        {props.attr1} =
                                     </th>
                                     <td>
                                         <input type="text" readOnly value={props.label1} />
@@ -179,7 +178,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                                 </tr>
                                 <tr>
                                     <th>
-                                        {props.attr2}:
+                                        {props.attr2} =
                                     </th>
                                     <td>
                                         <input type="text" readOnly value={props.label2} />
@@ -187,10 +186,12 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                                 </tr>
                             </tbody>
                         </table>
-                        <button type="button" className="default-button"
-                                onClick={handlePosClick}>
-                            {mixins.translate('freq__ct_pfilter_btn_label')}
-                        </button>
+                        <p>
+                            <button type="button" className="default-button"
+                                    onClick={handlePosClick}>
+                                {mixins.translate('freq__ct_pfilter_btn_label')}
+                            </button>
+                        </p>
                     </fieldset>
                 </form>
             </layoutViews.PopupBox>
@@ -264,6 +265,27 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
         } else {
             return <td className="empty-cell" />;
         }
+    };
+
+    /**
+     *
+     */
+    const THRowColLabels = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch({
+                actionType: 'MAIN_MENU_SHOW_FREQ_FORM',
+                props: {}
+            });
+        };
+
+        return (
+            <th className="attr-label">
+                <a onClick={handleClick} title={mixins.translate('freq__ct_change_attrs')}>
+                    {props.attr1} {'\u005C'} {props.attr2}
+                </a>
+            </th>
+        );
     };
 
     /**
@@ -381,9 +403,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                     <table className="ct-data">
                         <tbody>
                             <tr>
-                                <th className="attr-label">
-                                    {this.state.attr1} {'\u005C'} {this.state.attr2}
-                                </th>
+                                <THRowColLabels attr1={this.state.attr1} attr2={this.state.attr2} />
                                 {this._labels2().map((label2, i) =>
                                     <th key={`lab-${i}`} className={this._is}
                                         className={this._isHighlightedCol(i) ? 'highlighted' : null}>{label2}</th>)}

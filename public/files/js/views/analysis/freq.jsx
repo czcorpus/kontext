@@ -334,7 +334,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                         <tbody className="dim1">
                             <tr>
                                 <th className="main" rowSpan="3">
-                                    {this.translate('freq__ct_dim1')}
+                                    <strong>1.</strong>
+                                    ({this.translate('freq__ct_dim1')})
                                 </th>
                                 <th>
                                     {this.translate('freq__ml_th_attribute')}:
@@ -347,12 +348,13 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                     </select>
                                 </td>
                             </tr>
-                            {!this.state.attr1IsStruct ? this._renderPosAttrOpts(1) : null}
+                            {!this.state.attr1IsStruct ? this._renderPosAttrOpts(1) : <tr><td colSpan="2" rowSpan="2" /></tr>}
                         </tbody>
                         <tbody className="dim2">
                             <tr>
                                 <th className="main" rowSpan="3">
-                                    {this.translate('freq__ct_dim2')}
+                                    <strong>2.</strong>
+                                    ({this.translate('freq__ct_dim2')})
                                 </th>
                                 <th>
                                     {this.translate('freq__ml_th_attribute')}:
@@ -364,7 +366,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                     </select>
                                 </td>
                             </tr>
-                            {!this.state.attr2IsStruct ? this._renderPosAttrOpts(2) : null}
+                            {!this.state.attr2IsStruct ? this._renderPosAttrOpts(2) : <tr><td colSpan="2" rowSpan="2" /></tr>}
                         </tbody>
                     </table>
                 </div>

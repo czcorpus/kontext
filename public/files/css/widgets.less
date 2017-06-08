@@ -343,6 +343,13 @@ table.envelope.locked .define-range {
 
         tbody.dim1, tbody.dim2 {
             th.main {
+                text-align: center;
+
+                strong {
+                    display: block;
+                    font-size: 2em;
+                }
+
                 border-color: @color-default-green;
                 border-width: 0 1px 0 0;
                 border-style: solid;
@@ -475,6 +482,15 @@ div.CTFreqResultView {
             text-align: center;
             font-weight: bold;
             font-size: 110%;
+
+            a {
+                color: @color-default-text;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
         }
     }
 

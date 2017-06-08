@@ -381,8 +381,8 @@
         "freq__limit_invalid_val": "Invalid value (use 0, 1, 2,...)",
         "freq__page_invalid_val": "Invalid value (use 1, 2, 3,...)",
         "freq__neg_filter_disabled": "Negative filter cannot be used here.",
-        "freq__ct_dim1": "1st dimension (rows)",
-        "freq__ct_dim2": "2nd dimension (columns)",
+        "freq__ct_dim1": "rows",
+        "freq__ct_dim2": "columns",
         "freq__ct_transpose_table": "rows \u21C6 columns",
         "freq__ct_only_some_sattr_allowed_{allowed_sattrs}": "In case two structural attributes are selected, only the ones from {allowed_sattrs} are allowed.",
         "freq__ct_two_sattrs_not_allowed": "In case of this corpus, two structural attributes cannot be selected at the same time",
@@ -396,8 +396,9 @@
         "freq__ct_abs_freq_label": "Absolute frequency",
         "freq__ct_ipm_freq_label": "Instances per million",
         "freq__ct_pfilter_legend": "Instant filter for the current concordance",
-        "freq__ct_pfilter_btn_label": "Apply",
-        "freq__ct_detail_legend": "Detail"
+        "freq__ct_pfilter_btn_label": "View filtered concordance",
+        "freq__ct_detail_legend": "Detail",
+        "freq__ct_change_attrs": "Current attributes. Click to change."
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -781,8 +782,8 @@
         "freq__limit_invalid_val": "Neplatná hodnota (použijte 0, 1, 2,...)",
         "freq__page_invalid_val": "Neplatná hodnota (použijte 1, 2, 3,...)",
         "freq__neg_filter_disabled": "Negativní filtr zde nelze použít.",
-        "freq__ct_dim1": "1. dimenze (řádky)",
-        "freq__ct_dim2": "2. dimenze (sloupce)",
+        "freq__ct_dim1": "řádky",
+        "freq__ct_dim2": "sloupce",
         "freq__ct_transpose_table": "řádky \u21C6 sloupce",
         "freq__ct_only_some_sattr_allowed_{allowed_sattrs}": "V případě, že jsou vybrány dva strukturní atributy, lze použít pouze ty, které náleží těmto strukturám: {allowed_sattrs}.",
         "freq__ct_two_sattrs_not_allowed": "V případě tohoto korpusu nelze vybrat dva strukturní atributy najednou.",
@@ -796,7 +797,8 @@
         "freq__ct_abs_freq_label": "Absolutní frekvence",
         "freq__ct_ipm_freq_label": "Výskytů na milion pozic",
         "freq__ct_pfilter_legend": "Rychlý filtr aktuální konkordance",
-        "freq__ct_pfilter_btn_label": "Použít",
-        "freq__ct_detail_legend": "Detail"
+        "freq__ct_pfilter_btn_label": "Zobrazit filtrovanou konkordanci",
+        "freq__ct_detail_legend": "Detail",
+        "freq__ct_change_attrs": "Stávající atributy. Klikněte pro změnu zadání."
     }
 }
