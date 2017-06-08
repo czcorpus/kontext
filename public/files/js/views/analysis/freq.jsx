@@ -188,6 +188,49 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
         }
     });
 
+    // -------- <CTFreqPosSelect /> --------------------------------
+
+    const CTFreqPosSelect = (props) => {
+
+        const handleChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_CTX',
+                props: {
+                    dim: props.dim,
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <select value={props.value} onChange={handleChange}>
+                {props.positionRangeLabels.map((item, i) => <option key={i} value={i}>{item}</option>)}
+            </select>
+        );
+    };
+
+    // -------- <CTFreqNodeStartSelect /> --------------------------------
+
+    const CTFreqNodeStartSelect = (props) => {
+
+        const handleChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_ALIGN_TYPE',
+                props: {
+                    dim: props.dim,
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <select onChange={handleChange} value={props.value}>
+                <option>{mixins[0].translate('freq__align_type_left')}</option>
+                <option>{mixins[0].translate('freq__align_type_right')}</option>
+            </select>
+        );
+    };
+
     // -------------------- <CTFreqForm /> --------------------------------------------
 
     const CTFreqForm = React.createClass({
@@ -198,9 +241,16 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             return {
                 allAttrs: ctFreqStore.getAllAvailAttrs(),
                 attr1: ctFreqStore.getAttr1(),
+                attr1IsStruct: ctFreqStore.getAttr1IsStruct(),
                 attr2: ctFreqStore.getAttr2(),
+                attr2IsStruct: ctFreqStore.getAttr2IsStruct(),
                 minAbsFreq: ctFreqStore.getMinAbsFreq(),
-                setupError: ctFreqStore.getSetupError()
+                setupError: ctFreqStore.getSetupError(),
+                positionRangeLabels: ctFreqStore.getPositionRangeLabels(),
+                alignType1: ctFreqStore.getAlignType(1),
+                alignType2: ctFreqStore.getAlignType(2),
+                ctxIndex1: ctFreqStore.getCtxIndex(1),
+                ctxIndex2: ctFreqStore.getCtxIndex(2)
             };
         },
 
@@ -245,6 +295,32 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             }
         },
 
+        _renderPosAttrOpts : function (dim, alignType) {
+            return [
+                <tr key="label">
+                    <th>
+                        {this.translate('freq__ml_th_position')}:
+                    </th>
+                    <td>
+                        <CTFreqPosSelect
+                                positionRangeLabels={this.state.positionRangeLabels}
+                                dim={dim}
+                                value={dim === 1 ? this.state.ctxIndex1 : this.state.ctxIndex2} />
+                    </td>
+                </tr>,
+                <tr key="input">
+                    <th>
+                        {this.translate('freq__ml_th_node_start_at')}:
+                    </th>
+                    <td>
+                        <CTFreqNodeStartSelect
+                                dim={dim}
+                                value={dim === 1 ? this.state.alignType1 : this.state.alignType2} />
+                    </td>
+                </tr>
+            ];
+        },
+
         render : function () {
             return (
                 <div className="CTFreqForm">
@@ -255,53 +331,40 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                             <CTFreqFormMinFreqInput value={this.state.minAbsFreq} />
                     </div>
                     <table className="form">
-                        <tbody>
+                        <tbody className="dim1">
                             <tr>
+                                <th className="main" rowSpan="3">
+                                    {this.translate('freq__ct_dim1')}
+                                </th>
+                                <th>
+                                    {this.translate('freq__ml_th_attribute')}:
+                                </th>
                                 <td>
-                                </td>
-                                <td colSpan="4">
-                                    <label>
-                                        {this.translate('freq__ct_dim2')}:{'\u00a0'}
-                                        <select onChange={this._handleAttrSelChange.bind(this, 2)}
-                                                value={this.state.attr2}>
-                                            {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
-                                        </select>
-                                    </label>
+                                    <select onChange={this._handleAttrSelChange.bind(this, 1)}
+                                            value={this.state.attr1}>
+                                        {this.state.allAttrs.map(item =>
+                                            <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
+                                    </select>
                                 </td>
                             </tr>
+                            {!this.state.attr1IsStruct ? this._renderPosAttrOpts(1) : null}
+                        </tbody>
+                        <tbody className="dim2">
                             <tr>
-                                <td rowSpan="4">
-                                    <label>
-                                        {this.translate('freq__ct_dim1')}:<br />
-                                        <select onChange={this._handleAttrSelChange.bind(this, 1)}
-                                                value={this.state.attr1}>
-                                            {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
-                                        </select>
-                                    </label>
+                                <th className="main" rowSpan="3">
+                                    {this.translate('freq__ct_dim2')}
+                                </th>
+                                <th>
+                                    {this.translate('freq__ml_th_attribute')}:
+                                </th>
+                                <td>
+                                    <select onChange={this._handleAttrSelChange.bind(this, 2)}
+                                            value={this.state.attr2}>
+                                        {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
+                                    </select>
                                 </td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
                             </tr>
-                            <tr>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                            </tr>
-                            <tr>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                            </tr>
-                            <tr>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                                <td className="data"><div /></td>
-                            </tr>
+                            {!this.state.attr2IsStruct ? this._renderPosAttrOpts(2) : null}
                         </tbody>
                     </table>
                 </div>

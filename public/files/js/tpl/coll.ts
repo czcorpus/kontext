@@ -164,8 +164,10 @@ export class CollPage {
         const ctFormProps:ContingencyTableFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            attr1: attrs[0].n,
-            attr2: attrs[0].n,
+            ctattr1: ctFormInputs.ctattr1,
+            ctattr2: ctFormInputs.ctattr2,
+            ctfcrit1: ctFormInputs.ctfcrit1,
+            ctfcrit2: ctFormInputs.ctfcrit2,
             multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
             queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ctminfreq: ctFormInputs.ctminfreq

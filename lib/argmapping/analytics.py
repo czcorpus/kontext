@@ -59,11 +59,19 @@ class FreqFormArgs(object):
 
 class CTFreqFormArgs(object):
 
-    def __init__(self):
+    def __init__(self, default_attr='word'):
         self.ctminfreq = 1
+        self.ctattr1 = default_attr
+        self.ctfcrit1 = '0<0'
+        self.ctattr2 = default_attr
+        self.ctfcrit2 = '0<0'
 
     def update(self, args):
         self.ctminfreq = args.ctminfreq
+        self.ctattr1 = args.ctattr1
+        self.ctfcrit1 = args.ctfcrit1
+        self.ctattr2 = args.ctattr2
+        self.ctfcrit2 = args.ctfcrit2
         return self
 
     def to_dict(self):

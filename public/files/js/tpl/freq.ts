@@ -97,8 +97,10 @@ class FreqPage {
         const ctFormProps:ContingencyTableFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            attr1: this.layoutModel.getConf<string>('Attr1') || attrs[0].n,
-            attr2: this.layoutModel.getConf<string>('Attr2') || attrs[0].n,
+            ctattr1: ctFormInputs.ctattr1,
+            ctattr2: ctFormInputs.ctattr2,
+            ctfcrit1: ctFormInputs.ctfcrit1,
+            ctfcrit2: ctFormInputs.ctfcrit2,
             multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
             queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ctminfreq: ctFormInputs.ctminfreq
@@ -158,7 +160,7 @@ class FreqPage {
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: freqFormInputs.mlxattr ? 'ml' : 'tt'
+                initialFreqFormVariant: this.layoutModel.getConf<string>('FreqType')
             }
         );
     }
@@ -220,7 +222,8 @@ class FreqPage {
 
     private initFreqResult():void {
         switch (this.layoutModel.getConf<string>('FreqType')) {
-            case 'default':
+            case 'ml':
+            case 'tt':
                 const freqResultStore = new FreqDataRowsStore(
                     this.layoutModel.dispatcher,
                     this.layoutModel,

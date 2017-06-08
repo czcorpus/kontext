@@ -174,7 +174,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                                         {props.attr1}:
                                     </th>
                                     <td>
-                                        <input type="text" readonly value={props.label1} />
+                                        <input type="text" readOnly value={props.label1} />
                                     </td>
                                 </tr>
                                 <tr>
@@ -182,7 +182,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                                         {props.attr2}:
                                     </th>
                                     <td>
-                                        <input type="text" readonly value={props.label2} />
+                                        <input type="text" readOnly value={props.label2} />
                                     </td>
                                 </tr>
                             </tbody>

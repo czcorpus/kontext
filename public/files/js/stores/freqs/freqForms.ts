@@ -172,16 +172,6 @@ export class MLFreqFormStore extends SimplePageStore {
         return undefined;
     }
 
-    private detectAlignType(ctxVal:string):string {
-        if (MLFreqFormStore.POSITION_LA.indexOf(ctxVal) > -1) {
-            return 'left';
-
-        } else if (MLFreqFormStore.POSITION_RA.indexOf(ctxVal) > 1) {
-            return 'right';
-        }
-        return undefined;
-    }
-
     private addLevel():void {
         this.mlxattr = this.mlxattr.push(this.attrList.get(0).n);
         this.mlxicase = this.mlxicase.push(false);

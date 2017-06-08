@@ -33,7 +33,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.FreqFormProps = $to_json($freq_form_args);
     conf.CTFreqFormProps = $to_json($ctfreq_form_args);
     conf.CollFormProps = $to_json($coll_form_args);
-    #if $freq_type == 'default':
+    #if $freq_type in ('ml', 'tt'):
     conf.FreqResultData = $to_json($Blocks);
     conf.FreqItemsPerPage = $to_json($fmaxitems);
     conf.FreqCrit = $to_json($fcrit);

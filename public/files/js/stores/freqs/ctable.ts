@@ -42,6 +42,10 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 
 export interface ContingencyTableFormInputs {
     ctminfreq:string;
+    ctattr1:string;
+    ctattr2:string;
+    ctfcrit1:string;
+    ctfcrit2:string;
 }
 
 
@@ -50,8 +54,6 @@ export interface ContingencyTableFormProperties extends ContingencyTableFormInpu
     structAttrList:Array<Kontext.AttrItem>;
     multiSattrAllowedStructs:Array<string>;
     queryContainsWithin:boolean;
-    attr1:string;
-    attr2:string;
 }
 
 
@@ -134,9 +136,23 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private isTransposed:boolean;
 
-    private static colorHeatmap = [
+    private alignType1:string;
+
+    private ctxIndex1:number;
+
+    private alignType2:string;
+
+    private ctxIndex2:number;
+
+    private static COLOR_HEATMAP = [
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
+
+    private static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
+
+    private static POSITION_RA = ['-6>0', '-5>0', '-4>0', '-3>0', '-2>0', '-1>0', '0>0', '1>0', '2>0', '3>0', '4>0', '5>0', '6>0'];
+
+    private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:ContingencyTableFormProperties) {
@@ -144,8 +160,8 @@ export class ContingencyTableStore extends SimplePageStore {
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.attr1 = props.attr1;
-        this.attr2 = props.attr2;
+        this.attr1 = props.ctattr1;
+        this.attr2 = props.ctattr2;
         this.d1Labels = Immutable.List<[string, boolean]>();
         this.d2Labels = Immutable.List<[string, boolean]>();
         this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
@@ -153,6 +169,8 @@ export class ContingencyTableStore extends SimplePageStore {
         this.minAbsFreq = props.ctminfreq;
         this.filterZeroVectors = true;
         this.isTransposed = false;
+        [this.ctxIndex1, this.alignType1] = this.importCtxValue(props.ctfcrit1);
+        [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
 
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -160,6 +178,24 @@ export class ContingencyTableStore extends SimplePageStore {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
                     this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
                     this.validateAttrs();
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_CTX':
+                    if (payload.props['dim'] === 1) {
+                        this.ctxIndex1 = payload.props['value'];
+
+                    } else if (payload.props['dim'] === 2) {
+                        this.ctxIndex2 = payload.props['value'];
+                    }
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_ALIGN_TYPE':
+                    if (payload.props['dim'] === 1) {
+                        this.alignType1 = payload.props['value'];
+
+                    } else if (payload.props['dim'] === 2) {
+                        this.alignType2 = payload.props['value'];
+                    }
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SUBMIT':
@@ -214,6 +250,18 @@ export class ContingencyTableStore extends SimplePageStore {
         }
     }
 
+    private importCtxValue(v:string):[number, string] {
+        let srchIdx = ContingencyTableStore.POSITION_LA.indexOf(v);
+        if (srchIdx > -1) {
+            return [srchIdx, 'left'];
+        }
+        srchIdx = ContingencyTableStore.POSITION_RA.indexOf(v);
+        if (srchIdx > -1) {
+            return [srchIdx, 'right'];
+        }
+        return  [6, 'left'];
+    }
+
     private transposeTable():void {
         const ans:Data2DTable = {};
         for (let k1 in this.origData) {
@@ -265,11 +313,28 @@ export class ContingencyTableStore extends SimplePageStore {
         this.data = this.origData;
     }
 
+    private getAttrCtx(attr:string):string {
+        if (attr === this.attr1) {
+            return this.alignType1 === 'left' ?
+                ContingencyTableStore.POSITION_LA[this.ctxIndex1] : ContingencyTableStore.POSITION_RA[this.ctxIndex1];
+
+        } else if (attr === this.attr2) {
+            return this.alignType2 === 'left' ?
+                ContingencyTableStore.POSITION_LA[this.ctxIndex2] : ContingencyTableStore.POSITION_RA[this.ctxIndex2];
+        }
+        throw new Error('Unknown attr ' + attr);
+    }
+
+    private generateCrit(attr:string):string {
+        return this.isStructAttr(attr) ? '0' : this.getAttrCtx(attr);
+    }
+
     private getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
-        args.set('fcrit', `${this.attr1} 0 ${this.attr2} 0`);
-        args.set('attr1', this.attr1);
-        args.set('attr2', this.attr2);
+        args.set('ctfcrit1', this.generateCrit(this.attr1));
+        args.set('ctfcrit2', this.generateCrit(this.attr2));
+        args.set('ctattr1', this.attr1);
+        args.set('ctattr2', this.attr2);
         return args;
     }
 
@@ -285,17 +350,19 @@ export class ContingencyTableStore extends SimplePageStore {
             (data:any) => { // TODO type
                 this.importData(data);
             }
-        )
+        );
     }
 
     private validateMinAbsFreqAttr(v:string):boolean {
         return /^(0?|([1-9][0-9]*))$/.exec(v) !== null;
     }
 
-    private validateAttrs():void {
-        const isStructAttr = (v:string) => v.indexOf('.') > -1;
+    private isStructAttr(v:string):boolean {
+        return v.indexOf('.') > -1;
+    }
 
-        if (isStructAttr(this.attr1) && isStructAttr(this.attr2)
+    private validateAttrs():void {
+        if (this.isStructAttr(this.attr1) && this.isStructAttr(this.attr2)
             && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
                 || this.multiSattrAllowedStructs.indexOf(this.attr2.split('.')[0]) === -1)) {
             this.setupError =
@@ -368,7 +435,7 @@ export class ContingencyTableStore extends SimplePageStore {
                 ipm: cell.ipm,
                 abs: cell.abs,
                 domainSize: cell.domainSize,
-                bgColor: ContingencyTableStore.colorHeatmap[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))],
+                bgColor: ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))],
                 pfilter: cell.pfilter
             };
         });
@@ -393,6 +460,7 @@ export class ContingencyTableStore extends SimplePageStore {
      */
     getAllAvailAttrs():Immutable.List<Kontext.AttrItem> {
         return this.availAttrList
+                .concat([{n: null, label: '--------------------'}])
                 .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
     }
 
@@ -418,6 +486,14 @@ export class ContingencyTableStore extends SimplePageStore {
         return this.attr2;
     }
 
+    getAttr1IsStruct():boolean {
+        return this.isStructAttr(this.attr1);
+    }
+
+    getAttr2IsStruct():boolean {
+        return this.isStructAttr(this.attr2);
+    }
+
     getSetupError():string {
         return this.setupError;
     }
@@ -437,4 +513,30 @@ export class ContingencyTableStore extends SimplePageStore {
     getIsTransposed():boolean {
         return this.isTransposed;
     }
+
+    getPositionRangeLabels():Array<string> {
+        return ContingencyTableStore.POSITION_LABELS;
+    }
+
+    getAlignType(dim:number):string {
+        if (dim === 1) {
+            return this.alignType1;
+
+        } else if (dim === 2) {
+            return this.alignType2;
+        }
+        return undefined;
+    }
+
+    getCtxIndex(dim:number):number {
+        if (dim === 1) {
+            return this.ctxIndex1;
+
+        } else if (dim === 2) {
+            return this.ctxIndex2;
+        }
+        return undefined;
+    }
+
+
 }
