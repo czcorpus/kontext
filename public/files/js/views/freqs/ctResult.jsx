@@ -145,7 +145,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_QUICK_FILTER_CONCORDANCE',
                 props: {
-                    args: props.pfilter
+                    args: props.data.pfilter
                 }
             });
         };

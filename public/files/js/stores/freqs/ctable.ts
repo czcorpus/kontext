@@ -63,7 +63,7 @@ interface CTFreqCell {
     ipm:number;
     domainSize:number;
     bgColor:string;
-    pfilter:string;
+    pfilter:[string, string];
 }
 
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
@@ -230,10 +230,40 @@ export class ContingencyTableStore extends SimplePageStore {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_QUICK_FILTER_CONCORDANCE':
-                    alert('NOT IMPLEMENTED YET :-(');
+                    this.applyQuickFilter(payload.props['args'][0], payload.props['args'][1]);
+                    // leaves the page here
                 break;
             }
         });
+    }
+
+
+    private applyQuickFilter(arg1:string, arg2:string):void {
+        const args = this.pageModel.getConcArgs();
+        args.set('q2', arg1);
+        args.set('format', 'json');
+        this.pageModel.ajax<Kontext.AjaxResponse>(
+            'GET',
+            this.pageModel.createActionUrl('quick_filter'),
+            args
+
+        ).then(
+            (data) => {
+                if (!data.contains_errors) {
+                    this.pageModel.replaceConcArg('q', data['Q']);
+                    const args = this.pageModel.getConcArgs();
+                    args.set('q2', arg2);
+                    window.location.href = this.pageModel.createActionUrl('quick_filter', args.items());
+
+                } else {
+                    this.pageModel.showMessage('error', data.messages[0]);
+                }
+
+            },
+            (err) => {
+                this.pageModel.showMessage('error', err);
+            }
+        );
     }
 
 
@@ -382,16 +412,22 @@ export class ContingencyTableStore extends SimplePageStore {
         window.location.href = this.pageModel.createActionUrl('freqct', args.items());
     }
 
-    private generatePFilter(v1:string, v2:string):string {
-        if (this.attr1.indexOf('.') === -1) { // positional attr or a struct number
-            if (this.availAttrList.find(x => x.n === this.attr1)) {
+    private generatePFilter(v1:string, v2:string):[string, string] {
 
+        const pfilter = (attr:string, v:string):string => {
+            if (this.isStructAttr(attr)) {
+                const [s, a] = attr.split('.');
+                return `p0 0 1 [] within <${s} ${a}="${v}" />`;
+
+            } else {
+                const icase = ''; // TODO - optionally (?i)
+                const begin = this.getAttrCtx(attr);
+                const end = this.getAttrCtx(attr);
+                return `p${begin} ${end} 0 [${attr}="${icase}${v}"]`;
             }
+        };
 
-        } else { // structure
-
-        }
-        return ""; // TODO
+        return [pfilter(this.attr1, v1), pfilter(this.attr2, v2)];
     }
 
 
