@@ -23,66 +23,67 @@ import React from 'vendor/react';
 
 export function init(dispatcher, mixins, layoutViews, collViews, freqViews, mainMenuStore) {
 
+    const util = mixins[0];
+
     // ------------------------- <AnalysisFrame /> ---------------------------
 
-    const AnalysisFrame = React.createClass({
+    class AnalysisFrame extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = {activeItem: mainMenuStore.getActiveItem()};
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleCloseClick = this._handleCloseClick.bind(this);
+        }
 
-        getInitialState : function () {
-            return {
-                activeItem: mainMenuStore.getActiveItem()
-            }
-        },
-
-        _renderContents : function () {
+        _renderContents() {
             switch ((this.state.activeItem || {}).actionName) {
                 case 'MAIN_MENU_SHOW_COLL_FORM':
                     return <collViews.CollForm />;
                 case 'MAIN_MENU_SHOW_FREQ_FORM':
                     return <freqViews.FrequencyForm initialFreqFormVariant={this.props.initialFreqFormVariant} />;
             }
-        },
+        }
 
-        _getTitle : function () {
+        _getTitle() {
             switch ((this.state.activeItem || {}).actionName) {
                 case 'MAIN_MENU_SHOW_COLL_FORM':
-                    return this.translate('Collocation candidates'); // TODO
+                    return util.translate('Collocation candidates'); // TODO
                 case 'MAIN_MENU_SHOW_FREQ_FORM':
-                    return this.translate('freq__h2_freq_distr');
+                    return util.translate('freq__h2_freq_distr');
                 default:
                     return '?';
             }
-        },
+        }
 
-        _activeItemIsOurs : function () {
+        _activeItemIsOurs() {
             const actions = ['MAIN_MENU_SHOW_COLL_FORM', 'MAIN_MENU_SHOW_FREQ_FORM'];
             return this.state.activeItem !== null
                     && actions.indexOf(this.state.activeItem.actionName) > -1;
-        },
+        }
 
-        _handleStoreChange: function () {
+        _handleStoreChange() {
             this.setState({
                 activeItem: mainMenuStore.getActiveItem()
             });
-        },
+        }
 
-        _handleCloseClick : function () {
+        _handleCloseClick() {
             dispatcher.dispatch({
                 actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
                 props: {}
             });
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             mainMenuStore.addChangeListener(this._handleStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             mainMenuStore.removeChangeListener(this._handleStoreChange);
-        },
+        }
 
-        render : function () {
+        render() {
             if (this._activeItemIsOurs()) {
                 return (
                     <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
@@ -97,13 +98,9 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
                 return null;
             }
         }
-
-    });
-
+    }
 
     return {
         AnalysisFrame: AnalysisFrame
     };
-
-
 }

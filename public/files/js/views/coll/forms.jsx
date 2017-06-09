@@ -24,189 +24,167 @@ import React from 'vendor/react';
 
 export function init(dispatcher, mixins, layoutViews, collFormStore) {
 
+    const util = mixins[0];
 
     // -------------------- <AttrSelection /> --------------------------------------------
 
-    const AttrSelection = React.createClass({
+    const AttrSelection = (props) => {
 
-        _handleSelection : function (evt) {
+        const handleSelection = (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CATTR',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <select onChange={this._handleSelection} value={this.props.cattr}>
-                    {this.props.attrList.map(item => {
-                        return <option key={item.n} value={item.n}>{item.label}</option>
-                    })}
-                </select>
-            );
-        }
-    });
+        return (
+            <select onChange={handleSelection} value={props.cattr}>
+                {props.attrList.map(item => {
+                    return <option key={item.n} value={item.n}>{item.label}</option>
+                })}
+            </select>
+        );
+    };
 
     // -------------------- <WindowSpanInput /> --------------------------------------------
 
-    const WindowSpanInput = React.createClass({
+    const WindowSpanInput = (props) => {
 
-        mixins : mixins,
-
-        _handleFromValChange : function (evt) {
+        const handleFromValChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CFROMW',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        _handleToValChange : function (evt) {
+        const handleToValChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CTOW',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <div>
-                    <input type="text" style={{width: '3em'}} value={this.props.cfromw}
-                        onChange={this._handleFromValChange} />
-                    {'\u00a0'}{this.translate('coll__to')}{'\u00a0'}
-                    <input type="text" style={{width: '3em'}} value={this.props.ctow}
-                        onChange={this._handleToValChange} />
-                </div>
-            );
-        }
-    });
+        return (
+            <div>
+                <input type="text" style={{width: '3em'}} value={props.cfromw}
+                    onChange={handleFromValChange} />
+                {'\u00a0'}{util.translate('coll__to')}{'\u00a0'}
+                <input type="text" style={{width: '3em'}} value={props.ctow}
+                    onChange={handleToValChange} />
+            </div>
+        );
+    };
 
     // -------------------- <MinCollFreqCorpInput /> --------------------------------------------
 
-    const MinCollFreqCorpInput = React.createClass({
+    const MinCollFreqCorpInput = (props) => {
 
-        mixins : mixins,
-
-        _handleInputChange : function (evt) {
+        const handleInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CMINFREQ',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return <input type="text" value={this.props.cminfreq} style={{width: '3em'}}
-                        onChange={this._handleInputChange} />;
-        }
+        return <input type="text" value={props.cminfreq} style={{width: '3em'}}
+                    onChange={handleInputChange} />;
 
-    });
+    };
 
     // -------------------- <MinCollFreqSpanInput /> --------------------------------------------
 
-    const MinCollFreqSpanInput = React.createClass({
+    const MinCollFreqSpanInput = (props) => {
 
-        mixins : mixins,
-
-        _handleInputChange : function (evt) {
+        const handleInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CMINBGR',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return <input type="text" value={this.props.cminbgr} style={{width: '3em'}}
-                            onChange={this._handleInputChange} />;
-        }
-
-    });
+        return <input type="text" value={props.cminbgr} style={{width: '3em'}}
+                        onChange={handleInputChange} />;
+    };
 
 
     // -------------------- <CollMetricsSelection /> --------------------------------------------
 
-    const CollMetricsSelection = React.createClass({
+    const CollMetricsSelection = (props) => {
 
-        mixins : mixins,
-
-        _handleCheckboxClick : function (evt) {
+        const handleCheckboxClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CBGRFNS',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <table>
-                    <tbody>
-                        {this.props.availCbgrfns.map((item, k) => {
-                            return (
-                                <tr key={`v_${k}`}>
-                                    <td>
-                                        <label htmlFor={`cbgrfns_input_${k}`}>{item}</label>
-                                    </td>
-                                    <td>
-                                        <input id={`cbgrfns_input_${k}`} type="checkbox" value={k}
-                                            checked={this.props.cbgrfns.includes(k)}
-                                            onChange={this._handleCheckboxClick} />
-                                    </td>
-                                </tr>
-                            );
-                        }).toList()}
-                    </tbody>
-                </table>
-            );
-        }
-    });
+        return (
+            <table>
+                <tbody>
+                    {props.availCbgrfns.map((item, k) => {
+                        return (
+                            <tr key={`v_${k}`}>
+                                <td>
+                                    <label htmlFor={`cbgrfns_input_${k}`}>{item}</label>
+                                </td>
+                                <td>
+                                    <input id={`cbgrfns_input_${k}`} type="checkbox" value={k}
+                                        checked={props.cbgrfns.includes(k)}
+                                        onChange={handleCheckboxClick} />
+                                </td>
+                            </tr>
+                        );
+                    }).toList()}
+                </tbody>
+            </table>
+        );
+    };
 
     // -------------------- <CollSortBySelection /> --------------------------------------------
 
-    const CollSortBySelection = React.createClass({
+    const CollSortBySelection = (props) => {
 
-        mixins : mixins,
-
-        _handleCheckboxClick : function (evt) {
+        const handleCheckboxClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SET_CSORTFN',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <table>
-                    <tbody>
-                        {this.props.availCbgrfns.map((item, k) => {
-                            return (
-                                <tr key={`v_${k}`}>
-                                    <td>
-                                        <label htmlFor={`csortfn_input_${k}`}>{item}</label>
-                                    </td>
-                                    <td>
-                                        <input id={`csortfn_input_${k}`} type="radio" value={k}
-                                            checked={this.props.csortfn === k} onChange={this._handleCheckboxClick} />
-                                    </td>
-                                </tr>
-                            )
-                        }).toList()}
-                    </tbody>
-                </table>
-            );
-        }
-    });
+        return (
+            <table>
+                <tbody>
+                    {props.availCbgrfns.map((item, k) => {
+                        return (
+                            <tr key={`v_${k}`}>
+                                <td>
+                                    <label htmlFor={`csortfn_input_${k}`}>{item}</label>
+                                </td>
+                                <td>
+                                    <input id={`csortfn_input_${k}`} type="radio" value={k}
+                                        checked={props.csortfn === k} onChange={handleCheckboxClick} />
+                                </td>
+                            </tr>
+                        )
+                    }).toList()}
+                </tbody>
+            </table>
+        );
+    };
 
 
     // -------------------- <CollocationsForm /> --------------------------------------------

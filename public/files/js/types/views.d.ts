@@ -293,7 +293,7 @@ declare module "views/overview" {
 }
 
 
-declare module "views/analysis/frame" {
+declare module "views/analysis" {
 
     export interface AnalysisFrameViews {
         AnalysisFrame:React.ReactClass;
@@ -310,7 +310,7 @@ declare module "views/analysis/frame" {
 }
 
 
-declare module "views/analysis/coll" {
+declare module "views/coll/forms" {
 
     export interface CollFormViews {
         CollForm: React.ReactClass;
@@ -321,7 +321,7 @@ declare module "views/analysis/coll" {
 }
 
 
-declare module "views/analysis/freq" {
+declare module "views/freqs/forms" {
 
     export interface FreqFormViews {
         FrequencyForm: React.ReactClass;
