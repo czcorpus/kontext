@@ -66,7 +66,7 @@ import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
-import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
+import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';

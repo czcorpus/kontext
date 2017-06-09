@@ -293,7 +293,7 @@ declare module "views/overview" {
 }
 
 
-declare module "views/analysis/frame" {
+declare module "views/analysis" {
 
     export interface AnalysisFrameViews {
         AnalysisFrame:React.ReactClass;
