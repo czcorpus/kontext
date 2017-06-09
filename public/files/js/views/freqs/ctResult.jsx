@@ -24,7 +24,7 @@ import React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 
 
-export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
+export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFlatFreqDataRowsStore) {
 
     /**
      *
@@ -291,7 +291,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
     /**
      *
      */
-    class CTFreqResultView extends React.Component {
+    class CT2dFreqResultView extends React.Component {
 
         constructor(props) {
             super(props);
@@ -390,7 +390,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
 
         render() {
             return (
-                <div className="CTFreqResultView">
+                <div className="CT2dFreqResultView">
                     {this._renderWarning()}
                     <div className="toolbar">
                         <CTTableModForm
@@ -432,6 +432,179 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore) {
                             })}
                         </tbody>
                     </table>
+                </div>
+            );
+        }
+    }
+
+    /**
+     *
+     * @param {*} props
+     */
+    const TRFlatListRow = (props) => {
+        return (
+            <tr>
+                <td className="num">{props.idx}.</td>
+                <td>{props.data.val1}</td>
+                <td>{props.data.val2}</td>
+                <td className="num">{props.data.abs}</td>
+                <td className="num">{props.data.ipm}</td>
+            </tr>
+        );
+    }
+
+    /**
+     *
+     * @param {*} props
+     */
+    const THSortableCol = (props) => {
+
+        const handleClick = () => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SORT_FLAT_LIST',
+                props: {
+                    value: props.value,
+                    reversed: props.isActive ? !props.isReversed : false
+                }
+            });
+        };
+
+        const renderFlag = () => {
+            if (props.isActive) {
+                if (props.isReversed) {
+                    return <img src={mixins.createStaticUrl('img/sort_desc.svg')} />;
+
+                } else {
+                    return <img src={mixins.createStaticUrl('img/sort_asc.svg')} />;
+                }
+            }
+            return null;
+        };
+
+        return (
+            <th className="sort-col">
+                <a onClick={handleClick} title={mixins.translate('global__sort_by_this_col')}>
+                    {props.label}
+                    {renderFlag()}
+                </a>
+            </th>
+        );
+    }
+
+    /**
+     *
+     */
+    class CTFlatFreqResultView extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+        }
+
+        _fetchStoreState() {
+            return {
+                data: ctFlatFreqDataRowsStore.getData(),
+                attr1: ctFlatFreqDataRowsStore.getAttr1(),
+                attr2: ctFlatFreqDataRowsStore.getAttr2(),
+                minAbsFreq: ctFlatFreqDataRowsStore.getMinAbsFreq(),
+                sortCol: ctFlatFreqDataRowsStore.getSortCol(),
+                sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed()
+            };
+        }
+
+        _handleStoreChange() {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
+            ctFlatFreqDataRowsStore.addChangeListener(this._handleStoreChange);
+        }
+
+        componentWillUnmount() {
+            ctFlatFreqDataRowsStore.removeChangeListener(this._handleStoreChange);
+        }
+
+        render() {
+            return (
+                <div className="CTFlatFreqResultView">
+                    <div className="toolbar">
+                        <form>
+                            <fieldset>
+                                <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
+                                <ul className="items">
+                                    <li>
+                                        <MinFreqInput currVal={this.state.minAbsFreq} />
+                                    </li>
+                                </ul>
+                            </fieldset>
+                        </form>
+                    </div>
+                    <table className="data">
+                        <tbody>
+                            <tr>
+                                <th />
+                                <THSortableCol label={this.state.attr1} value={this.state.attr1}
+                                        isActive={this.state.sortCol === this.state.attr1}
+                                        isReversed={this.state.sortCol === this.state.attr1 && this.state.sortColIsReversed}
+                                         />
+                                <th>{this.state.attr2}</th>
+                                <THSortableCol label={mixins.translate('freq__ct_abs_freq_label')}
+                                        value="abs" isActive={this.state.sortCol === 'abs'}
+                                        isReversed={this.state.sortCol === 'abs' && this.state.sortColIsReversed}
+                                        />
+                                <THSortableCol label={mixins.translate('freq__ct_ipm_freq_label')}
+                                        value="ipm" isActive={this.state.sortCol === 'ipm'}
+                                        isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} />
+                            </tr>
+                            {this.state.data.map((item, i) =>
+                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item} />)}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+    }
+
+    /**
+     *
+     */
+    class CTFreqResultView extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {mode: 'table'};
+            this._handleModeSwitch = this._handleModeSwitch.bind(this);
+        }
+
+        _handleModeSwitch(evt) {
+            this.setState({mode: evt.target.value});
+        }
+
+        _renderContents() {
+            switch (this.state.mode) {
+                case 'table':
+                    return <CT2dFreqResultView {...this.props} />
+                case 'list':
+                    return <CTFlatFreqResultView {...this.props} />
+                default:
+                    return null;
+            }
+        }
+
+        render() {
+            return (
+                <div className="CTFreqResultView">
+                    <p className="mode-switch">
+                        <label>
+                            {mixins.translate('freq__ct_view_mode')}:{'\u00a0'}
+                            <select onChange={this._handleModeSwitch}>
+                                <option value="table">{mixins.translate('freq__ct_switch_table_view')}</option>
+                                <option value="list">{mixins.translate('freq__ct_switch_list_view')}</option>
+                            </select>
+                        </label>
+                    </p>
+                    {this._renderContents()}
                 </div>
             );
         }

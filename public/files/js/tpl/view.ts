@@ -49,7 +49,9 @@ import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
+import {ContingencyTableStore} from '../stores/freqs/ctable';
+import {CTFlatStore} from '../stores/freqs/flatCtable';
+import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
@@ -150,6 +152,8 @@ export class ViewPage {
     private ttFreqStore:TTFreqFormStore;
 
     private ctFreqStore:ContingencyTableStore;
+
+    private ctFlatFreqStore:CTFlatStore;
 
     private freqFormViews:FreqFormViews;
 
@@ -972,8 +976,8 @@ export class ViewPage {
         );
 
         // ------------------ contingency table ----------
-        const ctFormInputs = this.layoutModel.getConf<ContingencyTableFormInputs>('CTFreqFormProps');
-        const ctFormProps:ContingencyTableFormProperties = {
+        const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
+        const ctFormProps:CTFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             ctattr1: ctFormInputs.ctattr1,
@@ -991,13 +995,19 @@ export class ViewPage {
             this.layoutModel,
             ctFormProps
         );
+        this.ctFlatFreqStore = new CTFlatStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            ctFormProps
+        );
         this.freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
             this.mlFreqStore,
             this.ttFreqStore,
-            this.ctFreqStore
+            this.ctFreqStore,
+            this.ctFlatFreqStore
         );
         this.analysisViews = analysisFrameInit(
             this.layoutModel.dispatcher,

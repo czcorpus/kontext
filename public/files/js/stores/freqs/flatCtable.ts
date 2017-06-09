@@ -1,0 +1,169 @@
+/*
+ * Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2
+ * dated June, 1991.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../types/ajaxResponses.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+
+import {PageModel} from '../../tpl/document';
+import * as Immutable from 'vendor/immutable';
+import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
+
+
+export interface FreqDataItem extends CTFreqCell {
+    val1:string;
+    val2:string;
+}
+
+/**
+ *
+ */
+export class CTFlatStore extends GeneralCTStore {
+
+    private origData:Immutable.List<FreqDataItem>;
+
+    private data:Immutable.List<FreqDataItem>;
+
+    private sortBy:string;
+
+    private sortReversed:boolean;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
+        super(dispatcher, pageModel, props);
+        this.origData = Immutable.List<FreqDataItem>();
+        this.sortBy = 'ipm';
+        this.sortReversed = true;
+        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
+                    this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
+                    this.validateAttrs();
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_MIN_ABS_FREQ':
+                    if (this.validateMinAbsFreqAttr(payload.props['value'])) {
+                        this.minAbsFreq = payload.props['value'];
+                        if (this.data) {
+                            this.updateData();
+                        }
+
+                    } else {
+                        // we do not show error because other active store for 2d table handles this
+                    }
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SORT_FLAT_LIST':
+                    this.sortBy = payload.props['value'];
+                    this.sortReversed = payload.props['reversed'];
+                    this.updateData();
+                    this.notifyChangeListeners();
+                break;
+            }
+        });
+    }
+
+    private updateData():void {
+        const a1 = this.sortReversed ? -1 : 1;
+        const a2 = this.sortReversed ? 1 : -1;
+        this.data = this.origData.filter(item => item && item.abs >= parseInt(this.minAbsFreq || '0', 10)).toList();
+        switch (this.sortBy) {
+            case this.attr1:
+            this.data = this.data.sort((v1, v2) => {
+                const s1 = v1.val1 + v1.val2;
+                const s2 = v2.val1 + v2.val2;
+
+                if (s1 > s2) {
+                    return a1;
+                }
+                if (s1 === s2) {
+                    return 0;
+                }
+                if (s1 < s2) {
+                    return a2;
+                }
+            }).toList();
+            break;
+            case 'abs':
+            this.data = this.data.sort((v1, v2) => {
+                if (v1.abs > v2.abs) {
+                    return a1;
+                }
+                if (v1.abs === v2.abs) {
+                    return 0;
+                }
+                if (v1.abs < v2.abs) {
+                    return a2;
+                }
+            }).toList();
+            break;
+            case 'ipm':
+            this.data = this.data.sort((v1, v2) => {
+                if (v1.ipm > v2.ipm) {
+                    return a1;
+                }
+                if (v1.ipm === v2.ipm) {
+                    return 0;
+                }
+                if (v1.ipm < v2.ipm) {
+                    return a2;
+                }
+            }).toList();
+            break;
+        }
+    }
+
+    importData(data:FreqResultResponse.CTFreqResultData):void {
+        const calcIpm = (v:FreqResultResponse.CTFreqResultItem) => Math.round(v[2] / v[3] * 1e6 * 10) / 10;
+        this.origData = Immutable.List<FreqDataItem>(data.map(item => {
+            return {
+                val1: item[0],
+                val2: item[1],
+                abs: item[2],
+                ipm: calcIpm(item),
+                domainSize: item[3],
+                bgColor: 'transparent',
+                pfilter: this.generatePFilter(item[0], item[1])
+            };
+        }));
+        this.updateData();
+    }
+
+    getData():Immutable.List<FreqDataItem> {
+        return this.data;
+    }
+
+    getAttr1():string {
+        return this.attr1;
+    }
+
+    getAttr2():string {
+        return this.attr2;
+    }
+
+    getSortCol():string {
+        return this.sortBy;
+    }
+
+    getSortColIsReversed():boolean {
+        return this.sortReversed;
+    }
+
+}
