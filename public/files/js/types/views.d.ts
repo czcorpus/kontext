@@ -310,7 +310,7 @@ declare module "views/analysis/frame" {
 }
 
 
-declare module "views/analysis/coll" {
+declare module "views/coll/forms" {
 
     export interface CollFormViews {
         CollForm: React.ReactClass;

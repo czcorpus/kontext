@@ -32,7 +32,7 @@ import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '.
 import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
-import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
+import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
