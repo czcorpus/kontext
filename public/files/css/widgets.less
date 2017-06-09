@@ -372,10 +372,27 @@ table.envelope.locked .define-range {
     }
 }
 
-
 div.CTFreqResultView {
-
     margin: 1em;
+
+    .mode-switch {
+
+        text-align: center;
+        font-size: 110%;
+
+        a {
+            color: @color-logo-blue;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        a.current {
+            text-decoration: underline;
+        }
+    }
 
     div.toolbar {
         margin-bottom: 1em;
@@ -392,6 +409,10 @@ div.CTFreqResultView {
             }
         }
     }
+}
+
+
+div.CT2dFreqResultView {
 
     table.ct-data {
 
@@ -504,5 +525,24 @@ div.CTFreqResultView {
             vertical-align: middle;
             margin-right: 0.3em;
         }
+    }
+}
+
+div.CTFlatFreqResultView {
+
+    th.sort-col {
+
+        a {
+            text-decoration: underline;
+
+            img {
+                margin-left: 0.7em;
+            }
+        }
+
+        a:hover {
+            text-decoration: none;
+        }
+
     }
 }

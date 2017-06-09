@@ -328,7 +328,7 @@ declare module "views/freqs/forms" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:any, mlFreqStore:any, ttFreqStore:any, ctFreqStore:any);
+            layoutViews:any, mlFreqStore:any, ttFreqStore:any, ctFreqStore:any, ctFlatFreqStore:any);
 }
 
 
@@ -359,5 +359,5 @@ declare module "views/freqs/ctResult" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
-            ctFreqDataRowsStore:any):CTFreqsResultViews;
+            ctFreqDataRowsStore:any, ctFlatFreqDataRowsStore:any):CTFreqsResultViews;
 }

@@ -23,48 +23,12 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
+import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
 
-
-const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
-    if (x1.label < x2.label) {
-        return -1;
-    }
-    if (x1.label > x2.label) {
-        return 1;
-    }
-    return 0;
-};
-
-export interface ContingencyTableFormInputs {
-    ctminfreq:string;
-    ctattr1:string;
-    ctattr2:string;
-    ctfcrit1:string;
-    ctfcrit2:string;
-}
-
-
-export interface ContingencyTableFormProperties extends ContingencyTableFormInputs {
-    attrList:Array<Kontext.AttrItem>;
-    structAttrList:Array<Kontext.AttrItem>;
-    multiSattrAllowedStructs:Array<string>;
-    queryContainsWithin:boolean;
-}
-
-
-
-interface CTFreqCell {
-    abs:number;
-    ipm:number;
-    domainSize:number;
-    bgColor:string;
-    pfilter:[string, string];
-}
 
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
 
@@ -104,17 +68,7 @@ const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTab
 /**
  *
  */
-export class ContingencyTableStore extends SimplePageStore {
-
-    private pageModel:PageModel;
-
-    private availAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private availStructAttrList:Immutable.List<Kontext.AttrItem>;
-
-    private attr1:string;
-
-    private attr2:string;
+export class ContingencyTableStore extends GeneralCTStore {
 
     private data:Data2DTable;
 
@@ -124,54 +78,20 @@ export class ContingencyTableStore extends SimplePageStore {
 
     private d2Labels:Immutable.List<[string, boolean]>;
 
-    private multiSattrAllowedStructs:Immutable.List<string>;
-
-    private setupError:string;
-
-    private queryContainsWithin:boolean;
-
-    private minAbsFreq:string;
-
     private filterZeroVectors:boolean;
 
     private isTransposed:boolean;
-
-    private alignType1:string;
-
-    private ctxIndex1:number;
-
-    private alignType2:string;
-
-    private ctxIndex2:number;
 
     private static COLOR_HEATMAP = [
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
-    private static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
-
-    private static POSITION_RA = ['-6>0', '-5>0', '-4>0', '-3>0', '-2>0', '-1>0', '0>0', '1>0', '2>0', '3>0', '4>0', '5>0', '6>0'];
-
-    private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
-
-
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:ContingencyTableFormProperties) {
-        super(dispatcher);
-        this.pageModel = pageModel;
-        this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
-        this.availStructAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
-        this.attr1 = props.ctattr1;
-        this.attr2 = props.ctattr2;
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
+        super(dispatcher, pageModel, props);
         this.d1Labels = Immutable.List<[string, boolean]>();
         this.d2Labels = Immutable.List<[string, boolean]>();
-        this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
-        this.queryContainsWithin = props.queryContainsWithin;
-        this.minAbsFreq = props.ctminfreq;
         this.filterZeroVectors = true;
         this.isTransposed = false;
-        [this.ctxIndex1, this.alignType1] = this.importCtxValue(props.ctfcrit1);
-        [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
-
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -237,36 +157,6 @@ export class ContingencyTableStore extends SimplePageStore {
         });
     }
 
-
-    private applyQuickFilter(arg1:string, arg2:string):void {
-        const args = this.pageModel.getConcArgs();
-        args.set('q2', arg1);
-        args.set('format', 'json');
-        this.pageModel.ajax<Kontext.AjaxResponse>(
-            'GET',
-            this.pageModel.createActionUrl('quick_filter'),
-            args
-
-        ).then(
-            (data) => {
-                if (!data.contains_errors) {
-                    this.pageModel.replaceConcArg('q', data['Q']);
-                    const args = this.pageModel.getConcArgs();
-                    args.set('q2', arg2);
-                    window.location.href = this.pageModel.createActionUrl('quick_filter', args.items());
-
-                } else {
-                    this.pageModel.showMessage('error', data.messages[0]);
-                }
-
-            },
-            (err) => {
-                this.pageModel.showMessage('error', err);
-            }
-        );
-    }
-
-
     private updateData():void {
         this.data = filterDataTable(this.origData, (item) => {
             return item && item.abs >= parseInt(this.minAbsFreq || '0', 10);
@@ -278,18 +168,6 @@ export class ContingencyTableStore extends SimplePageStore {
             this.d1Labels = this.d1Labels.map<[string, boolean]>(x => [x[0], true]).toList();
             this.d2Labels = this.d2Labels.map<[string, boolean]>(x => [x[0], true]).toList();
         }
-    }
-
-    private importCtxValue(v:string):[number, string] {
-        let srchIdx = ContingencyTableStore.POSITION_LA.indexOf(v);
-        if (srchIdx > -1) {
-            return [srchIdx, 'left'];
-        }
-        srchIdx = ContingencyTableStore.POSITION_RA.indexOf(v);
-        if (srchIdx > -1) {
-            return [srchIdx, 'right'];
-        }
-        return  [6, 'left'];
     }
 
     private transposeTable():void {
@@ -343,18 +221,6 @@ export class ContingencyTableStore extends SimplePageStore {
         this.data = this.origData;
     }
 
-    private getAttrCtx(attr:string):string {
-        if (attr === this.attr1) {
-            return this.alignType1 === 'left' ?
-                ContingencyTableStore.POSITION_LA[this.ctxIndex1] : ContingencyTableStore.POSITION_RA[this.ctxIndex1];
-
-        } else if (attr === this.attr2) {
-            return this.alignType2 === 'left' ?
-                ContingencyTableStore.POSITION_LA[this.ctxIndex2] : ContingencyTableStore.POSITION_RA[this.ctxIndex2];
-        }
-        throw new Error('Unknown attr ' + attr);
-    }
-
     private generateCrit(attr:string):string {
         return this.isStructAttr(attr) ? '0' : this.getAttrCtx(attr);
     }
@@ -384,53 +250,10 @@ export class ContingencyTableStore extends SimplePageStore {
         );
     }
 
-    private validateMinAbsFreqAttr(v:string):boolean {
-        return /^(0?|([1-9][0-9]*))$/.exec(v) !== null;
-    }
-
-    private isStructAttr(v:string):boolean {
-        return v.indexOf('.') > -1;
-    }
-
-    private validateAttrs():void {
-        if (this.isStructAttr(this.attr1) && this.isStructAttr(this.attr2)
-            && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
-                || this.multiSattrAllowedStructs.indexOf(this.attr2.split('.')[0]) === -1)) {
-            this.setupError =
-                this.multiSattrAllowedStructs.size > 0 ?
-                    this.pageModel.translate('freq__ct_only_some_sattr_allowed_{allowed_sattrs}',
-                                             {allowed_sattrs: this.multiSattrAllowedStructs.join(', ')}) :
-                    this.pageModel.translate('freq__ct_two_sattrs_not_allowed');
-
-        } else {
-            this.setupError = '';
-        }
-    }
-
-
     submitForm():void {
         const args = this.getSubmitArgs();
         window.location.href = this.pageModel.createActionUrl('freqct', args.items());
     }
-
-    private generatePFilter(v1:string, v2:string):[string, string] {
-
-        const pfilter = (attr:string, v:string):string => {
-            if (this.isStructAttr(attr)) {
-                const [s, a] = attr.split('.');
-                return `p0 0 1 [] within <${s} ${a}="${v}" />`;
-
-            } else {
-                const icase = ''; // TODO - optionally (?i)
-                const begin = this.getAttrCtx(attr);
-                const end = this.getAttrCtx(attr);
-                return `p${begin} ${end} 0 [${attr}="${icase}${v}"]`;
-            }
-        };
-
-        return [pfilter(this.attr1, v1), pfilter(this.attr2, v2)];
-    }
-
 
     importData(data:FreqResultResponse.CTFreqResultData):void {
         const d1Labels:{[name:string]:boolean} = {};
@@ -491,58 +314,6 @@ export class ContingencyTableStore extends SimplePageStore {
         return this.d2Labels;
     }
 
-    /**
-     * Return both positional and structural attributes
-     * as a single list (positional first).
-     */
-    getAllAvailAttrs():Immutable.List<Kontext.AttrItem> {
-        return this.availAttrList
-                .concat([{n: null, label: '--------------------'}])
-                .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
-    }
-
-
-    private setDimensionAttr(dimNum:number, v:string):void {
-        if (dimNum === 1) {
-            this.attr1 = v;
-
-        } else if (dimNum === 2) {
-            this.attr2 = v;
-
-        } else {
-            throw new Error('Unknown dimension specification');
-        }
-    }
-
-
-    getAttr1():string {
-        return this.attr1;
-    }
-
-    getAttr2():string {
-        return this.attr2;
-    }
-
-    getAttr1IsStruct():boolean {
-        return this.isStructAttr(this.attr1);
-    }
-
-    getAttr2IsStruct():boolean {
-        return this.isStructAttr(this.attr2);
-    }
-
-    getSetupError():string {
-        return this.setupError;
-    }
-
-    getQueryContainsWithin():boolean {
-        return this.queryContainsWithin;
-    }
-
-    getMinAbsFreq():string {
-        return this.minAbsFreq;
-    }
-
     getFilterZeroVectors():boolean {
         return this.filterZeroVectors;
     }
@@ -552,28 +323,7 @@ export class ContingencyTableStore extends SimplePageStore {
     }
 
     getPositionRangeLabels():Array<string> {
-        return ContingencyTableStore.POSITION_LABELS;
+        return GeneralCTStore.POSITION_LABELS;
     }
-
-    getAlignType(dim:number):string {
-        if (dim === 1) {
-            return this.alignType1;
-
-        } else if (dim === 2) {
-            return this.alignType2;
-        }
-        return undefined;
-    }
-
-    getCtxIndex(dim:number):number {
-        if (dim === 1) {
-            return this.ctxIndex1;
-
-        } else if (dim === 2) {
-            return this.ctxIndex2;
-        }
-        return undefined;
-    }
-
 
 }

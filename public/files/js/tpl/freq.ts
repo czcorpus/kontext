@@ -29,7 +29,9 @@ import {MultiDict, dictToPairs} from '../util';
 import {bind as bindPopupBox} from '../popupbox';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
+import {ContingencyTableStore} from '../stores/freqs/ctable';
+import {CTFlatStore} from '../stores/freqs/flatCtable';
+import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
@@ -52,6 +54,8 @@ class FreqPage {
     private ttFreqStore:TTFreqFormStore;
 
     private ctFreqStore:ContingencyTableStore;
+
+    private ctFlatFreqStore:CTFlatStore;
 
     private collFormStore:CollFormStore;
 
@@ -93,8 +97,8 @@ class FreqPage {
             freqFormProps
         );
 
-        const ctFormInputs = this.layoutModel.getConf<ContingencyTableFormInputs>('CTFreqFormProps');
-        const ctFormProps:ContingencyTableFormProperties = {
+        const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
+        const ctFormProps:CTFormProperties = {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             ctattr1: ctFormInputs.ctattr1,
@@ -112,6 +116,11 @@ class FreqPage {
             this.layoutModel,
             ctFormProps
         );
+        this.ctFlatFreqStore = new CTFlatStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            ctFormProps
+        );
 
         const freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
@@ -119,7 +128,8 @@ class FreqPage {
             this.layoutModel.layoutViews,
             this.mlFreqStore,
             this.ttFreqStore,
-            this.ctFreqStore
+            this.ctFreqStore,
+            this.ctFlatFreqStore
         );
 
         // -------------------- coll form -------------------
@@ -247,12 +257,15 @@ class FreqPage {
                 );
             break;
             case 'ct':
-                this.ctFreqStore.importData(this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>('CTFreqResultData'));
+                const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>('CTFreqResultData');
+                this.ctFreqStore.importData(data);
+                this.ctFlatFreqStore.importData(data);
                 const ctFreqResultView = ctResultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentTools(),
                     this.layoutModel.layoutViews,
-                    this.ctFreqStore
+                    this.ctFreqStore,
+                    this.ctFlatFreqStore
                 );
                 this.layoutModel.renderReactComponent(
                     ctFreqResultView.CTFreqResultView,

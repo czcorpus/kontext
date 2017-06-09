@@ -111,6 +111,7 @@
         "global__sorted_click_change": "Sorted by this column. Click to change the order.",
         "global__click_to_sort": "Click to sort by this column.",
         "global__curr_page_num": "Current page",
+        "global__sort_by_this_col": "Sort by this column",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",
@@ -398,7 +399,10 @@
         "freq__ct_pfilter_legend": "Instant filter for the current concordance",
         "freq__ct_pfilter_btn_label": "View filtered concordance",
         "freq__ct_detail_legend": "Detail",
-        "freq__ct_change_attrs": "Current attributes. Click to change."
+        "freq__ct_change_attrs": "Current attributes. Click to change.",
+        "freq__ct_view_mode": "View mode",
+        "freq__ct_switch_table_view": "Table",
+        "freq__ct_switch_list_view": "List of pairs"
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -512,6 +516,7 @@
         "global__sorted_click_change": "Seřazeno podle tohoto sloupce. Klikněte pro změnu pořadí.",
         "global__click_to_sort": "Klikněte pro seřazení podle tohoto sloupce.",
         "global__curr_page_num": "Aktuální stránka",
+        "global__sort_by_this_col": "Třídit podle tohoto sloupce",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",
@@ -799,6 +804,9 @@
         "freq__ct_pfilter_legend": "Rychlý filtr aktuální konkordance",
         "freq__ct_pfilter_btn_label": "Zobrazit filtrovanou konkordanci",
         "freq__ct_detail_legend": "Detail",
-        "freq__ct_change_attrs": "Stávající atributy. Klikněte pro změnu zadání."
+        "freq__ct_change_attrs": "Stávající atributy. Klikněte pro změnu zadání.",
+        "freq__ct_view_mode": "Způsob zobrazení",
+        "freq__ct_switch_table_view": "tabulka",
+        "freq__ct_switch_list_view": "seznam dvojic"
     }
 }
