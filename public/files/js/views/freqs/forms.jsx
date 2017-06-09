@@ -24,119 +24,115 @@ import React from 'vendor/react';
 
 export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFormStore, ctFreqStore) {
 
+    const util = mixins[0];
+
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
-    const StructAttrSelect = React.createClass({
+    const StructAttrSelect = (props) => {
 
-        _handleCheckboxChange : function (evt) {
+        const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_TT_SET_FTTATTR',
                 props : {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <table className="struct-attr-list">
-                    <tbody>
-                        {this.props.structAttrList.map((item, i) => {
-                            return (
-                                <tr key={`item_${i}`}>
-                                    <td>
-                                        <label htmlFor={`ttsort_${i}`}>{item.label}</label>
-                                    </td>
-                                    <td>
-                                        <input id={`ttsort_${i}`}
-                                            type="checkbox"
-                                            value={item.n}
-                                            checked={this.props.fttattr.contains(item.n)}
-                                            onChange={this._handleCheckboxChange}  />
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            );
-        }
-    });
+        return (
+            <table className="struct-attr-list">
+                <tbody>
+                    {props.structAttrList.map((item, i) => {
+                        return (
+                            <tr key={`item_${i}`}>
+                                <td>
+                                    <label htmlFor={`ttsort_${i}`}>{item.label}</label>
+                                </td>
+                                <td>
+                                    <input id={`ttsort_${i}`}
+                                        type="checkbox"
+                                        value={item.n}
+                                        checked={props.fttattr.contains(item.n)}
+                                        onChange={handleCheckboxChange}  />
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        );
+    };
 
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
-    const FreqLimitInput = React.createClass({
+    const FreqLimitInput = (props) => {
 
-        _handleInputChange : function (evt) {
+        const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: `${this.props.actionPrefix}_SET_FLIMIT`,
+                actionType: `${props.actionPrefix}_SET_FLIMIT`,
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return <input type="text" name="flimit" value={this.props.flimit}
-                        style={{width: '3em'}} onChange={this._handleInputChange} />;
-        }
-    });
+        return <input type="text" name="flimit" value={props.flimit}
+                    style={{width: '3em'}} onChange={handleInputChange} />;
+    };
 
     // ---------------------- <IncludeEmptyCheckbox /> --------------------------------------------
 
-    const IncludeEmptyCheckbox = React.createClass({
+    const IncludeEmptyCheckbox = (props) => {
 
-        _handleCheckboxChange : function () {
+        const handleCheckboxChange = () => {
             dispatcher.dispatch({
                 actionType: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
                 props: {}
             });
-        },
+        };
 
-        render : function () {
-            return <input type="checkbox" checked={this.props.fttIncludeEmpty}
-                        onChange={this._handleCheckboxChange} />;
-        }
-    });
+        return <input type="checkbox" checked={props.fttIncludeEmpty}
+                    onChange={handleCheckboxChange} />;
+    };
 
     // ---------------------- <TTFreqForm /> --------------------------------------------
 
-    const TTFreqForm = React.createClass({
+    class TTFreqForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._getStoreState();
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+        }
 
-        _getStoreState : function () {
+        _getStoreState() {
             return {
                 structAttrList: ttFreqFormStore.getStructAttrList(),
                 fttattr: ttFreqFormStore.getFttattr(),
                 fttIncludeEmpty: ttFreqFormStore.getFttIncludeEmpty(),
                 flimit: ttFreqFormStore.getFlimit()
             };
-        },
+        }
 
-        getInitialState : function () {
-            return this._getStoreState();
-        },
-
-        _storeChangeHandler : function () {
+        _storeChangeHandler() {
             this.setState(this._getStoreState());
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             ttFreqFormStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             ttFreqFormStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <table className="form">
                     <tbody>
                         <tr>
                             <th>
-                                {this.translate('freq__freq_limit_label')}:
+                                {util.translate('freq__freq_limit_label')}:
                             </th>
                             <td>
                                 <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_TT" />
@@ -144,7 +140,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                         </tr>
                         <tr>
                             <th>
-                                {this.translate('freq__incl_no_hits_cats_label')}:
+                                {util.translate('freq__incl_no_hits_cats_label')}:
                             </th>
                             <td>
                                 <IncludeEmptyCheckbox fttIncludeEmpty={this.state.fttIncludeEmpty} />
@@ -160,33 +156,29 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 </table>
             );
         }
-    });
+    }
 
     // -------------------- <CTFreqFormMinFreqInput /> --------------------------------------------
 
-    const CTFreqFormMinFreqInput = React.createClass({
+    const CTFreqFormMinFreqInput = (props) => {
 
-        mixins : mixins,
-
-        _handleInputChange : function (evt) {
+        const handleInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_SET_MIN_ABS_FREQ',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <label>
-                    {this.translate('freq__ct_min_freq_label')}:{'\u00a0'}
-                    <input type="text" onChange={this._handleInputChange}
-                            value={this.props.value} style={{width: '3em'}} />
-                </label>
-            );
-        }
-    });
+        return (
+            <label>
+                {util.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                <input type="text" onChange={handleInputChange}
+                        value={props.value} style={{width: '3em'}} />
+            </label>
+        );
+    };
 
     // -------- <CTFreqPosSelect /> --------------------------------
 
@@ -233,11 +225,17 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
 
     // -------------------- <CTFreqForm /> --------------------------------------------
 
-    const CTFreqForm = React.createClass({
+    class CTFreqForm extends React.Component {
 
-        mixins: mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchState();
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._handleAttrSelChange = this._handleAttrSelChange.bind(this);
+        }
 
-        _fetchState : function () {
+
+        _fetchState() {
             return {
                 allAttrs: ctFreqStore.getAllAvailAttrs(),
                 attr1: ctFreqStore.getAttr1(),
@@ -252,25 +250,25 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 ctxIndex1: ctFreqStore.getCtxIndex(1),
                 ctxIndex2: ctFreqStore.getCtxIndex(2)
             };
-        },
+        }
 
-        getInitialState : function () {
+        getInitialState() {
             return this._fetchState();
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             ctFreqStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             ctFreqStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        _storeChangeHandler : function () {
+        _storeChangeHandler() {
             this.setState(this._fetchState());
-        },
+        }
 
-        _handleAttrSelChange : function (dimension, evt) {
+        _handleAttrSelChange(dimension, evt) {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_FORM_SET_DIMENSION_ATTR',
                 props: {
@@ -278,14 +276,14 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        _rendersetupError : function () {
+        _rendersetupError() {
             if (this.state.setupError) {
                 return (
                     <p className="setup-warning">
-                        <img src={this.createStaticUrl('img/warning-icon.svg')}
-                                alt={this.translate('global__warning')} />
+                        <img src={util.createStaticUrl('img/warning-icon.svg')}
+                                alt={util.translate('global__warning')} />
                         {this.state.setupError}
                     </p>
                 );
@@ -293,13 +291,13 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             } else {
                 return null;
             }
-        },
+        }
 
-        _renderPosAttrOpts : function (dim, alignType) {
+        _renderPosAttrOpts(dim, alignType) {
             return [
                 <tr key="label">
                     <th>
-                        {this.translate('freq__ml_th_position')}:
+                        {util.translate('freq__ml_th_position')}:
                     </th>
                     <td>
                         <CTFreqPosSelect
@@ -310,7 +308,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 </tr>,
                 <tr key="input">
                     <th>
-                        {this.translate('freq__ml_th_node_start_at')}:
+                        {util.translate('freq__ml_th_node_start_at')}:
                     </th>
                     <td>
                         <CTFreqNodeStartSelect
@@ -319,9 +317,9 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                     </td>
                 </tr>
             ];
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="CTFreqForm">
                     <div>
@@ -335,10 +333,10 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                             <tr>
                                 <th className="main" rowSpan="3">
                                     <strong>1.</strong>
-                                    ({this.translate('freq__ct_dim1')})
+                                    ({util.translate('freq__ct_dim1')})
                                 </th>
                                 <th>
-                                    {this.translate('freq__ml_th_attribute')}:
+                                    {util.translate('freq__ml_th_attribute')}:
                                 </th>
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 1)}
@@ -354,10 +352,10 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                             <tr>
                                 <th className="main" rowSpan="3">
                                     <strong>2.</strong>
-                                    ({this.translate('freq__ct_dim2')})
+                                    ({util.translate('freq__ct_dim2')})
                                 </th>
                                 <th>
-                                    {this.translate('freq__ml_th_attribute')}:
+                                    {util.translate('freq__ml_th_attribute')}:
                                 </th>
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 2)}
@@ -372,208 +370,193 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 </div>
             );
         }
-    });
+    }
 
     // -------------------- <MLAttrSelection /> --------------------------------------------
 
-    const MLAttrSelection = React.createClass({
+    const MLAttrSelection = (props) => {
 
-        _handleSelection : function (evt) {
+        const handleSelection = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_ML_SET_MLXATTR',
                 props: {
-                    levelIdx: this.props.levelIdx,
+                    levelIdx: props.levelIdx,
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <select onChange={this._handleSelection} value={this.props.mlxAttrValue}>
-                    {this.props.attrList.map(item => {
-                        return <option key={item.n} value={item.n}>{item.label}</option>
-                    })}
-                </select>
-            );
-        }
-    });
+        return (
+            <select onChange={handleSelection} value={props.mlxAttrValue}>
+                {props.attrList.map(item => {
+                    return <option key={item.n} value={item.n}>{item.label}</option>
+                })}
+            </select>
+        );
+    };
 
 
     // ---------------------- <MLIgnoreCaseCheckbox /> ---------------------
 
-    const MLIgnoreCaseCheckbox = React.createClass({
+    const MLIgnoreCaseCheckbox = (props) => {
 
-        _handleChange : function () {
+        const handleChange = () => {
             dispatcher.dispatch({
                 actionType: 'FREQ_ML_SET_MLXICASE',
                 props: {
-                    levelIdx: this.props.levelIdx
+                    levelIdx: props.levelIdx
                 }
             });
-        },
+        };
 
-        render : function () {
-            return <input type="checkbox" onChange={this._handleChange} checked={this.props.mlxicaseValue} />;
-        }
-    });
+        return <input type="checkbox" onChange={handleChange} checked={props.mlxicaseValue} />;
+    };
 
 
     // ---------------------- <MLPositionSelect /> ---------------------
 
-    const MLPositionSelect = React.createClass({
+    const MLPositionSelect = (props) => {
 
-        _handleSelection : function (evt) {
+        const handleSelection = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_ML_SET_MLXCTX_INDEX',
                 props: {
-                    levelIdx: this.props.levelIdx,
+                    levelIdx: props.levelIdx,
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <select onChange={this._handleSelection} value={this.props.mlxctxIndex}>
-                    {this.props.positionRangeLabels.map((item, i) => {
-                        return <option key={`opt_${i}`} value={i}>{item}</option>;
-                    })}
-                </select>
-            );
-        }
-    });
+        return (
+            <select onChange={handleSelection} value={props.mlxctxIndex}>
+                {props.positionRangeLabels.map((item, i) => {
+                    return <option key={`opt_${i}`} value={i}>{item}</option>;
+                })}
+            </select>
+        );
+    };
 
 
     // ---------------------- <MLPosAlignmentSelect /> ---------------------
 
-    const MLPosAlignmentSelect = React.createClass({
+    const MLPosAlignmentSelect = (props) => {
 
-        mixins : mixins,
-
-        _handleSelection : function (evt) {
+        const handleSelection = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_ML_SET_ALIGN_TYPE',
                 props: {
-                    levelIdx: this.props.levelIdx,
+                    levelIdx: props.levelIdx,
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <select className="kwic-alignment" value={this.props.alignType}
-                        onChange={this._handleSelection}>
-                    <option value="left">{this.translate('freq__align_type_left')}</option>
-                    <option value="right">{this.translate('freq__align_type_right')}</option>
-                </select>
-            );
-        }
-    });
+        return (
+            <select className="kwic-alignment" value={props.alignType}
+                    onChange={handleSelection}>
+                <option value="left">{util.translate('freq__align_type_left')}</option>
+                <option value="right">{util.translate('freq__align_type_right')}</option>
+            </select>
+        );
+    };
 
     // ---------------------- <MLMoveLevelControl /> ---------------------
 
-    const MLMoveLevelControl = React.createClass({
+    const MLMoveLevelControl = (props) => {
 
-        mixins : mixins,
-
-        _handleClick : function (direction) {
+        const handleClick = (direction) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_ML_CHANGE_LEVEL',
                 props: {
-                    levelIdx: this.props.levelIdx,
+                    levelIdx: props.levelIdx,
                     direction: direction
                 }
             });
-        },
+        };
 
-        render : function () {
-            const iconStyle = {cursor: 'pointer'};
-            return (
-                <div>
-                    {this.props.levelIdx < this.props.numLevels - 1 ?
-                        <img src={this.createStaticUrl('img/sort_desc.svg')} style={iconStyle}
-                                onClick={this._handleClick.bind(this, 'down')}
-                                alt={this.translate('freq__move_level_up')} />
-                        : null}
-                    {this.props.levelIdx > 0 ?
-                        <img src={this.createStaticUrl('img/sort_asc.svg')} style={iconStyle}
-                                onClick={this._handleClick.bind(this, 'up')}
-                                alt={this.translate('freq__move_level_down')} />
-                        : null}
-                </div>
-            );
-        }
-
-    });
+        const iconStyle = {cursor: 'pointer'};
+        return (
+            <div>
+                {props.levelIdx < props.numLevels - 1 ?
+                    <img src={util.createStaticUrl('img/sort_desc.svg')} style={iconStyle}
+                            onClick={handleClick.bind(null, 'down')}
+                            alt={util.translate('freq__move_level_up')} />
+                    : null}
+                {props.levelIdx > 0 ?
+                    <img src={util.createStaticUrl('img/sort_asc.svg')} style={iconStyle}
+                            onClick={handleClick.bind(null, 'up')}
+                            alt={util.translate('freq__move_level_down')} />
+                    : null}
+            </div>
+        );
+    };
 
     // ---------------------- <SingleLevelField /> ---------------------
 
-    const SingleLevelFieldTR = React.createClass({
+    const SingleLevelFieldTR = (props) => {
 
-        mixins : mixins,
-
-        _handleRemoveLevelClick : function () {
+        const handleRemoveLevelClick = () => {
             dispatcher.dispatch({
                 actionType: 'FREQ_ML_REMOVE_LEVEL',
                 props: {
-                    levelIdx: this.props.levelIdx
+                    levelIdx: props.levelIdx
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <tr className="level-line">
-                    <td className="level">{this.props.levelIdx + 1}.</td>
-                    <td>
-                        <MLAttrSelection
-                                attrList={this.props.attrList}
-                                levelIdx={this.props.levelIdx}
-                                mlxAttrValue={this.props.mlxAttrValue} />
-                    </td>
-                    <td>
-                        <MLIgnoreCaseCheckbox
-                                levelIdx={this.props.levelIdx}
-                                mlxicaseValue={this.props.mlxicaseValue} />
-                    </td>
-                    <td>
-                        <MLPositionSelect positionRangeLabels={this.props.positionRangeLabels}
-                                levelIdx={this.props.levelIdx}
-                                mlxctxIndex={this.props.mlxctxIndex} />
-                    </td>
-                    <td>
-                        <MLPosAlignmentSelect
-                                levelIdx={this.props.levelIdx}
-                                alignType={this.props.alignType} />
-                    </td>
-                    <td>
-                        <MLMoveLevelControl levelIdx={this.props.levelIdx} numLevels={this.props.numLevels} />
-                    </td>
-                    <td>
-                        {this.props.isRemovable ?
-                            (<a onClick={this._handleRemoveLevelClick}>
-                                <img src={this.createStaticUrl('img/close-icon.svg')}
-                                        alt={this.translate('freq__remove_level_btn')}
-                                        style={{width: '1em'}} />
-                            </a>)
-                        : null}
-                    </td>
-                </tr>
-            );
-        }
-
-    });
+        return (
+            <tr className="level-line">
+                <td className="level">{props.levelIdx + 1}.</td>
+                <td>
+                    <MLAttrSelection
+                            attrList={props.attrList}
+                            levelIdx={props.levelIdx}
+                            mlxAttrValue={props.mlxAttrValue} />
+                </td>
+                <td>
+                    <MLIgnoreCaseCheckbox
+                            levelIdx={props.levelIdx}
+                            mlxicaseValue={props.mlxicaseValue} />
+                </td>
+                <td>
+                    <MLPositionSelect positionRangeLabels={props.positionRangeLabels}
+                            levelIdx={props.levelIdx}
+                            mlxctxIndex={props.mlxctxIndex} />
+                </td>
+                <td>
+                    <MLPosAlignmentSelect
+                            levelIdx={props.levelIdx}
+                            alignType={props.alignType} />
+                </td>
+                <td>
+                    <MLMoveLevelControl levelIdx={props.levelIdx} numLevels={props.numLevels} />
+                </td>
+                <td>
+                    {props.isRemovable ?
+                        (<a onClick={handleRemoveLevelClick}>
+                            <img src={util.createStaticUrl('img/close-icon.svg')}
+                                    alt={util.translate('freq__remove_level_btn')}
+                                    style={{width: '1em'}} />
+                        </a>)
+                    : null}
+                </td>
+            </tr>
+        );
+    };
 
 
     // ---------------------- <MLFreqForm /> ---------------------
 
-    const MLFreqForm = React.createClass({
+    class MLFreqForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._getStoreState();
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._handleAddLevelClick = this._handleAddLevelClick.bind(this);
+        }
 
-        _getStoreState : function () {
+        _getStoreState() {
             return {
                 attrList: mlFreqFormStore.getAttrList(),
                 flimit: mlFreqFormStore.getFlimit(),
@@ -585,39 +568,35 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 alignTypes: mlFreqFormStore.getAlignTypes(),
                 maxNumLevels: mlFreqFormStore.getMaxNumLevels()
             };
-        },
+        }
 
-        getInitialState : function () {
-            return this._getStoreState();
-        },
-
-        _storeChangeHandler : function () {
+        _storeChangeHandler() {
             this.setState(this._getStoreState());
-        },
+        }
 
-        _handleAddLevelClick : function () {
+        _handleAddLevelClick() {
             dispatcher.dispatch({
                 actionType: 'FREQ_ML_ADD_LEVEL',
                 props: {}
             });
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             mlFreqFormStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             mlFreqFormStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <table className="form">
                     <tbody>
                         <tr>
                             <td>
                                 <label style={{fontWeight: 'bold'}}>
-                                    {this.translate('freq__freq_limit_label')}:{'\u00a0'}
+                                    {util.translate('freq__freq_limit_label')}:{'\u00a0'}
                                     <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_ML" />
                                 </label>
                             </td>
@@ -629,19 +608,19 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                     <tbody>
                                         <tr>
                                             <th>
-                                                {this.translate('freq__ml_th_level')}
+                                                {util.translate('freq__ml_th_level')}
                                             </th>
                                             <th>
-                                                {this.translate('freq__ml_th_attribute')}
+                                                {util.translate('freq__ml_th_attribute')}
                                             </th>
                                             <th>
-                                                {this.translate('freq__ml_th_icase')}
+                                                {util.translate('freq__ml_th_icase')}
                                             </th>
                                             <th>
-                                                {this.translate('freq__ml_th_position')}
+                                                {util.translate('freq__ml_th_position')}
                                             </th>
                                             <th>
-                                                {this.translate('freq__ml_th_node_start_at')}
+                                                {util.translate('freq__ml_th_node_start_at')}
                                             </th>
                                             <th />
                                             <th />
@@ -662,7 +641,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                         {this.state.levels.size < this.state.maxNumLevels ?
                                             (<tr>
                                                 <td>
-                                                    <a id="add-freq-level-button" title={this.translate('freq__add_level_btn')}
+                                                    <a id="add-freq-level-button" title={util.translate('freq__add_level_btn')}
                                                         onClick={this._handleAddLevelClick}>+</a>
                                                 </td>
                                                 <td colSpan="6" />
@@ -676,23 +655,27 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 </table>
             );
         }
-
-    });
+    }
 
 
     // ---------------------- <FrequencyForm /> ---------------------
 
-    const FrequencyForm = React.createClass({
+    class FrequencyForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = {formType: this.props.initialFreqFormVariant};
+            this._handleFormSwitch = this._handleFormSwitch.bind(this);
+            this._handleSubmitClick = this._handleSubmitClick.bind(this);
+        }
 
-        _handleFormSwitch : function (evt) {
+        _handleFormSwitch(evt) {
             this.setState({
                 formType: evt.target.value
             });
-        },
+        }
 
-        _handleSubmitClick : function () {
+        _handleSubmitClick() {
             const actions = {
                 ml: 'FREQ_ML_SUBMIT',
                 tt: 'FREQ_TT_SUBMIT',
@@ -702,15 +685,9 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 actionType: actions[this.state.formType],
                 props: {}
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                formType: this.props.initialFreqFormVariant
-            };
-        },
-
-        _renderContents : function () {
+        _renderContents() {
             switch (this.state.formType) {
                 case 'ml':
                     return <MLFreqForm />;
@@ -721,22 +698,22 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 default:
                      return null;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <form className="freq-form">
                     <fieldset>
                         <legend>
                             <select onChange={this._handleFormSwitch} value={this.state.formType}>
                                 <option value="ml">
-                                    {this.translate('freq__sel_form_type_ml')}
+                                    {util.translate('freq__sel_form_type_ml')}
                                 </option>
                                 <option value="tt">
-                                    {this.translate('freq__sel_form_type_tt')}
+                                    {util.translate('freq__sel_form_type_tt')}
                                 </option>
                                 <option value="ct">
-                                    {this.translate('freq__sel_form_type_ct')}
+                                    {util.translate('freq__sel_form_type_ct')}
                                 </option>
                             </select>
                         </legend>
@@ -744,14 +721,13 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                     </fieldset>
                     <div className="buttons">
                         <button className="default-button" type="button" onClick={this._handleSubmitClick}>
-                            {this.translate('freq__make_freq_list_btn')}
+                            {util.translate('freq__make_freq_list_btn')}
                         </button>
                     </div>
                 </form>
             );
         }
-
-    });
+    }
 
 
     return {
