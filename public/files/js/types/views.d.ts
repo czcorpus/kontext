@@ -321,7 +321,7 @@ declare module "views/analysis/coll" {
 }
 
 
-declare module "views/analysis/freq" {
+declare module "views/freqs/forms" {
 
     export interface FreqFormViews {
         FrequencyForm: React.ReactClass;

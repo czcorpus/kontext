@@ -68,7 +68,7 @@ import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis/frame';
 import {init as collFormInit, CollFormViews} from 'views/analysis/coll';
-import {init as freqFormInit, FreqFormViews} from 'views/analysis/freq';
+import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
