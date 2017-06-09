@@ -47,7 +47,7 @@ import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
 import {SortStore, MultiLevelSortStore, SortFormProperties, fetchSortFormArgs, importMultiLevelArg} from '../stores/query/sort';
-import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
+import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
 import tagHelperPlugin from 'plugins/taghelper/init';

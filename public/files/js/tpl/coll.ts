@@ -21,7 +21,7 @@
 import {PageModel} from './document';
 import * as $ from 'jquery';
 import {MultiDict, dictToPairs} from '../util';
-import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/analysis/collForm';
+import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {ContingencyTableStore, ContingencyTableFormProperties, ContingencyTableFormInputs} from '../stores/freqs/ctable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
