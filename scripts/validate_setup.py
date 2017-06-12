@@ -300,17 +300,6 @@ def test_9(finfo):
     yield finfo.permissions(path, match='2775')
 
 
-@test('Test <calc_pid_dir> parent directory',
-      'Test webserver owns the directory or anyone can write there')
-def test_10(finfo):
-    path = os.path.dirname(settings.get('corpora', 'calc_pid_dir'))
-    yield finfo.dir_exists(path)
-    status, err = finfo.test_owner_and_group(path, owner=finfo.webserver_user)
-    if status is False:
-        status, err = finfo.permissions(path, match='777', ignore_suid=True)
-    yield status, err
-
-
 @test('Test <freqs_precalc_dir> exists',
       '...test proper ownership')
 def test_11(finfo):

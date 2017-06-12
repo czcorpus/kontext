@@ -49,7 +49,6 @@
         </values>
     </logging>
     <corpora>
-        <calc_pid_dir>/path/to/tmp/calc/pid/dir</calc_pid_dir>
         <manatee_registry>/var/local/corpora/registry</manatee_registry>
         <manatee_registry_locale>cs_CZ</manatee_registry_locale>
         <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
