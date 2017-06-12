@@ -189,7 +189,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 actionType: 'FREQ_CT_SET_CTX',
                 props: {
                     dim: props.dim,
-                    value: evt.target.value
+                    value: parseInt(evt.target.value, 10)
                 }
             });
         };

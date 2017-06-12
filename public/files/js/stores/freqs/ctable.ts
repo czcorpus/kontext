@@ -221,14 +221,15 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.data = this.origData;
     }
 
-    private generateCrit(attr:string):string {
-        return this.isStructAttr(attr) ? '0' : this.getAttrCtx(attr);
+    private generateCrit(dim:number):string {
+        const attr = this.getAttrOfDim(dim);
+        return this.isStructAttr(attr) ? '0' : this.getAttrCtx(dim);
     }
 
     private getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
-        args.set('ctfcrit1', this.generateCrit(this.attr1));
-        args.set('ctfcrit2', this.generateCrit(this.attr2));
+        args.set('ctfcrit1', this.generateCrit(1));
+        args.set('ctfcrit2', this.generateCrit(2));
         args.set('ctattr1', this.attr1);
         args.set('ctattr2', this.attr2);
         args.set('ctminfreq', this.minAbsFreq);
