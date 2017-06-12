@@ -64,7 +64,6 @@ const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTab
     return ans;
 }
 
-
 /**
  *
  */
@@ -80,6 +79,10 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private filterZeroVectors:boolean;
 
+    private sortDim1:string;
+
+    private sortDim2:string;
+
     private isTransposed:boolean;
 
     private static COLOR_HEATMAP = [
@@ -92,6 +95,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.d2Labels = Immutable.List<[string, boolean]>();
         this.filterZeroVectors = true;
         this.isTransposed = false;
+        this.sortDim1 = 'attr';
+        this.sortDim2 = 'attr';
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -153,8 +158,84 @@ export class ContingencyTableStore extends GeneralCTStore {
                     this.applyQuickFilter(payload.props['args'][0], payload.props['args'][1]);
                     // leaves the page here
                 break;
+                case 'FREQ_CT_SORT_BY_DIMENSION':
+                    this.sortByDimension(
+                        payload.props['dim'],
+                        payload.props['attr']
+                    );
+                    this.updateData();
+                    this.notifyChangeListeners();
+                break;
             }
         });
+    }
+
+    private sortByDimension(dim:number, sortAttr:string):void {
+        if (dim === 1) {
+            this.sortDim1 = sortAttr;
+
+        } else if (dim === 2) {
+            this.sortDim2 = sortAttr;
+        }
+    }
+
+    private getRowSum(attrVal:string):{ipm:number; abs:number} {
+        const d = this.data[attrVal];
+        let sumIpm = 0;
+        let sumAbs = 0;
+        for (let k in d) {
+            sumIpm += d[k] ? d[k].ipm : 0;
+            sumAbs += d[k] ? d[k].abs : 0;
+        }
+        return {ipm: sumIpm, abs: sumAbs};
+    }
+
+    private getColSum(attrVal:string):{ipm:number; abs:number} {
+        let sumIpm = 0;
+        let sumAbs = 0;
+        for (let k in this.data) {
+            const d = this.data[k][attrVal];
+            sumIpm += d ? d.ipm : 0;
+            sumAbs += d ? d.ipm : 0;
+        }
+        return {ipm: sumIpm, abs: sumAbs};
+    }
+
+    /**
+     *
+     * @param items
+     * @param quantity either 'ipm', 'abs' or 'attr'
+     * @param vector either 'col' or 'row'
+     */
+    private sortLabels(items:Immutable.List<[string, boolean]>, quantity:string, vector:string):Immutable.List<[string, boolean]> {
+        const sumFn:(v:string)=>{ipm:number; abs:number} = (() => {
+            switch (vector) {
+            case 'row':
+                return this.getRowSum.bind(this);
+            case 'col':
+                return this.getColSum.bind(this);
+            }
+        })();
+        const fetchValFn:(v:string)=>any = (() => {
+            switch (quantity) {
+            case 'ipm':
+                return v => sumFn(v).ipm;
+            case 'abs':
+                return v => sumFn(v).abs;
+            case 'attr':
+                return v => v;
+            }
+        })();
+        const v = quantity === 'attr' ? 1 : -1;
+        return items.sort((x1, x2) => {
+            if (fetchValFn(x1[0]) > fetchValFn(x2[0])) {
+                return v;
+            }
+            if (fetchValFn(x1[0]) < fetchValFn(x2[0])) {
+                return -1 * v;
+            }
+            return 0;
+        }).toList();
     }
 
     private updateData():void {
@@ -164,10 +245,12 @@ export class ContingencyTableStore extends GeneralCTStore {
         if (this.filterZeroVectors) {
             this.removeZeroVectors();
 
-        } else {
+        } else { // reset visibility of all the values
             this.d1Labels = this.d1Labels.map<[string, boolean]>(x => [x[0], true]).toList();
             this.d2Labels = this.d2Labels.map<[string, boolean]>(x => [x[0], true]).toList();
         }
+        this.d1Labels = this.sortLabels(this.d1Labels, this.sortDim1, 'row');
+        this.d2Labels = this.sortLabels(this.d2Labels, this.sortDim2, 'col');
     }
 
     private transposeTable():void {
@@ -321,6 +404,14 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getIsTransposed():boolean {
         return this.isTransposed;
+    }
+
+    getSortDim1():string {
+        return this.sortDim1;
+    }
+
+    getSortDim2():string {
+        return this.sortDim2;
     }
 
     getPositionRangeLabels():Array<string> {

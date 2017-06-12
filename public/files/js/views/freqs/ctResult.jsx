@@ -102,7 +102,64 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         return (
             <label>
                 {mixins.translate('freq__ct_transpose_table')}:{'\u00a0'}
-                <input type="checkbox" checked={props.isChecked} onChange={handleClickTranspose} />
+                <input type="checkbox" checked={props.isChecked} onChange={handleClickTranspose}
+                        style={{verticalAlign: 'middle'}} />
+            </label>
+        );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    const TableSortRowsSelect = (props) => {
+
+        const handleChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
+                props: {
+                    dim: 1,
+                    attr: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <label>
+                {mixins.translate('freq__ct_sort_row_label')}:{'\u00a0'}
+                <select onChange={handleChange} value={props.sortAttr}>
+                    <option value="ipm">{mixins.translate('freq__ct_sort_row_opt_ipm')}</option>
+                    <option value="abs">{mixins.translate('freq__ct_sort_row_opt_abs')}</option>
+                    <option value="attr">{mixins.translate('freq__ct_sort_col_opt_attr')}</option>
+                </select>
+            </label>
+        );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    const TableSortColsSelect = (props) => {
+
+        const handleChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
+                props: {
+                    dim: 2,
+                    attr: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <label>
+                {mixins.translate('freq__ct_sort_col_label')}:{'\u00a0'}
+                <select onChange={handleChange} value={props.sortAttr}>
+                    <option value="ipm">{mixins.translate('freq__ct_sort_col_opt_ipm')}</option>
+                    <option value="abs">{mixins.translate('freq__ct_sort_col_opt_abs')}</option>
+                    <option value="attr">{mixins.translate('freq__ct_sort_col_opt_attr')}</option>
+                </select>
             </label>
         );
     };
@@ -113,9 +170,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
     const CTTableModForm = (props) => {
 
         return (
-            <form>
+            <form className="CTTableModForm">
                 <fieldset>
-                    <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
+                    <legend>{mixins.translate('freq__ct_data_parameters_legend')}</legend>
                     <ul className="items">
                         <li>
                             <QuantitySelect currVal={props.viewQuantity} changeQuantity={props.changeQuantity} />
@@ -125,6 +182,17 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                         </li>
                         <li>
                             <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
+                        </li>
+                    </ul>
+                </fieldset>
+                <fieldset>
+                    <legend>{mixins.translate('freq__ct_view_parameters_legend')}</legend>
+                    <ul className="items">
+                        <li>
+                            <TableSortRowsSelect sortAttr={props.sortDim1} />
+                        </li>
+                        <li>
+                            <TableSortColsSelect sortAttr={props.sortDim2} />
                         </li>
                         <li>
                             <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
@@ -282,7 +350,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         return (
             <th className="attr-label">
                 <a onClick={handleClick} title={mixins.translate('freq__ct_change_attrs')}>
-                    {props.attr1} {'\u005C'} {props.attr2}
+                    {props.attr1}
+                    {'\u005C'}
+                    {props.attr2}
                 </a>
             </th>
         );
@@ -309,6 +379,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 data: ctFreqDataRowsStore.getData(),
                 attr1: ctFreqDataRowsStore.getAttr1(),
                 attr2: ctFreqDataRowsStore.getAttr2(),
+                sortDim1: ctFreqDataRowsStore.getSortDim1(),
+                sortDim2: ctFreqDataRowsStore.getSortDim2(),
                 adHocSubcWarning: ctFreqDataRowsStore.getQueryContainsWithin(),
                 minAbsFreq: ctFreqDataRowsStore.getMinAbsFreq(),
                 viewQuantity: 'ipm',
@@ -398,7 +470,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                 viewQuantity={this.state.viewQuantity}
                                 changeQuantity={this._changeQuantity}
                                 hideEmptyVectors={this.state.hideEmptyVectors}
-                                transposeIsChecked={this.state.transposeIsChecked} />
+                                transposeIsChecked={this.state.transposeIsChecked}
+                                sortDim1={this.state.sortDim1}
+                                sortDim2={this.state.sortDim2} />
                     </div>
                     <table className="ct-data">
                         <tbody>
@@ -531,7 +605,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                     <div className="toolbar">
                         <form>
                             <fieldset>
-                                <legend>{mixins.translate('freq__ct_parameters_legend')}</legend>
+                                <legend>{mixins.translate('freq__ct_data_parameters_legend')}</legend>
                                 <ul className="items">
                                     <li>
                                         <MinFreqInput currVal={this.state.minAbsFreq} />
