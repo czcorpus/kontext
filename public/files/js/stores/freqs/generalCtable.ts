@@ -190,20 +190,31 @@ export abstract class GeneralCTStore extends SimplePageStore {
     }
 
     /**
-     * Return filter range value (e.g. '-3>0') for a provided attribute.
+     * Return filter range value (e.g. '-3>0') for a provided dimension attribute.
      *
-     * @param attr either this.attr1 or this.attr2
+     * @param dim either 1 (rows) or 2 (cols)
      */
-    protected getAttrCtx(attr:string):string {
-        if (attr === this.attr1) {
+    protected getAttrCtx(dim:number):string {
+        if (dim === 1) {
             return this.alignType1 === 'left' ?
                 GeneralCTStore.POSITION_LA[this.ctxIndex1] : GeneralCTStore.POSITION_RA[this.ctxIndex1];
 
-        } else if (attr === this.attr2) {
+        } else if (dim === 2) {
             return this.alignType2 === 'left' ?
                 GeneralCTStore.POSITION_LA[this.ctxIndex2] : GeneralCTStore.POSITION_RA[this.ctxIndex2];
         }
-        throw new Error('Unknown attr ' + attr);
+        throw new Error('Unknown dimension ' + dim);
+    }
+
+    protected getAttrOfDim(dim:number):string {
+        switch (dim) {
+            case 1:
+            return this.attr1;
+            case 2:
+            return this.attr2;
+            default:
+            throw new Error(`Unknown dimension: ${dim}`);
+        }
     }
 
     /**
@@ -214,20 +225,21 @@ export abstract class GeneralCTStore extends SimplePageStore {
      */
     protected generatePFilter(v1:string, v2:string):[string, string] {
 
-        const pfilter = (attr:string, v:string):string => {
+        const pfilter = (dim:number, v:string):string => {
+            const attr = this.getAttrOfDim(dim);
             if (this.isStructAttr(attr)) {
                 const [s, a] = attr.split('.');
                 return `p0 0 1 [] within <${s} ${a}="${v}" />`;
 
             } else {
                 const icase = ''; // TODO - optionally (?i)
-                const begin = this.getAttrCtx(attr);
-                const end = this.getAttrCtx(attr);
+                const begin = this.getAttrCtx(dim);
+                const end = this.getAttrCtx(dim);
                 return `p${begin} ${end} 0 [${attr}="${icase}${v}"]`;
             }
         };
 
-        return [pfilter(this.attr1, v1), pfilter(this.attr2, v2)];
+        return [pfilter(1, v1), pfilter(2, v2)];
     }
 
     /**
