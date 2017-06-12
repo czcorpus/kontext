@@ -325,11 +325,6 @@
             </element>
             <element name="corpora">
                 <interleave>
-                    <element name="calc_pid_dir">
-                        <a:documentation>Specifies a directory where concordance calculation
-                        auxiliary files are temporarily created.</a:documentation>
-                        <text />
-                    </element>
                     <element name="manatee_registry">
                         <a:documentation>A directory where Manatee registry files are located.
                         This one is very important.</a:documentation>

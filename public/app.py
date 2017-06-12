@@ -237,11 +237,6 @@ if settings.get('global', 'manatee_path', None):
 if settings.get('global', 'umask', None):
     os.umask(int(settings.get('global', 'umask'), 8))
 
-if not settings.contains('corpora', 'calc_pid_dir'):
-    raise Exception('Missing configuration: calc_pid_dir')
-elif not os.path.exists(settings.get('corpora', 'calc_pid_dir')):
-    os.makedirs(settings.get('corpora', 'calc_pid_dir'))
-
 if not settings.get_bool('global', 'maintenance'):
     application = KonTextWsgiApp()
 else:
