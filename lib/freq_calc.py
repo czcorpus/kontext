@@ -355,7 +355,7 @@ def calculate_freqs_mp(args):
 # ------------------ Contingency table freq. distribution --------------
 
 
-class CLFreqCalcArgs(FixedDict):
+class CTFreqCalcArgs(FixedDict):
     q = None
     user_id = None
     corpname = None
@@ -363,7 +363,7 @@ class CLFreqCalcArgs(FixedDict):
     subcname = None
     subcpath = None
     minsize = None
-    flimit = None
+    ctminfreq = None
     fcrit = None
     cache_path = None
 
@@ -399,6 +399,8 @@ class CTCalculation(object):
         words = manatee.StrVector()
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
+        import logging
+        logging.getLogger(__name__).warning('LIMIT: %s' % (limit,))
         self._corp.freq_dist(self._conc.RS(), crit, limit, words, freqs, norms)
 
         crit_lx = re.split(r'\s+', crit)
@@ -429,7 +431,7 @@ class CTCalculation(object):
         self._corp = cm.get_Corpus(self._args.corpname, self._args.subcname)
         self._conc = conclib.get_conc(corp=self._corp, user_id=self._args.user_id, minsize=self._args.minsize,
                                       q=self._args.q, fromp=0, pagesize=0, async=0, save=0, samplesize=0)
-        return [x[0] + x[1:] for x in self.ct_dist(self._args.fcrit, limit=1)]
+        return [x[0] + x[1:] for x in self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq)]
 
 
 def calculate_freqs_ct(args):

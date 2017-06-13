@@ -60,6 +60,7 @@ export interface CTFreqCell {
     ipm:number;
     domainSize:number;
     bgColor:string;
+    confInterval?:[number, number];
     pfilter:[string, string];
 }
 

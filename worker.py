@@ -277,7 +277,7 @@ def calculate_freqs(args):
 
 @app.task
 def calculate_freqs_ct(args):
-    args = freq_calc.CLFreqCalcArgs(**args)
+    args = freq_calc.CTFreqCalcArgs(**args)
     return freq_calc.CTCalculation(args).run()
 
 

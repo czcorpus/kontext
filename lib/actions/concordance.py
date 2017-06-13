@@ -1097,14 +1097,14 @@ class Actions(Querying):
         """
         """
 
-        args = freq_calc.CLFreqCalcArgs()
+        args = freq_calc.CTFreqCalcArgs()
         args.corpname = self.corp.corpname
         args.subcname = getattr(self.corp, 'subcname', None)
         args.subcpath = self.subcpath
         args.user_id = self._session_get('user', 'user')
         args.minsize = None
         args.q = self.args.q
-        args.flimit = int(request.args.get('flimit', '1'))
+        args.ctminfreq = int(request.args.get('ctminfreq', '1'))
         args.fcrit = '{0} {1} {2} {3}'.format(self.args.ctattr1, self.args.ctfcrit1,
                                               self.args.ctattr2, self.args.ctfcrit2)
         ans = freq_calc.calculate_freqs_ct(args)

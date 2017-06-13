@@ -28,6 +28,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
+import {confInterval} from './statTables';
 
 
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
@@ -85,6 +86,20 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private isTransposed:boolean;
 
+    /**
+     * A lower freq. limit used by server when fetching data.
+     * This is allows the store to retrieve additional data
+     * in case user requires a lower limit (which is currently
+     * not on the client-side).
+     */
+    private serverMinAbsFreq:number;
+
+    private isWaiting:boolean;
+
+    private throttleTimeout:number;
+
+    private onNewDataHandlers:Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>;
+
     private static COLOR_HEATMAP = [
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
@@ -97,6 +112,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.isTransposed = false;
         this.sortDim1 = 'attr';
         this.sortDim2 = 'attr';
+        this.serverMinAbsFreq = parseInt(props.ctminfreq, 10);
+        this.isWaiting = false;
+        this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -136,9 +154,23 @@ export class ContingencyTableStore extends GeneralCTStore {
                 case 'FREQ_CT_SET_MIN_ABS_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
                         this.minAbsFreq = payload.props['value'];
-                        if (this.data) {
-                            this.updateData();
+
+                        if (this.throttleTimeout) {
+                            window.clearTimeout(this.throttleTimeout);
                         }
+                        this.isWaiting = true;
+                        this.throttleTimeout = window.setTimeout(() => {
+                            if (this.data) {
+                                this.updateData().then(
+                                    () => {
+                                        this.notifyChangeListeners();
+                                    },
+                                    (err) => {
+                                        this.pageModel.showMessage('error', err);
+                                    }
+                                );
+                            }
+                        }, 400);
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
@@ -147,7 +179,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 break;
                 case 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY':
                     this.filterZeroVectors = payload.props['value'];
-                    this.updateData();
+                    this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_TRANSPOSE_TABLE':
@@ -163,7 +195,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                         payload.props['dim'],
                         payload.props['attr']
                     );
-                    this.updateData();
+                    this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
             }
@@ -238,7 +270,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         }).toList();
     }
 
-    private updateData():void {
+    private updateLocalData():void {
         this.data = filterDataTable(this.origData, (item) => {
             return item && item.abs >= parseInt(this.minAbsFreq || '0', 10);
         });
@@ -251,6 +283,31 @@ export class ContingencyTableStore extends GeneralCTStore {
         }
         this.d1Labels = this.sortLabels(this.d1Labels, this.sortDim1, 'row');
         this.d2Labels = this.sortLabels(this.d2Labels, this.sortDim2, 'col');
+    }
+
+    private updateData():RSVP.Promise<boolean> { // TODO type
+        return (() => {
+            if (parseInt(this.minAbsFreq, 10) < this.serverMinAbsFreq) {
+                return this.fetchData();
+
+            } else {
+                return new RSVP.Promise((resolve, reject) => {
+                    resolve(null);
+                });
+            }
+        })().then(
+            (data) => {
+                this.isWaiting = false;
+                if (data !== null) {
+                    this.serverMinAbsFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
+                    this.importData(data.data);
+
+                } else {
+                    this.updateLocalData();
+                }
+                return true;
+            }
+        );
     }
 
     private transposeTable():void {
@@ -268,7 +325,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         [this.d1Labels, this.d2Labels] = [this.d2Labels, this.d1Labels];
         [this.attr1, this.attr2] = [this.attr2, this.attr1];
         this.isTransposed = !this.isTransposed;
-        this.updateData();
+        this.updateLocalData();
     }
 
     private removeZeroVectors():void {
@@ -319,24 +376,34 @@ export class ContingencyTableStore extends GeneralCTStore {
         return args;
     }
 
-    private reloadData():RSVP.Promise<any> { // TODO
+    submitForm():void {
+        const args = this.getSubmitArgs();
+        window.location.href = this.pageModel.createActionUrl('freqct', args.items());
+    }
+
+    addOnNewDataHandler(fn:(data:FreqResultResponse.CTFreqResultData)=>void) {
+        this.onNewDataHandlers = this.onNewDataHandlers.push(fn);
+    }
+
+    private fetchData():RSVP.Promise<FreqResultResponse.CTFreqResultResponse> {
         const args = this.getSubmitArgs();
         args.set('format', 'json');
-        return this.pageModel.ajax(
+        return this.pageModel.ajax<FreqResultResponse.CTFreqResultResponse>(
             'GET',
             this.pageModel.createActionUrl('freqct'),
             args
 
         ).then(
-            (data:any) => { // TODO type
-                this.importData(data);
+            (data) => {
+                if (!data.contains_errors) {
+                    this.onNewDataHandlers.forEach(fn => fn(data.data));
+                    return data;
+
+                } else {
+                    throw new Error(data.messages[0]);
+                }
             }
         );
-    }
-
-    submitForm():void {
-        const args = this.getSubmitArgs();
-        window.location.href = this.pageModel.createActionUrl('freqct', args.items());
     }
 
     importData(data:FreqResultResponse.CTFreqResultData):void {
@@ -362,6 +429,8 @@ export class ContingencyTableStore extends GeneralCTStore {
                 bgColor: undefined,
                 pfilter: this.generatePFilter(item[0], item[1]),
             };
+            let tmp = confInterval(ipm, item[2], '0.05');
+            console.log('interval: ', ipm, item[2], tmp[0] * item[3], tmp[1] * item[3]);
 
             if (ipm > fMax) {
                 fMax = ipm;
@@ -383,7 +452,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 pfilter: cell.pfilter
             };
         });
-        this.updateData();
+        this.updateLocalData();
     }
 
     getData():any {
@@ -416,6 +485,10 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getPositionRangeLabels():Array<string> {
         return GeneralCTStore.POSITION_LABELS;
+    }
+
+    getIsWaiting():boolean {
+        return this.isWaiting;
     }
 
 }

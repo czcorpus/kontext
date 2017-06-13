@@ -260,6 +260,9 @@ class FreqPage {
                 const data = this.layoutModel.getConf<FreqResultResponse.CTFreqResultData>('CTFreqResultData');
                 this.ctFreqStore.importData(data);
                 this.ctFlatFreqStore.importData(data);
+                this.ctFreqStore.addOnNewDataHandler((newData) =>
+                    this.ctFlatFreqStore.importDataAndNotify(newData)
+                );
                 const ctFreqResultView = ctResultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentTools(),
