@@ -18,6 +18,7 @@ specified by attributes values).
 from functools import partial
 import collections
 import re
+import logging
 
 import l10n
 from argmapping import Args
@@ -240,7 +241,11 @@ class TextTypes(object):
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
-        subcorp_attr_list = re.split(r'\s*[,|]\s*', subcorpattrs)
+        subcorp_attr_list_tmp = re.split(r'\s*[,|]\s*', subcorpattrs)
+        subcorp_attr_list = collections.OrderedDict(zip(subcorp_attr_list_tmp, [None]*len(subcorp_attr_list_tmp))).keys()
+        subcorpattrs = '|'.join(subcorp_attr_list)
+        if len(subcorp_attr_list_tmp) != len(subcorp_attr_list):
+            logging.getLogger(__name__).warning('Duplicate SUBCORPATTRS item found')
 
         if plugins.has_plugin('live_attributes'):
             ans['bib_attr'] = corpus_info['metadata']['label_attr']
@@ -252,7 +257,6 @@ class TextTypes(object):
         else:
             ans['bib_attr'] = None
             list_none = ()
-
         tt = self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
                                        shrink_list=list_none, collator_locale=corpus_info.collator_locale)
         self._add_tt_custom_metadata(tt)
