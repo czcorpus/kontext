@@ -29,54 +29,43 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
 
     // ----------------------- <ResultSizeInfo /> -------------------------
 
-    class ResultSizeInfo extends React.Component {
+    const ResultSizeInfo = (props) => {
 
-        constructor(props) {
-            super(props)
-        }
-
-        render () {
-            return (
-                <p>
-                    <strong>{mixins.translate('freq__avail_label')}:</strong>
-                    {'\u00a0'}
-                    {mixins.translate('freq__avail_items_{num_items}', {num_items: this.props.totalItems})}
-                    {'\u00a0'}
-                    {this.props.totalPages ?
-                        <span>({mixins.translate('freq__avail_pages_{num_pages}', {num_pages: this.props.totalPages})})</span>
-                        : null}
-                </p>
-            );
-        }
-    }
+        return (
+            <p>
+                <strong>{mixins.translate('freq__avail_label')}:</strong>
+                {'\u00a0'}
+                {mixins.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})}
+                {'\u00a0'}
+                {props.totalPages ?
+                    <span>({mixins.translate('freq__avail_pages_{num_pages}', {num_pages: props.totalPages})})</span>
+                    : null}
+            </p>
+        );
+    };
 
     // ----------------------- <Paginator /> -------------------------
 
-    class Paginator extends React.Component {
+    const Paginator = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handlePageChange = this._handlePageChange.bind(this);
-        }
-
-        _handlePageChangeByClick(curr, step) {
-            this.props.setLoadingFlag();
+        const handlePageChangeByClick = (curr, step) => {
+            props.setLoadingFlag();
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_SET_CURRENT_PAGE',
                 props: {value: String(Number(curr) + step)}
             });
-        }
+        };
 
-        _handlePageChange(evt) {
-            this.props.setLoadingFlag();
+        const handlePageChange = (evt) => {
+            props.setLoadingFlag();
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_SET_CURRENT_PAGE',
                 props: {value: evt.target.value}
             });
-        }
+        };
 
-        _renderPageNum() {
-            if (this.props.isLoading) {
+        const renderPageNum = () => {
+            if (props.isLoading) {
                 return (
                     <span className="input-like" style={{width: '3em'}}>
                         <img src={mixins.createStaticUrl('img/ajax-loader-bar.gif')}
@@ -85,41 +74,39 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
                 );
 
             } else {
-                return <input type="text" value={this.props.currentPage}
+                return <input type="text" value={props.currentPage}
                                     title={mixins.translate('global__curr_page_num')}
-                                    onChange={this._handlePageChange}
-                                    disabled={!this.props.hasPrevPage && !this.props.hasNextPage}
+                                    onChange={handlePageChange}
+                                    disabled={!props.hasPrevPage && !props.hasNextPage}
                                     style={{width: '3em'}} />;
             }
-        }
+        };
 
-        render() {
-            return (
-                <div className="bonito-pagination">
-                    <form>
-                        <div className="bonito-pagination-core">
-                            <div className="bonito-pagination-left">
-                                {this.props.hasPrevPage ?
-                                    (<a onClick={(e) => this._handlePageChangeByClick(this.props.currentPage, -1)}>
-                                        <img className="over-img" src={mixins.createStaticUrl('img/prev-page.svg')}
-                                                alt="další" title="další" />
-                                    </a>) : null}
-                            </div>
-                            {this._renderPageNum()}
-                            <div className="bonito-pagination-right">
-                                {this.props.current}
-                                {this.props.hasNextPage ?
-                                    (<a onClick={(e) => this._handlePageChangeByClick(this.props.currentPage, 1)}>
-                                        <img className="over-img" src={mixins.createStaticUrl('img/next-page.svg')}
-                                                alt="další" title="další" />
-                                    </a>) : null}
-                            </div>
+        return (
+            <div className="bonito-pagination">
+                <form>
+                    <div className="bonito-pagination-core">
+                        <div className="bonito-pagination-left">
+                            {props.hasPrevPage ?
+                                (<a onClick={(e) => handlePageChangeByClick(props.currentPage, -1)}>
+                                    <img className="over-img" src={mixins.createStaticUrl('img/prev-page.svg')}
+                                            alt="další" title="další" />
+                                </a>) : null}
                         </div>
-                    </form>
-                </div>
-            );
-        }
-    }
+                        {renderPageNum()}
+                        <div className="bonito-pagination-right">
+                            {props.current}
+                            {props.hasNextPage ?
+                                (<a onClick={(e) => handlePageChangeByClick(props.currentPage, 1)}>
+                                    <img className="over-img" src={mixins.createStaticUrl('img/next-page.svg')}
+                                            alt="další" title="další" />
+                                </a>) : null}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        );
+    };
 
     // ----------------------- <FilterForm /> -------------------------
 
