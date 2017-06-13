@@ -244,6 +244,7 @@ class TextTypes(object):
 
         if plugins.has_plugin('live_attributes'):
             ans['bib_attr'] = corpus_info['metadata']['label_attr']
+            ans['id_attr'] = corpus_info['metadata']['id_attr']
             list_none = (ans['bib_attr'], )
             tmp = [s for s in subcorp_attr_list]  # making copy here
             if ans['bib_attr'] and ans['bib_attr'] not in tmp:  # if bib type is not in subcorpattrs
@@ -251,6 +252,7 @@ class TextTypes(object):
                 subcorpattrs = '|'.join(tmp)  # we ignore NoSkE '|' vs. ',' stuff deliberately here
         else:
             ans['bib_attr'] = None
+            ans['id_attr'] = None
             list_none = ()
 
         tt = self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
