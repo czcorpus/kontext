@@ -60,7 +60,8 @@ export interface Block {
 export interface InitialData {
     Blocks:Array<Block>;
     Normslist:Array<any>;
-    bib_attr:string;
+    bib_attr:string; // bib item label (possibly non-unique)
+    id_attr:string; // actual bib item identifier (unique)
 }
 
 
@@ -75,6 +76,10 @@ export interface InitialData {
 export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTypesStore {
 
     private attributes:Immutable.List<TextTypes.AttributeSelection>;
+
+    private bibLabelAttr:string;
+
+    private bibIdAttr:string;
 
     /**
      * A reference used to reset state.
@@ -126,6 +131,8 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
             checkedItems:TextTypes.ServerCheckedValues={}) {
         super(dispatcher);
         this.attributes = Immutable.List(this.importInitialData(data, checkedItems));
+        this.bibLabelAttr = data.bib_attr;
+        this.bibIdAttr = data.id_attr;
         this.initialAttributes = this.attributes;
         this.selectAll = Immutable.Map<string, boolean>(
                 this.attributes.map(
@@ -441,7 +448,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         const ans = {};
         this.attributes.forEach((attrSel:TextTypes.AttributeSelection) => {
             if (attrSel.hasUserChanges()) {
-                ans[attrSel.name] = attrSel.exportSelections(lockedOnesOnly);
+                ans[attrSel.name !== this.bibLabelAttr ? attrSel.name : this.bibIdAttr] = attrSel.exportSelections(lockedOnesOnly);
             }
         });
         return ans;
