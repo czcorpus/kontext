@@ -25,193 +25,155 @@ import React from 'vendor/react';
 export function init(dispatcher, mixins, freqDataRowsStore) {
 
     // ----------------------- <DataRowPNFilter /> --------------------------------
-    class DataRowPNFilter extends React.Component {
+    const DataRowPNFilter = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handlePosClick = this._handlePosClick.bind(this);
-            this._handleNegClick = this._handleNegClick.bind(this);
-        }
-
-        _handlePosClick(evt) {
+        const handlePosClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_APPLY_QUICK_FILTER',
                 props: {
-                    args: this.props.pfilter
+                    args: props.pfilter
                 }
             });
-        }
+        };
 
-        _handleNegClick(evt) {
+        const handleNegClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_APPLY_QUICK_FILTER',
                 props: {
-                    args: this.props.nfilter
+                    args: props.nfilter
                 }
             });
-        }
+        };
 
-        _hasSomeFilter() {
-            return this.props.pfilter.size + this.props.nfilter.size > 0;
-        }
+        if (props.pfilter.size + props.nfilter.size > 0) {
+            return (
+                <td>
+                    {props.pfilter.size > 0 ? <a onClick={handlePosClick}>p</a> :
+                            <span title={mixins.translate('freq__neg_filter_disabled')}>p</span>}
+                    {'\u00a0/\u00a0'}
+                    {props.nfilter.size > 0 ? <a onClick={handleNegClick}>n</a> :
+                            <span title={mixins.translate('freq__neg_filter_disabled')}>n</span>}
+                </td>
+            );
 
-        render() {
-            if (this._hasSomeFilter()) {
-                return (
-                    <td>
-                        {this.props.pfilter.size > 0 ? <a onClick={this._handlePosClick}>p</a> :
-                                <span title={mixins.translate('freq__neg_filter_disabled')}>p</span>}
-                        {'\u00a0/\u00a0'}
-                        {this.props.nfilter.size > 0 ? <a onClick={this._handleNegClick}>n</a> :
-                                <span title={mixins.translate('freq__neg_filter_disabled')}>n</span>}
-                    </td>
-                );
-
-            } else {
-                return <td />;
-            }
+        } else {
+            return <td />;
         }
-    }
+    };
 
     // ----------------------- <DataRow /> --------------------------------
-    class DataRow extends React.Component {
+    const DataRow = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
-
-        render() {
-            return (
-                <tr>
-                    <td className="num">{this.props.data.idx + 1}</td>
-                    <DataRowPNFilter pfilter={this.props.data.pfilter} nfilter={this.props.data.nfilter} />
-                    {this.props.data.Word.map((w, i) => <td key={i}>{w}</td>)}
-                    <td className="num">{this.props.data.freq}</td>
-                    <td className="num">{this.props.data.rel}</td>
-                    <td>
-                        <div className="bar" style={{height: '10px', width: `${this.props.data.relbar}px`}} />
-                    </td>
-                </tr>
-            );
-        }
-    }
+        return (
+            <tr>
+                <td className="num">{props.data.idx + 1}</td>
+                <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
+                {props.data.Word.map((w, i) => <td key={i}>{w}</td>)}
+                <td className="num">{props.data.freq}</td>
+                <td className="num">{props.data.rel}</td>
+                <td>
+                    <div className="bar" style={{height: '10px', width: `${props.data.relbar}px`}} />
+                </td>
+            </tr>
+        );
+    };
 
     // ----------------------- <DataRowNoRel /> --------------------------------
-    class DataRowNoRel extends React.Component {
+    const DataRowNoRel = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
-
-        render() {
-            return (
-                <tr>
-                    <td className="num">{this.props.data.idx + 1}</td>
-                    <DataRowPNFilter pfilter={this.props.data.pfilter} nfilter={this.props.data.nfilter} />
-                    {this.props.data.Word.map((w, i) => <td key={i}>{w}</td>)}
-                    <td className="num">{this.props.data.freq}</td>
-                    <td>
-                        <div className="bar" style={{height: '10px', width: `${this.props.data.fbar}px`}} />
-                    </td>
-                </tr>
-            );
-        }
+        return (
+            <tr>
+                <td className="num">{props.data.idx + 1}</td>
+                <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
+                {props.data.Word.map((w, i) => <td key={i}>{w}</td>)}
+                <td className="num">{props.data.freq}</td>
+                <td>
+                    <div className="bar" style={{height: '10px', width: `${props.data.fbar}px`}} />
+                </td>
+            </tr>
+        );
     }
 
     /**
      *  ----------------------- <TableColHead /> --------------------------------
      */
-    class TableColHead extends React.Component {
+    const TableColHead = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleClick = this._handleClick.bind(this);
-        }
-
-        _handleClick() {
-            this.props.setLoadingFlag();
+        const handleClick = () => {
+            props.setLoadingFlag();
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_SORT_BY_COLUMN',
                 props: {
-                    value: this.props.data.s
+                    value: props.data.s
                 }
             });
-        }
+        };
 
-        _renderSortingIcon() {
-            if (this.props.sortColumn === this.props.data.s) {
+        const renderSortingIcon = () => {
+            if (props.sortColumn === props.data.s) {
                 return (
                     <span title={mixins.translate('global__sorted')}>
-                         {this.props.data.n}
+                         {props.data.n}
                         <img className="sort-flag" src={mixins.createStaticUrl('img/sort_desc.svg')} />
                     </span>
                 )
 
             } else {
                 return (
-                    <a onClick={this._handleClick} title={mixins.translate('global__click_to_sort')}>
-                         {this.props.data.n}
+                    <a onClick={handleClick} title={mixins.translate('global__click_to_sort')}>
+                         {props.data.n}
                     </a>
                 );
             }
-        }
+        };
 
-        render() {
-            return (
-                <th key={this.props.data.n}
-                        title={this.props.data.title || ''}>
-                    {this._renderSortingIcon()}
-                </th>
-            );
-
-        }
-    }
+        return (
+            <th key={props.data.n}
+                    title={props.data.title || ''}>
+                {renderSortingIcon()}
+            </th>
+        );
+    };
 
     /**
      * ----------------------- <DataTable /> --------------------------------
      */
-    class DataTable extends React.Component {
+    const DataTable = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
-
-        _getBarChartTitle() {
-            if (this.props.head.size > 0) {
-                return this.props.head.get(-1).title || '';
+        const getBarChartTitle = () => {
+            if (props.head.size > 0) {
+                return props.head.get(-1).title || '';
             }
             return '';
-        }
+        };
 
-        _renderRows() {
-            if (this.props.rows.size === 0 || this.props.rows.get(0).relbar) {
-                return this.props.rows.map(item => {
+        const renderRows = () => {
+            if (props.rows.size === 0 || props.rows.get(0).relbar) {
+                return props.rows.map(item => {
                     return <DataRow key={item.idx} data={item} />;
                 });
 
             } else {
-                return this.props.rows.map(item => {
+                return props.rows.map(item => {
                     return <DataRowNoRel key={item.idx} data={item} />;
                 });
             }
-        }
+        };
 
-        render() {
-            return (
-                <table className="data">
-                    <tbody>
-                        <tr>
-                            <th />
-                            <th>Filter</th>
-                            {this.props.head.map(item => <TableColHead key={item.n} sortColumn={this.props.sortColumn}
-                                        data={item} setLoadingFlag={this.props.setLoadingFlag} />)}
-                            <th title={this._getBarChartTitle()} />
-                        </tr>
-                        {this._renderRows()}
-                    </tbody>
-                </table>
-            );
-        }
+        return (
+            <table className="data">
+                <tbody>
+                    <tr>
+                        <th />
+                        <th>Filter</th>
+                        {props.head.map(item => <TableColHead key={item.n} sortColumn={props.sortColumn}
+                                    data={item} setLoadingFlag={props.setLoadingFlag} />)}
+                        <th title={getBarChartTitle()} />
+                    </tr>
+                    {renderRows()}
+                </tbody>
+            </table>
+        );
     }
 
 
