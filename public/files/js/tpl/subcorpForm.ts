@@ -25,6 +25,7 @@
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../ts/declarations/react.d.ts" />
 
 import * as $ from 'jquery';
 import * as RSVP from 'vendor/rsvp';
@@ -39,6 +40,7 @@ import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
 import corplistComponent = require('plugins/corparch/init');
 import * as Immutable from 'vendor/immutable';
+import * as React from 'vendor/react';
 
 
 export interface TTInitData {
