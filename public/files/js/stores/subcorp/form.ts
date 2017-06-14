@@ -20,11 +20,102 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
 
 
 import {SimplePageStore} from '../base';
+import * as Immutable from 'vendor/immutable';
+import {MultiDict} from '../../util';
+import {PageModel} from '../../tpl/document';
+import {TextTypesStore} from '../../stores/textTypes/attrValues';
 
+export class SubcorpFormStore extends SimplePageStore {
 
+    private pageModel:PageModel;
+
+    private inputMode:string;
+
+    private corpname:string;
+
+    private subcname:string;
+
+    private withinFormStore:SubcorpWithinFormStore;
+
+    private textTypesStore:TextTypesStore;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel,
+            withinFormStore:SubcorpWithinFormStore, textTypesStore:TextTypesStore, corpname:string) {
+        super(dispatcher);
+        this.pageModel = pageModel;
+        this.withinFormStore = withinFormStore;
+        this.textTypesStore = textTypesStore;
+        this.corpname = corpname;
+        this.inputMode = 'gui';
+        this.subcname = '';
+
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'SUBCORP_FORM_SET_INPUT_MODE':
+                    this.inputMode = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_FORM_SET_SUBCNAME':
+                    this.subcname = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_FORM_SUBMIT':
+                    this.submit();
+                    // leaves the page here
+                break;
+            }
+        });
+    }
+
+    private getSubmitArgs():MultiDict {
+        const args = new MultiDict();
+        args.set('corpname', this.corpname);
+        args.set('subcname', this.subcname);
+        if (this.inputMode === 'raw') {
+            args.set('within_json', this.withinFormStore.exportJson());
+
+        } else if (this.inputMode === 'gui') {
+            const selections = this.textTypesStore.exportSelections(false);
+            for (let p in selections) {
+                args.replace(`sca_${p}`, selections[p]);
+            }
+        }
+        return args;
+    }
+
+    submit():void {
+        const args = this.getSubmitArgs();
+        console.log(JSON.stringify(args.items()));
+        if (this.subcname != '') {
+            this.pageModel.setLocationPost(
+                '/subcorpus/subcorp',
+                args.items()
+            );
+
+        } else {
+            this.pageModel.showMessage('error',
+                    this.pageModel.translate('subcform__missing_subcname'));
+        }
+
+    }
+
+    getSubcname():string {
+        return this.subcname;
+    }
+
+    getInputMode():string {
+        return this.inputMode;
+    }
+
+}
+
+/**
+ *
+ */
 export class WithinLine {
     rowIdx:number;
     negated:boolean;
@@ -40,56 +131,90 @@ export class WithinLine {
 }
 
 
-export class SubcorpFormStore extends SimplePageStore {
+/**
+ *
+ */
+export class SubcorpWithinFormStore extends SimplePageStore {
 
-    private lines:Array<WithinLine>;
+    private lines:Immutable.List<WithinLine>;
 
     constructor(dispatcher:Kontext.FluxDispatcher, initialStructName:string,
             initialState:Array<{[key:string]:string}>) {
         super(dispatcher);
-        let self = this;
-        this.lines = [];
+        this.lines = Immutable.List<WithinLine>();
 
         (initialState || []).forEach((item) => {
-            self.importLine(item);
+            this.importLine(item);
         });
-        if (this.lines.length === 0) {
-            this.lines.push(new WithinLine(this.lines.length, false, initialStructName, ''));
+        if (this.lines.size === 0) {
+            this.lines = this.lines.push(new WithinLine(this.lines.size, false, initialStructName, ''));
         }
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
-                case 'LINE_ADDED':
-                    self.addLine(payload.props);
-                    self.notifyChangeListeners('LINE_ADDED');
-                    break;
-                case 'LINE_UPDATED':
-                    self.updateLine(payload.props['row'], payload.props);
-                    self.notifyChangeListeners('LINE_UPDATED');
-                    break;
-                case 'LINE_REMOVED':
-                    self.removeLine(payload.props['rowIdx']);
-                    self.notifyChangeListeners('LINE_REMOVED');
+                case 'SUBCORP_FORM_WITHIN_LINE_ADDED':
+                    this.addLine(payload.props);
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE':
+                    this.updateWithinType(payload.props['rowIdx'], payload.props['value']);
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT':
+                    this.updateStruct(payload.props['rowIdx'], payload.props['value']);
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_FORM_WITHIN_LINE_SET_CQL':
+                    this.updateCql(payload.props['rowIdx'], payload.props['value']);
+                    this.notifyChangeListeners();
+                break;
+                case 'SUBCORP_FORM_WITHIN_LINE_REMOVED':
+                    this.removeLine(payload.props['rowIdx']);
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
 
-    updateLine(i, data) {
-        this.lines[i] = new WithinLine(i, data['negated'], data['structureName'], data['attributeCql']);
+    updateWithinType(i, negated) {
+        this.lines = this.lines.set(i, new WithinLine(
+            i,
+            negated,
+            this.lines.get(i).structureName,
+            this.lines.get(i).attributeCql
+        ));
+    }
+
+    updateStruct(i, structName) {
+        this.lines = this.lines.set(i, new WithinLine(
+            i,
+            this.lines.get(i).negated,
+            structName,
+            this.lines.get(i).attributeCql
+        ));
+    }
+
+    updateCql(i, cql) {
+        this.lines = this.lines.set(i, new WithinLine(
+            i,
+            this.lines.get(i).negated,
+            this.lines.get(i).structureName,
+            cql
+        ));
     }
 
     importLine(data) {
-        this.lines.push(new WithinLine(this.lines.length, data['negated'], data['structure_name'], data['attribute_cql']));
+        this.lines = this.lines.push(new WithinLine(this.lines.size, data['negated'], data['structure_name'], data['attribute_cql']));
     }
 
     addLine(data) {
-        this.lines.push(new WithinLine(this.lines.length, data['negated'], data['structureName'], data['attributeCql']));
+        this.lines = this.lines.push(new WithinLine(this.lines.size, data['negated'], data['structureName'], data['attributeCql']));
     }
 
     removeLine(idx) {
-        this.lines[idx] = null; // we want to keep deleted index to not confuse React (hint: key={idx})
+        this.lines = this.lines.remove(idx);
     }
 
-    getLines():Array<WithinLine> {
+    getLines():Immutable.List<WithinLine> {
         return this.lines;
     }
 
