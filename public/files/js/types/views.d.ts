@@ -88,11 +88,11 @@ declare module "views/concordance/detail" {
 declare module "views/subcorp/forms" {
 
     export interface SubcorpFormViews {
-        WithinBuilder:React.ReactClass;
+        SubcorpForm:React.ReactClass;
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            subcorpFormStore:any):SubcorpFormViews;
+            layoutViews:Kontext.LayoutViews, subcorpFormStore:any, subcorpWithinFormStore:any):SubcorpFormViews;
 }
 
 

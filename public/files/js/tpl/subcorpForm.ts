@@ -31,7 +31,7 @@ import * as RSVP from 'vendor/rsvp';
 import {PageModel} from './document';
 import * as popupBox from '../popupbox';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
-import {SubcorpFormStore} from '../stores/subcorp/form';
+import {SubcorpWithinFormStore, SubcorpFormStore} from '../stores/subcorp/form';
 import * as liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer = require('plugins/subcmixer/init');
 import {UserSettings} from '../userSettings';
@@ -40,6 +40,12 @@ import {init as ttViewsInit} from 'views/textTypes';
 import corplistComponent = require('plugins/corparch/init');
 import * as Immutable from 'vendor/immutable';
 
+
+export interface TTInitData {
+    component:React.Component;
+    props:{[p:string]:any};
+    ttStore:TextTypesStore;
+}
 
 
 /**
@@ -55,18 +61,12 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     private subcorpFormStore:SubcorpFormStore;
 
+    private subcorpWithinFormStore:SubcorpWithinFormStore;
+
     private textTypesStore:TextTypesStore;
 
     constructor(pageModel:PageModel) {
         this.layoutModel = pageModel;
-        const subcForm = $('#subcorp-form');
-        this.corplistComponent = corplistComponent.create(
-            window.document.getElementById('corparch-mount'),
-            'subcorpus/subcorp_form',
-            this.layoutModel.pluginApi(),
-            this,
-            {editable: true}
-        );
     }
 
     registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {}
@@ -85,90 +85,19 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return Immutable.List<{n:string; label:string}>();
     }
 
-    subcCreationVariantSwitch(value:string):void {
-        const widgetMap = {
-            'raw': '#subc-within-row',
-            'gui': '#subcorp-text-type-selection'
-        };
-        const jqSubmitBtn = $('#subcorp-form').find('button[type="submit"]');
-        for (let p in widgetMap) {
-            if (widgetMap.hasOwnProperty(p)) {
-                $(widgetMap[p]).hide();
-            }
-        }
-        jqSubmitBtn.off('click.customized');
-        $(widgetMap[value]).show();
-        if (value === 'raw') {
-            jqSubmitBtn.show();
-            jqSubmitBtn.on('click.customized', (evt:JQueryEventObject) => {
-                $('#within-json-field').val(this.subcorpFormStore.exportJson());
-            });
-            $('.text-type-params').find('input[type="checkbox"]').attr('disabled', '');
-            this.layoutModel.renderReactComponent(this.viewComponents.WithinBuilder,
-                    $('#subc-within-row .container').get(0),
-                    {
-                        structsAndAttrs: this.layoutModel.getConf('structsAndAttrs')
-                    }
-            );
-
-        } else if (value === 'gui') {
-            jqSubmitBtn.show();
-
-        } else {
-            throw new Error('Unknown subcorpus sub-menu item: ' + value);
-        }
-    }
-
-    initSubcCreationVariantSwitch():void {
-        $('input.method-select').on('click', (event) => {
-            this.subcCreationVariantSwitch($(event.target).val());
-        });
-        this.subcCreationVariantSwitch($('input[name="method"]:checked').val());
-    }
-
-    /**
-     * When user changes size from tokens to document counts (or other way around) he loses
-     * current unsaved checkbox selection. This forces a dialog box to prevent unwanted action.
-     */
-    sizeUnitsSafeSwitch():void {
-        $('.text-type-top-bar a').on('click', (event) => {
-            const ans = confirm(this.layoutModel.translate('global__this_action_resets_current_selection'));
-
-            if (!ans) {
-                event.preventDefault();
-                event.stopPropagation(); // in case some other actions are bound
-            }
-        });
-    }
-
-    initHints():void {
-        const attrs = this.layoutModel.getConf('structsAndAttrs');
-        const msg = this.layoutModel.translate('global__within_hint_text');
-        const hintRoot = $(window.document.createElement('div'));
-        const structList = $(window.document.createElement('ul'));
-        const hintAttrs = $(window.document.createElement('p'));
-
-        hintRoot.append('<p>' + msg + '</p>');
-        hintRoot.append(hintAttrs);
-        hintAttrs.append(this.layoutModel.translate('global__within_hint_attrs') + ':');
-
-        for (let p in attrs) {
-            if (attrs.hasOwnProperty(p)) {
-                structList.append('<li><strong>' + p + '</strong>: ' + attrs[p].join(', ') + '</li>');
-            }
-        }
-        hintAttrs.append(structList);
-
-        popupBox.bind(
-            $('#custom-within-hint').get(0),
-            hintRoot,
+    initSubcorpForm(ttComponent:React.Component, ttProps:{[p:string]:any}):void {
+        this.layoutModel.renderReactComponent(
+            this.viewComponents.SubcorpForm,
+            window.document.getElementById('subcorp-form-mount'),
             {
-                width: 'nice'
+                structsAndAttrs: this.layoutModel.getConf('structsAndAttrs'),
+                ttComponent: ttComponent,
+                ttProps: ttProps
             }
         );
     }
 
-    createTextTypesComponents():void {
+    createTextTypesComponents():RSVP.Promise<TTInitData> {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesStore = new TextTypesStore(
                 this.layoutModel.dispatcher,
@@ -196,7 +125,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                 fulfill(null);
             });
         }
-        liveAttrsProm.then(
+        return liveAttrsProm.then(
             (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
                 if (liveAttrsStore) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
@@ -235,20 +164,17 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     this.textTypesStore,
                     liveAttrsStore
                 );
-                this.layoutModel.renderReactComponent(
-                    ttViewComponents.TextTypesPanel,
-                    $('#subcorp-text-type-selection').get(0),
-                    {
+                return {
+                    component: ttViewComponents.TextTypesPanel,
+                    props: {
                         liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
                         liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
                         attributes: this.textTypesStore.getAttributes(),
                         alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                         manualAlignCorporaMode: true
-                    }
-                );
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
+                    },
+                    ttStore: this.textTypesStore
+                };
             }
         );
     }
@@ -260,25 +186,47 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
         this.layoutModel.init().then(
             () => {
-                this.subcorpFormStore = new SubcorpFormStore(
+                return this.createTextTypesComponents()
+            }
+        ).then(
+            (ttComponent:any) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
+                this.subcorpWithinFormStore = new SubcorpWithinFormStore(
                     this.layoutModel.dispatcher,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
                 );
+                this.subcorpFormStore = new SubcorpFormStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    this.subcorpWithinFormStore,
+                    ttComponent.ttStore,
+                    this.layoutModel.getConf<string>('corpname')
+                );
                 this.viewComponents = subcorpViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
-                    this.subcorpFormStore
+                    this.layoutModel.layoutViews,
+                    this.subcorpFormStore,
+                    this.subcorpWithinFormStore
                 );
-                this.initSubcCreationVariantSwitch();
-                this.sizeUnitsSafeSwitch();
-                this.initHints();
-            },
+                this.initSubcorpForm(ttComponent.component, ttComponent.props);
+            }
+        ).then(
+            () => {
+                this.corplistComponent = corplistComponent.create(
+                    window.document.getElementById('corparch-mount'),
+                    'subcorpus/subcorp_form',
+                    this.layoutModel.pluginApi(),
+                    this,
+                    {editable: true}
+                );
+            }
+        ).then(
+            ()=>undefined,
             (err) => {
                 this.layoutModel.showMessage('error', err);
             }
         );
-        this.createTextTypesComponents();
     }
 }
 

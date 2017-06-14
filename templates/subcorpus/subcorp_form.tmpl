@@ -43,52 +43,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
 #filter WebSafe
 <section>
 <h2>$_('New subcorpus')</h2>
-    <form id="subcorp-form" action="subcorp" method="POST">
-        <input type="hidden" name="corpname" value="${corpname}" />
-        <table class="form">
-        <tbody>
-        <tr>
-            <th>
-                $_('Corpus'):
-            </th>
-            <td>
-                <div id="corparch-mount"></div>
-                <div class="starred"></div>
-            </td>
-        </tr>
-        <tr class="required">
-        <th style="width: 20%">$_("New subcorpus name"):</th>
-        <td style="width: 80%"><input type="text" name="subcname" id="subcname" value="$subcname" /></td>
-        </tr>
-        <tr>
-            <th>$_('Specify subcorpus using'):</th>
-            <td>
-                <input id="method-raw-input" class="method-select" type="radio" name="method" value="raw" #if $method == 'raw'#checked="yes"#end if# /><label for="method-raw-input">$_('Custom \'within\' condition')</label>
-                <input id="method-gui-input" class="method-select" type="radio" name="method" value="gui" #if $method == 'gui'#checked="yes"#end if# /><label for="method-gui-input">$_('Attribute list')</label>
-            </td>
-        </tr>
-        <tr id="subc-within-row" style="display: none">
-            <th>$_('Custom \'within\' condition')
-                <a id="custom-within-hint" class="context-help">
-                    <img class="over-img"
-                         data-alt-img="${files_path}/img/question-mark_s.svg" src="${files_path}/img/question-mark.svg">
-                </a>:
-                <input id="within-json-field" type="hidden" name="within_json" />
-            </th>
-            <td class="container"></td>
-        </tr>
-        <tr id="subc-mixer-row" style="display: none">
-            <th></th>
-            <td class="widget"></td>
-        </tr>
-        </tbody>
-        </table>
-        <input type="hidden" name="create" value="1" />
-
-        <div id="subcorp-text-type-selection"></div>
-
-        <button class="default-button" type="submit">$_("Create Subcorpus")</button>
-    </form>
+    <div id="subcorp-form-mount"></div>
 </section>
 
 #end filter
