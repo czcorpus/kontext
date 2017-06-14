@@ -100,22 +100,22 @@ function findIndex(idx:number, within:Array<number>):number {
 function findCritVal(v1:number, v2:number, alphaId:string):number {
     const t = BINOM.data[alphaId];
     if (t) {
-        return t[findIndex(v1, BINOM.dflist)][findIndex(v2, BINOM.dflist)];
+        return t[findIndex(v2, BINOM.dflist)][findIndex(v1, BINOM.dflist)];
     }
     throw new Error('Failed to fetch critical value');
 }
 
 
 export function confInterval(v:number, base:number, alphaId:string):[number, number] {
-    const alpha = parseFloat(alphaId);
-    const v11 = 2 * (base * v + 1);
+    const v11 = 2 * (base - v + 1);
     const v12 = 2 * v;
     const f1 = findCritVal(v11, v12, alphaId);
 
     const v21 = 2 * (v + 1);
-    const v22 = 2 * base * v;
+    const v22 = 2 * (base - v);
     const f2 = findCritVal(v21, v22, alphaId);
-    const p1 = v / (v + (base - v + 1) * f1 * (1 - alpha / 2));
-    const p2 = (v + 1) * f2 * (1 - alpha / 2) / (base - v + (v + 1) * f2 * (1 - alpha / 2));
+
+    const p1 = v / (v + (base - v + 1) * f1);
+    const p2 = (v + 1) * f2 / (base - v + (v + 1) * f2);
     return [p1, p2];
 }

@@ -226,10 +226,26 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 <fieldset className="detail">
                     <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
                     {mixins.translate('freq__ct_ipm_freq_label')}:
-                    {'\u00a0'}{mixins.formatNumber(props.data.ipm, 1)}
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.ipm, 1)}
+                    {'\u00a0'}
+                    ({mixins.formatNumber(props.data.ipmConfInterval[0], 0)}
+                    {'\u00a0'}
+                    -
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.ipmConfInterval[1], 0)})
                     <br />
                     {mixins.translate('freq__ct_abs_freq_label')}:
-                    {'\u00a0'}{mixins.formatNumber(props.data.abs, 0)}
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.abs, 0)}
+                    {'\u00a0'}
+                    ({mixins.formatNumber(props.data.absConfInterval[0], 0)}
+                    {'\u00a0'}
+                    -
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.absConfInterval[1], 0)})
+
+
                 </fieldset>
                 <form>
                     <fieldset>

@@ -422,15 +422,16 @@ export class ContingencyTableStore extends GeneralCTStore {
                 tableData[item[0]] = {};
             }
             const ipm = calcIpm(item);
+            const confInt = confInterval(item[2], item[3], '0.05');
             tableData[item[0]][item[1]] = {
                 ipm: ipm,
+                ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
                 abs: item[2],
+                absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
                 domainSize: item[3],
                 bgColor: undefined,
-                pfilter: this.generatePFilter(item[0], item[1]),
+                pfilter: this.generatePFilter(item[0], item[1])
             };
-            let tmp = confInterval(ipm, item[2], '0.05');
-            console.log('interval: ', ipm, item[2], tmp[0] * item[3], tmp[1] * item[3]);
 
             if (ipm > fMax) {
                 fMax = ipm;
@@ -447,6 +448,8 @@ export class ContingencyTableStore extends GeneralCTStore {
             return {
                 ipm: cell.ipm,
                 abs: cell.abs,
+                absConfInterval: cell.absConfInterval,
+                ipmConfInterval: cell.ipmConfInterval,
                 domainSize: cell.domainSize,
                 bgColor: ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))],
                 pfilter: cell.pfilter

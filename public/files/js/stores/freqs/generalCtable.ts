@@ -57,10 +57,11 @@ export interface CTFormProperties extends CTFormInputs {
 
 export interface CTFreqCell {
     abs:number;
+    absConfInterval:[number, number];
     ipm:number;
+    ipmConfInterval:[number, number];
     domainSize:number;
     bgColor:string;
-    confInterval?:[number, number];
     pfilter:[string, string];
 }
 
