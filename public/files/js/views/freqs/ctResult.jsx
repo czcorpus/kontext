@@ -226,10 +226,26 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 <fieldset className="detail">
                     <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
                     {mixins.translate('freq__ct_ipm_freq_label')}:
-                    {'\u00a0'}{mixins.formatNumber(props.data.ipm, 1)}
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.ipm, 1)}
+                    {'\u00a0'}
+                    ({mixins.formatNumber(props.data.ipmConfInterval[0], 0)}
+                    {'\u00a0'}
+                    -
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.ipmConfInterval[1], 0)})
                     <br />
                     {mixins.translate('freq__ct_abs_freq_label')}:
-                    {'\u00a0'}{mixins.formatNumber(props.data.abs, 0)}
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.abs, 0)}
+                    {'\u00a0'}
+                    ({mixins.formatNumber(props.data.absConfInterval[0], 0)}
+                    {'\u00a0'}
+                    -
+                    {'\u00a0'}
+                    {mixins.formatNumber(props.data.absConfInterval[1], 0)})
+
+
                 </fieldset>
                 <form>
                     <fieldset>
@@ -360,6 +376,96 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
     /**
      *
+     * @param {*} props
+     */
+    const CTDataTable = (props) => {
+
+        const labels1 = () => {
+            return props.d1Labels.filter(x => x[1]).map(x => x[0]);
+        };
+
+        const labels2 = () => {
+            return props.d2Labels.filter(x => x[1]).map(x => x[0]);
+        };
+
+        const isHighlightedRow = (i) => {
+            return props.highlightedCoord !== null && props.highlightedCoord[0] === i;
+        };
+
+        const isHighlightedCol = (j) => {
+            return props.highlightedCoord !== null && props.highlightedCoord[1] === j;
+        };
+
+        const isHighlighted = (i, j) => {
+            return props.highlightedCoord !== null &&
+                    props.highlightedCoord[0] === i &&
+                    props.highlightedCoord[1] === j;
+        };
+
+        return (
+            <table className="ct-data">
+                <tbody>
+                    <tr>
+                        <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
+                        {labels2().map((label2, i) =>
+                            <th key={`lab-${i}`}
+                                    className={isHighlightedCol(i) ? 'highlighted' : null}>
+                                {label2}
+                            </th>
+                        )}
+                    </tr>
+                    {labels1().map((label1, i) => {
+                        const htmlClass = ['vert'];
+                        if (isHighlightedRow(i)) {
+                            htmlClass.push('highlighted');
+                        }
+                        return (
+                            <tr key={`row-${i}`}>
+                                <th className={htmlClass.join(' ')}><span>{label1}</span></th>
+                                {labels2().map((label2, j) => {
+                                    return <CTCell data={props.data[label1][label2]} key={`c-${i}:${j}`}
+                                                    quantity={props.viewQuantity}
+                                                    onClick={()=>props.onHighlight(i, j)}
+                                                    onClose={props.onResetHighlight}
+                                                    attr1={props.attr1}
+                                                    label1={label1}
+                                                    attr2={props.attr2}
+                                                    label2={label2}
+                                                    isHighlighted={isHighlighted(i, j)} />;
+                                })}
+                            </tr>
+                        )
+                    })}
+                </tbody>
+            </table>
+        );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    const WaitingAnim = (props) => {
+        return (
+             <table className="ct-data">
+                <tbody>
+                    <tr>
+                        <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
+                        <th>{'\u2026'}</th>
+                    </tr>
+                    <tr>
+                        <th>{'\u22EE'}</th>
+                        <td style={{padding: '2em'}}>
+                            <img src={mixins.createStaticUrl('img/ajax-loader.gif')} alt={mixins.translate('global__loading')} />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        );
+    };
+
+    /**
+     *
      */
     class CT2dFreqResultView extends React.Component {
 
@@ -386,7 +492,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 viewQuantity: 'ipm',
                 highlightedCoord: null,
                 transposeIsChecked: ctFreqDataRowsStore.getIsTransposed(),
-                hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors()
+                hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors(),
+                isWaiting: ctFreqDataRowsStore.getIsWaiting()
             };
         }
 
@@ -423,14 +530,6 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             }
         }
 
-        _labels1() {
-            return this.state.d1Labels.filter(x => x[1]).map(x => x[0]);
-        }
-
-        _labels2() {
-            return this.state.d2Labels.filter(x => x[1]).map(x => x[0]);
-        }
-
         _resetHighlight() {
             const newState = this._fetchState();
             newState.viewQuantity = this.state.viewQuantity;
@@ -444,20 +543,6 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             newState.viewQuantity = this.state.viewQuantity;
             newState.highlightedCoord = [i, j];
             this.setState(newState);
-        }
-
-        _isHighlighted(i, j) {
-            return this.state.highlightedCoord !== null &&
-                    this.state.highlightedCoord[0] === i &&
-                    this.state.highlightedCoord[1] === j;
-        }
-
-        _isHighlightedRow(i) {
-            return this.state.highlightedCoord !== null && this.state.highlightedCoord[0] === i;
-        }
-
-        _isHighlightedCol(j) {
-            return this.state.highlightedCoord !== null && this.state.highlightedCoord[1] === j;
         }
 
         render() {
@@ -474,38 +559,20 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                 sortDim1={this.state.sortDim1}
                                 sortDim2={this.state.sortDim2} />
                     </div>
-                    <table className="ct-data">
-                        <tbody>
-                            <tr>
-                                <THRowColLabels attr1={this.state.attr1} attr2={this.state.attr2} />
-                                {this._labels2().map((label2, i) =>
-                                    <th key={`lab-${i}`} className={this._is}
-                                        className={this._isHighlightedCol(i) ? 'highlighted' : null}>{label2}</th>)}
-                            </tr>
-                            {this._labels1().map((label1, i) => {
-                                const htmlClass = ['vert'];
-                                if (this._isHighlightedRow(i)) {
-                                    htmlClass.push('highlighted');
-                                }
-                                return (
-                                    <tr key={`row-${i}`}>
-                                        <th className={htmlClass.join(' ')}><span>{label1}</span></th>
-                                        {this._labels2().map((label2, j) => {
-                                            return <CTCell data={this.state.data[label1][label2]} key={`c-${i}:${j}`}
-                                                            quantity={this.state.viewQuantity}
-                                                            onClick={()=>this._highlightItem(i, j)}
-                                                            onClose={this._resetHighlight}
-                                                            attr1={this.state.attr1}
-                                                            label1={label1}
-                                                            attr2={this.state.attr2}
-                                                            label2={label2}
-                                                            isHighlighted={this._isHighlighted(i, j)} />;
-                                        })}
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
+                    {this.state.isWaiting ?
+                        <WaitingAnim attr1={this.state.attr1}
+                                attr2={this.state.attr2} /> :
+                        <CTDataTable
+                                attr1={this.state.attr1}
+                                attr2={this.state.attr2}
+                                d1Labels={this.state.d1Labels}
+                                d2Labels={this.state.d2Labels}
+                                data={this.state.data}
+                                viewQuantity={this.state.viewQuantity}
+                                onHighlight={this._highlightItem}
+                                onResetHighlight={this._resetHighlight}
+                                highlightedCoord={this.state.highlightedCoord} />
+                    }
                 </div>
             );
         }

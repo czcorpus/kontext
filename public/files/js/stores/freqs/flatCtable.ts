@@ -146,6 +146,11 @@ export class CTFlatStore extends GeneralCTStore {
         this.updateData();
     }
 
+    importDataAndNotify(data:FreqResultResponse.CTFreqResultData):void {
+        this.importData(data);
+        this.notifyChangeListeners();
+    }
+
     getData():Immutable.List<FreqDataItem> {
         return this.data;
     }
