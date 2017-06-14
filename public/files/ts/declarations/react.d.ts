@@ -25,6 +25,9 @@ declare module React {
     export interface ReactElement {
     }
 
+    export interface Component {
+    }
+
     export interface ReactClass {
     }
 
