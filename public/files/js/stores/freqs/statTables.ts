@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+const DFLIST = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 24, 30, 40, 60, 120, 1000];
 const BINOM = {
-    dflist: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 24, 30, 40, 60, 120, 1000],
-    data: {
     "0.1": [
         [39.8635, 8.5263, 5.5383, 4.5448, 4.0604, 3.7759, 3.5894, 3.4579, 3.3603, 3.285, 3.1765, 3.0732, 2.9747, 2.9271, 2.8807, 2.8354, 2.7911, 2.7478, 2.7106],
         [49.5, 9.0, 5.4624, 4.3246, 3.7797, 3.4633, 3.2574, 3.1131, 3.0065, 2.9245, 2.8068, 2.6952, 2.5893, 2.5383, 2.4887, 2.4404, 2.3933, 2.3473, 2.3079],
@@ -84,7 +83,7 @@ const BINOM = {
         [253.2529, 19.4874, 8.5494, 5.6581, 4.3985, 3.7047, 3.2674, 2.9669, 2.7475, 2.5801, 2.341, 2.1141, 1.8963, 1.7896, 1.6835, 1.5766, 1.4673, 1.3519, 1.2385],
         [254.1868, 19.4947, 8.5292, 5.6317, 4.369, 3.6732, 3.2343, 2.9324, 2.7116, 2.543, 2.3017, 2.0718, 1.8497, 1.7401, 1.6299, 1.5175, 1.3994, 1.2675, 1.1097]
     ]
-}}
+}
 
 // [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 24, 30, 40, 60, 120, 1000]
 function findIndex(idx:number, within:Array<number>):number {
@@ -98,13 +97,16 @@ function findIndex(idx:number, within:Array<number>):number {
 }
 
 function findCritVal(v1:number, v2:number, alphaId:string):number {
-    const t = BINOM.data[alphaId];
+    const t = BINOM[alphaId];
     if (t) {
-        return t[findIndex(v2, BINOM.dflist)][findIndex(v1, BINOM.dflist)];
+        return t[findIndex(v2, DFLIST)][findIndex(v1, DFLIST)];
     }
-    throw new Error('Failed to fetch critical value');
+    throw new Error(`Failed to fetch critical value for alpha: ${alphaId}, v1: ${v1}, v2: ${v2}`);
 }
 
+export function getAvailConfLevels():Array<string> {
+    return Object.keys(BINOM);
+}
 
 export function confInterval(v:number, base:number, alphaId:string):[number, number] {
     const v11 = 2 * (base - v + 1);

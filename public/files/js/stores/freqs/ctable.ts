@@ -28,7 +28,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
-import {confInterval} from './statTables';
+import {confInterval, getAvailConfLevels} from './statTables';
 
 
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
@@ -139,6 +139,12 @@ export class ContingencyTableStore extends GeneralCTStore {
                     } else if (payload.props['dim'] === 2) {
                         this.alignType2 = payload.props['value'];
                     }
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_ALPHA_LEVEL':
+                    this.alphaLevel = payload.props['value'];
+                    this.recalculateConfIntervals();
+                    this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SUBMIT':
@@ -406,6 +412,21 @@ export class ContingencyTableStore extends GeneralCTStore {
         );
     }
 
+    private recalculateConfIntervals():void {
+        this.origData = mapDataTable(this.origData, cell => {
+            const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
+            return {
+                ipm: cell.ipm,
+                ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
+                abs: cell.abs,
+                absConfInterval: [confInt[0] * cell.domainSize, confInt[1] * cell.domainSize],
+                domainSize: cell.domainSize,
+                bgColor: cell.bgColor,
+                pfilter: cell.pfilter
+            }
+        });
+    }
+
     importData(data:FreqResultResponse.CTFreqResultData):void {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
@@ -422,7 +443,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 tableData[item[0]] = {};
             }
             const ipm = calcIpm(item);
-            const confInt = confInterval(item[2], item[3], '0.05');
+            const confInt = confInterval(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
                 ipm: ipm,
                 ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
@@ -492,6 +513,10 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getIsWaiting():boolean {
         return this.isWaiting;
+    }
+
+    getAlphaLevel():string {
+        return this.alphaLevel;
     }
 
 }

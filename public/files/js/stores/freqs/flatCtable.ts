@@ -26,7 +26,7 @@
 import {PageModel} from '../../tpl/document';
 import * as Immutable from 'vendor/immutable';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
-
+import {confInterval} from './statTables';
 
 export interface FreqDataItem extends CTFreqCell {
     val1:string;
@@ -70,6 +70,12 @@ export class CTFlatStore extends GeneralCTStore {
                     }
                     this.notifyChangeListeners();
                 break;
+                case 'FREQ_CT_SET_ALPHA_LEVEL':
+                    this.alphaLevel = payload.props['value'];
+                    this.recalculateConfIntervals();
+                    this.updateData();
+                    this.notifyChangeListeners();
+                break;
                 case 'FREQ_CT_SORT_FLAT_LIST':
                     this.sortBy = payload.props['value'];
                     this.sortReversed = payload.props['reversed'];
@@ -78,6 +84,23 @@ export class CTFlatStore extends GeneralCTStore {
                 break;
             }
         });
+    }
+
+    private recalculateConfIntervals():void {
+        this.origData = this.origData.map(cell => {
+            const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
+            return {
+                val1: cell.val1,
+                val2: cell.val2,
+                ipm: cell.ipm,
+                ipmConfInterval: <[number, number]>[confInt[0] * 1e6, confInt[1] * 1e6],
+                abs: cell.abs,
+                absConfInterval: <[number, number]>[confInt[0] * cell.domainSize, confInt[1] * cell.domainSize],
+                domainSize: cell.domainSize,
+                pfilter: cell.pfilter,
+                bgColor: cell.bgColor
+            }
+        }).toList();
     }
 
     private updateData():void {
@@ -133,13 +156,15 @@ export class CTFlatStore extends GeneralCTStore {
     importData(data:FreqResultResponse.CTFreqResultData):void {
         const calcIpm = (v:FreqResultResponse.CTFreqResultItem) => Math.round(v[2] / v[3] * 1e6 * 10) / 10;
         this.origData = Immutable.List<FreqDataItem>(data.map(item => {
+            const confInt = confInterval(item[2], item[3], this.alphaLevel);
             return {
                 val1: item[0],
                 val2: item[1],
                 abs: item[2],
+                absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
                 ipm: calcIpm(item),
+                ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
                 domainSize: item[3],
-                bgColor: 'transparent',
                 pfilter: this.generatePFilter(item[0], item[1])
             };
         }));
