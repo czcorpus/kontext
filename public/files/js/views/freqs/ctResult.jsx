@@ -354,6 +354,20 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 props.confIntervalWarnRatio;
         };
 
+        const renderWarning = (props) => {
+            if (shouldWarn(props)) {
+                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
+                return <span style={linkStyle}
+                            title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
+                                {threshold: props.confIntervalWarnRatio * 100})}>
+                            {'\u26A0'}{'\u00a0'}
+                        </span>;
+
+            } else {
+                return '';
+            }
+        };
+
         if (isNonEmpty()) {
             const bgStyle = {};
             const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
@@ -366,12 +380,11 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             }
             return (
                 <td className={tdClasses.join(' ')} style={bgStyle}>
+                    {renderWarning(props)}
                     <a onClick={handleItemClick} style={linkStyle}
                             title={mixins.translate('freq__ct_click_for_details')}>
                         {getValue()}
                     </a>
-                    {shouldWarn(props) ? <span title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
-                            {threshold: props.confIntervalWarnRatio * 100})}>{'\u26A0'}</span> : ''}
                     {props.isHighlighted ? <CTCellMenu onClose={props.onClose}
                                                         data={props.data}
                                                         attr1={props.attr1}
@@ -625,13 +638,43 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
      * @param {*} props
      */
     const TRFlatListRow = (props) => {
+
+        const shouldWarn = (props) => {
+            return (props.data.absConfInterval[1] - props.data.absConfInterval[0]) / props.data.abs  >
+                props.confIntervalWarnRatio;
+        };
+
+        const formatRange = (interval) => {
+            return interval.map(x => mixins.formatNumber(x, 1)).join('-');
+        };
+
+        const renderWarning = () => {
+            if (shouldWarn(props)) {
+                return (
+                <span title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
+                            {threshold: props.confIntervalWarnRatio * 100})}>
+                        {'\u26A0'}{'\u00a0'}
+                </span>
+                );
+
+            } else {
+                return '';
+            }
+        };
+
         return (
             <tr>
                 <td className="num">{props.idx}.</td>
                 <td>{props.data.val1}</td>
                 <td>{props.data.val2}</td>
-                <td className="num">{props.data.abs}</td>
-                <td className="num">{props.data.ipm}</td>
+                <td className="num" title={formatRange(props.data.absConfInterval)}>
+                    {renderWarning()}
+                    {props.data.abs}
+                </td>
+                <td className="num" title={formatRange(props.data.ipmConfInterval)}>
+                    {renderWarning()}
+                    {props.data.ipm}
+                </td>
             </tr>
         );
     }
@@ -692,7 +735,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 attr2: ctFlatFreqDataRowsStore.getAttr2(),
                 minAbsFreq: ctFlatFreqDataRowsStore.getMinAbsFreq(),
                 sortCol: ctFlatFreqDataRowsStore.getSortCol(),
-                sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed()
+                sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
+                confIntervalWarnRatio: ctFlatFreqDataRowsStore.getConfIntervalWarnRatio()
             };
         }
 
@@ -741,7 +785,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                         isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} />
                             </tr>
                             {this.state.data.map((item, i) =>
-                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item} />)}
+                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item} confIntervalWarnRatio={this.state.confIntervalWarnRatio} />)}
                         </tbody>
                     </table>
                 </div>

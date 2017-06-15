@@ -21,10 +21,10 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-
+import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../tpl/document';
-import * as Immutable from 'vendor/immutable';
+import {confInterval, getAvailConfLevels} from './statTables';
 
 
 const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
@@ -100,6 +100,12 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     protected ctxIndex2:number;
 
+    protected alphaLevel:string; // we use it rather as an ID, that's why we use string
+
+    private availAlphaLevels:Immutable.List<[string, string]>;
+
+    private static CONF_INTERVAL_RATIO_WARN = 0.25;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
@@ -109,9 +115,30 @@ export abstract class GeneralCTStore extends SimplePageStore {
         this.attr1 = props.ctattr1;
         this.attr2 = props.ctattr2;
         this.minAbsFreq = props.ctminfreq;
+        this.alphaLevel = '0.05';
+        this.availAlphaLevels = this.importAvailAlphaLevels();
         this.queryContainsWithin = props.queryContainsWithin;
         [this.ctxIndex1, this.alignType1] = this.importCtxValue(props.ctfcrit1);
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
+    }
+
+    private importAvailAlphaLevels():Immutable.List<[string, string]> {
+        return Immutable.List<[string, string]>(
+            getAvailConfLevels()
+                .sort((x1, x2) => {
+                    if (parseFloat(x1) > parseFloat(x2)) {
+                        return 1;
+                    }
+                    if (parseFloat(x1) < parseFloat(x2)) {
+                        return -1;
+                    }
+                    return 0;
+
+                }).map(item => {
+                    return <[string, string]>[item, (1 - parseFloat(item)).toFixed(2)];
+
+                })
+        );
     }
 
     private importCtxValue(v:string):[number, string] {
@@ -306,6 +333,14 @@ export abstract class GeneralCTStore extends SimplePageStore {
             return this.ctxIndex2;
         }
         return undefined;
+    }
+
+    getAvailAlphaLevels():Immutable.List<[string, string]> {
+        return this.availAlphaLevels;
+    }
+
+    getConfIntervalWarnRatio():number {
+        return GeneralCTStore.CONF_INTERVAL_RATIO_WARN;
     }
 
 }

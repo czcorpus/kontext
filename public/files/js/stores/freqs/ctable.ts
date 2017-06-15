@@ -86,10 +86,6 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private isTransposed:boolean;
 
-    private alphaLevel:string; // we use it rather as an ID, that's why we use string
-
-    private availAlphaLevels:Immutable.List<[string, string]>;
-
     /**
      * A lower freq. limit used by server when fetching data.
      * This is allows the store to retrieve additional data
@@ -108,8 +104,6 @@ export class ContingencyTableStore extends GeneralCTStore {
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
-    private static CONF_INTERVAL_RATIO_WARN = 0.25;
-
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
         super(dispatcher, pageModel, props);
         this.d1Labels = Immutable.List<[string, boolean]>();
@@ -118,11 +112,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.isTransposed = false;
         this.sortDim1 = 'attr';
         this.sortDim2 = 'attr';
-        this.alphaLevel = '0.05';
         this.serverMinAbsFreq = parseInt(props.ctminfreq, 10);
         this.isWaiting = false;
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
-        this.availAlphaLevels = this.importAvailAlphaLevels();
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -214,25 +206,6 @@ export class ContingencyTableStore extends GeneralCTStore {
                 break;
             }
         });
-    }
-
-    private importAvailAlphaLevels():Immutable.List<[string, string]> {
-        return Immutable.List<[string, string]>(
-            getAvailConfLevels()
-                .sort((x1, x2) => {
-                    if (parseFloat(x1) > parseFloat(x2)) {
-                        return 1;
-                    }
-                    if (parseFloat(x1) < parseFloat(x2)) {
-                        return -1;
-                    }
-                    return 0;
-
-                }).map(item => {
-                    return <[string, string]>[item, (1 - parseFloat(item)).toFixed(2)];
-
-                })
-        );
     }
 
     private sortByDimension(dim:number, sortAttr:string):void {
@@ -440,7 +413,7 @@ export class ContingencyTableStore extends GeneralCTStore {
     }
 
     private recalculateConfIntervals():void {
-        mapDataTable(this.origData, cell => {
+        this.origData = mapDataTable(this.origData, cell => {
             const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
             return {
                 ipm: cell.ipm,
@@ -544,14 +517,6 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getAlphaLevel():string {
         return this.alphaLevel;
-    }
-
-    getAvailAlphaLevels():Immutable.List<[string, string]> {
-        return this.availAlphaLevels;
-    }
-
-    getConfIntervalWarnRatio():number {
-        return ContingencyTableStore.CONF_INTERVAL_RATIO_WARN;
     }
 
 }
