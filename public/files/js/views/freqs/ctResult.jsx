@@ -166,6 +166,31 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
     /**
      *
+     * @param {*} props
+     */
+    const AlphaLevelSelect = (props) => {
+        const onChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_ALPHA_LEVEL',
+                props: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <label>
+                {mixins.translate('freq__ct_conf_level_label')}:{'\u00a0'}
+                <select value={props.alphaLevel} onChange={onChange}>
+                    {props.availAlphaLevels.map(item =>
+                        <option key={item[0]} value={item[0]}>{item[1]}</option>)}
+                </select>
+            </label>
+        );
+    };
+
+    /**
+     *
      */
     const CTTableModForm = (props) => {
 
@@ -182,6 +207,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                         </li>
                         <li>
                             <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
+                        </li>
+                        <li>
+                            <AlphaLevelSelect alphaLevel={props.alphaLevel} availAlphaLevels={props.availAlphaLevels} />
                         </li>
                     </ul>
                 </fieldset>
@@ -229,11 +257,11 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                     {'\u00a0'}
                     {mixins.formatNumber(props.data.ipm, 1)}
                     {'\u00a0'}
-                    ({mixins.formatNumber(props.data.ipmConfInterval[0], 0)}
+                    ({mixins.formatNumber(props.data.ipmConfInterval[0], 1)}
                     {'\u00a0'}
                     -
                     {'\u00a0'}
-                    {mixins.formatNumber(props.data.ipmConfInterval[1], 0)})
+                    {mixins.formatNumber(props.data.ipmConfInterval[1], 1)})
                     <br />
                     {mixins.translate('freq__ct_abs_freq_label')}:
                     {'\u00a0'}
@@ -493,7 +521,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 highlightedCoord: null,
                 transposeIsChecked: ctFreqDataRowsStore.getIsTransposed(),
                 hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors(),
-                isWaiting: ctFreqDataRowsStore.getIsWaiting()
+                isWaiting: ctFreqDataRowsStore.getIsWaiting(),
+                alphaLevel: ctFreqDataRowsStore.getAlphaLevel(),
+                availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels()
             };
         }
 
@@ -557,7 +587,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                 hideEmptyVectors={this.state.hideEmptyVectors}
                                 transposeIsChecked={this.state.transposeIsChecked}
                                 sortDim1={this.state.sortDim1}
-                                sortDim2={this.state.sortDim2} />
+                                sortDim2={this.state.sortDim2}
+                                alphaLevel={this.state.alphaLevel}
+                                availAlphaLevels={this.state.availAlphaLevels} />
                     </div>
                     {this.state.isWaiting ?
                         <WaitingAnim attr1={this.state.attr1}

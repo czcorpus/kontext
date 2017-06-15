@@ -414,7 +414,8 @@
         "freq__ct_sort_col_opt_attr": "attribute value",
         "freq__ct_sort_row_label": "sort rows by",
         "freq__ct_sort_row_opt_ipm": "sum of i.p.m. in a row",
-        "freq__ct_sort_row_opt_abs": "sum of abs. frequencies in a row"
+        "freq__ct_sort_row_opt_abs": "sum of abs. frequencies in a row",
+        "freq__ct_conf_level_label": "confidence level"
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -831,6 +832,7 @@
         "freq__ct_sort_col_opt_attr": "hodnoty atributu",
         "freq__ct_sort_row_label": "třídit řádky podle",
         "freq__ct_sort_row_opt_ipm": "součtu i.p.m. v řádku",
-        "freq__ct_sort_row_opt_abs": "součtu abs. frekvencí v řádku"
+        "freq__ct_sort_row_opt_abs": "součtu abs. frekvencí v řádku",
+        "freq__ct_conf_level_label": "koeficient spolehlivosti"
     }
 }

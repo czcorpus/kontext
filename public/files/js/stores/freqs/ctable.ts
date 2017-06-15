@@ -28,7 +28,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
-import {confInterval} from './statTables';
+import {confInterval, getAvailConfLevels} from './statTables';
 
 
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
@@ -86,6 +86,10 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private isTransposed:boolean;
 
+    private alphaLevel:string; // we use it rather as an ID, that's why we use string
+
+    private availAlphaLevels:Immutable.List<[string, string]>;
+
     /**
      * A lower freq. limit used by server when fetching data.
      * This is allows the store to retrieve additional data
@@ -112,9 +116,11 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.isTransposed = false;
         this.sortDim1 = 'attr';
         this.sortDim2 = 'attr';
+        this.alphaLevel = '0.05';
         this.serverMinAbsFreq = parseInt(props.ctminfreq, 10);
         this.isWaiting = false;
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
+        this.availAlphaLevels = this.importAvailAlphaLevels();
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -139,6 +145,12 @@ export class ContingencyTableStore extends GeneralCTStore {
                     } else if (payload.props['dim'] === 2) {
                         this.alignType2 = payload.props['value'];
                     }
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_ALPHA_LEVEL':
+                    this.alphaLevel = payload.props['value'];
+                    this.recalculateConfIntervals();
+                    this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SUBMIT':
@@ -200,6 +212,25 @@ export class ContingencyTableStore extends GeneralCTStore {
                 break;
             }
         });
+    }
+
+    private importAvailAlphaLevels():Immutable.List<[string, string]> {
+        return Immutable.List<[string, string]>(
+            getAvailConfLevels()
+                .sort((x1, x2) => {
+                    if (parseFloat(x1) > parseFloat(x2)) {
+                        return 1;
+                    }
+                    if (parseFloat(x1) < parseFloat(x2)) {
+                        return -1;
+                    }
+                    return 0;
+
+                }).map(item => {
+                    return <[string, string]>[item, (1 - parseFloat(item)).toFixed(2)];
+
+                })
+        );
     }
 
     private sortByDimension(dim:number, sortAttr:string):void {
@@ -406,6 +437,21 @@ export class ContingencyTableStore extends GeneralCTStore {
         );
     }
 
+    private recalculateConfIntervals():void {
+        mapDataTable(this.origData, cell => {
+            const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
+            return {
+                ipm: cell.ipm,
+                ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
+                abs: cell.abs,
+                absConfInterval: [confInt[0] * cell.domainSize, confInt[1] * cell.domainSize],
+                domainSize: cell.domainSize,
+                bgColor: cell.bgColor,
+                pfilter: cell.pfilter
+            }
+        });
+    }
+
     importData(data:FreqResultResponse.CTFreqResultData):void {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
@@ -422,7 +468,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 tableData[item[0]] = {};
             }
             const ipm = calcIpm(item);
-            const confInt = confInterval(item[2], item[3], '0.05');
+            const confInt = confInterval(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
                 ipm: ipm,
                 ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
@@ -492,6 +538,14 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getIsWaiting():boolean {
         return this.isWaiting;
+    }
+
+    getAlphaLevel():string {
+        return this.alphaLevel;
+    }
+
+    getAvailAlphaLevels():Immutable.List<[string, string]> {
+        return this.availAlphaLevels;
     }
 
 }
