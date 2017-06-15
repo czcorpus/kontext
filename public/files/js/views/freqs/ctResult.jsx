@@ -349,6 +349,11 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             props.onClick();
         };
 
+        const shouldWarn = (props) => {
+            return (props.data.absConfInterval[1] - props.data.absConfInterval[0]) / props.data.abs  >
+                props.confIntervalWarnRatio;
+        };
+
         if (isNonEmpty()) {
             const bgStyle = {};
             const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
@@ -365,6 +370,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                             title={mixins.translate('freq__ct_click_for_details')}>
                         {getValue()}
                     </a>
+                    {shouldWarn(props) ? <span title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
+                            {threshold: props.confIntervalWarnRatio * 100})}>{'\u26A0'}</span> : ''}
                     {props.isHighlighted ? <CTCellMenu onClose={props.onClose}
                                                         data={props.data}
                                                         attr1={props.attr1}
@@ -459,7 +466,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                                     label1={label1}
                                                     attr2={props.attr2}
                                                     label2={label2}
-                                                    isHighlighted={isHighlighted(i, j)} />;
+                                                    isHighlighted={isHighlighted(i, j)}
+                                                    confIntervalWarnRatio={props.confIntervalWarnRatio} />;
                                 })}
                             </tr>
                         )
@@ -523,7 +531,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors(),
                 isWaiting: ctFreqDataRowsStore.getIsWaiting(),
                 alphaLevel: ctFreqDataRowsStore.getAlphaLevel(),
-                availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels()
+                availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels(),
+                confIntervalWarnRatio: ctFreqDataRowsStore.getConfIntervalWarnRatio()
             };
         }
 
@@ -603,7 +612,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                 viewQuantity={this.state.viewQuantity}
                                 onHighlight={this._highlightItem}
                                 onResetHighlight={this._resetHighlight}
-                                highlightedCoord={this.state.highlightedCoord} />
+                                highlightedCoord={this.state.highlightedCoord}
+                                confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
                     }
                 </div>
             );

@@ -108,6 +108,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
+    private static CONF_INTERVAL_RATIO_WARN = 0.25;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
         super(dispatcher, pageModel, props);
         this.d1Labels = Immutable.List<[string, boolean]>();
@@ -546,6 +548,10 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getAvailAlphaLevels():Immutable.List<[string, string]> {
         return this.availAlphaLevels;
+    }
+
+    getConfIntervalWarnRatio():number {
+        return ContingencyTableStore.CONF_INTERVAL_RATIO_WARN;
     }
 
 }
