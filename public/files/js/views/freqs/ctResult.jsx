@@ -736,7 +736,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 minAbsFreq: ctFlatFreqDataRowsStore.getMinAbsFreq(),
                 sortCol: ctFlatFreqDataRowsStore.getSortCol(),
                 sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
-                confIntervalWarnRatio: ctFlatFreqDataRowsStore.getConfIntervalWarnRatio()
+                confIntervalWarnRatio: ctFlatFreqDataRowsStore.getConfIntervalWarnRatio(),
+                alphaLevel: ctFlatFreqDataRowsStore.getAlphaLevel(),
+                availAlphaLevels: ctFlatFreqDataRowsStore.getAvailAlphaLevels()
             };
         }
 
@@ -762,6 +764,10 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                 <ul className="items">
                                     <li>
                                         <MinFreqInput currVal={this.state.minAbsFreq} />
+                                    </li>
+                                    <li>
+                                        <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
+                                                availAlphaLevels={this.state.availAlphaLevels} />
                                     </li>
                                 </ul>
                             </fieldset>

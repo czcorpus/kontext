@@ -515,8 +515,4 @@ export class ContingencyTableStore extends GeneralCTStore {
         return this.isWaiting;
     }
 
-    getAlphaLevel():string {
-        return this.alphaLevel;
-    }
-
 }
