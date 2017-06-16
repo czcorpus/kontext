@@ -339,6 +339,10 @@ export abstract class GeneralCTStore extends SimplePageStore {
         return this.availAlphaLevels;
     }
 
+    getAlphaLevel():string {
+        return this.alphaLevel;
+    }
+
     getConfIntervalWarnRatio():number {
         return GeneralCTStore.CONF_INTERVAL_RATIO_WARN;
     }
