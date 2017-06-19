@@ -19,11 +19,11 @@
  */
 
 /// <reference path="../types/common.d.ts" />
-/// <reference path="../../ts/declarations//immutable.d.ts" />
+/// <reference path="../../ts/declarations/immutable.d.ts" />
 
 import {PageModel, PluginApi} from './document';
 import * as $ from 'jquery';
-import {create as createCorparch} from 'plugins/corparch/init';
+import {createWidget as createCorparch} from 'plugins/corparch/init';
 import {extended as popupBox} from '../popupbox';
 import * as Immutable from 'vendor/immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
@@ -34,9 +34,9 @@ import {SimplePageStore} from '../stores/base';
  */
 class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHandler {
 
-    private layoutModel:PageModel
+    private layoutModel:PageModel;
 
-    private corplistComponent; // TODO
+    private corpusIdent:Kontext.FullCorpusIdent;
 
     private onSubcorpChangeActions:Array<(subcname:string)=>void> = [];
 
@@ -45,19 +45,16 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
     private views:WordlistFormViews;
 
 
-    constructor(layoutModel:PageModel) {
+    constructor(layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         super(layoutModel.dispatcher);
         this.layoutModel = layoutModel;
+        this.corpusIdent = corpusIdent;
     }
 
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
-
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void) {}
-
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+    registerCorpusSelectionListener(fn:(corpname:string, aligned:Immutable.List<string>, subcorp:string)=>void) {}
 
     getCorpora():Immutable.List<string> {
-        return Immutable.List<string>();
+        return Immutable.List<string>([this.corpusIdent.id]);
     }
 
     getCurrentSubcorpus():string {
@@ -247,13 +244,22 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
         );
     }
 
-    private initCorparchPlugin():void {
-        this.corplistComponent = createCorparch(
-            window.document.getElementById('corparch-mount'),
+    private initCorparchPlugin():React.Component {
+        return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),
+            {
+                getCurrentSubcorpus: () => null,
+                getAvailableSubcorpora: () => Immutable.List<string>(),
+                addChangeListener: (fn:Kontext.StoreListener) => undefined
+            },
             this,
-            {submitMethod: 'GET'}
+            {
+                itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                    window.location.href = this.layoutModel.createActionUrl('wordlist_form',
+                    [['corpname', corpora[0]]]);
+                }
+            }
         );
     }
 
@@ -288,14 +294,15 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
             (d) => {
                 this.initActionHandling();
                 this.bindStaticElements();
+                const corparchWidget = this.initCorparchPlugin();
                 this.views = wordlistFormInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     this.layoutModel.layoutViews,
+                    corparchWidget,
                     this
                 );
                 this.initSubcSelector();
-                this.initCorparchPlugin();
                 this.initOutputTypeForms();
                 this.initCorpInfoToolbar();
                 this.initActiveAttributeHighlight();
@@ -309,6 +316,9 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
 
 
 export function init(conf:Kontext.Conf) {
-    const model = new WordlistFormPage(new PageModel(conf));
-    model.init();
+    const layoutModel = new PageModel(conf);
+    new WordlistFormPage(
+        layoutModel,
+        layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent')
+    ).init();
 }

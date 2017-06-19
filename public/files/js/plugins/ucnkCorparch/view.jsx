@@ -17,18 +17,19 @@
  */
 
 import React from 'vendor/react';
-import $ from 'jquery';
-import {init as defaultViewInit} from '../defaultCorparch/view';
+import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 
 
 export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore) {
-    let defaultComponents = defaultViewInit(dispatcher, mixins, layoutViews, CorpusInfoBox,
+    const defaultComponents = defaultViewInit(dispatcher, mixins, layoutViews, CorpusInfoBox,
             formStore, listStore);
+
+    const util = mixins[0];
 
     /**
      *
      */
-    let RequestForm = React.createClass({
+    const RequestForm = React.createClass({
         mixins: mixins,
 
         _submitHandler : function () {
@@ -79,7 +80,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
     /**
      *
      */
-    let LockIcon = React.createClass({
+    const LockIcon = React.createClass({
         mixins: mixins,
 
         getInitialState : function () {
@@ -102,42 +103,37 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
             this.setState(React.addons.update(this.state, {hasDialog: {$set: false}}));
         },
 
+        _renderDialog : function () {
+            if (this.state.hasDialog) {
+                const onBoxReady = function (elm) {
+                    let rect = elm.getBoundingClientRect();
+                    let newX, newY;
+
+                    newX = (document.documentElement.clientWidth - rect.width) / 2;
+                    newY = document.documentElement.clientHeight / 2;
+                    elm.style.left = newX;
+                    elm.style.top = newY;
+                };
+                return (
+                    <layoutViews.PopupBox onCloseClick={this._closeDialog}
+                        customClass="corpus-access-req" onReady={onBoxReady} >
+                        <div>
+                            <RequestForm submitHandler={this._closeDialog}
+                                corpusId={this.props.corpusId}
+                                corpusName={this.props.corpusName} />
+                        </div>
+                    </layoutViews.PopupBox>
+                );
+
+            } else {
+                return null;
+            }
+        },
+
         render : function () {
-            let img,
-                dialog,
-                onBoxReady;
-
             if (this.state.isUnlockable) {
-                if (this.state.hasFocus) {
-                    img = <img src={this.createStaticUrl('img/unlocked.svg')} />;
-
-                } else {
-                    img = <img src={this.createStaticUrl('img/locked.svg')} />;
-                }
-
-                if (this.state.hasDialog) {
-                    onBoxReady = function (elm) {
-                        let rect = elm.getBoundingClientRect();
-                        let newX, newY;
-
-                        newX = (document.documentElement.clientWidth - rect.width) / 2;
-                        newY = document.documentElement.clientHeight / 2;
-                        $(elm).css('left', newX).css('top', newY);
-                    };
-                    dialog = (
-                        <layoutViews.PopupBox onCloseClick={this._closeDialog}
-                            customClass="corpus-access-req" onReady={onBoxReady} >
-                            <div>
-                                <RequestForm submitHandler={this._closeDialog}
-                                    corpusId={this.props.corpusId}
-                                    corpusName={this.props.corpusName} />
-                            </div>
-                        </layoutViews.PopupBox>
-                    );
-
-                } else {
-                    dialog = null;
-                }
+                const img = this.state.hasFocus ? <img src={this.createStaticUrl('img/unlocked.svg')} /> :
+                        <img src={this.createStaticUrl('img/locked.svg')} />;
 
                 return (
                     <div>
@@ -148,7 +144,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                                 onClick={this._clickHandler}>
                             {img}
                         </div>
-                        {dialog}
+                        {this._renderDialog()}
                     </div>
                 );
 
@@ -161,67 +157,61 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
     /**
      * A single dataset row
      */
-    let CorplistRow = React.createClass({
+    const CorplistRow = (props) => {
 
-        mixins: mixins,
+        const handleDetailClick = (corpusId, evt) => {
+            props.detailClickHandler(corpusId);
+        };
+        const keywords = props.row.keywords.map((k, i) => {
+            return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
+        });
+        const link = util.createActionLink('first_form', [['corpname', props.row.id]]);
+        const size = props.row.size_info ? props.row.size_info : '-';
 
-        _handleDetailClick : function (corpusId, evt) {
-            this.props.detailClickHandler(corpusId);
-        },
-
-        render: function () {
-            const keywords = this.props.row.keywords.map(function (k, i) {
-                return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
-            });
-
-            const link = this.createActionLink('first_form', [['corpname', this.props.row.id]]);
-            const size = this.props.row.raw_size ? this.props.row.raw_size : '-';
-
-            let userAction = null;
-            let corpLink;
-            if (this.props.enableUserActions) {
-                if (this.props.row.requestable) {
-                    corpLink = <span className="inaccessible">{this.props.row.name}</span>;
-                    userAction = <LockIcon isUnlockable={this.props.row.requestable}
-                                        corpusId={this.props.row.id}
-                                        corpusName={this.props.row.name} />;
-
-                } else {
-                    corpLink = <a href={link}>{this.props.row.name}</a>;
-                    userAction = <defaultComponents.FavStar corpusId={this.props.row.id}
-                                        corpusName={this.props.row.name}
-                                        isFav={this.props.row.user_item} />;
-                }
+        let userAction = null;
+        let corpLink;
+        if (props.enableUserActions) {
+            if (props.row.requestable) {
+                corpLink = <span className="inaccessible">{props.row.name}</span>;
+                userAction = <LockIcon isUnlockable={props.row.requestable}
+                                    corpusId={props.row.id}
+                                    corpusName={props.row.name} />;
 
             } else {
-                corpLink = <a href={link}>{this.props.row.name}</a>;
+                corpLink = <a href={link}>{props.row.name}</a>;
+                userAction = <defaultComponents.FavStar corpusId={props.row.id}
+                                    corpusName={props.row.name}
+                                    isFav={props.row.user_item} />;
             }
-            return (
-                <tr>
-                    <td className="corpname">{corpLink}</td>
-                    <td className="num">{size}</td>
-                    <td>
-                        {keywords}
-                    </td>
-                    <td>
-                        {userAction}
-                    </td>
-                    <td>
-                        <p className="desc" style={{display: 'none'}}></p>
-                        <a className="detail"
-                                onClick={this._handleDetailClick.bind(this, this.props.row.id)}>
-                            {this.translate('defaultCorparch__corpus_details')}
-                        </a>
-                    </td>
-                </tr>
-            );
+
+        } else {
+            corpLink = <a href={link}>{props.row.name}</a>;
         }
-    });
+        return (
+            <tr>
+                <td className="corpname">{corpLink}</td>
+                <td className="num">{size}</td>
+                <td>
+                    {keywords}
+                </td>
+                <td>
+                    {userAction}
+                </td>
+                <td>
+                    <p className="desc" style={{display: 'none'}}></p>
+                    <a className="detail"
+                            onClick={handleDetailClick.bind(null, props.row.id)}>
+                        {util.translate('defaultCorparch__corpus_details')}
+                    </a>
+                </td>
+            </tr>
+        );
+    };
 
     /**
      * dataset table
      */
-    let CorplistTable = React.createClass({
+    const CorplistTable = React.createClass({
 
         changeHandler: function () {
             const data = listStore.getData();
@@ -314,26 +304,25 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
      * Provides a link allowing to load more items with current
      * query and filter settings.
      */
-    let ListExpansion = React.createClass({
-        mixins : mixins,
-        _linkClickHandler : function () {
+    const ListExpansion = (props) => {
+
+        const linkClickHandler = () => {
             dispatcher.dispatch({
                 actionType: 'EXPANSION_CLICKED',
                 props: {
-                    offset: this.props.offset
+                    offset: props.offset
                 }
             });
-        },
-        render : function () {
-            return (
-                    <tr className="load-more">
-                        <td colSpan="5">
-                            <a onClick={this._linkClickHandler}>{this.translate('ucnkCorparch__load_all')}</a>
-                        </td>
-                    </tr>
-            );
-        }
-    });
+        };
+
+        return (
+            <tr className="load-more">
+                <td colSpan="5">
+                    <a onClick={linkClickHandler}>{util.translate('ucnkCorparch__load_all')}</a>
+                </td>
+            </tr>
+        );
+    };
 
     return {
         CorplistTable: CorplistTable,

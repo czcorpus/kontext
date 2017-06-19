@@ -19,7 +19,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, subcorpFormStore, subcorpWithinFormStore) {
+export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorpFormStore, subcorpWithinFormStore) {
 
     const util = mixins[0];
 
@@ -415,7 +415,7 @@ export function init(dispatcher, mixins, layoutViews, subcorpFormStore, subcorpW
                                     {util.translate('global__corpus')}:
                                 </th>
                                 <td>
-                                    <div id="corparch-mount"></div>
+                                    <CorparchComponent />
                                     <div className="starred"></div>
                                 </td>
                             </tr>

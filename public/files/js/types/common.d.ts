@@ -30,10 +30,15 @@
 declare module Kontext {
 
     /**
+     *
+     */
+    export type GeneralProps = {[key:string]:any};
+
+    /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).
      */
-    export type MultiDictSrc = Array<[string,any]>|{[key:string]:any};
+    export type MultiDictSrc = Array<[string,any]>|GeneralProps;
 
     export interface UserCredentials {
         context_limit:number;
@@ -62,7 +67,9 @@ declare module Kontext {
     }
 
     /**
-     * Specifies a configuration object generated at runtime
+     * Specifies a configuration object generated at runtime.
+     * In page models, layoutModel.getConf<T>() should be
+     * always the preferred way how to access conf values.
      */
     export interface Conf {
         [key:string]: any;
@@ -71,12 +78,13 @@ declare module Kontext {
     /**
      *
      */
-    export type GeneralProps = {[key:string]:any};
-
-    /**
-     *
-     */
     export type FluxDispatcher = Dispatcher.Dispatcher<DispatcherPayload>;
+
+    export interface FullCorpusIdent {
+        id:string;
+        canonicalId:string;
+        name:string;
+    }
 
     /**
      * An interface used by KonText plug-ins
@@ -113,17 +121,20 @@ declare module Kontext {
      */
     export interface QuerySetupHandler {
 
-        registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void;
-
-        registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void;
-
-        registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
-
-        registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void;
+        registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void;
 
         getCorpora():Immutable.List<string>;
 
         getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}>;
+
+        getCurrentSubcorpus():string;
+    }
+
+    /**
+     * A general click action performed on featured/favorite/searched item
+     */
+    export interface CorplistItemClick {
+        (corpora:Array<string>, subcorpId:string):RSVP.Promise<any>;
     }
 
     /**
@@ -249,13 +260,11 @@ declare module Kontext {
     }
 
     /**
-     * A function listening for change in a store.
-     * In general, React components should not misuse
-     * 'eventType' to make complex rules when to update
-     * themselves.
+     * A function listening for change in a store. This is
+     * used by React components to handle store updates.
      */
     export interface StoreListener {
-        (store:Kontext.PageStore, eventType:string, err?:Error):void;
+        (err?:Error):void;
     }
 
     /**
@@ -272,7 +281,7 @@ declare module Kontext {
          * Action's arguments. A defined, non-null
          * object should be always used.
          */
-        props:{[name:string]:any};
+        props:GeneralProps;
     }
 
     /**
@@ -335,7 +344,7 @@ declare module Kontext {
         status:string; // one of PENDING, STARTED, RETRY, FAILURE, SUCCESS
         created:number;
         error:string; // = Celery's "result" property in case status == 'FAILURE'
-        args:{[key:string]:any};
+        args:GeneralProps;
     }
 
     export interface AsyncTaskOnUpdate {
@@ -374,7 +383,7 @@ declare module Kontext {
          * argument updates. Original arguments stored in model
          * are unchanged.
          */
-        exportConcArgs(args:Array<Array<string>>|{[key:string]:any}):string;
+        exportConcArgs(args:Array<Array<string>>|GeneralProps):string;
     }
 
     export interface IHistory {
@@ -560,7 +569,7 @@ declare module TextTypes {
          */
         availItems?:number;
 
-        extendedInfo?:{[key:string]:any};
+        extendedInfo?:Kontext.GeneralProps;
     }
 
     export interface AutoCompleteItem {
@@ -751,7 +760,7 @@ declare module TextTypes {
         /**
          * Export checkbox selections (e.g. for ajax requests)
          */
-        exportSelections(lockedOnesOnly:boolean):{[attr:string]:any};
+        exportSelections(lockedOnesOnly:boolean):Kontext.GeneralProps;
 
         /**
          * Reset store state

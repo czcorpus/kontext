@@ -19,24 +19,19 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/plugins/corparch.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../types/views.d.ts" />
 
-/// <amd-dependency path="vendor/typeahead" />
-/// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
-
 import * as $ from 'jquery';
 import {CorplistItemUcnk} from './common';
-import * as widget from './widget';
 import {CorplistPage} from './corplist';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
 import {QueryStore} from '../../stores/query/main';
+import * as dcInit from '../defaultCorparch/init';
 
 /**
  *
@@ -65,27 +60,14 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
 }
 
 /**
- * Creates a corplist widget which is a box containing two tabs
- *  1) user's favorite items
- *  2) corpus search tool
  *
- * @param selectElm A HTML SELECT element for default (= non JS) corpus selection we want to be replaced by this widget
- * @param targetAction ???
+ * @param targetAction
  * @param pluginApi
- * @param querySetupHandler - an object handling specific events within the query form (non-React world)
- * @param options A configuration for the widget
+ * @param queryStore
+ * @param querySetupHandler
+ * @param options
  */
-export function create(selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-                       querySetupHandler:Kontext.QuerySetupHandler,
-                       options:CorparchCommon.Options):CorparchCommon.Widget {
-    const corplist:widget.Corplist = new widget.Corplist(
-        targetAction,
-        $(selectElm).closest('form').get(0),
-        pluginApi,
-        querySetupHandler,
-        options
-    );
-    corplist.bind(selectElm);
-    corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
-    return corplist;
+export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.Component {
+    return dcInit.createWidget(targetAction, pluginApi, queryStore, querySetupHandler, options);
 }

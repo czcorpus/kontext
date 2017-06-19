@@ -32,7 +32,7 @@ export class QueryProcessingStore extends SimplePageStore {
 
     protected tagPrefix:string;
 
-    protected data:any;
+    protected data:{rows:Array<common.CorplistItem>; filters:any};
 
     protected selectedKeywords:{[key:string]:boolean};
 
@@ -43,7 +43,7 @@ export class QueryProcessingStore extends SimplePageStore {
     constructor(pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
-        this.data = {};
+        this.data = {rows: [], filters: []};
         this.selectedKeywords = {};
         this.searchedCorpName = null;
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
@@ -219,35 +219,33 @@ export class CorplistTableStore extends SimplePageStore {
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
-        const self = this;
-        CorplistTableStore.DispatchToken = this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
+        CorplistTableStore.DispatchToken = this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'LIST_STAR_CLICKED':
-                        self.changeFavStatus(payload.props['corpusId'], payload.props['corpusName'],
+                        this.changeFavStatus(payload.props['corpusId'], payload.props['corpusName'],
                             payload.props['type'], payload.props['isFav']).then(
                                 (message) => {
-                                    self.notifyChangeListeners();
-                                    self.pluginApi.showMessage('info', message);
+                                    this.notifyChangeListeners();
+                                    this.pluginApi.showMessage('info', message);
                                 },
                                 (err) => {
-                                    self.pluginApi.showMessage('error', err);
+                                    this.pluginApi.showMessage('error', err);
                                 }
                             );
                     break;
                     case 'CORPARCH_CORPUS_INFO_REQUIRED':
-                        self.loadCorpusInfo(payload.props['corpusId']).then(
+                        this.loadCorpusInfo(payload.props['corpusId']).then(
                             (data) => {
-                                self.notifyChangeListeners();
+                                this.notifyChangeListeners();
                             },
                             (err) => {
-                                self.pluginApi.showMessage('message', err);
+                                this.pluginApi.showMessage('message', err);
                             }
                         )
                     break;
                     case 'CORPARCH_CORPUS_INFO_CLOSED':
-                        self.detailData = null;
-                        self.notifyChangeListeners();
+                        this.detailData = null;
+                        this.notifyChangeListeners();
                     break;
                 }
             }
@@ -256,39 +254,32 @@ export class CorplistTableStore extends SimplePageStore {
 
     private changeFavStatus(corpusId:string, corpusName:string, itemType:string,
             isFav:boolean):RSVP.Promise<string> {
-        let prom:RSVP.Promise<any>;
-        let item:common.CorplistItem;
-        let message;
+        return (() => {
+            if (isFav) {
+                const item:common.GeneratedFavListItem = {
+                    subcorpus_id: null,
+                    corpora:[corpusId]
+                };
+                return this.pluginApi.ajax<any>(
+                    'POST',
+                    this.pluginApi.createActionUrl('user/set_favorite_item'),
+                    item
+                );
 
-        if (isFav) {
-            item = common.createEmptyCorplistItem();
-            item.corpus_id = corpusId;
-            item.id = item.corpus_id;
-            item.name = corpusName;
-            item.type = itemType;
+            } else {
+                return this.pluginApi.ajax<any>(
+                    'POST',
+                    this.pluginApi.createActionUrl('user/unset_favorite_item'),
+                    {id: corpusId}
+                );
+            }
 
-            prom = this.pluginApi.ajax<any>(
-                'POST',
-                this.pluginApi.createActionUrl('user/set_favorite_item'),
-                item,
-                {contentType: 'application/x-www-form-urlencoded'}
-            );
-            message = this.pluginApi.translate('item added to favorites');
-
-        } else {
-            prom = this.pluginApi.ajax<any>(
-                'POST',
-                this.pluginApi.createActionUrl('user/unset_favorite_item'),
-                {id: corpusId},
-                {contentType: 'application/x-www-form-urlencoded'}
-            );
-            message = this.pluginApi.translate('item removed from favorites');
-        }
-        return prom.then(
+        })().then(
             (data) => {
                 if (!data.error) {
                     this.updateDataItem(corpusId, {user_item: isFav});
-                    return message;
+                    return isFav ? this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
+                        this.pluginApi.translate('defaultCorparch__item_removed_from_fav');
 
                 } else {
                     throw new Error(this.pluginApi.translate('failed to update item'));
@@ -306,16 +297,6 @@ export class CorplistTableStore extends SimplePageStore {
             },
             {
                 contentType : 'application/x-www-form-urlencoded'
-            }
-        ).then(
-            (data) => {
-                if (!data.contains_errors) {
-                    this.detailData = data;
-                    return data;
-
-                } else {
-                    throw new Error(data.messages[0]);
-                }
             }
         );
     }
@@ -342,23 +323,18 @@ export class CorplistTableStore extends SimplePageStore {
             }
         ).then(
             (data) => {
-                if (data.contains_errors) {
-                    throw new Error(data.mesages[0]);
+                if (offset === 0) {
+                this.setData(data);
 
                 } else {
-                    if (offset === 0) {
-                    this.setData(data);
-
-                    } else {
-                        this.extendData(data);
-                    }
+                    this.extendData(data);
                 }
             }
         );
     }
 
     protected updateDataItem(corpusId, data) {
-        (this.data.rows || []).forEach(function (item:common.CorplistItem) {
+        (this.data.rows || []).forEach((item:common.CorplistItem) => {
             if (item.id === corpusId) {
                 for (var p in data) {
                     if (data.hasOwnProperty(p)) {

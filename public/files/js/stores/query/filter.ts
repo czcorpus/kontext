@@ -213,6 +213,10 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         return this.pageModel.createActionUrl('filter', this.createSubmitArgs(filterId).items());
     }
 
+    getCurrentSubcorpus():string {
+        return undefined;
+    }
+
     /**
      * Synchronize user input values from an external source
      * (typically a server response or a local cache).

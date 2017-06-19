@@ -143,7 +143,6 @@ import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
 from plugins.abstract.corpora import CorplistProvider
-from plugins.abstract.user_items import CorpusItem
 from plugins import inject
 import l10n
 import manatee
@@ -303,7 +302,7 @@ class DeafultCorplistProvider(CorplistProvider):
 
         def is_fav(corpus_id):
             for item in user_items:
-                if isinstance(item, CorpusItem) and item.corpus_id == corpus_id:
+                if item.is_single_corpus and item.main_corpus_id == corpus_id:
                     return True
             return False
 
@@ -332,7 +331,8 @@ class DeafultCorplistProvider(CorplistProvider):
                 tests.append(self._corparch.custom_filter(self._plugin_api, full_data, permitted_corpora))
 
                 if self.matches_all(tests):
-                    corp['raw_size'] = l10n.simplify_num(corp['size']) if corp['size'] else None
+                    corp['size'] = corp['size']
+                    corp['size_info'] = l10n.simplify_num(corp['size']) if corp['size'] else None
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                     corp['found_in'] = found_in
                     corp['user_item'] = is_fav(corp['id'])
@@ -368,7 +368,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
     GROUP_DUPLICATES_KEY = 'group_duplicates'
 
-    LABEL_OVERLAY_TRANSPARENCY = 0.15
+    LABEL_OVERLAY_TRANSPARENCY = 0.20
 
     def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
                  max_page_size, registry_lang):
@@ -681,10 +681,12 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for x in self._raw_list(plugin_api.user_lang).values():
             if x['id'] in permitted_corpora and is_featured(x):
                 featured.append({
-                    'id': permitted_corpora[x['id']],
+                    'id': permitted_corpora[x['id']],  # on client-side, this may contain also subc. id, aligned ids
+                    'corpus_id': permitted_corpora[x['id']],
                     'canonical_id': self._auth.canonical_corpname(x['id']),
                     'name': self._manatee_corpora.get_info(x['id']).name,
-                    'size': l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size),
+                    'size': self._manatee_corpora.get_info(x['id']).size,
+                    'size_info': l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size),
                     'description': self._export_untranslated_label(
                         plugin_api, self._manatee_corpora.get_info(x['id']).description)
                 })
@@ -695,7 +697,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in plugins.get('user_items').get_user_items(plugin_api):
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_api, self._manatee_corpora.get_info(item.canonical_id).description)
+                plugin_api, self._manatee_corpora.get_info(item.main_corpus_canonical_id).description)
             ans.append(tmp)
         return ans
 
@@ -726,7 +728,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         }
 
     def export_actions(self):
-        return {actions.user.User: [ask_corpus_access, get_favorite_corpora]}
+        return {actions.user.User: [get_favorite_corpora]}
 
 
 @inject('auth', 'user_items')

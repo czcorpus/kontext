@@ -17,7 +17,6 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/plugins/corparch.d.ts" />
 
 /*
  * Common types and functions used by plug-in objects
@@ -31,44 +30,42 @@ export enum Favorite {
     FAVORITE = 1
 }
 
-export class CorplistItemType {
-    static CORPUS:string = 'corpus';
-    static SUBCORPUS:string = 'subcorpus';
-    static ALIGNED_CORPORA:string = 'aligned_corpora';
+
+export interface ServerFavlistItem {
+    id:string;
+    name:string;
+    subcorpus_id:string;
+    size:number;
+    size_info:string;
+    corpora:Array<{id:string; canonical_id:string; name:string}>;
+}
+
+export interface GeneratedFavListItem {
+    subcorpus_id:string;
+    corpora:Array<string>;
 }
 
 /**
  * Generalized corplist item which may refer to a single
  * corpus, subcorpus, corpus with aligned corpora.
  */
-export interface CorplistItem extends CorparchCommon.Item {
+export interface CorplistItem {
     id?: string;
     name: string;
-    type: string;
     corpus_id: string;
     canonical_id: string;
     subcorpus_id: string;
     corpora: Array<string>;
     description: string;
-    featured: Favorite;
-    user_item: boolean;
     size: number;
     /**
      * A simplified/human readable version of size.
      * E.g. if the size is 1,200,000 then the size_info is '1M'
      */
     size_info: string;
+    user_item: boolean;
+    featured: boolean;
 }
 
-/**
- * A factory for CorplistItem
- */
-export function createEmptyCorplistItem():CorplistItem {
-    return {
-        id: null, name: null, type: null, corpus_id: null, canonical_id: null,
-        subcorpus_id: null, corpora: null, description: null, featured: null,
-        size: null, size_info: null, user_item: null
-    }
-}
 
 

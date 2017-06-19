@@ -1139,6 +1139,9 @@ class Kontext(Controller):
         else:
             result['multi_sattr_allowed_structs'] = []
 
+        result['corpus_ident'] = dict(id=self.args.corpname, canonicalId=self._canonical_corpname(self.args.corpname),
+                                      name=self._human_readable_corpname())
+
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)
         result['plugin_data'] = {}

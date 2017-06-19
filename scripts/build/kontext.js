@@ -196,8 +196,6 @@
             'vendor/immutable',
             'vendor/Dispatcher',
             'SoundManager',
-            'vendor/typeahead',
-            'vendor/bloodhound',
             'vendor/intl-messageformat',
             'vendor/d3',
             'vendor/d3-color'

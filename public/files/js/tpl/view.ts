@@ -693,6 +693,7 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
+            null, // no corpus selection widget here
             this.queryStores.queryStore,
             this.queryStores.textTypesStore,
             this.queryStores.queryHintStore,

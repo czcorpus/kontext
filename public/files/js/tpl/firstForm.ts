@@ -22,7 +22,6 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
-/// <reference path="../types/plugins/corparch.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
@@ -51,7 +50,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private clStorage:ConcLinesStorage;
 
-    private corplistComponent:CorparchCommon.Widget;
+    private corplistComponent:React.Component;
 
     private layoutModel:PageModel;
 
@@ -86,51 +85,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return this.layoutModel.translate(msg, values);
     }
 
-    /**
-     * Registers a callback which is invoked after an aligned
-     * corpus is added to the query page (i.e. firstForm's
-     * internal actions are performed first then the list of
-     * registered callbacks).
-     *
-     * @param fn:(corpname:string)=>void
-     */
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.queryStore.registerOnAddParallelCorpAction(fn);
-    }
-
-    /**
-     * Registers a callback which is invoked AFTER an aligned
-     * corpus is removed from the query page (i.e. firstForm's
-     * internal actions are performed first then the list of
-     * registered callbacks).
-     *
-     * @param fn:(corpname:string)=>void
-     */
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.queryStore.registerOnRemoveParallelCorpAction(fn);
-    }
-
-    /**
-     * Registers a callback which is invoked BEFORE an aligned
-     * corpus is removed from the query page (i.e. firstForm's
-     * internal actions are performed this actions).
-     *
-     * @param fn
-     */
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.queryStore.registerOnBeforeRemoveParallelCorpAction(fn);
-    }
-
-    /**
-     * Registers a callback which is invoked after the subcorpus
-     * selection element is changed. It guarantees that all the
-     * firstForm's internal actions are performed before this
-     * externally registered ones.
-     *
-     * @param fn:(subcname:string)=>void
-     */
-    registerOnSubcorpChangeAction(fn:(corpname:string)=>void):void {
-        this.queryStore.registerOnSubcorpChangeAction(fn);
+    registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void {
+        this.queryStore.registerCorpusSelectionListener(fn);
     }
 
     getCorpora():Immutable.List<string> {
@@ -141,21 +97,24 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return this.queryStore.getAvailableAlignedCorpora();
     }
 
-    private initCorplistComponent():void {
-        this.corplistComponent = corplistComponent.create(
-            window.document.getElementById('corparch-mount'),
+    getCurrentSubcorpus():string {
+        return this.queryStore.getCurrentSubcorpus();
+    }
+
+    getAvailableSubcorpora():Immutable.List<string> {
+        return this.queryStore.getAvailableSubcorpora();
+    }
+
+
+    private initCorplistComponent():React.Component {
+        return corplistComponent.createWidget(
             'first_form',
             this.layoutModel.pluginApi(),
+            this.queryStore,
             this,
             {
-                itemClickAction: (item) => {
-                    const corpora = [item.corpus_id];
-                    (item.corpora || []).forEach(corp => {
-                        corpora.push(corp.corpus_id);
-                    });
-                    const subcorpId = item.type === 'subcorpus' ? item.subcorpus_id : undefined;
-                    this.corplistComponent.setButtonLoader();
-                    this.layoutModel.switchCorpus(corpora, subcorpId).then(
+                itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                    return this.layoutModel.switchCorpus(corpora, subcorpId).then(
                         () => {
                             // all the components must be deleted to prevent memory leaks
                             // and unwanted action handlers from previous instance
@@ -166,7 +125,6 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
-                            this.corplistComponent.disableButtonLoader();
                         }
                     )
                 }
@@ -246,7 +204,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         );
     }
 
-    private attachQueryForm(properties:{[key:string]:any}):void {
+    private initQueryStore():void {
         const formCorpora = [this.layoutModel.getConf<string>('corpname')];
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
@@ -281,18 +239,19 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes')
             }
         );
-        this.queryStore.registerOnAddParallelCorpAction(corpname => {
-            this.onAlignedCorporaChanged(this.queryStore.getCorpora().rest().toList())
-        });
-        this.queryStore.registerOnRemoveParallelCorpAction(corpname => {
-            this.onAlignedCorporaChanged(this.queryStore.getCorpora().rest().toList())
-        });
+        this.queryStore.registerCorpusSelectionListener((corpname, aligned, subcorp) =>
+                this.onAlignedCorporaChanged(aligned));
         this.onQueryStoreReady(this.queryStore);
+    }
+
+    private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.Component):void {
+
         this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
             this.layoutModel.layoutViews,
+            corparchWidget,
             this.queryStore,
             this.textTypesStore,
             this.queryHintStore,
@@ -388,8 +347,9 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 props['allowCorpusSelection'] = true;
                 props['manualAlignCorporaMode'] = false;
                 props['actionPrefix'] = '';
-                this.attachQueryForm(props);
-                this.initCorplistComponent(); // non-React world here
+                this.initQueryStore();
+                const corparchWidget = this.initCorplistComponent();
+                this.attachQueryForm(props, corparchWidget);
                 this.initCorpnameLink();
                 this.initViewOptions();
             }

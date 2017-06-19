@@ -1910,6 +1910,8 @@ class Actions(Querying):
             subcorpname=self.args.usesubcorp,
             baseAttr=Kontext.BASE_ATTR,
             humanCorpname=self._human_readable_corpname(),
+            corpusIdent=dict(id=self.args.corpname, canonicalId=self._canonical_corpname(self.args.corpname),
+                             name=self._human_readable_corpname()),
             currentArgs=[['corpname', self.args.corpname]],
             compiledQuery=[],
             concPersistenceOpId=None,

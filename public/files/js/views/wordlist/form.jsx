@@ -20,12 +20,28 @@
 
 
 import React from 'vendor/react';
-import {init as corpSelViewsInit} from '../query/corpSel';
 
 
-export function init(dispatcher, mixins, layoutViews, wordlistPageStore) {
+export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistPageStore) {
 
-    const corpSelViews = corpSelViewsInit(dispatcher, mixins);
+    const util = mixins[0];
+
+    /**
+     *
+     * @param {*} props
+     */
+    const TRCorpusField = (props) => {
+
+        return (
+            <tr>
+                <th>{util.translate('global__corpus')}:</th>
+                <td>
+                    <props.corparchWidget subcorpList={props.subcorpList} />
+                </td>
+            </tr>
+        );
+    };
+
 
     // ------------------- <WordListCorpSel /> -----------------------------
 
@@ -54,8 +70,9 @@ export function init(dispatcher, mixins, layoutViews, wordlistPageStore) {
         render : function () {
             return (
                 <tbody>
-                    <corpSelViews.TRCorpusField subcorpList={this.props.subcorpList}
-                            currentSubcorp={this.state.currentSubcorp} />
+                    <TRCorpusField subcorpList={this.props.subcorpList}
+                            currentSubcorp={this.state.currentSubcorp}
+                            corparchWidget={CorparchWidget} />
                 </tbody>
             )
         }

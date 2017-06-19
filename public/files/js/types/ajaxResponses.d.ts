@@ -203,8 +203,9 @@ declare module AjaxResponse {
     }
 
     export interface CorpusSwitchResponse extends Kontext.AjaxConcResponse {
-        corpname:string;
-        humanCorpname:string;
+        corpname:string; // deprecated
+        humanCorpname:string; // deprecated
+        corpusIdent:Kontext.FullCorpusIdent;
         subcorpname:string;
         baseAttr:string;
         currentArgs:Array<[string, string]>;

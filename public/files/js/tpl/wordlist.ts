@@ -115,6 +115,7 @@ export class WordlistPage extends SimplePageStore  {
             this.pageModel.dispatcher,
             this.pageModel.exportMixins(),
             this.pageModel.layoutViews,
+            null, // TODO corparch widget view !!!!
             this
         );
         this.pageModel.renderReactComponent(

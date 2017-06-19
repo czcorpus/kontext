@@ -18,23 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/jquery.d.ts" />
-/// <reference path="../../../ts/declarations/typeahead.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 /// <reference path="../../types/plugins/abstract.d.ts" />
-/// <reference path="../../types/plugins/corparch.d.ts" />
-/// <reference path="./view.d.ts" />
 /// <reference path="../../types/views.d.ts" />
+/// <reference path="./corplistView.d.ts" />
+/// <reference path="./widgetView.d.ts" />
 
-/// <amd-dependency path="vendor/typeahead" />
-/// <amd-dependency path="vendor/bloodhound" name="Bloodhound" />
-
-import * as $ from 'jquery';
-import {Corplist} from './widget';
+import {CorplistWidgetStore} from './widget';
 import {CorplistPage} from './corplist';
-import {init as viewInit} from './view';
+import {init as viewInit} from './corplistView';
+import {init as widgetInit} from './widgetView';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
+import {QueryStore} from '../../stores/query/main';
+import * as common from './common';
+import {SearchEngine} from './search';
 
 /**
  *
@@ -71,19 +70,34 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
  * @param pluginApi
  * @param options A configuration for the widget
  */
-export function create(
-        selectElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-        querySetupHandler:Kontext.QuerySetupHandler,
-        options:CorparchCommon.Options):CorparchCommon.Widget {
+export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.Component { // TODO opts type
 
-    const corplist:Corplist = new Corplist(
-        targetAction,
-        $(selectElm).closest('form').get(0),
+    const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
+    const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
+    const featData = pluginData['featured'] || [];
+
+    const corporaLabels:Array<[string,string,string]> = pluginApi.getConf<Array<[string,string,string]>>('pluginData')['corparch']['corpora_labels'];
+
+    const searchEngine = new SearchEngine(
         pluginApi,
-        querySetupHandler,
-        options
+        10,
+        corporaLabels
     );
-    corplist.bind(selectElm);
-    corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
-    return corplist;
+
+    const store = new CorplistWidgetStore(
+        pluginApi.dispatcher(),
+        pluginApi,
+        pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+        pluginApi.getConf<boolean>('anonymousUser'),
+        querySetupHandler,
+        searchEngine,
+        favData,
+        featData,
+        options.itemClickAction
+    );
+    store.initHandlers();
+    return widgetInit(pluginApi.dispatcher(), pluginApi.getComponentTools(), pluginApi.getComponentTools().getLayoutViews(), store,
+        queryStore);
+    // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
 }
