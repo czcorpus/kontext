@@ -19,12 +19,10 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../types/views.d.ts" />
 
-import * as $ from 'jquery';
 import {CorplistItemUcnk} from './common';
 import {CorplistPage} from './corplist';
 import {init as viewInit} from './view';

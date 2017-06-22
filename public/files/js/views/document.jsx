@@ -18,7 +18,6 @@
 
 import React from 'vendor/react';
 import ReactDOM from 'vendor/react-dom';
-import $ from 'jquery';
 
 
 const ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
@@ -400,7 +399,7 @@ export function init(dispatcher, mixins, storeProvider) {
             return (
                 <li id="active-corpus">
                     <strong>{this.translate('global__corpus')}:{'\u00a0'}</strong>
-                    <a className="corpus-desc" title="$_('click for details')"
+                    <a className="corpus-desc" title="click for details"
                                 onClick={this._handleCorpnameClick}>
                         {this.props.humanCorpname}
                     </a>

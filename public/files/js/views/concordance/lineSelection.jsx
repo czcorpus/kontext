@@ -21,7 +21,6 @@
 /// <reference path="../../../ts/declarations/react.d.ts" />
 
 import React from 'vendor/react';
-import $ from 'jquery';
 
 
 export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
