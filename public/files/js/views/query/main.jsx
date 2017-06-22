@@ -24,19 +24,18 @@ import {init as inputInit} from './input';
 import {init as alignedInit} from './aligned';
 import {init as contextInit} from './context';
 import {init as ttViewsInit} from '../textTypes';
-import {init as corpSelInit} from './corpSel';
 
 
 export function init(
-        dispatcher, mixins, layoutViews, queryStore, textTypesStore, queryHintStore,
+        dispatcher, mixins, layoutViews, CorparchWidget, queryStore, textTypesStore, queryHintStore,
         withinBuilderStore, virtualKeyboardStore, queryContextStore) {
-
     const inputViews = inputInit(
         dispatcher, mixins, layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
     const alignedViews = alignedInit(dispatcher, mixins, layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
     const contextViews = contextInit(dispatcher, mixins, queryContextStore);
     const ttViews = ttViewsInit(dispatcher, mixins, textTypesStore);
-    const corpSelViews = corpSelInit(dispatcher, mixins);
+
+    const util = mixins[0];
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
@@ -80,6 +79,23 @@ export function init(
         }
     });
 
+    /**
+     *
+     * @param {*} props
+     */
+    const TRCorpusField = (props) => {
+
+        return (
+            <tr>
+                <th>{util.translate('global__corpus')}:</th>
+                <td>
+                    <props.corparchWidget />
+                </td>
+            </tr>
+        );
+    };
+
+
     // ------------------- <QueryForm /> -----------------------------
 
     const QueryForm = React.createClass({
@@ -92,8 +108,6 @@ export function init(
                 availableAlignedCorpora: queryStore.getAvailableAlignedCorpora(),
                 supportsParallelCorpora: queryStore.supportsParallelCorpora(),
                 queryTypes: queryStore.getQueryTypes(),
-                subcorpList: queryStore.getSubcorpList(),
-                currentSubcorp: queryStore.getCurrentSubcorp(),
                 supportedWidgets: queryStore.getSupportedWidgets(),
                 lposlist: queryStore.getLposlist(),
                 lposValues: queryStore.getLposValues(),
@@ -174,8 +188,7 @@ export function init(
                     <table className="form primary-language">
                         <tbody>
                             {this.props.allowCorpusSelection ?
-                                <corpSelViews.TRCorpusField corpname={primaryCorpname} subcorpList={this.state.subcorpList}
-                                        currentSubcorp={this.state.currentSubcorp} />
+                                <TRCorpusField corpname={primaryCorpname} corparchWidget={CorparchWidget} />
                                 : null}
                             <inputViews.TRQueryTypeField
                                     queryType={this.state.queryTypes.get(primaryCorpname)}
@@ -268,8 +281,6 @@ export function init(
             return {
                 corpora: queryStore.getCorpora(),
                 queryTypes: queryStore.getQueryTypes(),
-                subcorpList: queryStore.getSubcorpList(),
-                currentSubcorp: queryStore.getCurrentSubcorp(),
                 supportedWidgets: queryStore.getSupportedWidgets(),
                 lposlist: queryStore.getLposlist(),
                 lposValues: queryStore.getLposValues(),

@@ -104,13 +104,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     // ----- non flux world handlers
 
-    protected onSubcorpChangeActions:Immutable.List<(subcname:string)=>void>;
-
-    protected onAddParallelCorpActions:Immutable.List<(corpname:string)=>void>;
-
-    protected onBeforeRemoveParallelCorpActions:Immutable.List<(corpname:string)=>void>;
-
-    protected onRemoveParallelCorpAction:Immutable.List<(corpname:string)=>void>;
+    protected onCorpusSelectionChangeActions:Immutable.List<(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void>;
 
     // -------
 
@@ -129,10 +123,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.hasLemmaAttr = props.hasLemmaAttr;
         this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
 
-        this.onSubcorpChangeActions = Immutable.List<(subcname:string)=>void>();
-        this.onAddParallelCorpActions = Immutable.List<(corpname:string)=>void>();
-        this.onBeforeRemoveParallelCorpActions = Immutable.List<(corpname:string)=>void>();
-        this.onRemoveParallelCorpAction = Immutable.List<(corpname:string)=>void>();
+        this.onCorpusSelectionChangeActions = Immutable.List<(subcname:string)=>void>();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
@@ -154,20 +145,8 @@ export abstract class GeneralQueryStore extends SimplePageStore {
      */
     abstract setActiveWidget(sourceId:string, ident:string):void;
 
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {
-        this.onSubcorpChangeActions = this.onSubcorpChangeActions.push(fn);
-    }
-
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onAddParallelCorpActions = this.onAddParallelCorpActions.push(fn);
-    }
-
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onBeforeRemoveParallelCorpActions = this.onBeforeRemoveParallelCorpActions.push(fn);
-    }
-
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {
-        this.onRemoveParallelCorpAction = this.onRemoveParallelCorpAction.push(fn);
+    registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void {
+        this.onCorpusSelectionChangeActions = this.onCorpusSelectionChangeActions.push(fn);
     }
 
     getLposlist():Immutable.List<{v:string; n:string}> {
@@ -333,7 +312,9 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 case 'QUERY_INPUT_SELECT_SUBCORP':
                     self.currentSubcorp = payload.props['subcorp'];
                     self.notifyChangeListeners();
-                    self.onSubcorpChangeActions.forEach(fn => fn(self.currentSubcorp));
+                    self.onCorpusSelectionChangeActions.forEach(fn =>
+                        fn(self.corpora.first(), self.corpora.rest().toList(), self.currentSubcorp)
+                    );
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
                     self.queries = self.queries.set(payload.props['sourceId'], payload.props['query']);
@@ -370,13 +351,16 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
                     self.addAlignedCorpus(payload.props['corpname']);
                     self.notifyChangeListeners();
-                    self.onAddParallelCorpActions.forEach(fn => fn(payload.props['corpname']));
+                    self.onCorpusSelectionChangeActions.forEach(fn =>
+                        fn(self.corpora.first(), self.corpora.rest().toList(), self.currentSubcorp)
+                    );
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
-                    self.onBeforeRemoveParallelCorpActions.forEach(fn => fn(payload.props['corpname']));
                     self.removeAlignedCorpus(payload.props['corpname']);
                     self.notifyChangeListeners();
-                    self.onRemoveParallelCorpAction.forEach(fn => fn(payload.props['corpname']));
+                    self.onCorpusSelectionChangeActions.forEach(fn =>
+                        fn(self.corpora.first(), self.corpora.rest().toList(), self.currentSubcorp)
+                    );
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
                     self.pcqPosNegValues = self.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
@@ -656,11 +640,12 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         return this.availableAlignedCorpora;
     }
 
-    getSubcorpList():Immutable.List<string> {
+
+    getAvailableSubcorpora():Immutable.List<string> {
         return this.subcorpList;
     }
 
-    getCurrentSubcorp():string {
+    getCurrentSubcorpus():string {
         return this.currentSubcorp;
     }
 

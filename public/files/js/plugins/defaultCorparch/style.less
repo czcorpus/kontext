@@ -24,7 +24,71 @@ section.corplist {
     }
 }
 
+.CorplistWidget {
+
+    a.star-switch {
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 0.7em;
+    }
+
+    div.autocomplete-wrapper {
+        margin: 1em;
+    }
+
+
+    .tt-input {
+        width: 80%;
+        font-size: 1.4em;
+    }
+}
+
+
+.tt-menu {
+    position: absolute;
+    background-color: #FFFFFF;
+    padding: 0.3em 1em;
+    border-style: @input-border-style;
+    border-radius: @input-border-radius;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: @portal-box-shadow;
+
+    .tt-suggestion span.num {
+        font-size: 70%;
+        padding-left: 1em;
+    }
+
+    .tt-suggestion {
+        margin: 0;
+        padding-bottom: 0.2em;
+        .ping-dot-item;
+        font-size: 1.4em;
+        text-align: left;
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        a:hover {
+            background-color: #FFF9ED;
+        }
+    }
+
+    .hint {
+        padding-top: 3pt;
+        border-width: 1pt 0 0 0;
+        border-color: @color-light-grey;
+        border-style: solid;
+        font-size: 80%;
+    }
+
+}
+
+
 @corplist-widget-table-spacing: 30pt;
+
 .corplist-widget {
     max-width: 500pt;
     border: 1px solid #E4E4E4;
@@ -33,165 +97,182 @@ section.corplist {
     box-shadow: 0 0 10pt #a5a5a5;
     padding: 1em 0.7pt 0 0.7em;
     text-align: left;
+
+    .footer {
+        text-align: center;
+        color: @color-light-text;
+        border-color: @color-light-grey;
+        border-width: 1pt 0 0 0;
+        border-style: solid;
+        font-size: 80%;
+        height: 2em;
+        line-height: 2em;
+        margin-top: 10pt;
+    }
+
+    .tmp-hint img {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+    }
+
+    .srch-field {
+        color: inherit;
+    }
+
+    .srch-field.initial {
+        color: #ababab;
+    }
+
+    table td {
+        padding: 0.2em 1em;
+    }
+
+    table td.tools {
+        padding: 0.2em 0 0 0;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    tr td a {
+        color: @color-default-text;
+        text-decoration: none;
+    }
+
+
+    tr td a:hover {
+        color: @color-logo-pink;
+        text-decoration: underline;
+    }
+
+    .menu {
+        margin: 0 0 10pt 0;
+        text-align: center;
+
+        a {
+            text-decoration: none;
+        }
+
+        a.current {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+    }
+
+    .labels {
+        padding: 5pt;
+
+        a {
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .ajax-loader {
+        display: inline-block;
+        margin-right: 1em;
+        vertical-align: middle;
+    }
+
+    .input-wrapper {
+        position: relative;
+        left: -24px;
+    }
+
+    .keyword {
+        #label-design();
+    }
+
+    .keyword.reset {
+        background-color: @color-light-grey;
+        border-color: @color-light-text;
+        color: @color-default-text;
+    }
+
+    .keyword .overlay {
+        border-width: 1pt;
+        border-radius: @border-radius-default;
+        border-color: transparent;
+        padding: 0.2em 0.4em;
+        display: inline-block;
+        -webkit-transition: all 0.2s ease-in-out;
+        -moz-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        -ms-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .keyword.selected {
+        color: @color-bg-light-blue;
+        background-color: @color-logo-blue;
+    }
+
+    table.favorite-list,
+    table.featured-list {
+        display: inline-block;
+        vertical-align: top;
+        box-sizing: border-box;
+        border-spacing: 0;
+    }
+
+    table.favorite-list th.conf {
+        text-align: right;
+        padding-right: 8pt;
+        padding-left: 0;
+
+        img.config {
+            cursor: pointer;
+        }
+    }
+
+    table.favorite-list img.remove {
+        display: inline-block;
+        padding: 0;
+        cursor: pointer;
+        width: @navig-icon-size;
+    }
+
+    table.favorite-list img.remove.disabled {
+        display: none;
+    }
+
+    table.featured-list {
+        margin-left: @corplist-widget-table-spacing;
+    }
+
+    div.tables > table tr {
+        line-height: 1.2em;
+    }
+
+    div.tables > table th {
+        text-align: left;
+        color: @color-logo-pink;
+        padding-left: 1em;
+        height: 1.5em;
+    }
+
+    .labels-hint {
+        padding: 0.5em 0 0 0;
+        color: @color-light-text;
+        font-size: 8pt;
+        text-align: left;
+    }
 }
-.corplist-widget .footer {
-    text-align: center;
-    color: @color-light-text;
-    border-color: @color-light-grey;
-    border-width: 1pt 0 0 0;
-    border-style: solid;
-    font-size: 80%;
-    height: 2em;
-    line-height: 2em;
-    margin-top: 10pt;
-}
-.corplist-widget .tmp-hint img {
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-}
-.corplist-widget .srch-field {
-    color: inherit;
-}
-.corplist-widget .srch-field.initial {
-    color: #ababab;
-}
-.corplist-widget table td {
-    padding: 0.2em 1em;
-}
-.corplist-widget table td.tools {
-    padding: 0.2em 0 0 0;
-    text-align: left;
-    vertical-align: middle;
-}
-.corplist-widget tr td a {
-    color: @color-default-text;
-    text-decoration: none;
-}
+
 .tt-menu .tt-suggestion span.num,
 .corplist-widget tr td.num {
     color: @color-light-text;
 }
-.corplist-widget tr td a:hover {
-    color: @color-logo-pink;
-    text-decoration: underline;
-}
-.corplist-widget .menu {
-    margin: 0 0 10pt 0;
-    text-align: center;
-}
-.corplist-widget .menu a {
-    text-decoration: none;
-}
-.corplist-widget .menu a.current {
-    text-decoration: underline;
-    font-weight: bold;
-}
-.corplist-widget .labels {
-    padding: 5pt;
-}
-.corplist-widget .labels a {
-    text-decoration: none;
-}
-.corplist-widget .labels a:hover {
-    text-decoration: underline;
-}
-.corplist-widget .srch-box {
-    display: block;
-    text-align: center;
-    margin-top: 10pt;
-}
-.corplist-widget .srch-box .twitter-typeahead {
-    display: block;
-    width: 80%;
-}
-.corplist-widget .corp-search {
-    font-size: 14pt;
-    display: block;
-    width: 100%;
-}
-.corplist-widget .ajax-loader {
-    display: inline-block;
-    margin-right: 10pt;
-}
-.corplist-widget .ajax-loader.hidden {
-    visibility: hidden;
-}
-.corplist-widget .input-wrapper {
-    position: relative;
-    left: -24px;
-}
-.corplist-widget .keyword {
-    #label-design();
-}
-.corplist-widget .keyword.reset {
-    background-color: @color-light-grey;
-    border-color: @color-light-text;
-    color: @color-default-text;
-}
-.corplist-widget .keyword .overlay {
-    border-width: 0;
-    border-radius: @border-radius-default;
-    padding: 0.2em 0.4em;
-    display: inline-block;
-    -webkit-transition: all 0.2s ease-in-out;
-    -moz-transition: all 0.2s ease-in-out;
-    -o-transition: all 0.2s ease-in-out;
-    -ms-transition: all 0.2s ease-in-out;
-    transition: all 0.2s ease-in-out;
-}
-.corplist-widget .keyword.selected {
-    color: @color-bg-light-blue;
-    background-color: @color-logo-blue;
-}
-.corplist-widget table.favorite-list,
-.corplist-widget table.featured-list {
-    display: inline-block;
-    vertical-align: top;
-    box-sizing: border-box;
-    border-spacing: 0;
-}
-.corplist-widget table.favorite-list th.conf {
-    text-align: right;
-    padding-right: 8pt;
-    padding-left: 0;
 
-    img.config {
-        cursor: pointer;
-    }
-}
-.corplist-widget table.favorite-list img.remove {
-    display: inline-block;
-    padding: 0;
-    cursor: pointer;
-    width: @navig-icon-size;
-}
-.corplist-widget table.favorite-list img.remove.disabled {
-    display: none;
-}
-.corplist-widget table.featured-list {
-    margin-left: @corplist-widget-table-spacing;
-}
-.corplist-widget div.tables > table tr {
-    line-height: 1.2em;
-}
-.corplist-widget div.tables > table th {
-    text-align: left;
-    color: @color-logo-pink;
-    padding-left: 1em;
-    height: 1.5em;
-}
-.corplist-widget .labels-hint {
-    padding: 0.5em 0 0 0;
-    color: @color-light-text;
-    font-size: 8pt;
-    text-align: left;
-}
 table.corplist tr.load-more td {
     text-align: center;
     padding-top: 1em;
     padding-bottom: 0.7em;
 }
+
 table.corplist td img.starred {
     cursor: pointer;
     display: inline-block;

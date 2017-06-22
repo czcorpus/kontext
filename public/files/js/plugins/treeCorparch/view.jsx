@@ -111,19 +111,28 @@ export function init(dispatcher, mixins, treeStore) {
                 });
 
             } else {
-                this.setState({active: !this.state.active, data: this.state.data});
+                this.setState({
+                    active: !this.state.active,
+                    data: this.state.data,
+                    currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+                });
             }
         },
 
         _changeListener : function (store, action) {
             this.setState({
                 active: true,
-                data: store.getData()
+                data: store.getData(),
+                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
             });
         },
 
         getInitialState : function () {
-            return {active: false, data: treeStore.getData()};
+            return {
+                active: false,
+                data: treeStore.getData(),
+                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+            };
         },
 
         componentDidMount : function () {
@@ -137,7 +146,10 @@ export function init(dispatcher, mixins, treeStore) {
         render : function () {
             return (
                 <div className="corp-tree-widget">
-                    <button className="switch" type="button" onClick={this._buttonClickHandler}>{this.props.currentCorpus}</button>
+                    <button className="switch util-button" type="button" onClick={this._buttonClickHandler}
+                            title={this.state.currentCorpusIdent.name}>
+                        {this.state.currentCorpusIdent.id}
+                    </button>
                     {this.state.active ? <ItemList htmlClass="corp-tree"
                         corplist={this.state.data['corplist']} /> : null}
                 </div>
@@ -151,12 +163,16 @@ export function init(dispatcher, mixins, treeStore) {
 
         _changeListener : function (store, action) {
             this.setState({
-                data: store.getData()
+                data: store.getData(),
+                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
             });
         },
 
         getInitialState : function () {
-            return {data: null};
+            return {
+                data: null,
+                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+            };
         },
 
         componentDidMount : function () {

@@ -20,7 +20,6 @@
 
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
-/// <reference path="../types/plugins/corparch.d.ts" />
 /// <reference path="../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
@@ -38,7 +37,7 @@ import subcMixer = require('plugins/subcmixer/init');
 import {UserSettings} from '../userSettings';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
-import corplistComponent = require('plugins/corparch/init');
+import * as corplistComponent from 'plugins/corparch/init'
 import * as Immutable from 'vendor/immutable';
 import * as React from 'vendor/react';
 
@@ -55,9 +54,11 @@ export interface TTInitData {
  */
 export class SubcorpForm implements Kontext.QuerySetupHandler {
 
+    private corpusIdent:Kontext.FullCorpusIdent;
+
     private layoutModel:PageModel;
 
-    private corplistComponent:CorparchCommon.Widget;
+    private corplistComponent:any;
 
     private viewComponents:any; // TODO types
 
@@ -67,20 +68,19 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
 
     private textTypesStore:TextTypesStore;
 
-    constructor(pageModel:PageModel) {
+    constructor(pageModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         this.layoutModel = pageModel;
+        this.corpusIdent = corpusIdent;
     }
 
-    registerOnSubcorpChangeAction(fn:(subcname:string)=>void):void {}
+    registerCorpusSelectionListener(fn:(corpname:string, aligned:Immutable.List<string>, subcorp:string)=>void) {}
 
-    registerOnAddParallelCorpAction(fn:(corpname:string)=>void):void {}
-
-    registerOnBeforeRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
-
-    registerOnRemoveParallelCorpAction(fn:(corpname:string)=>void):void {}
+    getCurrentSubcorpus():string {
+        return this.subcorpFormStore.getSubcname();
+    }
 
     getCorpora():Immutable.List<string> {
-        return Immutable.List<string>();
+        return Immutable.List<string>([this.corpusIdent.id]);
     }
 
     getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
@@ -191,8 +191,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                 return this.createTextTypesComponents()
             }
         ).then(
-            (ttComponent:any) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
-                this.subcorpWithinFormStore = new SubcorpWithinFormStore(
+            (ttComponent:any) => {
+                 this.subcorpWithinFormStore = new SubcorpWithinFormStore(
                     this.layoutModel.dispatcher,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
                     this.layoutModel.getConf<Array<{[key:string]:string}>>('currentWithinJson')
@@ -204,37 +204,53 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     ttComponent.ttStore,
                     this.layoutModel.getConf<string>('corpname')
                 );
+                return ttComponent;
+            }
+        ).then(
+            (ttComponent:any) => {
+                const corparchComponent = corplistComponent.createWidget(
+                    'subcorpus/subcorp_form',
+                    this.layoutModel.pluginApi(),
+                    {
+                        getCurrentSubcorpus: () => null,
+                        getAvailableSubcorpora: () => Immutable.List<string>(),
+                        addChangeListener: (fn:Kontext.StoreListener) => undefined
+                    },
+                    this,
+                    {
+                        itemClickAction: (corpora:Array<string>, subcorpId:string) => {
+                            window.location.href = this.layoutModel.createActionUrl('subcorpus/subcorp_form',
+                                    [['corpname', corpora[0]]]);
+                        }
+                    }
+                );
+                return [ttComponent, corparchComponent];
+            }
+        ).then(
+            (items:[any, React.Component]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
                 this.viewComponents = subcorpViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
                     this.layoutModel.layoutViews,
+                    items[1],
                     this.subcorpFormStore,
                     this.subcorpWithinFormStore
                 );
-                this.initSubcorpForm(ttComponent.component, ttComponent.props);
+                this.initSubcorpForm(items[0].component, items[0].props);
             }
-        ).then(
-            () => {
-                this.corplistComponent = corplistComponent.create(
-                    window.document.getElementById('corparch-mount'),
-                    'subcorpus/subcorp_form',
-                    this.layoutModel.pluginApi(),
-                    this,
-                    {editable: true}
-                );
-            }
-        ).then(
-            ()=>undefined,
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        );
+        ).catch((err) => {
+            this.layoutModel.showMessage('error', err);
+            return null;
+        });
     }
 }
 
 
 export function init(conf:Kontext.Conf) {
     const layoutModel:PageModel = new PageModel(conf);
-    const pageModel = new SubcorpForm(layoutModel);
+    const pageModel = new SubcorpForm(
+        layoutModel,
+        layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent')
+    );
     pageModel.init(conf);
 }

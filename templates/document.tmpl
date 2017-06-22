@@ -155,11 +155,12 @@ define('conf', [], function () {
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_url";
     conf.staticPath = "$files_path";
-    conf.corpname = "$corpname";
+    conf.corpname = "$corpname";  ## deprecated
     conf.subcorpname = #if $getVar('usesubcorp')#"$usesubcorp"#else# null#end if#;
+    conf.humanCorpname = "$human_corpname";  ## deprecated
+    conf.corpusIdent = $to_json($corpus_ident);
     conf.baseAttr = "${base_attr}";
     conf.currentAction = "$current_action";
-    conf.humanCorpname = "$human_corpname";
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
     conf.loginUrl = "$login_url";
     conf.currentArgs = $Globals.to_json();

@@ -92,7 +92,8 @@ declare module "views/subcorp/forms" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:Kontext.LayoutViews, subcorpFormStore:any, subcorpWithinFormStore:any):SubcorpFormViews;
+            layoutViews:Kontext.LayoutViews, corparchComponent:React.Component,
+            subcorpFormStore:any, subcorpWithinFormStore:any):SubcorpFormViews;
 }
 
 
@@ -131,18 +132,6 @@ declare module "views/menu" {
             layoutViews:Kontext.LayoutViews):MainMenuViews;
 }
 
-declare module "views/query/corpSel" {
-
-    export interface CorpusSelectionViews {
-        TRCorpusField:React.ReactClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        mixins:any
-    ):CorpusSelectionViews;
-}
-
 
 declare module "views/query/main" {
 
@@ -155,6 +144,7 @@ declare module "views/query/main" {
             dispatcher:Kontext.FluxDispatcher,
             mixins:any,
             layoutViews:Kontext.LayoutViews,
+            CorparchWidget:React.Component,
             queryStore:any,
             textTypesStore:any,
             queryHintStore:any,
@@ -262,7 +252,8 @@ declare module "views/wordlist/form" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher,
-            mixins:any, layoutViews:Kontext.LayoutViews, wordlistPageStore:any):WordlistFormViews;
+            mixins:any, layoutViews:Kontext.LayoutViews, CorparchWidget:React.Component,
+            wordlistPageStore:any):WordlistFormViews;
 }
 
 

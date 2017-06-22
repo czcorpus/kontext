@@ -30,15 +30,5 @@ export interface CorplistItemUcnk extends CorplistItem {
     requestable: boolean;
 }
 
-/**
- * A factory for CorplistItemUcnk
- */
-export function createEmptyCorplistItem():CorplistItemUcnk {
-    return {
-        id: null, name: null, type: null, corpus_id: null, canonical_id: null,
-        subcorpus_id: null, corpora: null, description: null, featured: null,
-        size: null, size_info: null, user_item: null, requestable: null
-    }
-}
 
 

@@ -17,7 +17,6 @@
  */
 
 import React from 'vendor/react';
-import $ from 'jquery';
 
 
 export function init(dispatcher, mixins, layoutViews, subcMixerStore) {

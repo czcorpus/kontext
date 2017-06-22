@@ -12,8 +12,7 @@
 
 import json
 
-from abstract.user_items import AbstractUserItems, CorpusItem, SubcorpusItem, UserItemException, AlignedCorporaItem
-from abstract.user_items import infer_item_key
+from abstract.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
 import plugins
 import l10n
@@ -21,89 +20,59 @@ from controller import exposed
 from actions.user import User as UserController
 
 
-class ItemEncoder(json.JSONEncoder):
-    """
-    Provides a consistent encoding of GeneralItem objects into the JSON format.
-    In accordance with plug-in's 'serialize()' required signature also a list of
-    GeneralItem instances is supported.
-    """
-    @staticmethod
-    def _convert_single(obj):
-        d = [(k, v) for k, v in obj.__dict__.items() if not k.startswith('_')]
-        d.append(('id', obj.id))
-        d.append(('type', obj.type))
-        return dict(d)
+def import_legacy_record(data):
+    ans = FavoriteItem()
+    ans.ident = data['id']
+    ans.name = data.get('name', '??')
+    if 'corpora' in data:
+        ans.corpora = data.get('corpora')
+    else:
+        ans.corpora = [dict(id=data['corpus_id'], canonical_id=data['canonical_id'], name=data['name'])]
+    ans.subcorpus_id = data.get('subcorpus_id', None)
+    ans.size = data.get('size', None)
+    ans.size_info = data.get('size_info', None)
 
-    def default(self, obj):
-        if hasattr(obj, '__iter__'):
-            return [self._convert_single(item) for item in obj]
-        else:
-            return self._convert_single(obj)
+    return ans
 
 
-def import_from_json(obj, recursive=False):
+def import_from_json(src):
     """
     Provides a consistent decoding of JSON-encoded GeneralItem objects.
     If a new GeneralItem implementation occurs then this method must
     be updated accordingly.
 
     arguments:
-    obj -- a dict representing decoded JSON
+    src -- a JSON representation of a favorite item
     """
-    def set_common(item_obj, src_data):
-        item_obj.corpus_id = src_data['corpus_id']
-        item_obj.canonical_id = src_data['canonical_id']
-        item_obj.size = src_data.get('size', None)   # can be None in case item_obj is an aligned corp.
-        item_obj.size_info = src_data.get('size_info', None)  # can be None in case item_obj is an aligned corp.
-
-    item_type = obj.get('type', None)
-    if item_type == 'corpus':
-        ans = CorpusItem(name=obj['name'])
-        set_common(ans, obj)
-    elif item_type == 'subcorpus':
-        ans = SubcorpusItem(obj['name'])
-        set_common(ans, obj)
-        ans.subcorpus_id = obj['subcorpus_id']
-    elif item_type == 'aligned_corpora':
-        ans = AlignedCorporaItem(obj['name'])
-        set_common(ans, obj)
-        if not recursive:
-            ans.corpora = obj['corpora']
-        else:
-            ans.corpora = [import_from_json(c) for c in obj['corpora']]
+    obj = json.loads(src)
+    if 'type' in obj:
+        return import_legacy_record(obj)
     else:
-        raise UserItemException('Unknown/undefined item type: %s' % item_type)
-    return ans
+        return FavoriteItem(data=obj)
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def set_favorite_item(ctrl, request):
     """
     """
-    main_corp = ctrl.cm.get_Corpus(request.form['corpus_id'], request.form['subcorpus_id'])
-    corp_size = main_corp.search_size()
-    data = {
-        'corpora': [],
-        'canonical_id': request.form['canonical_id'],
-        'corpus_id': request.form['corpus_id'],
-        'subcorpus_id': request.form['subcorpus_id'],
-        'name': request.form['name'],
-        'size': corp_size,
-        'size_info': l10n.simplify_num(corp_size),
-        'type': request.form['type']
-    }
-    aligned_corpnames = request.form.getlist('corpora')
-    for ac in aligned_corpnames:
-        data['corpora'].append({
-            'name': ac,  # TODO fetch real name??
-            'corpus_id': ac,
-            'canonical_id': ctrl._canonical_corpname(ac),
-            'type': 'corpus'
-        })
-
-    item = plugins.get('user_items').from_dict(data)
+    corpora = []
+    main_size = None
+    for i, c_id in enumerate(request.form.getlist('corpora')):
+        corp = ctrl.cm.get_Corpus(c_id, request.form['subcorpus_id'] if i == 0 else None)
+        if i == 0:
+            main_size = corp.search_size()
+        corpora.append(dict(id=c_id, canonical_id=ctrl._canonical_corpname(c_id),
+                            name=corp.get_conf('NAME')))
+    subcorpus_id = request.form['subcorpus_id']
+    item = FavoriteItem(dict(
+        name=' + '.join(c['name'] for c in corpora) + (' : ' + subcorpus_id if subcorpus_id else ''),
+        corpora=corpora,
+        subcorpus_id=request.form['subcorpus_id'],
+        size=main_size,
+        size_info=l10n.simplify_num(main_size)
+    ))
     plugins.get('user_items').add_user_item(ctrl._plugin_api, item)
-    return dict(id=item.id)
+    return dict(id=item.ident)
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
@@ -123,8 +92,6 @@ class UserItems(AbstractUserItems):
     be random - i.e. sorting must be performed externally.
     """
 
-    decoder = json.JSONDecoder(object_hook=import_from_json)
-
     def __init__(self, settings, db, auth):
         super(UserItems, self).__init__()
         self._settings = settings
@@ -139,21 +106,18 @@ class UserItems(AbstractUserItems):
     def _mk_key(user_id):
         return 'favitems:user:%d' % user_id
 
-    def from_dict(self, data):
-        return import_from_json(data, recursive=True)
-
     def serialize(self, obj):
         """
         This is used for server-side serialization only
         """
-        return json.dumps(obj, cls=ItemEncoder)
+        return json.dumps(obj.to_dict())
 
     def get_user_items(self, plugin_api):
         ans = []
         if self._auth.anonymous_user()['id'] != plugin_api.user_id:
             for item_id, item in self._db.hash_get_all(self._mk_key(plugin_api.user_id)).items():
-                ans.append(self.decoder.decode(item))
-            ans = l10n.sort(ans, plugin_api.user_lang, key=lambda itm: itm.name, reverse=False)
+                ans.append(import_from_json(item))
+            ans = l10n.sort(ans, plugin_api.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 
     def add_user_item(self, plugin_api, item):
@@ -161,13 +125,10 @@ class UserItems(AbstractUserItems):
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        self._db.hash_set(self._mk_key(plugin_api.user_id), item.id, self.serialize(item))
+        self._db.hash_set(self._mk_key(plugin_api.user_id), item.ident, self.serialize(item))
 
     def delete_user_item(self, plugin_api, item_id):
         self._db.hash_del(self._mk_key(plugin_api.user_id), item_id)
-
-    def infer_item_key(self, corpname, usesubcorp, aligned_corpora):
-        return infer_item_key(corpname, usesubcorp, aligned_corpora)
 
     def export_actions(self):
         return {UserController: [set_favorite_item, unset_favorite_item]}

@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-export interface DefaultCorparchViews {
-    CorplistTable:any;
-    CorplistHeader:any;
-    FilterForm:any;
-    FavStar:any;
-    CorpKeywordLink:any;
-}
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
-export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore):DefaultCorparchViews;
+export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore):{
+    CorplistTable:React.Component;
+    CorplistHeader:React.Component;
+    FilterForm:React.Component;
+    FavStar:React.Component;
+    CorpKeywordLink:React.Component;
+};

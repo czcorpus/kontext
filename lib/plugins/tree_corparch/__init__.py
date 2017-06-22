@@ -53,6 +53,7 @@ grammar {
 
 
 from lxml import etree
+import copy
 
 import plugins
 from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
@@ -127,11 +128,39 @@ class TreeCorparch(AbstractCorporaArchive):
         parser = CorptreeParser()
         self._data, self._metadata = parser.parse_xml_tree(corplist_path)
 
+    def _srch_item(self, node, name):
+        for item in node.get('corplist', []):
+            if 'corplist' in item:
+                return self._srch_item(item, name)
+            elif item.get('ident') == name:
+                return item
+        return None
+
+    @staticmethod
+    def _localize_corpus_info(data, lang_code):
+        """
+        Updates localized values from data (please note that not all
+        the data are localized - e.g. paths to files) by a single variant
+        given passed lang_code.
+        """
+        ans = copy.deepcopy(data)
+        lang_code = lang_code.split('_')[0]
+        desc = ans.metadata.desc
+        ans.metadata.desc = desc[lang_code] if lang_code in desc else ''
+        return ans
+
     def setup(self, controller_obj):
         pass
 
     def get_corpus_info(self, user_lang, corp_id):
-        return BrokenCorpusInfo()
+        info = self._srch_item(self._data, corp_id)
+        if info:
+            ans = CorpusInfo()
+            ans.id = info.get('id')
+            ans.name = info.get('name')
+            return self._localize_corpus_info(ans, user_lang)
+        else:
+            return self._localize_corpus_info(BrokenCorpusInfo(), user_lang)
 
     def get_list(self, plugin_api, user_allowed_corpora):
         return sorted(self._metadata.keys())

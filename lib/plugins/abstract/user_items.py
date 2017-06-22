@@ -26,6 +26,8 @@ Expected factory method signature: create_instance(config, db)
 
 from controller import UserActionException
 
+import hashlib
+
 
 class UserItemException(UserActionException):
     """
@@ -35,142 +37,44 @@ class UserItemException(UserActionException):
     pass
 
 
-def generate_item_key(obj):
-    if obj.type == 'corpus':
-        return obj.corpus_id
-    elif obj.type == 'subcorpus':
-        return '%s:%s' % (obj.corpus_id, obj.subcorpus_id)
-    elif obj.type == 'aligned_corpora':
-        return '+'.join([obj.corpus_id] + [generate_item_key(corp) for corp in obj.corpora])
-
-
-def infer_item_key(corpname, usesubcorp, aligned_corpora):
-    if aligned_corpora is None or (len(aligned_corpora) == 1 and aligned_corpora[0] == ''):
-        aligned_corpora = []
-    if corpname:
-        if usesubcorp:
-            return '%s:%s' % (corpname, usesubcorp)
-        elif aligned_corpora:
-            return '+'.join([corpname] + [infer_item_key(corp, None, None)
-                                          for corp in aligned_corpora])
-        else:
-            return corpname
-    else:
-        return None
-
-
-class GeneralItem(object):
-    """
-    General favorite/promoted/whatever item (corpus, subcorpus,...).
-    This should be always extended.
-    """
-    def __init__(self, name):
-        self.name = name
-
-    def generate_id(self):
-        """
-        ID generator should be the same for all implementations
-        """
-        raise NotImplementedError()
-
-    @property
-    def id(self):
-        """
-        An unique, read-only identifier of the item (see generate_id).
-        """
-        return self.generate_id()
-
-    @property
-    def type(self):
-        """
-        A read-only type
-        """
-        raise NotImplementedError()
-
-    def to_dict(self):
-        raise NotImplementedError()
-
-
-class CorpusItem(GeneralItem):
+class FavoriteItem(object):
     """
     A reference to a corpus in user's list
     """
-    def __init__(self, name):
-        super(CorpusItem, self).__init__(name)
-        self.corpus_id = None
-        self.canonical_id = None
-        self.size = None
-        self.size_info = None
-
-    def generate_id(self):
-        return generate_item_key(self)
+    def __init__(self, data=None):
+        if data is None:
+            data = {}
+        self.name = data.get('name', 'New item')
+        self.corpora = data.get('corpora', [])
+        self.size = data.get('size', None)
+        self.size_info = data.get('size_info', None)
+        self.subcorpus_id = data.get('subcorpus_id', None)
+        self.ident = data.get('id', hashlib.md5(self.sort_key).hexdigest())
 
     @property
-    def type(self):
-        return 'corpus'
+    def is_single_corpus(self):
+        return not self.subcorpus_id and len(self.corpora) == 1
 
-    def __repr__(self):
-        return 'CorpusItem(id: %s)' % (self.id,)
+    @property
+    def main_corpus_id(self):
+        return self.corpora[0]['id']
+
+    def main_corpus_canonical_id(self):
+        return self.corpora[0]['canonical_id']
+
+    @property
+    def sort_key(self):
+        return '{0} {1}'.format(' '.join(x['name'] for x in self.corpora), self.subcorpus_id)
 
     def to_dict(self):
         return dict(
-            id=self.id,
+            id=self.ident,
             name=self.name,
-            type=self.type,
-            corpus_id=self.corpus_id,
-            canonical_id=self.canonical_id,
             size=self.size,
-            size_info=self.size_info
+            size_info=self.size_info,
+            corpora=self.corpora,
+            subcorpus_id=self.subcorpus_id
         )
-
-
-class SubcorpusItem(CorpusItem):
-    """
-    A reference to a sub-corpus in user's list
-    """
-    def __init__(self, name):
-        super(SubcorpusItem, self).__init__(name)
-        self.subcorpus_id = None
-
-    def __repr__(self):
-        return 'SubcorpusItem(id: %s)' % (self.id,)
-
-    def generate_id(self):
-        return generate_item_key(self)
-
-    @property
-    def type(self):
-        return 'subcorpus'
-
-    def to_dict(self):
-        ans = super(SubcorpusItem, self).to_dict()
-        ans['subcorpus_id'] = self.subcorpus_id
-        return ans
-
-
-class AlignedCorporaItem(CorpusItem):
-    """
-    A reference to an n-tuple of aligned corpora
-    (eg. (Intercorp_en, intercorp_cs, Intercorp_be).
-    """
-    def __init__(self, name):
-        super(AlignedCorporaItem, self).__init__(name)
-        self.corpora = []
-
-    def __repr__(self):
-        return 'AlignedCorporaItem(id: %s)' % (self.id,)
-
-    def generate_id(self):
-        return generate_item_key(self)
-
-    @property
-    def type(self):
-        return 'aligned_corpora'
-
-    def to_dict(self):
-        ans = super(AlignedCorporaItem, self).to_dict()
-        ans['corpora'] = [c.to_dict() for c in self.corpora]
-        return ans
 
 
 class AbstractUserItems(object):
@@ -236,22 +140,3 @@ class AbstractUserItems(object):
         """
         raise NotImplementedError()
 
-    def infer_item_key(self, corpname, usesubcorp, aligned_corpora):
-        """
-        Infers a user_item key (~ id) from provided parameters
-        (e.g. if usesubcorp is empty and so is aligned_corpora we know
-        for sure that the unknown item is 'corpus' and the respective
-        key will consist only from corpname.
-
-        This is used to extract information about currently used (sub)corpus/aligned
-        corpus.
-
-        arguments:
-        corpname -- a canonical corpus name
-        usesubcorp -- a subcorpus name
-        aligned_corpora -- a list of canonical corpora names
-
-        returns:
-        a string identifier of guessed object type
-        """
-        raise NotImplementedError()

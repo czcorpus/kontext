@@ -110,6 +110,7 @@ class BrokenCorpusInfo(CorpusInfo):
     def __init__(self, name=None):
         super(BrokenCorpusInfo, self).__init__()
         self.name = (name if name else 'undefined') + '(!)'
+        self.metadata = CorpusMetadata()
 
 
 class CorpInfoEncoder(json.JSONEncoder):

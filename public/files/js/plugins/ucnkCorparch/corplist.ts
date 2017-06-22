@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as $ from 'jquery';
 import {SimplePageStore} from '../../stores/base';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';

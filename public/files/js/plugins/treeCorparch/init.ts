@@ -18,17 +18,18 @@
 
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/plugins/corparch.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 import * as $ from 'jquery';
 import {init as viewInit} from './view';
+import {QueryStore} from '../../stores/query/main';
 
 
 export interface Node {
@@ -53,11 +54,19 @@ export class TreeWidgetStore extends SimplePageStore {
 
     private widgetId:number;
 
-    private corpusClickHandler:(item:CorparchCommon.Item)=>void;
+    private corpusClickHandler:Kontext.CorplistItemClick;
 
-    constructor(pluginApi:Kontext.PluginApi, corpusClickHandler:(item:CorparchCommon.Item)=>void) {
+    private corpusIdent:Kontext.FullCorpusIdent;
+
+    private querySetupHandler:Kontext.QuerySetupHandler
+
+    constructor(pluginApi:Kontext.PluginApi, corpusIdent:Kontext.FullCorpusIdent,
+                querySetupHandler:Kontext.QuerySetupHandler,
+                corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
+        this.corpusIdent = corpusIdent;
+        this.querySetupHandler = querySetupHandler;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -76,9 +85,10 @@ export class TreeWidgetStore extends SimplePageStore {
                         );
                     break;
                     case 'TREE_CORPARCH_LEAF_NODE_CLICKED':
-                        this.corpusClickHandler({
-                            corpus_id: payload.props['ident']
-                        });
+                        this.corpusClickHandler(
+                            [payload.props['ident']],
+                            this.querySetupHandler.getCurrentSubcorpus()
+                        );
                     break;
                 }
             }
@@ -131,6 +141,10 @@ export class TreeWidgetStore extends SimplePageStore {
     getData():Node {
         return this.data;
     }
+
+    getCurrentCorpusIdent():Kontext.FullCorpusIdent {
+        return this.corpusIdent;
+    }
 }
 
 
@@ -145,24 +159,17 @@ export class TreeWidgetStore extends SimplePageStore {
  * @param querySetupHandler - query form functions
  * @param options A configuration of the widget
  */
-export function create(targetElm:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-            querySetupHandler:Kontext.QuerySetupHandler, options:CorparchCommon.Options):void {
+export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+            queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.Component {
     const widgetWrapper = window.document.createElement('div');
-    $(widgetWrapper).addClass('corp-tree-wrapper');
-    $(targetElm).replaceWith(widgetWrapper);
+
     const treeStore = new TreeWidgetStore(
         pluginApi,
-        (item:CorparchCommon.Item) => {
-            window.location.href = pluginApi.createActionUrl('first_form?corpname=' + item.corpus_id);
-        }
+        pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+        querySetupHandler,
+        options.itemClickAction
     );
-    const viewsLib = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
-            treeStore);
-    pluginApi.renderReactComponent(
-        viewsLib.CorptreeWidget,
-        widgetWrapper,
-        {currentCorpus: pluginApi.getConf<string>('humanCorpname')}
-    );
+    return viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(), treeStore).CorptreeWidget;
 }
 
 
@@ -176,9 +183,20 @@ export class CorplistPage implements CorplistPage {
 
     constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
-        this.treeStore = new TreeWidgetStore(pluginApi, (item:CorparchCommon.Item) => {
-            window.location.href = pluginApi.createActionUrl('first_form?corpname=' + item.corpus_id);
-        });
+        this.treeStore = new TreeWidgetStore(
+            pluginApi,
+            pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+            {
+                registerCorpusSelectionListener: (fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void) => {},
+                getCorpora: () => Immutable.List<string>(pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id),
+                getAvailableAlignedCorpora: () => Immutable.List<{n:string; label:string}>(),
+                getCurrentSubcorpus: () => null
+            },
+            (corpora:Array<string>, subcorpId:string) => {
+                window.location.href = pluginApi.createActionUrl('first_form?corpname=' + corpora[0]);
+                return null; // just to keep the type check cool
+            }
+        );
         this.viewsLib = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
                 this.treeStore);
     }

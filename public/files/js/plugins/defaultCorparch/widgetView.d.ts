@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,19 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-declare module RSVP {
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
-    export class Promise<T> {
-
-        constructor(action:(resolve:(v:T)=>void, reject:(e:any)=>void)=>void);
-
-        then<V>(onFulfilled?:(v:T)=>V, onRejected?:(err:any)=>any):Promise<V>;
-        then<V>(onFulfilled?:(v:T)=>Promise<V>, onRejected?:(err:any)=>any):Promise<V>;
-        catch<V>(onRejected:(err:any)=>Promise<V>);
-    }
-}
-
-
-declare module "vendor/rsvp" {
-    export = RSVP;
-}
+// TODO types
+export function init(dispatcher, mixins, layoutViews, widgetStore, queryStore):React.Component;

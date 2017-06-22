@@ -351,6 +351,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.setConf<string>('corpname', data.corpname);
                 this.setConf<string>('subcorpname', data.subcorpname);
                 this.setConf<string>('humanCorpname', data.humanCorpname);
+                this.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
                 this.setConf<string>('baseAttr', data.baseAttr);
                 this.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
                 this.setConf<Array<string>>('compiledQuery', data.compiledQuery);
@@ -422,12 +423,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             return ans.join('&');
         }
 
-        function decodeArgs(s) {
+        const decodeArgs = (s:string) => {
             let ans = {};
             s.split('&').map((s2)=>s2.split('=').map((s3)=>decodeURIComponent(s3))).forEach((item) => {
                 ans[item[0]] = item[1];
             });
-        }
+            return ans;
+        };
 
         let body;
 
@@ -466,9 +468,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             requestBody: body,
             url: url
         }).then<T>(
-            function (data:string) {
+            (data:string) => {
                 switch (options.accept) {
                     case 'application/json':
+                    case 'text/x-json':
                         return JSON.parse(data);
                     case 'application/x-www-form-urlencoded':
                         return decodeArgs(data);
@@ -500,29 +503,31 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *                  be used.
      */
     showMessage(msgType:string, message:any, onClose?:()=>void):void {
-        let timeout;
         let outMsg;
         if (msgType === 'error') {
             if (this.getConf<boolean>('isDebug')) {
                 console.error(message);
             }
             if (message instanceof XMLHttpRequest) {
-                if (message.statusText && message.status >= 400) {
-                    outMsg = `${message.status}: ${message.statusText}`;
+                const respText = (<XMLHttpRequest>message).responseText;
+                try {
+                    let respObj = JSON.parse(respText);
+                    if (respObj['contains_errors'] && respObj['error_code']) {
+                        outMsg = this.translate(respObj['error_code'], respObj['error_args'] || {});
 
-                } else {
-                    const respText = (<XMLHttpRequest>message).responseText;
-                    try {
-                        let respObj = JSON.parse(respText);
-                        if (respObj['contains_errors'] && respObj['messages']) {
-                            outMsg = respObj['messages'].map(x => x[1]).join(', ');
+                    } else if (respObj['contains_errors'] && respObj['messages']) {
+                        outMsg = respObj['messages'].map(x => x[1]).join(', ');
 
-                        } else {
-                            outMsg = this.translate('global__unknown_error');
-                        }
+                    } else {
+                        outMsg = `${message.status}: ${message.statusText}`;
+                    }
 
-                    } catch (e) {
-                        outMsg = String(respText).substr(100);
+                } catch (e) {
+                    if (message.statusText && message.status >= 400) {
+                        outMsg = `${message.status}: ${message.statusText} (${String(respText).substr(0, 100)}...)`;
+
+                    } else {
+                        outMsg = `${message.status}: ${message.statusText}`;
                     }
                 }
 

@@ -1,5 +1,7 @@
 # Copyright (c) 2003-2011  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Vit Baisa
-# Copyright (c) 2014  Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -852,7 +854,7 @@ class Controller(object):
             return (
                 action_name,
                 None,
-                dict(error=user_msg,
+                dict(messages=[user_msg],
                      contains_errors=True,
                      error_code=getattr(ex, 'error_code', None),
                      error_args=getattr(ex, 'error_args', {}))
@@ -947,7 +949,7 @@ class Controller(object):
         bool -- True if content should follow else False
         """
         if return_type == 'json':
-            self._headers['Content-Type'] = 'text/x-json'
+            self._headers['Content-Type'] = 'application/json'
         elif return_type == 'xml':
             self._headers['Content-Type'] = 'application/xml'
 

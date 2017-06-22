@@ -21,7 +21,6 @@
 /// <reference path="../common.d.ts" />
 /// <reference path="./liveAttributes.d.ts" />
 /// <reference path="./subcmixer.d.ts" />
-/// <reference path="./corparch.d.ts" />
 
 /*
 This module contains "fake" plugin modules representing
@@ -74,8 +73,12 @@ declare module "plugins/corparch/init" {
         createList(targetElm:HTMLElement, properties:any):void;
     }
 
-    export function create(target:HTMLElement, targetAction:string, pluginApi:Kontext.PluginApi,
-        querySetupHandler:Kontext.QuerySetupHandler, conf:CorparchCommon.Options);
+    export interface CorplistOptions {
+
+    }
+
+    export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+        queryStore:any, querySetupHandler:Kontext.QuerySetupHandler, conf:CorplistOptions):React.Component;
 
     export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage;
 }

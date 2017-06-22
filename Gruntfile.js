@@ -57,7 +57,6 @@
                         'public/files/js/compiled/*',
                         'public/files/js/min/*',
                         '!public/files/js/min/vendor',
-                        'public/files/js/min/vendor/bloodhound.js',
                         'public/files/js/min/vendor/immutable.min.js',
                         'public/files/js/min/vendor/qunit.js',
                         'public/files/js/min/vendor/react.dev.js',
@@ -73,7 +72,6 @@
                         'public/files/js/min/vendor/Dispatcher.js',
                         'public/files/js/min/vendor/jquery.min.js',
                         'public/files/js/min/vendor/react.min.js',
-                        'public/files/js/min/vendor/typeahead.js',
                         '!public/files/js/min/tpl',
                     ]
                 }
@@ -228,11 +226,7 @@
                         appDir: "public/files/js/optimized",
                         baseUrl: ".",
                         dir: "public/files/js/min",
-                        shim: {
-                            'typeahead': {
-                                deps: ['jquery']
-                            }
-                        },
+                        shim: {},
                         wrapShim: true,
                         optimize: 'none',
                         paths: kontext.loadModulePathMap('./conf/config.xml', './public/files/js/plugins', true),
