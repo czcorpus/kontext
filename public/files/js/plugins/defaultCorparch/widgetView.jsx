@@ -198,12 +198,12 @@ export function init(dispatcher, util, layoutViews, widgetStore, queryStore) {
     const TabMenu = (props) => {
         return (
             <div className="menu">
-                <a data-func="my-corpora" className="current"
+                <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
                         onClick={() => props.onItemClick(0)}>
                     {util.translate('defaultCorparch__my_list')}
                 </a>
                 {'\u00a0|\u00a0'}
-                <a data-func="search"
+                <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
                         onClick={() => props.onItemClick(1)}>
                     {util.translate('defaultCorparch__other_corpora')}
                 </a>
@@ -322,7 +322,7 @@ export function init(dispatcher, util, layoutViews, widgetStore, queryStore) {
         };
 
         return (
-            <p className="tt-suggestion tt-selectable">
+            <p className="tt-suggestion">
                 <a onClick={handleClick}>
                     {props.data.name}
                 </a>
@@ -332,6 +332,24 @@ export function init(dispatcher, util, layoutViews, widgetStore, queryStore) {
                 </span>
             </p>
         );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    const SearchLoaderBar = (props) => {
+        if (props.isActive) {
+            return (
+                <div className="ajax-loader">
+                    <img src={util.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={util.translate('global__processing')} />
+                </div>
+            );
+
+        } else {
+            return null;
+        }
     };
 
     /**
@@ -349,14 +367,10 @@ export function init(dispatcher, util, layoutViews, widgetStore, queryStore) {
                     </div>
                 </div>
                 <div className="autocomplete-wrapper">
-                    {props.isWaitingForSearchResults ?
-                    <img className="ajax-loader" src={util.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={util.translate('global__processing')} style={{width: '1em'}} /> :
-                    null
-                    }
                     <SearchInput value={props.currSearchPhrase} />
+                    <SearchLoaderBar isActive={props.isWaitingForSearchResults} />
                     {props.currSearchResult.size > 0 ?
-                        (<div className="tt-menu tt-open">
+                        (<div className="tt-menu">
                             {props.currSearchResult.map(item => <SearchResultRow key={item.id} data={item} />)}
                         </div>) : null}
                 </div>
@@ -509,7 +523,7 @@ export function init(dispatcher, util, layoutViews, widgetStore, queryStore) {
             return (
                 <layoutViews.PopupBox customClass="corplist-widget"
                         onCloseClick={this._handleCloseClick}>
-                    <TabMenu onItemClick={this._handleTabSwitch} />
+                    <TabMenu onItemClick={this._handleTabSwitch} activeTab={this.state.activeTab} />
                     {this.state.activeTab === 0 ?
                         <ListsTab dataFav={this.state.dataFav} dataFeat={this.state.dataFeat}
                                 editEnable={this.state.editEnable}
