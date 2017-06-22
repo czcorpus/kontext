@@ -33,40 +33,53 @@ section.corplist {
     }
 
     div.autocomplete-wrapper {
-        margin: 1em;
+        margin: 1em 1em 1em 0;
+        padding-bottom: 0.7em;
+        border: @input-border-style;
+        border-radius: @input-border-radius;
     }
 
 
     .tt-input {
-        width: 80%;
-        font-size: 1.4em;
+        display: block;
+        margin: 0 auto;
+        width: 90%;
+        padding: 0.3em 0.7em;
+        font-size: 1.2em;
+        border-style: solid;
+        border-width: 0 0 1px 0;
+        border-color: #d2ebf4;
+        border-radius: 0;
+    }
+
+    .tt-input:focus {
+        outline: none;
+        border-width: 0 0 1px 0;
+        border-style: solid;
+        border-color: @color-logo-blue;
     }
 }
 
 
 .tt-menu {
-    position: absolute;
-    background-color: #FFFFFF;
-    padding: 0.3em 1em;
-    border-style: @input-border-style;
-    border-radius: @input-border-radius;
-    width: 100%;
-    box-sizing: border-box;
-    box-shadow: @portal-box-shadow;
+    margin-left: 1em;
+    padding: 0.3em 1em 0.3em 1em;
 
     .tt-suggestion span.num {
         font-size: 70%;
-        padding-left: 1em;
+        padding-left: 0.2em;
     }
 
     .tt-suggestion {
         margin: 0;
         padding-bottom: 0.2em;
         .ping-dot-item;
-        font-size: 1.4em;
+        font-size: 1.3em;
         text-align: left;
 
         a {
+            display: inline-block;
+            padding-right: 1em;
             text-decoration: none;
             color: inherit;
         }
@@ -101,9 +114,6 @@ section.corplist {
     .footer {
         text-align: center;
         color: @color-light-text;
-        border-color: @color-light-grey;
-        border-width: 1pt 0 0 0;
-        border-style: solid;
         font-size: 80%;
         height: 2em;
         line-height: 2em;
@@ -172,9 +182,15 @@ section.corplist {
     }
 
     .ajax-loader {
-        display: inline-block;
-        margin-right: 1em;
-        vertical-align: middle;
+
+        height: 2em;
+        text-align: center;
+
+        img {
+            display: inline-block;
+            width: 1em;
+            margin: 1em;
+        }
     }
 
     .input-wrapper {
@@ -255,10 +271,10 @@ section.corplist {
     }
 
     .labels-hint {
-        padding: 0.5em 0 0 0;
+        padding: 0 1em 0 0;
         color: @color-light-text;
         font-size: 8pt;
-        text-align: left;
+        text-align: right;
     }
 }
 

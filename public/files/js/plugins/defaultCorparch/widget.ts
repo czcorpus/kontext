@@ -209,6 +209,7 @@ export class CorplistWidgetStore extends SimplePageStore {
     }
 
     private searchDelayed():void {
+        this.currSearchResult = Immutable.List<SearchResultRow>();
         if (this.inputThrottleTimer) {
             window.clearTimeout(this.inputThrottleTimer);
         }
@@ -223,10 +224,7 @@ export class CorplistWidgetStore extends SimplePageStore {
                         this.pluginApi.showMessage('error', err);
                     }
                 );
-            }, 500);
-
-        } else {
-            this.currSearchResult = Immutable.List<SearchResultRow>();
+            }, 350);
         }
     }
 
