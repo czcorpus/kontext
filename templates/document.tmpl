@@ -132,14 +132,13 @@ require(['vendor/rsvp'], function (RSVP) {
     missingPlugins.forEach(function (pluginPath) {
         define(pluginPath, [], function () {
             var plg = {
-                getViews : function () { return {}; },
                 create : function () {
                     return new RSVP.Promise(function (fulfill, reject) {
                         fulfill(null);
                     });
                 }
             };
-            plg.default = plg;
+            plg.default = plg.create;
             return plg;
         });
     });

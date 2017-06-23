@@ -183,8 +183,8 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                                 defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
-                                tagHelperViews={this.props.tagHelperViews}
-                                queryStorageViews={this.props.queryStorageViews}
+                                tagHelperView={this.props.tagHelperView}
+                                queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguage}
                                 actionPrefix={this.props.actionPrefix} />
                         </tbody>
@@ -268,8 +268,8 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                                 defaultAttr={this.state.defaultAttrValues.get(this.props.filterId)}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
-                                tagHelperViews={this.props.tagHelperViews}
-                                queryStorageViews={this.props.queryStorageViews}
+                                tagHelperView={this.props.tagHelperView}
+                                queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguage}
                                 actionPrefix={this.props.actionPrefix} />
                         </tbody>

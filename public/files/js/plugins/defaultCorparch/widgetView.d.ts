@@ -21,4 +21,4 @@
 /// <reference path="../../../ts/declarations/react.d.ts" />
 
 // TODO types
-export function init(dispatcher, mixins, layoutViews, widgetStore, queryStore):React.Component;
+export function init(dispatcher, mixins, layoutViews, widgetStore, queryStore):React.ReactClass;

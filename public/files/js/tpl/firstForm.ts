@@ -28,7 +28,7 @@
 
 import * as corplistComponent from 'plugins/corparch/init';
 import {PageModel} from './document';
-import * as liveAttributes from 'plugins/liveAttributes/init';
+import liveAttributes from 'plugins/liveAttributes/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'vendor/immutable';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
@@ -141,60 +141,44 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
         );
 
-        let liveAttrsProm;
-        let ttTextInputCallback;
-        if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(
-                this.layoutModel.pluginApi(),
-                this.textTypesStore,
-                () => this.queryStore.getCorpora(),
-                () => this.textTypesStore.hasSelectedItems(),
-                textTypesData['bib_attr']
-            );
-
-        } else {
-            liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
-                fulfill(null);
-            });
-        }
-        return liveAttrsProm.then(
-            (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
-                if (liveAttrsStore) {
+        return liveAttributes(
+            this.layoutModel.pluginApi(),
+            this.textTypesStore,
+            () => this.queryStore.getCorpora(),
+            () => this.textTypesStore.hasSelectedItems(),
+            textTypesData['bib_attr']
+        ).then(
+            (liveAttrsPlugin) => {
+                let liveAttrsViews;
+                if (liveAttrsPlugin) {
                     // Complicated dependencies between QueryStore, TextTypesStore and LiveAttrsStore
                     // cause that LiveAttrs store needs QueryStore data but it is not available
                     // here yet. That's the reason we have to define a callback here to configure
                     // required values later.
                     this.onQueryStoreReady = (qs => {
-                        liveAttrsStore.selectLanguages(qs.getCorpora().rest().toList(), false);
+                        liveAttrsPlugin.selectLanguages(qs.getCorpora().rest().toList(), false);
                     });
                     this.onAlignedCorporaChanged = (corpora => {
-                        if (liveAttrsStore.hasSelectionSteps()) {
-                            liveAttrsStore.reset();
-                            liveAttrsStore.notifyChangeListeners();
+                        if (liveAttrsPlugin.hasSelectionSteps()) {
+                            liveAttrsPlugin.reset();
+                            liveAttrsPlugin.notifyChangeListeners();
                             this.textTypesStore.notifyChangeListeners();
                         }
-                        liveAttrsStore.selectLanguages(corpora, true);
+                        liveAttrsPlugin.selectLanguages(corpora, true);
                     });
-                    this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
+                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getListenerCallback());
                     this.textTypesStore.addSelectionChangeListener(target => {
-                        liveAttrsStore.setControlsEnabled(target.hasSelectedItems() ||
-                                liveAttrsStore.hasSelectedLanguages());
+                        liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
+                                liveAttrsPlugin.hasSelectedLanguages());
                     });
+                    liveAttrsViews = liveAttrsPlugin.getViews(null, this.textTypesStore); // TODO 'this' reference = antipattern
 
                 } else {
                     this.onQueryStoreReady = () => undefined;
                     this.onAlignedCorporaChanged = (_) => undefined;
+                    liveAttrsViews = {};
                 }
-                const subcmixerViews = {
-                    Widget: null
-                };
-                const liveAttrsViews = liveAttributes.getViews(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins(),
-                    subcmixerViews,
-                    this.textTypesStore,
-                    liveAttrsStore
-                );
+
                 return {
                     liveAttrsView: 'LiveAttrsView' in liveAttrsViews ? liveAttrsViews['LiveAttrsView'] : null,
                     liveAttrsCustomTT: 'LiveAttrsCustomTT' in liveAttrsViews ? liveAttrsViews['LiveAttrsCustomTT'] : null,
@@ -312,7 +296,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     }
 
     init():void {
-        this.layoutModel.init().then(
+        const p1 = this.layoutModel.init().then(
             () => {
                 this.queryHintStore = new QueryHintStore(
                     this.layoutModel.dispatcher,
@@ -330,20 +314,27 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             }
         ).then(
             () => {
-                tagHelperPlugin.create(this.layoutModel.pluginApi());
+                return tagHelperPlugin(this.layoutModel.pluginApi());
             }
-        ).then(
+        );
+
+        const p2 = p1.then(
             () => {
-                queryStoragePlugin.create(this.layoutModel.pluginApi());
+                return queryStoragePlugin(this.layoutModel.pluginApi());
             }
-        ).then(
+        );
+
+        const p3 = p2.then(
             () => {
                 return this.createTTViews();
             }
-        ).then(
-            (props) => {
-                props['tagHelperViews'] = tagHelperPlugin.getViews();
-                props['queryStorageViews'] = queryStoragePlugin.getViews();
+        );
+
+        RSVP.all([p1, p2, p3]).then(
+            (args:any) => {
+                const [taghelper, qsplug, props] = args;
+                props['tagHelperView'] = taghelper.getWidgetView();
+                props['queryStorageView'] = qsplug.getWidgetView();
                 props['allowCorpusSelection'] = true;
                 props['manualAlignCorporaMode'] = false;
                 props['actionPrefix'] = '';

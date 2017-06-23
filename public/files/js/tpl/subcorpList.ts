@@ -21,10 +21,8 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 
-import * as $ from 'jquery';
 import {PageModel, PluginApi} from './document';
 import * as corplist from 'plugins/corparch/init';
-import * as popupBox from '../popupbox';
 import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';
 import {init as listViewInit} from 'views/subcorp/list';
 

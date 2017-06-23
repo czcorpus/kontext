@@ -24,7 +24,6 @@
 import {PageModel, PluginApi} from './document';
 import * as $ from 'jquery';
 import {createWidget as createCorparch} from 'plugins/corparch/init';
-import {extended as popupBox} from '../popupbox';
 import * as Immutable from 'vendor/immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {SimplePageStore} from '../stores/base';
@@ -155,6 +154,7 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
      *
      */
     bindStaticElements():void {
+        /*
         popupBox(this.layoutModel).bind(
             $('#show-help-format-link'),
             this.layoutModel.translate('global__wl_white_lists'),
@@ -162,6 +162,7 @@ class WordlistFormPage extends SimplePageStore implements Kontext.QuerySetupHand
                 width: '300px'
             }
         );
+        */
         $('#select-output-type-simple').on('click', () => {
             this.selectOutputType('simple');
         });

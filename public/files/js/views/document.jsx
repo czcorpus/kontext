@@ -25,6 +25,8 @@ const ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 export function init(dispatcher, mixins, storeProvider) {
 
+    const util = mixins[0];
+
     // ------------------------------ <ModalOverlay /> -----------------------------
 
     const ModalOverlay = React.createClass({
@@ -76,12 +78,6 @@ export function init(dispatcher, mixins, storeProvider) {
      */
     const PopupBox = React.createClass({
 
-        mixins: mixins,
-
-        getInitialState: function () {
-            return {visible: false};
-        },
-
         closeClickHandler: function () {
             if (typeof this.props.onCloseClick === 'function') {
                 this.props.onCloseClick.call(this);
@@ -95,18 +91,22 @@ export function init(dispatcher, mixins, storeProvider) {
         },
 
         _renderStatusIcon : function () {
-            let m = {
-                'info': 'img/info-icon.svg',
-                'message': 'img/message-icon.png',
-                'warning': 'img/warning-icon.svg',
-                'error': 'img/error-icon.svg'
+            const m = {
+                info: 'img/info-icon.svg',
+                message: 'img/message-icon.png',
+                warning: 'img/warning-icon.svg',
+                error: 'img/error-icon.svg'
             };
             if (!this.props.status || !m[this.props.status]) {
                 return null;
 
             } else {
-                let path = this.createStaticUrl(m[this.props.status]);
-                return <div><img className="info-icon" src={path} alt={this.props.status} /></div>;
+                return (
+                    <div>
+                        <img className="info-icon" src={this.createStaticUrl(m[this.props.status])}
+                                alt={this.props.status} />
+                    </div>
+                );
             }
         },
 
@@ -146,9 +146,9 @@ export function init(dispatcher, mixins, storeProvider) {
         },
 
         render: function () {
-            let classes = 'tooltip-box';
+            let classes = ['tooltip-box'];
             if (this.props.customClass) {
-                classes += ' ' + this.props.customClass;
+                classes.push(this.props.customClass);
             }
             let css = this._createStyle();
             if (this.props.autoSize) {
@@ -156,7 +156,7 @@ export function init(dispatcher, mixins, storeProvider) {
             }
 
             return (
-                <div className={classes} style={css}>
+                <div className={classes.join(' ')} style={css}>
                     <div className="header">
                         {this._renderCloseButton()}
                         {this._renderStatusIcon()}

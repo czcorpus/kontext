@@ -19,8 +19,53 @@
  */
 
 /// <reference path="../common.d.ts" />
-/// <reference path="./liveAttributes.d.ts" />
-/// <reference path="./subcmixer.d.ts" />
+
+declare module PluginInterfaces {
+
+    export interface IAuth {
+    }
+
+    export interface IToolbar {
+    }
+
+    export interface IFooterBar {
+    }
+
+    export interface ISubcMixer {
+        refreshData():void;
+        getWidgetView():React.ReactClass;
+    }
+
+    export interface ISyntaxViewer {
+    }
+
+    export interface ITagHelper {
+        getWidgetView():React.ReactClass;
+    }
+
+    export interface IQueryStorage {
+        getWidgetView():React.ReactClass;
+    }
+
+    export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
+        getViews(subcMixerView:React.ReactClass, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
+        notifyChangeListeners():void;
+    }
+
+    /**
+     * A factory class for generating corplist page. The page is expected
+     * to contain two blocks
+     *  - a form (typically a filter)
+     *  - a dataset (= list of matching corpora)
+     *
+     */
+    export interface ICorplistPage {
+
+        createForm(targetElm:HTMLElement, properties:any):void;
+
+        createList(targetElm:HTMLElement, properties:any):void;
+    }
+}
 
 /*
 This module contains "fake" plugin modules representing
@@ -37,83 +82,65 @@ persuaded that general names actually exist. At runtime, RequireJS
 remaps these names to custom ones.
 */
 
-declare module 'plugins/applicationBar/init' {
-
-    export interface Toolbar extends Kontext.Plugin {
-        openLoginDialog():void;
-    }
-
-    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Toolbar>;
-
+/**
+ * This represents an external library provided
+ * by toolbar provider.
+ */
+declare module 'plugins/applicationBar/toolbar' {
+    export function init():void;
     export function openLoginDialog():void;
 }
 
-declare module "plugins/applicationBar/toolbar" {
-    export function openLoginDialog():void;
-    export function init():void;
+declare module 'plugins/applicationBar/init' {
+
+    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
 }
 
 declare module 'plugins/footerBar/init' {
-    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin>;
+    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
 }
 
 declare module "plugins/corparch/init" {
 
-    /**
-     * A factory class for generating corplist page. The page is expected
-     * to contain two blocks
-     *  - a form (typically a filter)
-     *  - a dataset (= list of matching corpora)
-     *
-     */
-    export interface CorplistPage {
-
-        createForm(targetElm:HTMLElement, properties:any):void;
-
-        createList(targetElm:HTMLElement, properties:any):void;
-    }
-
-    export interface CorplistOptions {
-
-    }
-
     export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-        queryStore:any, querySetupHandler:Kontext.QuerySetupHandler, conf:CorplistOptions):React.Component;
+        queryStore:any, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.Component;
 
-    export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage;
+    export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):PluginInterfaces.ICorplistPage;
 }
 
 declare module "plugins/liveAttributes/init" {
-    export = LiveAttributesInit;
+
+    export default function create(pluginApi:Kontext.PluginApi,
+                     textTypesStore:TextTypes.ITextTypesStore,
+                     selectedCorporaProvider:()=>Immutable.List<string>,
+                     ttCheckStatusProvider:()=>boolean,
+                     bibAttr:string):RSVP.Promise<PluginInterfaces.ILiveAttributes>;
+
 }
 
 declare module "plugins/queryStorage/init" {
-    const pluginObject:Kontext.PluginObject<Kontext.PageStore>;
-    export default pluginObject;
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IQueryStorage>;
 }
 
 declare module "plugins/taghelper/init" {
-    const pluginObject:Kontext.PluginObject<Kontext.PageStore>;
-    export default pluginObject;
+    let create:(pluginApi:Kontext.PluginApi)=>RSVP.Promise<PluginInterfaces.ITagHelper>;
+    export default create;
+}
+
+declare module "plugins/auth/init" {
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IAuth>;
 }
 
 declare module "plugins/syntaxViewer/init" {
-    export function create(pluginApi:Kontext.PluginApi):void;
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer>;
 }
 
 
 declare module "plugins/subcmixer/init" {
 
-    export function getViews(
-        dispatcher:Kontext.FluxDispatcher,
-        mixins:any,
-        layoutViews:any,
-        subcmixerStore:Subcmixer.ISubcMixerStore
-    ):Subcmixer.SubcMixerViews
-
-    export function create(pluginApi:Kontext.PluginApi,
+    export default function create(pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore,
             getCurrentSubcnameFn:()=>string,
-            getAlignedCoroporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>,
-            corpusIdAttr:string):Subcmixer.ISubcMixerStore;
+            getAlignedCoroporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
+            corpusIdAttr:string):RSVP.Promise<PluginInterfaces.ISubcMixer>;
 }

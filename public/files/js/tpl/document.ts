@@ -33,7 +33,6 @@
 /// <reference path="../../ts/declarations/translations.d.ts" />
 
 import * as $ from 'jquery';
-import * as popupbox from '../popupbox';
 import * as applicationBar from 'plugins/applicationBar/init';
 import * as footerBar from 'plugins/footerBar/init';
 import {Dispatcher} from 'vendor/Dispatcher';
@@ -54,6 +53,7 @@ import * as Immutable from 'vendor/immutable';
 import {AsyncTaskChecker} from '../stores/asyncTask';
 import {UserSettings} from '../userSettings';
 import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
+import * as authPlugin from 'plugins/auth/init';
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**

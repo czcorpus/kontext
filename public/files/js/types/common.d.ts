@@ -140,36 +140,10 @@ declare module Kontext {
     /**
      * General specification of a plug-in object.
      */
-    export interface Plugin {
-        init(api:PluginApi):void;
+    export interface PluginFactory<T> {
+        (api:PluginApi):RSVP.Promise<T>;
     }
 
-    export type MultipleViews = {[key:string]:React.ReactClass};
-
-    /**
-     * Flux+React compatible plug-ins.
-     * An object of type T is expected to be an object
-     * required by specific KonText interface. If there is
-     * no need for one, null can be returned.
-     */
-    export interface PluginObject<T> {
-
-        /**
-         * Return initialized React classes used by KonText.
-         * Plug-in should be able to return these objects before
-         * create() is called but on the other hand it is not
-         * expected for these views to be able to handle user
-         * interaction before create() is called.
-         */
-        getViews():MultipleViews;
-
-        /**
-         * Instantiate and initialize plug-in itself (typically -
-         * create required stores and connect them with KonText
-         * stores/callbacks if needed).
-         */
-        create(pluginApi:Kontext.PluginApi):RSVP.Promise<T>;
-    }
 
     /**
      * A Flux Store. Please note that only Flux Views are expected
@@ -727,7 +701,6 @@ declare module TextTypes {
         getAutoComplete():Immutable.List<AutoCompleteItem>;
 
         resetAutoComplete():ITextInputAttributeSelection;
-
     }
 
 
@@ -876,6 +849,34 @@ declare module TextTypes {
     export interface AttrSummary {
         text:string;
         help?:string;
+    }
+
+
+    export interface AlignedLanguageItem {
+        value:string;
+        label:string;
+        selected:boolean;
+        locked:boolean;
+    }
+
+    /**
+     * Represents an object which is able to provide
+     * a callback function initiated by textTypesStore
+     * every time user enters a text into one of raw text inputs
+     * (used whenever the number of items to display is too high).
+     */
+    export interface AttrValueTextInputListener {
+        getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any>;
+        getTextInputPlaceholder():string; // a text displayed in a respective text field
+        addUpdateListener(fn:()=>void):void;
+        removeUpdateListener(fn:()=>void):void;
+        getAlignedCorpora():Immutable.List<AlignedLanguageItem>;
+        selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean);
+        hasSelectedLanguages():boolean;
+        hasSelectionSteps():boolean;
+        setControlsEnabled(v:boolean):void;
+        reset():void;
+        notifyChangeListeners():void;
     }
 }
 

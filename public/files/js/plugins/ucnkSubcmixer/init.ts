@@ -20,8 +20,7 @@
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../types/plugins/liveAttributes.d.ts" />
-/// <reference path="../../types/plugins/subcmixer.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
 
 
 import {SimplePageStore} from '../../stores/base';
@@ -61,7 +60,7 @@ export interface CalculationResults {
 /**
  *
  */
-export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMixerStore {
+export class SubcMixerStore extends SimplePageStore {
 
     static DispatchToken:string;
 
@@ -75,7 +74,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     getCurrentSubcnameFn:()=>string;
 
-    getAlignedCorporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>;
+    getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 
     private currentSubcname:string;
 
@@ -87,7 +86,7 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
 
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
-            getAlignedCorporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>, corpusIdAttr:string) {
+            getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>, corpusIdAttr:string) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.textTypesStore = textTypesStore;
@@ -381,26 +380,46 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
         return this.errorTolerance;
     }
 
-    getAlignedCorpora():Immutable.List<LiveAttributesInit.AlignedLanguageItem> {
+    getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
         return this.getAlignedCorporaFn();
     }
 }
 
 
-export function getViews(dispatcher:Kontext.FluxDispatcher,
-        mixins:Kontext.ComponentCoreMixins, layoutViews:any,
-        subcmixerStore:SubcMixerStore):{[name:string]:any} {
-    return viewInit(dispatcher, mixins, layoutViews, subcmixerStore);
+class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
+
+    pluginApi:Kontext.PluginApi
+
+    private store:SubcMixerStore;
+
+    constructor(pluginApi:Kontext.PluginApi, store:SubcMixerStore) {
+        this.pluginApi = pluginApi;
+        this.store = store;
+    }
+
+    refreshData():void {
+        this.store.refreshData();
+    }
+
+    getWidgetView():React.ReactClass {
+        return viewInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.exportMixins(),
+            this.pluginApi.getViews(),
+            this.store
+        ).Widget;
+    }
+
 }
 
 
-export function create(
+export default function create(
         pluginApi:Kontext.PluginApi,
         textTypesStore:TextTypes.ITextTypesStore,
         getCurrentSubcnameFn:()=>string,
-        getAlignedCorporaFn:()=>Immutable.List<LiveAttributesInit.AlignedLanguageItem>,
-        corpusIdAttr:string):Subcmixer.ISubcMixerStore {
-    return new SubcMixerStore(
+        getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
+        corpusIdAttr:string):RSVP.Promise<PluginInterfaces.ISubcMixer> {
+    const store = new SubcMixerStore(
         pluginApi.dispatcher(),
         pluginApi,
         textTypesStore,
@@ -408,4 +427,7 @@ export function create(
         getAlignedCorporaFn,
         corpusIdAttr
     );
+    return new RSVP.Promise<PluginInterfaces.ISubcMixer>((resolve:(v)=>void, reject:(err)=>void) => {
+        resolve(new SubcmixerPlugin(pluginApi, store));
+    });
 }

@@ -17,35 +17,37 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/jquery.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
 import * as RSVP from 'vendor/rsvp';
 import {QueryStorageStore} from './stores';
 import {init as viewsInit} from './view';
 
-export class QueryStoragePlugin implements Kontext.PluginObject<any> {
+export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
 
     private pluginApi:Kontext.PluginApi;
 
-    private views:Kontext.MultipleViews;
-
     private store:QueryStorageStore;
 
-    getViews():Kontext.MultipleViews {
-        return this.views;
-    }
-
-
-    create(pluginApi:Kontext.PluginApi):RSVP.Promise<any> {
+    constructor(pluginApi:Kontext.PluginApi, store:QueryStorageStore) {
         this.pluginApi = pluginApi;
-        this.store = new QueryStorageStore(this.pluginApi);
-        this.views = viewsInit(this.pluginApi.dispatcher(), this.pluginApi.exportMixins(), this.store);
-        return new RSVP.Promise<any>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-            resolve(this.store);
-        });
-
+        this.store = store;
     }
+
+    getWidgetView():React.ReactClass {
+        return viewsInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.exportMixins(),
+            this.store
+        ).QueryStorage;
+    }
+
 }
 
-export default new QueryStoragePlugin();
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IQueryStorage> {
+    return new RSVP.Promise<PluginInterfaces.IQueryStorage>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
+        resolve(new QueryStoragePlugin(pluginApi, new QueryStorageStore(pluginApi)));
+    });
+}

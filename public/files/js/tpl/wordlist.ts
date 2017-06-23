@@ -22,7 +22,6 @@
 
 import {PageModel} from './document';
 import * as $ from 'jquery';
-import {bind as bindPopupBox} from '../popupbox';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {SimplePageStore} from '../stores/base';
@@ -107,7 +106,9 @@ export class WordlistPage extends SimplePageStore  {
     }
 
     private setupContextHelp(message):void {
+        /*
         bindPopupBox($('#progress_message a.context-help'), message, {width: 'nice'});
+        */
     }
 
     private initCorpInfoToolbar():void {

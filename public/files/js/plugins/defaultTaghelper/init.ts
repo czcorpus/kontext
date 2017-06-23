@@ -17,6 +17,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 import {TagHelperStore} from './stores';
@@ -25,36 +26,29 @@ import {TooltipBox} from '../../popupbox';
 import * as RSVP from 'vendor/rsvp';
 
 
-
-export class TagHelperPlugin implements Kontext.PluginObject<TagHelperStore> {
+export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 
     private pluginApi:Kontext.PluginApi;
 
     private store:TagHelperStore;
 
-    private views:Kontext.MultipleViews;
-
-    constructor() {
-    }
-
-    getViews():Kontext.MultipleViews {
-        return this.views;
-    }
-
-
-    create(pluginApi:Kontext.PluginApi):RSVP.Promise<TagHelperStore> {
+    constructor(pluginApi:Kontext.PluginApi, store:TagHelperStore) {
         this.pluginApi = pluginApi;
-        this.store = new TagHelperStore(pluginApi.dispatcher(), pluginApi);
-        this.views = viewInit(
+        this.store = store;
+    }
+
+    getWidgetView():React.ReactClass {
+        return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.exportMixins(),
             this.store
-        );
-
-        return new RSVP.Promise<TagHelperStore>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-            resolve(this.store);
-        });
+        ).TagBuilder;
     }
 }
 
-export default new TagHelperPlugin();
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
+    const plugin = new TagHelperPlugin(pluginApi, new TagHelperStore(pluginApi.dispatcher(), pluginApi));
+    return new RSVP.Promise<PluginInterfaces.ITagHelper>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
+        resolve(plugin);
+    });
+}

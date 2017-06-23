@@ -26,7 +26,6 @@
 import * as $ from 'jquery';
 import {PageModel} from './document';
 import {MultiDict, dictToPairs} from '../util';
-import {bind as bindPopupBox} from '../popupbox';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {ContingencyTableStore} from '../stores/freqs/ctable';

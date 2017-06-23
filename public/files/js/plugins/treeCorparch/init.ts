@@ -160,7 +160,7 @@ export class TreeWidgetStore extends SimplePageStore {
  * @param options A configuration of the widget
  */
 export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-            queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.Component {
+            queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ReactClass {
     const widgetWrapper = window.document.createElement('div');
 
     const treeStore = new TreeWidgetStore(

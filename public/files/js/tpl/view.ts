@@ -22,17 +22,14 @@
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins/abstract.d.ts" />
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
-/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/soundmanager.d.ts" />
 /// <reference path="../../ts/declarations/d3.d.ts" />
 /// <reference path="../../ts/declarations/d3-color.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
-import * as $ from 'jquery';
 import {PageModel} from './document';
 import {MultiDict, parseUrlArgs, updateProps} from '../util';
-import * as popupBox from '../popupbox';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
@@ -57,7 +54,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as SoundManager from 'SoundManager';
 import * as d3 from 'vendor/d3';
 import * as d3Color from 'vendor/d3-color';
-import * as syntaxViewer from 'plugins/syntaxViewer/init';
+import syntaxViewer from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import * as RSVP from 'vendor/rsvp';
@@ -179,6 +176,7 @@ export class ViewPage {
         this.queryStores = new QueryStores();
         this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
+        this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
     }
 
     /**
@@ -245,7 +243,7 @@ export class ViewPage {
      * @param rootElm
      * @param usePrevData
      */
-    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
+    showGroupsStats(rootElm:d3.Selection<any>, usePrevData:boolean):void {
         const self = this;
 
         function renderChart(data:LineGroupChartData):Array<string> {
@@ -264,7 +262,7 @@ export class ViewPage {
                 .sort(null);
 
             const pieData = pie(data);
-            const wrapper = d3.select(rootElm).append('svg')
+            const wrapper = rootElm.append('svg')
                 .attr('width', width)
                 .attr('height', height)
                 .attr('class', 'chart')
@@ -289,77 +287,62 @@ export class ViewPage {
             return color;
         }
 
-        function renderLabels(data:LineGroupChartData, colors:Array<string>, rootElm:HTMLElement):void {
+        function renderLabels(data:LineGroupChartData, colors:Array<string>, rootElm:d3.Selection<any>):void {
             const labelWrapper:HTMLElement = window.document.createElement('table');
             const tbody:HTMLElement = window.document.createElement('tbody');
-
-            function addElm(name:string, parent:HTMLElement):HTMLElement {
-                const elm = window.document.createElement(name);
-                $(parent).append(elm);
-                return elm;
-            }
-
             const total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
-
-            function percentage(item) {
+            const percentage = (item) => {
                 return (item['count'] / total * 100).toFixed(1) + '%';
-            }
+            };
 
-            $(labelWrapper)
-                .addClass('chart-label')
-                .append(tbody);
-
+            d3.select(labelWrapper)
+                .attr('class', 'chart-label')
+                .append(() => tbody);
             data
                 .sort((x1, x2) => x1.groupId > x2.groupId ? 1 : -1)
                 .forEach((item, i) => {
-                    const trElm = addElm('tr', tbody);
-                    const td1Elm = addElm('td', trElm);
-                    const td2Elm = addElm('th', trElm);
-                    const td3Elm = addElm('td', trElm);
-                    const td4Elm = addElm('td', trElm);
-                    $(td1Elm)
-                        .addClass('label-text')
-                        .css({'background-color': colors[item.groupId]})
-                        .addClass('color-code')
+                    const trElm = d3.select(tbody).append('tr');
+                    trElm.append('td')
+                        .attr('class', 'label-text color-code')
+                        .style('background-color', colors[item.groupId])
                         .text('\u00A0');
-                    $(td2Elm)
-                        .addClass('num')
-                        .append(item['group']);
-                    $(td3Elm)
-                        .addClass('num')
-                        .append(percentage(item));
-                    $(td4Elm)
-                        .addClass('num')
-                        .append('(' + item['count'] + 'x)');
+                    trElm.append('th')
+                        .attr('class', 'num')
+                        .text(item['group']);
+                    trElm.append('td')
+                        .attr('class', 'num')
+                        .text(percentage(item));
+                    trElm.append('td')
+                        .attr('class', 'num')
+                        .text('(' + item['count'] + 'x)');
                 });
-            $(rootElm).append(labelWrapper);
+            rootElm.append(() => labelWrapper);
         }
 
-        let prom:RSVP.Promise<LineGroupStats>;
-        if (this.lastGroupStats && usePrevData) {
-            prom = new RSVP.Promise<LineGroupStats>((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                resolve(this.lastGroupStats);
-            });
+        (() => {
+            if (this.lastGroupStats && usePrevData) {
+                return new RSVP.Promise<LineGroupStats>((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+                    resolve(this.lastGroupStats);
+                });
 
-        } else {
-            prom = this.layoutModel.ajax<LineGroupStats>(
-                'GET',
-                this.layoutModel.createActionUrl(
-                    'ajax_get_line_groups_stats',
-                    this.layoutModel.getConcArgs().items()
-                ),
-                {},
-                {contentType : 'application/x-www-form-urlencoded'}
+            } else {
+                return this.layoutModel.ajax<LineGroupStats>(
+                    'GET',
+                    this.layoutModel.createActionUrl(
+                        'ajax_get_line_groups_stats',
+                        this.layoutModel.getConcArgs().items()
+                    ),
+                    {},
+                    {contentType : 'application/x-www-form-urlencoded'}
 
-            ).then(
-                (data) => {
-                    this.lastGroupStats = data;
-                    return data;
-                }
-            );
-        }
-
-        prom.then(
+                ).then(
+                    (data) => {
+                        this.lastGroupStats = data;
+                        return data;
+                    }
+                );
+            }
+        })().then(
             (data) => {
                 const chartData:LineGroupChartData = [];
                 for (let p in data) {
@@ -369,10 +352,10 @@ export class ViewPage {
                         count: data[p]
                     });
                 }
-                $(rootElm).empty(); // remove loader
-                $(rootElm).append(
-                    '<legend>' + self.translate('linesel__groups_stats_heading') + '</legend>'
-                );
+                rootElm.selectAll('*').remove(); // remove loader
+                rootElm
+                    .append('legend')
+                    .text(self.translate('linesel__groups_stats_heading'));
                 const colors = renderChart(chartData);
                 renderLabels(chartData, colors, rootElm);
             },
@@ -382,19 +365,20 @@ export class ViewPage {
         );
     }
 
+    private handleBeforeUnload(event:any):void {
+        if (this.viewStores.lineSelectionStore.size() > 0) {
+            event.returnValue = this.translate('global__are_you_sure_to_leave');
+            return event.returnValue;
+        }
+        return undefined; // !! any other value will cause the dialog window to be shown
+    }
+
     /**
      * User must be notified in case he wants to leave the page but at the same time he
      * has selected some concordance lines without using them in a filter.
      */
-    private onBeforeUnloadAsk():any {
-        let self = this;
-        $(window).on('beforeunload.alert_unsaved', function (event:any) {
-            if (self.viewStores.lineSelectionStore.size() > 0) {
-                event.returnValue = self.translate('global__are_you_sure_to_leave');
-                return event.returnValue;
-            }
-            return undefined; // !! any other value will cause the dialog window to be shown
-        });
+    private onBeforeUnloadAsk():void {
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
     }
 
     /**
@@ -402,6 +386,7 @@ export class ViewPage {
      * case she is not logged-in.
      */
     private anonymousUserWarning():void {
+        /*
         const self = this;
         const box = popupBox.extended(this.layoutModel).open(
             this.translate('global__anonymous_user_warning',
@@ -427,13 +412,7 @@ export class ViewPage {
         box.setCss('top', top + 'px');
         box.setCss('font-size', '120%');
         box.setCss('height', '70px');
-    }
-
-    attachMouseWheelEvents(area, fn):void {
-        area = $(area).get(0);
-        area.addEventListener('mousewheel', fn, false);
-	    // Firefox
-	    area.addEventListener('DOMMouseScroll', fn, false);
+        */
     }
 
     /**
@@ -472,67 +451,6 @@ export class ViewPage {
             }
         });
         return ans;
-    }
-
-    /**
-     *
-     */
-    reloadHits():void {
-        const loop = (idx:number, delay:number, decay:number) => {
-            window.setTimeout(() => {
-                this.layoutModel.ajax(
-                    'GET',
-                    this.layoutModel.createActionUrl('get_cached_conc_sizes'),
-                    this.layoutModel.getConcArgs()
-
-                ).then(
-                    (data:AjaxResponse.ConcStatus) => {
-                        if (data.end) { // TODO what is this for?
-                            delay = 5;
-                        }
-
-                        $('#result-info span.ipm').html(this.layoutModel.formatNumber(data.relconcsize));
-                        this.layoutModel.dispatcher.dispatch({
-                            actionType: 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES',
-                            props: {
-                                availPages: Math.ceil(data.concsize / this.layoutModel.getConf<number>('numLines'))
-                            }
-                        });
-                        if (!data.finished) {
-                            if (data.fullsize > 0) {
-                                this.layoutModel.dispatcher.dispatch({
-                                    actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
-                                    props: {
-                                        finished: false,
-                                        concsize: data.concsize,
-                                        fullsize: data.fullsize
-                                    }
-                                });
-                            }
-                            if (idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
-                                loop(idx + 1, delay * decay, decay);
-                            }
-
-                        } else {
-                            this.layoutModel.dispatcher.dispatch({
-                                actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
-                                props: {
-                                    finished: true,
-                                    concsize: data.concsize,
-                                    fullsize: data.fullsize
-                                }
-                            });
-                            /* We are unable to update ARF on the fly which means we
-                            * have to reload the page after all the server calculations are finished.
-                            */
-                            //win.location.reload();
-                        }
-                    }
-                );
-
-            }, delay);
-        }
-        loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
     }
 
     /**
@@ -861,7 +779,7 @@ export class ViewPage {
     /**
      *
      */
-    initQueryOverviewArea():void {
+    initQueryOverviewArea(taghelperPlugin:PluginInterfaces.ITagHelper, queryStoragePlugin:PluginInterfaces.IQueryStorage):void {
         this.queryStores.queryReplayStore = new QueryReplayStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -899,14 +817,14 @@ export class ViewPage {
                 usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
                 queryFormProps: {
                     corpname: this.layoutModel.getConf<string>('corpname'),
-                    tagHelperViews: tagHelperPlugin.getViews(),
-                    queryStorageViews: queryStoragePlugin.getViews(),
+                    tagHelperView: taghelperPlugin.getWidgetView(),
+                    queryStorageView: queryStoragePlugin.getWidgetView(),
                     allowCorpusSelection: false,
                     actionPrefix: ''
                 },
                 filterFormProps: {
-                    tagHelperViews: tagHelperPlugin.getViews(),
-                    queryStorageViews: queryStoragePlugin.getViews(),
+                    tagHelperView: taghelperPlugin.getWidgetView(),
+                    queryStorageView: queryStoragePlugin.getWidgetView(),
                     allowCorpusSelection: false,
                     actionPrefix: 'FILTER_'
                 },
@@ -1094,6 +1012,7 @@ export class ViewPage {
             isShuffled: this.layoutModel.getConf<boolean>('ResultShuffled')
         };
         const lineViewProps:ViewConfiguration = {
+            anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
@@ -1137,7 +1056,10 @@ export class ViewPage {
                 this.layoutModel,
                 this.layoutModel.dispatcher,
                 this.viewStores.lineViewStore,
-                conclines.openStorage(()=>{})
+                conclines.openStorage(()=>{}),
+                () => {
+                    window.removeEventListener('beforeunload', this.handleBeforeUnload);
+                }
         );
         this.viewStores.lineSelectionStore.registerQuery(this.layoutModel.getConf<Array<string>>('compiledQuery'));
         this.viewStores.concDetailStore = new ConcDetailStore(
@@ -1168,16 +1090,12 @@ export class ViewPage {
      */
     init():RSVP.Promise<any> {
         this.extendBaseColorPalette();
-        return this.layoutModel.init().then(
+        const p1 = this.layoutModel.init().then(
             () => {
                 const lineViewProps = this.initStores();
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
-                    let frame = window.document.getElementById('selection-actions');
-                    this.showGroupsStats($(frame).find('.chart-area').get(0), usePrevData);
-                };
-                lineViewProps.onPageUpdate = () => {
-                    syntaxViewer.create(this.layoutModel.pluginApi());
+                    this.showGroupsStats(d3.select('#selection-actions'), usePrevData);
                 };
                 this.initUndoFunction();
 
@@ -1187,10 +1105,17 @@ export class ViewPage {
                     this.layoutModel.layoutViews,
                     this.viewStores
                 );
+                return lineViewProps;
+            }
+        );
 
+        const p2 = p1.then(
+            (lineViewProps) => {
                 return this.renderLines(lineViewProps);
             }
-        ).then(
+        );
+
+        const p3 = p2.then(
             () => {
                 this.setupHistoryOnPopState();
                 if (this.layoutModel.getConf('anonymousUser')) {
@@ -1198,23 +1123,34 @@ export class ViewPage {
                 }
                 this.onBeforeUnloadAsk();
                 this.updateLocalAlignedCorpora();
-                syntaxViewer.create(this.layoutModel.pluginApi());
+                return syntaxViewer(this.layoutModel.pluginApi());
             }
-        ).then(
+        );
+
+        const p4 = p3.then(
             () => {
-                tagHelperPlugin.create(this.layoutModel.pluginApi());
+                return queryStoragePlugin(this.layoutModel.pluginApi());
             }
-        ).then(
+        );
+
+        const p5 = p4.then(
             () => {
-                queryStoragePlugin.create(this.layoutModel.pluginApi());
+                return tagHelperPlugin(this.layoutModel.pluginApi());
             }
-        ).then(
-            () => {
+        );
+
+        return RSVP.all([p1, p4, p5]).then(
+            (args:any) => {
+                const [lvprops, tagh, qs] = args;
+
+                lvprops.onPageUpdate = () => {
+                    syntaxViewer(this.layoutModel.pluginApi());
+                };
                 this.initQueryForm();
                 this.initFilterForm();
                 this.initSortForm();
                 this.initSampleForm();
-                this.initQueryOverviewArea();
+                this.initQueryOverviewArea(tagh, qs);
                 this.initAnalysisViews();
                 this.updateMainMenu();
                 this.initViewOptions();

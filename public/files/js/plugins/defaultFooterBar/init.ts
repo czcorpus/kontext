@@ -23,19 +23,11 @@
 
 import * as RSVP from 'vendor/rsvp';
 
-class FooterPlugin implements Kontext.Plugin {
-
-    constructor() {
-    }
-
-    init():void {
-    }
+export class FooterPlugin {
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
-    return new RSVP.Promise<Kontext.Plugin>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-        let plugin = new FooterPlugin();
-        plugin.init();
-        resolve(plugin);
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<FooterPlugin> {
+    return new RSVP.Promise<FooterPlugin>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
+        resolve(new FooterPlugin());
     });
 }
