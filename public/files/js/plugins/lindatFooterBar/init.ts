@@ -18,10 +18,11 @@
 
 /// <reference path="../../types/plugins/abstract.d.ts" />
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import RSVP = require('vendor/rsvp');
+import * as RSVP from 'vendor/rsvp';
 
-class FooterPlugin implements Kontext.Plugin {
+export class FooterPlugin {
 
     constructor() {
     }
@@ -32,8 +33,8 @@ class FooterPlugin implements Kontext.Plugin {
     }
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
-    return new RSVP.Promise<Kontext.Plugin>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
+export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<FooterPlugin> {
+    return new RSVP.Promise<FooterPlugin>((resolve:(d:FooterPlugin)=>void, reject:(e:any)=>void) => {
         let plugin = new FooterPlugin();
         plugin.init();
         resolve(plugin);

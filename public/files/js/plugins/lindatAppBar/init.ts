@@ -17,15 +17,19 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import RSVP = require('vendor/rsvp');
-import aai = require('./aai-config');
+import * as RSVP from 'vendor/rsvp';
+import * as aai from './aai-config';
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
-    return new RSVP.Promise((resolve:(ans:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
+export class LindatAppBar implements PluginInterfaces.IToolbar {
+}
+
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
+    return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
         aai.init();
-        resolve(null);
+        resolve(new LindatAppBar());
     });
 }
 

@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins/subcmixer.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
 export interface LiveAttributesViews {
     LiveAttrsView:any;
@@ -28,7 +29,7 @@ export interface LiveAttributesViews {
 export function init(
     dispatcher:any,
     mixins:any,
-    subcMixerViews:Subcmixer.SubcMixerViews,
+    subcMixerComponent:React.ReactClass,
     textTypesStore:any,
     liveAttrsStore:any
 ):LiveAttributesViews;

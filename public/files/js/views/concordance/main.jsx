@@ -40,6 +40,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
     const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore);
 
+    const util = mixins[0];
+
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
 
@@ -444,6 +446,36 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     });
 
 
+    // ------------------------- <AnonymousUserLoginPopup /> ---------------------------
+
+    const AnonymousUserLoginPopup = (props) => {
+
+        const handleLoginClick = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'USER_SHOW_LOGIN_DIALOG',
+                props: {}
+            });
+            evt.preventDefault();
+        };
+
+        return (
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true}
+                customStyle={{left: '50%', width: '30em', marginLeft: '-15em'}}>
+                <p>
+                    <img className="info-icon" src={util.createStaticUrl('img/warning-icon.svg')} alt={util.translate('global__info_icon')} />
+                    {util.translate('global__anonymous_user_warning')}
+                </p>
+                <p>
+                    <button type="button" className="default-button"
+                            onClick={handleLoginClick}>
+                        {util.translate('global__login_label')}
+                    </button>
+                </p>
+            </layoutViews.PopupBox>
+        );
+    };
+
+
     // ------------------------- <ConcordanceView /> ---------------------------
 
     const ConcordanceView = React.createClass({
@@ -454,7 +486,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 refsDetailData: null,
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
-                concSummary: lineStore.getConcSummary()
+                concSummary: lineStore.getConcSummary(),
+                showAnonymousUserWarn: this.props.anonymousUser
             };
         },
 
@@ -506,6 +539,10 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     }
                 });
             }
+        },
+
+        _handleAnonymousUserWarning : function () {
+            this.setState(React.addons.update(this.state, {showAnonymousUserWarn: {$set: false}}));
         },
 
         _handleRefsDetailCloseClick : function () {
@@ -577,6 +614,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                                 canSendMail={this.props.canSendMail}
                                 showConcToolbar={this.props.ShowConcToolbar}
                                 usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
+                        {this.state.showAnonymousUserWarn ?
+                            <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
                     <div id="conclines-wrapper">
                         <linesViews.ConcLines {...this.props}

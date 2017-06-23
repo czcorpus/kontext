@@ -22,7 +22,6 @@
 /// <reference path="../types/views.d.ts" />
 
 import {PageModel} from './document';
-import {bind as bindPopupBox} from '../popupbox';
 
 /**
  *

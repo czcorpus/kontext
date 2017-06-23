@@ -31,7 +31,7 @@ declare var treexView:JQuery;
 /**
  *
  */
-class SyntaxTreeViewer {
+export class SyntaxTreeViewer {
 
     private pluginApi:Kontext.PluginApi;
 
@@ -132,9 +132,9 @@ class SyntaxTreeViewer {
     }
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
-    return new RSVP.Promise<Kontext.Plugin>((resolve:(val:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
-        let viewer = new SyntaxTreeViewer(pluginApi);
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<SyntaxTreeViewer> {
+    return new RSVP.Promise<SyntaxTreeViewer>((resolve:(val:SyntaxTreeViewer)=>void, reject:(e:any)=>void) => {
+        const viewer = new SyntaxTreeViewer(pluginApi);
         viewer.init();
         resolve(viewer);
     });

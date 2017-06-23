@@ -20,20 +20,16 @@
 
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
-/// <reference path="../types/plugins/liveAttributes.d.ts" />
-/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../ts/declarations/react.d.ts" />
 
-import * as $ from 'jquery';
 import * as RSVP from 'vendor/rsvp';
 import {PageModel} from './document';
-import * as popupBox from '../popupbox';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
 import {SubcorpWithinFormStore, SubcorpFormStore} from '../stores/subcorp/form';
-import * as liveAttributes from 'plugins/liveAttributes/init';
-import subcMixer = require('plugins/subcmixer/init');
+import liveAttributes from 'plugins/liveAttributes/init';
+import subcMixer from 'plugins/subcmixer/init';
 import {UserSettings} from '../userSettings';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
@@ -43,7 +39,7 @@ import * as React from 'vendor/react';
 
 
 export interface TTInitData {
-    component:React.Component;
+    component:React.ReactClass;
     props:{[p:string]:any};
     ttStore:TextTypesStore;
 }
@@ -112,59 +108,48 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             this.layoutModel.exportMixins(),
             this.textTypesStore
         );
-        let liveAttrsProm;
-        if (this.layoutModel.hasPlugin('live_attributes')) {
-            liveAttrsProm = liveAttributes.create(
-                this.layoutModel.pluginApi(),
-                this.textTypesStore,
-                null, // no corplist provider => manual aligned corp. selection mode
-                () => this.textTypesStore.hasSelectedItems(),
-                textTypesData['bib_attr']
-            );
 
-        } else {
-            liveAttrsProm = new RSVP.Promise((fulfill:(v)=>void, reject:(err)=>void) => {
-                fulfill(null);
-            });
-        }
-        return liveAttrsProm.then(
-            (liveAttrsStore:LiveAttributesInit.AttrValueTextInputListener) => {
-                if (liveAttrsStore) {
-                    this.textTypesStore.setTextInputChangeCallback(liveAttrsStore.getListenerCallback());
+        const p1 = liveAttributes(
+            this.layoutModel.pluginApi(),
+            this.textTypesStore,
+            null, // no corplist provider => manual aligned corp. selection mode
+            () => this.textTypesStore.hasSelectedItems(),
+            textTypesData['bib_attr']
+        );
+        const p2 = p1.then(
+            (liveAttrsPlugin:TextTypes.AttrValueTextInputListener) => {
+                if (liveAttrsPlugin) {
+                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getListenerCallback());
                     this.textTypesStore.addSelectionChangeListener(target => {
-                        liveAttrsStore.setControlsEnabled(target.hasSelectedItems() ||
-                                liveAttrsStore.hasSelectedLanguages());
+                        liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
+                                liveAttrsPlugin.hasSelectedLanguages());
                     });
                 }
-                let subcmixerViews;
-                if (this.layoutModel.getConf<boolean>('HasSubcmixer')
-                        && this.layoutModel.getConf<string>('CorpusIdAttr')) {
-                    const subcmixerStore = subcMixer.create(
-                        this.layoutModel.pluginApi(),
-                        this.textTypesStore,
-                        () => $('#subcname').val(),
-                        () => liveAttrsStore.getAlignedCorpora(),
-                        this.layoutModel.getConf<string>('CorpusIdAttr')
-                    );
-                    liveAttrsStore.addUpdateListener(subcmixerStore.refreshData.bind(subcmixerStore));
-                    subcmixerViews = subcMixer.getViews(
-                        this.layoutModel.dispatcher,
-                        this.layoutModel.exportMixins(),
-                        this.layoutModel.layoutViews,
-                        subcmixerStore
-                    );
+                return subcMixer(
+                    this.layoutModel.pluginApi(),
+                    this.textTypesStore,
+                    () => this.subcorpFormStore.getSubcname(),
+                    () => liveAttrsPlugin.getAlignedCorpora(),
+                    this.layoutModel.getConf<string>('CorpusIdAttr')
+                );
+            }
+        );
+
+        return RSVP.all([p1, p2]).then(
+            (args:[PluginInterfaces.ILiveAttributes, PluginInterfaces.ISubcMixer]) => {
+                const [liveAttrs, subcmixerPlugin] = args;
+                let subcMixerComponent:React.ReactClass;
+
+                if (subcmixerPlugin) {
+                    liveAttrs.addUpdateListener(subcmixerPlugin.refreshData.bind(subcmixerPlugin));
+                    subcMixerComponent = subcmixerPlugin.getWidgetView();
 
                 } else {
-                    subcmixerViews = {
-                        Widget: null
-                    };
+                    subcMixerComponent = null;
                 }
-                const liveAttrsViews = liveAttributes.getViews(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins(),
-                    subcmixerViews,
-                    this.textTypesStore,
-                    liveAttrsStore
+                const liveAttrsViews = liveAttrs.getViews(
+                    subcMixerComponent,
+                    this.textTypesStore
                 );
                 return {
                     component: ttViewComponents.TextTypesPanel,

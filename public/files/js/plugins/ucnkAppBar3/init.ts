@@ -52,19 +52,17 @@ export class AppBarStore extends SimplePageStore {
     }
 }
 
-export class AppBarPlugin implements Kontext.Plugin {
+export class AppBarPlugin implements PluginInterfaces.IToolbar {
 
     private store:AppBarStore;
 
     constructor(store:AppBarStore) {
         this.store = store;
     }
-
-    init(api:Kontext.PluginApi):void {}
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<Kontext.Plugin> {
-    return new RSVP.Promise((resolve:(ans:Kontext.Plugin)=>void, reject:(e:any)=>void) => {
+export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
+    return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
         toolbar.init();
         const appBarStore = new AppBarStore(pluginApi.dispatcher());
         resolve(new AppBarPlugin(appBarStore));

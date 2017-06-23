@@ -148,7 +148,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                         onCloseClick={this.props.closeClickHandler}
                         customClass="tag-builder-widget"
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                    <this.props.tagHelperViews.TagBuilder
+                    <this.props.tagHelperView
                             sourceId={this.props.sourceId}
                             onInsert={this.props.closeClickHandler}
                             onEscKey={this.props.closeClickHandler}
@@ -262,7 +262,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
         render : function () {
             return (
                 <div className="history-widget">
-                    <this.props.queryStorageViews.QueryStorage
+                    <this.props.queryStorageView
                             sourceId={this.props.sourceId}
                             onCloseTrigger={this.props.onCloseTrigger}
                             actionPrefix={this.props.actionPrefix} />
@@ -352,7 +352,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
             switch (this.state.activeWidget) {
                 case 'tag':
                     return <TagWidget closeClickHandler={this._handleCloseWidget}
-                                tagHelperViews={this.props.tagHelperViews}
+                                tagHelperView={this.props.tagHelperView}
                                 sourceId={this.props.sourceId}
                                 actionPrefix={this.props.actionPrefix} />;
                 case 'within':
@@ -625,8 +625,8 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     <td>
                         <div className="query-area">
                             <QueryToolbox widgets={this.props.widgets}
-                                tagHelperViews={this.props.tagHelperViews}
-                                queryStorageViews={this.props.queryStorageViews}
+                                tagHelperView={this.props.tagHelperView}
+                                queryStorageView={this.props.queryStorageView}
                                 sourceId={this.props.sourceId}
                                 toggleHistoryWidget={this._toggleHistoryWidget}
                                 inputLanguage={this.props.inputLanguage}
@@ -634,7 +634,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                             {this._renderInput()}
                             {this.state.historyVisible ?
                                 <HistoryWidget
-                                        queryStorageViews={this.props.queryStorageViews}
+                                        queryStorageView={this.props.queryStorageView}
                                         sourceId={this.props.sourceId}
                                         onCloseTrigger={this._toggleHistoryWidget}
                                         actionPrefix={this.props.actionPrefix}/>

@@ -82,6 +82,8 @@ export interface ConcSummary {
 
 export interface ViewConfiguration {
 
+    anonymousUser:boolean;
+
     /**
      * Determine concordance view mode (kwic/sen/align)
      */

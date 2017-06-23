@@ -21,7 +21,7 @@
 import React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAttrsStore) {
+export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liveAttrsStore) {
 
     // ----------------------------- <SelectionSteps /> --------------------------
 
@@ -219,9 +219,9 @@ export function init(dispatcher, mixins, subcMixerViews, textTypesStore, liveAtt
                         <li>
                             <ResetButton enabled={this.state.controlsEnabled} clickHandler={this._mkClickHandler} />
                         </li>
-                        {subcMixerViews.Widget ?
+                        {SubcmixerComponent ?
                             (<li>
-                                <subcMixerViews.Widget isActive={this._widgetIsActive()} />
+                                <SubcmixerComponent isActive={this._widgetIsActive()} />
                             </li>)
                         : null}
                     </ul>

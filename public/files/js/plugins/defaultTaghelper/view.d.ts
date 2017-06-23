@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/react.d.ts" />
 
 
-export function init(dispatcher, mixins, tagHelperStore):Kontext.MultipleViews;
+export function init(dispatcher, mixins, tagHelperStore):{TagBuilder:React.ReactClass};

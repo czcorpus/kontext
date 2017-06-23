@@ -208,8 +208,8 @@ export function init(
                                 defaultAttr={this.state.defaultAttrValues.get(primaryCorpname)}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
-                                tagHelperViews={this.props.tagHelperViews}
-                                queryStorageViews={this.props.queryStorageViews}
+                                tagHelperView={this.props.tagHelperView}
+                                queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(primaryCorpname)}
                                 actionPrefix={this.props.actionPrefix} />
                         </tbody>
@@ -229,7 +229,7 @@ export function init(
                                 tagsetDocUrl={this.state.tagsetDocUrl}
                                 pcqPosNegValues={this.state.pcqPosNegValues}
                                 inputLanguages={this.state.inputLanguages}
-                                queryStorageViews={this.props.queryStorageViews}
+                                queryStorageView={this.props.queryStorageView}
                                 actionPrefix={this.props.actionPrefix}
                                 hasLemmaAttr={this.state.hasLemmaAttr} />
                         : null
@@ -380,8 +380,8 @@ export function init(
                                 defaultAttr={this.state.defaultAttrValues.get(this.props.corpname)}
                                 attrList={this.state.attrList}
                                 tagsetDocUrl={this.state.tagsetDocUrl}
-                                tagHelperViews={this.props.tagHelperViews}
-                                queryStorageViews={this.props.queryStorageViews}
+                                tagHelperView={this.props.tagHelperView}
+                                queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
                                 actionPrefix={this.props.actionPrefix} />
                         </tbody>

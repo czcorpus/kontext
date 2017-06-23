@@ -87,7 +87,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 attrList={this.props.attrList}
                                 tagsetDocUrl={this.props.tagsetDocUrl}
                                 inputLanguage={this.props.inputLanguage}
-                                queryStorageViews={this.props.queryStorageViews}
+                                queryStorageView={this.props.queryStorageView}
                                 actionPrefix="" />
                         </tbody>
                     </table>
@@ -154,7 +154,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 tagsetDocUrl={this.props.tagsetDocUrl}
                                 pcqPosNegValue={this.props.pcqPosNegValues.get(item)}
                                 inputLanguage={this.props.inputLanguages.get(item)}
-                                queryStorageViews={this.props.queryStorageViews}
+                                queryStorageView={this.props.queryStorageView}
                                 hasLemmaAttr={this.props.hasLemmaAttr} />;
                     })}
                 </fieldset>

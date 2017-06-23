@@ -20,27 +20,82 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="./view.d.ts" />
-/// <reference path="../../types/plugins/liveAttributes.d.ts" />
-/// <reference path="../../types/plugins/subcmixer.d.ts" />
+/// <reference path="../../types/plugins/abstract.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 
 import textTypesStore = require('../../stores/textTypes/attrValues');
 import liveAttrsStore = require('./store');
-import RSVP = require('vendor/rsvp');
+import * as RSVP from 'vendor/rsvp';
 import common = require('./common');
 import {init as viewInit} from './view';
-import {create as createSubcMixer} from 'plugins/subcmixer/init';
+import createSubcMixer from 'plugins/subcmixer/init';
 
 
-export function getViews(
-        dispatcher:Kontext.FluxDispatcher,
-        mixins:any,
-        subcMixerViews:Subcmixer.SubcMixerViews,
-        textTypesStore:TextTypes.ITextTypesStore,
-        liveAttrsStore:any):LiveAttributesInit.LiveAttrsViews {
+export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
 
-    return viewInit(dispatcher, mixins, subcMixerViews, textTypesStore, liveAttrsStore);
+    private pluginApi:Kontext.PluginApi;
+
+    private store:liveAttrsStore.LiveAttrsStore;
+
+    constructor(pluginApi:Kontext.PluginApi, store:liveAttrsStore.LiveAttrsStore) {
+        this.pluginApi = pluginApi;
+        this.store = store;
+    }
+
+    getViews(subcMixerView:React.ReactClass, textTypesStore:Kontext.PageStore):any {// TODO store types
+        return viewInit(
+            this.pluginApi.dispatcher(),
+            this.pluginApi.exportMixins(),
+            subcMixerView,
+            textTypesStore,
+            this.store
+        );
+    }
+
+    getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any> {
+        return this.store.getListenerCallback();
+    }
+
+    getTextInputPlaceholder():string {
+        return this.store.getTextInputPlaceholder();
+    }
+
+    addUpdateListener(fn:()=>void):void {
+        this.store.addUpdateListener(fn);
+    }
+
+    removeUpdateListener(fn:()=>void):void {
+        this.store.removeUpdateListener(fn);
+    }
+
+    getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
+        return this.store.getAlignedCorpora();
+    }
+
+    selectLanguages(languages:Immutable.List<string>, notifyListeners:boolean) {
+        this.store.selectLanguages(languages, notifyListeners);
+    }
+
+    hasSelectedLanguages():boolean {
+        return this.store.hasSelectedLanguages();
+    }
+
+    hasSelectionSteps():boolean {
+        return this.store.hasSelectionSteps();
+    }
+
+    setControlsEnabled(v:boolean):void {
+        this.store.setControlsEnabled(v);
+    }
+
+    reset():void {
+        this.store.reset();
+    }
+
+    notifyChangeListeners():void {
+        this.store.notifyChangeListeners();
+    }
 }
 
 
@@ -51,19 +106,20 @@ export function getViews(
  * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
-export function create(pluginApi:Kontext.PluginApi, textTypesStore:TextTypes.ITextTypesStore,
+export default function create(pluginApi:Kontext.PluginApi, textTypesStore:TextTypes.ITextTypesStore,
         selectedCorporaProvider:()=>Immutable.List<string>,
         ttCheckStatusProvider:()=>boolean, bibAttr:string):RSVP.Promise<Kontext.PageStore> {
-    return new RSVP.Promise(function (resolve, reject) {
+    return new RSVP.Promise((resolve, reject) => {
         try {
-            resolve(new liveAttrsStore.LiveAttrsStore(
+            const store = new liveAttrsStore.LiveAttrsStore(
                 pluginApi.dispatcher(),
                 pluginApi,
                 textTypesStore,
                 selectedCorporaProvider,
                 ttCheckStatusProvider,
                 bibAttr
-            ));
+            );
+            resolve(new LiveAttributesPlugin(pluginApi, store));
 
         } catch (e) {
             reject(e);

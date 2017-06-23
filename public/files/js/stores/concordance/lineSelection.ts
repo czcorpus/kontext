@@ -64,13 +64,16 @@ export class LineSelectionStore extends SimplePageStore {
 
     private maxGroupId:number;
 
+    private onLeavePage:()=>void;
+
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
-            concLineStore:ConcLineStore, clStorage:ConcLinesStorage) {
+            concLineStore:ConcLineStore, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(dispatcher);
         let self = this;
         this.layoutModel = layoutModel;
         this.concLineStore = concLineStore;
         this.clStorage = clStorage;
+        this.onLeavePage = onLeavePage;
         if (clStorage.size() > 0) {
             this.mode = this.clStorage.getMode();
 
@@ -322,7 +325,7 @@ export class LineSelectionStore extends SimplePageStore {
                     const args = this.layoutModel.getConcArgs();
                     args.replace('q', data.Q);
                     const nextUrl = this.layoutModel.createActionUrl('view', args.items());
-                    $(window).off('beforeunload.alert_unsaved'); // TODO
+                    this.onLeavePage();
                     window.location.href = nextUrl; // we're leaving Flux world here so it's ok
 
                 } else {
