@@ -51,7 +51,7 @@ class FooterBar(AbstractFootbar):
 
     def __init__(self, content_dir):
         self._content_dir = content_dir
-        self._lang_text_map = dict((item[7:9], self._get_text_path(item))
+        self._lang_text_map = dict((item.split('.')[0].split('-')[1], self._get_text_path(item))
                                    for item in os.listdir(self._content_dir))
         if 'en' not in self._lang_text_map:
             logging.getLogger(__name__).warning('Missing *en* version of a footer text. Found: %s' % (

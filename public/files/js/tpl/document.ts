@@ -21,7 +21,7 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
-/// <reference path="../types/plugins/abstract.d.ts" />
+/// <reference path="../types/plugins.d.ts" />
 /// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
@@ -33,8 +33,8 @@
 /// <reference path="../../ts/declarations/translations.d.ts" />
 
 import * as $ from 'jquery';
-import * as applicationBar from 'plugins/applicationBar/init';
-import * as footerBar from 'plugins/footerBar/init';
+import applicationBar from 'plugins/applicationBar/init';
+import footerBar from 'plugins/footerBar/init';
 import {Dispatcher} from 'vendor/Dispatcher';
 import {init as documentViewsInit} from 'views/document';
 import {init as menuViewsInit} from 'views/menu';
@@ -945,11 +945,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
         }).then(
             () => {
-                applicationBar.create(this.pluginApi());
+                return applicationBar(this.pluginApi());
             }
+
         ).then(
             () => {
-                footerBar.create(this.pluginApi());
+                footerBar(this.pluginApi());
             }
         );
     }

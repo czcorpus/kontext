@@ -92,7 +92,7 @@ declare module "views/subcorp/forms" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:Kontext.LayoutViews, corparchComponent:React.Component,
+            layoutViews:Kontext.LayoutViews, corparchComponent:React.ReactClass,
             subcorpFormStore:any, subcorpWithinFormStore:any):SubcorpFormViews;
 }
 

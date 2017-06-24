@@ -17,7 +17,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/plugins/abstract.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
@@ -201,7 +201,7 @@ class SyntaxTreeViewer {
     }
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer> {
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer> {
     return new RSVP.Promise<PluginInterfaces.ISyntaxViewer>((resolve:(val:PluginInterfaces.ISyntaxViewer)=>void, reject:(e:any)=>void) => {
         const viewer = new SyntaxTreeViewer(pluginApi);
         viewer.init();

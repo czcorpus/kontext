@@ -20,7 +20,7 @@
 
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/react.d.ts" />
-/// <reference path="../../types/plugins/abstract.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/views.d.ts" />
 /// <reference path="./corplistView.d.ts" />
 /// <reference path="./widgetView.d.ts" />

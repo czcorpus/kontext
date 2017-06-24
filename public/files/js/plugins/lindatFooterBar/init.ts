@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/plugins/abstract.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
@@ -33,7 +33,7 @@ export class FooterPlugin {
     }
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<FooterPlugin> {
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<FooterPlugin> {
     return new RSVP.Promise<FooterPlugin>((resolve:(d:FooterPlugin)=>void, reject:(e:any)=>void) => {
         let plugin = new FooterPlugin();
         plugin.init();

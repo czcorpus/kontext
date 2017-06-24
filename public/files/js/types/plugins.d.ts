@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../common.d.ts" />
+/// <reference path="./common.d.ts" />
 
 declare module PluginInterfaces {
 
@@ -68,7 +68,7 @@ declare module PluginInterfaces {
 }
 
 /*
-This module contains "fake" plugin modules representing
+The following part contains "fake" plugin modules representing
 virtual general plug-ins implementations with proper module
 names which can be hardcoded in KonText source codes.
 
@@ -93,11 +93,11 @@ declare module 'plugins/applicationBar/toolbar' {
 
 declare module 'plugins/applicationBar/init' {
 
-    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
 }
 
 declare module 'plugins/footerBar/init' {
-    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
 }
 
 declare module "plugins/corparch/init" {

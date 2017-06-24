@@ -83,7 +83,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return Immutable.List<{n:string; label:string}>();
     }
 
-    initSubcorpForm(ttComponent:React.Component, ttProps:{[p:string]:any}):void {
+    initSubcorpForm(ttComponent:React.ReactClass, ttProps:{[p:string]:any}):void {
         this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
@@ -171,12 +171,12 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             return this.layoutModel.userSettings.get<Array<string>>(UserSettings.ALIGNED_CORPORA_KEY) || [];
         };
 
-        this.layoutModel.init().then(
+        const p1 = this.layoutModel.init().then(
             () => {
                 return this.createTextTypesComponents()
             }
         ).then(
-            (ttComponent:any) => {
+            (ttComponent) => {
                  this.subcorpWithinFormStore = new SubcorpWithinFormStore(
                     this.layoutModel.dispatcher,
                     Object.keys(this.layoutModel.getConf('structsAndAttrs'))[0], // TODO what about order?
@@ -191,9 +191,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                 );
                 return ttComponent;
             }
-        ).then(
-            (ttComponent:any) => {
-                const corparchComponent = corplistComponent.createWidget(
+        );
+
+        const p2 = p1.then(
+            (ttComponent) => {
+                return corplistComponent.createWidget(
                     'subcorpus/subcorp_form',
                     this.layoutModel.pluginApi(),
                     {
@@ -209,10 +211,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                         }
                     }
                 );
-                return [ttComponent, corparchComponent];
             }
-        ).then(
-            (items:[any, React.Component]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
+        );
+
+        RSVP.all([p1, p2]).then(
+            (items:[TTInitData, React.ReactClass]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
                 this.viewComponents = subcorpViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.exportMixins(),
