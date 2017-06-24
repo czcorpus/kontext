@@ -61,7 +61,7 @@ export class AppBarPlugin implements PluginInterfaces.IToolbar {
     }
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
     return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
         toolbar.init();
         const appBarStore = new AppBarStore(pluginApi.dispatcher());
