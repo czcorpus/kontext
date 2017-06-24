@@ -17,7 +17,7 @@
  */
 
 /// <reference path="../types/common.d.ts" />
-/// <reference path="../types/plugins/abstract.d.ts" />
+/// <reference path="../types/plugins.d.ts" />
 
 import $ = require('jquery');
 import {PageModel} from './document';
