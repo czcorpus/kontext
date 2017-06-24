@@ -93,11 +93,11 @@ declare module 'plugins/applicationBar/toolbar' {
 
 declare module 'plugins/applicationBar/init' {
 
-    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
 }
 
 declare module 'plugins/footerBar/init' {
-    export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
 }
 
 declare module "plugins/corparch/init" {

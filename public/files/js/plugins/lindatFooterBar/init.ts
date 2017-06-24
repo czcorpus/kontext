@@ -33,7 +33,7 @@ export class FooterPlugin {
     }
 }
 
-export function create(pluginApi:Kontext.PluginApi):RSVP.Promise<FooterPlugin> {
+export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<FooterPlugin> {
     return new RSVP.Promise<FooterPlugin>((resolve:(d:FooterPlugin)=>void, reject:(e:any)=>void) => {
         let plugin = new FooterPlugin();
         plugin.init();

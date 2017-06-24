@@ -39,7 +39,7 @@ class FootBar(AbstractFootbar):
         else:
             return self._templates['en_US']
 
-    def get_contents(self, plugin_api, return_url):
+    def get_contents(self, plugin_api, return_url=None):
         tpl_path = self.get_template(plugin_api.user_lang)
         with open(tpl_path, mode='rb') as fin:
             return fin.read().decode('utf-8')
