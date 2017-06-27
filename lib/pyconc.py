@@ -27,6 +27,11 @@ import l10n
 from l10n import import_string, export_string, escape
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as _
+import plugins
+
+
+def canonical_corpname(corpname):
+    return plugins.get('auth').canonical_corpname(corpname)
 
 
 def get_conc_labelmap(infopath):
@@ -150,7 +155,7 @@ class PyConc(manatee.Concordance):
         if options[0] == '-':
             self.switch_aligned(self.orig_corp.get_conffile())
             try:
-                self.add_aligned(options[1:])
+                self.add_aligned(canonical_corpname(options[1:]))
             except RuntimeError as e:
                 logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
                 raise EmptyParallelCorporaIntersection(_('No alignment available for the selected languages'))
