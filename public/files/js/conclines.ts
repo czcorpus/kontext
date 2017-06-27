@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../ts/declarations/immutable.d.ts" />
+
+import * as Immutable from 'vendor/immutable';
 
 
 const accessKey = 'concLines';
@@ -127,6 +130,10 @@ export class ConcLinesStorage {
             return true;
         });
         return ans;
+    }
+
+    asMap():Immutable.Map<string, [number, number]> {
+        return Immutable.Map<string, [number, number]>(this.data);
     }
 
     /**

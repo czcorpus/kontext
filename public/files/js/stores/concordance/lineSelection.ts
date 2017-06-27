@@ -530,12 +530,16 @@ export class LineSelectionStore extends SimplePageStore {
         return this.clStorage.containsLine(id);
     }
 
-    getLine(id:string):Array<number> {
+    getLine(id:string):[number, number] {
         return this.clStorage.getLine(id);
     }
 
-    getAll():any {
+    getAll():Array<[number, number]> {
         return this.clStorage.getAll();
+    }
+
+    asMap():Immutable.Map<string, [number, number]> {
+        return this.clStorage.asMap();
     }
 
     clear():void {
