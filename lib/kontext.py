@@ -181,13 +181,13 @@ class Kontext(Controller):
     # main menu items disabled for public users (this is applied automatically during
     # _post_dispatch())
     ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
-                                 MainMenu.CORPORA('my-subcorpora', 'new-subcorpus'),
+                                 MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
                                  MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
                                  MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.VIEW)
 
     CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
                            MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'),
-                           MainMenu.CORPORA('new-subcorpus'))
+                           MainMenu.CORPORA('create-subcorpus'))
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
                        'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers')
