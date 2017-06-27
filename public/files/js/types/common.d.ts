@@ -22,7 +22,6 @@
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../ts/declarations/jquery.d.ts" />
 
 /**
  *

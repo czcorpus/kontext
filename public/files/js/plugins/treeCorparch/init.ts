@@ -21,13 +21,11 @@
 /// <reference path="./view.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/react.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
-import * as $ from 'jquery';
 import {init as viewInit} from './view';
 import {QueryStore} from '../../stores/query/main';
 
@@ -204,8 +202,8 @@ export class CorplistPage implements CorplistPage {
     createForm(targetElm:HTMLElement, properties:any):void {}
 
     createList(targetElm:HTMLElement, properties:any):void {
-        let wrapper = window.document.createElement('div');
-        $('section.corplist').append(wrapper);
+        const wrapper = window.document.createElement('div');
+        document.querySelector('section.corplist').appendChild(wrapper);
 
         this.pluginApi.renderReactComponent(
             this.viewsLib.CorptreePageComponent,

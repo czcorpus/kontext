@@ -22,7 +22,6 @@
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
-/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../ts/declarations/react.d.ts" />
 /// <reference path="../../ts/declarations/flux.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
@@ -32,7 +31,6 @@
 /// <reference path="../../ts/declarations/modernizr.d.ts" />
 /// <reference path="../../ts/declarations/translations.d.ts" />
 
-import * as $ from 'jquery';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import {Dispatcher} from 'vendor/Dispatcher';
@@ -378,7 +376,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * JQuery-independent AJAX call.
      *
      * Notes:
      * - default contentType is 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -549,32 +546,18 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     bindLangSwitch():void {
         //
-        $('#switch-language-box a').each(function () {
-            let lang = $(this).data('lang');
-            let form = $('#language-switch-form');
-            $(this).bind('click', function () {
-                $(form).find('input.language').val(lang);
-                $(form).find('input.continue').val(window.location.href);
-                form.submit();
-            });
-        });
-    }
-
-    /**
-     *
-     */
-    timeoutMessages() {
-        let timeout;
-        let jqMessage = $('.message');
-
-        if (jqMessage.length > 0 && this.conf['messageAutoHideInterval']) {
-            timeout = window.setTimeout(function () {
-                jqMessage.hide(200);
-                window.clearTimeout(timeout);
-                if (jqMessage.data('next-url')) {
-                    window.location.href = jqMessage.data('next-url');
-                }
-            }, this.conf['messageAutoHideInterval']);
+        const srch = document.getElementById('switch-language-box');
+        if (srch) {
+            const linkSrch = srch.querySelectorAll('a');
+            for (let i = 0; i < linkSrch.length; i += 1) {
+                const lang = linkSrch[i].getAttribute('data-lang');
+                const form = document.getElementById('language-switch-form');
+                form.addEventListener('click', () => {
+                    (<HTMLInputElement>form.querySelector('input.language')).value = lang;
+                    (<HTMLInputElement>form.querySelector('input.continue')).value = window.location.href;
+                    (<HTMLFormElement>form).submit();
+                });
+            }
         }
     }
 
@@ -583,26 +566,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     initNotifications() {
         this.renderReactComponent(
-            this.layoutViews.Messages, $('#content .messages-mount').get(0));
+            this.layoutViews.Messages,
+            <HTMLElement>document.querySelector('#content .messages-mount')
+        );
 
         (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
             this.messageStore.addMessage(msg[0], msg[1], null);
-        });
-    }
-
-    /**
-     * @todo this is currently a Czech National Corpus specific solution
-     */
-    enhanceMessages() {
-        $('.message .sign-in').each(function () {
-            let text = $(this).text();
-            let findSignInUrl;
-
-            findSignInUrl = function () {
-                return $('#cnc-toolbar-user a:nth-child(1)').attr('href');
-            };
-
-            $(this).replaceWith('<a href="' + findSignInUrl() + '">' + text + '</a>');
         });
     }
 
@@ -930,8 +899,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.initMainMenu();
                 this.initOverviewArea();
                 this.bindLangSwitch();
-                this.timeoutMessages();
-                this.enhanceMessages();
                 this.initNotifications();
                 this.asyncTaskChecker.init();
 

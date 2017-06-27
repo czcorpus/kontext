@@ -22,11 +22,9 @@
  * This module contains a page model form the 'viewopts' page
  */
 
-/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 
-import $ = require('jquery');
 import {PageModel} from './document';
 import {init as corpnameLinkInit} from 'views/overview';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
@@ -46,18 +44,18 @@ class ViewOptsPage {
     }
 
     private blockUnsaved():void {
-        $(this.mainForm).find('input[type!="hidden"][type!="submit"]').on('change', () => {
+        this.mainForm.querySelector('input:not([type="hidden"]):not([type="submit"])').addEventListener('change', () => {
             this.changed = true;
         });
 
-        $(window).on('beforeunload', (event:JQueryEventObject) => {
+        window.addEventListener('beforeunload', (event:JQueryEventObject) => {
             if (this.changed) {
                 return this.layoutModel.translate('global__there_are_unsaved_changes');
             }
             return undefined;
         });
 
-        $(this.mainForm).find('input[type="submit"]').on('click', () => {
+        this.mainForm.querySelector('input[type="submit"]').addEventListener('click', () => {
             this.changed = false;
         });
     }

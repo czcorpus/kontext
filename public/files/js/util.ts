@@ -97,36 +97,6 @@ export function importColor(color:string, opacity:number):Kontext.RGBAColor {
 // ------------------------------------------------------------
 
 /**
- * Returns position (in number of characters) of cursor in a text input
- *
- * @param {Element|jQuery} inputElm
- * @return {number} position of cursor (starting from zero)
- */
-export function getCaretPosition(inputElm) {
-    var range,
-        jqInputElm;
-
-    if (inputElm instanceof jQuery) {
-        jqInputElm = inputElm;
-        inputElm = inputElm.get(0);
-
-    } else {
-        jqInputElm = $(inputElm);
-    }
-    if (window.getSelection) {
-        jqInputElm.focus();
-        return inputElm.selectionStart;
-
-    } else if (window.document['selection']) { // < IE9
-        jqInputElm.focus();
-        range = window.document['selection'].createRange();
-        range.moveStart('character', -jqInputElm.val().length);
-        return range.text.length;
-    }
-    return 0;
-}
-
-/**
  * Update a general key-value object with an incoming one.
  * The function does not modify its parameters and returns
  * a new object with shallow copies of original values where

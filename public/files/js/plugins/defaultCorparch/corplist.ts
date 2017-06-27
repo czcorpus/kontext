@@ -16,10 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
 
-import * as $ from 'jquery';
 import {SimplePageStore} from '../../stores/base';
 import * as util from '../../util';
 import * as common from './common';
