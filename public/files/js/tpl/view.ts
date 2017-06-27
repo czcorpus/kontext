@@ -28,6 +28,11 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../../ts/declarations/rsvp.d.ts" />
 
+import * as SoundManager from 'SoundManager';
+import * as d3 from 'vendor/d3';
+import * as d3Color from 'vendor/d3-color';
+import * as RSVP from 'vendor/rsvp';
+
 import {PageModel} from './document';
 import {MultiDict, parseUrlArgs, updateProps} from '../util';
 import * as conclines from '../conclines';
@@ -51,13 +56,9 @@ import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import * as SoundManager from 'SoundManager';
-import * as d3 from 'vendor/d3';
-import * as d3Color from 'vendor/d3-color';
 import syntaxViewer from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
-import * as RSVP from 'vendor/rsvp';
 import {UserInfo} from '../stores/userStores';
 import {ViewOptionsStore} from '../stores/viewOptions';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
@@ -332,8 +333,7 @@ export class ViewPage {
                         'ajax_get_line_groups_stats',
                         this.layoutModel.getConcArgs().items()
                     ),
-                    {},
-                    {contentType : 'application/x-www-form-urlencoded'}
+                    {}
 
                 ).then(
                     (data) => {
@@ -1095,7 +1095,7 @@ export class ViewPage {
                 const lineViewProps = this.initStores();
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
-                    this.showGroupsStats(d3.select('#selection-actions'), usePrevData);
+                    this.showGroupsStats(d3.select('#selection-actions .chart-area'), usePrevData);
                 };
                 this.initUndoFunction();
 

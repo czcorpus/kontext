@@ -486,6 +486,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         _storeChangeListener : function (store) {
             this.setState({
                 lines: lineStore.getLines(),
+                lineSelData: lineSelectionStore.asMap(),
                 lineSelMode: this._getLineSelMode(),
                 numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
                 audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
@@ -496,6 +497,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         getInitialState : function () {
             return {
                 lines: lineStore.getLines(),
+                lineSelData: lineSelectionStore.asMap(),
                 lineSelMode: this._getLineSelMode(),
                 numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
                 audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
@@ -523,7 +525,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         _getCatColors : function (dataItem) {
-            const tmp = lineSelectionStore.getLine(dataItem.languages.first().tokenNumber);
+            const tmp = this.state.lineSelData.get(dataItem.languages.first().tokenNumber);
             const cat = tmp ? tmp[1] : dataItem.lineGroup;
             if (cat >= 1) {
                 const bgColor = this.props.catColors[cat % this.props.catColors.length];
