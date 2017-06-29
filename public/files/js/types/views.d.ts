@@ -312,6 +312,17 @@ declare module "views/coll/forms" {
 }
 
 
+declare module "views/coll/result" {
+
+    export interface CollResultView {
+        CollResultView: React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
+            collFormStore:any);
+}
+
+
 declare module "views/freqs/forms" {
 
     export interface FreqFormViews {

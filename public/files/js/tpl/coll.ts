@@ -27,8 +27,10 @@ import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
+import {CollResultStore, CollResultData, CollResultHeading} from '../stores/coll/result';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
+import {init as collResultViewInit} from 'views/coll/result';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
@@ -39,12 +41,6 @@ import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview
 export class CollPage {
 
     private layoutModel:PageModel;
-
-    private checkIntervalId:number;
-
-    private numNoChange:number;
-
-    private lastStatus:number;
 
     private collFormStore:CollFormStore;
 
@@ -58,78 +54,10 @@ export class CollPage {
 
     private queryReplayStore:IndirectQueryReplayStore;
 
-    /**
-     * Specifies after how many checks should client
-     * give-up on watching the status.
-     */
-    static MAX_NUM_NO_CHANGE = 240;
-
-    static CHECK_INTERVAL_SEC = 2;
+    private collResultStore:CollResultStore;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
-    }
-
-    private stopWithError(customMsg?:string):void {
-        if (!customMsg) {
-            customMsg = '';
-        }
-        this.stopWatching();
-        this.layoutModel.showMessage(
-                'error',
-                this.layoutModel.translate('global__bg_calculation_failed'),
-                () => {window.history.back();});
-    }
-
-    private checkStatus():void {
-        const args = new MultiDict([
-            ['corpname', this.layoutModel.getConf<string>('corpname')],
-            ['usesubcorp', this.layoutModel.getConf<string>('subcorpname')],
-            ['attrname', this.layoutModel.getConf<string>('attrname')]
-        ]);
-        this.layoutModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
-            args.add('worker_tasks', taskId);
-        });
-        this.layoutModel.ajax(
-            'GET',
-            this.layoutModel.createActionUrl('wordlist_process'),
-            args,
-            {contentType : 'application/x-www-form-urlencoded'}
-
-        ).then(
-            (data:Kontext.AjaxResponse) => {
-                if (data.contains_errors) {
-                    this.stopWithError();
-
-                } else {
-                    document.getElementById('processbar').style.width = data['status'] + '%';
-                    if (data['status'] === 100) {
-                        this.stopWatching(); // just for sure
-                        this.layoutModel.reload();
-
-                    } else if (this.numNoChange >= CollPage.MAX_NUM_NO_CHANGE) {
-                        this.stopWithError('global__bg_calculation_waiting_failed');
-
-                    } else if (data['status'] === this.lastStatus) {
-                        this.numNoChange += 1;
-                    }
-                    this.lastStatus = data['status'];
-                }
-            },
-            (err) => {
-                this.stopWithError();
-            }
-        );
-    }
-
-    startWatching():void {
-        this.numNoChange = 0;
-        this.checkIntervalId = setInterval(this.checkStatus.bind(this),
-                CollPage.CHECK_INTERVAL_SEC * 1000);
-    }
-
-    stopWatching():void {
-        clearTimeout(this.checkIntervalId);
     }
 
     initAnalysisViews():void {
@@ -199,6 +127,8 @@ export class CollPage {
             this.ctFlatFreqStore
         );
 
+        // collocations ------------------------------------
+
         this.collFormStore = new CollFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -235,6 +165,34 @@ export class CollPage {
                 initialFreqFormVariant: 'ml'
             }
         );
+
+        // ---- coll result
+
+        this.collResultStore = new CollResultStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.collFormStore,
+            this.layoutModel.getConf<CollResultData>('CollResultData'),
+            this.layoutModel.getConf<CollResultHeading>('CollResultHeading'),
+            this.layoutModel.getConf<number>('CollPageSize'),
+            (s)=>this.setDownloadLink(s),
+            this.layoutModel.getConf<number>('CollSaveLinesLimit'),
+            !!this.layoutModel.getConf<number>('CollUnfinished')
+        );
+
+        const collResultViews = collResultViewInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.getComponentTools(),
+            this.layoutModel.layoutViews,
+            this.collResultStore
+        );
+
+        this.layoutModel.renderReactComponent(
+            collResultViews.CollResultView,
+            document.getElementById('coll-view-mount'),
+            {}
+        );
+
     }
 
     private initViewOptions():void {
@@ -292,6 +250,11 @@ export class CollPage {
         );
     }
 
+    setDownloadLink(url:string):void {
+        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
+        iframe.src = url;
+    }
+
     init():void {
         this.layoutModel.init().then(
             () => {
@@ -343,15 +306,14 @@ export class CollPage {
                 this.initAnalysisViews();
                 this.initQueryOpNavigation();
             }
-        )
+
+        ).catch((err) => {
+            console.error(err);
+        });
     }
 }
 
 
 export function init(conf:Kontext.Conf, runningInBg:boolean):void {
-    const model = new CollPage(new PageModel(conf));
-    model.init();
-    if (runningInBg) {
-        model.startWatching();
-    }
+    new CollPage(new PageModel(conf)).init();
 }

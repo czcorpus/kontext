@@ -1126,8 +1126,8 @@ class Actions(Querying):
         list collocations
         """
         self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
-        if self.args.csortfn == '' and self.args.cbgrfnscbgrfns:
-            self.args.csortfn = self.args.cbgrfnscbgrfns[0]
+        if self.args.csortfn == '':
+            self.args.csortfn = 'f'
 
         calc_args = coll_calc.CollCalcArgs()
         calc_args.corpus_encoding = self.corp.get_conf('ENCODING')
@@ -1151,44 +1151,19 @@ class Actions(Querying):
         calc_args.citemsperpage = self.args.citemsperpage
         calc_args.collpage = self.args.collpage
 
-        save_args = [
-            ('cmaxitems', self.COLLS_QUICK_SAVE_MAX_LINES),
-            ('cattr', self.args.cattr),
-            ('cfromw', self.args.cfromw),
-            ('ctow', self.args.ctow),
-            ('cminfreq', self.args.cminfreq),
-            ('cminbgr', self.args.cminbgr),
-            ('csortfn', self.args.csortfn),
-            ('collpage', self.args.collpage)
-        ]
-        save_args += [('cbgrfns', item) for item in self.args.cbgrfns]
-        self._add_save_menu_item('CSV', 'savecoll', save_args, save_format='csv')
-        self._add_save_menu_item('XLSX', 'savecoll', save_args, save_format='xlsx')
-        self._add_save_menu_item('XML', 'savecoll', save_args, save_format='xml')
-        self._add_save_menu_item('TXT', 'savecoll', save_args, save_format='text')
-        save_args = save_args[1:]
-        self._add_save_menu_item('%s...' % _('Custom'), 'savecoll_form', save_args)
+        self._add_flux_save_menu_item('CSV', save_format='csv')
+        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
+        self._add_flux_save_menu_item('XML', save_format='xml')
+        self._add_flux_save_menu_item('TXT', save_format='text')
+        self._add_flux_save_menu_item(_('Custom'))
 
         ans = coll_calc.calculate_colls(calc_args)
         ans['query_contains_within'] = self._query_contains_within()
         ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
+        ans['save_line_limit'] = 100000
         return ans
-
-    @exposed(access_level=1, legacy=True)
-    def savecoll_form(self, from_line=1, to_line='', saveformat='text'):
-        self.disabled_menu_items = (MainMenu.SAVE, )
-        self.args.citemsperpage = sys.maxint
-        self.args.collpage = 1  # we must reset this manually because user may have been on any page before
-
-        if to_line == '':
-            to_line = ''
-        return dict(
-            from_line=from_line,
-            to_line=to_line,
-            saveformat=saveformat,
-            save_max_lines=Actions.SAVECOLL_MAX_LINES)
 
     @exposed(access_level=1, vars=('concsize',), legacy=True)
     def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):

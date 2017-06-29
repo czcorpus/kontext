@@ -21,11 +21,11 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
 
-import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
-
+import {SimplePageStore} from '../base';
+import {PageModel} from '../../tpl/document';
+import {MultiDict} from '../../util';
 
 export type AttrValue = {n:string; label:string};
 
@@ -156,7 +156,7 @@ export class CollFormStore extends SimplePageStore {
         return !!/^([1-9]\d*)?$/.exec(s);
     }
 
-    private submit():void {
+    getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
         args.set('cattr', this.cattr);
         args.set('cfromw', this.cfromw);
@@ -165,7 +165,11 @@ export class CollFormStore extends SimplePageStore {
         args.set('cminbgr', this.cminbgr);
         args.replace('cbgrfns', this.cbgrfns.toArray());
         args.set('csortfn', this.csortfn);
-        window.location.href = this.pageModel.createActionUrl('collx', args.items());
+        return args;
+    }
+
+    private submit():void {
+        window.location.href = this.pageModel.createActionUrl('collx', this.getSubmitArgs().items());
     }
 
     getAttrList():Immutable.List<AttrValue> {
