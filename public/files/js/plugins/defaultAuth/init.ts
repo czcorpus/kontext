@@ -39,7 +39,7 @@ export class UserStatusStore extends SimplePageStore {
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
-                    console.log('oh yes!');
+                    window.location.href = this.pluginApi.createActionUrl('user/login');
                 break;
             }
         });

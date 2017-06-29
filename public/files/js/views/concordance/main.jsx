@@ -467,6 +467,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 </p>
                 <p>
                     <button type="button" className="default-button"
+                            ref={elm => elm ? elm.focus() : null}
                             onClick={handleLoginClick}>
                         {util.translate('global__login_label')}
                     </button>

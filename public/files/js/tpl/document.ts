@@ -51,7 +51,8 @@ import * as Immutable from 'vendor/immutable';
 import {AsyncTaskChecker} from '../stores/asyncTask';
 import {UserSettings} from '../userSettings';
 import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
-import * as authPlugin from 'plugins/auth/init';
+import authPlugin from 'plugins/auth/init';
+
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**
@@ -140,6 +141,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     private viewOptionsStore:ViewOptionsStore;
 
     private mainMenuStore:MainMenuStore;
+
+    private authPlugin:PluginInterfaces.IAuth;
 
     /**
      * A dictionary containing translations for current UI language (conf['uiLang']).
@@ -917,6 +920,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
         ).then(
             () => {
+                return authPlugin(this.pluginApi());
+            }
+
+        ).then(
+            (authPlugin) => {
+                // no direct communication is performed
+                // with authPlugin but to keep things
+                // clear we set the attribute
+                this.authPlugin = authPlugin;
                 footerBar(this.pluginApi());
             }
         );
