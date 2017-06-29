@@ -18,10 +18,8 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import * as $ from 'jquery';
 import * as RSVP from 'vendor/rsvp';
 import {extended as initPopupboxLib, Api as PopupBoxApi, TooltipBox} from '../../popupbox';
 import {createGenerator} from './ucnkTreeView';
@@ -45,16 +43,16 @@ class SyntaxTreeViewer {
         this.popupBoxApi = initPopupboxLib(this.pluginApi);
     }
 
-    private createAjaxLoader():JQuery {
-        const loader = $(window.document.createElement('div'));
-        loader
-            .addClass('ajax-loading-msg')
-            .css({
-                'bottom' : '50px',
-                'position' : 'fixed',
-                'left' : ($(window).width() / 2 - 50) + 'px'
-            })
-            .append('<span>' + this.pluginApi.translate('global__loading') + '</span>');
+    private createAjaxLoader():HTMLElement {
+        const loader = window.document.createElement('div');
+        loader.setAttribute('class', 'ajax-loading-msg');
+        loader.style.bottom = '50px';
+        loader.style.position = 'fixed';
+        loader.style.left = `${window.innerWidth / 2 - 50}px`;
+
+        const span = window.document.createElement('span');
+        span.textContent = this.pluginApi.translate('global__loading');
+        loader.appendChild(span);
         return loader;
     }
 
@@ -63,7 +61,7 @@ class SyntaxTreeViewer {
         const renderTree = (box:TooltipBox, finalize:()=>void, data:any):void => {
             const parentElm = box.getContentElement();
             const treexFrame = window.document.createElement('div');
-            $(treexFrame).css('width', '90%');
+            treexFrame.style.width = '90%';
 
             parentElm.appendChild(treexFrame);
             finalize();
@@ -84,7 +82,7 @@ class SyntaxTreeViewer {
                     paddingLeft: 20,
                     paddingRight: 20,
                     onOverflow: (width:number, height:number) => {
-                        $(overlayElm).css('position', 'absolute');
+                        overlayElm.style.position = 'absolute';
                         box
                             .setCss('maxHeight', 'none')
                             .setCss('transform', 'none')
@@ -98,7 +96,7 @@ class SyntaxTreeViewer {
 
         return (box:TooltipBox, finalize:()=>void) => {
             const ajaxAnim = this.createAjaxLoader();
-            $('body').append(ajaxAnim);
+            document.querySelector('body').appendChild(ajaxAnim);
 
             this.pluginApi.ajax(
                 'GET',
@@ -112,7 +110,7 @@ class SyntaxTreeViewer {
 
             ).then(
                 (data:any) => {
-                    $(ajaxAnim).remove();
+                    ajaxAnim.parentNode.removeChild(ajaxAnim);
                     if (!data['contains_errors']) {
                         renderTree(box, finalize, data);
 
@@ -123,7 +121,7 @@ class SyntaxTreeViewer {
                     }
                 },
                 (error) => {
-                    $(ajaxAnim).remove();
+                    ajaxAnim.parentNode.removeChild(ajaxAnim);
                     finalize();
                     box.close();
                     this.pluginApi.showMessage('error', error);
@@ -141,8 +139,8 @@ class SyntaxTreeViewer {
                 this.popupBox.close();
             }
             const overlay = window.document.createElement('div');
-            $(overlay).attr('id', 'modal-overlay');
-            $('body').append(overlay);
+            overlay.setAttribute('id', 'modal-overlay');
+            document.querySelector('body').appendChild(overlay);
 
             this.popupBox = this.popupBoxApi.openAt(
                 overlay,
@@ -155,7 +153,7 @@ class SyntaxTreeViewer {
                     timeout: null,
                     htmlClass: 'syntax-tree',
                     afterClose: () => {
-                        $(overlay).remove();
+                        overlay.parentNode.removeChild(overlay);
                         window.removeEventListener('resize', this.resizeHandler);
                     }
                 }
@@ -174,30 +172,31 @@ class SyntaxTreeViewer {
             window.addEventListener('resize', this.resizeHandler);
         }
 
-        $(button)
-            .attr('src', baseImg)
-            .attr('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'))
-            .on('mouseover', () => {
-                $(button).attr('src', overImg);
-            })
-            .on('mouseout', () => {
-                $(button).attr('src', baseImg);
-            })
-            .on('click', showSyntaxTree);
+        button.setAttribute('src', baseImg);
+        button.setAttribute('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'));
+        button.addEventListener('mouseover', () => {
+            button.setAttribute('src', overImg);
+        });
+        button.addEventListener('mouseout', () => {
+            button.setAttribute('src', baseImg);
+        });
+        button.addEventListener('click', showSyntaxTree);
         return button;
     }
 
     init():void {
-        let srch = $('#conclines').find('td.syntax-tree');
-        srch
-            .empty()
-            .each((i, elm:HTMLElement) => {
-                let trElm = $(elm).closest('tr');
-                if (trElm.attr('data-toknum')) {
-                    $(elm).append(this.createActionButton(trElm.attr('data-toknum'),
-                            parseInt(trElm.attr('data-kwiclen')))).show();
-                }
-            });
+        const srch = document.querySelectorAll('#conclines td.syntax-tree');
+        for (let i = 0; i < srch.length; i += 1) {
+            const item = srch[i];
+            while (item.childNodes.length > 0) {
+                item.removeChild(item.childNodes[0]);
+            }
+            const trElm = item.parentElement;
+            if (trElm.getAttribute('data-toknum')) {
+                item.appendChild(this.createActionButton(trElm.getAttribute('data-toknum'),
+                        parseInt(trElm.getAttribute('data-kwiclen'))));
+            }
+        }
     }
 }
 

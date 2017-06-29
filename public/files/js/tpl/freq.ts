@@ -18,12 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 
-import * as $ from 'jquery';
 import {PageModel} from './document';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';

@@ -17,9 +17,9 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/views.d.ts" />
 
 import {PageModel} from './document';
-import * as $ from 'jquery';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
@@ -102,7 +102,7 @@ export class CollPage {
                     this.stopWithError();
 
                 } else {
-                    $('#processbar').css('width', data['status'] + '%');
+                    document.getElementById('processbar').style.width = data['status'] + '%';
                     if (data['status'] === 100) {
                         this.stopWatching(); // just for sure
                         this.layoutModel.reload();
