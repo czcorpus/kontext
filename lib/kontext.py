@@ -39,7 +39,7 @@ import scheduled
 import templating
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
-from main_menu import MainMenu, MenuGenerator, ConcMenuItem
+from main_menu import MainMenu, MenuGenerator, ConcMenuItem, EventTriggeringItem
 from plugins.abstract.auth import AbstractInternalAuth
 from texttypes import get_tt
 
@@ -742,6 +742,16 @@ class Kontext(Controller):
                 raise ValueError('Unsupported argument type: %s' % type(params))
         item_id = '%s-%s' % (action.replace('/', '_'), save_format)
         self.save_menu.append(ConcMenuItem(MainMenu.SAVE(item_id), label, action).add_args(*params))
+
+    def _add_flux_save_menu_item(self, label, save_format=None):
+        if save_format is None:
+            event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
+            self.save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name).mark_indirect())
+
+        else:
+            event_name = 'MAIN_MENU_DIRECT_SAVE'
+            self.save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name
+                                                      ).add_args(('saveformat', save_format)))
 
     def _determine_curr_corpus(self, form, corp_list):
         """

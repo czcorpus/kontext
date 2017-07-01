@@ -65,3 +65,12 @@ export class SimplePageStore implements Kontext.PageStore {
         this.changeListeners = [];
     }
 }
+
+
+    export function validateNumber(s:string):boolean {
+        return !!/^-?([1-9]\d*|0)?$/.exec(s);
+    }
+
+    export function validateGzNumber(s:string):boolean {
+        return !!/^([1-9]\d*)?$/.exec(s);
+    }

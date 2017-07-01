@@ -864,15 +864,19 @@ section #result-mount .bonito-pagination {
         background-color: #ffffff;
         display: inline-block;
         width: 3em;
+        line-height: 1.4em;
         border: @input-border-style;
         border-radius: @input-border-radius;
-        padding-right: 0.4em;
-        padding-left: 0.4em;
+        padding: 0;
         text-align: left;
 
         input {
             width: 3em;
             border: none;
+            padding-right: 0.4em;
+            padding-left: 0.4em;
+            border-radius: 0;
+            box-sizing: border-box;
         }
 
         img.ajax-loader-bar {
@@ -1065,6 +1069,11 @@ a.form-extension-switch.collapse:hover {
 }
 
 // collx.tmpl
+
+#coll-view-mount {
+    margin: 0;
+}
+
 fieldset.float {
     background-color: transparent;
     border-width: 0;

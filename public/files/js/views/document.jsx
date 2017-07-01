@@ -139,7 +139,7 @@ export function init(dispatcher, mixins, storeProvider) {
                             ref={item => item ? item.focus() : null} />;
 
              } else {
-                 return <button className="close-link"
+                 return <button type="button" className="close-link"
                             onClick={this.closeClickHandler}
                             onKeyDown={this._handleKeyPress} />;
              }
