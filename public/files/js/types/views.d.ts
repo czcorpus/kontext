@@ -84,6 +84,15 @@ declare module "views/concordance/detail" {
             concDetailStore:Kontext.PageStore):RefDetail;
 }
 
+declare module "views/concordance/save" {
+
+    export interface ConcSaveViews {
+        ConcSaveForm: React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:Kontext.LayoutViews,
+            concSaveStore:Kontext.PageStore):ConcSaveViews;
+}
 
 declare module "views/subcorp/forms" {
 

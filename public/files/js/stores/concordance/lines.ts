@@ -33,6 +33,7 @@ import * as Immutable from 'vendor/immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
 import {AudioPlayer} from './media';
+import {ConcSaveStore} from './save';
 declare var Modernizr:Modernizr.ModernizrStatic;
 
 export interface ServerTextChunk {
@@ -279,12 +280,16 @@ export class ConcLineStore extends SimplePageStore {
 
     private useSafeFont:boolean;
 
+    private saveStore:ConcSaveStore;
+
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
-            lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
+            saveStore:ConcSaveStore, lineViewProps:ViewConfiguration,
+            initialData:Array<ServerLineData>) {
         super(dispatcher);
         let self = this;
         this.layoutModel = layoutModel;
+        this.saveStore = saveStore;
         this.viewMode = lineViewProps.ViewMode;
         this.showLineNumbers = lineViewProps.ShowLineNumbers;
         this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
@@ -621,6 +626,10 @@ export class ConcLineStore extends SimplePageStore {
 
     getUseSafeFont():boolean {
         return this.useSafeFont;
+    }
+
+    getSaveStore():ConcSaveStore {
+        return this.saveStore;
     }
 
 }

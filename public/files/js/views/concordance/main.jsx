@@ -23,24 +23,27 @@ import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
 import {init as concDetailViewsInit} from 'views/concordance/detail';
+import {init as concSaveViewsInit} from 'views/concordance/save';
 
 
 export function init(dispatcher, mixins, layoutViews, stores) {
 
     const lineSelectionStore = stores.lineSelectionStore;
     const lineStore = stores.lineViewStore;
+    const concSaveStore = lineStore.getSaveStore();
     const concDetailStore = stores.concDetailStore;
     const refsDetailStore = stores.refsDetailStore;
     const userInfoStore = stores.userInfoStore;
     const viewOptionsStore = stores.viewOptionsStore;
     const mainMenuStore = stores.mainMenuStore;
 
+    const util = mixins[0];
+
     const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
     const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
     const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore);
-
-    const util = mixins[0];
+    const concSaveViews = concSaveViewsInit(dispatcher, util, layoutViews, concSaveStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -235,7 +238,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
             }
         },
 
-        _lineStoreChangeHandler : function (store, action) {
+        _storeChangeHandler : function (store, action) {
             this.setState({
                 canCalculateAdHocIpm: lineStore.providesAdHocIpm(),
                 adHocIpm: lineStore.getAdHocIpm(),
@@ -245,11 +248,11 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         },
 
         componentDidMount : function () {
-            lineStore.addChangeListener(this._lineStoreChangeHandler);
+            lineStore.addChangeListener(this._storeChangeHandler);
         },
 
         componentWillUnmount : function () {
-            lineStore.removeChangeListener(this._lineStoreChangeHandler);
+            lineStore.removeChangeListener(this._storeChangeHandler);
         },
 
         _getIpm : function () {
@@ -488,7 +491,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
                 concSummary: lineStore.getConcSummary(),
-                showAnonymousUserWarn: this.props.anonymousUser
+                showAnonymousUserWarn: this.props.anonymousUser,
+                saveFormVisible: concSaveStore.getFormIsActive()
             };
         },
 
@@ -561,20 +565,26 @@ export function init(dispatcher, mixins, layoutViews, stores) {
             }));
         },
 
-        _lineStoreChangeHandler : function (store, action) {
+        _storeChangeHandler : function (store, action) {
             this.setState({
+                concDetailMetadata: this.state.concDetailMetadata,
+                refsDetailData:  this.state.refsDetailData,
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 concSummary: lineStore.getConcSummary(),
-                isUnfinishedCalculation: lineStore.isUnfinishedCalculation()
+                isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
+                showAnonymousUserWarn: this.state.showAnonymousUserWarn,
+                saveFormVisible: concSaveStore.getFormIsActive()
             });
         },
 
         componentDidMount : function () {
-            lineStore.addChangeListener(this._lineStoreChangeHandler);
+            lineStore.addChangeListener(this._storeChangeHandler);
+            concSaveStore.addChangeListener(this._storeChangeHandler);
         },
 
         componentWillUnmount : function () {
-            lineStore.removeChangeListener(this._lineStoreChangeHandler);
+            lineStore.removeChangeListener(this._storeChangeHandler);
+            concSaveStore.removeChangeListener(this._storeChangeHandler);
         },
 
         render : function () {
@@ -628,6 +638,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                             <paginationViews.Paginator {...this.props} />
                         </div>
                     </div>
+                    {this.state.saveFormVisible ? <concSaveViews.ConcSaveForm /> : null}
                 </div>
             );
         }

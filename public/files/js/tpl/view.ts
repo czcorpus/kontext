@@ -54,6 +54,7 @@ import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '.
 import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
+import {ConcSaveStore} from '../stores/concordance/save';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewer from 'plugins/syntaxViewer/init';
@@ -1047,6 +1048,12 @@ export class ViewPage {
         this.viewStores.lineViewStore = new ConcLineStore(
                 this.layoutModel,
                 this.layoutModel.dispatcher,
+                new ConcSaveStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    this.layoutModel.getConf<number>('ConcSize'),
+                    s=>this.setDownloadLink(s)
+                ),
                 lineViewProps,
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
@@ -1083,6 +1090,11 @@ export class ViewPage {
             this.viewStores.lineViewStore
         );
         return lineViewProps;
+    }
+
+    setDownloadLink(url:string):void {
+        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
+        iframe.src = url;
     }
 
     /**

@@ -209,22 +209,12 @@ class Actions(Querying):
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
 
-        params = [
-            ('pagesize', self.args.pagesize),
-            ('leftctx', self.args.leftctx),
-            ('rightctx', self.args.rightctx),
-            ('heading', self.args.heading),
-            ('numbering', self.args.numbering),
-            ('align_kwic', self.args.align_kwic),
-            ('from_line', 1),
-            ('to_line', conc.size())
-        ]
-        self._add_save_menu_item('CSV', 'saveconc', params, save_format='csv')
-        self._add_save_menu_item('XLSX', 'saveconc', params, save_format='xlsx')
-        self._add_save_menu_item('XML', 'saveconc', params, save_format='xml')
-        self._add_save_menu_item('TXT', 'saveconc', params, save_format='text')
-        self._add_save_menu_item('%s...' % _('Custom'), 'saveconc_form',
-                                 [('leftctx', self.args.leftctx), ('rightctx', self.args.rightctx)])
+        self._add_flux_save_menu_item('CSV', save_format='csv')
+        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
+        self._add_flux_save_menu_item('XML', save_format='xml')
+        self._add_flux_save_menu_item('TXT', save_format='text')
+        self._add_flux_save_menu_item(_('Custom'))
+
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
         out['widectx_globals'] = self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts()))
@@ -1560,20 +1550,9 @@ class Actions(Querying):
         self._headers['Content-Type'] = 'application/json'
         return corplib.attr_vals(self.args.corpname, avattr, avpat)
 
-    @exposed(access_level=1, legacy=True)
-    def saveconc_form(self, from_line=1, to_line=''):
-        self.disabled_menu_items = (MainMenu.SAVE, )
-        corpus_info = self.get_corpus_info(self.args.corpname)
-        conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user'),
-                                                     corpus_info.sample_size))
-        if not to_line:
-            to_line = conc.size()
-            # TODO Save menu should be active here
-        return {'from_line': from_line, 'to_line': to_line}
-
     @exposed(access_level=1, vars=('concsize',), legacy=True)
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0,
-                 leftctx='40', rightctx='40'):
+                 leftctx='-40', rightctx='40'):
 
         def merge_conc_line_parts(items):
             """
