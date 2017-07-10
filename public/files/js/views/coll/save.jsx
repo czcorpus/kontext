@@ -62,7 +62,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
             <tr className="separator">
                 <th>{utils.translate('coll__save_form_incl_heading')}:</th>
                 <td>
-                    <input type="checkbox" name="heading" value="1" />
+                    <input type="checkbox" name="heading" />
                 </td>
             </tr>
         );
