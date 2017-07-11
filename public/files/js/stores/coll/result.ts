@@ -346,8 +346,19 @@ export class CollResultStore extends SimplePageStore {
                     this.sortFn = payload.props['sortFn'];
                     this.processDataReload();
                 break;
+                case 'COLL_RESULT_APPLY_QUICK_FILTER':
+                    this.applyQuickFilter(payload.props['args']);
+                    // a new page is loaded here
+                break;
             }
         });
+    }
+
+    private applyQuickFilter(args:Immutable.List<[string, string]>) {
+        const submitArgs = this.layoutModel.getConcArgs();
+        submitArgs.remove('q2');
+        args.forEach(item => submitArgs.add(item[0], item[1]));
+        window.location.href = this.layoutModel.createActionUrl('quick_filter', submitArgs.items());
     }
 
     private processDataReload():void {

@@ -30,9 +30,25 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
      * @param {*} props
      */
     const TDPosNegFilterLink = (props) => {
+
+        const handleClick = (args) => {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'COLL_RESULT_APPLY_QUICK_FILTER',
+                    props: {
+                        args: args
+                    }
+                });
+            };
+        };
+
         return (
             <td>
-                <a href="" title="negative filter">n</a>
+                <a onClick={handleClick(props.pfilter)}
+                        title={utils.translate('global__pnfilter_label_p')}>p</a>
+                {'\u00a0/\u00a0'}
+                <a onClick={handleClick(props.nfilter)}
+                        title={utils.translate('global__pnfilter_label_n')}>n</a>
             </td>
         );
     };
@@ -47,7 +63,7 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
                 <td className="num">
                     {props.idx}.
                 </td>
-                <TDPosNegFilterLink />
+                <TDPosNegFilterLink pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
                 <td className="left monospace">
                     {props.data.str}
                 </td>
