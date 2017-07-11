@@ -287,7 +287,7 @@ export class CollResultStore extends SimplePageStore {
         this.isWaiting = false;
         this.pageSize = pageSize;
         this.hasNextPage = true; // we do not know in advance in case of collocations
-        this.sortFn = resultHeading.length > 0 ? resultHeading[0].s : 'f';
+        this.sortFn = resultHeading.length > 1 && resultHeading[1].s ? resultHeading[1].s : 'f'; // [0] = token column
         this.saveStore = new CollResultsSaveStore(dispatcher, layoutModel, this, saveLinkFn);
         this.saveLinesLimit = saveLinesLimit;
         this.calcStatus = unfinished ? 0 : 100;
@@ -346,8 +346,19 @@ export class CollResultStore extends SimplePageStore {
                     this.sortFn = payload.props['sortFn'];
                     this.processDataReload();
                 break;
+                case 'COLL_RESULT_APPLY_QUICK_FILTER':
+                    this.applyQuickFilter(payload.props['args']);
+                    // a new page is loaded here
+                break;
             }
         });
+    }
+
+    private applyQuickFilter(args:Immutable.List<[string, string]>) {
+        const submitArgs = this.layoutModel.getConcArgs();
+        submitArgs.remove('q2');
+        args.forEach(item => submitArgs.add(item[0], item[1]));
+        window.location.href = this.layoutModel.createActionUrl('quick_filter', submitArgs.items());
     }
 
     private processDataReload():void {
@@ -388,7 +399,6 @@ export class CollResultStore extends SimplePageStore {
 
                 } else {
                     this.heading = Immutable.List<{s:string;n:string}>(data.Head).slice(1).toList();
-                    this.sortFn = this.heading.get(0).s;
                     this.data = Immutable.List<CollResultRow>(data.Items);
                 }
                 return true;

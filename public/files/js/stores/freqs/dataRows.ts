@@ -238,7 +238,7 @@ export class FreqDataRowsStore extends SimplePageStore {
         }
     }
 
-    private applyQuickFilter(args:Immutable.List<[string, string]>) {
+    private applyQuickFilter(args:Array<[string, string]>) {
         const submitArgs = this.pageModel.getConcArgs();
         submitArgs.remove('q2');
         args.forEach(item => submitArgs.add(item[0], item[1]));

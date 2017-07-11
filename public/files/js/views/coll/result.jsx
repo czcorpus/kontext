@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 import {init as initSaveViews} from './save';
 
 export function init(dispatcher, utils, layoutViews, collResultStore) {
@@ -30,9 +30,25 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
      * @param {*} props
      */
     const TDPosNegFilterLink = (props) => {
+
+        const handleClick = (args) => {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'COLL_RESULT_APPLY_QUICK_FILTER',
+                    props: {
+                        args: args
+                    }
+                });
+            };
+        };
+
         return (
             <td>
-                <a href="" title="negative filter">n</a>
+                <a onClick={handleClick(props.pfilter)}
+                        title={utils.translate('global__pnfilter_label_p')}>p</a>
+                {'\u00a0/\u00a0'}
+                <a onClick={handleClick(props.nfilter)}
+                        title={utils.translate('global__pnfilter_label_n')}>n</a>
             </td>
         );
     };
@@ -47,7 +63,7 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
                 <td className="num">
                     {props.idx}.
                 </td>
-                <TDPosNegFilterLink />
+                <TDPosNegFilterLink pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
                 <td className="left monospace">
                     {props.data.str}
                 </td>
@@ -74,13 +90,25 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
             });
         };
 
-        return (
-            <th>
-                <a className={props.isActive ? 'active' : ''} onClick={handleClick}>
-                    {props.label}
-                </a>
-            </th>
-        );
+        const renderSortingIcon = () => {
+            if (props.isActive) {
+                return (
+                    <span title={utils.translate('global__sorted')}>
+                         {props.label}
+                        <img className="sort-flag" src={utils.createStaticUrl('img/sort_desc.svg')} />
+                    </span>
+                );
+
+            } else {
+                return (
+                    <a onClick={handleClick} title={utils.translate('global__click_to_sort')}>
+                         {props.label}
+                    </a>
+                );
+            }
+        };
+
+        return <th>{renderSortingIcon()}</th>;
     };
 
     /**
@@ -88,14 +116,13 @@ export function init(dispatcher, utils, layoutViews, collResultStore) {
      * @param {*} props
      */
     const TRDataHeading = (props) => {
-
         return (
             <tr>
                 <th />
                 <th>{utils.translate('coll__cattr_col_hd')}</th>
                 <th>{props.cattr}</th>
                 {props.data.map((item, i) => <THSortable key={`head${i}`}
-                        sortFn={item.s} label={item.n} isActive={s => props.sortFn == s} />)}
+                        sortFn={item.s} label={item.n} isActive={props.sortFn === item.s} />)}
             </tr>
         );
     };
