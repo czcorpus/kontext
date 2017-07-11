@@ -60,9 +60,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
-#if $qunit_test
-<link rel="stylesheet" type="text/css" href="$files_path/css/qunit.css" />
-#end if
 
 <script type="text/javascript" src="$files_path/js/vendor/modernizr.custom.min.js"></script>
 #if $debug
@@ -91,10 +88,6 @@ missingPlugins.push('plugins/$camelize(plugin_id)/init');
 #end if
 #end for
 
-#if $qunit_test
-paths['vendor/QUnit'] = './vendor/qunit';
-#end if
-
 #if $app_bar_js
 #if $app_bar_js.main
 paths['plugins/applicationBar/toolbar'] = '$app_bar_js.main';
@@ -109,15 +102,6 @@ requirejs.config({
     paths: paths,
     #if $deployment_id#urlArgs: 'v=$deployment_id',#end if#
     shim : {
-        #if $qunit_test
-        'vendor/QUnit' : {
-            exports : 'QUnit',
-            init: function() {
-                QUnit.config.autoload = false;
-                QUnit.config.autostart = false;
-            },
-        }
-        #end if
         #if $app_bar_js
         #for $item in $app_bar_js.deps
         #if 'shim' in $item
@@ -197,10 +181,6 @@ define('conf', [], function () {
 </script>
 </head>
 <body>
-#if $qunit_test
-<div id="qunit"></div>
-<div id="qunit-fixture">
-#end if
 
 #filter WebSafe
 <div id="common-bar">
@@ -309,10 +289,6 @@ define('conf', [], function () {
     #end if
 </footer>
 #end filter
-
-#if $qunit_test
-</div>
-#end if
 
 <script type="text/javascript">
 #block bodyonload
