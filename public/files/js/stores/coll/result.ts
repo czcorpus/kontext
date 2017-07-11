@@ -287,7 +287,7 @@ export class CollResultStore extends SimplePageStore {
         this.isWaiting = false;
         this.pageSize = pageSize;
         this.hasNextPage = true; // we do not know in advance in case of collocations
-        this.sortFn = resultHeading.length > 0 ? resultHeading[0].s : 'f';
+        this.sortFn = resultHeading.length > 1 && resultHeading[1].s ? resultHeading[1].s : 'f'; // [0] = token column
         this.saveStore = new CollResultsSaveStore(dispatcher, layoutModel, this, saveLinkFn);
         this.saveLinesLimit = saveLinesLimit;
         this.calcStatus = unfinished ? 0 : 100;
@@ -388,7 +388,6 @@ export class CollResultStore extends SimplePageStore {
 
                 } else {
                     this.heading = Immutable.List<{s:string;n:string}>(data.Head).slice(1).toList();
-                    this.sortFn = this.heading.get(0).s;
                     this.data = Immutable.List<CollResultRow>(data.Items);
                 }
                 return true;
