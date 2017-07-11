@@ -1123,14 +1123,8 @@ class Kontext(Controller):
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
 
         result['error_report_url'] = self._get_error_reporting_url()
-
-        result['qunit_test'] = self.args.qunit
-        if self.args.qunit and settings.is_debug_mode():
-            result['client_model_dir'] = 'tests'
-            result['page_model'] = self.args.qunit
-        else:
-            result['client_model_dir'] = 'tpl'
-            result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
+        result['client_model_dir'] = 'tpl'
+        result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
 
         if settings.contains('global', 'ui_state_ttl'):
             result['ui_state_ttl'] = settings.get('global', 'ui_state_ttl')

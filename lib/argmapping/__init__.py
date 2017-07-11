@@ -259,8 +259,6 @@ class GlobalArgs(object):
 
     subcnorm = Parameter('tokens')
 
-    qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
-
     # Collocations
 
     cattr = Parameter('word')
