@@ -38,6 +38,7 @@ import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview
 import {init as resultViewInit, FreqsResultViews} from 'views/freqs/main';
 import {init as ctResultViewInit, CTFreqsResultViews} from 'views/freqs/ctResult';
 import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
+import {FreqResultsSaveStore} from '../stores/freqs/save';
 
 /**
  *
@@ -227,6 +228,11 @@ class FreqPage {
         );
     }
 
+    private setDownloadLink(url:string):void {
+        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
+        iframe.src = url;
+    }
+
     private initFreqResult():void {
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ml':
@@ -235,7 +241,8 @@ class FreqPage {
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
-                    this.layoutModel.getConf<FreqFormInputs>('FreqFormProps')
+                    this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
+                    (s)=>this.setDownloadLink(s)
                 );
                 freqResultStore.importData(
                     this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
@@ -245,7 +252,8 @@ class FreqPage {
                 const freqResultView = resultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentTools(),
-                    freqResultStore
+                    freqResultStore,
+                    this.layoutModel.layoutViews
                 );
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,

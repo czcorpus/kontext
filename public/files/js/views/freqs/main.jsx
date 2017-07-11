@@ -20,12 +20,14 @@
 
 /// <reference path="../../../ts/declarations/react.d.ts" />
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 import {init as dataRowsInit} from './dataRows';
+import {init as initSaveViews} from './save';
 
-export function init(dispatcher, mixins, freqDataRowsStore) {
+export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
 
     const drViews = dataRowsInit(dispatcher, mixins, freqDataRowsStore);
+    const saveViews = initSaveViews(dispatcher, mixins, layoutViews, freqDataRowsStore.getSaveStore());
 
     // ----------------------- <ResultSizeInfo /> -------------------------
 
@@ -175,6 +177,7 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
                 sortColumn: freqDataRowsStore.getSortColumn(),
                 hasNextPage: freqDataRowsStore.hasNextPage(),
                 hasPrevPage: freqDataRowsStore.hasPrevPage(),
+                saveFormIsActive: freqDataRowsStore.getSaveStore().getFormIsActive(),
                 isLoading: false
             };
         }
@@ -185,16 +188,25 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
 
         componentDidMount() {
             freqDataRowsStore.addChangeListener(this._handleStoreChange);
+            freqDataRowsStore.getSaveStore().addChangeListener(this._handleStoreChange);
         }
 
         componentWillUnmount() {
             freqDataRowsStore.removeChangeListener(this._handleStoreChange);
+            freqDataRowsStore.getSaveStore().removeChangeListener(this._handleStoreChange);
         }
 
         _setLoadingFlag() {
             const v = this._fetchState();
             v.isLoading = true;
             this.setState(v);
+        }
+
+        _handleSaveFormClose() {
+            dispatcher.dispatch({
+                actionType: 'FREQ_RESULT_CLOSE_SAVE_FORM',
+                props: {}
+            });
         }
 
         render() {
@@ -220,6 +232,10 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
                             );
                         })}
                     </div>
+                    {this.state.saveFormIsActive ?
+                        <saveViews.SaveFreqForm onClose={this._handleSaveFormClose} /> :
+                        null
+                    }
                 </div>
             );
         }

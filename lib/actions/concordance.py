@@ -941,52 +941,18 @@ class Actions(Querying):
                      'pfilter': pfilter, 'nfilter': corr_nfilter,
                      'norel': 1, 'fbar': 0})
 
-            save_params = [
-                ('from_line', 1),
-                ('to_line', self.FREQ_QUICK_SAVE_MAX_LINES),
-                ('ml', self.args.ml),
-                ('flimit', self.args.flimit),
-                # cannot use self.args.fcrit as this action (freqs)
-                # is also called directly by other actions
-                ('fcrit', fcrit),
-                ('freq_sort', self.args.freq_sort),
-                ('fpage', self.args.fpage),
-                ('ftt_include_empty', self.args.ftt_include_empty)
-            ]
-            self._add_save_menu_item('CSV', 'savefreq', save_params, save_format='csv')
-            self._add_save_menu_item('XLSX', 'savefreq', save_params, save_format='xlsx')
-            self._add_save_menu_item('XML', 'savefreq', save_params, save_format='xml')
-            self._add_save_menu_item('TXT', 'savefreq', save_params, save_format='text')
-            save_params = save_params[:1] + save_params[2:]
-            self._add_save_menu_item('%s...' % _('Custom'), 'savefreq_form', save_params)
+            self._add_flux_save_menu_item('CSV', save_format='csv')
+            self._add_flux_save_menu_item('XLSX', save_format='xlsx')
+            self._add_flux_save_menu_item('XML', save_format='xml')
+            self._add_flux_save_menu_item('TXT', save_format='text')
+            self._add_flux_save_menu_item(_('Custom'))
+
         result['query_contains_within'] = self._query_contains_within()
         result['freq_type'] = 'ml' if ml > 0 else 'tt'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         return result
-
-    @exposed(access_level=1, vars=('concsize',), legacy=True)
-    def savefreq_form(self, fcrit=(), flimit=0, freq_sort='', ml=0, saveformat='text', from_line=1,
-                      to_line=''):
-        """
-        Displays a form to set-up the 'save frequencies' operation
-        """
-        self.disabled_menu_items = (MainMenu.SAVE, )
-        result = self.freqs(fcrit, flimit, freq_sort, ml)
-        is_multiblock = len(result['Blocks']) > 1
-        if not to_line:
-            if 'Total' in result['Blocks'][0]:
-                to_line = result['Blocks'][0]['Total']
-            else:
-                to_line = len(result['Blocks'][0]['Items'])
-
-        return {
-            'FCrit': [{'fcrit': cr} for cr in fcrit],
-            'from_line': from_line if not is_multiblock else '1',
-            'to_line': to_line if not is_multiblock else 'auto',
-            'is_multiblock': is_multiblock
-        }
 
     @exposed(access_level=1, legacy=True)
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,

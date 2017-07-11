@@ -21,7 +21,7 @@
 /// <reference path="../types/common.d.ts" />
 
 /**
- *
+ * A base class for KonText's Flux stores.
  */
 export class SimplePageStore implements Kontext.PageStore {
 
@@ -31,12 +31,30 @@ export class SimplePageStore implements Kontext.PageStore {
 
     public static CHANGE_EVENT:string = 'change';
 
-    public static ERROR_EVENT:string = 'error';
+    private throttlingTimeouts:{[id:string]:number};
 
+    private static THROTTLING_TIMEOUT_MS = 300;
+
+    constructor(dispatcher:Kontext.FluxDispatcher) {
+        this.dispatcher = dispatcher;
+        this.changeListeners = [];
+        this.throttlingTimeouts = {};
+    }
+
+    /**
+     * Function for React components to register store change listening.
+     * (typically on 'componentDidMount()')
+     * @param fn
+     */
     addChangeListener(fn:Kontext.StoreListener):void {
         this.changeListeners.push(fn);
     }
 
+    /**
+     * Function for React components to unregister from store change listening.
+     * (typically on 'componentWillUnmount()')
+     * @param fn
+     */
     removeChangeListener(fn:Kontext.StoreListener):void {
         for (var i = 0; i < this.changeListeners.length; i += 1) {
             if (this.changeListeners[i] === fn) {
@@ -46,6 +64,18 @@ export class SimplePageStore implements Kontext.PageStore {
         }
     }
 
+    /**
+     * This method is used to notify all the registered listeners about
+     * change in stores internal state.
+     *
+     * Please note that using eventType and error is deprecated! I.e. stores
+     * should only notify about change in their state and it is up to
+     * a concrete React component how it will determine (via fetching store's
+     * state using its getters) how to react.
+     *
+     * @param eventType
+     * @param error
+     */
     notifyChangeListeners(eventType:string=SimplePageStore.CHANGE_EVENT, error:Error=null):void {
         const handlers = this.changeListeners.slice(0);
         for (let i = 0; i < handlers.length; i += 1) {
@@ -60,17 +90,37 @@ export class SimplePageStore implements Kontext.PageStore {
         }
     }
 
-    constructor(dispatcher:Kontext.FluxDispatcher) {
-        this.dispatcher = dispatcher;
-        this.changeListeners = [];
+    /**
+     * This method is intended to be used for delayed
+     * value validation (i.e. we give user a time to write
+     * a correct value and then run the validation).
+     * @param id
+     * @param fn
+     */
+    protected throttleAction(id:string, fn:()=>void):void {
+        if (this.throttlingTimeouts.hasOwnProperty(id)) {
+            window.clearTimeout(this.throttlingTimeouts[id]);
+        }
+        this.throttlingTimeouts[id] = window.setTimeout(() => {
+            fn();
+            delete this.throttlingTimeouts[id];
+        }, SimplePageStore.THROTTLING_TIMEOUT_MS);
     }
 }
 
 
-    export function validateNumber(s:string):boolean {
-        return !!/^-?([1-9]\d*|0)?$/.exec(s);
-    }
+/**
+ * Test whether a string 's' represents an integer
+ * number.
+ */
+export function validateNumber(s:string):boolean {
+    return !!/^-?([1-9]\d*|0)?$/.exec(s);
+}
 
-    export function validateGzNumber(s:string):boolean {
-        return !!/^([1-9]\d*)?$/.exec(s);
-    }
+/**
+ * Test whether a string 's' represents an integer
+ * number greater than zero.
+ */
+export function validateGzNumber(s:string):boolean {
+    return !!/^([1-9]\d*)?$/.exec(s);
+}

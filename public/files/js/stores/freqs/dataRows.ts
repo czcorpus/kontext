@@ -28,6 +28,8 @@ import {PageModel} from '../../tpl/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {FreqFormInputs} from './freqForms';
+import {FreqResultsSaveStore} from './save';
+import {MultiDict} from '../../util';
 
 
 export interface ResultItem {
@@ -84,9 +86,10 @@ export class FreqDataRowsStore extends SimplePageStore {
 
     private alignType:Array<string>;
 
+    private saveStore:FreqResultsSaveStore;
 
-
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>, formProps:FreqFormInputs) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
+            formProps:FreqFormInputs, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<ResultBlock>();
@@ -100,7 +103,12 @@ export class FreqDataRowsStore extends SimplePageStore {
         this.mlxicase = formProps.mlxicase;
         this.mlxctx = formProps.mlxctx;
         this.alignType = formProps.alignType;
-
+        this.saveStore = new FreqResultsSaveStore(
+            dispatcher,
+            pageModel,
+            ()=>this.getSubmitArgs(),
+            saveLinkFn
+        );
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -182,7 +190,7 @@ export class FreqDataRowsStore extends SimplePageStore {
         return false;
     }
 
-    loadPage():RSVP.Promise<FreqResultResponse.FreqResultResponse> {
+    getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
         args.remove('fcrit');
         this.freqCrit.forEach((item) => {
@@ -193,11 +201,14 @@ export class FreqDataRowsStore extends SimplePageStore {
         args.set('fpage', this.currentPage);
         args.set('ftt_include_empty', this.ftt_include_empty);
         args.set('format', 'json');
+        return args;
+    }
 
+    loadPage():RSVP.Promise<FreqResultResponse.FreqResultResponse> {
         return this.pageModel.ajax<FreqResultResponse.FreqResultResponse>(
             'GET',
             this.pageModel.createActionUrl('freqs'),
-            args
+            this.getSubmitArgs
 
         ).then(
             (data) => {
@@ -274,6 +285,10 @@ export class FreqDataRowsStore extends SimplePageStore {
 
     hasPrevPage():boolean {
         return Number(this.currentPage) > 1 && this.data.get(0).TotalPages > 1;
+    }
+
+    getSaveStore():FreqResultsSaveStore {
+        return this.saveStore;
     }
 
 }

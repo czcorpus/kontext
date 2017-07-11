@@ -20,7 +20,7 @@
 
 import React from 'vendor/react';
 
-export function init(dispatcher, utils, layoutViews, collSaveStore) {
+export function init(dispatcher, utils, layoutViews, freqSaveStore) {
 
     /**
      *
@@ -30,7 +30,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_FORMAT',
+                actionType: 'FREQ_SAVE_FORM_SET_FORMAT',
                 props: {
                     value: evt.target.value
                 }
@@ -60,7 +60,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_INCLUDE_HEADING',
+                actionType: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING',
                 props: {
                     value: !props.value
                 }
@@ -69,9 +69,9 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         return (
             <tr className="separator">
-                <th>{utils.translate('coll__save_form_incl_heading')}:</th>
+                <th><label htmlFor="tr-include-heading-checkbox">{utils.translate('coll__save_form_incl_heading')}</label>:</th>
                 <td>
-                    <input type="checkbox" checked={props.value} onChange={handleChange} />
+                    <input id="tr-include-heading-checkbox" type="checkbox" checked={props.value} onChange={handleChange} />
                 </td>
             </tr>
         );
@@ -85,7 +85,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         const handleChange = () => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
+                actionType: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
                 props: {
                     value: !props.value
                 }
@@ -94,9 +94,9 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         return (
             <tr className="separator">
-                <th>{utils.translate('coll__save_form_incl_col_hd')}:</th>
+                <th><label htmlFor="tr-col-headers-checkbox">{utils.translate('coll__save_form_incl_col_hd')}</label>:</th>
                 <td>
-                    <input type="checkbox" checked={props.value} onChange={handleChange} />
+                    <input id="tr-col-headers-checkbox" type="checkbox" checked={props.value} onChange={handleChange} />
                 </td>
             </tr>
         );
@@ -110,7 +110,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_FROM_LINE',
+                actionType: 'FREQ_SAVE_FORM_SET_FROM_LINE',
                 props: {
                     value: evt.target.value
                 }
@@ -119,7 +119,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
         const handleToInput = (evt) => {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SET_TO_LINE',
+                actionType: 'FREQ_SAVE_FORM_SET_TO_LINE',
                 props: {
                     value: evt.target.value
                 }
@@ -142,17 +142,6 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
 
                     <div className="hint">
                         ({utils.translate('coll__save_form_leave_to_load_to_end')}
-                        <a className="context-help" onClick={()=>props.onLineLimitHintShow(true)}>
-                            <img className="save-limit-help context-help"
-                                src={utils.createStaticUrl('img/question-mark.svg')} />
-                        </a>)
-                        {props.lineLimitHintVisible ?
-                            <layoutViews.PopupBox onCloseClick={()=>props.onLineLimitHintShow(false)}>
-                                {utils.translate('global__coll_save_max_lines_warning_{max_coll_save_size}',
-                                    {max_coll_save_size: utils.formatNumber(props.saveLinesLimit)})}
-                            </layoutViews.PopupBox> :
-                            null
-                        }
                     </div>
                 </td>
             </tr>
@@ -162,31 +151,28 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
     /**
      *
      */
-    class SaveCollForm extends React.Component {
+    class SaveFreqForm extends React.Component {
 
         constructor(props) {
             super(props);
             this.state = this._fetchStoreState();
             this._handleStoreChange = this._handleStoreChange.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this._switchLineLimitHint = this._switchLineLimitHint.bind(this);
         }
 
         _fetchStoreState() {
             return {
-                saveformat: collSaveStore.getSaveformat(),
-                includeColHeaders: collSaveStore.getIncludeColHeaders(),
-                includeHeading: collSaveStore.getIncludeHeading(),
-                fromLine: collSaveStore.getFromLine(),
-                toLine: collSaveStore.getToLine(),
-                saveLinesLimit: collSaveStore.getMaxSaveLines(),
-                lineLimitHintVisible: false
+                saveformat: freqSaveStore.getSaveformat(),
+                includeColHeaders: freqSaveStore.getIncludeColHeaders(),
+                includeHeading: freqSaveStore.getIncludeHeading(),
+                fromLine: freqSaveStore.getFromLine(),
+                toLine: freqSaveStore.getToLine()
             };
         }
 
         _handleSubmitClick() {
             dispatcher.dispatch({
-                actionType: 'COLL_SAVE_FORM_SUBMIT',
+                actionType: 'FREQ_SAVE_FORM_SUBMIT',
                 props: {}
             });
         }
@@ -196,11 +182,11 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
         }
 
         componentDidMount() {
-            collSaveStore.addChangeListener(this._handleStoreChange);
+            freqSaveStore.addChangeListener(this._handleStoreChange);
         }
 
         componentWillUnmount() {
-            collSaveStore.removeChangeListener(this._handleStoreChange);
+            freqSaveStore.removeChangeListener(this._handleStoreChange);
         }
 
         _renderFormatDependentOptions() {
@@ -211,29 +197,20 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
                 case 'xlsx':
                     return <TRColHeadersCheckbox value={this.state.includeColHeaders} />
                 default:
-                return <span />;
+                return <tr><td colSpan="2" /></tr>;
             }
-        }
-
-        _switchLineLimitHint(v) {
-            const state = this._fetchStoreState();
-            state.lineLimitHintVisible = v;
-            this.setState(state);
         }
 
         render() {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.onClose}>
-                    <layoutViews.CloseableFrame onCloseClick={this.props.onClose} label={utils.translate('coll__save_form_label')}>
-                        <form className="SaveCollForm">
+                    <layoutViews.CloseableFrame onCloseClick={this.props.onClose} label={utils.translate('freq__save_form_label')}>
+                        <form className="SaveFreqForm">
                             <table className="form">
                                 <tbody>
                                     <TRSaveFormatSelect value={this.state.saveformat} />
                                     {this._renderFormatDependentOptions()}
-                                    <TRSelLineRangeInputs fromValue={this.state.fromLine} toValue={this.state.toLine}
-                                            saveLinesLimit={this.state.saveLinesLimit}
-                                            lineLimitHintVisible={this.state.lineLimitHintVisible}
-                                            onLineLimitHintShow={this._switchLineLimitHint} />
+                                    <TRSelLineRangeInputs fromValue={this.state.fromLine} toValue={this.state.toLine} />
                                 </tbody>
                             </table>
                             <button type="button" className="default-button"
@@ -248,7 +225,7 @@ export function init(dispatcher, utils, layoutViews, collSaveStore) {
     }
 
     return {
-        SaveCollForm: SaveCollForm
+        SaveFreqForm: SaveFreqForm
     };
 
 }
