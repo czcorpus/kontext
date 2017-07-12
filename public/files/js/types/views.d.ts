@@ -359,7 +359,18 @@ declare module "views/freqs/main" {
         FreqResultView: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, freqDataRowsStore:any):FreqsResultViews;
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, freqDataRowsStore:any,
+            layoutViews:any):FreqsResultViews;
+}
+
+declare module "views/freqs/save" {
+
+    export interface SaveFreqFormViews {
+        SaveFreqForm: React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
+            collSaveStore:any):SaveFreqFormViews;
 }
 
 

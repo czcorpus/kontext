@@ -49,11 +49,11 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
             return (
                 <td>
                     {props.pfilter.size > 0 ? <a onClick={handlePosClick}
-                                title={utils.translate('global__pnfilter_label_p')}>p</a> :
+                                title={mixins.translate('global__pnfilter_label_p')}>p</a> :
                             <span title={mixins.translate('freq__neg_filter_disabled')}>p</span>}
                     {'\u00a0/\u00a0'}
                     {props.nfilter.size > 0 ? <a onClick={handleNegClick}
-                                title={utils.translate('global__pnfilter_label_n')}>n</a> :
+                                title={mixins.translate('global__pnfilter_label_n')}>n</a> :
                             <span title={mixins.translate('freq__neg_filter_disabled')}>n</span>}
                 </td>
             );

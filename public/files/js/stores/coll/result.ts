@@ -23,7 +23,7 @@
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore, validateGzNumber} from '../../stores/base';
+import {SimplePageStore, validateGzNumber, validateNumber} from '../../stores/base';
 import {PageModel} from '../../tpl/document';
 import {CollFormStore} from '../../stores/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
@@ -59,9 +59,9 @@ export class CollResultsSaveStore extends SimplePageStore {
 
     private saveformat:string;
 
-    private colheaders:string;
+    private includeColHeaders:boolean;
 
-    private heading:string;
+    private includeHeading:boolean;
 
     private fromLine:string;
 
@@ -69,10 +69,14 @@ export class CollResultsSaveStore extends SimplePageStore {
 
     private saveLinkFn:(string)=>void;
 
+    private collArgsProviderFn:()=>MultiDict;
+
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
+    private static GLOBAL_SAVE_LINE_LIMIT = 100000;
+
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
-            mainStore:CollResultStore, saveLinkFn:(string)=>void) {
+            mainStore:CollResultStore, collArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.mainStore = mainStore;
@@ -80,6 +84,9 @@ export class CollResultsSaveStore extends SimplePageStore {
         this.saveformat = 'csv';
         this.fromLine = '1';
         this.toLine = '';
+        this.includeColHeaders = false;
+        this.includeHeading = false;
+        this.collArgsProviderFn = collArgsProviderFn;
         this.saveLinkFn = saveLinkFn;
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -107,24 +114,76 @@ export class CollResultsSaveStore extends SimplePageStore {
                 case 'COLL_SAVE_FORM_SET_FROM_LINE':
                     this.fromLine = payload.props['value'];
                     this.notifyChangeListeners();
+                    this.throttleAction('validate-from-line', () => {
+                        if (!validateGzNumber(this.toLine)) {
+                            this.toLine = '';
+                        }
+                        if (!this.validateFromVal()) {
+                            this.layoutModel.showMessage('error',
+                                this.layoutModel.translate('coll__save_form_from_val_err_msg'));
+                        }
+                        this.notifyChangeListeners();
+                    });
                 break;
                 case 'COLL_SAVE_FORM_SET_TO_LINE':
                     this.toLine = payload.props['value'];
                     this.notifyChangeListeners();
+                    this.throttleAction('validate-to-line', () => {
+                        if (!validateGzNumber(this.fromLine)) {
+                            this.fromLine = '1';
+                        }
+                        if (!this.validateToVal()) {
+                            this.layoutModel.showMessage('error',
+                                this.layoutModel.translate('coll__save_form_to_val_err_msg_{value1}{value2}',
+                                    {
+                                        value1: this.layoutModel.formatNumber(parseInt(this.fromLine || '1', 10) + 1),
+                                        value2: this.layoutModel.formatNumber(CollResultsSaveStore.GLOBAL_SAVE_LINE_LIMIT)
+                                    }
+                                )
+                            );
+                        }
+                        this.notifyChangeListeners();
+                    });
+                break;
+                case 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
+                    this.includeColHeaders = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'COLL_SAVE_FORM_SET_INCLUDE_HEADING':
+                    this.includeHeading = payload.props['value'];
+                    this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SUBMIT':
-                    this.submit();
+                    if (this.validateFromVal() && this.validateToVal()) {
+                        this.submit();
+
+                    } else {
+                        this.layoutModel.showMessage('error',
+                            this.layoutModel.translate('global__the_form_contains_errors_msg'));
+                    }
                     this.notifyChangeListeners();
                 break;
             }
         });
     }
 
+    private validateFromVal() {
+        return validateNumber(this.fromLine) &&
+                (this.toLine === '' || parseInt(this.fromLine, 10) < parseInt(this.toLine, 10)) &&
+                parseInt(this.fromLine, 10) > 0;
+    }
+
+    private validateToVal() {
+        return validateNumber(this.toLine) && parseInt(this.toLine, 10) <= CollResultsSaveStore.GLOBAL_SAVE_LINE_LIMIT
+                && parseInt(this.toLine, 10) > parseInt(this.fromLine, 10);
+    }
+
     private submit():void {
-        const args = this.layoutModel.getConcArgs();
+        const args = this.collArgsProviderFn();
+        args.remove('format'); // cannot risk format=json and invalid http resp. headers
         args.set('saveformat', this.saveformat);
-        args.set('colheaders', this.colheaders);
-        args.set('heading', this.heading);
+        args.set('colheaders', this.includeColHeaders ? '1' : '0');
+        args.set('heading', this.includeHeading ? '1' : '0');
         args.set('from_line', this.fromLine);
         args.set('to_line', this.toLine);
         this.saveLinkFn(this.layoutModel.createActionUrl('savecoll', args.items()));
@@ -144,12 +203,12 @@ export class CollResultsSaveStore extends SimplePageStore {
         return this.saveformat;
     }
 
-    getColheaders():string {
-        return this.colheaders;
+    getIncludeColHeaders():boolean {
+        return this.includeColHeaders;
     }
 
-    getHeading():string {
-        return this.heading;
+    getIncludeHeading():boolean {
+        return this.includeHeading;
     }
 
     getFromLine():string {
@@ -158,6 +217,10 @@ export class CollResultsSaveStore extends SimplePageStore {
 
     getToLine():string {
         return this.toLine;
+    }
+
+    getMaxSaveLines():number {
+        return CollResultsSaveStore.GLOBAL_SAVE_LINE_LIMIT;
     }
 }
 
@@ -288,7 +351,13 @@ export class CollResultStore extends SimplePageStore {
         this.pageSize = pageSize;
         this.hasNextPage = true; // we do not know in advance in case of collocations
         this.sortFn = resultHeading.length > 1 && resultHeading[1].s ? resultHeading[1].s : 'f'; // [0] = token column
-        this.saveStore = new CollResultsSaveStore(dispatcher, layoutModel, this, saveLinkFn);
+        this.saveStore = new CollResultsSaveStore(
+            dispatcher,
+            layoutModel,
+            this,
+            ()=>this.getSubmitArgs(),
+            saveLinkFn
+        );
         this.saveLinesLimit = saveLinesLimit;
         this.calcStatus = unfinished ? 0 : 100;
         this.calcWatchdog = new CalcWatchdog(layoutModel, this, (status, err) => {
@@ -375,11 +444,16 @@ export class CollResultStore extends SimplePageStore {
         );
     }
 
-    private loadData():RSVP.Promise<boolean> {
+    private getSubmitArgs():MultiDict {
         const args = this.formStore.getSubmitArgs();
         args.set('format', 'json');
         args.set('collpage', this.currPage);
         args.set('csortfn', this.sortFn);
+        return args;
+    }
+
+    private loadData():RSVP.Promise<boolean> {
+        const args = this.getSubmitArgs();
         return this.layoutModel.ajax<AjaxResponse>(
             'GET',
             this.layoutModel.createActionUrl('collx'),
