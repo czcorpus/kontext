@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 import {init as lineSelViewsInit} from './lineSelection';
 import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
@@ -36,6 +36,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     const userInfoStore = stores.userInfoStore;
     const viewOptionsStore = stores.viewOptionsStore;
     const mainMenuStore = stores.mainMenuStore;
+    const syntaxViewStore = lineStore.getSyntaxViewStore();
 
     const util = mixins[0];
 
@@ -479,6 +480,53 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         );
     };
 
+    // ------------------------- <SyntaxViewPane /> ----------------------------
+
+    class SyntaxViewPane extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {
+                waiting: syntaxViewStore.isWaiting()
+            };
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+        }
+
+        _handleStoreChange() {
+            this.setState({
+                waiting: syntaxViewStore.isWaiting()
+            });
+        }
+
+        componentDidMount() {
+            syntaxViewStore.addChangeListener(this._handleStoreChange);
+            this.props.onReady(
+                this.props.tokenNumber,
+                this.props.kwicLength
+            );
+        }
+
+        componentWillUnmount() {
+            this.props.onClose();
+            syntaxViewStore.removeChangeListener(this._handleStoreChange);
+        }
+
+        render() {
+            return (
+                <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick} isScrollable={true}>
+                    <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
+                            customClass="syntax-tree">
+                        <div id="syntax-view-pane">
+                            {this.state.waiting ?
+                                <img src={util.createStaticUrl('img/ajax-loader.gif')}
+                                        alt={util.translate('global__loading')} /> : null}
+                        </div>
+                    </layoutViews.PopupBox>
+                </layoutViews.ModalOverlay>
+            );
+        }
+    };
+
 
     // ------------------------- <ConcordanceView /> ---------------------------
 
@@ -492,7 +540,9 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
                 concSummary: lineStore.getConcSummary(),
                 showAnonymousUserWarn: this.props.anonymousUser,
-                saveFormVisible: concSaveStore.getFormIsActive()
+                saveFormVisible: concSaveStore.getFormIsActive(),
+                supportsSyntaxView: lineStore.getSupportsSyntaxView(),
+                syntaxBoxData: null
             };
         },
 
@@ -558,6 +608,15 @@ export function init(dispatcher, mixins, layoutViews, stores) {
             });
         },
 
+        _handleSyntaxBoxClick : function (tokenNumber, kwicLength) {
+            this.setState(React.addons.update(this.state,
+                {syntaxBoxData: {$set: {tokenNumber: tokenNumber, kwicLength: kwicLength}}}));
+        },
+
+        _handleSyntaxBoxClose : function () {
+            this.setState(React.addons.update(this.state, {syntaxBoxData: {$set: null}}));
+        },
+
         _refsDetailClickHandler : function (corpusId, tokenNumber, lineIdx) {
             this.setState(React.addons.update(this.state, {
                 concDetailMetadata: {$set: null},
@@ -590,6 +649,12 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         render : function () {
             return (
                 <div>
+                    {this.state.syntaxBoxData ?
+                        <SyntaxViewPane onCloseClick={this._handleSyntaxBoxClose}
+                                tokenNumber={this.state.syntaxBoxData.tokenNumber}
+                                kwicLength={this.state.syntaxBoxData.kwicLength}
+                                onReady={this.props.onSyntaxPaneReady}
+                                onClose={this.props.onSyntaxPaneClose} /> : null}
                     {this.state.concDetailMetadata ?
                         <concDetailViews.ConcDetail
                             closeClickHandler={this._handleDetailCloseClick}
@@ -630,6 +695,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     </div>
                     <div id="conclines-wrapper">
                         <linesViews.ConcLines {...this.props}
+                            supportsSyntaxView={this.state.supportsSyntaxView}
+                            onSyntaxViewClick={this._handleSyntaxBoxClick}
                             concDetailClickHandler={this._detailClickHandler}
                             refsDetailClickHandler={this._refsDetailClickHandler} />
                     </div>

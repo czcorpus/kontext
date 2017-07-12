@@ -30,6 +30,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     const mediaViews = initMediaViews(dispatcher, mixins, lineStore);
 
+    const utils = mixins[0];
+
     // ------------------------- <ConcColsHeading /> ---------------------------
 
     const ConcColsHeading = React.createClass({
@@ -296,6 +298,17 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         }
     });
 
+    // ------------------------- <SyntaxTreeButton /> ---------------------
+    //
+    const SyntaxTreeButton = (props) => {
+        return (
+            <a onClick={props.onSyntaxViewClick} title={utils.translate('concview__click_to_see_the_tree')}>
+                <img src={utils.createStaticUrl('img/syntax-tree-icon.svg')} style={{width: '1em'}}
+                        alt="syntax-tree-icon" />
+            </a>
+        );
+    };
+
     // ------------------------- <Line /> ---------------------------
 
     const Line = React.createClass({
@@ -460,6 +473,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                         catBgColor={this.props.catBgColor}
                         catTextColor={this.props.catTextColor} />
                     <td className="syntax-tree">
+                        {this.props.supportsSyntaxView ?
+                            <SyntaxTreeButton onSyntaxViewClick={()=>this.props.onSyntaxViewClick(primaryLang.tokenNumber, this.props.data.kwicLength)}
+                                    tokenNumber={primaryLang.tokenNumber} kwicLength={this.props.data.kwicLength} /> : null}
                     </td>
                     {this._renderText(primaryLang, 0)}
                     {alignedCorpora.map((alCorp, i) => this._renderText(alCorp, i + 1))}
@@ -508,7 +524,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         componentDidMount : function () {
             lineStore.addChangeListener(this._storeChangeListener);
             lineSelectionStore.addChangeListener(this._storeChangeListener);
-            if (typeof this.props.onReady === 'function') { // <-- a glue with legacy dode
+            if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code
                 this.props.onReady();
             }
         },
@@ -516,12 +532,6 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         componentWillUnmount : function () {
             lineStore.removeChangeListener(this._storeChangeListener);
             lineSelectionStore.removeChangeListener(this._storeChangeListener);
-        },
-
-        componentDidUpdate : function (prevProps, prevstate) {
-            if (typeof this.props.onPageUpdate === 'function') {
-                this.props.onPageUpdate();
-            }
         },
 
         _getCatColors : function (dataItem) {
@@ -552,7 +562,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          concDetailClickHandler={this.props.concDetailClickHandler}
                          refsDetailClickHandler={this.props.refsDetailClickHandler}
                          catBgColor={catColor[0]}
-                         catTextColor={catColor[1]} />;
+                         catTextColor={catColor[1]}
+                         supportsSyntaxView={this.props.supportsSyntaxView}
+                         onSyntaxViewClick={this.props.onSyntaxViewClick} />;
         },
 
         render : function () {

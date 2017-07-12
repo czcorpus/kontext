@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
@@ -177,9 +178,13 @@ export interface ViewConfiguration {
 
     catColors:Array<string>;
 
-    onReady?:()=>void;
+    supportsSyntaxView:boolean;
 
-    onPageUpdate?:()=>void;
+    onSyntaxPaneReady:(tokenId:number, kwicLength:number, confirmFn:()=>void)=>void;
+
+    onSyntaxPaneClose:()=>void;
+
+    onReady?:()=>void;
 
     onChartFrameReady?:(usePrevData:boolean)=>void;
 }
@@ -240,6 +245,23 @@ function importData(data:Array<ServerLineData>):Immutable.List<Line> {
 /**
  *
  */
+export class DummySyntaxViewStore extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
+
+    render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {}
+
+    close():void {}
+
+    onPageResize():void {}
+
+    isWaiting():boolean {
+        return false;
+    }
+}
+
+
+/**
+ *
+ */
 export class ConcLineStore extends SimplePageStore {
 
     private layoutModel:PageModel;
@@ -282,14 +304,19 @@ export class ConcLineStore extends SimplePageStore {
 
     private saveStore:ConcSaveStore;
 
+    private syntaxViewStore:PluginInterfaces.ISyntaxViewer;
+
+    private supportsSyntaxView:boolean;
+
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
-            saveStore:ConcSaveStore, lineViewProps:ViewConfiguration,
+            saveStore:ConcSaveStore, syntaxViewStore:PluginInterfaces.ISyntaxViewer, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {
         super(dispatcher);
         let self = this;
         this.layoutModel = layoutModel;
         this.saveStore = saveStore;
+        this.syntaxViewStore = syntaxViewStore;
         this.viewMode = lineViewProps.ViewMode;
         this.showLineNumbers = lineViewProps.ShowLineNumbers;
         this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
@@ -305,6 +332,7 @@ export class ConcLineStore extends SimplePageStore {
         this.currentPage = lineViewProps.currentPage || 1;
         this.containsWithin = lineViewProps.ContainsWithin;
         this.useSafeFont = lineViewProps.useSafeFont;
+        this.supportsSyntaxView = lineViewProps.supportsSyntaxView;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -630,6 +658,14 @@ export class ConcLineStore extends SimplePageStore {
 
     getSaveStore():ConcSaveStore {
         return this.saveStore;
+    }
+
+    getSyntaxViewStore():PluginInterfaces.ISyntaxViewer {
+        return this.syntaxViewStore;
+    }
+
+    getSupportsSyntaxView():boolean {
+        return this.supportsSyntaxView;
     }
 
 }

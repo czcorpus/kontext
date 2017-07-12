@@ -39,7 +39,7 @@ import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
-import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary} from '../stores/concordance/lines';
+import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewStore} from '../stores/concordance/lines';
 import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} from '../stores/query/main';
 import {QueryReplayStore, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
@@ -57,7 +57,7 @@ import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
 import {ConcSaveStore} from '../stores/concordance/save';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
-import syntaxViewer from 'plugins/syntaxViewer/init';
+import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../stores/userStores';
@@ -1003,7 +1003,7 @@ export class ViewPage {
         )
     }
 
-    private initStores():ViewConfiguration {
+    private initStores(syntaxViewer:PluginInterfaces.ISyntaxViewer):ViewConfiguration {
         const concSummaryProps:ConcSummary = {
             concSize: this.layoutModel.getConf<number>('ConcSize'),
             fullSize: this.layoutModel.getConf<number>('FullSize'),
@@ -1039,7 +1039,18 @@ export class ViewPage {
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
             catColors: this.extendBaseColorPalette(),
-            useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont')
+            useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
+            supportsSyntaxView: this.layoutModel.hasPlugin('syntax_viewer'),
+            onSyntaxPaneReady: (tokenNumber, kwicLength) => {
+                syntaxViewer.render(
+                    document.getElementById('syntax-view-pane'),
+                    tokenNumber,
+                    kwicLength
+                );
+            },
+            onSyntaxPaneClose: () => {
+                syntaxViewer.close();
+            }
         };
         this.viewStores = new ViewPageStores();
         this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
@@ -1054,6 +1065,7 @@ export class ViewPage {
                     this.layoutModel.getConf<number>('ConcSize'),
                     s=>this.setDownloadLink(s)
                 ),
+                syntaxViewer,
                 lineViewProps,
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
@@ -1104,7 +1116,18 @@ export class ViewPage {
         this.extendBaseColorPalette();
         const p1 = this.layoutModel.init().then(
             () => {
-                const lineViewProps = this.initStores();
+                const sv = syntaxViewerInit(this.layoutModel.pluginApi());
+                if (sv) {
+                    return sv;
+                }
+                return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
+                    resolve(new DummySyntaxViewStore(this.layoutModel.dispatcher));
+                });
+            }
+
+        ).then(
+            (sv) => {
+                const lineViewProps = this.initStores(sv);
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
                     this.showGroupsStats(d3.select('#selection-actions .chart-area'), usePrevData);
@@ -1135,7 +1158,6 @@ export class ViewPage {
                 }
                 this.onBeforeUnloadAsk();
                 this.updateLocalAlignedCorpora();
-                return syntaxViewer(this.layoutModel.pluginApi());
             }
         );
 
@@ -1154,10 +1176,6 @@ export class ViewPage {
         return RSVP.all([p1, p4, p5]).then(
             (args:any) => {
                 const [lvprops, tagh, qs] = args;
-
-                lvprops.onPageUpdate = () => {
-                    syntaxViewer(this.layoutModel.pluginApi());
-                };
                 this.initQueryForm();
                 this.initFilterForm();
                 this.initSortForm();

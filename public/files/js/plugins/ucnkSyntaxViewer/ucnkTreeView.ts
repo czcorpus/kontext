@@ -597,13 +597,13 @@ export function createGenerator(mixins:any):TreeGeneratorFn {
 export function generate(data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement,
         options:Options) {
     const mixins = {
-        translate : function (x, v) { return x.replace(/[_-]/g, ' '); },
-        createStaticUrl : function (x) { return '../../../' + x; },
-        createActionLink : function (x) { return x; },
-        getConf : function (k) { return null; },
-        formatNumber: function (v) { return v; },
-        formatDate: function (v) { return v; },
-        getLayoutViews: function () { return null}
+        translate : (x, v) => x.replace(/[_-]/g, ' '),
+        createStaticUrl : x => `../../../${x}`,
+        createActionLink : x => x,
+        getConf : k => null,
+        formatNumber: v => v,
+        formatDate: v => v,
+        getLayoutViews: () => null
     }
     const gen = new TreeGenerator(options, mixins);
     gen.generate(data, zone, tree, target);

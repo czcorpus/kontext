@@ -24,8 +24,17 @@
 
 import $ = require('jquery');
 import RSVP = require('vendor/rsvp');
-import popupbox = require('../../popupbox');
+//import popupbox = require('../../popupbox');
 declare var treexView:JQuery;
+
+module popupbox {
+    export interface TooltipBox{
+        getContentElement();
+        close();
+    };
+
+    export function bind(...any) {};
+}
 
 
 /**

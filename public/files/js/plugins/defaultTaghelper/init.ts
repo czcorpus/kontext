@@ -22,7 +22,6 @@
 
 import {TagHelperStore} from './stores';
 import {init as viewInit} from './view';
-import {TooltipBox} from '../../popupbox';
 import * as RSVP from 'vendor/rsvp';
 
 

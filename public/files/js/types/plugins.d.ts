@@ -19,7 +19,11 @@
  */
 
 /// <reference path="./common.d.ts" />
+/// <reference path="../../ts/declarations/rsvp.d.ts" />
 
+/**
+ *
+ */
 declare module PluginInterfaces {
 
     export interface IAuth {
@@ -36,7 +40,11 @@ declare module PluginInterfaces {
         getWidgetView():React.ReactClass;
     }
 
-    export interface ISyntaxViewer {
+    export interface ISyntaxViewer extends Kontext.PageStore {
+        render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
+        close():void;
+        onPageResize():void;
+        isWaiting():boolean;
     }
 
     export interface ITagHelper {
