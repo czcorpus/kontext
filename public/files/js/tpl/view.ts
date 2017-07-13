@@ -1040,7 +1040,7 @@ export class ViewPage {
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
             catColors: this.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
-            supportsSyntaxView: this.layoutModel.hasPlugin('syntax_viewer'),
+            supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
             onSyntaxPaneReady: (tokenNumber, kwicLength) => {
                 syntaxViewer.render(
                     document.getElementById('syntax-view-pane'),

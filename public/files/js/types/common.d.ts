@@ -108,7 +108,7 @@ declare module Kontext {
         getStores():Kontext.LayoutStores;
         getViews():Kontext.LayoutViews;
         getUserSettings():Kontext.IUserSettings;
-        hasPlugin(name:string):boolean;
+        pluginIsActive(name:string):boolean;
         getConcArgs():IMultiDict;
         registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
     }

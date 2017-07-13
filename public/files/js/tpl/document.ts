@@ -359,6 +359,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
                 this.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
                 this.setConf<Array<{n:string; label:string}>>('availableAlignedCorpora', data.availableAlignedCorpora);
+                this.setConf<Array<string>>('activePlugins', data.activePlugins);
                 this.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
                 this.setConf<number>('numQueryOps', data.numQueryOps);
                 this.setConf<any>('textTypesData', data.textTypesData); // TODO type
@@ -823,10 +824,16 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
+     * Test whether a plug-in is currently active (= configured, loaded and
+     * active for the current corpus).
+     *
+     * Please note that plug-ins here are identified by their respective
+     * server names and not by JS camel-case names - i.e. use
+     * 'live_attributes' and not 'liveAttributes' to test the plug-in status.
      *
      * @param name
      */
-    hasPlugin(name:string):boolean {
+    pluginIsActive(name:string):boolean {
         return this.getConf<Array<string>>('activePlugins').indexOf(name) > -1;
     }
 
@@ -1022,8 +1029,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.userSettings;
     }
 
-    hasPlugin(name:string):boolean {
-        return this.pageModel.hasPlugin(name);
+    pluginIsActive(name:string):boolean {
+        return this.pageModel.pluginIsActive(name);
     }
 
     getConcArgs():MultiDict {
