@@ -213,6 +213,7 @@ declare module AjaxResponse {
         concPersistenceOpId:string;
         alignedCorpora:Array<string>;
         availableAlignedCorpora:Array<{n:string; label:string}>;
+        activePlugins:Array<string>;
         queryOverview:Array<Kontext.QueryOperation>;
         numQueryOps:number;
         textTypesData:any; // TODO type

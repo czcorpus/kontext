@@ -1824,6 +1824,8 @@ class Actions(Querying):
         self._attach_aligned_query_params(tmp_out)
         self._export_subcorpora_list(self.args.corpname, tmp_out)
         corpus_info = self.get_corpus_info(self.args.corpname)
+        plg_status = {}
+        self._setup_optional_plugins_js(plg_status)
 
         ans = dict(
             corpname=self.args.corpname,
@@ -1837,6 +1839,7 @@ class Actions(Querying):
             concPersistenceOpId=None,
             alignedCorpora=self.args.align,
             availableAlignedCorpora=avail_al_corp,
+            activePlugins=plg_status['active_plugins'],
             queryOverview=[],
             numQueryOps=0,
             textTypesData=get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False),

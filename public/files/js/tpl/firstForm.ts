@@ -150,7 +150,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         ).then(
             (liveAttrsPlugin) => {
                 let liveAttrsViews;
-                if (liveAttrsPlugin) {
+                if (liveAttrsPlugin && this.layoutModel.pluginIsActive('live_attributes')) {
                     // Complicated dependencies between QueryStore, TextTypesStore and LiveAttrsStore
                     // cause that LiveAttrs store needs QueryStore data but it is not available
                     // here yet. That's the reason we have to define a callback here to configure
