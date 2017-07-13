@@ -927,19 +927,18 @@ class Kontext(Controller):
         """
         import plugins
         ans = {}
+        result['active_plugins'] = []
         for opt_plugin in plugins.get_plugins(include_missing=True).keys():
             ans[opt_plugin] = None
             if plugins.has_plugin(opt_plugin):
                 plugin_obj = plugins.get(opt_plugin)
-                # if the plug-in is "always on" or "sometimes off but currently on"
-                # then it must configure JavaScript
-                if (not isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin) or
-                        plugin_obj.is_enabled_for(self._plugin_api, self.args.corpname)):
-                    js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
-                    if js_file:
-                        ans[opt_plugin] = js_file
+                js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
+                if js_file:
+                    ans[opt_plugin] = js_file
+                    if (not (isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin)) or
+                            plugin_obj.is_enabled_for(self._plugin_api, self.args.corpname)):
+                        result['active_plugins'].append(opt_plugin)
         result['plugin_js'] = ans
-        result['active_plugins'] = plugins.get_plugins(include_missing=False).keys()
 
     def _get_attrs(self, attr_names, force_values=None):
         """

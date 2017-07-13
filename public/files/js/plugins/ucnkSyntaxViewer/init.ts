@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,189 +23,116 @@
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
 import * as RSVP from 'vendor/rsvp';
-import {extended as initPopupboxLib, Api as PopupBoxApi, TooltipBox} from '../../popupbox';
 import {createGenerator} from './ucnkTreeView';
-
+import {SimplePageStore} from '../../stores/base';
 
 /**
  *
  */
-class SyntaxTreeViewer {
+class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
 
     private pluginApi:Kontext.PluginApi;
 
-    private popupBox:TooltipBox;
+    private waitingStatus:boolean;
 
-    private popupBoxApi:PopupBoxApi;
+    private data:any; // TODO type
 
-    private resizeHandler:()=>void;
+    private target:HTMLElement; // the value changes on each render() call
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    private resizeThrottleTimer:number;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+        super(dispatcher);
         this.pluginApi = pluginApi;
-        this.popupBoxApi = initPopupboxLib(this.pluginApi);
+        this.waitingStatus = false;
     }
 
-    private createAjaxLoader():HTMLElement {
-        const loader = window.document.createElement('div');
-        loader.setAttribute('class', 'ajax-loading-msg');
-        loader.style.bottom = '50px';
-        loader.style.position = 'fixed';
-        loader.style.left = `${window.innerWidth / 2 - 50}px`;
+    private renderTree():void {
+        const treexFrame = window.document.createElement('div');
+        treexFrame.style.width = '90%';
+        this.target.appendChild(treexFrame);
 
-        const span = window.document.createElement('span');
-        span.textContent = this.pluginApi.translate('global__loading');
-        loader.appendChild(span);
-        return loader;
-    }
-
-    private createRenderFunction(tokenId:string, kwicLength:number,
-            overlayElm:HTMLElement):(box:TooltipBox, finalize:()=>void)=>void {
-        const renderTree = (box:TooltipBox, finalize:()=>void, data:any):void => {
-            const parentElm = box.getContentElement();
-            const treexFrame = window.document.createElement('div');
-            treexFrame.style.width = '90%';
-
-            parentElm.appendChild(treexFrame);
-            finalize();
-            box
-                .setCss('left', '50%')
-                .setCss('top', '50%');
-            createGenerator(this.pluginApi.exportMixins()[0]).call(
-                null,
-                data,
-                'cs',
-                'default',
-                treexFrame,
-                {
-                    width: null, // = auto
-                    height: null, // = auto
-                    paddingTop: 20,
-                    paddingBottom: 50,
-                    paddingLeft: 20,
-                    paddingRight: 20,
-                    onOverflow: (width:number, height:number) => {
-                        overlayElm.style.position = 'absolute';
-                        box
-                            .setCss('maxHeight', 'none')
-                            .setCss('transform', 'none')
-                            .setCss('top', 0)
-                            .setCss('left', 0);
-                        return [width, height];
-                    }
+        createGenerator(this.pluginApi.exportMixins()[0]).call(
+            null,
+            this.data,
+            'cs',
+            'default',
+            treexFrame,
+            {
+                width: null, // = auto
+                height: null, // = auto
+                paddingTop: 20,
+                paddingBottom: 50,
+                paddingLeft: 20,
+                paddingRight: 20,
+                onOverflow: (width:number, height:number) => {
+                    const mo = document.getElementById('modal-overlay');
+                    const box = <HTMLElement>mo.querySelector('div.syntax-tree');
+                    box.style['top'] = '0';
+                    box.style['left'] = '50%';
+                    box.style['transform'] = 'translate(-50%, 0%)';
+                    return [width, height];
                 }
-            );
+            }
+        );
+    }
+
+    isWaiting():boolean {
+        return this.waitingStatus;
+    }
+
+    close():void {
+        window.removeEventListener('resize', this.onPageResize);
+    }
+
+    onPageResize = () => {
+        if (this.resizeThrottleTimer) {
+            window.clearTimeout(this.resizeThrottleTimer);
         }
+        this.resizeThrottleTimer = window.setTimeout(() => {
+            while (this.target.firstChild) {
+                this.target.removeChild(this.target.firstChild);
+            }
+            this.renderTree();
 
-        return (box:TooltipBox, finalize:()=>void) => {
-            const ajaxAnim = this.createAjaxLoader();
-            document.querySelector('body').appendChild(ajaxAnim);
-
-            this.pluginApi.ajax(
-                'GET',
-                this.pluginApi.createActionUrl('get_syntax_data'),
-                {
-                    corpname: this.pluginApi.getConf('corpname'),
-                    kwic_id: tokenId,
-                    kwic_len: kwicLength
-                },
-                {contentType : 'application/x-www-form-urlencoded'}
-
-            ).then(
-                (data:any) => {
-                    ajaxAnim.parentNode.removeChild(ajaxAnim);
-                    if (!data['contains_errors']) {
-                        renderTree(box, finalize, data);
-
-                    } else {
-                        finalize();
-                        box.close();
-                        this.pluginApi.showMessage('error', data['error']);
-                    }
-                },
-                (error) => {
-                    ajaxAnim.parentNode.removeChild(ajaxAnim);
-                    finalize();
-                    box.close();
-                    this.pluginApi.showMessage('error', error);
-                }
-            );
-        };
+        }, 250);
     }
 
-    private createActionButton(tokenId:string, kwicLength:number):HTMLElement {
-        const baseImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon.svg');
-        const overImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon_s.svg');
-        const button = window.document.createElement('img');
-        const showSyntaxTree = () => {
-            if (this.popupBox) {
-                this.popupBox.close();
-            }
-            const overlay = window.document.createElement('div');
-            overlay.setAttribute('id', 'modal-overlay');
-            document.querySelector('body').appendChild(overlay);
+    render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {
+        this.target = target;
+        this.waitingStatus = true;
+        this.notifyChangeListeners();
 
-            this.popupBox = this.popupBoxApi.openAt(
-                overlay,
-                this.createRenderFunction(tokenId, kwicLength, overlay),
-                {left: 0, top: 0},
-                {
-                    type: 'plain',
-                    calculatePosition: false,
-                    closeIcon: true,
-                    timeout: null,
-                    htmlClass: 'syntax-tree',
-                    afterClose: () => {
-                        overlay.parentNode.removeChild(overlay);
-                        window.removeEventListener('resize', this.resizeHandler);
-                    }
-                }
-            );
-            let timer = null;
-            this.resizeHandler = () => {
-                if (timer !== null) {
-                    window.clearTimeout(timer);
-                }
-                timer = window.setTimeout(() => {
-                    this.popupBox.close();
-                    showSyntaxTree();
-
-                }, 500);
+        this.pluginApi.ajax(
+            'GET',
+            this.pluginApi.createActionUrl('get_syntax_data'),
+            {
+                corpname: this.pluginApi.getConf('corpname'),
+                kwic_id: tokenNumber,
+                kwic_len: kwicLength
             }
-            window.addEventListener('resize', this.resizeHandler);
-        }
 
-        button.setAttribute('src', baseImg);
-        button.setAttribute('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'));
-        button.addEventListener('mouseover', () => {
-            button.setAttribute('src', overImg);
-        });
-        button.addEventListener('mouseout', () => {
-            button.setAttribute('src', baseImg);
-        });
-        button.addEventListener('click', showSyntaxTree);
-        return button;
-    }
-
-    init():void {
-        const srch = document.querySelectorAll('#conclines td.syntax-tree');
-        for (let i = 0; i < srch.length; i += 1) {
-            const item = srch[i];
-            while (item.childNodes.length > 0) {
-                item.removeChild(item.childNodes[0]);
+        ).then(
+            (data:any) => {
+                this.data = data;
+                window.addEventListener('resize', this.onPageResize);
+                this.renderTree();
+                this.waitingStatus = false;
+                this.notifyChangeListeners();
             }
-            const trElm = item.parentElement;
-            if (trElm.getAttribute('data-toknum')) {
-                item.appendChild(this.createActionButton(trElm.getAttribute('data-toknum'),
-                        parseInt(trElm.getAttribute('data-kwiclen'))));
+        ).catch(
+            (error) => {
+                this.waitingStatus = false;
+                this.close();
+                this.pluginApi.showMessage('error', error);
+                this.notifyChangeListeners();
             }
-        }
+        );
     }
 }
 
 export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer> {
     return new RSVP.Promise<PluginInterfaces.ISyntaxViewer>((resolve:(val:PluginInterfaces.ISyntaxViewer)=>void, reject:(e:any)=>void) => {
-        const viewer = new SyntaxTreeViewer(pluginApi);
-        viewer.init();
-        resolve(viewer);
+        resolve(new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi));
     });
 }

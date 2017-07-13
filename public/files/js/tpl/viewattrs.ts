@@ -22,11 +22,9 @@
  * This module contains a page model for the 'viewattrs' page
  */
 
-/// <reference path="../../ts/declarations/jquery.d.ts" />
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 
-import * as $ from 'jquery';
 import {PageModel} from './document';
 import {init as structsAttrsViewInit} from 'views/options/structsAttrs';
 import {init as corpnameLinkInit} from 'views/overview';
@@ -44,23 +42,6 @@ class ViewAttrsPage {
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
         this.mainForm = window.document.getElementById('viewopts-form');
-    }
-
-    private blockUnsaved():void {
-        $(this.mainForm).find('input[type!="hidden"][type!="submit"]').on('change', () => {
-            this.changed = true;
-        });
-
-        $(window).on('beforeunload', (event) => {
-            if (this.changed) {
-                return this.layoutModel.translate('global__there_are_unsaved_changes');
-            }
-            return undefined;
-        });
-
-        $(this.mainForm).find('input[type="submit"]').on('click', () => {
-            this.changed = false;
-        });
     }
 
     private initCorpnameLink():void {
@@ -116,7 +97,6 @@ class ViewAttrsPage {
             }
         );
         this.initCorpnameLink();
-        this.blockUnsaved();
     }
 }
 

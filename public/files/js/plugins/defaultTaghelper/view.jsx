@@ -299,10 +299,6 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
         componentDidMount : function () {
             tagHelperStore.addChangeListener(this._changeListener);
-            // we must inform non-react environment (here popupbox.js) we are ready here
-            if (typeof this.props.doneCallback === 'function') {
-                this.props.doneCallback();
-            }
             dispatcher.dispatch({
                 actionType: 'TAGHELPER_GET_INITIAL_DATA',
                 props: {}

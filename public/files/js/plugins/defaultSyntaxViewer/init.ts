@@ -17,125 +17,100 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../../ts/declarations/jquery.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="./js-treex-view.d.ts" />
-/// <amd-dependency path="./js-treex-view" />
 
-import $ = require('jquery');
-import RSVP = require('vendor/rsvp');
-import popupbox = require('../../popupbox');
+/// <amd-dependency path="./js-treex-view" />
 declare var treexView:JQuery;
 
+import * as $ from 'jquery';
+import * as RSVP from 'vendor/rsvp';
+import {SimplePageStore} from '../../stores/base';
 
 /**
  *
  */
-export class SyntaxTreeViewer {
+export class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
 
     private pluginApi:Kontext.PluginApi;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    private waitingStatus:boolean;
+
+    private data:any; // TODO type
+
+    private target:HTMLElement;
+
+    private resizeThrottleTimer:number;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+        super(dispatcher);
         this.pluginApi = pluginApi;
     }
 
-    private createAjaxLoader():JQuery {
-        const loader = $(window.document.createElement('div'));
-        loader
-            .addClass('ajax-loading-msg')
-            .css({
-                'bottom' : '50px',
-                'position' : 'fixed',
-                'left' : ($(window).width() / 2 - 50) + 'px'
-            })
-            .append('<span>' + this.pluginApi.translate('global__loading') + '</span>');
-        return loader;
+    isWaiting():boolean {
+        return this.waitingStatus;
     }
 
-    private createRenderFunction(tokenId:string, kwicLength:number):(box:popupbox.TooltipBox, finalize:()=>void)=>void {
-        return (box:popupbox.TooltipBox, finalize:()=>void) => {
-            const ajaxAnim = this.createAjaxLoader();
-            $('body').append(ajaxAnim);
-
-            this.pluginApi.ajax(
-                'GET',
-                this.pluginApi.createActionUrl('get_syntax_data'),
-                {
-                    corpname: this.pluginApi.getConf('corpname'),
-                    kwic_id: tokenId,
-					kwic_len: kwicLength
-                },
-                {contentType : 'application/x-www-form-urlencoded'}
-
-            ).then(
-                (data) => {
-                    $(ajaxAnim).remove();
-                    if (!data['contains_errors']) {
-                        let treexFrame = window.document.createElement('div');
-                        $(box.getContentElement()).append(treexFrame);
-                        finalize();
-                        $(treexFrame).treexView(data); // this must be run after finalize
-
-                    } else {
-                        finalize();
-                        box.close();
-                        this.pluginApi.showMessage('error', data['error']);
-                    }
-                },
-                (error) => {
-                    $(ajaxAnim).remove();
-                    finalize();
-                    box.close();
-                    this.pluginApi.showMessage('error', error);
-                }
-            );
-        };
+    close():void {
+        window.removeEventListener('resize', this.onPageResize);
     }
 
-    private createActionButton(tokenId:string, kwicLength:number):HTMLElement {
-        const baseImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon.svg');
-        const overImg = this.pluginApi.createStaticUrl('js/plugins/defaultSyntaxViewer/syntax-tree-icon_s.svg');
-        const button = window.document.createElement('img');
-        $(button)
-            .attr('src', baseImg)
-            .attr('title', this.pluginApi.translate('syntaxViewer__click_to_see_the_tree'))
-            .on('mouseover', () => {
-                $(button).attr('src', overImg);
-            })
-            .on('mouseout', () => {
-                $(button).attr('src', baseImg);
-            });
-        popupbox.bind(
-            button,
-            this.createRenderFunction(tokenId, kwicLength),
+    onPageResize = () => {
+        if (this.resizeThrottleTimer) {
+            window.clearTimeout(this.resizeThrottleTimer);
+        }
+        this.resizeThrottleTimer = window.setTimeout(() => {
+            while (this.target.firstChild) {
+                this.target.removeChild(this.target.firstChild);
+            }
+            this.renderTree();
+
+        }, 250);
+    }
+
+    render(target:HTMLElement, tokenNumber:number, kwicLength:number):void {
+        this.target = target;
+        this.waitingStatus = true;
+        this.notifyChangeListeners();
+
+        this.pluginApi.ajax(
+            'GET',
+            this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                type: 'plain',
-                closeIcon: true,
-                movable: true,
-                timeout: null
+                corpname: this.pluginApi.getConf('corpname'),
+                kwic_id: tokenNumber, // this must be run after finalize
+                kwic_len: kwicLength
+            }
+
+        ).then(
+            (data) => {
+                this.data = data;
+                this.renderTree();
+                window.addEventListener('resize', this.onPageResize);
+            },
+            (error) => {
+                this.close();
+                this.pluginApi.showMessage('error', error);
             }
         );
-        return button;
     }
 
-    init():void {
-        let srch = $('#conclines').find('td.syntax-tree');
-        srch
-            .empty()
-            .each((i, elm:HTMLElement) => {
-                let trElm = $(elm).closest('tr');
-                if (trElm.attr('data-toknum')) {
-                    $(elm).append(this.createActionButton(trElm.attr('data-toknum'),
-                            parseInt(trElm.attr('data-kwiclen')))).show();
-                }
-            });
+    private renderTree():void {
+        while (this.target.firstChild) {
+            this.target.removeChild(this.target.firstChild);
+        }
+        const treexFrame = window.document.createElement('div');
+        treexFrame.style['width'] = `${(window.innerWidth - window.innerWidth * 0.05).toFixed(0)}px`;
+        $(this.target).append(treexFrame);
+        $(treexFrame).treexView(this.data);
     }
+
 }
 
 export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<SyntaxTreeViewer> {
     return new RSVP.Promise<SyntaxTreeViewer>((resolve:(val:SyntaxTreeViewer)=>void, reject:(e:any)=>void) => {
-        const viewer = new SyntaxTreeViewer(pluginApi);
-        viewer.init();
-        resolve(viewer);
+        resolve(new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi));
     });
 }

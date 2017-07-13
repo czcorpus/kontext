@@ -188,7 +188,6 @@
     module.exports.listPackedModules = function (isProduction) {
         let modules = [
             'jquery',
-            'popupbox',
             'vendor/rsvp',
             'vendor/rsvp-ajax',
             'vendor/react',
