@@ -64,7 +64,9 @@ export function init(dispatcher, mixins, storeProvider) {
     // ------------------------------ <PopupBox /> -----------------------------
 
     /**
-     * React version of KonText popupbox
+     * A general PopupBox for displaying overlay information. The box
+     * is not modal but in can be wrapped in <ModalOverlay />
+     * component to get modal box/window.
      *
      * supported properties:
      * customStyle -- an optional inline CSS

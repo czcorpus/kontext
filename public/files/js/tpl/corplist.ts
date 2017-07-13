@@ -19,7 +19,6 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 
-import $ = require('jquery');
 import {PageModel} from './document';
 import corparch = require('plugins/corparch/init');
 
@@ -30,6 +29,6 @@ export function init(conf:Kontext.Conf, corplistParams, corplistData):void {
     let layoutModel = new PageModel(conf);
     layoutModel.init();
     let page = corparch.initCorplistPageComponents(layoutModel.pluginApi());
-    page.createForm($('#content form.filter').get(0), corplistParams);
-    page.createList($('#corplist').get(0), corplistData);
+    page.createForm(<HTMLElement>document.getElementById('content').querySelector('form.filter'), corplistParams);
+    page.createList(document.getElementById('corplist'), corplistData);
 }
