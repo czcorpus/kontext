@@ -968,10 +968,6 @@ class Actions(Querying):
 
         self.args.fpage = 1
         self.args.fmaxitems = to_line - from_line + 1
-        self.args.wlwords, self.args.wlcache = self._get_wl_words(upl_file='wlfile',
-                                                                  cache_file='wlcache')
-        self.args.blacklist, self.args.blcache = self._get_wl_words(upl_file='wlblacklist',
-                                                                    cache_file='blcache')
         if self.args.wlattr:
             self._make_wl_query()  # multilevel wordlist
 
@@ -1222,36 +1218,6 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, out)
         return out
 
-    #(upl_file='wlfile', cache_file='wlcache')
-    def _get_wl_words(self, upl_file, cache_file):
-        """
-        gets arbitrary list of words for wordlist
-        """
-        from hashlib import md5
-
-        wl_cache_dir = settings.get('global', 'upload_cache_dir')
-        if not os.path.isdir(wl_cache_dir):
-            os.makedirs(wl_cache_dir)
-
-        wlfile = self._request.files.get(upl_file)
-        if wlfile:
-            wlfile = wlfile.read()
-        wlcache = getattr(self.args, cache_file, '')
-        filename = wlcache
-        wlwords = []
-        if wlfile:  # save a cache file
-            filename = os.path.join(wl_cache_dir, md5(wlfile).hexdigest() + '.wordlist')
-            cache_file = open(filename, 'w')
-            cache_file.write(wlfile)
-            cache_file.close()
-            wlwords = [w.strip().decode('utf-8') for w in wlfile.split('\n')]
-        if wlcache:  # read from a cache file
-            filename = os.path.join(wl_cache_dir, wlcache)
-            cache_file = open(filename)
-            wlwords = [w.strip() for w in cache_file]
-            cache_file.close()
-        return wlwords, os.path.basename(filename)
-
     @exposed(access_level=1, legacy=True)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
                  ref_usesubcorp='', paginate=True):
@@ -1286,10 +1252,6 @@ class Actions(Querying):
             })
         }
         try:
-            self.args.wlwords, self.args.wlcache = self._get_wl_words(upl_file='wlfile',
-                                                                      cache_file='wlcache')
-            self.args.blacklist, self.args.blcache = self._get_wl_words(upl_file='wlblacklist',
-                                                                        cache_file='blcache')
             if wltype == 'keywords':
                 args = (self.cm.get_Corpus(self.args.corpname, usesubcorp),
                         self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
@@ -1309,13 +1271,13 @@ class Actions(Querying):
             else:  # ordinary list
                 if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
                     self.args.wlsort = ''
+                whitelist = [w for w in re.split('\s+', self.args.wlwords.strip()) if w]
+                blacklist = [w for w in re.split('\s+', self.args.blacklist.strip()) if w]
                 result_list = self.call_function(corplib.wordlist,
-                                                 (self.corp, self.args.wlwords),
-                                                 wlmaxitems=wlmaxitems)[wlstart:]
-                if self.args.wlwords:
-                    result['wlcache'] = self.args.wlcache
-                if self.args.blacklist:
-                    result['blcache'] = self.args.blcache
+                                                 (self.corp,),
+                                                 wlmaxitems=wlmaxitems,
+                                                 words=whitelist,
+                                                 blacklist=blacklist)[wlstart:]
                 result['Items'] = result_list
             if len(result_list) < self.args.wlpagesize + 1:
                 result['lastpage'] = 1
@@ -1345,8 +1307,6 @@ class Actions(Querying):
                 'wlsort': self.args.wlsort,
                 'wlminfreq': self.args.wlminfreq,
                 'wlnums': self.args.wlnums,
-                'wlcache': self.args.wlcache,
-                'blcache': self.args.blcache,
                 'wltype': 'simple',
                 'from_line': 1,
                 'to_line': None,
@@ -1381,21 +1341,20 @@ class Actions(Querying):
         if not self.args.include_nonwords:
             qparts.append(u'%s!="%s"' % (self.args.wlattr,
                                         self.corp.get_conf('NONWORDRE')))
-        if self.args.wlwords:
-            qq = [u'%s=="%s"' % (self.args.wlattr, w.strip()) for w in self.args.wlwords]
+
+        whitelist = [w for w in re.split('\s+', self.args.wlwords.strip()) if w]
+        blacklist = [w for w in re.split('\s+', self.args.blacklist.strip()) if w]
+        if len(whitelist) > 0:
+            qq = [u'%s=="%s"' % (self.args.wlattr, w.strip()) for w in whitelist]
             qparts.append('(' + '|'.join(qq) + ')')
-        for w in self.args.blacklist:
+        for w in blacklist:
             qparts.append(u'%s!=="%s"' % (self.args.wlattr, w.strip()))
         self.args.q = [u'q[' + '&'.join(qparts) + ']']
 
-    @exposed(template='freqs.tmpl', legacy=True)
+    @exposed(template='freqs.tmpl', page_model='freq', legacy=True)
     def struct_wordlist(self):
         self._exceptmethod = 'wordlist_form'
         if self.args.fcrit:
-            self.args.wlwords, self.args.wlcache = self._get_wl_words(upl_file='wlfile',
-                                                                      cache_file='wlcache')
-            self.args.blacklist, self.args.blcache = self._get_wl_words(upl_file='wlblacklist',
-                                                                        cache_file='blcache')
             self._make_wl_query()
             return self.freqs(self.args.fcrit, self.args.flimit, self.args.freq_sort, 1)
 
@@ -1404,10 +1363,6 @@ class Actions(Querying):
         if self.args.wlnums != 'frq':
             raise ConcError('Multilevel lists are limited to Word counts frequencies')
         level = 3
-        self.args.wlwords, self.args.wlcache = self._get_wl_words(upl_file='wlfile',
-                                                                  cache_file='wlcache')
-        self.args.blacklist, self.args.blcache = self._get_wl_words(upl_file='wlblacklist',
-                                                                    cache_file='blcache')
         if not self.args.wlposattr1:
             raise ConcError(_('No output attribute specified'))
         if not self.args.wlposattr3:
@@ -1437,13 +1392,11 @@ class Actions(Querying):
             usesubcorp=self.args.usesubcorp,
             ref_corpname=self.args.ref_corpname,
             ref_usesubcorp=self.args.ref_usesubcorp,
-            wlcache=self.args.wlcache,
             usearf=self.args.usearf,
             simple_n=self.args.simple_n,
             wltype=self.args.wltype,
             wlnums=self.args.wlnums,
-            include_nonwords=self.args.include_nonwords,
-            blcache=self.args.blcache
+            include_nonwords=self.args.include_nonwords
         ).items())
         return ans
 

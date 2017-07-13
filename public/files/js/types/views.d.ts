@@ -256,13 +256,13 @@ declare module "views/wordlist/save" {
 declare module "views/wordlist/form" {
 
     export interface WordlistFormViews {
-        WordlistCorpSelection:React.ReactClass;
+        WordListForm:React.ReactClass;
         CorpInfoToolbar:React.ReactClass;
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher,
             mixins:any, layoutViews:Kontext.LayoutViews, CorparchWidget:React.Component,
-            wordlistPageStore:any):WordlistFormViews;
+            wordlistFormStore:any):WordlistFormViews;
 }
 
 

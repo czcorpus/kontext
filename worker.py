@@ -1,4 +1,4 @@
-#  Copyright (c) 2008-2013  Pavel Rychly, Milos Jakubicek
+# Copyright (c) 2008-2013  Pavel Rychly, Milos Jakubicek
 # Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
