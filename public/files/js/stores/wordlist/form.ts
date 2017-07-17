@@ -65,6 +65,8 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
+    private subcorpusId:string;
+
     private currentSubcorpus:string;
 
     private subcorpList:Immutable.List<string>;
@@ -110,6 +112,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
         super(dispatcher);
         this.corpusIdent = corpusIdent;
+        this.subcorpusId = '';
         this.layoutModel = layoutModel;
         this.subcorpList = Immutable.List<string>(subcorpList);
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
@@ -133,6 +136,10 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
+            case 'QUERY_INPUT_SELECT_SUBCORP':
+                this.subcorpusId = payload.props['subcorp'];
+                this.notifyChangeListeners();
+            break;
             case 'WORDLIST_FORM_SELECT_ATTR':
                 this.wlattr = payload.props['value'];
                 this.notifyChangeListeners();
@@ -280,6 +287,9 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
     private createSubmitArgs():MultiDict {
         const ans = new MultiDict();
         ans.set('corpname', this.corpusIdent.id);
+        if (this.subcorpusId) {
+            ans.set('usesubcorp', this.subcorpusId);
+        }
         ans.set('wlattr', this.wlattr);
         ans.set('wlpat', this.wlpat);
         ans.set('wlminfreq', this.wlminfreq);
