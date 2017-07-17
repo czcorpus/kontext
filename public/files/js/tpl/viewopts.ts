@@ -48,7 +48,7 @@ class ViewOptsPage {
             this.changed = true;
         });
 
-        window.addEventListener('beforeunload', (event:JQueryEventObject) => {
+        window.addEventListener('beforeunload', () => {
             if (this.changed) {
                 return this.layoutModel.translate('global__there_are_unsaved_changes');
             }
