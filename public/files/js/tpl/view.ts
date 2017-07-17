@@ -383,40 +383,6 @@ export class ViewPage {
     }
 
     /**
-     * Let's bother poor user with a notification in
-     * case she is not logged-in.
-     */
-    private anonymousUserWarning():void {
-        /*
-        const self = this;
-        const box = popupBox.extended(this.layoutModel).open(
-            this.translate('global__anonymous_user_warning',
-            {login_url: this.layoutModel.getConf('loginUrl')}),
-            {top: 0, left: 0},
-            {
-                type: 'warning',
-                onShow: function () {
-                    $(this.getRootElement()).find('a.fast-login').on('click', (evt:JQueryEventObject) => {
-                        $(evt.target).attr('href', null);
-                        self.layoutModel.dispatcher.dispatch({
-                            actionType: 'USER_SHOW_LOGIN_DIALOG',
-                            props: {}
-                        });
-                        evt.preventDefault();
-                    });
-                }
-            }
-        );
-        const left = $(window).width() / 2 - box.getPosition().width / 2;
-        const top = $('#conc-wrapper').offset().top + 40;
-        box.setCss('left', left + 'px');
-        box.setCss('top', top + 'px');
-        box.setCss('font-size', '120%');
-        box.setCss('height', '70px');
-        */
-    }
-
-    /**
      *
      */
     private setupHistoryOnPopState():void {
@@ -1153,9 +1119,6 @@ export class ViewPage {
         const p3 = p2.then(
             () => {
                 this.setupHistoryOnPopState();
-                if (this.layoutModel.getConf('anonymousUser')) {
-                    this.anonymousUserWarning();
-                }
                 this.onBeforeUnloadAsk();
                 this.updateLocalAlignedCorpora();
             }
