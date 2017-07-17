@@ -18,7 +18,10 @@ from kontext import MainMenu
 from translation import ugettext as _
 import plugins
 import settings
-import l10n
+
+
+USER_ACTIONS_DISABLED_ITEMS = (MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE,
+                               MainMenu.CONCORDANCE, MainMenu.VIEW)
 
 
 class User(Kontext):
@@ -35,9 +38,7 @@ class User(Kontext):
 
     @exposed(skip_corpus_init=True)
     def login(self, request):
-        self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
-                                    MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
+        self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         return {}
 
     @exposed(template='user/login.tmpl', skip_corpus_init=True)
@@ -50,18 +51,14 @@ class User(Kontext):
         if self._session['user'].get('id', None):
             self._redirect('%sfirst_form' % (self.get_root_url(), ))
         else:
-            self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
-                                        MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
-                                        MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
+            self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
             self.add_system_message('error', _('Incorrect username or password'))
         self.refresh_session_id()
         return ans
 
     @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True)
     def logoutx(self, request):
-        self.disabled_menu_items = (MainMenu.NEW_QUERY, MainMenu.VIEW,
-                                    MainMenu.SAVE, MainMenu.CORPORA, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
+        self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         plugins.get('auth').logout(self._session)
         self._init_session()
         self.refresh_session_id()
@@ -122,9 +119,7 @@ class User(Kontext):
 
     @exposed(access_level=1, legacy=True)
     def query_history(self, offset=0, limit=100, from_date='', to_date='', query_type='', current_corpus=''):
-        self.disabled_menu_items = (MainMenu.VIEW, MainMenu.SAVE,
-                                    MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
-                                    MainMenu.COLLOCATIONS)
+        self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         num_records = int(settings.get('plugins', 'query_storage').get('page_num_records', 0))
 
         if not offset:
