@@ -281,8 +281,8 @@ class GlobalArgs(object):
 
     wlminfreq = Parameter(5)
     wlicase = Parameter(0)
-    wlwords = Parameter([])
-    blacklist = Parameter([])
+    wlwords = Parameter('')
+    blacklist = Parameter('')
 
     include_nonwords = Parameter(0)
     wltype = Parameter('simple')

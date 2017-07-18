@@ -710,7 +710,7 @@ class Controller(object):
         if type(result) is dict:
             result['messages'] = self._system_messages
             result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
-        if self._request.args.get('format') == 'json':
+        if self._request.args.get('format') == 'json' or self._request.form.get('format') == 'json':
             action_metadata['return_type'] = 'json'
 
     @staticmethod

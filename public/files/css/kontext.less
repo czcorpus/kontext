@@ -1125,6 +1125,10 @@ table.data {
         text-align: right;
     }
 
+    td.center {
+        text-align: center;
+    }
+
     th a {
         color: @color-default-text;
     }
@@ -1723,14 +1727,6 @@ a.context-help {
         width: 0.6em;
         padding-bottom: 0.1em;
     }
-}
-
-// wordlist form
-#show-help-format-link img {
-    padding-right: 0.4em;
-    display: inline-block;
-    vertical-align: middle;
-    width: 1.2em;
 }
 
 #common-bar {
@@ -2437,9 +2433,13 @@ section#my-subcorpora {
     color: @color-light-text;
 }
 
-#wordlist_form .current-wlattr {
+.wordlist_form .current-wlattr {
     font-weight: bold;
     color: @color-logo-pink;
+}
+
+#wordlist-result-mount {
+    margin: 0;
 }
 
 p.boxed-par {

@@ -347,7 +347,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 const args = new MultiDict();
                 args.set('corpname', data.corpname);
                 args.set('usesubcorp', data.subcorpname);
-                this.history.pushState('first_form', args);
+                this.history.pushState(this.getConf<string>('currentAction'), args);
 
                 this.setConf<string>('corpname', data.corpname);
                 this.setConf<string>('subcorpname', data.subcorpname);
