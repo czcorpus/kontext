@@ -1386,28 +1386,6 @@ class Actions(Querying):
                            ml3attr=self.args.wlposattr3)
 
     @exposed(access_level=1, legacy=True)
-    def savewl_form(self, from_line=1, to_line=''):
-        self.disabled_menu_items = (MainMenu.SAVE, )
-        ans = {}
-        ans['WlStateForm'] = json.dumps(dict(
-            corpname=self.args.corpname,
-            wlattr=self.args.wlattr,
-            wlminfreq=self.args.wlminfreq,
-            wlpat=self.args.wlpat,
-            wlicase=self.args.wlicase,
-            wlsort=self.args.wlsort,
-            usesubcorp=self.args.usesubcorp,
-            ref_corpname=self.args.ref_corpname,
-            ref_usesubcorp=self.args.ref_usesubcorp,
-            usearf=self.args.usearf,
-            simple_n=self.args.simple_n,
-            wltype=self.args.wltype,
-            wlnums=self.args.wlnums,
-            include_nonwords=self.args.include_nonwords
-        ).items())
-        return ans
-
-    @exposed(access_level=1, legacy=True)
     def savewl(self, from_line=1, to_line='', wltype='simple', usesubcorp='',
                ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
