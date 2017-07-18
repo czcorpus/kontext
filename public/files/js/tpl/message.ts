@@ -19,13 +19,9 @@
  */
 
 /// <reference path="../types/common.d.ts" />
-/// <reference path="../types/views.d.ts" />
 
 import {PageModel} from './document';
 
-/**
- *
- */
 class MessagePage {
 
     private layoutModel:PageModel;
@@ -33,7 +29,6 @@ class MessagePage {
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
-
 
     init():void {
         this.layoutModel.init().then(
@@ -49,6 +44,5 @@ class MessagePage {
 
 
 export function init(conf:Kontext.Conf):void {
-    const page = new MessagePage(new PageModel(conf));
-    page.init();
+    new MessagePage(new PageModel(conf)).init();
 }
