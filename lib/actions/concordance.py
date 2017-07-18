@@ -1313,12 +1313,19 @@ class Actions(Querying):
                 'include_nonwords': self.args.include_nonwords
             }
 
+            result['form_args'] = dict(
+                    wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
+                    subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
+                    wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
+                    wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
+
             self._add_save_menu_item('CSV', 'savewl', params, save_format='csv')
             self._add_save_menu_item('XLSX', 'savewl', params, save_format='xlsx')
             self._add_save_menu_item('XML', 'savewl', params, save_format='xml')
             self._add_save_menu_item('TXT', 'savewl', params, save_format='text')
             # custom save is solved in templates because of compatibility issues
             result['tasks'] = []
+            self._export_subcorpora_list(self.args.corpname, result)
             return result
 
         except corplib.MissingSubCorpFreqFile as e:

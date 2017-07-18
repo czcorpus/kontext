@@ -474,7 +474,11 @@
         "wordlist__incl_non_word_label": "Include non-words",
         "wordlist__req_file_format_link": "required file format",
         "wordlist__wl_white_lists": "Wordlist whitelists and blacklists must be plain text (.txt), encoded in UTF-8, with one item per line.  The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input.",
-        "wordlist__confirm_file_remove": "Are you sure you want to remove the filter list?"
+        "wordlist__confirm_file_remove": "Are you sure you want to remove the filter list?",
+        "wordlist__filter_th": "Filter",
+        "wordlist__page_not_found_err": "Page not found",
+        "wordlist__invalid_page_num": "Invalid page number",
+        "wordlist__filter_not_avail": "Filter not available"
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -952,6 +956,10 @@
         "wordlist__incl_non_word_label": "včetně číslic a interpunkce",
         "wordlist__req_file_format_link": "požadovaný formát souboru",
         "wordlist__wl_white_lists": "Soubory obsahující seznamy slov, pro něž jsou požadovány frekvence, musí být prosté textové soubory (.txt) v kódování UTF-8 s jednou položkou na každém řádku. Položky musí odpovídat vybranému atributu. Pokud je tedy např. v menu atributu vybráno 'lemma', musí být soubor seznamem lemmat. Pro vstupní soubor se používá přesné porovnávání, nikoliv porovnávání pomocí regulárních výrazů.",
-        "wordlist__confirm_file_remove": "Jste si jisti, že chcete odstranit seznam slov pro filtr?"
+        "wordlist__confirm_file_remove": "Jste si jisti, že chcete odstranit seznam slov pro filtr?",
+        "wordlist__filter_th": "Filtr",
+        "wordlist__page_not_found_err": "Stránka nebyla nalezena",
+        "wordlist__invalid_page_num": "Chybné číslo stránky",
+        "wordlist__filter_not_avail": "Filtr není k dispozici"
     }
 }

@@ -107,6 +107,8 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
     private includeNonwords:boolean;
 
+    private dispatcherToken:string;
+
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
@@ -117,11 +119,11 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         this.subcorpList = Immutable.List<string>(subcorpList);
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
         this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
-        this.wlpat = ''; // TODO init
-        this.wlattr = this.attrList.get(0).n; // TODO init
-        this.wlnums = 'frq'; // TODO init
+        this.wlpat = '';
+        this.wlattr = this.attrList.get(0).n;
+        this.wlnums = 'frq';
         this.wltype = 'simple';
-        this.wlminfreq = '5'; // TODO init
+        this.wlminfreq = '5';
         this.wlsort = '';
         this.wlposattr1 = '';
         this.wlposattr2 = '';
@@ -134,7 +136,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         this.includeNonwords = false;
 
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherToken = dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
                 this.subcorpusId = payload.props['subcorp'];
@@ -241,6 +243,10 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
                 this.filterEditorData = null;
                 this.notifyChangeListeners();
             break;
+            case 'WORDLIST_RESULT_SET_SORT_COLUMN':
+                this.wlsort = payload.props['sortKey'];
+                this.notifyChangeListeners();
+            break;
             case 'WORDLIST_FORM_SUBMIT':
                 this.submit();
                 this.notifyChangeListeners();
@@ -284,7 +290,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         )
     }
 
-    private createSubmitArgs():MultiDict {
+    createSubmitArgs():MultiDict {
         const ans = new MultiDict();
         ans.set('corpname', this.corpusIdent.id);
         if (this.subcorpusId) {
@@ -295,6 +301,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         ans.set('wlminfreq', this.wlminfreq);
         ans.set('wlnums', this.wlnums);
         ans.set('wltype', this.wltype);
+        ans.set('wlsort', this.wlsort);
         if (this.wlwords.trim()) {
             ans.set('wlwords', this.wlwords.trim());
         }
@@ -340,12 +347,16 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
     }
 
     csSetState(state:WordlistFormProps):void {
+        this.wlattr = state.wlattr ? state.wlattr : 'word';
         this.wlpat = state.wlpat;
         this.wlsort = state.wlsort;
         this.subcnorm = state.subcnorm;
         this.wltype = state.wltype;
         this.wlnums = state.wlnums;
         this.wlminfreq = state.wlminfreq;
+        this.wlposattr1 = state.wlposattr1;
+        this.wlposattr2 = state.wlposattr2;
+        this.wlposattr3 = state.wlposattr3;
         this.wlwords = state.wlwords;
         this.blacklist = state.blacklist;
         this.wlFileName = state.wlFileName;
@@ -401,6 +412,10 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         return this.wltype;
     }
 
+    getWlsort():string {
+        return this.wlsort;
+    }
+
     getWlminfreq():string {
         return this.wlminfreq;
     }
@@ -427,5 +442,13 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
     getIncludeNonwords():boolean {
         return this.includeNonwords;
+    }
+
+    getCorpusIdent():Kontext.FullCorpusIdent {
+        return this.corpusIdent;
+    }
+
+    getDispatcherToken():string {
+        return this.dispatcherToken;
     }
 }

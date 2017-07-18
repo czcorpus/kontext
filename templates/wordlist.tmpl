@@ -18,8 +18,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 
-#import urllib
-
 #from translation import ugettext as _
 #from templating.filters import *
 #from cmpltmpl.document import document
@@ -30,50 +28,30 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $_("Word list")#slurp
 #end def
 
-#def headers
-    #filter WebSafe
-
-    #set global $curr_hidden_params = [('corpname', $corpname), ('usesubcorp', $usesubcorp),
-        ('wlattr', $wlattr), ('wlminfreq', $wlminfreq), ('wlpat', $wlpat), ('wlicase', $wlicase),
-        ('wlsort', $wlsort), ('ref_corpname', $ref_corpname), ('ref_usesubcorp', $ref_usesubcorp),
-        ('wlcache', $wlcache), ('simple_n', $simple_n), ('wltype', $wltype), ('wlnums', $wlnums),
-        ('include_nonwords', $include_nonwords), ('blcache', $blcache)]
-
-    #set global $curr_params = $curr_hidden_params + [('wlpage', $wlpage)]
-
-    #set global $curr_settings = $join_params($curr_params)
-
-    #end filter
-#end def
-
 #def bodyonload
 require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
     conf.attrname = "$wlattr";
     conf.reloadUrl = "$reload_url";
     conf.IsUnfinished = #if $processing is not None#true#else#false#end if#;
     conf.WorkerTasks = $to_json($tasks);
-    var page = pageSelf.init(conf);
+    conf.SubcorpList = $to_json($SubcorpList);
+    conf.AttrList = $to_json($AttrList);
+    conf.StructAttrList = $to_json($StructAttrList);
+    conf.Data = $to_json($Items);
+    conf.wlattrLabel = $to_json($wlattr_label);
+    conf.freqFigure = $to_json($freq_figure);
+    conf.PageNum = $to_json($wlpage);
+    conf.PageSize = $to_json($wlpagesize);
+    conf.IsLastPage = $to_json($lastpage);
+    conf.FormArgs = $to_json($form_args);
+    pageSelf.init(conf);
 });
 #end def
 
-#def urlquote($word)
-    ## quoting strings in URLs
-    #if $type('') == $type($word)
-    #return urllib.quote_plus($word)
-    #else
-    #return urllib.quote_plus($word.encode('utf8'))
-    #end if
-#end def
-
-#def custom_save
-    <li><a href="savewl_form?$curr_settings">$_('Custom')...</a></li>
-#end def
-
 #def main
-
-#filter WebSafe
 <section>
     <h2>$_("Word list")</h2>
+    <div id="wordlist-result-mount"></div>
 
     #if $processing is not None
         <div id="progress_message">
@@ -84,127 +62,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
                 <div id="progress_scale"><div id="processbar" style="width:$processing%;"></div></div>
             </div>
         </div>
-    #else
-        #block navigation($navid="next")
-        #if ($getVar('Items', '') or $getVar('Keywords', '')) and not ($wlpage == 1 and $lastpage)
-        <div class="bonito-pagination">
-        <form action="wordlist">
-
-          #if $wlpage > 1
-            <div class="bonito-pagination-left">
-            #set $firstlink_sett = $join_params($update_params($curr_params, 'wlpage', 1))
-            <a href="wordlist?$firstlink_sett"><img class="over-img" src="${files_path}/img/first-page.svg" alt="$_("<< First")" title="$_("<< First")" data-alt-img="${files_path}/img/first-page_s.svg" /></a>
-            #set $prevlink_sett = $join_params($update_params($curr_params, 'wlpage', int($wlpage) - 1))
-            <a href="wordlist?$prevlink_sett"><img class="over-img" src="${files_path}/img/prev-page.svg" alt="$_("< Previous")" title="$_("< Previous")" data-alt-src="${files_path}/img/prev-page.svg" /></a>
-            </div>
-          #end if
-
-        <div class="bonito-pagination-core">
-          #for $n, $v in $curr_hidden_params:
-          <input type="hidden" name="$n" value="$v" />
-          #end for
-          <input type="text" name="wlpage" value="$wlpage" size="4" />
-          <button type="submit" class="util-button">$_("Go")</button>
-        </div>
-
-          #if not $lastpage
-          <div class="bonito-pagination-right">
-            #set $nextlink_sett = $join_params($update_params($curr_params, 'wlpage', int($wlpage) + 1))
-          <a href="wordlist?$nextlink_sett" id="$navid"><img class="over-img" src="${files_path}/img/next-page.svg" alt="$_("Next >")" title="$_("Next >")" data-alt-img="${files_path}/img/next-page_s.svg" /></a>
-          </div>
-          #else
-          <a id="$navid"></a>
-          #end if
-        </form>
-        </div>
-        #end if
-        #end block
-
-        <table class="data word-list">
-        #if $Items
-
-          #set $attrsort_sett = $join_params($update_params($curr_params, 'wlsort', ''))
-          #set $freqsort_sett = $join_params($update_params($curr_params, 'wlsort', 'f'))
-          <thead><tr>
-          <th><a href="wordlist?$attrsort_sett">$wlattr_label</a></th>
-          <th><a href="wordlist?$freqsort_sett">$freq_figure</a></th>
-          </tr></thead>
-
-          #for $i in $Items
-            <tr>
-              #set $url_str = $urlquote($i.str.replace('\\', '\\\\').replace('"', '\\"'))
-              <td class="left">$i.str</td><td class="num">
-              #if '.' in $wlattr
-                $i.freq
-              #else
-                #set $wlattr_q = 'cql=%5B' + $wlattr + '=%22' + $url_str + '%22%5D'
-                <a href="first?$join_params([('corpname', $corpname), ('usesubcorp', $usesubcorp),
-                ('default_attr', $wlattr), ('qmcase', 1), ('queryselector', 'cqlrow')], $wlattr_q)">$i.freq</a>
-              #end if
-              </td>
-            </tr>
-          #end for
-
-        ## keywords
-        #elif $Keywords
-          <thead>
-            <tr>
-              <th></th>
-              <th></th>
-              <th colspan="3" border="1"><i>$human_corpname#if $usesubcorp# : $usesubcorp#end if</i></th>
-              <th></th>
-              <th colspan="3" border="1"><i>$ref_corp_full_name#if $ref_usesubcorp# : $ref_usesubcorp#end if</i></th>
-              <th></th>
-              <th></th>
-            </tr>
-            <tr>
-              <th>$wlattr</th>
-              <th width="10"></th>
-              <th>$_("Freq")</th>
-              <th>$_("Freq/mill")</th>
-              <th width="10"></th>
-              <th>$_("Freq")</th>
-              <th>$_("Freq/mill")</th>
-              <th width="10"></th>
-              <th>$_("Score")</th>
-            </tr>
-          </thead>
-          #for $k in $Keywords
-            <tr #if $k.has_key('class')#class="$k.class"#end if#>
-              <td class="left">$k.str</td>
-              <td></td>
-              #set $url_str = $urlquote($k.str.replace('"', '\\"'))
-              <td><a href="first?$join_params([('corpname', $corpname), ('usesubcorp', $usesubcorp),
-                    ('phrase', $url_str), ('default_attr', $wlattr), ('qmcase', '1'),
-                    ('queryselector', 'phraserow')])">$k.freq</a></td>
-
-              <td>$k.rel</td>
-              <td></td>
-              <td>
-              #if $k.freq_ref
-                <a href="first?$join_params([('corpname', $ref_corpname), ('usesubcorp', $ref_usesubcorp),
-                        ('phrase', $url_str), ('default_attr', $wlattr), ('qmcase', '1'),
-                        ('queryselector', 'phraserow')])">$k.freq_ref</a>
-              #else
-                0
-              #end if
-              </td>
-              <td>$k.rel_ref</td>
-              <td></td>
-              <td> $k.score</td>
-            </tr>
-          #end for
-        #elif not $processing
-        ## no keywords && no items
-          <i>$_("Nothing found.")</i>
-        #end if
-        </table>
-
-        #filter none
-        $navigation("next2")
-        #end filter
-
-        #end if
+    #end if
 </section>
-#end filter
 #end def

@@ -21,17 +21,19 @@
 /// <reference path="../types/common.d.ts" />
 
 import {PageModel} from './document';
-import * as $ from 'jquery';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
+import {init as wordlistResultViewInit} from 'views/wordlist/result';
 import {SimplePageStore} from '../stores/base';
+import {WordlistResultStore, ResultData, ResultItem, HeadingItem} from '../stores/wordlist/main';
+import {WordlistFormStore, WordlistFormProps} from '../stores/wordlist/form';
 
 /**
  *
  */
 export class WordlistPage extends SimplePageStore  {
 
-    private pageModel:PageModel;
+    private layoutModel:PageModel;
 
     private checkIntervalId:number;
 
@@ -43,31 +45,35 @@ export class WordlistPage extends SimplePageStore  {
 
     static MAX_NUM_NO_CHANGE = 20;
 
-    constructor(pageModel:PageModel) {
-        super(pageModel.dispatcher);
-        this.pageModel = pageModel;
+    private resultStore:WordlistResultStore;
+
+    private formStore:WordlistFormStore;
+
+    constructor(layoutModel:PageModel) {
+        super(layoutModel.dispatcher);
+        this.layoutModel = layoutModel;
     }
 
     private stopWithError():void {
         this.stopWatching();
-        this.pageModel.showMessage(
+        this.layoutModel.showMessage(
                 'error',
-                this.pageModel.translate('global__bg_calculation_failed'),
+                this.layoutModel.translate('global__bg_calculation_failed'),
                 () => {window.history.back();});
     }
 
     private checkStatus():void {
         const args = new MultiDict([
-            ['corpname', this.pageModel.getConf<string>('corpname')],
-            ['usesubcorp', this.pageModel.getConf<string>('subcorpname')],
-            ['attrname', this.pageModel.getConf<string>('attrname')]
+            ['corpname', this.layoutModel.getConf<string>('corpname')],
+            ['usesubcorp', this.layoutModel.getConf<string>('subcorpname')],
+            ['attrname', this.layoutModel.getConf<string>('attrname')]
         ]);
-        this.pageModel.getConf<Array<string>>('WorkerTasks').forEach(taskId => {
+        this.layoutModel.getConf<Array<string>>('WorkerTasks').forEach(taskId => {
             args.add('worker_tasks', taskId);
         });
-        this.pageModel.ajax(
+        this.layoutModel.ajax(
             'GET',
-            this.pageModel.createActionUrl('wordlist_process'),
+            this.layoutModel.createActionUrl('wordlist_process'),
             args
 
         ).then(
@@ -76,10 +82,10 @@ export class WordlistPage extends SimplePageStore  {
                     this.stopWithError();
 
                 } else {
-                    $('#processbar').css('width', data['status'] + '%');
+                    // $('#processbar').css('width', data['status'] + '%');
                     if (data['status'] === 100) {
                         this.stopWatching(); // just for sure
-                        window.location.href = this.pageModel.getConf<string>('reloadUrl');
+                        window.location.href = this.layoutModel.getConf<string>('reloadUrl');
 
                     } else if (this.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
                         this.stopWithError();
@@ -96,7 +102,7 @@ export class WordlistPage extends SimplePageStore  {
         );
     }
 
-    private startWatching():void {
+    private startWatching():void {WordlistFormStore
         this.numNoChange = 0;
         this.checkIntervalId = window.setInterval(this.checkStatus.bind(this), 2000);
     }
@@ -113,32 +119,79 @@ export class WordlistPage extends SimplePageStore  {
 
     private initCorpInfoToolbar():void {
         const views:WordlistFormViews = wordlistFormInit(
-            this.pageModel.dispatcher,
-            this.pageModel.exportMixins(),
-            this.pageModel.layoutViews,
+            this.layoutModel.dispatcher,
+            this.layoutModel.exportMixins(),
+            this.layoutModel.layoutViews,
             null, // TODO corparch widget view !!!!
             this
         );
-        this.pageModel.renderReactComponent(
+        this.layoutModel.renderReactComponent(
             views.CorpInfoToolbar,
             window.document.getElementById('query-overview-mount'),
             {
-                corpname: this.pageModel.getConf<string>('corpname'),
-                humanCorpname: this.pageModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.pageModel.getConf<string>('subcorpname')
+                corpname: this.layoutModel.getConf<string>('corpname'),
+                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
+                usesubcorp: this.layoutModel.getConf<string>('subcorpname')
             }
         );
     }
 
     init():void {
-        this.pageModel.init().then(
+        this.layoutModel.init().then(
             (data) => {
-                this.setupContextHelp(this.pageModel.translate('global__wl_calc_info'));
-                if (this.pageModel.getConf<boolean>('IsUnfinished')) {
+                this.setupContextHelp(this.layoutModel.translate('global__wl_calc_info'));
+                if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
                     this.startWatching();
                 }
+                this.formStore = new WordlistFormStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
+                    this.layoutModel.getConf<Array<string>>('SubcorpList'),
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
+                );
+                this.formStore.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
+                this.resultStore = new WordlistResultStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    this.formStore,
+                    {
+                        data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
+                        page: this.layoutModel.getConf<number>('PageNum'),
+                        pageSize: this.layoutModel.getConf<number>('PageSize'),
+                        isLastPage: !!this.layoutModel.getConf<boolean>('IsLastPage')
+                    },
+                    [
+                        {
+                            str: this.layoutModel.getConf<string>('wlattrLabel'),
+                            sortKey: ''
+                        },
+                        {
+                            str: this.layoutModel.getConf<string>('freqFigure'),
+                            sortKey: 'f'
+                        }
+                    ]
+                );
+
+                const view = wordlistResultViewInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.getComponentTools(),
+                    this.layoutModel.layoutViews,
+                    this.resultStore
+                );
+
+                this.layoutModel.renderReactComponent(
+                    view.WordlistResult,
+                    document.getElementById('wordlist-result-mount'),
+                    {}
+                );
+
                 this.initCorpInfoToolbar();
             }
+
+        ).catch(
+            (err) => console.error(err)
         );
     }
 }

@@ -265,6 +265,17 @@ declare module "views/wordlist/form" {
             wordlistFormStore:any):WordlistFormViews;
 }
 
+declare module "views/wordlist/result" {
+
+    export interface WordlistResultViews {
+        WordlistResult:React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
+            layoutViews:Kontext.LayoutViews, wordlistResultStore:any):WordlistResultViews;
+
+}
+
 
 declare module "views/options/structsAttrs" {
 

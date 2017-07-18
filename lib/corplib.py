@@ -194,7 +194,6 @@ def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
     """
     Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
     """
-    logging.getLogger(__name__).debug('args: word: %s, wlattr: %s, wlpat: %s, wlminfreq: %s, words: %s, blacklist: %s' % (wlattr, wlpat, wlminfreq, wlsort, words, blacklist))
     dec_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
     enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
 

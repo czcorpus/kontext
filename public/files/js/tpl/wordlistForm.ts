@@ -28,8 +28,6 @@ import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {SimplePageStore} from '../stores/base';
 import {WordlistFormStore} from '../stores/wordlist/form';
 
-declare var $;
-
 /**
  *
  */
@@ -42,7 +40,6 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
     private views:WordlistFormViews;
 
     private wordlistFormStore:WordlistFormStore;
-
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -131,10 +128,8 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
                     document.getElementById('wordlist-form-mount'),
                     {}
                 );
-
             }
-        ).then(
-            () => undefined,
+        ).catch(
             (err) => console.error(err)
         );
     }
