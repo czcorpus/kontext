@@ -35,6 +35,7 @@ import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import {Dispatcher} from 'vendor/Dispatcher';
 import {init as documentViewsInit} from 'views/document';
+import {init as commonViewsInit} from 'views/common';
 import {init as menuViewsInit} from 'views/menu';
 import {init as overviewAreaViewsInit} from 'views/overview';
 import * as React from 'vendor/react';
@@ -131,6 +132,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * React component classes
      */
     layoutViews:Kontext.LayoutViews;
+
+    commonViews:CommonViews;
 
     private corpusInfoStore:docStores.CorpusInfoStore;
 
@@ -902,6 +905,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     this.getStores()
                 );
 
+                this.commonViews = commonViewsInit(this.getComponentTools());
+
                 window.onkeydown = (evt) => {
                     this.globalKeyHandlers.forEach(fn => fn(evt));
                 }
@@ -1023,6 +1028,10 @@ export class PluginApi implements Kontext.PluginApi {
 
     getViews():Kontext.LayoutViews {
         return this.pageModel.layoutViews;
+    }
+
+    getCommonViews():CommonViews {
+        return this.pageModel.commonViews;
     }
 
     getUserSettings():Kontext.IUserSettings {

@@ -23,7 +23,7 @@ import * as React from 'vendor/react';
 
 /**
  */
-export function init(dispatcher, utils, layoutViews, wordlistResultStore) {
+export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlistResultStore) {
 
     // ---------------------- <THSortableColumn /> -------------------
 
@@ -165,17 +165,21 @@ export function init(dispatcher, utils, layoutViews, wordlistResultStore) {
             <div className="bonito-pagination">
                 <form onKeyDown={handleKeyPress}>
                     <div className="bonito-pagination-left">
-                        <a onClick={handlePrevPageClick}>
-                            <img src={utils.createStaticUrl('img/prev-page.svg')} />
-                        </a>
+                        {props.currPage > 1 ?
+                            (<a onClick={handlePrevPageClick}>
+                                <img src={utils.createStaticUrl('img/prev-page.svg')} />
+                            </a>) : null
+                        }
                     </div>
                     <div className="bonito-pagination-core">
                         <PaginatorTextInput value={props.currPage} storeIsBusy={props.storeIsBusy} />
                     </div>
                     <div className="bonito-pagination-right">
-                        <a onClick={handleNextPageClick}>
-                            <img src={utils.createStaticUrl('img/next-page.svg')} />
-                        </a>
+                        {!props.isLastPage ?
+                            (<a onClick={handleNextPageClick}>
+                                <img src={utils.createStaticUrl('img/next-page.svg')} />
+                            </a>) : null
+                        }
                     </div>
                 </form>
             </div>
@@ -199,7 +203,9 @@ export function init(dispatcher, utils, layoutViews, wordlistResultStore) {
                 currPageInput: wordlistResultStore.getCurrPageInput(),
                 storeIsBusy: wordlistResultStore.getIsBusy(),
                 usesStructAttr: wordlistResultStore.usesStructAttr(),
-                wlsort: wordlistResultStore.getWlsort()
+                wlsort: wordlistResultStore.getWlsort(),
+                saveFormActive: wordlistResultStore.getSaveFormActive(),
+                isLastPage: wordlistResultStore.getIsLastPage()
             };
         }
 
@@ -218,7 +224,8 @@ export function init(dispatcher, utils, layoutViews, wordlistResultStore) {
         render() {
             return (
                 <div className="WordlistResult">
-                    <Paginator currPage={this.state.currPageInput} storeIsBusy={this.state.storeIsBusy} />
+                    <Paginator currPage={this.state.currPageInput} storeIsBusy={this.state.storeIsBusy}
+                                isLastPage={this.state.isLastPage} />
                     <table className="data">
                         <thead>
                             <tr>
@@ -237,6 +244,7 @@ export function init(dispatcher, utils, layoutViews, wordlistResultStore) {
                                         usesStructAttr={this.state.usesStructAttr} />)}
                         </tbody>
                     </table>
+                    {this.state.saveFormActive ? <wordlistSaveViews.WordlistSaveForm /> : null}
                 </div>
             );
         }

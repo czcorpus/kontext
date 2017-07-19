@@ -478,7 +478,8 @@
         "wordlist__filter_th": "Filter",
         "wordlist__page_not_found_err": "Page not found",
         "wordlist__invalid_page_num": "Invalid page number",
-        "wordlist__filter_not_avail": "Filter not available"
+        "wordlist__filter_not_avail": "Filter not available",
+        "wordlist__save_form_heading": "Save word list"
     },
     "cs-CZ" : {
         "global__remark_figures_denote_different_attributes": "Poznámka: čísla v tomto přehledu udávají počty různých atributů / struktur (tj. typů) v korpusu.",
@@ -960,6 +961,7 @@
         "wordlist__filter_th": "Filtr",
         "wordlist__page_not_found_err": "Stránka nebyla nalezena",
         "wordlist__invalid_page_num": "Chybné číslo stránky",
-        "wordlist__filter_not_avail": "Filtr není k dispozici"
+        "wordlist__filter_not_avail": "Filtr není k dispozici",
+        "wordlist__save_form_heading": "Uložit seznam slov"
     }
 }

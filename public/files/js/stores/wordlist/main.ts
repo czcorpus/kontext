@@ -28,6 +28,7 @@ import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../tpl/document';
 import {WordlistFormStore} from './form';
 import {MultiDict} from '../../util';
+import {WordlistSaveStore} from './save';
 
 
 export type ResultData = {
@@ -65,6 +66,8 @@ export class WordlistResultStore extends SimplePageStore {
 
     formStore:WordlistFormStore;
 
+    saveStore:WordlistSaveStore;
+
     data:Immutable.List<IndexedResultItem>;
 
     headings:Immutable.List<HeadingItem>;
@@ -80,10 +83,11 @@ export class WordlistResultStore extends SimplePageStore {
     isBusy:boolean;
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
-            data:ResultData, headings:Array<HeadingItem>) {
+            saveStore:WordlistSaveStore, data:ResultData, headings:Array<HeadingItem>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formStore = formStore;
+        this.saveStore = saveStore;
         this.currPage = data.page;
         this.currPageInput = String(this.currPage);
         this.pageSize = data.pageSize;
@@ -107,7 +111,6 @@ export class WordlistResultStore extends SimplePageStore {
                 case 'WORDLIST_RESULT_SET_SORT_COLUMN':
                     dispatcher.waitFor([this.formStore.getDispatcherToken()]);
                     this.processPageLoad();
-                    this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_RESULT_NEXT_PAGE':
                     if (!this.isLastPage) {
@@ -144,6 +147,14 @@ export class WordlistResultStore extends SimplePageStore {
                 case 'WORDLIST_RESULT_CONFIRM_PAGE':
                     this.currPage = parseInt(this.currPageInput, 10);
                     this.processPageLoad();
+                break;
+                case 'MAIN_MENU_SHOW_SAVE_FORM':
+                    dispatcher.waitFor([this.saveStore.getDispatcherToken()]);
+                    this.notifyChangeListeners();
+                break;
+                case 'WORDLIST_SAVE_FORM_HIDE':
+                    dispatcher.waitFor([this.saveStore.getDispatcherToken()]);
+                    this.notifyChangeListeners();
                 break;
             }
         });
@@ -229,4 +240,7 @@ export class WordlistResultStore extends SimplePageStore {
         return this.formStore.getWlsort();
     }
 
+    getSaveFormActive():boolean {
+        return this.saveStore.getFormIsActive();
+    }
 }
