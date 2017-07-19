@@ -1954,6 +1954,9 @@ msgstr "Nepodařilo se otevřít korpus {0}"
 msgid "Two-attribute interrelationship"
 msgstr "Vzájemný vztah dvou atributů"
 
+msgid "Name the query"
+msgstr "Pojmenovat dotaz"
+
 #~ msgid "Create subcorpus"
 #~ msgstr "Subkorpusy"
 

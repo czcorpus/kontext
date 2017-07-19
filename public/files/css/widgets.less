@@ -564,3 +564,84 @@ fieldset.FieldsetOutputOptions {
         margin: 1em;
     }
 }
+
+
+.RecentQueriesPageList {
+
+    table.data {
+        margin-top: 1em;
+
+        .last-row td {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .details {
+            color: @color-light-text;
+            font-size: 80%;
+        }
+
+        .corpname {
+            color: @color-logo-pink;
+        }
+
+        .query {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            padding: 0.3em 2em 0.3em 0;
+            font-family: @monospace-font-family;
+            max-width: 40em;
+        }
+    }
+
+    .options {
+        text-align: left;
+        font-size: 80%;
+        padding: 5px 20px;
+        color: @color-logo-blue;
+        line-height: 1.5em;
+    }
+
+    .options span.query-action {
+        border: 1px solid @color-logo-blue;
+        color: @color-logo-blue;
+        border-radius: 3px;
+        padding: 1px 4px;
+        white-space: nowrap;
+    }
+
+    .date {
+        color: #999999;
+
+        strong {
+            padding-left: 0.4em;
+        }
+    }
+
+    .link,
+    .date {
+        text-align: left;
+        min-width: 15em;
+    }
+
+    .selectable {
+        display: inline-block;
+        border: @input-border-style;
+        border-radius: @input-border-radius;
+        background-color: #FFFFFF;
+        padding: 3px 5px;
+    }
+
+    .default-attr {
+        border: 1px solid @color-logo-blue;
+        color: @color-logo-blue;
+        border-radius: 3px;
+        padding: 1px 4px;
+        white-space: nowrap;
+    }
+
+    .query-history-filter > *:nth-child(n+1) {
+        margin-right: 20px;
+    }
+}

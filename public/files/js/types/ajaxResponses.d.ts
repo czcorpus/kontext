@@ -82,22 +82,8 @@ declare module AjaxResponse {
         fullsize:number;
     }
 
-
-    export interface QueryHistoryItem {
-        corpname:string;
-        humanCorpname:string;
-        created:[string,string]; // date string and time string
-        details:string;
-        query:string;
-        query_form_url:string;
-        query_type:string;
-        query_type_translated:string;
-        subcorpname:string;
-        params:{[key:string]:any}
-    }
-
     export interface QueryHistory extends Kontext.AjaxResponse {
-        data:Array<QueryHistoryItem>;
+        data:Array<Kontext.QueryHistoryItem>;
         limit:number;
         offset:number;
     }

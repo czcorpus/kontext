@@ -320,7 +320,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
         const p2 = p1.then(
             () => {
-                return queryStoragePlugin(this.layoutModel.pluginApi());
+                const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
+                return queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
             }
         );
 

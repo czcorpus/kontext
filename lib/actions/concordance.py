@@ -242,6 +242,7 @@ class Actions(Querying):
         out['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         self._export_subcorpora_list(self.args.corpname, out)
 
+        out['query_history_page_num_records'] = int(settings.get('plugins', 'query_storage')['page_num_records'])
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
         if not out['finished'] and self.args.async and self.args.save and not out['sampled_size']:
             out['running_calc'] = True
@@ -278,6 +279,7 @@ class Actions(Querying):
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
+        out['query_history_page_num_records'] = int(settings.get('plugins', 'query_storage')['page_num_records'])
         return out
 
     @exposed(return_type='json', legacy=True)

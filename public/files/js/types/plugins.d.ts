@@ -51,8 +51,26 @@ declare module PluginInterfaces {
         getWidgetView():React.ReactClass;
     }
 
+    export interface IQueryStorageStore extends Kontext.PageStore {
+
+        /**
+         *
+         */
+        getData():Immutable.List<Kontext.QueryHistoryItem>;
+    }
+
     export interface IQueryStorage {
+
+        /**
+         * Import data to store. This is meant to be used right
+         * after plug-in initialization and it should never
+         * notify listeners.
+         */
+        importData(data:Array<Kontext.QueryHistoryItem>):void;
+
         getWidgetView():React.ReactClass;
+
+        getStore():IQueryStorageStore;
     }
 
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
@@ -127,7 +145,7 @@ declare module "plugins/liveAttributes/init" {
 }
 
 declare module "plugins/queryStorage/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IQueryStorage>;
+    export default function create(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage>;
 }
 
 declare module "plugins/taghelper/init" {

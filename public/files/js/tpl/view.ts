@@ -1126,7 +1126,8 @@ export class ViewPage {
 
         const p4 = p3.then(
             () => {
-                return queryStoragePlugin(this.layoutModel.pluginApi());
+                const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
+                return queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
             }
         );
 
@@ -1138,7 +1139,7 @@ export class ViewPage {
 
         return RSVP.all([p1, p4, p5]).then(
             (args:any) => {
-                const [lvprops, tagh, qs] = args;
+                const [lvprops, qs, tagh] = args;
                 this.initQueryForm();
                 this.initFilterForm();
                 this.initSortForm();
