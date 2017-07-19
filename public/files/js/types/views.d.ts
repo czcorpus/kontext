@@ -21,9 +21,23 @@
 /// <reference path="../../ts/declarations/flux.d.ts" />
 
 
+declare interface CommonViews {
+    SaveFormatSelect:React.ReactClass;
+}
+
+
 declare module "views/document" {
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
             storeProvider:any):Kontext.LayoutViews;
+}
+
+declare module "views/common" {
+
+    export interface CommonViews {
+        SaveFormatSelect:React.ReactClass;
+    }
+
+    export function init(utils:any):CommonViews;
 }
 
 
@@ -245,11 +259,11 @@ declare module "views/query/overview" {
 declare module "views/wordlist/save" {
 
     export interface WordlistSaveViews {
-        SaveWlForm:React.ReactClass;
+        WordlistSaveForm:React.ReactClass;
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher,
-            mixins:any):WordlistSaveViews;
+            mixins:any, layoutViews:Kontext.LayoutViews, commonViews:any, wordlistSaveStore:any):WordlistSaveViews;
 }
 
 
@@ -272,7 +286,7 @@ declare module "views/wordlist/result" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:Kontext.LayoutViews, wordlistResultStore:any):WordlistResultViews;
+            layoutViews:Kontext.LayoutViews, wordlistSaveViews:any, wordlistResultStore:any):WordlistResultViews;
 
 }
 

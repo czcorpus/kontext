@@ -24,9 +24,11 @@ import {PageModel} from './document';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {init as wordlistResultViewInit} from 'views/wordlist/result';
+import {init as wordlistSaveViewInit} from 'views/wordlist/save';
 import {SimplePageStore} from '../stores/base';
 import {WordlistResultStore, ResultData, ResultItem, HeadingItem} from '../stores/wordlist/main';
 import {WordlistFormStore, WordlistFormProps} from '../stores/wordlist/form';
+import {WordlistSaveStore} from '../stores/wordlist/save';
 
 /**
  *
@@ -44,10 +46,6 @@ export class WordlistPage extends SimplePageStore  {
     private lastStatus:number;
 
     static MAX_NUM_NO_CHANGE = 20;
-
-    private resultStore:WordlistResultStore;
-
-    private formStore:WordlistFormStore;
 
     constructor(layoutModel:PageModel) {
         super(layoutModel.dispatcher);
@@ -102,7 +100,7 @@ export class WordlistPage extends SimplePageStore  {
         );
     }
 
-    private startWatching():void {WordlistFormStore
+    private startWatching():void {
         this.numNoChange = 0;
         this.checkIntervalId = window.setInterval(this.checkStatus.bind(this), 2000);
     }
@@ -136,6 +134,11 @@ export class WordlistPage extends SimplePageStore  {
         );
     }
 
+    setDownloadLink(url:string):void {
+        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
+        iframe.src = url;
+    }
+
     init():void {
         this.layoutModel.init().then(
             (data) => {
@@ -143,7 +146,7 @@ export class WordlistPage extends SimplePageStore  {
                 if (this.layoutModel.getConf<boolean>('IsUnfinished')) {
                     this.startWatching();
                 }
-                this.formStore = new WordlistFormStore(
+                const formStore = new WordlistFormStore(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
@@ -151,11 +154,20 @@ export class WordlistPage extends SimplePageStore  {
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
                 );
-                this.formStore.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
-                this.resultStore = new WordlistResultStore(
+                formStore.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
+
+                const saveStore = new WordlistSaveStore(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
-                    this.formStore,
+                    url => this.setDownloadLink(url),
+                    () => formStore.createSubmitArgs()
+                );
+
+                const resultStore = new WordlistResultStore(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    formStore,
+                    saveStore,
                     {
                         data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
                         page: this.layoutModel.getConf<number>('PageNum'),
@@ -174,11 +186,20 @@ export class WordlistPage extends SimplePageStore  {
                     ]
                 );
 
+                const saveViews = wordlistSaveViewInit(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel.getComponentTools(),
+                    this.layoutModel.layoutViews,
+                    this.layoutModel.commonViews,
+                    saveStore
+                );
+
                 const view = wordlistResultViewInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentTools(),
                     this.layoutModel.layoutViews,
-                    this.resultStore
+                    saveViews,
+                    resultStore
                 );
 
                 this.layoutModel.renderReactComponent(

@@ -1299,30 +1299,17 @@ class Actions(Querying):
             result['freq_figure'] = _(self.FREQ_FIGURES.get(self.args.wlnums, '?'))
             result['processing'] = None
 
-            params = {
-                'colheaders': 0,
-                'ref_usesubcorp': None,
-                'wlattr': self.args.wlattr,
-                'wlpat': wlpat,
-                'wlsort': self.args.wlsort,
-                'wlminfreq': self.args.wlminfreq,
-                'wlnums': self.args.wlnums,
-                'wltype': 'simple',
-                'from_line': 1,
-                'to_line': None,
-                'include_nonwords': self.args.include_nonwords
-            }
-
             result['form_args'] = dict(
                     wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
                     subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
                     wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
                     wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
 
-            self._add_save_menu_item('CSV', 'savewl', params, save_format='csv')
-            self._add_save_menu_item('XLSX', 'savewl', params, save_format='xlsx')
-            self._add_save_menu_item('XML', 'savewl', params, save_format='xml')
-            self._add_save_menu_item('TXT', 'savewl', params, save_format='text')
+            self._add_flux_save_menu_item('CSV', save_format='csv')
+            self._add_flux_save_menu_item('XLSX', save_format='xlsx')
+            self._add_flux_save_menu_item('XML', save_format='xml')
+            self._add_flux_save_menu_item('TXT', save_format='text')
+            self._add_flux_save_menu_item(_('Custom'))
             # custom save is solved in templates because of compatibility issues
             result['tasks'] = []
             self._export_subcorpora_list(self.args.corpname, result)
@@ -1386,28 +1373,6 @@ class Actions(Querying):
                            ml3attr=self.args.wlposattr3)
 
     @exposed(access_level=1, legacy=True)
-    def savewl_form(self, from_line=1, to_line=''):
-        self.disabled_menu_items = (MainMenu.SAVE, )
-        ans = {}
-        ans['WlStateForm'] = json.dumps(dict(
-            corpname=self.args.corpname,
-            wlattr=self.args.wlattr,
-            wlminfreq=self.args.wlminfreq,
-            wlpat=self.args.wlpat,
-            wlicase=self.args.wlicase,
-            wlsort=self.args.wlsort,
-            usesubcorp=self.args.usesubcorp,
-            ref_corpname=self.args.ref_corpname,
-            ref_usesubcorp=self.args.ref_usesubcorp,
-            usearf=self.args.usearf,
-            simple_n=self.args.simple_n,
-            wltype=self.args.wltype,
-            wlnums=self.args.wlnums,
-            include_nonwords=self.args.include_nonwords
-        ).items())
-        return ans
-
-    @exposed(access_level=1, legacy=True)
     def savewl(self, from_line=1, to_line='', wltype='simple', usesubcorp='',
                ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
@@ -1441,7 +1406,6 @@ class Actions(Querying):
             self._headers['Content-Type'] = writer.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
                 mkfilename(saveformat),)
-
             # write the header first, if required
             if colheaders:
                 writer.writeheading(('', self.args.wlattr, 'freq'))

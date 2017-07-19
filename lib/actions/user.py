@@ -154,11 +154,10 @@ class User(Kontext):
             'limit': limit
         }
 
-    @exposed(return_type='html', template='empty.tmpl', legacy=True, skip_corpus_init=True)
+    @exposed(return_type='html', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):
-        html = plugins.get('application_bar').get_contents(plugin_api=self._plugin_api,
+        return plugins.get('application_bar').get_contents(plugin_api=self._plugin_api,
                                                            return_url=self.return_url)
-        return {'html': html}
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_user_info(self, request):

@@ -18,31 +18,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-
-import {PageModel} from './document';
-
-class MessagePage {
-
-    private layoutModel:PageModel;
-
-    constructor(layoutModel:PageModel) {
-        this.layoutModel = layoutModel;
-    }
-
-    init():void {
-        this.layoutModel.init().then(
-            () => {
-
-            },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        )
-    }
-}
+import * as React from 'vendor/react';
 
 
-export function init(conf:Kontext.Conf):void {
-    new MessagePage(new PageModel(conf)).init();
+export function init(utils) {
+
+    /**
+     *
+     * @param {value:string; onChange:(evt)=>void; } props
+     */
+    const SaveFormatSelect = (props) => {
+
+        return (
+            <select value={props.value} onChange={props.onChange}>
+                <option value="csv">CSV</option>
+                <option value="xlsx">XLSX (Excel)</option>
+                <option value="xml">XML</option>
+                <option value="text">Text</option>
+            </select>
+        );
+    };
+
+    return {
+        SaveFormatSelect: SaveFormatSelect
+    };
+
 }
