@@ -162,6 +162,13 @@ declare module Kontext {
     }
 
     /**
+     * A store that another store can wait for.
+     */
+    export interface ComposableStore extends PageStore {
+        getDispatcherToken():string;
+    }
+
+    /**
      * A store managing access to a user information
      */
     export interface IUserInfoStore extends PageStore {
@@ -343,7 +350,7 @@ declare module Kontext {
 
     export interface IURLHandler {
         createStaticUrl(path:string):string;
-        createActionUrl(path:string, args?:Array<Array<string>>):string;
+        createActionUrl(path:string, args?:Array<Array<string>>|IMultiDict):string;
         encodeURLParameters(params:IMultiDict):string
     }
 
@@ -415,6 +422,19 @@ declare module Kontext {
          * was executed.
          */
         size:number;
+    }
+
+    export interface QueryHistoryItem {
+        corpname:string;
+        humanCorpname:string;
+        created:[string,string]; // date string and time string
+        details:string;
+        query:string;
+        query_form_url:string;
+        query_type:string;
+        query_type_translated:string;
+        subcorpname:string;
+        params:{[key:string]:any}
     }
 
     /**

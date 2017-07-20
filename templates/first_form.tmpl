@@ -44,6 +44,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf
     conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
     conf.InputLanguages = $to_json($input_languages);
     conf.TextTypesNotes = $to_json($text_types_notes);
+    conf.QueryHistoryPageNumRecords = $to_json($query_history_page_num_records);
     firstForm.init(conf);
 });
 #end def

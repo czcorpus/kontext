@@ -256,6 +256,17 @@ declare module "views/query/overview" {
 }
 
 
+declare module "views/query/history" {
+
+    export interface RecentQueriesPageViews {
+        RecentQueriesPageList:React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, utils:any,
+                    layoutViews:Kontext.LayoutViews, queryHistoryStore:any):RecentQueriesPageViews;
+}
+
+
 declare module "views/wordlist/save" {
 
     export interface WordlistSaveViews {

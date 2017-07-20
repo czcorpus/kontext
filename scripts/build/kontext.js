@@ -142,8 +142,7 @@
 
     /**
      * Produces mapping for modules with 'fake' (= non filesystem) paths.
-     * E.g. 'jquery' maps to 'vendor/jquery.min', 'plugins/queryStorage'
-     * maps to 'plugins/myCoolQueryStorage'.
+     * E.g. 'plugins/queryStorage' maps to 'plugins/myCoolQueryStorage'.
      *
      * @param {string} confPath - a path to KonText XML configuration file (config.xml)
      * @param {string} pluginsPath - a path to JS/TS plug-ins implementations
@@ -160,7 +159,6 @@
             'win' : 'empty:',
             'conf' : 'empty:',
             'plugins/applicationBar/toolbar': 'empty:',
-            'jquery' : 'vendor/jquery.min',
             'vendor/rsvp' : 'vendor/rsvp.min',
             'vendor/react': reactModule,
             'vendor/react-dom': reactDomModule,
@@ -187,7 +185,6 @@
      */
     module.exports.listPackedModules = function (isProduction) {
         let modules = [
-            'jquery',
             'vendor/rsvp',
             'vendor/rsvp-ajax',
             'vendor/react',

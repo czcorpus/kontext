@@ -85,8 +85,8 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.FreqFormProps = $to_json($freq_form_args);
     conf.CTFreqFormProps = $to_json($ctfreq_form_args);
     conf.CollFormProps = $to_json($coll_form_args);
-    ## sort form
-
+    ##
+    conf.QueryHistoryPageNumRecords = $to_json($query_history_page_num_records);
 
     #if $running_calc
     conf.numLines = $len($Lines);

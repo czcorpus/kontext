@@ -117,42 +117,44 @@ class User(Kontext):
             rows = ()
         return rows
 
-    @exposed(access_level=1, legacy=True)
-    def query_history(self, offset=0, limit=100, from_date='', to_date='', query_type='', current_corpus=''):
+    @exposed(access_level=1)
+    def query_history(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         num_records = int(settings.get('plugins', 'query_storage').get('page_num_records', 0))
+        # offset=0, limit=100, from_date='', to_date='', query_type='', current_corpus=''
+        offset = int(request.args.get('offset', '0'))
+        pages = 1
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        query_type = request.args.get('query_type')
+        current_corpus = int(request.args.get('current_corpus', '0'))
 
-        if not offset:
-            offset = 0
-        if not limit:
-            limit = 0
         rows = self._load_query_history(from_date=from_date, query_type=query_type, current_corpus=current_corpus,
-                                        to_date=to_date, offset=offset, limit=num_records)
-        return {
-            'data': rows,
-            'from_date': from_date,
-            'to_date': to_date,
-            'offset': offset,
-            'limit': limit,
-            'page_num_records': num_records,
-            'page_append_records': settings.get('plugins', 'query_storage').get('page_append_records', 0)
-        }
+                                        to_date=to_date, offset=offset, limit=num_records * pages)
+        return dict(
+            data=rows,
+            from_date=from_date,
+            to_date=to_date,
+            offset=offset,
+            limit=num_records * pages,
+            page_num_records=num_records
+        )
 
-    @exposed(access_level=1, return_type='json', legacy=True)
-    def ajax_query_history(self, current_corpus='', offset=0, limit=20, query_type=''):
-        if not offset:
-            offset = 0
-        if not limit:
-            limit = 0
+    @exposed(access_level=1, return_type='json')
+    def ajax_query_history(self, request):
+        offset = int(request.args.get('offset', '0'))
+        limit = int(request.args.get('limit'))
+        query_type = request.args.get('query_type')
+        current_corpus = int(request.args.get('current_corpus', '0'))
         rows = self._load_query_history(offset=offset, limit=limit, query_type=query_type,
                                         current_corpus=current_corpus, from_date=None, to_date=None)
-        return {
-            'data': rows,
-            'from_date': None,
-            'to_date': None,
-            'offset': offset,
-            'limit': limit
-        }
+        return dict(
+            data=rows,
+            from_date=None,
+            to_date=None,
+            offset=offset,
+            limit=limit
+        )
 
     @exposed(return_type='html', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):

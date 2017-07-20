@@ -33,14 +33,13 @@ class ApplicationBar3(AbstractApplicationBar):
 
     @staticmethod
     def _process_scripts(conf):
-        present_deps = ('jquery', )   # TODO
-        foreign_deps = filter(lambda x: x[1]['module'] not in present_deps, conf['depends'].items())
-        for item in foreign_deps:
+        deps = conf['depends'].items()
+        for item in deps:
             item[1]['url'] = item[1]['url'].rstrip('.js')
             item[1]['module'] = item[1]['package'] + '/' + item[1]['module']
             del item[1]['package']
         return dict(main=conf['main'].rstrip('.js'),
-                    deps=map(lambda x: x[1], foreign_deps))
+                    deps=map(lambda x: x[1], deps))
 
     def get_styles(self, plugin_api):
         toolbar_obj = plugin_api.get_shared('toolbar')

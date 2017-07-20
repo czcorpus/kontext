@@ -659,13 +659,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl(path:string, args?:Array<[string,string]>):string {
+    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string {
         if (typeof path !== 'string') {
             throw new Error(`Cannot create action url. Invalid path: ${path}`);
         }
         let urlArgs = '';
         if (args !== undefined) {
-            urlArgs = args
+            const nArgs = Array.isArray(args) ? args : args.items();
+            urlArgs = nArgs
                 .filter(item => item[1] !== null && item[1] !== undefined)
                 .map(item => encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]))
                 .join('&');
@@ -969,7 +970,7 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.createStaticUrl(path);
     }
 
-    createActionUrl(path:string, args?:Array<[string,string]>) {
+    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict) {
         return this.pageModel.createActionUrl(path, args);
     }
 

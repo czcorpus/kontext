@@ -44,10 +44,18 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
         ).QueryStorage;
     }
 
+    getStore():PluginInterfaces.IQueryStorageStore {
+        return this.store;
+    }
+
+    importData(data:Array<Kontext.QueryHistoryItem>):void {
+        this.store.importData(data);
+    }
+
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IQueryStorage> {
+export default function create(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage> {
     return new RSVP.Promise<PluginInterfaces.IQueryStorage>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
-        resolve(new QueryStoragePlugin(pluginApi, new QueryStorageStore(pluginApi)));
+        resolve(new QueryStoragePlugin(pluginApi, new QueryStorageStore(pluginApi, offset, limit, pageSize)));
     });
 }

@@ -1,5 +1,7 @@
 #*
-Copyright (c) 2013 Institute of the Czech National Corpus
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -19,7 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #encoding UTF-8
 #from translation import ugettext as _
 #from cmpltmpl.document import document
-#from templating.filters import *
 
 #extends document
 
@@ -29,8 +30,12 @@ KonText - $_('Recent queries')
 
 #def bodyonload
     require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
-        conf.page.page_num_records = $page_num_records;
-        conf.page.page_append_records = $page_append_records;
+        conf.Data = $to_json($data);
+        conf.FromDate = $to_json($from_date);
+        conf.ToDate = $to_json($to_date);
+        conf.Offset = $to_json($offset);
+        conf.Limit = $to_json($limit);
+        conf.PageSize = $to_json($page_num_records);
         pageSelf.init(conf);
     });
 #end def
@@ -38,46 +43,6 @@ KonText - $_('Recent queries')
 #block main
 <section>
     <h2>$_('Recent queries')</h2>
-
-    <form class="query-history-filter" action="" method="get">
-        <input type="hidden" name="corpname" value="$corpname" />
-        <label>$_('current corpus only')<input type="checkbox" name="current_corpus" value="1" #if $getVar('current_corpus', None)#checked="checked"#end if# /></label>
-        $_('query type'):
-        <select name="query_type">
-            <option value="">$_('any type')</option>
-            <option value="iquery" #if $getVar('query_type', '') == 'iquery'#selected="selected"#end if#>$_('Basic')</option>
-            <option value="lemma" #if $getVar('query_type', '') == 'lemma'#selected="selected"#end if#>$_('Lemma')</option>
-            <option value="phrase" #if $getVar('query_type', '') == 'phrase'#selected="selected"#end if#>$_('Phrase')</option>
-            <option value="word" #if $getVar('query_type', '') == 'word'#selected="selected"#end if#>$_('Word form')</option>
-            <option value="char" #if $getVar('query_type', '') == 'char'#selected="selected"#end if#>$_('Word part')</option>
-            <option value="cql" #if $getVar('query_type', '') == 'cql'#selected="selected"#end if#>CQL</option>
-        </select>
-        <button class="default-button" type="submit">$_('Filter list')</button>
-    </form>
-
-    #if $len($data) > 0
-    <table border="0" class="data query-history">
-    <tr>
-        <th>$_('query')</th>
-        <th>$_('corpus')</th>
-        <th>$_('query type')</th>
-        <th>$_('details')</th>
-        <th>$_('date and time')</th>
-        <th></th>
-    </tr>
-    #for $row in $data
-        <tr class="data-item">
-            <td class="query">#filter $Shortener#${row.query, nice=True, escape=True, length=$history_max_query_size}#end filter</td>
-            <td class="corpname">$row.humanCorpname#if $row.subcorpname #:$row.subcorpname#end if#</td>
-            <td>$row.query_type_translated</td>
-            <td class="details">$row.get('details', '')</td>
-            <td class="date">$row.created[1] <strong>$row.created[0]</strong></td>
-            <td><a href="$row.query_form_url">$_('use query')</a></td>
-        </tr>
-    #end for
-    </table>
-    #else
-    <p>[$_('Empty list')]</p>
-    #end if
+    <div id="query-history-mount"></div>
 </section>
 #end block

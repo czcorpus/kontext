@@ -26,61 +26,137 @@
 
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
+import {MultiDict} from '../../util';
 
 
-export class QueryStorageStore extends SimplePageStore {
-
-    static DispatchToken:string;
+export class QueryStorageStore extends SimplePageStore implements PluginInterfaces.IQueryStorageStore {
 
     private pluginApi:Kontext.PluginApi;
 
-    private data:Immutable.List<AjaxResponse.QueryHistoryItem>;
+    private data:Immutable.List<Kontext.QueryHistoryItem>;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    private offset:number;
+
+    private limit:number;
+
+    private queryType:string;
+
+    private currentCorpusOnly:boolean;
+
+    private isBusy:boolean;
+
+    private pageSize:number;
+
+    constructor(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
-        const self = this;
         this.pluginApi = pluginApi;
-        this.data = Immutable.List<AjaxResponse.QueryHistoryItem>();
+        this.data = Immutable.List<Kontext.QueryHistoryItem>();
+        this.queryType = '';
+        this.currentCorpusOnly = false;
+        this.offset = offset;
+        this.limit = limit;
+        this.pageSize = pageSize;
+        this.isBusy = false;
 
-        QueryStorageStore.DispatchToken = this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
-                switch (payload.actionType) {
-                    case 'QUERY_STORAGE_LOAD_HISTORY':
-                        self.loadData().then(
-                            () => {
-                                self.notifyChangeListeners();
-                            },
-                            (err) => {
-                                self.pluginApi.showMessage('error', err);
-                            }
-                        )
-                    break;
-                }
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'QUERY_STORAGE_SET_QUERY_TYPE':
+                    this.queryType = payload.props['value'];
+                    this.performLoadAction();
+                break;
+                case 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY':
+                    this.currentCorpusOnly = payload.props['value'];
+                    this.performLoadAction();
+                break;
+                case 'QUERY_STORAGE_LOAD_MORE':
+                    this.limit += this.pageSize;
+                    this.performLoadAction();
+
+                break;
+                case 'QUERY_STORAGE_LOAD_HISTORY':
+                    this.performLoadAction();
+                break;
+                case 'QUERY_STORAGE_OPEN_QUERY_FORM':
+                    this.openQueryForm(
+                        payload.props['corpusId'],
+                        payload.props['queryType'],
+                        payload.props['query']
+                    );
+                    // page leaves here
+                break;
+            }
+        });
+    }
+
+    private openQueryForm(corpusId:string, queryType:string, query:string):void {
+        const args = new MultiDict();
+        args.set('corpname', corpusId);
+        args.set(queryType, query);
+        args.set('queryselector', queryType + 'row');
+        window.location.href = this.pluginApi.createActionUrl('first_form', args);
+    }
+
+    private performLoadAction():void {
+        this.isBusy = true;
+        this.notifyChangeListeners();
+        this.loadData().then(
+            () => {
+                this.isBusy = false;
+                this.notifyChangeListeners();
+            },
+            (err) => {
+                this.isBusy = false;
+                this.pluginApi.showMessage('error', err);
+                this.notifyChangeListeners();
             }
         );
     }
 
     private loadData():RSVP.Promise<any> {
+        const args = new MultiDict();
+        args.set('corpname', this.pluginApi.getConf('corpname'));
+        args.set('offset', this.offset);
+        args.set('limit', this.limit);
+        args.set('query_type', this.queryType);
+        args.set('current_corpus', this.currentCorpusOnly ? '1' : '0');
         return this.pluginApi.ajax(
             'GET',
             this.pluginApi.createActionUrl('user/ajax_query_history'),
-            {corpname: this.pluginApi.getConf('corpname')},
-            {contentType : 'application/x-www-form-urlencoded'}
+            args
 
         ).then(
             (data:AjaxResponse.QueryHistory) => {
-                if (data.contains_errors) {
-                    throw new Error(data.messages[0]);
-
-                } else {
-                    this.data = Immutable.List<AjaxResponse.QueryHistoryItem>(data.data);
-                }
+                this.data = Immutable.List<Kontext.QueryHistoryItem>(data.data);
             }
         );
     }
 
-    getData():Immutable.List<AjaxResponse.QueryHistoryItem> {
+    importData(data:Array<Kontext.QueryHistoryItem>):void {
+        this.data = Immutable.List<Kontext.QueryHistoryItem>(data);
+    }
+
+    getData():Immutable.List<Kontext.QueryHistoryItem> {
         return this.data;
+    }
+
+    getOffset():number {
+        return this.offset;
+    }
+
+    getLimit():number {
+        return this.limit;
+    }
+
+    getQueryType():string {
+        return this.queryType;
+    }
+
+    getCurrentCorpusOnly():boolean {
+        return this.currentCorpusOnly;
+    }
+
+    getIsBusy():boolean {
+        return this.isBusy;
     }
 
 }
