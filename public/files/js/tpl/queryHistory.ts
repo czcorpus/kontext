@@ -71,7 +71,7 @@ class QueryHistoryPage {
                 qsStore.importData(this.layoutModel.getConf<Array<Kontext.QueryHistoryItem>>('Data'));
                 const qhViews = initQueryHistoryViews(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentTools(),
+                    this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     qsStore.getStore()
                 );

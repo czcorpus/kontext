@@ -495,7 +495,8 @@ class MenuGenerator(object):
         )
 
         self.view_global = (
-            ConcMenuItem(MainMenu.VIEW('global-options'), _('General view options'), 'options/viewopts')
+            EventTriggeringItem(MainMenu.VIEW('global-options'), _('General view options'),
+                                'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS')
             .mark_indirect()
         )
 

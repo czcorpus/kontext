@@ -61,7 +61,6 @@ import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../stores/userStores';
-import {ViewOptionsStore} from '../stores/viewOptions';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
@@ -70,7 +69,6 @@ import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
-import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 
 declare var Modernizr:Modernizr.ModernizrStatic;
 
@@ -80,7 +78,6 @@ export class ViewPageStores {
     concDetailStore:ConcDetailStore;
     refsDetailStore:RefsDetailStore;
     userInfoStore:Kontext.IUserInfoStore;
-    viewOptionsStore:ViewOptions.IViewOptionsStore;
     collFormStore:CollFormStore;
     mainMenuStore:Kontext.IMainMenuStore;
 }
@@ -155,8 +152,6 @@ export class ViewPage {
     private ctFlatFreqStore:CTFlatStore;
 
     private freqFormViews:FreqFormViews;
-
-    private viewOptionsViews:StructsAndAttrsViews;
 
     /**
      * Color scheme derived from d3.schemeCategory20
@@ -931,33 +926,6 @@ export class ViewPage {
         this.layoutModel.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
     }
 
-    private initViewOptions():void {
-        this.viewOptionsViews = structsAttrsViewInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this.layoutModel.layoutViews,
-            this.viewStores.viewOptionsStore,
-            this.viewStores.mainMenuStore
-        );
-
-        this.layoutModel.renderReactComponent(
-            this.viewOptionsViews.StructAttrsViewOptions,
-            window.document.getElementById('view-options-mount'),
-            {
-                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                isSubmitMode: true,
-                stateArgs: this.layoutModel.getConcArgs().items()
-            }
-        );
-
-        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
-            'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
-            (args:Kontext.GeneralProps) => {
-                return this.layoutModel.getStores().viewOptionsStore.loadData();
-            }
-        );
-    }
-
     private initUndoFunction():void {
         this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
             'MAIN_MENU_UNDO_LAST_QUERY_OP',
@@ -1020,7 +988,6 @@ export class ViewPage {
         };
         this.viewStores = new ViewPageStores();
         this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
-        this.viewStores.viewOptionsStore = this.layoutModel.getStores().viewOptionsStore;
         this.viewStores.mainMenuStore = this.layoutModel.getStores().mainMenuStore;
         this.viewStores.lineViewStore = new ConcLineStore(
                 this.layoutModel,
@@ -1035,8 +1002,10 @@ export class ViewPage {
                 lineViewProps,
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
-        this.viewStores.viewOptionsStore.addOnSave((_) => this.viewStores.lineViewStore.updateOnViewOptsChange());
-        this.viewStores.viewOptionsStore.addOnSave((data) => this.viewStores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
+        this.layoutModel.getStores().corpusViewOptionsStore.addOnSave(
+            (_) => this.viewStores.lineViewStore.updateOnViewOptsChange());
+        this.layoutModel.getStores().corpusViewOptionsStore.addOnSave(
+            (data) => this.viewStores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
         this.viewStores.lineSelectionStore = new LineSelectionStore(
                 this.layoutModel,
                 this.layoutModel.dispatcher,
@@ -1147,7 +1116,6 @@ export class ViewPage {
                 this.initQueryOverviewArea(tagh, qs);
                 this.initAnalysisViews();
                 this.updateMainMenu();
-                this.initViewOptions();
                 this.updateHistory();
             }
         );

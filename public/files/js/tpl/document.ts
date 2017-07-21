@@ -38,6 +38,7 @@ import {init as documentViewsInit} from 'views/document';
 import {init as commonViewsInit} from 'views/common';
 import {init as menuViewsInit} from 'views/menu';
 import {init as overviewAreaViewsInit} from 'views/overview';
+import {init as viewOptionsInit} from 'views/options/main';
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 import * as RSVP from 'vendor/rsvp';
@@ -45,7 +46,8 @@ import * as rsvpAjax from 'vendor/rsvp-ajax';
 import {MultiDict, History, NullHistory} from '../util';
 import * as docStores from '../stores/common/layout';
 import {UserInfo} from '../stores/userStores';
-import {ViewOptionsStore} from '../stores/viewOptions';
+import {CorpusViewOptionsStore} from '../stores/options/structsAttrs';
+import {GeneralViewOptionsStore} from '../stores/options/general';
 import * as translations from 'translations';
 import IntlMessageFormat = require('vendor/intl-messageformat');
 import * as Immutable from 'vendor/immutable';
@@ -141,7 +143,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private userInfoStore:UserInfo;
 
-    private viewOptionsStore:ViewOptionsStore;
+    private corpViewOptionsStore:CorpusViewOptionsStore;
+
+    private generalViewOptionsStore:GeneralViewOptionsStore;
 
     private mainMenuStore:MainMenuStore;
 
@@ -165,7 +169,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private switchCorpStateStorage:Immutable.Map<string, any>;
 
-    private componentTools:Kontext.ComponentCoreMixins;
+    private componentTools:Kontext.ComponentHelpers;
 
     /**
      *
@@ -221,13 +225,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             corpusInfoStore: this.corpusInfoStore,
             messageStore: this.messageStore,
             userInfoStore: this.userInfoStore,
-            viewOptionsStore: this.viewOptionsStore,
+            corpusViewOptionsStore: this.corpViewOptionsStore,
+            generalViewOptionsStore: this.generalViewOptionsStore,
             asyncTaskInfoStore: this.asyncTaskChecker,
             mainMenuStore: this.mainMenuStore
         };
     }
 
-    getComponentTools():Kontext.ComponentCoreMixins {
+    getComponentHelpers():Kontext.ComponentHelpers {
         return this.componentTools;
     }
 
@@ -874,6 +879,42 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
     }
 
+    private initViewOptions(mainMenuStore:Kontext.IMainMenuStore,
+                generalViewOptionsStore:ViewOptions.IGeneralViewOptionsStore,
+                corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore):void {
+        const viewOptionsViews = viewOptionsInit(
+            this.dispatcher,
+            this.getComponentHelpers(),
+            this.layoutViews,
+            generalViewOptionsStore,
+            corpViewOptionsStore,
+            mainMenuStore
+        );
+
+        this.mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
+            (args:Kontext.GeneralProps) => {
+                return this.corpViewOptionsStore.loadData();
+            }
+        );
+        this.mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
+            (args:Kontext.GeneralProps) => {
+                return this.generalViewOptionsStore.loadData();
+            }
+        );
+
+        this.renderReactComponent(
+            viewOptionsViews.OptionsContainer,
+            window.document.getElementById('view-options-mount'),
+            {}
+        );
+    }
+
+    resetMenuActiveItemAndNotify():void {
+        this.mainMenuStore.resetActiveItemAndNotify();
+    }
+
     /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.
@@ -893,7 +934,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.corpusInfoStore = new docStores.CorpusInfoStore(this.dispatcher, this.pluginApi());
                 this.messageStore = new docStores.MessageStore(this.dispatcher, this.pluginApi());
                 this.userInfoStore = new UserInfo(this.dispatcher, this);
-                this.viewOptionsStore = new ViewOptionsStore(this.dispatcher, this);
+                this.corpViewOptionsStore = new CorpusViewOptionsStore(
+                    this.dispatcher,
+                    this,
+                    this.getConf<Kontext.FullCorpusIdent>('corpusIdent')
+                );
+                this.generalViewOptionsStore = new GeneralViewOptionsStore(this.dispatcher, this);
                 this.mainMenuStore = new MainMenuStore(
                     this.dispatcher,
                     this,
@@ -906,7 +952,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     this.getStores()
                 );
 
-                this.commonViews = commonViewsInit(this.getComponentTools());
+                this.commonViews = commonViewsInit(this.getComponentHelpers());
 
                 window.onkeydown = (evt) => {
                     this.globalKeyHandlers.forEach(fn => fn(evt));
@@ -916,6 +962,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.initOverviewArea();
                 this.bindLangSwitch();
                 this.initNotifications();
+                this.initViewOptions(
+                    this.mainMenuStore,
+                    this.generalViewOptionsStore,
+                    this.corpViewOptionsStore
+                );
                 this.asyncTaskChecker.init();
 
                 this.registerCoreEvents();
@@ -1006,8 +1057,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.dispatcher;
     }
 
-    getComponentTools():Kontext.ComponentCoreMixins {
-        return this.pageModel.getComponentTools();
+    getComponentHelpers():Kontext.ComponentHelpers {
+        return this.pageModel.getComponentHelpers();
     }
 
     exportMixins(...mixins:any[]):any[] {
@@ -1049,5 +1100,9 @@ export class PluginApi implements Kontext.PluginApi {
 
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
         return this.pageModel.registerSwitchCorpAwareObject(obj);
+    }
+
+    resetMenuActiveItemAndNotify():void {
+        this.pageModel.resetMenuActiveItemAndNotify();
     }
 }
