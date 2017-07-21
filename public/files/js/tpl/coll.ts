@@ -32,7 +32,6 @@ import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as collResultViewInit} from 'views/coll/result';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
-import {init as structsAttrsViewInit, StructsAndAttrsViews} from 'views/options/structsAttrs';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 
 /**
@@ -182,7 +181,7 @@ export class CollPage {
 
         const collResultViews = collResultViewInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.getComponentTools(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             this.collResultStore
         );
@@ -191,27 +190,6 @@ export class CollPage {
             collResultViews.CollResultView,
             document.getElementById('coll-view-mount'),
             {}
-        );
-
-    }
-
-    private initViewOptions():void {
-        const viewOptionsViews:StructsAndAttrsViews = structsAttrsViewInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this.layoutModel.layoutViews,
-            this.layoutModel.getStores().viewOptionsStore,
-            this.layoutModel.getStores().mainMenuStore
-        );
-
-        this.layoutModel.renderReactComponent(
-            viewOptionsViews.StructAttrsViewOptions,
-            window.document.getElementById('view-options-mount'),
-            {
-                humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                isSubmitMode: true,
-                stateArgs: this.layoutModel.getConcArgs().items()
-            }
         );
     }
 
@@ -296,13 +274,6 @@ export class CollPage {
                         break;
                     }
                 });
-                mainMenuStore.addItemActionPrerequisite(
-                    'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
-                    (args:Kontext.GeneralProps) => {
-                        return this.layoutModel.getStores().viewOptionsStore.loadData();
-                    }
-                );
-                this.initViewOptions();
                 this.initAnalysisViews();
                 this.initQueryOpNavigation();
             }

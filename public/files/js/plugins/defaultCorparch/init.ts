@@ -97,7 +97,7 @@ export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
         options.itemClickAction
     );
     store.initHandlers();
-    return widgetInit(pluginApi.dispatcher(), pluginApi.getComponentTools(), pluginApi.getComponentTools().getLayoutViews(), store,
+    return widgetInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), pluginApi.getComponentHelpers().getLayoutViews(), store,
         queryStore);
     // TODO corplist.getCorpusSwitchAwareObjects().forEach(item => pluginApi.registerSwitchCorpAwareObject(item));
 }

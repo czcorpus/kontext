@@ -18,19 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../../ts/declarations/flux.d.ts" />
-/// <reference path="../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../../ts/declarations/flux.d.ts" />
+/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../../ts/declarations/rsvp.d.ts" />
 
-import {SimplePageStore} from './base';
-import Immutable = require('vendor/immutable');
-import {PageModel} from '../tpl/document';
-import RSVP = require('vendor/rsvp');
+import {SimplePageStore} from '../base';
+import * as Immutable from 'vendor/immutable';
+import {PageModel} from '../../tpl/document';
+import * as RSVP from 'vendor/rsvp';
 
 
 
-export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IViewOptionsStore {
+export class CorpusViewOptionsStore extends SimplePageStore implements ViewOptions.ICorpViewOptionsStore {
 
     private layoutModel:PageModel;
 
@@ -60,10 +60,12 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
 
     private isWaiting:boolean;
 
+    private corpusIdent:Kontext.FullCorpusIdent;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         super(dispatcher);
         this.layoutModel = layoutModel;
+        this.corpusIdent = corpusIdent;
         this.attrVmode = layoutModel.getConcArgs()['attr_vmode'];
         this.updateHandlers = Immutable.List<()=>void>();
         this.isWaiting = false;
@@ -128,6 +130,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
                             this.isWaiting = false;
                             this.notifyChangeListeners();
                             this.updateHandlers.forEach(fn => fn(data));
+                            this.layoutModel.resetMenuActiveItemAndNotify();
                         },
                         (err) => {
                             this.isWaiting = false;
@@ -139,11 +142,15 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
         });
     }
 
+    getCorpusIdent():Kontext.FullCorpusIdent {
+        return this.corpusIdent;
+    }
+
     getIsWaiting():boolean {
         return this.isWaiting;
     }
 
-    addOnSave(fn:()=>void):void {
+    addOnSave(fn:(data:AjaxResponse.SaveViewAttrsOptionsResponse)=>void):void {
         this.updateHandlers = this.updateHandlers.push(fn);
     }
 
@@ -172,8 +179,7 @@ export class ViewOptionsStore extends SimplePageStore implements ViewOptions.IVi
         return this.layoutModel.ajax<AjaxResponse.SaveViewAttrsOptionsResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewattrsx') + '?' + urlArgs,
-            formArgs,
-            {contentType : 'application/x-www-form-urlencoded'}
+            formArgs
 
         ).then((data) => {
             if (this.getAttrsAllpos() === 'all') {

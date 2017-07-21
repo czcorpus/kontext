@@ -188,7 +188,7 @@ export class WordlistPage extends SimplePageStore  {
 
                 const saveViews = wordlistSaveViewInit(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentTools(),
+                    this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     this.layoutModel.commonViews,
                     saveStore
@@ -196,7 +196,7 @@ export class WordlistPage extends SimplePageStore  {
 
                 const view = wordlistResultViewInit(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentTools(),
+                    this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     saveViews,
                     resultStore

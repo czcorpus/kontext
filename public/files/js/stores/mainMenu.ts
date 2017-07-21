@@ -153,6 +153,11 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         return this.activeItem;
     }
 
+    resetActiveItemAndNotify():void {
+        this.activeItem = null;
+        this.notifyChangeListeners();
+    }
+
     /**
      * Typically, it is expected that UI components reacting to main menu changes
      * will listen to MainMenuStore updates and update themselves accordingly.

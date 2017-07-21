@@ -124,22 +124,21 @@ class Options(Kontext):
         else:
             self._redirect('/first_form')
 
-    @exposed(access_level=1, legacy=True)
-    def viewopts(self):
-        self.disabled_menu_items = (MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS,
-                                    MainMenu.VIEW('kwic-sentence'))
-        out = {
-            'newctxsize': self.args.kwicleftctx[1:]
-        }
-        return out
+    @exposed(access_level=1, return_type='json', http_method='GET')
+    def viewopts(self, _):
+        return dict(
+            pagesize=self.args.pagesize,
+            newctxsize=self.args.kwicleftctx[1:],
+            ctxunit='@pos',
+            line_numbers=self.args.line_numbers,
+            shuffle=self.args.shuffle,
+            wlpagesize=self.args.wlpagesize,
+            fmaxitems=self.args.fmaxitems,
+            citemsperpage=self.args.citemsperpage
+        )
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=1, return_type='json', http_method='POST', legacy=True)
     def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0):
         self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers)
         self._save_options(self.GENERAL_OPTIONS)
-
-        if self.args.q:
-            return self._redirect_to_conc()
-        else:
-            self._redirect(self.get_root_url() + 'first_form')
+        return {}

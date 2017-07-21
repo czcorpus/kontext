@@ -20,10 +20,10 @@
 
 /// <reference path="../../../ts/declarations/react.d.ts" />
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenuStore) {
+export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMenuStore) {
 
     // ---------------------------- <LiAttributeItem /> ----------------------
 
@@ -73,14 +73,12 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
 
     let SelectAll = React.createClass({
 
-        mixins: mixins,
-
         render : function () {
             return (
                 <label className="select-all">
                     <input className="select-all" type="checkbox"
                             onChange={this.props.onChange} checked={this.props.isSelected} />
-                    {this.translate('global__select_all')}
+                    {helpers.translate('global__select_all')}
                 </label>
             );
         }
@@ -89,8 +87,6 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
     // ---------------------------- <AttributesTweaks /> ----------------------
 
     let AttributesTweaks = React.createClass({
-
-        mixins : mixins,
 
         _handleSelectChange : function (name, event) {
             dispatcher.dispatch({
@@ -106,12 +102,12 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
             let src;
             let title;
             if (this.props.attrsVmode === 'mouseover') {
-                src = this.createStaticUrl('img/mouseover-available.svg')
-                title = this.translate('options__vmode_switch_indicator_desc');
+                src = helpers.createStaticUrl('img/mouseover-available.svg')
+                title = helpers.translate('options__vmode_switch_indicator_desc');
 
             } else {
-                src = this.createStaticUrl('img/mouseover-not-available.svg');
-                title = this.translate('options__vmode_switch_indicator_desc');
+                src = helpers.createStaticUrl('img/mouseover-not-available.svg');
+                title = helpers.translate('options__vmode_switch_indicator_desc');
             }
             return <img className="vmode-indicator" src={src} alt={title} title={title} />;
         },
@@ -120,15 +116,15 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
             return (
                 <div>
                     <h3 className="label">
-                        {this.translate('options__attr_apply_header')}
+                        {helpers.translate('options__attr_apply_header')}
                     </h3>
                     <div>
                         <select name="attr_vmode"
                                 value={this.props.attrsVmode}
                                 onChange={this._handleSelectChange.bind(this, 'attr_vmode')}
                                 className="no-label">
-                            <option value="visible">{this.translate('options__vmode_switch_visible')}</option>
-                            <option value="mouseover">{this.translate('options__vmode_switch_mouseover')}</option>
+                            <option value="visible">{helpers.translate('options__vmode_switch_visible')}</option>
+                            <option value="mouseover">{helpers.translate('options__vmode_switch_mouseover')}</option>
                         </select>
                         {this.props.showConcToolbar ? this._renderVmodeInfoIcon() : null}
                     </div>
@@ -139,9 +135,9 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
                                 onChange={this._handleSelectChange.bind(this, 'allpos')}
                                 disabled={this.props.attrsVmode === 'mouseover'}
                                 title={this.props.attrsVmode === 'mouseover' ?
-                                        this.translate('options__locked_allpos_expl') : null}>
-                            <option value="all">{this.translate('options__attr_apply_all')}</option>
-                            <option value="kw">{this.translate('options__attr_apply_kwic')}</option>
+                                        helpers.translate('options__locked_allpos_expl') : null}>
+                            <option value="all">{helpers.translate('options__attr_apply_all')}</option>
+                            <option value="kw">{helpers.translate('options__attr_apply_kwic')}</option>
                         </select>
                         {this.props.attrsVmode === 'mouseover' ?
                             <input type="hidden" name="allpos" value="all" /> : null}
@@ -155,8 +151,6 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
 
     let FieldsetAttributes = React.createClass({
 
-        mixins : mixins,
-
         _handleSelectAll : function () {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
@@ -167,7 +161,7 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
         render : function () {
             return (
                 <fieldset className="settings-group">
-                    <legend>{this.translate('options__attributes_hd')}</legend>
+                    <legend>{helpers.translate('options__attributes_hd')}</legend>
                     <ul>
                     {this.props.attrList.map((item, i) => {
                         if (item.locked) {
@@ -219,8 +213,6 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
 
     let FieldsetStructures = React.createClass({
 
-        mixins : mixins,
-
         _handleStructClick : function (event) {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
@@ -244,7 +236,7 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
         render : function () {
             return (
                 <fieldset className="settings-group">
-                    <legend>{this.translate('options__structures_hd')}</legend>
+                    <legend>{helpers.translate('options__structures_hd')}</legend>
                     <ul>
                         {this.props.availStructs.map((item) => {
                             return (
@@ -290,8 +282,6 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
 
     let FieldsetMetainformation = React.createClass({
 
-        mixins : mixins,
-
         _handleCheckboxChange : function (idx, evt) {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
@@ -311,7 +301,7 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
         render : function () {
             return (
                 <fieldset className="settings-group">
-                    <legend>{this.translate('options__references_hd')}</legend>
+                    <legend>{helpers.translate('options__references_hd')}</legend>
                     <ul>
                         {this.props.availRefs.map((item, i) => {
                             return <LiReferenceItem
@@ -334,7 +324,6 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
 
 
     let SubmitButtons = React.createClass({
-        mixins : mixins,
 
         _handleSaveClick : function () {
             dispatcher.dispatch({
@@ -346,15 +335,15 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
         _renderSubmitButton : function () {
             if (this.props.isWaiting) {
                 return <img key="save-waiting" className="ajax-loader"
-                                src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                alt={this.translate('global__processing')}
-                                title={this.translate('global__processing')} />
+                                src={helpers.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={helpers.translate('global__processing')}
+                                title={helpers.translate('global__processing')} />
 
             } else {
                 return (
                     <button key="save" type="button" className="default-button"
                             onClick={this._handleSaveClick}>
-                        {this.translate('options__apply_btn')}
+                        {helpers.translate('options__apply_btn')}
                     </button>
                 );
             }
@@ -375,12 +364,10 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
 
     const StructsAndAttrsForm = React.createClass({
 
-        mixins : mixins,
-
         render : function () {
             if (this.props.hasLoadedData) {
                 return (
-                    <form className="options-form" method="POST" action={this.createActionLink('options/viewattrsx')}>
+                    <form className="options-form" method="POST" action={helpers.createActionLink('options/viewattrsx')}>
                         <div>
                             <FieldsetAttributes fixedAttr={this.props.fixedAttr} attrList={this.props.attrList}
                                     hasSelectAll={this.props.hasSelectAllAttrs} attrsAllpos={this.props.attrsAllpos}
@@ -396,8 +383,8 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
             } else {
                 return (
                     <div>
-                        <img src={this.createStaticUrl('img/ajax-loader.gif')}
-                            alt={this.translate('global__loading')} title={this.translate('global__loading')} />
+                        <img src={helpers.createStaticUrl('img/ajax-loader.gif')}
+                            alt={helpers.translate('global__loading')} title={helpers.translate('global__loading')} />
                     </div>
                 );
             }
@@ -411,10 +398,9 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
 
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
 
-        mixins : mixins,
-
         _fetchStoreState : function () {
             return {
+                corpusIdent: viewOptionsStore.getCorpusIdent(),
                 fixedAttr: viewOptionsStore.getFixedAttr(),
                 attrList: viewOptionsStore.getAttributes(),
                 availStructs: viewOptionsStore.getStructures(),
@@ -429,16 +415,6 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
                 isWaiting: viewOptionsStore.getIsWaiting(),
                 isVisible: false
             };
-        },
-
-        _handleCloseClick : function () {
-            dispatcher.dispatch({
-                actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-                props: {}
-            });
-            const state = this._fetchStoreState();
-            state.isVisible = false;
-            this.setState(state);
         },
 
         _handleStoreChange : function () {
@@ -465,6 +441,7 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
         componentDidMount : function () {
             mainMenuStore.addChangeListener(this._handleStoreChange);
             viewOptionsStore.addChangeListener(this._handleViewOptsStoreChange);
+            // ---> not needed (see action prerequisite)
             if (this.state.isVisible) {
                 dispatcher.dispatch({
                     actionType: 'VIEW_OPTIONS_LOAD_DATA',
@@ -482,42 +459,26 @@ export function init(dispatcher, mixins, layoutViews, viewOptionsStore, mainMenu
             return this._fetchStoreState();
         },
 
-        _renderContents : function () {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                    <layoutViews.CloseableFrame
-                            customClass="query-replay-box"
-                            scrollable={true}
-                            onCloseClick={this._handleCloseClick}
-                            label={this.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.humanCorpname})}>
-                        <StructsAndAttrsForm
-                                fixedAttr={this.state.fixedAttr}
-                                attrList={this.state.attrList}
-                                availStructs={this.state.availStructs}
-                                structAttrs={this.state.structAttrs}
-                                availRefs={this.state.availRefs}
-                                hasSelectAllAttrs={this.state.hasSelectAllAttrs}
-                                hasSellectAllRefs={this.state.hasSellectAllRefs}
-                                hasLoadedData={this.state.hasLoadedData}
-                                attrsVmode={this.state.attrsVmode}
-                                attrsAllpos={this.state.attrsAllpos}
-                                showConcToolbar={this.state.showConcToolbar}
-                                isWaiting={this.state.isWaiting} />
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            );
-        },
-
         render : function () {
-            if (this.state.isVisible) {
-                return this._renderContents();
-
-            } else {
-                return null;
-            }
+            return (
+                <div>
+                    <StructsAndAttrsForm
+                            fixedAttr={this.state.fixedAttr}
+                            attrList={this.state.attrList}
+                            availStructs={this.state.availStructs}
+                            structAttrs={this.state.structAttrs}
+                            availRefs={this.state.availRefs}
+                            hasSelectAllAttrs={this.state.hasSelectAllAttrs}
+                            hasSellectAllRefs={this.state.hasSellectAllRefs}
+                            hasLoadedData={this.state.hasLoadedData}
+                            attrsVmode={this.state.attrsVmode}
+                            attrsAllpos={this.state.attrsAllpos}
+                            showConcToolbar={this.state.showConcToolbar}
+                            isWaiting={this.state.isWaiting} />
+                </div>
+            );
         }
     });
-
 
     return {
         StructAttrsViewOptions: StructAttrsViewOptions

@@ -101,7 +101,7 @@ declare module Kontext {
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         exportMixins(...mixins:any[]):any[];
-        getComponentTools():Kontext.ComponentCoreMixins;
+        getComponentHelpers():Kontext.ComponentHelpers;
         renderReactComponent(reactClass:React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;
@@ -111,6 +111,7 @@ declare module Kontext {
         pluginIsActive(name:string):boolean;
         getConcArgs():IMultiDict;
         registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
+        resetMenuActiveItemAndNotify():void;
     }
 
     /**
@@ -279,7 +280,7 @@ declare module Kontext {
     /**
      * Convenient functions used by KonText's React components
      */
-    export interface ComponentCoreMixins {
+    export interface ComponentHelpers {
         translate(s:string, values?:any):string;
         getConf(k:string):any;
         createActionLink(path:string):string;
@@ -295,7 +296,8 @@ declare module Kontext {
         corpusInfoStore:PageStore,
         messageStore:MessagePageStore,
         userInfoStore:IUserInfoStore,
-        viewOptionsStore:ViewOptions.IViewOptionsStore,
+        corpusViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
+        generalViewOptionsStore:ViewOptions.IGeneralViewOptionsStore;
         asyncTaskInfoStore:IAsyncTaskStore,
         mainMenuStore:IMainMenuStore;
     }
@@ -512,7 +514,8 @@ declare module ViewOptions {
         ShowConcToolbar:boolean;
     }
 
-    export interface IViewOptionsStore {
+    export interface ICorpViewOptionsStore extends Kontext.PageStore {
+        getCorpusIdent():Kontext.FullCorpusIdent;
         initFromPageData(data:ViewOptions.PageData):void;
         loadData():RSVP.Promise<ViewOptions.PageData>;
         isLoaded():boolean;
@@ -526,6 +529,10 @@ declare module ViewOptions {
         getFixedAttr():string;
         getAttrsVmode():string;
         getAttrsAllpos():string;
+    }
+
+    export interface IGeneralViewOptionsStore extends Kontext.PageStore {
+        // TODO
     }
 }
 

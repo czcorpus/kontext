@@ -310,10 +310,42 @@ declare module "views/options/structsAttrs" {
 
     export function init(
             dispatcher:Kontext.FluxDispatcher,
-            mixins:any,
+            helpers:Kontext.ComponentHelpers,
             layoutViews:Kontext.LayoutViews,
-            viewOptionsStore:any,
-            mainMenustore:any):StructsAndAttrsViews;
+            viewOptionsStore:Kontext.PageStore,
+            mainMenustore:Kontext.PageStore):StructsAndAttrsViews;
+}
+
+
+declare module "views/options/general" {
+
+    export interface GeneralOptionsViews {
+        GeneralOptions:React.ReactClass;
+    }
+
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        helpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        generalOptionsStore:Kontext.PageStore
+    ):GeneralOptionsViews;
+}
+
+
+declare module "views/options/main" {
+
+    export interface OptionsContainerViews {
+        OptionsContainer:React.ReactClass;
+    }
+
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        helpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        generalOptionsStore:Kontext.PageStore,
+        viewOptionsStore:Kontext.PageStore,
+        mainMenuStore:Kontext.PageStore
+    ):OptionsContainerViews;
 }
 
 
