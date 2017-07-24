@@ -956,7 +956,7 @@ class Actions(Querying):
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         return result
 
-    @exposed(access_level=1, legacy=True)
+    @exposed(access_level=1, legacy=True, template='txtexport/savefreq.tmpl')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
@@ -1119,7 +1119,7 @@ class Actions(Querying):
         ans['save_line_limit'] = 100000
         return ans
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True)
+    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl')
     def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):
         """
         save collocations
@@ -1374,7 +1374,7 @@ class Actions(Querying):
                            ml1attr=self.args.wlposattr1, ml2attr=self.args.wlposattr2,
                            ml3attr=self.args.wlposattr3)
 
-    @exposed(access_level=1, legacy=True)
+    @exposed(access_level=1, legacy=True, template='txtexport/savewl.tmpl')
     def savewl(self, from_line=1, to_line='', wltype='simple', usesubcorp='',
                ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
@@ -1442,7 +1442,7 @@ class Actions(Querying):
         self._headers['Content-Type'] = 'application/json'
         return corplib.attr_vals(self.args.corpname, avattr, avpat)
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True)
+    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/saveconc.tmpl')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0,
                  leftctx='-40', rightctx='40'):
 
