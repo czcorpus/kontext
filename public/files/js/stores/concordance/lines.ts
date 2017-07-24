@@ -668,5 +668,9 @@ export class ConcLineStore extends SimplePageStore {
         return this.supportsSyntaxView;
     }
 
+    getBaseCorpname():string {
+        return this.baseCorpname;
+    }
+
 }
 

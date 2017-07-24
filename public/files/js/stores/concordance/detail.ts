@@ -130,11 +130,19 @@ export class ConcDetailStore extends SimplePageStore {
      */
     private speakerColorsAttachments:Immutable.Map<string, Kontext.RGBAColor>;
 
+    private isBusy:boolean;
+
+    /**
+     * Currently expanded side. In case the store is not busy the
+     * value represent last expanded side (it is not reset after expansion).
+     * Values: 'left', 'right'
+     */
+    private expaningSide:string;
+
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore, structCtx:string,
             speechOpts:SpeechOptions, speakerColors:Array<string>, wideCtxGlobals:Array<[string, string]>) {
         super(dispatcher);
-        const self = this;
         this.layoutModel = layoutModel;
         this.linesStore = linesStore;
         this.structCtx = structCtx;
@@ -168,137 +176,156 @@ export class ConcDetailStore extends SimplePageStore {
                         this.layoutModel.translate('concview__failed_to_play_audio'));
             }
         );
+        this.isBusy = false;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_EXPAND_KWIC_DETAIL':
-                    self.loadConcDetail(
-                            self.corpusId,
-                            self.tokenNum,
-                            self.kwicLength,
-                            self.lineIdx,
+                    this.expaningSide = payload.props['position'];
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
+                    this.loadConcDetail(
+                            this.corpusId,
+                            this.tokenNum,
+                            this.kwicLength,
+                            this.lineIdx,
                             [],
                             payload.props['position']
                     ).then(
                         () => {
-                            self.linesStore.setLineFocus(self.lineIdx, true);
-                            self.linesStore.notifyChangeListeners();
-                            self.notifyChangeListeners();
+                            this.isBusy = false;
+                            this.linesStore.setLineFocus(this.lineIdx, true);
+                            this.linesStore.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
-                    self.mode = 'default';
-                    self.expandLeftArgs = Immutable.List<ExpandArgs>();
-                    self.expandRightArgs = Immutable.List<ExpandArgs>();
-                    self.loadConcDetail(
+                    this.mode = 'default';
+                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    this.expandRightArgs = Immutable.List<ExpandArgs>();
+                    this.loadConcDetail(
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
                             payload.props['kwicLength'],
                             payload.props['lineIdx'],
                             [],
-                            self.expandLeftArgs.size > 1 && self.expandRightArgs.size > 1 ? 'reload' : null
+                            this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null
                     ).then(
                         () => {
-                            self.linesStore.setLineFocus(payload.props['lineIdx'], true);
-                            self.linesStore.notifyChangeListeners();
-                            self.notifyChangeListeners();
+                            this.isBusy = false;
+                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
+                            this.linesStore.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this.isBusy = false;
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_SHOW_WHOLE_DOCUMENT':
-                    self.loadWholeDocument().then(
+                    this.loadWholeDocument().then(
                         () => {
-                            self.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_SHOW_SPEECH_DETAIL':
-                    self.mode = 'speech';
-                    self.expandLeftArgs = Immutable.List<ExpandArgs>();
-                    self.expandRightArgs = Immutable.List<ExpandArgs>();
-                    self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
-                    self.loadSpeechDetail(
+                    this.mode = 'speech';
+                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                    this.expandRightArgs = Immutable.List<ExpandArgs>();
+                    this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
+                    this.loadSpeechDetail(
                             payload.props['corpusId'],
                             payload.props['tokenNumber'],
                             payload.props['kwicLength'],
                             payload.props['lineIdx'],
-                            self.expandLeftArgs.size > 1 && self.expandRightArgs.size > 1 ? 'reload' : null).then(
+                            this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null).then(
                         () => {
-                            self.linesStore.setLineFocus(payload.props['lineIdx'], true);
-                            self.linesStore.notifyChangeListeners();
-                            self.notifyChangeListeners();
+                            this.isBusy = false;
+                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
+                            this.linesStore.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_EXPAND_SPEECH_DETAIL':
-                    self.loadSpeechDetail(
-                            self.corpusId,
-                            self.tokenNum,
-                            self.kwicLength,
-                            self.lineIdx,
+                    this.expaningSide = payload.props['position'];
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
+                    this.loadSpeechDetail(
+                            this.corpusId,
+                            this.tokenNum,
+                            this.kwicLength,
+                            this.lineIdx,
                             payload.props['position']).then(
                         () => {
-                            self.linesStore.setLineFocus(self.lineIdx, true);
-                            self.linesStore.notifyChangeListeners();
-                            self.notifyChangeListeners();
+                            this.isBusy = false;
+                            this.linesStore.setLineFocus(this.lineIdx, true);
+                            this.linesStore.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this.isBusy = false;
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
                 case 'CONCORDANCE_RESET_DETAIL':
-                    if (self.lineIdx !== null) {
-                        self.linesStore.setLineFocus(self.lineIdx, false);
-                        self.lineIdx = null;
-                        self.corpusId = null;
-                        self.tokenNum = null;
-                        self.kwicLength = null;
-                        self.wholeDocumentLoaded = false;
-                        self.expandLeftArgs = self.expandLeftArgs.clear();
-                        self.expandRightArgs = self.expandRightArgs.clear();
-                        self.speakerColorsAttachments = self.speakerColorsAttachments.clear();
-                        self.notifyChangeListeners();
-                        self.linesStore.notifyChangeListeners();
+                    if (this.lineIdx !== null) {
+                        this.linesStore.setLineFocus(this.lineIdx, false);
+                        this.lineIdx = null;
+                        this.corpusId = null;
+                        this.tokenNum = null;
+                        this.kwicLength = null;
+                        this.wholeDocumentLoaded = false;
+                        this.expandLeftArgs = this.expandLeftArgs.clear();
+                        this.expandRightArgs = this.expandRightArgs.clear();
+                        this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
+                        this.notifyChangeListeners();
+                        this.linesStore.notifyChangeListeners();
                     }
                 break;
                 case 'CONCORDANCE_PLAY_SPEECH':
-                    if (self.playingRowIdx > -1) {
-                        self.playingRowIdx = null;
-                        self.audioPlayer.stop();
-                        self.notifyChangeListeners();
+                    if (this.playingRowIdx > -1) {
+                        this.playingRowIdx = null;
+                        this.audioPlayer.stop();
+                        this.notifyChangeListeners();
                     }
-                    self.playingRowIdx = payload.props['rowIdx'];
+                    this.playingRowIdx = payload.props['rowIdx'];
                     const itemsToPlay = (<Immutable.List<string>>payload.props['segments']).map(item => {
-                            return self.layoutModel.createActionUrl(`audio?corpname=${self.corpusId}&chunk=${item}`);
+                            return this.layoutModel.createActionUrl(`audio?corpname=${this.corpusId}&chunk=${item}`);
                         }).toArray();
                     if (itemsToPlay.length > 0) {
-                        self.audioPlayer.start(itemsToPlay);
+                        this.audioPlayer.start(itemsToPlay);
 
                     } else {
-                        self.playingRowIdx = -1;
-                        self.layoutModel.showMessage('error', self.layoutModel.translate('concview__nothing_to_play'));
-                        self.notifyChangeListeners();
+                        this.playingRowIdx = -1;
+                        this.layoutModel.showMessage('error', this.layoutModel.translate('concview__nothing_to_play'));
+                        this.notifyChangeListeners();
                     }
                 break;
                 case 'CONCORDANCE_STOP_SPEECH':
-                    if (self.playingRowIdx > -1) {
-                        self.playingRowIdx = null;
-                        self.audioPlayer.stop();
-                        self.notifyChangeListeners();
+                    if (this.playingRowIdx > -1) {
+                        this.playingRowIdx = null;
+                        this.audioPlayer.stop();
+                        this.notifyChangeListeners();
                     }
                 break;
             }
@@ -314,10 +341,9 @@ export class ConcDetailStore extends SimplePageStore {
     }
 
     getSpeechesDetail():SpeechLines {
-        const self = this;
         let spkId = null;
 
-        function parseTag(name:string, s:string):{[key:string]:string} {
+        const parseTag = (name:string, s:string):{[key:string]:string} => {
             const srch = new RegExp(`<${name}(\\s+[^>]+)>`).exec(s);
             if (srch) {
                 const ans:{[key:string]:string} = {};
@@ -329,12 +355,12 @@ export class ConcDetailStore extends SimplePageStore {
                 return ans;
             }
             return null;
-        }
+        };
 
-        function createNewSpeech(speakerId:string, colorCode:Kontext.RGBAColor, metadata:{[attr:string]:string}):Speech {
+        const createNewSpeech = (speakerId:string, colorCode:Kontext.RGBAColor, metadata:{[attr:string]:string}):Speech => {
             const importedMetadata = Immutable.Map<string, string>(metadata)
-                    .filter((val, attr) => attr !== self.speechOpts.speechSegment[1] &&
-                                attr !== self.speechOpts.speakerIdAttr[1])
+                    .filter((val, attr) => attr !== this.speechOpts.speechSegment[1] &&
+                                attr !== this.speechOpts.speakerIdAttr[1])
                     .toMap();
             return {
                 text: [],
@@ -343,22 +369,22 @@ export class ConcDetailStore extends SimplePageStore {
                 metadata: importedMetadata,
                 colorCode: colorCode
             };
-        }
+        };
 
-        function isOverlap(s1:Speech, s2:Speech):boolean {
-            if (s1 && s2 && self.spkOverlapMode === ConcDetailStore.SPK_OVERLAP_MODE_FULL) {
-                const flag1 = s1.metadata.get(self.speechOpts.speechOverlapAttr[1]);
-                const flag2 = s2.metadata.get(self.speechOpts.speechOverlapAttr[1]);
+        const isOverlap = (s1:Speech, s2:Speech):boolean => {
+            if (s1 && s2 && this.spkOverlapMode === ConcDetailStore.SPK_OVERLAP_MODE_FULL) {
+                const flag1 = s1.metadata.get(this.speechOpts.speechOverlapAttr[1]);
+                const flag2 = s2.metadata.get(this.speechOpts.speechOverlapAttr[1]);
                 if (flag1 === flag2
-                        && flag2 === self.speechOpts.speechOverlapVal
+                        && flag2 === this.speechOpts.speechOverlapVal
                         && s1.segments.get(0) === s2.segments.get(0)) {
                     return true;
                 }
             }
             return false;
-        }
+        };
 
-        function mergeOverlaps(speeches:Array<Speech>):SpeechLines {
+        const mergeOverlaps = (speeches:Array<Speech>):SpeechLines => {
             const ans:SpeechLines = [];
             let prevSpeech:Speech = null;
             speeches.forEach((item, i) => {
@@ -382,12 +408,13 @@ export class ConcDetailStore extends SimplePageStore {
                 prevSpeech = item;
             });
             return ans;
-        }
+        };
+
         let currSpeech:Speech = createNewSpeech('\u2026', null, {});
         let prevSpeech:Speech = null;
         const tmp:Array<Speech> = [];
 
-        this.concDetail.forEach((item, i) => {
+        (this.concDetail || []).forEach((item, i) => {
             if (item.class === 'strc') {
                 const attrs = parseTag(this.speechOpts.speakerIdAttr[0], item.str);
                 if (attrs !== null && attrs[this.speechOpts.speakerIdAttr[1]]) {
@@ -542,6 +569,9 @@ export class ConcDetailStore extends SimplePageStore {
             args.set('detail_right_ctx', String(this.expandLeftArgs.get(-1)[1]));
         }
 
+        this.isBusy = true;
+        this.notifyChangeListeners();
+
         return this.layoutModel.ajax<AjaxResponse.WideCtx>(
             'GET',
             this.layoutModel.createActionUrl('widectx'),
@@ -591,6 +621,33 @@ export class ConcDetailStore extends SimplePageStore {
     getDefaultViewMode():string {
         return this.mode;
     }
+
+    getConcDetailMetadata() {
+        if (this.tokenNum) {
+            const baseCn = this.linesStore.getBaseCorpname();
+            return {
+                corpusId: this.corpusId,
+                tokenNumber: this.tokenNum,
+                kwicLength: this.kwicLength,
+                lineIdx: this.lineIdx,
+                speakerIdAttr: baseCn === this.corpusId ? this.speechOpts.speakerIdAttr : null,
+                speechOverlapAttr: baseCn === this.corpusId ? this.speechOpts.speechOverlapAttr : null,
+                speechOverlapVal: baseCn === this.corpusId ? this.speechOpts.speechOverlapVal : null,
+                speechSegment: baseCn === this.corpusId ? this.speechOpts.speechSegment : null
+            };
+
+        } else {
+            return null;
+        }
+    }
+
+    getIsBusy():boolean {
+        return this.isBusy;
+    }
+
+    getExpaningSide():string {
+        return this.expaningSide;
+    }
 }
 
 
@@ -612,35 +669,41 @@ export class RefsDetailStore extends SimplePageStore {
 
     private lineIdx:number;
 
+    private isBusy:boolean;
+
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore) {
         super(dispatcher);
-        const self = this;
         this.layoutModel = layoutModel;
         this.linesStore = linesStore;
         this.lineIdx = null;
         this.data = Immutable.List<RefsColumn>();
+        this.isBusy = false;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_SHOW_REF_DETAIL':
-                    self.loadRefs(payload.props['corpusId'], payload.props['tokenNumber'], payload.props['lineIdx']).then(
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
+                    this.loadRefs(payload.props['corpusId'], payload.props['tokenNumber'], payload.props['lineIdx']).then(
                         () => {
-                            self.linesStore.setLineFocus(payload.props['lineIdx'], true);
-                            self.linesStore.notifyChangeListeners();
-                            self.notifyChangeListeners();
+                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
+                            this.linesStore.notifyChangeListeners();
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
-                            self.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
                         }
                     );
                 break;
                 case 'CONCORDANCE_REF_RESET_DETAIL':
-                    if (self.lineIdx !== null) {
-                        self.linesStore.setLineFocus(self.lineIdx, false);
-                        self.lineIdx = null;
-                        self.notifyChangeListeners();
-                        self.linesStore.notifyChangeListeners();
+                    if (this.lineIdx !== null) {
+                        this.linesStore.setLineFocus(this.lineIdx, false);
+                        this.lineIdx = null;
+                        this.notifyChangeListeners();
+                        this.linesStore.notifyChangeListeners();
                     }
                 break;
             }
@@ -648,33 +711,36 @@ export class RefsDetailStore extends SimplePageStore {
     }
 
     getData():Immutable.List<[RefsColumn, RefsColumn]> {
-        const ans:Array<[RefsColumn, RefsColumn]> = [];
-        for (let i = 0; i < this.data.size; i += 2) {
-            ans.push([this.data.get(i), this.data.get(i+1)]);
+        if (this.lineIdx !== null) {
+            const ans:Array<[RefsColumn, RefsColumn]> = [];
+            for (let i = 0; i < this.data.size; i += 2) {
+                ans.push([this.data.get(i), this.data.get(i+1)]);
+            }
+            return Immutable.List<[RefsColumn, RefsColumn]>(ans);
+
+        } else if (this.isBusy) {
+            return Immutable.List<[RefsColumn, RefsColumn]>();
+
+        } else {
+            return null;
         }
-        return Immutable.List<[RefsColumn, RefsColumn]>(ans);
     }
 
     private loadRefs(corpusId:string, tokenNum:number, lineIdx:number):RSVP.Promise<any> {
         return this.layoutModel.ajax<AjaxResponse.FullRef>(
             'GET',
             this.layoutModel.createActionUrl('fullref'),
-            {corpname: corpusId, pos: tokenNum},
-            {
-                contentType : 'application/x-www-form-urlencoded',
-                accept: 'application/json'
-            }
+            {corpname: corpusId, pos: tokenNum}
 
         ).then(
             (data) => {
-                if (!data.contains_errors) {
-                    this.lineIdx = lineIdx;
-                    this.data = Immutable.List<RefsColumn>(data.Refs);
-
-                } else {
-                    throw new Error(data.messages[0]);
-                }
+                this.lineIdx = lineIdx;
+                this.data = Immutable.List<RefsColumn>(data.Refs);
             }
         );
+    }
+
+    getIsBusy():boolean {
+        return this.isBusy;
     }
 }

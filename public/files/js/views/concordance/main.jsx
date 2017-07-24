@@ -529,12 +529,24 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
     // ------------------------- <ConcordanceView /> ---------------------------
 
-    const ConcordanceView = React.createClass({
+    class ConcordanceView extends React.Component {
 
-        getInitialState : function () {
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleDetailCloseClick = this._handleDetailCloseClick.bind(this);
+            this._refsDetailClickHandler = this._refsDetailClickHandler.bind(this);
+            this._handleAnonymousUserWarning = this._handleAnonymousUserWarning.bind(this);
+            this._handleSyntaxBoxClick = this._handleSyntaxBoxClick.bind(this);
+            this._handleSyntaxBoxClose = this._handleSyntaxBoxClose.bind(this);
+            this._detailClickHandler = this._detailClickHandler.bind(this);
+        }
+
+        _fetchStoreState() {
             return {
-                concDetailMetadata : null,
-                refsDetailData: null,
+                concDetailMetadata: concDetailStore.getConcDetailMetadata(),
+                refsDetailData: refsDetailStore.getData(),
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
                 concSummary: lineStore.getConcSummary(),
@@ -543,10 +555,15 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 supportsSyntaxView: lineStore.getSupportsSyntaxView(),
                 syntaxBoxData: null
             };
-        },
+        }
 
-        _handleDetailCloseClick : function () {
-            this.setState(React.addons.update(this.state, {concDetailMetadata: {$set: null}}));
+        _handleStoreChange() {
+            const state = this._fetchStoreState();
+            state.showAnonymousUserWarn = this.state.showAnonymousUserWarn;
+            this.setState(state);
+        }
+
+        _handleDetailCloseClick() {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_STOP_SPEECH',
                 props: {}
@@ -555,22 +572,9 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 actionType: 'CONCORDANCE_RESET_DETAIL',
                 props: {}
             });
-        },
+        }
 
-        _detailClickHandler : function (corpusId, tokenNumber, kwicLength, lineIdx) {
-            this.setState(React.addons.update(this.state, {
-                concDetailMetadata: {$set: {
-                    corpusId: corpusId,
-                    tokenNumber: tokenNumber,
-                    kwicLength: kwicLength,
-                    lineIdx: lineIdx,
-                    speakerIdAttr: this.props.baseCorpname === corpusId ? this.props.SpeakerIdAttr : null,
-                    speechOverlapAttr: this.props.baseCorpname === corpusId ? this.props.SpeechOverlapAttr : null,
-                    speechOverlapVal: this.props.baseCorpname === corpusId ? this.props.SpeechOverlapVal : null,
-                    speechSegment: this.props.baseCorpname === corpusId ? this.props.SpeechSegment : null
-                }},
-                refsDetailData: {$set: null}
-            }));
+        _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
             if (concDetailStore.getDefaultViewMode() === 'default') {
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
@@ -593,59 +597,56 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     }
                 });
             }
-        },
+        }
 
-        _handleAnonymousUserWarning : function () {
-            this.setState(React.addons.update(this.state, {showAnonymousUserWarn: {$set: false}}));
-        },
+        _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_SHOW_REF_DETAIL',
+                props: {
+                    corpusId: corpusId,
+                    tokenNumber: tokenNumber,
+                    lineIdx: lineIdx
+                }
+            });
+        }
 
-        _handleRefsDetailCloseClick : function () {
-            this.setState(React.addons.update(this.state, {refsDetailData: {$set: null}}));
+        _handleAnonymousUserWarning() {
+            const state = this._fetchStoreState();
+            state.showAnonymousUserWarn = false;
+            this.setState(state);
+        }
+
+        _handleRefsDetailCloseClick() {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_REF_RESET_DETAIL',
                 props: {}
             });
-        },
+        }
 
-        _handleSyntaxBoxClick : function (tokenNumber, kwicLength) {
+        _handleSyntaxBoxClick(tokenNumber, kwicLength) {
             this.setState(React.addons.update(this.state,
                 {syntaxBoxData: {$set: {tokenNumber: tokenNumber, kwicLength: kwicLength}}}));
-        },
+        }
 
-        _handleSyntaxBoxClose : function () {
+        _handleSyntaxBoxClose() {
             this.setState(React.addons.update(this.state, {syntaxBoxData: {$set: null}}));
-        },
+        }
 
-        _refsDetailClickHandler : function (corpusId, tokenNumber, lineIdx) {
-            this.setState(React.addons.update(this.state, {
-                concDetailMetadata: {$set: null},
-                refsDetailData: {$set: {corpusId: corpusId, tokenNumber: tokenNumber, lineIdx: lineIdx}}
-            }));
-        },
+        componentDidMount() {
+            lineStore.addChangeListener(this._handleStoreChange);
+            concSaveStore.addChangeListener(this._handleStoreChange);
+            concDetailStore.addChangeListener(this._handleStoreChange);
+            refsDetailStore.addChangeListener(this._handleStoreChange);
+        }
 
-        _storeChangeHandler : function (store, action) {
-            this.setState({
-                concDetailMetadata: this.state.concDetailMetadata,
-                refsDetailData:  this.state.refsDetailData,
-                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
-                concSummary: lineStore.getConcSummary(),
-                isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
-                showAnonymousUserWarn: this.state.showAnonymousUserWarn,
-                saveFormVisible: concSaveStore.getFormIsActive()
-            });
-        },
+        componentWillUnmount() {
+            lineStore.removeChangeListener(this._handleStoreChange);
+            concSaveStore.removeChangeListener(this._handleStoreChange);
+            concDetailStore.removeChangeListener(this._handleStoreChange);
+            refsDetailStore.removeChangeListener(this._handleStoreChange);
+        }
 
-        componentDidMount : function () {
-            lineStore.addChangeListener(this._storeChangeHandler);
-            concSaveStore.addChangeListener(this._storeChangeHandler);
-        },
-
-        componentWillUnmount : function () {
-            lineStore.removeChangeListener(this._storeChangeHandler);
-            concSaveStore.removeChangeListener(this._storeChangeHandler);
-        },
-
-        render : function () {
+        render() {
             return (
                 <div>
                     {this.state.syntaxBoxData ?
@@ -708,7 +709,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 </div>
             );
         }
-    });
+    }
 
     return {
         ConcordanceView: ConcordanceView
