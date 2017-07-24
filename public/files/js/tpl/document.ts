@@ -939,11 +939,19 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     this,
                     this.getConf<Kontext.FullCorpusIdent>('corpusIdent')
                 );
-                this.generalViewOptionsStore = new GeneralViewOptionsStore(this.dispatcher, this);
+
                 this.mainMenuStore = new MainMenuStore(
                     this.dispatcher,
                     this,
                     this.getConf<InitialMenuData>('menuData')
+                );
+
+                this.generalViewOptionsStore = new GeneralViewOptionsStore(
+                    this.dispatcher,
+                    this,
+                    () => {
+                        this.mainMenuStore.resetActiveItemAndNotify();
+                    }
                 );
 
                 this.layoutViews = documentViewsInit(

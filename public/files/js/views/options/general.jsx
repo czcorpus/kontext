@@ -287,6 +287,33 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
         );
     };
 
+    // --------------------- <SubmitButton /> -------------------------
+
+    const SubmitButton = (props) => {
+
+        const handleSubmitClick = () => {
+            dispatcher.dispatch({
+                actionType: 'GENERAL_VIEW_OPTIONS_SUBMIT',
+                props: {}
+            });
+        };
+
+        if (props.storeIsBusy) {
+            return <img src={helpers.createStaticUrl('img/ajax-loader-bar.gif')}
+                        className="button-replace ajax-loader"
+                        alt={helpers.translate('global__loading')} />;
+
+        } else {
+            return (
+                <button type="button" className="default-button"
+                        onClick={handleSubmitClick}>
+                    {helpers.translate('options__submit')}
+                </button>
+            );
+        }
+    }
+
+    // --------------------- <GeneralOptions /> -------------------------
 
     class GeneralOptions extends React.Component {
 
@@ -294,7 +321,6 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
             super(props);
             this.state = this._fetchStoreState();
             this._handleStoreChange = this._handleStoreChange.bind(this);
-            this._handleSubmitClick = this._handleSubmitClick.bind(this);
         }
 
         _fetchStoreState() {
@@ -305,15 +331,9 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                 shuffle: generalOptionsStore.getShuffle(),
                 wlPageSize: generalOptionsStore.getWlPageSize(),
                 fmaxItems: generalOptionsStore.getFmaxItems(),
-                citemsPerPage: generalOptionsStore.getCitemsPerPage()
+                citemsPerPage: generalOptionsStore.getCitemsPerPage(),
+                storeIsBusy: generalOptionsStore.getIsBusy()
             };
-        }
-
-        _handleSubmitClick() {
-            dispatcher.dispatch({
-                actionType: 'GENERAL_VIEW_OPTIONS_SUBMIT',
-                props: {}
-            });
         }
 
         _handleStoreChange() {
@@ -330,11 +350,11 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
 
         render() {
             return (
-                <div>
+                <div className="GeneralOptions">
                     <p>
                         {helpers.translate('options__this_applies_for_all_the_corpora')}
                     </p>
-                    <form id="viewopts-form" className="options-form" action="https://kontext.korpus.cz/options/viewoptsx">
+                    <form>
                         <FieldsetConcordance pageSize={this.state.pageSize}
                                 newCtxSize={this.state.newCtxSize}
                                 lineNumbers={this.state.lineNumbers}
@@ -343,10 +363,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                         <FieldsetFreqDistrib fmaxItems={this.state.fmaxItems} />
                         <FieldsetColl citemsPerPage={this.state.citemsPerPage} />
                         <div className="buttons">
-                            <button type="button" className="default-button"
-                                    onClick={this._handleSubmitClick}>
-                                {helpers.translate('options__submit')}
-                            </button>
+                            <SubmitButton storeIsBusy={this.state.storeIsBusy} />
                         </div>
                     </form>
                 </div>

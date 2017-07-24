@@ -166,6 +166,7 @@ declare module Kontext {
      * A store that another store can wait for.
      */
     export interface ComposableStore extends PageStore {
+        getIsBusy():boolean;
         getDispatcherToken():string;
     }
 
@@ -217,6 +218,7 @@ declare module Kontext {
         getActiveItem():MainMenuActiveItem;
         disableMenuItem(itemId:string, subItemId?:string):void;
         enableMenuItem(itemId:string, subItemId?:string):void;
+        resetActiveItemAndNotify():void;
 
         /**
          * Register an action which is run before listeners
@@ -532,6 +534,7 @@ declare module ViewOptions {
     }
 
     export interface IGeneralViewOptionsStore extends Kontext.PageStore {
+        getIsBusy():boolean;
         loadData():RSVP.Promise<boolean>;
         getPageSize():string;
         getNewCtxSize():string;

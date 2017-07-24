@@ -367,7 +367,7 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
         render : function () {
             if (this.props.hasLoadedData) {
                 return (
-                    <form className="options-form" method="POST" action={helpers.createActionLink('options/viewattrsx')}>
+                    <form method="POST" action={helpers.createActionLink('options/viewattrsx')}>
                         <div>
                             <FieldsetAttributes fixedAttr={this.props.fixedAttr} attrList={this.props.attrList}
                                     hasSelectAll={this.props.hasSelectAllAttrs} attrsAllpos={this.props.attrsAllpos}
@@ -461,7 +461,7 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
 
         render : function () {
             return (
-                <div>
+                <div className="StructAttrsViewOptions">
                     <StructsAndAttrsForm
                             fixedAttr={this.state.fixedAttr}
                             attrList={this.state.attrList}
