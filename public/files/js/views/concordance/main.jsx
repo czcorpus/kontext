@@ -515,10 +515,13 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick} isScrollable={true}>
                     <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
                             customClass="syntax-tree">
-                        <div id="syntax-view-pane">
+                        <div id="syntax-view-pane" className="SyntaxViewPane">
                             {this.state.waiting ?
-                                <img src={util.createStaticUrl('img/ajax-loader.gif')}
-                                        alt={util.translate('global__loading')} /> : null}
+                                (<div className="ajax-loader">
+                                    <img src={util.createStaticUrl('img/ajax-loader.gif')}
+                                            alt={util.translate('global__loading')} />
+                                </div>) : null
+                            }
                         </div>
                     </layoutViews.PopupBox>
                 </layoutViews.ModalOverlay>
