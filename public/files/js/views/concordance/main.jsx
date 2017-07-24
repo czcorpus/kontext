@@ -34,7 +34,6 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     const concDetailStore = stores.concDetailStore;
     const refsDetailStore = stores.refsDetailStore;
     const userInfoStore = stores.userInfoStore;
-    const viewOptionsStore = stores.viewOptionsStore;
     const mainMenuStore = stores.mainMenuStore;
     const syntaxViewStore = lineStore.getSyntaxViewStore();
 
