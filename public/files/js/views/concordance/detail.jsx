@@ -29,15 +29,16 @@ import {calcTextColorFromBg, color2str} from '../../util';
 export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore) {
 
     const mediaViews = initMediaViews(dispatcher, mixins, lineStore);
+    const he = mixins[0];
 
 
     // ------------------------- <RefLine /> ---------------------------
 
-    const RefLine = React.createClass({
+    const RefLine = (props) => {
 
-        _renderCols : function () {
-            let ans = [];
-            let item = this.props.colGroups;
+        const renderCols = () => {
+            const ans = [];
+            const item = props.colGroups;
 
             if (item[0]) {
                 ans.push(<th key="c1">{item[0].name}</th>);
@@ -56,71 +57,46 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 ans.push(<td key="c4" />);
             }
             return ans;
-        },
+        };
 
-        render : function () {
-            return <tr>{this._renderCols()}</tr>;
-        }
-    });
+        return <tr>{renderCols()}</tr>;
+    };
 
     // ------------------------- <RefDetail /> ---------------------------
 
-    const RefDetail = React.createClass({
+    class RefDetail extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+        }
 
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 data: refsDetailStore.getData(),
-                isWaiting: true
-            };
-        },
-
-        _storeChangeHandler : function (store) {
-            this.setState({
-                data: refsDetailStore.getData(),
-                isWaiting: false
-            });
-        },
-
-        _loadData : function (props) {
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SHOW_REF_DETAIL',
-                props: {
-                    corpusId: props.corpusId,
-                    tokenNumber: props.tokenNumber,
-                    lineIdx: props.lineIdx
-                }
-            });
-        },
-
-        componentDidMount : function () {
-            refsDetailStore.addChangeListener(this._storeChangeHandler);
-            this._loadData(this.props);
-        },
-
-        componentWillUnmount : function () {
-            refsDetailStore.removeChangeListener(this._storeChangeHandler);
-        },
-
-        componentWillReceiveProps : function (nextProps) {
-            if (nextProps.corpusId !== this.props.corpusId
-                    || nextProps.tokenNumber !== this.props.tokenNumber
-                    || nextProps.lineIdx !== this.props.lineIdx) {
-                this.setState({
-                     isWaiting: true,
-                     data: this.state.data
-                });
-                this._loadData(nextProps);
+                isWaiting: refsDetailStore.getIsBusy()
             }
-        },
+        }
 
-        _renderContents : function () {
+        _storeChangeHandler() {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
+            refsDetailStore.addChangeListener(this._storeChangeHandler);
+        }
+
+        componentWillUnmount() {
+            refsDetailStore.removeChangeListener(this._storeChangeHandler);
+        }
+
+        _renderContents() {
             if (this.state.isWaiting) {
-                return <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />;
+                return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
 
             } else if (this.state.data.size === 0) {
-                return <p><strong>{this.translate('global__no_data_avail')}</strong></p>;
+                return <p><strong>{he.translate('global__no_data_avail')}</strong></p>;
 
             } else {
                 return(
@@ -133,9 +109,9 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     </table>
                 );
             }
-        },
+        }
 
-        render: function () {
+        render() {
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="refs-detail"
                         takeFocus={true}>
@@ -143,123 +119,117 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 </layoutViews.PopupBox>
             );
         }
-    });
+    }
 
     // ------------------------- <ExpandConcDetail /> ---------------------------
 
-    const ExpandConcDetail = React.createClass({
+    const ExpandConcDetail = (props) => {
 
-        mixins : mixins,
+        const createTitle = () => {
+            if (props.position === 'left') {
+                return he.translate('concview__click_to_expand_left');
 
-        _createTitle : function () {
-            if (this.props.position === 'left') {
-                return this.translate('concview__click_to_expand_left');
-
-            } else if (this.props.position === 'right') {
-                return this.translate('concview__click_to_expand_right');
+            } else if (props.position === 'right') {
+                return he.translate('concview__click_to_expand_right');
             }
-        },
+        };
 
-        _createAlt : function () {
-            if (this.props.position === 'left') {
-                return this.translate('concview__expand_left_symbol');
+        const createAlt = () => {
+            if (props.position === 'left') {
+                return he.translate('concview__expand_left_symbol');
 
-            } else if (this.props.position === 'right') {
-                return this.translate('concview__expand_right_symbol');
+            } else if (props.position === 'right') {
+                return he.translate('concview__expand_right_symbol');
             }
-        },
+        };
 
-        _createImgPath : function () {
-            if (this.props.position === 'left') {
-                return this.createStaticUrl('/img/prev-page.svg');
+        const createImgPath = () => {
+            if (props.position === 'left') {
+                return he.createStaticUrl('/img/prev-page.svg');
 
-            } else if (this.props.position === 'right') {
-                return this.createStaticUrl('/img/next-page.svg');
+            } else if (props.position === 'right') {
+                return he.createStaticUrl('/img/next-page.svg');
             }
-        },
+        };
 
-        render : function () {
-            if (this.props.waitingFor !== this.props.waitingKey) {
-                return (
-                    <a className={`expand${this.props.position === 'left' ? ' left' : ''}`}
-                            title={this._createTitle()} onClick={this.props.clickHandler}>
-                        <img src={this._createImgPath()} alt={this._createAlt()} />
-                    </a>
-                );
+        if (!props.isWaiting) {
+            return (
+                <a className={`expand${props.position === 'left' ? ' left' : ''}`}
+                        title={createTitle()} onClick={props.clickHandler}>
+                    <img src={createImgPath()} alt={createAlt()} />
+                </a>
+            );
 
-            } else {
-                return (
-                    <img className="expand"
-                            src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={this.translate('global__loading')} />
-                );
-            }
+        } else {
+            return (
+                <img className="expand"
+                        src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                        alt={he.translate('global__loading')} />
+            );
         }
-
-    });
+    };
 
     // ------------------------- <DefaultView /> ---------------------------
 
-    const DefaultView = React.createClass({
+    class DefaultView extends React.Component {
 
-        _expandClickHandler : function (position) {
-            this.setState({
-                data: this.state.data,
-                waitingFor : position,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._handleDisplayWholeDocumentClick = this._handleDisplayWholeDocumentClick.bind(this);
+        }
+
+        _fetchStoreState() {
+            return {
+                data: concDetailStore.getConcDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
                 hasExpandRight: concDetailStore.hasExpandRight(),
-                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument()
-            });
+                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument(),
+                expandingSide: concDetailStore.getExpaningSide(),
+                storeIsBusy: concDetailStore.getIsBusy()
+            };
+        }
+
+        _expandClickHandler(position) {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_EXPAND_KWIC_DETAIL',
                 props: {
                     position: position
                 }
             });
-        },
+        }
 
-        _storeChangeHandler : function (store, action) {
-            this.setState({
-                data: concDetailStore.getConcDetail(),
-                waitingFor: null,
-                hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight(),
-                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument()
-            });
-        },
+        _storeChangeHandler(store, action) {
+            this.setState(this._fetchStoreState());
+        }
 
-        _handleDisplayWholeDocumentClick : function () {
+        _handleDisplayWholeDocumentClick() {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
                 props: {}
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                data: concDetailStore.getConcDetail(),
-                hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight(),
-                canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument()
-            }
-        },
-
-        componentDidMount : function () {
+        componentDidMount() {
             concDetailStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             concDetailStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
-            return(
+        _isWaitingExpand(side) {
+            return this.state.storeIsBusy && this.state.expandingSide === side;
+        }
+
+        render() {
+            return (
                 <div>
                     {this.state.hasExpandLeft ?
-                                <ExpandConcDetail position="left" waitingFor={this.state.waitingFor}
-                                        clickHandler={this._expandClickHandler.bind(this, 'left')}
-                                        waitingKey="left" />
-                                : null
+                        <ExpandConcDetail position="left" isWaiting={this._isWaitingExpand('left')}
+                                clickHandler={this._expandClickHandler.bind(this, 'left')} />
+                        : null
                     }
                     {(this.state.data || []).map((item, i) => {
                         return (
@@ -267,9 +237,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                         );
                     })}
                     {this.state.hasExpandRight ?
-                        <ExpandConcDetail position="right" waitingFor={this.state.waitingFor}
-                                clickHandler={this._expandClickHandler.bind(this, 'right')}
-                                waitingKey="right" />
+                        <ExpandConcDetail position="right" isWaiting={this._isWaitingExpand('right')}
+                                clickHandler={this._expandClickHandler.bind(this, 'right')} />
                         : null
                     }
                     {this.state.canDisplayWholeDocument ?
@@ -282,96 +251,69 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 </div>
             );
         }
-    });
+    }
 
     // ------------------------- <ExpandSpeechesButton /> ---------------------------
 
-    const ExpandSpeechesButton = React.createClass({
+    const ExpandSpeechesButton = (props) => {
 
-        mixins : mixins,
-
-        _handleExpandClick : function (position) {
-            this.setState({
-                isWaiting: true
-            });
+        const handleExpandClick = (position) => {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
                 props: {
                     position: position
                 }
             });
-        },
+        };
 
-        componentDidMount : function () {
-            concDetailStore.addChangeListener(this._handleStoreChange);
-        },
-
-        componentWillUnmount : function () {
-            concDetailStore.removeChangeListener(this._handleStoreChange);
-        },
-
-        _handleStoreChange : function () {
-            this.setState({
-                isWaiting: false
-            });
-        },
-
-        getInitialState : function () {
-            return {
-                isWaiting: false
-            };
-        },
-
-        _ifTopThenElseIfBottom : function (val1, val2) {
-            if (this.props.position === 'top') {
+        const ifTopThenElseIfBottom = (val1, val2) => {
+            if (props.position === 'top') {
                 return val1;
 
-            } else if (this.props.position === 'bottom') {
+            } else if (props.position === 'bottom') {
                 return val2;
             }
-        },
+        };
 
-        _mapPosition : function () {
-            if (this.props.position === 'top') {
+        const mapPosition = () => {
+            if (props.position === 'top') {
                 return 'left';
 
-            } else if (this.props.position === 'bottom') {
+            } else if (props.position === 'bottom') {
                 return 'right';
             }
-        },
+        };
 
-        _createImgPath : function () {
-            return this.createStaticUrl(this._ifTopThenElseIfBottom(
+        const createImgPath = () => {
+            return he.createStaticUrl(ifTopThenElseIfBottom(
                 'img/sort_asc.svg', 'img/sort_desc.svg'
             ));
-        },
+        };
 
-        _createImgAlt : function () {
-            return this.translate(this._ifTopThenElseIfBottom(
+        const createImgAlt = () => {
+            return he.translate(ifTopThenElseIfBottom(
                 'concview__expand_up_symbol', 'concview__expand_down_symbol'
             ));
-        },
+        };
 
-        _createTitle : function () {
-            return this.translate(this._ifTopThenElseIfBottom(
+        const createTitle = () => {
+            return he.translate(ifTopThenElseIfBottom(
                 'concview__click_to_expand_up', 'concview__click_to_expand_down'
             ));
-        },
+        };
 
-        render : function () {
-            if (this.state.isWaiting) {
-                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />;
+        if (props.isWaiting) {
+            return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
 
-            } else {
-                return (
-                    <a onClick={this._handleExpandClick.bind(this, this._mapPosition())}
-                            title={this._createTitle()}>
-                        <img src={this._createImgPath()} alt={this._createImgAlt()} />
-                    </a>
-                );
-            }
+        } else {
+            return (
+                <a onClick={handleExpandClick.bind(null, mapPosition())}
+                        title={createTitle()}>
+                    <img src={createImgPath()} alt={createImgAlt()} />
+                </a>
+            );
         }
-    });
+    };
 
     // ----------------------------------------------------------------------
 
@@ -380,7 +322,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
             return data.map((val, attr) => `${attr}: ${val}`).join(', ');
 
         } else {
-            return mixins[0].translate('concview__no_speech_metadata_available');
+            return he.translate('concview__no_speech_metadata_available');
         }
     }
 
@@ -392,19 +334,17 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
     // ------------------------- <PlaybackIcon /> ---------------------------
 
-    const PlaybackIcon = React.createClass({
+    class PlaybackIcon extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._interval = null;
+            this.state = {img: 0};
+            this._handleMouseOver = this._handleMouseOver.bind(this);
+            this._handleMouseOut = this._handleMouseOut.bind(this);
+        }
 
-        _interval : null,
-
-        getInitialState : function () {
-            return {
-                img: 0
-            };
-        },
-
-        componentDidUpdate : function () {
+        componentDidUpdate() {
             if (this.props.isPlaying && this._interval === null) {
                 this._interval = window.setInterval(() => {
                     this.setState({
@@ -419,65 +359,65 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     img: 0
                 });
             }
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             if (this._interval !== null) {
                 window.clearInterval(this._interval);
             }
-        },
+        }
 
-        _handleMouseOver : function () {
+        _handleMouseOver() {
             this.props.setFocusFn(true);
-        },
+        }
 
-        _handleMouseOut : function () {
+        _handleMouseOut() {
             this.props.setFocusFn(false);
-        },
+        }
 
-        _getTitle : function () {
+        _getTitle() {
             if (this.props.isPlaying) {
-                return this.translate('concview__playing');
+                return he.translate('concview__playing');
 
             } else {
-                return this.translate('concview__click_to_play_audio');
+                return he.translate('concview__click_to_play_audio');
             }
-        },
+        }
 
-        _getClickHandler : function () {
+        _getClickHandler() {
             if (this.props.isPlaying) {
                 return this.props.handleStopClick;
 
             } else {
                 return this.props.handleClick;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
-                    <img src={this.createStaticUrl(`img/audio-${this.state.img}w.svg`)} title={this._getTitle()}
+                    <img src={he.createStaticUrl(`img/audio-${this.state.img}w.svg`)} title={this._getTitle()}
                             onClick={this._getClickHandler()} />
                 </span>
             );
         }
-    });
+    }
 
     // ------------------------- <SpeechText /> ---------------------------
 
-    const SpeechText = React.createClass({
+    class SpeechText extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = {hasFocus: false};
+            this._setFocus = this._setFocus.bind(this);
+        }
 
-        getInitialState : function () {
-            return {hasFocus: false};
-        },
-
-        _setFocus : function (focus) {
+        _setFocus(focus) {
             this.setState({hasFocus: focus});
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className={'speech-text' + (this.state.hasFocus ? ' focus' : '')}>
                     <span style={{color: this.props.bulletColor}}>{'\u25cf\u00a0'}</span>
@@ -493,7 +433,7 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 </div>
             );
         }
-    });
+    }
 
     // ------------------------- <TRSingleSpeech /> ---------------------------
 
@@ -568,20 +508,29 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
     // ------------------------- <SpeechView /> ---------------------------
 
-    const SpeechView = React.createClass({
+    class SpeechView extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._handlePlayClick = this._handlePlayClick.bind(this);
+            this._handleStopClick = this._handleStopClick.bind(this);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
 
-        getInitialState : function () {
+        }
+
+        _fetchStoreState() {
             return {
                 data: concDetailStore.getSpeechesDetail(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
                 hasExpandRight: concDetailStore.hasExpandRight(),
-                playerWaitingIdx: concDetailStore.getPlayingRowIdx()
-            }
-        },
+                playerWaitingIdx: concDetailStore.getPlayingRowIdx(),
+                storeIsBusy: concDetailStore.getIsBusy(),
+                expandingSide: concDetailStore.getExpaningSide()
+            };
+        }
 
-        _handlePlayClick : function (segments, rowIdx) {
+        _handlePlayClick(segments, rowIdx) {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_PLAY_SPEECH',
                 props: {
@@ -589,40 +538,39 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     rowIdx: rowIdx
                 }
             });
-        },
+        }
 
-        _handleStopClick : function () {
+        _handleStopClick() {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_STOP_SPEECH',
                 props: {}
             });
-        },
+        }
 
-        _storeChangeHandler : function () {
-            this.setState({
-                data: concDetailStore.getSpeechesDetail(),
-                hasExpandLeft: concDetailStore.hasExpandLeft(),
-                hasExpandRight: concDetailStore.hasExpandRight(),
-                playerWaitingIdx: concDetailStore.getPlayingRowIdx()
-            });
-        },
+        _storeChangeHandler() {
+            this.setState(this._fetchStoreState());
+        }
 
-        componentDidMount : function () {
+        _isWaitingExpand(side) {
+            return this.state.storeIsBusy && this.state.expandingSide === side;
+        }
+
+        componentDidMount() {
             concDetailStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             concDetailStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        _canStartPlayback : function (speechPart) {
+        _canStartPlayback(speechPart) {
             return this.props.speechSegment
                 && this.props.speechSegment[1]
                 && speechPart.segments.size > 0
                 && speechPart.segments.find(v => !!v);
-        },
+        }
 
-        _renderSpeechLines : function () {
+        _renderSpeechLines() {
             return (this.state.data || []).map((item, i) => {
                 if (item.length === 1) {
                     return <TRSingleSpeech
@@ -649,9 +597,9 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     return null;
                 }
             });
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div>
                     <table className="speeches">
@@ -659,7 +607,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                             <tr className="expand">
                                 <th>
                                     {this.state.hasExpandLeft ?
-                                        <ExpandSpeechesButton position="top" />
+                                        <ExpandSpeechesButton position="top"
+                                            isWaiting={this._isWaitingExpand('left')} />
                                     : null}
                                 </th>
                                 <td />
@@ -668,7 +617,8 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                             <tr className="expand">
                                 <th>
                                     {this.state.hasExpandRight ?
-                                        <ExpandSpeechesButton position="bottom" />
+                                        <ExpandSpeechesButton position="bottom"
+                                            isWaiting={this._isWaitingExpand('right')} />
                                     : null}
                                 </th>
                                 <td />
@@ -678,94 +628,76 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                 </div>
             );
         }
-    });
+    }
 
     // ------------------------- <MenuLink /> ---------------------------
 
-    const MenuLink = React.createClass({
+    const MenuLink = (props) => {
 
-        mixins : mixins,
+        if (!props.active) {
+            return (
+                <a onClick={props.clickHandler}>
+                    {props.label}
+                </a>
+            );
 
-        render : function () {
-            if (!this.props.active) {
-                return (
-                    <a onClick={this.props.clickHandler}>
-                        {this.props.label}
-                    </a>
-                );
-
-            } else {
-                return (
-                    <strong>
-                        {this.props.label}
-                    </strong>
-                );
-            }
+        } else {
+            return (
+                <strong>
+                    {props.label}
+                </strong>
+            );
         }
-    });
+    };
 
     // ------------------------- <ConcDetailMenu /> ---------------------------
 
-    const ConcDetailMenu = React.createClass({
+    const ConcDetailMenu = (props) => {
 
-        mixins : mixins,
+        const handleMenuClick = (mode) => {
+            props.changeHandler(mode);
+        };
 
-        _handleMenuClick : function (mode) {
-            this.props.changeHandler(mode);
-        },
+        if (props.speakerIdAttr) {
+            return (
+                <ul className="view-mode">
+                    <li className={props.mode === 'default' ? 'current' : null}>
+                        <MenuLink clickHandler={handleMenuClick.bind(null, 'default')}
+                            label={he.translate('concview__detail_default_mode_menu')}
+                            active={props.mode === 'default'} />
+                    </li>
+                    <li className={props.mode === 'speech' ? 'current' : null}>
+                        <MenuLink clickHandler={handleMenuClick.bind(null, 'speech')}
+                            label={he.translate('concview__detail_speeches_mode_menu')}
+                            active={props.mode === 'speech'} />
+                    </li>
+                </ul>
+            );
 
-        render : function () {
-            if (this.props.speakerIdAttr) {
-                return (
-                    <ul className="view-mode">
-                        <li className={this.props.mode === 'default' ? 'current' : null}>
-                            <MenuLink clickHandler={this._handleMenuClick.bind(this, 'default')}
-                                label={this.translate('concview__detail_default_mode_menu')}
-                                active={this.props.mode === 'default'} />
-                        </li>
-                        <li className={this.props.mode === 'speech' ? 'current' : null}>
-                            <MenuLink clickHandler={this._handleMenuClick.bind(this, 'speech')}
-                                label={this.translate('concview__detail_speeches_mode_menu')}
-                                active={this.props.mode === 'speech'} />
-                        </li>
-                    </ul>
-                );
-
-            } else {
-                return <div className="view-mode" />;
-            }
+        } else {
+            return <div className="view-mode" />;
         }
-    });
+    };
 
     // ------------------------- <ConcDetail /> ---------------------------
 
-    const ConcDetail = React.createClass({
+    class ConcDetail extends React.Component {
 
-        mixins : mixins,
-
-        getInitialState : function () {
-            return {
-                isWaiting: true,
+        constructor(props) {
+            super(props);
+            this.state = {
                 mode: concDetailStore.getDefaultViewMode()
             };
-        },
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+        }
 
-        _handleViewChange : function (mode) {
-            this.setState(React.addons.update(this.state, {
-                mode: {$set: mode},
-                isWaiting: {$set: true}
-            }));
-            this._reloadData(mode);
-        },
-
-        _storeChangeHandler : function () {
+        _storeChangeHandler() {
             this.setState({
-                isWaiting: false,
                 mode: concDetailStore.getDefaultViewMode()
             });
-        },
+        }
 
-        _reloadData : function (mode) {
+        _reloadData(mode) {
             switch (mode) {
                 case 'default':
                     dispatcher.dispatch({
@@ -790,17 +722,17 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                     });
                 break;
             }
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             concDetailStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             concDetailStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        _renderContents : function () {
+        _renderContents() {
             switch (this.state.mode) {
                 case 'default':
                     return <DefaultView
@@ -818,24 +750,23 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
                                 speechOverlapVal={this.props.speechOverlapVal}
                                 speechSegment={this.props.speechSegment} />;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler}
                         customClass="conc-detail"
                         customStyle={{overflowY: 'auto'}}
                         takeFocus={true}>
-                {this.state.isWaiting ?
-                    <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
-                    : <div><ConcDetailMenu speakerIdAttr={this.props.speakerIdAttr} mode={this.state.mode}
-                            changeHandler={this._handleViewChange} />{this._renderContents()}</div>
-                }
+                    <div>
+                        <ConcDetailMenu speakerIdAttr={this.props.speakerIdAttr} mode={this.state.mode} />
+                        {this._renderContents()}
+                    </div>
                 </layoutViews.PopupBox>
             );
         }
+    }
 
-    });
 
     return {
         RefDetail: RefDetail,
