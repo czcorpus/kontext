@@ -312,7 +312,7 @@ declare module "views/options/structsAttrs" {
             dispatcher:Kontext.FluxDispatcher,
             helpers:Kontext.ComponentHelpers,
             layoutViews:Kontext.LayoutViews,
-            viewOptionsStore:Kontext.PageStore,
+            corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
             mainMenustore:Kontext.PageStore):StructsAndAttrsViews;
 }
 
@@ -327,7 +327,7 @@ declare module "views/options/general" {
         dispatcher:Kontext.FluxDispatcher,
         helpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        generalOptionsStore:Kontext.PageStore
+        generalOptionsStore:ViewOptions.IGeneralViewOptionsStore
     ):GeneralOptionsViews;
 }
 
@@ -342,8 +342,8 @@ declare module "views/options/main" {
         dispatcher:Kontext.FluxDispatcher,
         helpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        generalOptionsStore:Kontext.PageStore,
-        viewOptionsStore:Kontext.PageStore,
+        generalOptionsStore:ViewOptions.IGeneralViewOptionsStore,
+        corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
         mainMenuStore:Kontext.PageStore
     ):OptionsContainerViews;
 }

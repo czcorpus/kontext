@@ -532,7 +532,14 @@ declare module ViewOptions {
     }
 
     export interface IGeneralViewOptionsStore extends Kontext.PageStore {
-        // TODO
+        loadData():RSVP.Promise<boolean>;
+        getPageSize():string;
+        getNewCtxSize():string;
+        getLineNumbers():string;
+        getShuffle():boolean;
+        getWlPageSize():string;
+        getFmaxItems():string;
+        getCitemsPerPage():string;
     }
 }
 

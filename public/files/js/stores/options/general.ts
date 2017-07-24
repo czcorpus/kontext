@@ -110,7 +110,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         });
     }
 
-    loadData():RSVP.Promise<any> {
+    loadData():RSVP.Promise<boolean> {
         return this.layoutModel.ajax<ViewOptsResponse>(
             'GET',
             this.layoutModel.createActionUrl('options/viewopts'),
@@ -126,6 +126,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                 this.wlpagesize = String(data.wlpagesize);
                 this.fmaxitems = String(data.fmaxitems);
                 this.citemsperpage = String(data.citemsperpage);
+                return true;
             }
         );
     }
