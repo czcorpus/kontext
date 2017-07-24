@@ -68,9 +68,15 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     private citemsperpage:string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
+    private isBusy:boolean;
+
+    private onSubmitResponse:()=>void;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, onSubmitResponse:()=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
+        this.onSubmitResponse = onSubmitResponse;
+        this.isBusy = false;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -103,8 +109,21 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SUBMIT':
-                    this.submit();
+                    this.isBusy = true;
                     this.notifyChangeListeners();
+                    this.submit().then(
+                        () => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.onSubmitResponse();
+                        },
+                        (err) => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+
                 break;
             }
         });
@@ -131,7 +150,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         );
     }
 
-    private submit():void {
+    private submit():RSVP.Promise<Kontext.AjaxResponse> {
         const args = new MultiDict();
         args.set('pagesize', this.pageSize);
         args.set('newctxsize', this.newCtxSize);
@@ -141,7 +160,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         args.set('wlpagesize', this.wlpagesize);
         args.set('fmaxitems', this.fmaxitems);
         args.set('citemsperpage', this.citemsperpage);
-        this.layoutModel.ajax<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax<Kontext.AjaxResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewoptsx'),
             args
@@ -176,4 +195,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         return this.citemsperpage;
     }
 
+    getIsBusy():boolean {
+        return this.isBusy;
+    }
 }
