@@ -18,35 +18,7 @@
 Custom Cheetah filters for the KonText interface
 """
 from Cheetah.Filters import Filter
-import json
-import urllib
-from datetime import datetime
-import time
 import re
-
-from l10n import format_number
-from l10n import datetime_formatting
-
-
-class IntegerFormatter(Filter):
-    """
-    Formats integer numbers according to the locales currently set
-    """
-    def filter(self, val, **kw):
-        if val:
-            return format_number(val)
-        return str(val)
-
-
-class FloatFormatter(Filter):
-    """
-    Formats float numbers according to the locales currently set
-    """
-
-    def filter(self, val, **kw):
-        if val:
-            return format_number(val, mask='%01.2f')
-        return str(val)
 
 
 class HtmlEscape(Filter):
@@ -87,37 +59,3 @@ class Shortener(Filter):
         if kw.get('escape', False):
             s = HtmlEscape().filter(s)
         return '%s%s' % (s, suff)
-
-
-class Join(Filter):
-    def filter(self, val, **kw):
-        separ = kw.get('separator', ', ')
-        mask = kw.get('mask', '%s')
-        return separ.join([mask % v for v in val])
-
-
-class URLEncode(Filter):
-    def filter(self, val, **kw):
-        if type(val) is unicode:
-            val = val.encode('utf-8')
-        return urllib.quote(val)
-
-
-class Datetime(Filter):
-    def filter(self, val, **kw):
-        if type(val) is datetime:
-            return time.strftime(datetime_formatting(), val.timetuple())
-        elif type(val) is str:
-            return val
-        else:
-            return '??'
-
-
-class Bool2Num(Filter):
-    def filter(self, val, **kw):
-        if type(val) is bool:
-            return str(int(val))
-        elif type(val) is str:
-            return {'true': '1', 'false': '0'}[val.lower()]
-        else:
-            return str(int(bool(val)))

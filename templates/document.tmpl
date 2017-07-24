@@ -19,8 +19,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 *#
 #encoding UTF-8
-#import urllib
-#import re
 #from templating.filters import *
 #from translation import ugettext as _
 ##
@@ -128,8 +126,6 @@ require(['vendor/rsvp'], function (RSVP) {
     });
 });
 
-define('win', [], function () { return window; });
-
 define('conf', [], function () {
     var conf = {};
     conf.page = {};
@@ -154,7 +150,7 @@ define('conf', [], function () {
     conf.uiStateTTL = ${ui_state_ttl};
     conf.historyMaxQuerySize = ${history_max_query_size};
     #if $varExists('aligned_corpora')
-    conf.alignedCorpora = [ #filter $Join#${aligned_corpora, mask='"%s"'}#end filter# ];
+    conf.alignedCorpora = $to_json($aligned_corpora);
     #end if
     conf.availableAlignedCorpora = $to_json($getVar('Aligned', []));
     conf.pluginData = $to_json($plugin_data);
@@ -300,24 +296,3 @@ require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
 
 </body>
 </html>
-
-## ******** Common methods definitions ******** ##
-
-
-## ***************************************** ##
-#def input_hidden($exclude=())
-    ## Argument to keep current concordance
-    #for $g_name, $g_value in $Globals.items()
-      #if not $g_name in $exclude
-        #for $v in $g_value:
-            <input type="hidden" name="$g_name" value="${v, also='"'}" />
-        #end for
-      #end if
-    #end for
-#end def
-
-## ***************************************** ##
-#def $human_corpsize()
-#filter $FloatFormatter#$corp_size#end filter##slurp
-#end def
-

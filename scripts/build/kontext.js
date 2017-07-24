@@ -156,7 +156,6 @@
         let reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev';
         let reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev';
         let pluginMap = {
-            'win' : 'empty:',
             'conf' : 'empty:',
             'plugins/applicationBar/toolbar': 'empty:',
             'vendor/rsvp' : 'vendor/rsvp.min',
