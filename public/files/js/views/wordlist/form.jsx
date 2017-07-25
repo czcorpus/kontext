@@ -486,6 +486,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
             this.state = this._fetchStoreState();
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
             this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleKeyPress = this._handleKeyPress.bind(this);
         }
 
         _fetchStoreState() {
@@ -522,6 +523,14 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
             this.setState(this._fetchStoreState());
         }
 
+        _handleKeyPress(evt) {
+            if (evt.keyCode === 13) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                this._handleSubmitClick();
+            }
+        }
+
         componentDidMount() {
             wordlistFormStore.addChangeListener(this._handleStoreChange);
         }
@@ -532,7 +541,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
 
         render() {
             return (
-                <form className="wordlist_form">
+                <form className="wordlist_form" onKeyDown={this._handleKeyPress}>
                     {this.state.filterEditorData ? <FileEditor data={this.state.filterEditorData} /> : null}
                     <table className="form">
                         <tbody>
