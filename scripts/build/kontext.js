@@ -171,6 +171,10 @@
             (pluginBuildConf[p]['ignoreModules'] || []).forEach((item) => {
                 pluginMap[item] = 'empty:'
             });
+            const remapModules = pluginBuildConf[p]['remapModules'] || {};
+            for (let p in remapModules) {
+                pluginMap[p] = remapModules[p];
+            }
         };
         findPluginTags(doc).forEach((item) => {
             pluginMap['plugins/' + item.canonicalName] = item.jsModule ? 'plugins/' + item.jsModule : 'empty:';

@@ -22,8 +22,9 @@
 /// <reference path="./js-treex-view.d.ts" />
 
 /// <amd-dependency path="./js-treex-view" />
-declare var treexView:JQuery;
+/// <amd-dependency path="jquery" />
 declare var $:any;
+
 
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../../stores/base';
