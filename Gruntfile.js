@@ -1,6 +1,9 @@
 (function (module) {
     'use strict';
 
+    const CONF_PATH = './conf/config.xml';
+    const PLUGINS_PATH = './public/files/js/plugins';
+
     module.exports = function (grunt) {
 
         let kontext = require('./scripts/build/kontext');
@@ -93,7 +96,7 @@
                                 "public/files/css/widgets.less",
                                 "public/files/css/keyboard.css"
                             ];
-                            return ans.concat(kontext.getCustomStyles('./conf/config.xml', './public/files/js/plugins'));
+                            return ans.concat(kontext.getCustomStyles(CONF_PATH, PLUGINS_PATH));
                         }())
                     },
                     options: {
@@ -102,8 +105,7 @@
                 },
                 devel: {
                     files: {
-                        "public/files/css/custom.min.css": kontext.getCustomStyles('./conf/config.xml',
-                                './public/files/js/plugins')
+                        "public/files/css/custom.min.css": kontext.getCustomStyles(CONF_PATH, PLUGINS_PATH)
                     },
                     options: {
                         compress: true
@@ -228,9 +230,9 @@
                         shim: {},
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadModulePathMap('./conf/config.xml', './public/files/js/plugins', true),
+                        paths: kontext.loadModulePathMap(CONF_PATH, PLUGINS_PATH, true),
                         modules: kontext.listAppModules('./public/files/js/tpl')
-                            .concat(kontext.listPackedModules(true))
+                            .concat(kontext.listPackedModules(CONF_PATH, PLUGINS_PATH, true))
                     }
                 },
                 vendor: {
@@ -240,8 +242,8 @@
                         dir: "public/files/js/min",
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadModulePathMap('./conf/config.xml', './public/files/js/plugins', false),
-                        modules: kontext.listPackedModules(false)
+                        paths: kontext.loadModulePathMap(CONF_PATH, PLUGINS_PATH, false),
+                        modules: kontext.listPackedModules(CONF_PATH, PLUGINS_PATH, false)
                     }
                 }
             },

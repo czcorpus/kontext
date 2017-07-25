@@ -140,6 +140,13 @@
         return findAllThemeCss(doc).concat(findAllPluginCss(pluginsPath, doc));
     };
 
+    const parseXml = (path) => {
+        let data = fs.readFileSync(path, {encoding: 'utf8'});
+        let DOMParser = require('xmldom').DOMParser;
+        return new DOMParser().parseFromString(data);
+    };
+
+
     /**
      * Produces mapping for modules with 'fake' (= non filesystem) paths.
      * E.g. 'plugins/queryStorage' maps to 'plugins/myCoolQueryStorage'.
@@ -150,9 +157,7 @@
      * @return {[fakePath:string]:string}
      */
     module.exports.loadModulePathMap = function (confPath, pluginsPath, isProduction) {
-        let data = fs.readFileSync(confPath, {encoding: 'utf8'});
-        let DOMParser = require('xmldom').DOMParser;
-        let doc = new DOMParser().parseFromString(data);
+        let doc = parseXml(confPath);
         let reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev';
         let reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev';
         let pluginMap = {
@@ -186,7 +191,7 @@
      * Configures a special module "vendor/common" which contains all the 3rd
      * party libs merged into a single file
      */
-    module.exports.listPackedModules = function (isProduction) {
+    module.exports.listPackedModules = function (confPath, pluginsPath, isProduction) {
         let modules = [
             'vendor/rsvp',
             'vendor/rsvp-ajax',
@@ -201,6 +206,16 @@
         ];
         if (isProduction) {
             modules.push('translations');
+
+        } else {
+            let doc = parseXml(confPath);
+            let pluginBuildConf = findAllPluginBuildConf(pluginsPath, doc);
+            for (let p in pluginBuildConf) {
+                const remapModules = pluginBuildConf[p]['remapModules'] || {};
+                for (let p in remapModules) {
+                    modules.push(p);
+                }
+            }
         }
         return [
             {
