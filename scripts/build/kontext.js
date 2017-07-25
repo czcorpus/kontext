@@ -133,17 +133,8 @@
      * Finds CSS paths defined in a custom KonText theme. This is merged during the
      * build process with the rest of CSS.
      */
-    module.exports.getCustomStyles = function (confPath, pluginsPath) {
-        let xmldom = require('xmldom');
-        let data = fs.readFileSync(confPath, {encoding: 'utf8'});
-        let doc = new xmldom.DOMParser().parseFromString(data);
-        return findAllThemeCss(doc).concat(findAllPluginCss(pluginsPath, doc));
-    };
-
-    const parseXml = (path) => {
-        let data = fs.readFileSync(path, {encoding: 'utf8'});
-        let DOMParser = require('xmldom').DOMParser;
-        return new DOMParser().parseFromString(data);
+    module.exports.getCustomStyles = function (confDoc, pluginsPath) {
+        return findAllThemeCss(confDoc).concat(findAllPluginCss(pluginsPath, confDoc));
     };
 
 
@@ -151,13 +142,12 @@
      * Produces mapping for modules with 'fake' (= non filesystem) paths.
      * E.g. 'plugins/queryStorage' maps to 'plugins/myCoolQueryStorage'.
      *
-     * @param {string} confPath - a path to KonText XML configuration file (config.xml)
+     * @param {string} confDoc - parsed KonText XML config
      * @param {string} pluginsPath - a path to JS/TS plug-ins implementations
      * @param {boolean} isProduction - set whether a production setup should be exported
      * @return {[fakePath:string]:string}
      */
-    module.exports.loadModulePathMap = function (confPath, pluginsPath, isProduction) {
-        let doc = parseXml(confPath);
+    module.exports.loadModulePathMap = function (confDoc, pluginsPath, isProduction) {
         let reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev';
         let reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev';
         let pluginMap = {
@@ -171,7 +161,7 @@
             'vendor/d3-color': 'vendor/d3-color.min',
             'SoundManager' : 'vendor/soundmanager2.min',
         };
-        let pluginBuildConf = findAllPluginBuildConf(pluginsPath, doc);
+        let pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
         for (let p in pluginBuildConf) {
             (pluginBuildConf[p]['ignoreModules'] || []).forEach((item) => {
                 pluginMap[item] = 'empty:'
@@ -181,7 +171,7 @@
                 pluginMap[p] = remapModules[p];
             }
         };
-        findPluginTags(doc).forEach((item) => {
+        findPluginTags(confDoc).forEach((item) => {
             pluginMap['plugins/' + item.canonicalName] = item.jsModule ? 'plugins/' + item.jsModule : 'empty:';
         });
         return pluginMap;
@@ -191,7 +181,7 @@
      * Configures a special module "vendor/common" which contains all the 3rd
      * party libs merged into a single file
      */
-    module.exports.listPackedModules = function (confPath, pluginsPath, isProduction) {
+    module.exports.listPackedModules = function (confDoc, pluginsPath, isProduction) {
         let modules = [
             'vendor/rsvp',
             'vendor/rsvp-ajax',
@@ -208,8 +198,7 @@
             modules.push('translations');
 
         } else {
-            let doc = parseXml(confPath);
-            let pluginBuildConf = findAllPluginBuildConf(pluginsPath, doc);
+            let pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
             for (let p in pluginBuildConf) {
                 const remapModules = pluginBuildConf[p]['remapModules'] || {};
                 for (let p in remapModules) {

@@ -1,8 +1,13 @@
 (function (module) {
     'use strict';
 
-    const CONF_PATH = './conf/config.xml';
+    const fs = require('fs');
     const PLUGINS_PATH = './public/files/js/plugins';
+    const CONF_DOC = ((path) => {
+        let data = fs.readFileSync(path, {encoding: 'utf8'});
+        let DOMParser = require('xmldom').DOMParser;
+        return new DOMParser().parseFromString(data);
+    })('./conf/config.xml');
 
     module.exports = function (grunt) {
 
@@ -96,7 +101,7 @@
                                 "public/files/css/widgets.less",
                                 "public/files/css/keyboard.css"
                             ];
-                            return ans.concat(kontext.getCustomStyles(CONF_PATH, PLUGINS_PATH));
+                            return ans.concat(kontext.getCustomStyles(CONF_DOC, PLUGINS_PATH));
                         }())
                     },
                     options: {
@@ -105,7 +110,7 @@
                 },
                 devel: {
                     files: {
-                        "public/files/css/custom.min.css": kontext.getCustomStyles(CONF_PATH, PLUGINS_PATH)
+                        "public/files/css/custom.min.css": kontext.getCustomStyles(CONF_DOC, PLUGINS_PATH)
                     },
                     options: {
                         compress: true
@@ -230,9 +235,9 @@
                         shim: {},
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadModulePathMap(CONF_PATH, PLUGINS_PATH, true),
+                        paths: kontext.loadModulePathMap(CONF_DOC, PLUGINS_PATH, true),
                         modules: kontext.listAppModules('./public/files/js/tpl')
-                            .concat(kontext.listPackedModules(CONF_PATH, PLUGINS_PATH, true))
+                            .concat(kontext.listPackedModules(CONF_DOC, PLUGINS_PATH, true))
                     }
                 },
                 vendor: {
@@ -242,8 +247,8 @@
                         dir: "public/files/js/min",
                         wrapShim: true,
                         optimize: 'none',
-                        paths: kontext.loadModulePathMap(CONF_PATH, PLUGINS_PATH, false),
-                        modules: kontext.listPackedModules(CONF_PATH, PLUGINS_PATH, false)
+                        paths: kontext.loadModulePathMap(CONF_DOC, PLUGINS_PATH, false),
+                        modules: kontext.listPackedModules(CONF_DOC, PLUGINS_PATH, false)
                     }
                 }
             },
