@@ -649,10 +649,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         if (typeof path !== 'string') {
             throw new Error(`Cannot create static url. Invalid path: ${path}`);
         }
-        if (path.indexOf('/') === 0) {
-            path = path.substr(1);
-        }
-        return this.getConf<string>('staticPath') + path;
+        return this.getConf<string>('staticPath') + (path.indexOf('/') === 0 ? '' : '/') + path;
     }
 
     /**
@@ -676,10 +673,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 .map(item => encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]))
                 .join('&');
         }
-        if (path.indexOf('/') === 0) {
-            path = path.substr(1);
-        }
-        return this.conf['rootPath'] + path + (urlArgs ? '?' + urlArgs : '');
+        return this.conf['rootPath'] + (path.indexOf('/') === 0 ? '' : '/') +
+                path + (urlArgs ? '?' + urlArgs : '');
     }
 
     /**

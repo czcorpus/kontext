@@ -1039,7 +1039,7 @@ class Kontext(Controller):
         Controller._add_globals(self, result, methodname, action_metadata)
         result['base_attr'] = Kontext.BASE_ATTR
         result['root_url'] = self.get_root_url()
-        result['files_path'] = self._files_path + '/'
+        result['files_path'] = self._files_path
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
 
