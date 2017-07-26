@@ -166,7 +166,6 @@ declare module Kontext {
      * A store that another store can wait for.
      */
     export interface ComposableStore extends PageStore {
-        getIsBusy():boolean;
         getDispatcherToken():string;
     }
 
@@ -218,7 +217,6 @@ declare module Kontext {
         getActiveItem():MainMenuActiveItem;
         disableMenuItem(itemId:string, subItemId?:string):void;
         enableMenuItem(itemId:string, subItemId?:string):void;
-        resetActiveItemAndNotify():void;
 
         /**
          * Register an action which is run before listeners
@@ -516,12 +514,16 @@ declare module ViewOptions {
         ShowConcToolbar:boolean;
     }
 
+    export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
+        widectx_globals:Array<[string, string]>;
+    }
+
     export interface ICorpViewOptionsStore extends Kontext.PageStore {
         getCorpusIdent():Kontext.FullCorpusIdent;
         initFromPageData(data:ViewOptions.PageData):void;
         loadData():RSVP.Promise<ViewOptions.PageData>;
         isLoaded():boolean;
-        addOnSave(fn:(data:AjaxResponse.SaveViewAttrsOptionsResponse)=>void):void;
+        addOnSave(fn:(data:SaveViewAttrsOptionsResponse)=>void):void;
         getAttributes():Immutable.List<ViewOptions.AttrDesc>;
         getSelectAllAttributes():boolean;
         getStructures():Immutable.List<ViewOptions.StructDesc>;
@@ -534,15 +536,7 @@ declare module ViewOptions {
     }
 
     export interface IGeneralViewOptionsStore extends Kontext.PageStore {
-        getIsBusy():boolean;
-        loadData():RSVP.Promise<boolean>;
-        getPageSize():string;
-        getNewCtxSize():string;
-        getLineNumbers():string;
-        getShuffle():boolean;
-        getWlPageSize():string;
-        getFmaxItems():string;
-        getCitemsPerPage():string;
+        // TODO
     }
 }
 
