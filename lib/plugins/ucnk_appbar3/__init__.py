@@ -21,6 +21,27 @@ Required config.xml/plugin entries:
 element application_bar {
   element module { "ucnk_appbar" }
 }
+
+
+dependencies info structure:
+
+{
+    'depends': {
+        '1': {
+            'url': 'https://www.korpus.cz/toolbar/vendor/webmodel/ui/main.js',
+            'version': '0',
+            'module': 'main',
+            'package': 'webmodel/ui'
+        },
+        '0': {
+            'url': 'https://code.jquery.com/jquery-1.12.4.min.js',
+            'version': '1.12.4',
+            'module': 'jquery',
+            'package': 'jquery/jquery'
+        }
+    },
+    'main': 'https://www.korpus.cz/toolbar/js/toolbar.js'
+}
 """
 from plugins.abstract.appbar import AbstractApplicationBar
 
@@ -33,13 +54,17 @@ class ApplicationBar3(AbstractApplicationBar):
 
     @staticmethod
     def _process_scripts(conf):
-        deps = conf['depends'].items()
-        for item in deps:
-            item[1]['url'] = item[1]['url'].rstrip('.js')
-            item[1]['module'] = item[1]['package'] + '/' + item[1]['module']
-            del item[1]['package']
+        deps = []
+        for item in conf['depends'].values():
+            deps.append(dict(
+                url=item['url'].rstrip('.js'),
+                module=item['package'] + '/' + item['module']))
+            if item['module'] == 'jquery':
+                deps.append(dict(
+                    url=item['url'].rstrip('.js'),
+                    module='jquery'))
         return dict(main=conf['main'].rstrip('.js'),
-                    deps=map(lambda x: x[1], deps))
+                    deps=deps)
 
     def get_styles(self, plugin_api):
         toolbar_obj = plugin_api.get_shared('toolbar')
