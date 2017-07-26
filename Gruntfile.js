@@ -28,8 +28,8 @@
                         './cmpltmpl/*',
                         '!./cmpltmpl/__init__.py',
                         './public/files/js/min/*',
-                        './public/files/js/compiled/*',
-                        './public/files/js/optimized/*'
+                        './public/files/js/.compiled/*',
+                        './public/files/js/.optimized/*'
                     ]
                 },
                 templates: {
@@ -41,28 +41,28 @@
                 javascript: {
                     src: [
                         './public/files/js/min/*',
-                        './public/files/js/compiled/*',
-                        './public/files/js/optimized/*'
+                        './public/files/js/.compiled/*',
+                        './public/files/js/.optimized/*'
                     ]
                 },
                 jsKeepVendor: {
                     src: [
                         './public/files/js/min/*',
                         '!./public/files/js/min/vendor',
-                        './public/files/js/compiled/*',
-                        './public/files/js/optimized/*'
+                        './public/files/js/.compiled/*',
+                        './public/files/js/.optimized/*'
                     ]
                 },
                 cleanup: {
                     src: [
-                        './public/files/js/optimized/*',
-                        './public/files/js/compiled/*'
+                        './public/files/js/.optimized/*',
+                        './public/files/js/.compiled/*'
                     ]
                 },
                 production: {
                     src: [
-                        'public/files/js/optimized/*',
-                        'public/files/js/compiled/*',
+                        'public/files/js/.optimized/*',
+                        'public/files/js/.compiled/*',
                         'public/files/js/min/*',
                         '!public/files/js/min/vendor',
                         'public/files/js/min/vendor/immutable.min.js',
@@ -88,7 +88,7 @@
                     cmd: 'find ./templates -name "*.tmpl" -exec sh -c \'T=$(echo {}); T=${T#./templates/}; cheetah compile --odir cmpltmpl --idir templates "$T"\' \\;'
                 },
                 cql_grammar: {
-                    cmd: 'mkdir -p public/files/js/compiled/cqlParser; ./node_modules/pegjs/bin/pegjs --format amd --allowed-start-rules Query,RegExpRaw,PhraseQuery -o public/files/js/compiled/cqlParser/parser.js scripts/build/cql.pegjs'
+                    cmd: 'mkdir -p public/files/js/.compiled/cqlParser; ./node_modules/pegjs/bin/pegjs --format amd --allowed-start-rules Query,RegExpRaw,PhraseQuery -o public/files/js/.compiled/cqlParser/parser.js scripts/build/cql.pegjs'
                 }
             },
             "less": {
@@ -122,9 +122,9 @@
                     files: [
                         {
                             expand: true,
-                            cwd: 'public/files/js/compiled',
+                            cwd: 'public/files/js/.compiled',
                             src: ['**/*.js'],
-                            dest: 'public/files/js/optimized'
+                            dest: 'public/files/js/.optimized'
                         }
                     ]
                 }
@@ -135,14 +135,14 @@
                         {
                             expand: true,
                             cwd: 'public/files/js',
-                            src: ['**/*.js', '!min/**', '!compiled/**', '!optimized/**'],
-                            dest: 'public/files/js/optimized'
+                            src: ['**/*.js', '!min/**', '!.compiled/**', '!.optimized/**'],
+                            dest: 'public/files/js/.optimized'
                         },
                         {
                             expand: true,
-                            cwd: 'public/files/js/compiled',
-                            src: ['**/*.js', '!min/**', '!compiled/**', '!optimized/**'],
-                            dest: 'public/files/js/optimized'
+                            cwd: 'public/files/js/.compiled',
+                            src: ['**/*.js', '!min/**', '!.compiled/**', '!.optimized/**'],
+                            dest: 'public/files/js/.optimized'
                         }
                     ]
                 },
@@ -151,8 +151,8 @@
                         {
                             expand: true,
                             cwd: 'public/files/js',
-                            src: ['**/*.js', '!**/*.min.js', '!min/**', '!compiled/**', '!optimized/**'],
-                            dest: 'public/files/js/compiled'
+                            src: ['**/*.js', '!**/*.min.js', '!min/**', '!.compiled/**', '!.optimized/**'],
+                            dest: 'public/files/js/.compiled'
                         }
                     ]
                 },
@@ -161,8 +161,8 @@
                         {
                             expand: true,
                             cwd: 'public/files/js',
-                            src: ['**/*.min.js', '!min/**', '!compiled/**', '!optimized/**'],
-                            dest: 'public/files/js/optimized'
+                            src: ['**/*.min.js', '!min/**', '!.compiled/**', '!.optimized/**'],
+                            dest: 'public/files/js/.optimized'
                         }
                     ]
                 },
@@ -170,7 +170,7 @@
                     files: [
                         {
                             expand: true,
-                            cwd: 'public/files/js/compiled',
+                            cwd: 'public/files/js/.compiled',
                             src: ['**/*.js', '!vendor/*'],
                             dest: 'public/files/js/min'
                         }
@@ -182,7 +182,7 @@
                     files: [
                         {
                             src: ["public/files/js/**/*.ts"],
-                            dest: "public/files/js/compiled"
+                            dest: "public/files/js/.compiled"
                         }
                     ],
                     options: {
@@ -197,7 +197,7 @@
                     files: [
                         {
                             src: ["public/files/js/**/*.ts"],
-                            dest: "public/files/js/compiled"
+                            dest: "public/files/js/.compiled"
                         }
                     ],
                     options: {
@@ -220,7 +220,7 @@
                             expand: true,
                             cwd: 'public/files/js',
                             src: ["**/*.jsx"],
-                            dest: "public/files/js/compiled",
+                            dest: "public/files/js/.compiled",
                             ext: ".js"
                         }
                     ]
@@ -229,7 +229,7 @@
             requirejs: {
                 production: {
                     options: {
-                        appDir: "public/files/js/optimized",
+                        appDir: "public/files/js/.optimized",
                         baseUrl: ".",
                         dir: "public/files/js/min",
                         shim: {},
@@ -242,7 +242,7 @@
                 },
                 vendor: {
                     options: {
-                        appDir: "public/files/js/optimized",
+                        appDir: "public/files/js/.optimized",
                         baseUrl: ".",
                         dir: "public/files/js/min",
                         wrapShim: true,
@@ -257,7 +257,7 @@
                     targetFile: './public/files/js/min/translations.js'
                 },
                 production: {
-                    targetFile: './public/files/js/optimized/translations.js'
+                    targetFile: './public/files/js/.optimized/translations.js'
                 }
             },
             keymaps: {
