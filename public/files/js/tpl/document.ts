@@ -673,8 +673,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 .map(item => encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]))
                 .join('&');
         }
-        return this.conf['rootPath'] + (path.indexOf('/') === 0 ? '' : '/') +
-                path + (urlArgs ? '?' + urlArgs : '');
+        return this.conf['rootPath'] +
+                (path.indexOf('/') === 0 ? path.substr(1) : path) +
+                (urlArgs ? '?' + urlArgs : '');
     }
 
     /**
