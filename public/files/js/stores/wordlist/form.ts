@@ -25,7 +25,7 @@
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
-import {SimplePageStore} from '../base';
+import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../pages/document';
 import {MultiDict} from '../../util';
 
@@ -180,7 +180,12 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SET_WLMINFREQ':
-                this.wlminfreq = payload.props['value'];
+                if (validateGzNumber(payload.props['value'])) {
+                    this.wlminfreq = payload.props['value'];
+
+                } else {
+                    this.layoutModel.showMessage('error', this.layoutModel.translate('wordlist__minfreq_err'));
+                }
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SET_INCLUDE_NONWORDS':
