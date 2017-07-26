@@ -56,7 +56,7 @@ export class CorpusViewOptionsStore extends SimplePageStore implements ViewOptio
 
     private attrAllpos:string; // kw/all
 
-    private updateHandlers:Immutable.List<(data:AjaxResponse.SaveViewAttrsOptionsResponse)=>void>;
+    private updateHandlers:Immutable.List<(data:ViewOptions.SaveViewAttrsOptionsResponse)=>void>;
 
     private isWaiting:boolean;
 
@@ -150,7 +150,7 @@ export class CorpusViewOptionsStore extends SimplePageStore implements ViewOptio
         return this.isWaiting;
     }
 
-    addOnSave(fn:(data:AjaxResponse.SaveViewAttrsOptionsResponse)=>void):void {
+    addOnSave(fn:(data:ViewOptions.SaveViewAttrsOptionsResponse)=>void):void {
         this.updateHandlers = this.updateHandlers.push(fn);
     }
 
@@ -172,11 +172,11 @@ export class CorpusViewOptionsStore extends SimplePageStore implements ViewOptio
         return ans;
     }
 
-    private saveSettings():RSVP.Promise<AjaxResponse.SaveViewAttrsOptionsResponse> {
+    private saveSettings():RSVP.Promise<ViewOptions.SaveViewAttrsOptionsResponse> {
         const corpname = this.layoutModel.getConf<string>('corpname');
         const urlArgs = `corpname=${corpname}&format=json`;
         const formArgs = this.serialize();
-        return this.layoutModel.ajax<AjaxResponse.SaveViewAttrsOptionsResponse>(
+        return this.layoutModel.ajax<ViewOptions.SaveViewAttrsOptionsResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewattrsx') + '?' + urlArgs,
             formArgs
