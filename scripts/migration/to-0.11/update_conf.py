@@ -48,3 +48,4 @@ if __name__ == '__main__':
         with open(output_path, 'wb') as f:
             f.write(result_xml)
             print('DONE!\nConverted config written to %s\n' % output_path)
+    print('\nPlease do not forget to update subcorpora paths by running updsubc.py!\n')

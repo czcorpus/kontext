@@ -277,10 +277,11 @@ class Kontext(Controller):
         if 'shuffle' not in options:
             options['shuffle'] = 1
 
-    def _setup_user_paths(self, user_file_id):
+    def _setup_user_paths(self):
+        user_id = self._session_get('user', 'id')
         if not self.user_is_anonymous():
-            self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), user_file_id)]
-        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_file_id)
+            self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))]
+        self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
 
     def _user_has_persistent_settings(self):
         conf = settings.get('plugins', 'settings_storage')
@@ -343,7 +344,7 @@ class Kontext(Controller):
         convert_types(options, self.clone_args(), selector=1)
         if callable(actions):
             actions(options)
-        self._setup_user_paths(self._session_get('user', 'user'))
+        self._setup_user_paths()
         self.args.__dict__.update(options)
 
     def _apply_corpus_user_settings(self, options, corpname):
