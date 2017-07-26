@@ -707,7 +707,7 @@ declare module TextTypes {
         /**
          *
          */
-        setExtendedInfo(idx:number, data:Immutable.Map<string, any>):AttributeSelection;
+        setExtendedInfo(ident:string, data:Immutable.Map<string, any>):AttributeSelection;
     }
 
     /**
@@ -840,7 +840,7 @@ declare module TextTypes {
          * to update store(s) in such a way that the information becomes
          * available.
          */
-        setExtendedInfoSupport<T>(attrName:string, fn:(idx:number)=>RSVP.Promise<T>):void;
+        setExtendedInfoSupport<T>(attrName:string, fn:(ident:string)=>RSVP.Promise<T>):void;
 
         /**
          * Returns true if a specific attribute has activated support
@@ -852,10 +852,10 @@ declare module TextTypes {
          * Attaches an extended information item to a specific attribute value.
          * This is typically used by setExtendedInfoSupport's callback function.
          */
-        setExtendedInfo(attrName:string, idx:number, data:Immutable.Map<string, any>):void;
+        setExtendedInfo(attrName:string, ident:string, data:Immutable.Map<string, any>):void;
 
 
-        setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>void):void;
+        setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>RSVP.Promise<any>):void;
 
         getTextInputPlaceholder():string;
 

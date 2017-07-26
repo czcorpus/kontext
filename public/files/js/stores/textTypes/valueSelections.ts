@@ -254,28 +254,34 @@ export class TextInputAttributeSelection implements TextTypes.ITextInputAttribut
         return !!this.values.find(item=>item.locked);
     }
 
-    setExtendedInfo(idx:number, data:Immutable.Map<string, any>):TextTypes.AttributeSelection {
-        let currVal = this.values.get(idx);
-        let newVal = {
-            ident: currVal.ident,
-            value: currVal.value,
-            locked: currVal.locked,
-            selected: currVal.selected,
-            availItems: currVal.availItems,
-            numGrouped: currVal.numGrouped,
-            extendedInfo: data
-        };
-        let values = this.values.set(idx, newVal);
-        return new TextInputAttributeSelection(
-            this.name,
-            this.label,
-            this.isNumeric,
-            this.isInterval,
-            this.attrInfo,
-            this.textFieldValue,
-            values,
-            this.autoCompleteHints
-        );
+    setExtendedInfo(ident:string, data:Immutable.Map<string, any>):TextTypes.AttributeSelection {
+        const srchIdx = this.values.findIndex(v => v.ident === ident);
+        if (srchIdx > -1) {
+            const currVal = this.values.get(srchIdx);
+            const newVal = {
+                ident: currVal.ident,
+                value: currVal.value,
+                locked: currVal.locked,
+                selected: currVal.selected,
+                availItems: currVal.availItems,
+                numGrouped: currVal.numGrouped,
+                extendedInfo: data
+            };
+            const values = this.values.set(srchIdx, newVal);
+            return new TextInputAttributeSelection(
+                this.name,
+                this.label,
+                this.isNumeric,
+                this.isInterval,
+                this.attrInfo,
+                this.textFieldValue,
+                values,
+                this.autoCompleteHints
+            );
+
+        } else {
+            throw new Error(`Cannot set extended info - ident ${ident} not found`);
+        }
     }
 
     getTextFieldValue():string {
@@ -452,26 +458,32 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
         return !!this.values.find(item=>item.locked);
     }
 
-    setExtendedInfo(idx:number, data:{[key:string]:any}):TextTypes.AttributeSelection {
-        let currVal = this.values.get(idx);
-        let newVal = {
-            ident: currVal.ident,
-            value: currVal.value,
-            locked: currVal.locked,
-            selected: currVal.selected,
-            availItems: currVal.availItems,
-            numGrouped: currVal.numGrouped,
-            extendedInfo: data
-        };
-        let values = this.values.set(idx, newVal);
-        return new FullAttributeSelection(
-            this.name,
-            this.label,
-            this.isNumeric,
-            this.isInterval,
-            this.attrInfo,
-            values
-        );
+    setExtendedInfo(ident:string, data:{[key:string]:any}):TextTypes.AttributeSelection {
+        const srchIdx = this.values.findIndex(v => v.ident === ident);
+        if (srchIdx > -1) {
+            const currVal = this.values.get(srchIdx);
+            const newVal = {
+                ident: currVal.ident,
+                value: currVal.value,
+                locked: currVal.locked,
+                selected: currVal.selected,
+                availItems: currVal.availItems,
+                numGrouped: currVal.numGrouped,
+                extendedInfo: data
+            };
+            const values = this.values.set(srchIdx, newVal);
+            return new FullAttributeSelection(
+                this.name,
+                this.label,
+                this.isNumeric,
+                this.isInterval,
+                this.attrInfo,
+                values
+            );
+
+        } else {
+            throw new Error(`Cannot set extended info - ident ${ident} not found`);
+        }
     }
 
     getNumOfSelectedItems():number {
