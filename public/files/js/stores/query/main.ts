@@ -20,14 +20,14 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../../ts/declarations/cqlParser.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import {MultiDict} from '../../util';
 import {parse as parseQuery} from 'cqlParser/parser';
 import {TextTypesStore} from '../textTypes/attrValues';

@@ -79,7 +79,7 @@
                         'public/files/js/min/vendor/Dispatcher.js',
                         'public/files/js/min/vendor/jquery.min.js',
                         'public/files/js/min/vendor/react.min.js',
-                        '!public/files/js/min/tpl',
+                        '!public/files/js/min/pages',
                     ]
                 }
             },
@@ -236,7 +236,7 @@
                         wrapShim: true,
                         optimize: 'none',
                         paths: kontext.loadModulePathMap(CONF_DOC, PLUGINS_PATH, true),
-                        modules: kontext.listAppModules('./public/files/js/tpl')
+                        modules: kontext.listAppModules('./public/files/js/pages')
                             .concat(kontext.listPackedModules(CONF_DOC, PLUGINS_PATH, true))
                     }
                 },

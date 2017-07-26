@@ -17,9 +17,9 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/flux.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 
 

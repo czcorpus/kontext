@@ -19,6 +19,6 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/react.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 export function init(dispatcher, mixins, queryStorageStore):{QueryStorage:React.ReactClass};

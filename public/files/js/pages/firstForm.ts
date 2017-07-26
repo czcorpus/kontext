@@ -22,8 +22,8 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
-/// <reference path="../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 
 import * as corplistComponent from 'plugins/corparch/init';

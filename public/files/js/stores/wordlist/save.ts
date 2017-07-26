@@ -21,7 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 
 
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 

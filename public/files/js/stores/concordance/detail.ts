@@ -19,11 +19,11 @@
  */
 
 /// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import {MultiDict, importColor} from '../../util';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'vendor/immutable';

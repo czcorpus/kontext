@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../../ts/declarations/react.d.ts" />
+/// <reference path="../../vendor.d.ts/flux.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/views.d.ts" />
 /// <reference path="./corplistView.d.ts" />

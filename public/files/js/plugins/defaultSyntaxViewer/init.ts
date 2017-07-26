@@ -18,7 +18,7 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="./js-treex-view.d.ts" />
 
 /// <amd-dependency path="./js-treex-view" />

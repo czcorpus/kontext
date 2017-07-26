@@ -20,12 +20,12 @@
 
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore, validateGzNumber} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import {WordlistFormStore} from './form';
 import {MultiDict} from '../../util';
 import {WordlistSaveStore} from './save';

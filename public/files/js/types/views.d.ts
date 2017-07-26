@@ -17,8 +17,8 @@
  */
 
 /// <reference path="./common.d.ts" />
-/// <reference path="../../ts/declarations/react.d.ts" />
-/// <reference path="../../ts/declarations/flux.d.ts" />
+/// <reference path="../vendor.d.ts/react.d.ts" />
+/// <reference path="../vendor.d.ts/flux.d.ts" />
 
 
 declare interface CommonViews {

@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import {QueryStore, QueryFormUserEntries} from './main';
 import {FilterStore} from './filter';
 import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';

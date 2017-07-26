@@ -19,7 +19,7 @@
  */
 
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 
 
 export type VirtualKeys = Array<Array<[string, string]>>;

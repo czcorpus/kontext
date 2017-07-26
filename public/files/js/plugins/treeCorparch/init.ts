@@ -19,10 +19,10 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="./view.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../../ts/declarations/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/flux.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';

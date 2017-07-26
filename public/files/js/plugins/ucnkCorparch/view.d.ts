@@ -19,7 +19,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/react.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 export interface UcnkCorparchViews {
     CorplistTable:any;
