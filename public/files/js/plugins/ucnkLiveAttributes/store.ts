@@ -110,7 +110,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
 
     private bibliographyAttribute:string;
 
-    private bibliographyIds:Immutable.List<string>;
+    private bibliographyIds:Immutable.OrderedSet<string>;
 
     private updateListeners:Immutable.List<()=>void>;
 
@@ -154,7 +154,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
                                 locked: selectedCorporaProvider ? true : item.locked
                             };
                         }));
-        this.bibliographyIds = Immutable.List<string>();
+        this.bibliographyIds = Immutable.OrderedSet<string>();
         this.initialAlignedCorpora = this.alignedCorpora;
         this.updateListeners = Immutable.List<()=>void>();
         this.selectedCorporaProvider = selectedCorporaProvider;
@@ -221,25 +221,32 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
 
         // set the data iff server data are full-fledget (i.e. including unique 'ident')
         if (newBibData.length > 0 && !!newBibData[0].ident) {
-            this.bibliographyIds = Immutable.List<string>(newBibData.map(v => v.ident));
+            this.bibliographyIds = this.bibliographyIds.union(Immutable.OrderedSet<string>(newBibData.map(v => v.ident)));
         }
         this.textTypesStore.setExtendedInfoSupport(
             this.bibliographyAttribute,
-            (idx:number) => {
-                return this.loadBibInfo(this.bibliographyIds.get(idx)).then(
-                    (serverData:ServerBibData) => {
-                        if (!serverData.contains_errors) {
-                            this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
-                                    idx, Immutable.OrderedMap<string, any>(serverData.bib_data));
+            (ident:string) => {
+                if (this.bibliographyIds.contains(ident)) {
+                    return this.loadBibInfo(ident).then(
+                        (serverData:ServerBibData) => {
+                            if (!serverData.contains_errors) {
+                                this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
+                                        ident, Immutable.OrderedMap<string, any>(serverData.bib_data));
 
-                        } else {
-                            throw new Error(serverData.error);
+                            } else {
+                                throw new Error(serverData.error);
+                            }
+                        },
+                        (err:any) => {
+                            this.pluginApi.showMessage('error', err);
                         }
-                    },
-                    (err:any) => {
-                        this.pluginApi.showMessage('error', err);
-                    }
-                );
+                    );
+
+                } else {
+                    return new RSVP.Promise<any>((resolve:()=>void, reject:(err)=>void) => {
+                        reject(new Error('Item not found'));
+                    })
+                }
             }
         );
     }

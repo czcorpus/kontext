@@ -110,7 +110,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
      * user clicks to the [i] icon. The store must be set to provide
      * such a functionality.
      */
-    private extendedInfoCallbacks:Immutable.Map<string, (idx:number)=>RSVP.Promise<any>>; // TODO type
+    private extendedInfoCallbacks:Immutable.Map<string, (ident:string)=>RSVP.Promise<any>>; // TODO type
 
     /**
      * Contains externally registered callbacks invoked in case
@@ -141,7 +141,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.pluginApi = pluginApi;
         this.rangeSelector = new rangeSelector.RangeSelector(pluginApi, this);
         this.metaInfo = Immutable.Map<string, TextTypes.AttrSummary>();
-        this.extendedInfoCallbacks = Immutable.Map<string, (idx:number)=>RSVP.Promise<any>>();
+        this.extendedInfoCallbacks = Immutable.Map<string, (ident:string)=>RSVP.Promise<any>>();
         this.selectionChangeListeners = Immutable.List<(target:TextTypes.ITextTypesStore)=>void>();
         this.textInputPlaceholder = null;
         const self = this;
@@ -164,7 +164,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     self.notifyChangeListeners();
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
-                    self.fetchExtendedInfo(payload.props['attrName'], payload.props['idx']).then(
+                    self.fetchExtendedInfo(payload.props['attrName'], payload.props['ident']).then(
                         (v) => {
                             self.notifyChangeListeners();
                         },
@@ -174,7 +174,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                     );
                     break;
                 case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
-                    self.clearExtendedInfo(payload.props['attrName'], payload.props['idx']);
+                    self.clearExtendedInfo(payload.props['attrName'], payload.props['ident']);
                     self.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED':
@@ -205,11 +205,11 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         });
     }
 
-    private clearExtendedInfo(attrName:string, itemIdx:number):void {
+    private clearExtendedInfo(attrName:string, ident:string):void {
         const attr = this.getAttribute(attrName);
         if (attr) {
             const attrIdx = this.attributes.indexOf(attr);
-            const newAttr = attr.setExtendedInfo(itemIdx, null);
+            const newAttr = attr.setExtendedInfo(ident, null);
             this.attributes = this.attributes.set(attrIdx, newAttr);
 
         } else {
@@ -217,11 +217,12 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         }
     }
 
-    private fetchExtendedInfo(attrName:string, itemIdx:number):RSVP.Promise<any> {
+    private fetchExtendedInfo(attrName:string, ident:string):RSVP.Promise<any> {
         const attr = this.getAttribute(attrName);
         const attrIdx = this.attributes.indexOf(attr);
+        const srchIdx = attr.getValues().findIndex(v => v.ident === ident);
 
-        if (attr.getValues().get(itemIdx).numGrouped < 2) {
+        if (srchIdx > - 1 && attr.getValues().get(srchIdx).numGrouped < 2) {
             this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
                 return {
                     availItems: item.availItems,
@@ -235,7 +236,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
             }));
             const fn = this.extendedInfoCallbacks.get(attrName);
             if (fn) {
-                return fn(itemIdx);
+                return fn(ident);
 
             } else {
                 return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
@@ -243,14 +244,19 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                 });
             }
 
-        } else {
+        } else if (srchIdx > -1) {
             const message = this.pluginApi.translate(
                     'query__tt_multiple_items_same_name_{num_items}',
-                    {num_items: attr.getValues().get(itemIdx).numGrouped}
+                    {num_items: attr.getValues().get(srchIdx).numGrouped}
             );
-            this.setExtendedInfo(attrName, itemIdx, Immutable.Map({__message__: message}));
+            this.setExtendedInfo(attrName, ident, Immutable.Map({__message__: message}));
             return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                resolve(null);
+                reject(null);
+            });
+
+        } else {
+            return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
+                reject(null);
             });
         }
     }
@@ -533,7 +539,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return this.metaInfo;
     }
 
-    setExtendedInfoSupport<T>(attrName:string, fn:(idx:number)=>RSVP.Promise<T>):void {
+    setExtendedInfoSupport<T>(attrName:string, fn:(ident:string)=>RSVP.Promise<T>):void {
         this.extendedInfoCallbacks = this.extendedInfoCallbacks.set(attrName, fn);
     }
 
@@ -541,11 +547,11 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return this.extendedInfoCallbacks.has(attrName);
     }
 
-    setExtendedInfo(attrName:string, idx:number, data:Immutable.Map<string, any>):void {
+    setExtendedInfo(attrName:string, ident:string, data:Immutable.Map<string, any>):void {
         let attr = this.getAttribute(attrName);
         if (attrName) {
             let attrIdx = this.attributes.indexOf(attr);
-            this.attributes = this.attributes.set(attrIdx, attr.setExtendedInfo(idx, data));
+            this.attributes = this.attributes.set(attrIdx, attr.setExtendedInfo(ident, data));
 
         } else {
             throw new Error('Failed to find attribute ' + attrName);

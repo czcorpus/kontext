@@ -194,7 +194,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                 actionType: 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST',
                 props: {
                     attrName: this.props.attrName,
-                    idx: this.props.itemIdx
+                    ident: this.props.ident
                 }
             });
         },
@@ -239,7 +239,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                     actionType: 'TT_EXTENDED_INFORMATION_REQUEST',
                     props: {
                         attrName: this.props.attrName,
-                        idx: idx
+                        ident: this.props.ident
                     }
                 });
             }
@@ -302,7 +302,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                                 <td className="num">{item.availItems ? this.formatNumber(item.availItems) : ''}</td>
                                 <td className="extended-info">
                                 {hasExtendedInfo ?
-                                    <ExtendedInfoButton idx={i} attrName={this.props.attrObj.name}
+                                    <ExtendedInfoButton ident={item.ident} attrName={this.props.attrObj.name}
                                             numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
                                     : null
                                 }
@@ -500,7 +500,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                         </td>
                         <td>
                             {hasExtendedInfo
-                                ? <ExtendedInfoButton idx={i} attrName={this.props.attrObj.name}
+                                ? <ExtendedInfoButton ident={item.ident} attrName={this.props.attrObj.name}
                                         numGrouped={item.numGrouped}
                                         containsExtendedInfo={!!item.extendedInfo} />
                                 : null }
@@ -648,7 +648,7 @@ export function init(dispatcher, mixins, textTypesStore) {
             const srch = this.props.attrObj.getValues().findEntry(item => !!item.extendedInfo);
             if (srch) {
                 const [srchIdx, item] = srch;
-                return <ExtendedInfoBox data={item.extendedInfo} itemIdx={srchIdx}
+                return <ExtendedInfoBox data={item.extendedInfo} ident={item.ident}
                                 attrName={this.props.attrObj.name} />;
 
             } else {
