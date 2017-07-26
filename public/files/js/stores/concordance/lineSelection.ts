@@ -19,13 +19,13 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/flux.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
 import {ConcLinesStorage} from '../../conclines';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import {ConcLineStore} from './lines';
 import * as RSVP from 'vendor/rsvp';
 

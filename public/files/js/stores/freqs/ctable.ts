@@ -19,11 +19,11 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';

@@ -17,8 +17,8 @@
  */
 
 
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 
 import {SimplePageStore} from '../../stores/base';

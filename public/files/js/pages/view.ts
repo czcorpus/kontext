@@ -21,12 +21,12 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
-/// <reference path="../../ts/declarations/modernizr.d.ts" />
-/// <reference path="../../ts/declarations/soundmanager.d.ts" />
-/// <reference path="../../ts/declarations/d3.d.ts" />
-/// <reference path="../../ts/declarations/d3-color.d.ts" />
+/// <reference path="../vendor.d.ts/modernizr.d.ts" />
+/// <reference path="../vendor.d.ts/soundmanager.d.ts" />
+/// <reference path="../vendor.d.ts/d3.d.ts" />
+/// <reference path="../vendor.d.ts/d3-color.d.ts" />
 /// <reference path="../types/views.d.ts" />
-/// <reference path="../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import * as SoundManager from 'SoundManager';
 import * as d3 from 'vendor/d3';

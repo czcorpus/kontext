@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/d3.d.ts" />
+/// <reference path="../../vendor.d.ts/d3.d.ts" />
 /// <reference path="../../types/common.d.ts" />
 
 import * as d3 from 'vendor/d3';

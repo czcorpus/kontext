@@ -19,10 +19,10 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import * as RSVP from 'vendor/rsvp';
 
 /**

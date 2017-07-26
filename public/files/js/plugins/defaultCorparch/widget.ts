@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../types/common.d.ts" />
 
 import * as common from './common';

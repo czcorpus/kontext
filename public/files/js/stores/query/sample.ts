@@ -22,7 +22,7 @@
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import {MultiDict} from '../../util';
 
 

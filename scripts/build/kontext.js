@@ -220,18 +220,18 @@
      * @param {string} path to a directory where models reside
      * @return Array<string>
      */
-    module.exports.listAppModules = function (tplDir) {
+    module.exports.listAppModules = function (pageDir) {
         let ans = [];
 
         function isExcluded(p) {
             return ['document.js'].indexOf(p) > -1;
         }
 
-        fs.readdirSync(tplDir).forEach(function (item) {
+        fs.readdirSync(pageDir).forEach(function (item) {
             let srch = /^(.+)\.[jt]s$/.exec(item);
             if (srch && !isExcluded(item)) {
                 ans.push({
-                    name: 'tpl/' + srch[1],
+                    name: 'pages/' + srch[1],
                     exclude: ['vendor/common'] // we do not want to include vendor stuff in page code
                 });
             }

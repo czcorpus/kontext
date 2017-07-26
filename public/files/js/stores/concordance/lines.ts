@@ -21,15 +21,15 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../../ts/declarations/flux.d.ts" />
-/// <reference path="../../../ts/declarations/rsvp.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
-/// <reference path="../../../ts/declarations/modernizr.d.ts" />
+/// <reference path="../../vendor.d.ts/flux.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/modernizr.d.ts" />
 
 
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';

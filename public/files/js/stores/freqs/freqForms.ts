@@ -19,10 +19,10 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../../ts/declarations/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../tpl/document';
+import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
