@@ -102,6 +102,8 @@ export class CorplistWidgetStore extends SimplePageStore {
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK':
+                    this.isWaitingToSwitch = true;
+                    this.notifyChangeListeners();
                     this.handleFavItemClick(payload.props['itemId']).then(
                         () => {
                             this.notifyChangeListeners();
@@ -114,6 +116,8 @@ export class CorplistWidgetStore extends SimplePageStore {
                     );
                 break;
                 case 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK':
+                    this.isWaitingToSwitch = true;
+                    this.notifyChangeListeners();
                     this.handleFeatItemClick(payload.props['itemId']).then(
                         () => {
                             this.notifyChangeListeners();
@@ -126,6 +130,8 @@ export class CorplistWidgetStore extends SimplePageStore {
                     );
                 break;
                 case 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED':
+                    this.isWaitingToSwitch = true;
+                    this.notifyChangeListeners();
                     this.handleSearchItemClick(payload.props['itemId']).then(
                         () => {
                             this.notifyChangeListeners();
@@ -245,7 +251,6 @@ export class CorplistWidgetStore extends SimplePageStore {
     }
 
     private handleFavItemClick(itemId:string):RSVP.Promise<any> {
-        this.isWaitingToSwitch = true;
         const item = this.dataFav.find(item => item.id === itemId);
         return (() => {
             if (item !== undefined) {
@@ -260,7 +265,6 @@ export class CorplistWidgetStore extends SimplePageStore {
     }
 
     private handleFeatItemClick(itemId:string):RSVP.Promise<any> {
-        this.isWaitingToSwitch = true;
         const item = this.dataFeat.find(item => item.id === itemId);
         return (() => {
             if (item !== undefined) {
@@ -275,7 +279,6 @@ export class CorplistWidgetStore extends SimplePageStore {
     }
 
     private handleSearchItemClick(itemId:string):RSVP.Promise<any> {
-        this.isWaitingToSwitch = true;
         const item = this.currSearchResult.find(item => item.id === itemId);
         return (() => {
             if (item !== undefined) {
