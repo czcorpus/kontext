@@ -52,6 +52,18 @@ declare module "views/concordance/lineSelection" {
             lineSelectionStore:any, userInfoStore:any):LineSelectionViews;
 }
 
+declare module "views/concordance/lineExtras" {
+
+    export interface LineExtrasViews {
+        AudioLink:React.ReactClass;
+        TdLineSelection:React.ReactClass;
+        SyntaxTreeButton:React.ReactClass;
+        RefInfo:React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, helpers:Kontext.ComponentHelpers);
+}
+
 
 declare module "views/concordance/lines" {
 

@@ -24,20 +24,21 @@ import React from 'vendor/react';
 
 import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str, importColor} from '../../util';
+import {init as lineExtrasViewsInit} from './lineExtras';
 
 
 export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
     const mediaViews = initMediaViews(dispatcher, mixins, lineStore);
-
-    const utils = mixins[0];
+    const he = mixins[0];
+    const extras = lineExtrasViewsInit(dispatcher, he);
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
-    const ConcColsHeading = React.createClass({
+    const ConcColsHeading = (props) => {
 
-        _handleSetMainCorpClick : function (corpusId) {
-            if (this.props.corpsWithKwic.indexOf(corpusId) > -1) {
+        const handleSetMainCorpClick = (corpusId) => {
+            if (props.corpsWithKwic.indexOf(corpusId) > -1) {
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_CHANGE_MAIN_CORPUS',
                     props: {
@@ -54,295 +55,113 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                     }
                 });
             }
-        },
+        };
 
-        _renderCol : function (corpInfo) {
-            const colSpan = this.props.viewMode === 'kwic' ? 3 : 1;
+        const renderCol = (corpInfo) => {
+            const colSpan = props.viewMode === 'kwic' ? 3 : 1;
 
             return [
                 <td key={'ref:' + corpInfo.n}>{/* matches reference column */}</td>,
                 <td key={corpInfo.n} className="concordance-col-heading" colSpan={colSpan}>
-                    <a className="select-primary-lang" onClick={this._handleSetMainCorpClick.bind(this, corpInfo.n)}>{corpInfo.label}</a>
+                    <a className="select-primary-lang" onClick={handleSetMainCorpClick.bind(null, corpInfo.n)}>
+                        {corpInfo.label}
+                    </a>
                 </td>
             ];
-        },
+        };
 
-        render : function () {
-            return (
-                <tr>
-                    <td>{/* matches line number column */}</td>
-                    <td>{/* matches selection checkbox column */}</td>
-                    <td>{/* matches syntax tree column */}</td>
-                    {this.props.cols.map(item => this._renderCol(item))}
-                </tr>
-            );
-        }
+        return (
+            <tr>
+                <td>{/* matches line number column */}</td>
+                <td>{/* matches selection checkbox column */}</td>
+                <td>{/* matches syntax tree column */}</td>
+                {props.cols.map(item => renderCol(item))}
+            </tr>
+        );
+    };
 
-    });
-
-    // ------------------------- <AudioLink /> ---------------------------
-
-    const AudioLink = React.createClass({
-
-        mixins,
-
-        _getChar : function () {
-            return {'L': '\u00A0[\u00A0', '+': '\u00A0+\u00A0', 'R': '\u00A0]\u00A0'}[this.props.t];
-        },
-
-        _handleClick : function () {
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
-                props: {
-                    chunks: this.props.chunks,
-                    lineIdx: this.props.lineIdx
-                }
-            });
-        },
-
-        _canStartPlayback : function () {
-            const chunks = (this.props.chunks || []);
-            for (let i = 0; i < chunks.length; i += 1) {
-                if (chunks[i].openLink && chunks[i].openLink.speechPath) {
-                    return true;
-                }
-                if (chunks[i].closeLink && chunks[i].closeLink.speechPath) {
-                    return true;
-                }
-            }
-            return false;
-        },
-
-        render : function () {
-            if (this.props.chunks.length == 1
-                    && this.props.chunks[this.props.chunks.length - 1].showAudioPlayer) {
-                return (
-                    <span>
-                        <a className="speech-link" onClick={this._handleClick}>{this._getChar()}</a>
-                        <mediaViews.AudioPlayer />
-                    </span>
-                );
-
-            } else if (this._canStartPlayback()) {
-                return <a className="speech-link" onClick={this._handleClick}
-                            title={this.translate('concview__click_to_play_audio')}>{this._getChar()}</a>;
-
-            } else {
-                return <span className="speech-link disabled"
-                            title={this.translate('concview__segment_has_no_playback_data')}>{this._getChar(0)}</span>;
-            }
-        }
-    });
-
-    // ------------------------- <LineSelCheckbox /> ---------------------------
-
-    const LineSelCheckbox = React.createClass({
-
-        _checkboxChangeHandler : function (event) {
-            this.setState({checked: !this.state.checked});
-            dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_SELECT_LINE',
-                props: {
-                    value: event.currentTarget.checked ? 1 : null,
-                    lineNumber: this.props.lineNumber,
-                    tokenNumber: this.props.tokenNumber,
-                    kwicLength: this.props.kwicLength
-                }
-            });
-        },
-
-        _handleStoreChange : function () {
-            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
-            this.setState({checked: tmp ? true : false});
-        },
-
-        componentDidMount : function () {
-            lineSelectionStore.addChangeListener(this._handleStoreChange);
-        },
-
-        componentWillUnmount : function () {
-            lineSelectionStore.removeChangeListener(this._handleStoreChange);
-        },
-
-        getInitialState : function () {
-            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
-            return {checked: tmp ? true : false};
-        },
-
-        shouldComponentUpdate : function (nextProps, nextState) {
-            return this.state.checked !== nextState.checked;
-        },
-
-        render : function () {
-            return <input type="checkbox" checked={this.state.checked}
-                        onChange={this._checkboxChangeHandler} />;
-        }
-    });
-
-    // ------------------------- <LineSelInput /> ---------------------------
-
-    const LineSelInput = React.createClass({
-
-        _textChangeHandler : function (event) {
-            dispatcher.dispatch({
-                actionType: 'LINE_SELECTION_SELECT_LINE',
-                props: {
-                    value: event.currentTarget.value ? Number(event.currentTarget.value) : -1,
-                    lineNumber: this.props.lineNumber,
-                    tokenNumber: this.props.tokenNumber,
-                    kwicLength: this.props.kwicLength
-                }
-            });
-        },
-
-        _handleStoreChange : function () {
-            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
-            this.setState({value: tmp ? tmp[1] : ''});
-        },
-
-        componentDidMount : function () {
-            lineSelectionStore.addChangeListener(this._handleStoreChange);
-        },
-
-        componentWillUnmount : function () {
-            lineSelectionStore.removeChangeListener(this._handleStoreChange);
-        },
-
-        getInitialState : function () {
-            const tmp = lineSelectionStore.getLine(this.props.tokenNumber);
-            return {value: tmp ? tmp[1] : ''};
-        },
-
-        shouldComponentUpdate : function (nextProps, nextState) {
-            return this.state.value !== nextState.value;
-        },
-
-        render : function () {
-            return <input type="text" inputMode="numeric" style={{width: '1.4em'}}
-                        value={this.state.value} onChange={this._textChangeHandler} />;
-        }
-    });
-
-    // ------------------------- <TdLineSelection /> ---------------------------
-
-    const TdLineSelection = React.createClass({
-
-        _renderInput : function () {
-            if (this.props.lockedGroupId) {
-                const groupLabel = this.props.lockedGroupId > -1 ? `#${this.props.lockedGroupId}` : '';
-                return <span className="group-id">{groupLabel}</span>;
-
-            } else if (this.props.mode === 'simple') {
-                return <LineSelCheckbox {...this.props} />;
-
-            } else if (this.props.mode === 'groups') {
-                return <LineSelInput {...this.props} />;
-
-            } else {
-                return null;
-            }
-        },
-
-        render : function () {
-            const css = {};
-            if (this.props.catTextColor) {
-                css['color'] = this.props.catTextColor
-            }
-            if (this.props.catBgColor) {
-                css['backgroundColor'] = this.props.catBgColor;
-            }
-            return (
-                <td className="manual-selection" style={css}>
-                    {this._renderInput()}
-                </td>
-            );
-        }
-    });
 
     // ------------------------- <NonKwicText /> ---------------------------
 
-    const NonKwicText = React.createClass({
+    const NonKwicText = (props) => {
 
-        _hasClass : function (cls) {
-            return this.props.data.className.indexOf(cls) > -1;
-        },
+        const hasClass = (cls) => {
+            return props.data.className.indexOf(cls) > -1;
+        };
 
-        _mkKey : function () {
-            return `${this.props.position}:${this.props.idx}`;
-        },
+        const mkKey = () => {
+            return `${props.position}:${props.idx}`;
+        };
 
-        render : function () {
-            if (this.props.data.className && this.props.data.text) {
-                if (this._hasClass('coll') && !this._hasClass('col0')) {
-                    return(
-                        <em key={this._mkKey()} className={this.props.data.className}>
-                            {this.props.data.text}
-                        </em>
-                    );
-
-                } else {
-                    return(
-                        <span key={this._mkKey()} className={this.props.data.className}>
-                            {this.props.data.text}
-                        </span>
-                    );
-                }
+        if (props.data.className && props.data.text) {
+            if (hasClass('coll') && !hasClass('col0')) {
+                return(
+                    <em key={mkKey()} className={props.data.className}>
+                        {props.data.text}
+                    </em>
+                );
 
             } else {
-                return(
-                    <span key={this._mkKey()} title={(this.props.data.mouseover || []).join(', ')}>
-                        {this.props.data.text}
+                return (
+                    <span key={mkKey()} className={props.data.className}>
+                        {props.data.text}
                     </span>
                 );
             }
-        }
-    });
 
-    // ------------------------- <SyntaxTreeButton /> ---------------------
-    //
-    const SyntaxTreeButton = (props) => {
-        return (
-            <a onClick={props.onSyntaxViewClick} title={utils.translate('concview__click_to_see_the_tree')}>
-                <img src={utils.createStaticUrl('img/syntax-tree-icon.svg')} style={{width: '1em'}}
-                        alt="syntax-tree-icon" />
-            </a>
-        );
+        } else {
+            return (
+                <span key={mkKey()} title={(props.data.mouseover || []).join(', ')}>
+                    {props.data.text}
+                </span>
+            );
+        }
     };
 
     // ------------------------- <Line /> ---------------------------
 
-    const Line = React.createClass({
+    class Line extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+        }
 
-        _renderLeftChunk : function (item, i, itemList) {
+        _fetchStoreState() {
+            return {
+                selectionValue: lineSelectionStore.getLine(this.props.data.languages.first().tokenNumber)
+            };
+        }
+
+        _renderLeftChunk(item, i, itemList) {
             const ans = [];
             if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[itemList.get(i - 1), item]} />);
             }
             if (item.openLink) {
-                ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
             ans.push(<NonKwicText data={item} idx={i} position="l" />);
             if (item.closeLink) {
-                ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
             return ans;
-        },
+        }
 
-        _renderKwicChunk : function (prevBlockClosed, hasKwic, item, i, itemList) {
+        _renderKwicChunk(prevBlockClosed, hasKwic, item, i, itemList) {
             const ans = [];
             const mouseover = (item.mouseover || []).join(', ');
             const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
             if (prevClosed && item.openLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                         chunks={[prevClosed, item]} />);
 
             } else if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                         chunks={[itemList.get(i - 1), item]} />);
             }
             if (hasKwic) {
@@ -355,45 +174,45 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 ans.push(item.text);
             }
             return ans;
-        },
+        }
 
-        _renderRightChunk : function (prevBlockClosed, item, i, itemList) {
+        _renderRightChunk(prevBlockClosed, item, i, itemList) {
             const ans = [];
             const mouseover = (item.mouseover || []).join(', ');
             const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
             if (prevClosed && item.openLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[prevClosed, item]} />);
 
             } else if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[itemList.get(i - 1), item]} />);
             }
             if (item.openLink) {
-                ans.push(<AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
             ans.push(<NonKwicText data={item} idx={i} position="r" />);
             if (item.closeLink) {
-                ans.push(<AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
             return ans;
-        },
+        }
 
-        _exportTextElmClass : function (corpname, ...customClasses) {
+        _exportTextElmClass(corpname, ...customClasses) {
             const ans = customClasses.slice();
             if (corpname === this.props.mainCorp) {
                 ans.push('maincorp');
             }
             return ans.join(' ');
-        },
+        }
 
-        _renderTextKwicMode : function (corpname, corpusOutput) {
+        _renderTextKwicMode(corpname, corpusOutput) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             return [
                 <td key="lc" className={this._exportTextElmClass(corpname, 'lc')}>
-                    {corpusOutput.left.map(this._renderLeftChunk)}
+                    {corpusOutput.left.map(this._renderLeftChunk.bind(this))}
                 </td>,
                 <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
                         onClick={this._handleKwicClick.bind(this, corpname,
@@ -404,9 +223,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                     {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.kwic.get(-1)))}
                 </td>
             ];
-        },
+        }
 
-        _renderTextParMode : function (corpname, corpusOutput) {
+        _renderTextParMode(corpname, corpusOutput) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             return [
                 <td key="par" className={this._exportTextElmClass(corpname, 'par')}
@@ -417,100 +236,116 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                     {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.kwic.get(-1)))}
                 </td>
             ]
-        },
+        }
 
-        _renderText : function (corpusOutput, corpusIdx) {
+        _renderText(corpusOutput, corpusIdx) {
             const corpname = this.props.cols[corpusIdx].n;
-            const ans = [
-                <td key="ref" className="ref" title={this.translate('concview__click_for_details')}
-                        onClick={this._handleRefsClick.bind(this, corpname,
-                                 corpusOutput.tokenNumber, this.props.lineIdx)}>
-                    {corpusOutput.ref.join(', ')}
-                </td>
-            ];
             if (this.props.viewMode === 'kwic') {
-                return ans.concat(this._renderTextKwicMode(corpname, corpusOutput));
+                return this._renderTextKwicMode(corpname, corpusOutput);
 
             } else {
-                return ans.concat(this._renderTextParMode(corpname, corpusOutput));
+                return this._renderTextParMode(corpname, corpusOutput);
             }
-        },
+        }
 
-        _handleRefsClick : function (corpusId, tokenNumber, lineIdx) {
-            this.props.refsDetailClickHandler(corpusId, tokenNumber, lineIdx);
-        },
-
-        _handleKwicClick : function (corpusId, tokenNumber, lineIdx) {
+        _handleKwicClick(corpusId, tokenNumber, lineIdx) {
             this.props.concDetailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
-        },
+        }
 
-        shouldComponentUpdate : function (nextProps, nextState) {
-            return this.props.data !== nextProps.data
-                    || this.props.lineSelMode !== nextProps.lineSelMode
-                    || this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible
-                    || this.props.data.lineGroup !== nextProps.data.lineGroup
-                    || this.props.catBgColor != nextProps.catBgColor;
-        },
+        _handleStoreChange() {
+            this.setState(this._fetchStoreState());
+        }
 
-        render : function () {
+        shouldComponentUpdate(nextProps, nextState) {
+            return this.state.selectionValue !== nextState.selectionValue ||
+                    this.props.data !== nextProps.data ||
+                    this.props.lineSelMode !== nextProps.lineSelMode ||
+                    this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible ||
+                    this.props.data.lineGroup !== nextProps.data.lineGroup ||
+                    this.props.catBgColor != nextProps.catBgColor;
+        }
+
+        componentDidMount() {
+            lineSelectionStore.addChangeListener(this._handleStoreChange);
+        }
+
+        componentWillUnmount() {
+            lineSelectionStore.removeChangeListener(this._handleStoreChange);
+        }
+
+        render() {
             const primaryLang = this.props.data.languages.first();
             const alignedCorpora = this.props.data.languages.rest();
             const htmlClasses = [];
             if (this.props.data.hasFocus) {
                 htmlClasses.push('active');
             }
-            // NOTE: attributes "data-toknum" and "data-kwiclen" below
-            // are used by non-react widgets (e.g. syntax viewer plug-in)
             return (
-                <tr className={htmlClasses.join(' ')} data-toknum={primaryLang.tokenNumber} data-kwiclen={this.props.data.kwicLength}>
+                <tr className={htmlClasses.join(' ')}>
                     <td className="line-num">{this.props.showLineNumbers ? this.props.data.lineNumber + 1 : null}</td>
-                    <TdLineSelection
+                    <extras.TdLineSelection
                         kwicLength={this.props.data.kwicLength}
                         tokenNumber={primaryLang.tokenNumber}
                         lineNumber={this.props.data.lineNumber}
                         mode={this.props.lineSelMode}
                         lockedGroupId={this.props.numItemsInLockedGroups > 0 ? this.props.data.lineGroup : null}
                         catBgColor={this.props.catBgColor}
-                        catTextColor={this.props.catTextColor} />
+                        catTextColor={this.props.catTextColor}
+                        selectionValue={this.state.selectionValue} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
-                            <SyntaxTreeButton onSyntaxViewClick={()=>this.props.onSyntaxViewClick(primaryLang.tokenNumber, this.props.data.kwicLength)}
-                                    tokenNumber={primaryLang.tokenNumber} kwicLength={this.props.data.kwicLength} /> : null}
+                            <extras.SyntaxTreeButton
+                                    onSyntaxViewClick={()=>this.props.onSyntaxViewClick(primaryLang.tokenNumber, this.props.data.kwicLength)}
+                                    tokenNumber={primaryLang.tokenNumber}
+                                    kwicLength={this.props.data.kwicLength} /> :
+                            null
+                        }
+                    </td>
+                    <td className="ref">
+                        <extras.RefInfo corpusId={this.props.cols[0].n}
+                                tokenNumber={primaryLang.tokenNumber}
+                                lineIdx={this.props.lineIdx}
+                                data={primaryLang.ref}
+                                refsDetailClickHandler={this.props.refsDetailClickHandler} />
                     </td>
                     {this._renderText(primaryLang, 0)}
-                    {alignedCorpora.map((alCorp, i) => this._renderText(alCorp, i + 1))}
+                    {alignedCorpora.map((alCorp, i) => {
+                        return [
+                            (<td className="ref">
+                                <extras.RefInfo corpusId={this.props.cols[i + 1].n}
+                                    tokenNumber={alCorp.tokenNumber}
+                                    lineIdx={this.props.lineIdx}
+                                    data={alCorp.ref}
+                                    refsDetailClickHandler={this.props.refsDetailClickHandler} />
+                            </td>),
+                            this._renderText(alCorp, i + 1)
+                        ];
+                    })}
                 </tr>
             );
         }
-    });
+    }
 
     // ------------------------- <ConcLines /> ---------------------------
 
-    const ConcLines = React.createClass({
+    class ConcLines extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._storeChangeListener = this._storeChangeListener.bind(this);
+        }
 
-        _getLineSelMode : function () {
+        _getLineSelMode() {
             if (lineStore.getNumItemsInLockedGroups() > 0) {
                 return 'groups';
 
             } else {
                 return lineSelectionStore.getMode();
             }
-        },
+        }
 
-        _storeChangeListener : function (store) {
-            this.setState({
-                lines: lineStore.getLines(),
-                lineSelData: lineSelectionStore.asMap(),
-                lineSelMode: this._getLineSelMode(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
-                audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
-                useSafeFont: lineStore.getUseSafeFont()
-            });
-        },
-
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 lines: lineStore.getLines(),
                 lineSelData: lineSelectionStore.asMap(),
@@ -519,22 +354,26 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
                 useSafeFont: lineStore.getUseSafeFont()
             };
-        },
+        }
 
-        componentDidMount : function () {
+        _storeChangeListener(store) {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
             lineStore.addChangeListener(this._storeChangeListener);
             lineSelectionStore.addChangeListener(this._storeChangeListener);
             if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code
                 this.props.onReady();
             }
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineStore.removeChangeListener(this._storeChangeListener);
             lineSelectionStore.removeChangeListener(this._storeChangeListener);
-        },
+        }
 
-        _getCatColors : function (dataItem) {
+        _getCatColors(dataItem) {
             const tmp = this.state.lineSelData.get(dataItem.languages.first().tokenNumber);
             const cat = tmp ? tmp[1] : dataItem.lineGroup;
             if (cat >= 1) {
@@ -543,9 +382,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 return [color2str(importColor(bgColor, 0.9)), fgColor];
             }
             return [null, null];
-        },
+        }
 
-        _renderLine : function (item, i) {
+        _renderLine(item, i) {
             const catColor = this._getCatColors(item);
             return <Line key={String(i) + ':' + item.languages.first().tokenNumber}
                          lineIdx={i}
@@ -565,9 +404,9 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          catTextColor={catColor[1]}
                          supportsSyntaxView={this.props.supportsSyntaxView}
                          onSyntaxViewClick={this.props.onSyntaxViewClick} />;
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <table id="conclines" className={this.state.useSafeFont ? 'safe' : null}>
                     <tbody>
@@ -576,13 +415,12 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                                     viewMode={this.props.ViewMode} />
                             : null
                         }
-                        {this.state.lines.map(this._renderLine)}
+                        {this.state.lines.map(this._renderLine.bind(this))}
                     </tbody>
                 </table>
             );
         }
-    });
-
+    }
 
     return {
         ConcLines: ConcLines
