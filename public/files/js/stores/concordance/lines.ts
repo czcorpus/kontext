@@ -24,7 +24,6 @@
 /// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../vendor.d.ts/modernizr.d.ts" />
 
 
 import {MultiDict} from '../../util';
@@ -35,7 +34,6 @@ import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
 import {AudioPlayer} from './media';
 import {ConcSaveStore} from './save';
-declare var Modernizr:Modernizr.ModernizrStatic;
 
 export interface ServerTextChunk {
     class:string;

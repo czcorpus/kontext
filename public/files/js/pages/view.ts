@@ -21,7 +21,6 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
-/// <reference path="../vendor.d.ts/modernizr.d.ts" />
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 /// <reference path="../vendor.d.ts/d3.d.ts" />
 /// <reference path="../vendor.d.ts/d3-color.d.ts" />
@@ -69,8 +68,6 @@ import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
-
-declare var Modernizr:Modernizr.ModernizrStatic;
 
 export class ViewPageStores {
     lineSelectionStore:LineSelectionStore;

@@ -317,3 +317,12 @@ export class History implements Kontext.IHistory {
         window.onpopstate = fn;
     }
 }
+
+export function createHistory(urlHandler:Kontext.IURLHandler):Kontext.IHistory {
+    if (window.history && 'pushState' in window.history) {
+        return new History(urlHandler);
+
+    } else {
+        return new NullHistory();
+    }
+}

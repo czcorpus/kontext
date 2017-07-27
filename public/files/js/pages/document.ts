@@ -28,7 +28,6 @@
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 /// <reference path="../vendor.d.ts/intl-messageformat.d.ts" />
-/// <reference path="../vendor.d.ts/modernizr.d.ts" />
 /// <reference path="../vendor.d.ts/translations.d.ts" />
 
 import applicationBar from 'plugins/applicationBar/init';
@@ -43,7 +42,7 @@ import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 import * as RSVP from 'vendor/rsvp';
 import * as rsvpAjax from 'vendor/rsvp-ajax';
-import {MultiDict, History, NullHistory} from '../util';
+import {MultiDict, createHistory} from '../util';
 import * as docStores from '../stores/common/layout';
 import {UserInfo} from '../stores/userStores';
 import {CorpusViewOptionsStore} from '../stores/options/structsAttrs';
@@ -55,8 +54,6 @@ import {AsyncTaskChecker} from '../stores/asyncTask';
 import {UserSettings} from '../userSettings';
 import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
 import authPlugin from 'plugins/auth/init';
-
-declare var Modernizr:Modernizr.ModernizrStatic;
 
 /**
  *
@@ -180,7 +177,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.confChangeHandlers = Immutable.Map<string, Immutable.List<(v:any)=>void>>();
         this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui',
                 '__timestamp__', this.conf['uiStateTTL']);
-        this.history = Modernizr.history ? new History(this) : new NullHistory();
+        this.history = createHistory(this);
         this.translations = translations[this.conf['uiLang']] || {};
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
         this.switchCorpAwareObjects = Immutable.List<Kontext.ICorpusSwitchAware<any>>();
