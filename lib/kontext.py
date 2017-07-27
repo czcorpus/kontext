@@ -613,10 +613,7 @@ class Kontext(Controller):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if fallback_url:
                 path = [Controller.NO_OPERATION]
-                if action_metadata.get('return_type', None) != 'json':
-                    self._redirect(fallback_url)
-                else:
-                    path = ['json_access_error']  # for JSON mode, set special 'access denied' response
+                self._redirect(fallback_url)
         elif len(allowed_corpora) > 0:
             self.args.corpname = ''
         else:
