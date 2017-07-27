@@ -1005,10 +1005,3 @@ class Controller(object):
     @exposed(accept_kwargs=True, skip_corpus_init=True, page_model='message')
     def message(self, *args, **kwargs):
         return kwargs
-
-    @exposed(return_type='json', legacy=True)
-    def json_access_error(self, error='', reset=False):
-        """
-        Corpus access error response
-        """
-        raise ForbiddenException('Cannot access corpus %s' % (self.args.corpname,))
