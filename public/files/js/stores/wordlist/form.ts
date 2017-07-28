@@ -83,7 +83,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
     private subcnorm:string;
 
-    private wlnums:string; // freq/docf/arf
+    private wlnums:string; // frq/docf/arf
 
     private wlposattr1:string;
 
@@ -455,5 +455,9 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
     getDispatcherToken():string {
         return this.dispatcherToken;
+    }
+
+    getAllowsMultilevelWltype():boolean {
+        return this.wlnums === 'frq';
     }
 }

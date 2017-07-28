@@ -224,27 +224,38 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                             ({util.translate('wordlist__curr_wlattr_hint')}:{'\u00a0'}
                             <strong className="current-wlattr">{props.wlattr}</strong>)
                         </li>
-                        <li>
-                            <label>
-                                <input type="radio" value="multilevel" checked={props.wltype === 'multilevel'}
-                                        onChange={handleOutTypeChange} />
-                                {util.translate('wordlist__out_type_multi_label')}
-                            </label>:
-                            <OutTypeAttrSel attrList={props.attrList} value={props.wposattr1} position={1}
-                                    disabled={props.wltype !== 'multilevel'} />
-                            {'\u00a0'}
-                            <OutTypeAttrSel attrList={props.attrList} value={props.wposattr2} position={2}
-                                    disabled={props.wltype !== 'multilevel'} />
-                            {'\u00a0'}
-                            <OutTypeAttrSel attrList={props.attrList} value={props.wposattr3} position={3}
-                                    disabled={props.wltype !== 'multilevel'} />
-                            {props.wltype === 'multilevel' ?
-                                (<p className="hint">
-                                    <img src={util.createStaticUrl('img/info-icon.svg')}
-                                            alt={util.translate('global__info_icon')}
-                                            style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
-                                    {util.translate('wordlist__multiattr_warning')}</p>) : null}
-                        </li>
+                        {props.allowsMultilevelWltype ?
+                            (<li>
+                                <label>
+                                    <input type="radio" value="multilevel" checked={props.wltype === 'multilevel'}
+                                            onChange={handleOutTypeChange} />
+                                    {util.translate('wordlist__out_type_multi_label')}
+                                </label>:
+                                {'\u00a0'}
+                                <OutTypeAttrSel attrList={props.attrList} value={props.wposattr1} position={1}
+                                        disabled={props.wltype !== 'multilevel'} />
+                                {'\u00a0'}
+                                <OutTypeAttrSel attrList={props.attrList} value={props.wposattr2} position={2}
+                                        disabled={props.wltype !== 'multilevel'} />
+                                {'\u00a0'}
+                                <OutTypeAttrSel attrList={props.attrList} value={props.wposattr3} position={3}
+                                        disabled={props.wltype !== 'multilevel'} />
+                                {props.wltype === 'multilevel' ?
+                                    (<p className="hint">
+                                        <img src={util.createStaticUrl('img/info-icon.svg')}
+                                                alt={util.translate('global__info_icon')}
+                                                style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
+                                        {util.translate('wordlist__multiattr_warning')}</p>) : null}
+                            </li>) :
+                            (<li>
+                                <label>
+                                    <input type="radio" disabled={true} />
+                                    {util.translate('wordlist__out_type_multi_label')}
+                                </label>:
+                                {'\u00a0'}
+                                <span className="hint">{util.translate('wordlist__ml_not_avail')}</span>
+                            </li>)
+                        }
                     </ul>
                 </td>
             </tr>
@@ -264,7 +275,8 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                         <TRFrequencyFigures wlnums={props.wlnums} />
                         <TROutputType attrList={props.attrList} wposattr1={props.wposattr1}
                                     wposattr2={props.wposattr2} wposattr3={props.wposattr3}
-                                    wltype={props.wltype} wlattr={props.wlattr} />
+                                    wltype={props.wltype} wlattr={props.wlattr}
+                                    allowsMultilevelWltype={props.allowsMultilevelWltype} />
                     </tbody>
                 </table>
             </fieldset>
@@ -508,7 +520,8 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                 hasBlacklist: wordlistFormStore.hasBlacklist(),
                 wlFileName: wordlistFormStore.getWlFileName(),
                 blFileName: wordlistFormStore.getBlFileName(),
-                includeNonwords: wordlistFormStore.getIncludeNonwords()
+                includeNonwords: wordlistFormStore.getIncludeNonwords(),
+                allowsMultilevelWltype: wordlistFormStore.getAllowsMultilevelWltype()
             };
         }
 
@@ -580,8 +593,8 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                     </fieldset>
                     <FieldsetOutputOptions wlnums={this.state.wlnums} wposattr1={this.state.wposattr1}
                             wposattr2={this.state.wposattr2} wposattr3={this.state.wposattr3}
-                            attrList={this.state.attrList}
-                            wltype={this.state.wltype} wlattr={this.state.wlattr} />
+                            attrList={this.state.attrList} wltype={this.state.wltype} wlattr={this.state.wlattr}
+                            allowsMultilevelWltype={this.state.allowsMultilevelWltype} />
                     <div className="buttons">
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>
