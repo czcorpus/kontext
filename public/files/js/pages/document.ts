@@ -682,11 +682,14 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param path
      * @param args
      */
-    setLocationPost(path:string, args?:Array<[string,string]>):void {
+    setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
         const body = window.document.getElementsByTagName('body')[0];
         const form = window.document.createElement('form');
         form.setAttribute('method', 'post');
         form.setAttribute('action', path);
+        if (blankWindow) {
+            form.setAttribute('target', '_blank');
+        }
         body.appendChild(form);
         (args || []).forEach(item => {
             const input = window.document.createElement('input');
@@ -908,6 +911,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.mainMenuStore.resetActiveItemAndNotify();
     }
 
+    initCoreOnly():RSVP.Promise<any> {
+        return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
+            this.dispatcher = new Dispatcher<Kontext.DispatcherPayload>();
+            resolve(null);
+        });
+    }
+
     /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.
@@ -969,9 +979,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     this.corpViewOptionsStore
                 );
                 this.asyncTaskChecker.init();
-
                 this.registerCoreEvents();
-
                 resolve(null);
 
             } catch (e) {

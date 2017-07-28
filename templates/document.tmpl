@@ -176,8 +176,9 @@ define('conf', [], function () {
 </script>
 </head>
 <body>
-
 #filter WebSafe
+
+#block AppBar
 <div id="common-bar">
 #if $app_bar
 #filter None
@@ -195,7 +196,9 @@ define('conf', [], function () {
 </span>
 #end if
 </div>
+#end block
 
+#block Header
 <header id="topbar">
     <div class="navig-wrapper">
         <div id="menu-bar">
@@ -227,6 +230,7 @@ define('conf', [], function () {
 
     </div> ## navig wrapper
 </header>
+#end block
 #end filter
 
 #filter WebSafe
@@ -242,6 +246,7 @@ define('conf', [], function () {
     #end filter
 </div>
 
+#block Footer
 <footer #if $footer_bar#class="custom-footer"#end if#>
     #if $debug
     <div class="debug-warning">
@@ -283,6 +288,7 @@ define('conf', [], function () {
         </div>
     #end if
 </footer>
+#end block
 #end filter
 
 <script type="text/javascript">
