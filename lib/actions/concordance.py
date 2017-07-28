@@ -250,6 +250,17 @@ class Actions(Querying):
             out['running_calc'] = False
         return out
 
+    @exposed(template='chart.tmpl', page_model='chart')
+    def chart(self, request):
+        ptr_path = os.path.join(os.path.dirname(__file__), '../../public/files/js/charts/fills.json')
+        with open(ptr_path, 'rb') as fr:
+            fill_patterns = json.load(fr)
+        return dict(
+            data=json.loads(request.form['data']),
+            chart_type=request.form['chart_type'],
+            fill_patterns=fill_patterns,
+            fill_ids=[x[0] for x in fill_patterns])
+
     @exposed(apply_semi_persist_args=True)
     def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,

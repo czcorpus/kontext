@@ -22,14 +22,10 @@
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
-/// <reference path="../vendor.d.ts/d3.d.ts" />
-/// <reference path="../vendor.d.ts/d3-color.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import * as SoundManager from 'SoundManager';
-import * as d3 from 'vendor/d3';
-import * as d3Color from 'vendor/d3-color';
 import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from './document';
@@ -68,6 +64,7 @@ import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
+import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
 
 export class ViewPageStores {
     lineSelectionStore:LineSelectionStore;
@@ -92,10 +89,6 @@ export class QueryStores {
     multiLevelSortStore:MultiLevelSortStore;
     sampleStore:SampleStore;
 }
-
-type LineGroupChartData = Array<{groupId:number; group:string; count:number}>;
-
-type LineGroupStats = {[groupId:number]:number};
 
 /**
  * This is the concordance viewing and operating model with
@@ -122,7 +115,7 @@ export class ViewPage {
 
     private analysisViews:AnalysisFrameViews;
 
-    private lastGroupStats:LineGroupStats; // group stats cache
+    private lineGroupsChart:LineSelGroupsRatiosChart;
 
     private queryFormViews:QueryFormViews;
 
@@ -151,15 +144,6 @@ export class ViewPage {
     private freqFormViews:FreqFormViews;
 
     /**
-     * Color scheme derived from d3.schemeCategory20
-     * by changing the order.
-     */
-    private static BASE_COLOR_SCHEME = [
-        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
-    ];
-
-    /**
      *
      * @param layoutModel
      * @param stores
@@ -171,22 +155,7 @@ export class ViewPage {
         this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
         this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
-    }
-
-    /**
-     * @todo this must be tuned quite a bit to make
-     * categories and chart elements distinguishable
-     */
-    private extendBaseColorPalette(offset:number=0):Array<string> {
-        const ans:Array<string> = ['RGB(0, 0, 0)']; // we don't use the first color
-        const coeff = [0, 0.7, 1.2, 1.8, 2.1, 2.2, 2.3, 2.3, 2.3, 2.3];
-        for (let i = 0; i < 10; i += 1) {
-            ViewPage.BASE_COLOR_SCHEME.forEach((color, j) => {
-                const c = d3Color.color(color);
-                ans.push(c.brighter(coeff[i]).toString());
-            });
-        }
-        return ans.slice(offset);
+        this.lineGroupsChart = new LineSelGroupsRatiosChart(this.layoutModel);
     }
 
     private translate(s:string, values?:any):string {
@@ -237,125 +206,8 @@ export class ViewPage {
      * @param rootElm
      * @param usePrevData
      */
-    showGroupsStats(rootElm:d3.Selection<any>, usePrevData:boolean):void {
-        const self = this;
-
-        function renderChart(data:LineGroupChartData):Array<string> {
-            const width = 200;
-            const height = 200;
-            const radius = Math.min(width, height) / 2;
-            const color = self.extendBaseColorPalette();
-            const arc = d3.arc()
-                .outerRadius(radius - 10)
-                .innerRadius(0);
-            const labelArc = d3.arc()
-                .outerRadius(radius - 40)
-                .innerRadius(radius - 40);
-            const pie = d3.pie()
-                .value((d) => d['count'])
-                .sort(null);
-
-            const pieData = pie(data);
-            const wrapper = rootElm.append('svg')
-                .attr('width', width)
-                .attr('height', height)
-                .attr('class', 'chart')
-                .append('g')
-                    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')')
-                    .attr('class', 'chart-wrapper');
-
-            const g = wrapper.selectAll('.arc')
-                .data(pieData).enter()
-                    .append('g')
-                    .attr('class', 'arc');
-
-            g.append('path')
-                .attr('d', arc)
-                .style('fill', (d:any) => color[d.data['groupId']]);
-
-            if (pieData.length <= 5) { // direct labels only for small num of portions
-                g.append('text')
-                    .attr('transform', (d:any) => ('translate(' + labelArc.centroid(d) + ')'))
-                    .text((d:any) => d.data['group']);
-            }
-            return color;
-        }
-
-        function renderLabels(data:LineGroupChartData, colors:Array<string>, rootElm:d3.Selection<any>):void {
-            const labelWrapper:HTMLElement = window.document.createElement('table');
-            const tbody:HTMLElement = window.document.createElement('tbody');
-            const total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
-            const percentage = (item) => {
-                return (item['count'] / total * 100).toFixed(1) + '%';
-            };
-
-            d3.select(labelWrapper)
-                .attr('class', 'chart-label')
-                .append(() => tbody);
-            data
-                .sort((x1, x2) => x1.groupId > x2.groupId ? 1 : -1)
-                .forEach((item, i) => {
-                    const trElm = d3.select(tbody).append('tr');
-                    trElm.append('td')
-                        .attr('class', 'label-text color-code')
-                        .style('background-color', colors[item.groupId])
-                        .text('\u00A0');
-                    trElm.append('th')
-                        .attr('class', 'num')
-                        .text(item['group']);
-                    trElm.append('td')
-                        .attr('class', 'num')
-                        .text(percentage(item));
-                    trElm.append('td')
-                        .attr('class', 'num')
-                        .text('(' + item['count'] + 'x)');
-                });
-            rootElm.append(() => labelWrapper);
-        }
-
-        (() => {
-            if (this.lastGroupStats && usePrevData) {
-                return new RSVP.Promise<LineGroupStats>((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-                    resolve(this.lastGroupStats);
-                });
-
-            } else {
-                return this.layoutModel.ajax<LineGroupStats>(
-                    'GET',
-                    this.layoutModel.createActionUrl(
-                        'ajax_get_line_groups_stats',
-                        this.layoutModel.getConcArgs().items()
-                    ),
-                    {}
-
-                ).then(
-                    (data) => {
-                        this.lastGroupStats = data;
-                        return data;
-                    }
-                );
-            }
-        })().then(
-            (data) => {
-                const chartData:LineGroupChartData = [];
-                for (let p in data) {
-                    chartData.push({
-                        groupId: parseInt(p, 10),
-                        group: `#${p}`,
-                        count: data[p]
-                    });
-                }
-                rootElm.selectAll('*').remove(); // remove loader
-                rootElm
-                    .append('legend')
-                    .text(self.translate('linesel__groups_stats_heading'));
-                const colors = renderChart(chartData);
-                renderLabels(chartData, colors, rootElm);
-            },
-            (err) => {
-                self.layoutModel.showMessage('error', err);
-            }
-        );
+    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
+        this.lineGroupsChart.showGroupsStats(rootElm, usePrevData, [200, 200]);
     }
 
     private handleBeforeUnload(event:any):void {
@@ -962,14 +814,14 @@ export class ViewPage {
             ContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
-            SpeakerColors: this.extendBaseColorPalette(1),
+            SpeakerColors: this.lineGroupsChart.extendBaseColorPalette(1),
             SpeechSegment: this.layoutModel.getConf<[string, string]>('SpeechSegment'),
             SpeechOverlapAttr: this.layoutModel.getConf<[string, string]>('SpeechOverlapAttr'),
             SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
             SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
             WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
-            catColors: this.extendBaseColorPalette(),
+            catColors: this.lineGroupsChart.extendBaseColorPalette(),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginIsActive('syntax_viewer'),
             onSyntaxPaneReady: (tokenNumber, kwicLength) => {
@@ -1045,7 +897,6 @@ export class ViewPage {
      *
      */
     init():RSVP.Promise<any> {
-        this.extendBaseColorPalette();
         const p1 = this.layoutModel.init().then(
             () => {
                 const sv = syntaxViewerInit(this.layoutModel.pluginApi());
@@ -1062,7 +913,8 @@ export class ViewPage {
                 const lineViewProps = this.initStores(sv);
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
-                    this.showGroupsStats(d3.select('#selection-actions .chart-area'), usePrevData);
+                    this.showGroupsStats(<HTMLElement>document.querySelector('#selection-actions .chart-area'),
+                            usePrevData);
                 };
                 this.initUndoFunction();
 

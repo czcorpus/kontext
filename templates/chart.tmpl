@@ -1,0 +1,70 @@
+#*
+Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*#
+
+#from cmpltmpl.document import document
+#extends document
+
+#def title
+KonText - $getVar('page_title', '') ($_('Concordance').lower())#slurp
+#end def
+
+#def bodyonload
+require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
+conf.Data = $to_json($data);
+conf.ChartType = $to_json($chart_type);
+conf.FillIds = $to_json($fill_ids);
+pageSelf.init(conf);
+});
+#end def
+
+#block AppBar
+#end block
+
+#block Header
+#end block
+
+
+#block main
+<!-- following fill patterns are taken from https://github.com/iros/patternfills -->
+<div id="patterns" style="height:0;">
+    <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+      <defs>
+        #for $item in $fill_patterns
+        <pattern id="$item[0]" patternUnits="userSpaceOnUse" width="$item[1]" height="$item[2]">
+            <image xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="$item[3]"
+                    x="0" y="0" width="$item[1]" height="$item[2]" />
+        </pattern>
+        #end for
+      </defs>
+    </svg>
+</div>
+<section id="chart-export">
+    <div id="selection-actions">
+        <div class="chart-area">
+            <div id="chart-root">
+            </div>
+        </div>
+    </div>
+</section>
+#end block
+
+
+#block Footer
+#end block
