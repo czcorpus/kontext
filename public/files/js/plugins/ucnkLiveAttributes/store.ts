@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
@@ -136,22 +137,23 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
      */
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, selectedCorporaProvider:()=>Immutable.List<string>,
-            ttCheckStatusProvider:()=>boolean, bibAttr:string) {
+            ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs) {
         super(dispatcher);
         let self = this;
         this.pluginApi = pluginApi;
         this.userData = null;
-        this.bibliographyAttribute = bibAttr;
+        this.bibliographyAttribute = args.bibAttr;
+        this.manualAlignCorporaMode = args.manualAlignCorporaMode;
         this.controlsEnabled = false; // it is enabled when user selects one or more items (via )
         this.textTypesStore = textTypesStore;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
-        this.alignedCorpora = Immutable.List(this.pluginApi.getConf<Array<any>>('availableAlignedCorpora')
+        this.alignedCorpora = Immutable.List(args.availableAlignedCorpora
                         .map((item) => {
                             return {
                                 value: item.n,
                                 label: item.label,
                                 selected: false,
-                                locked: selectedCorporaProvider ? true : item.locked
+                                locked: selectedCorporaProvider ? true : false // TODO ??? item.locked
                             };
                         }));
         this.bibliographyIds = Immutable.OrderedSet<string>();
@@ -381,7 +383,12 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
     }
 
     getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
-        return this.alignedCorpora;
+        if (this.manualAlignCorporaMode) {
+            return this.alignedCorpora;
+
+        } else {
+            return this.alignedCorpora.filter(v => v.selected).toList();
+        }
     }
 
     getUnusedAttributes():Array<string> {
@@ -526,5 +533,9 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
 
     setControlsEnabled(v:boolean):void {
         this.controlsEnabled = v;
+    }
+
+    isManualAlignCorporaMode():boolean {
+        return this.manualAlignCorporaMode;
     }
 }

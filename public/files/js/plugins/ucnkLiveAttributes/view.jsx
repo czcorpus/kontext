@@ -23,6 +23,8 @@ import React from 'vendor/react';
 
 export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liveAttrsStore) {
 
+    const he = mixins[0];
+
     // ----------------------------- <SelectionSteps /> --------------------------
 
     const SelectionSteps = React.createClass({
@@ -233,69 +235,72 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
 
     // ----------------------------- <AlignedLangItem /> --------------------------
 
-    let AlignedLangItem = React.createClass({
+    const AlignedLangItem = (props) => {
 
-        mixins : mixins,
-
-        _clickHandler : function () {
+        const clickHandler = () => {
             dispatcher.dispatch({
                 actionType: 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED',
                 props: {
-                    idx: this.props.itemIdx
+                    idx: props.itemIdx
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <label>
-                    {this.props.item.locked ?
-                        <input type="hidden" name="aligned_corpora" value={this.props.item.value} />
-                        : null
-                    }
-                    <input type="checkbox" className="aligned-lang" name="aligned_corpora"
-                            onChange={this._clickHandler} checked={this.props.item.selected}
-                            value={this.props.item.value} disabled={this.props.item.locked}
-                            title={this.props.manualAlignCorporaMode ? '' : this.translate('ucnkLA__aligned_lang_cannot_be_set_here') } />
-                    {'\u00a0'}{this.props.item.label}
-                </label>
-            );
-        }
-    });
+        return (
+            <label>
+                <input type="checkbox" className="aligned-lang" name="aligned_corpora"
+                        onChange={clickHandler} checked={props.item.selected}
+                        value={props.item.value} disabled={props.item.locked} />
+                {'\u00a0'}{props.item.label}
+            </label>
+        );
+    };
 
     // ----------------------------- <LiveAttrsCustomTT /> --------------------------
 
-    let LiveAttrsCustomTT = React.createClass({
+    class LiveAttrsCustomTT extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._changeHandler = this._changeHandler.bind(this);
+        }
 
-        _changeHandler : function (store, action) {
-            this.setState({
-                alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLocked: store.hasLockedAlignedLanguages()
-            });
-        },
-
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLocked: liveAttrsStore.hasLockedAlignedLanguages()
+                isLocked: liveAttrsStore.hasLockedAlignedLanguages(),
+                manualAlignCorporaMode: liveAttrsStore.isManualAlignCorporaMode()
             };
-        },
+        }
 
-        componentDidMount : function () {
+        _changeHandler() {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
             liveAttrsStore.addChangeListener(this._changeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             liveAttrsStore.removeChangeListener(this._changeHandler);
-        },
+        }
 
-        render : function () {
-            if (this.state.alignedCorpora.size === 0) {
-                return null;
+        _shouldRender() {
+            return !this.state.manualAlignCorporaMode || this.state.alignedCorpora.size > 0;
+        }
+
+        _renderHint() {
+            if (this.state.manualAlignCorporaMode) {
+                return he.translate('ucnkLA__subcorp_consider_aligned_corpora_manual');
 
             } else {
+                return he.translate('ucnkLA__subcorp_consider_aligned_corpora_auto');
+            }
+        }
+
+        render() {
+            if (this._shouldRender()) {
                 let classes = ['envelope', 'aligned'];
                 if (this.state.isLocked) {
                     classes.push('locked');
@@ -305,12 +310,18 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                         <tbody>
                             <tr className="attrib-name">
                                 <th>
-                                    {this.translate('ucnkLA__aligned_corpora')}
+                                    {he.translate('ucnkLA__aligned_corpora')}
                                 </th>
                             </tr>
                             <tr>
                                 <td className="note">
-                                    <p>({this.translate('ucnkLA__subcorp_consider_aligned_corpora')})</p>
+                                    <p>
+                                        {this._renderHint()}
+                                    </p>
+                                    {this.state.alignedCorpora.size > 0 ?
+                                        null :
+                                        <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
+                                    }
                                 </td>
                             </tr>
                             <tr>
@@ -322,8 +333,7 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                                                     return (
                                                         <tr key={item.value}>
                                                             <td>
-                                                                <AlignedLangItem item={item} itemIdx={i}
-                                                                    manualAlignCorporaMode={this.props.manualAlignCorporaMode} />
+                                                                <AlignedLangItem item={item} itemIdx={i} />
                                                             </td>
                                                             <td />
                                                         </tr>
@@ -344,9 +354,12 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                         </tbody>
                     </table>
                 );
+
+            } else {
+                return null;
             }
         }
-    });
+    }
 
     return {
         LiveAttrsView: LiveAttrsView,

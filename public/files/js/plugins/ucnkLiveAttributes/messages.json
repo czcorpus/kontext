@@ -9,11 +9,12 @@
         "ucnkLA__failed_to_calc_range": "Failed to calculate the range. Please try again later or contact system administrator.",
         "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Please note that subcorpora created with respect to language alignment take more time to process (up to several minutes). The task will run in the background and once it is finished, you will be notified. In between, you can use KonText in a normal way.",
         "ucnkLA__aligned_corpora": "Aligned corpora",
-        "ucnkLA__subcorp_consider_aligned_corpora": "Include only texts found also in the corpora selected here.",
+        "ucnkLA__subcorp_consider_aligned_corpora_auto": "Only texts found also in these corpora will be searched.",
+        "ucnkLA__subcorp_consider_aligned_corpora_manual": "Only texts found also in selected corpora will be included in the subcorpus.",
         "ucnkLA__refine_selection_btn": "Refine selection",
         "ucnkLA__reset_selection_btn": "Reset selection",
         "ucnkLA__start_writing_for_suggestions": "Start writing\u2026",
-        "ucnkLA__aligned_lang_cannot_be_set_here": "The list of checked aligned corpora is determined automatically by corpora added to the query form"
+        "ucnkLA__aligned_lang_cannot_be_set_here": "The list of aligned corpora in this box is determined automatically by corpora added to the query form"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -25,10 +26,11 @@
         "ucnkLA__failed_to_calc_range": "Nepodařilo se spočítat rozsah. Zkuste prosím opakovat akci později nebo kontaktujte správce aplikace.",
         "ucnkLA__subcorp_cosider_aligned_may_take_long_time": "Berte prosím na vědomí, že vytváření subkorpusů s ohledem na zarovnání jazyků může trvat déle (až několik minut). Jakmile bude zpracování hotovo, zobrazí se vám zpráva. Mezitím můžete KonText normálně používat.",
         "ucnkLA__aligned_corpora": "Zarovnané korpusy",
-        "ucnkLA__subcorp_consider_aligned_corpora": "Zahrnout pouze texty, které se vyskytují také ve všech zde označených korpusech",
+        "ucnkLA__subcorp_consider_aligned_corpora_auto": "Zahrnuty budou pouze texty nalezené současně i v následujících korpusech.",
+        "ucnkLA__subcorp_consider_aligned_corpora_manual": "Subkorpus bude obsahovat pouze texty nalezené současně i ve vybraných korpusech.",
         "ucnkLA__refine_selection_btn": "Zúžit výběr",
         "ucnkLA__reset_selection_btn": "Zrušit výběr",
         "ucnkLA__start_writing_for_suggestions": "Začněte psát\u2026",
-        "ucnkLA__aligned_lang_cannot_be_set_here": "Seznam zaškrtnutých zarovnaných korpusů je dán automaticky korpusy přidanými do formuláře dotazu."
+        "ucnkLA__aligned_lang_cannot_be_set_here": "Seznam zarovnaných korpusů v tomto poli je dán automaticky korpusy přidanými do formuláře dotazu."
 	}
 }

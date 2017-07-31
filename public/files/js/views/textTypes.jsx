@@ -757,7 +757,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                     </div>
                     <div className="text-types-selection">
                         {this.props.liveAttrsCustomTT
-                            ? <this.props.liveAttrsCustomTT manualAlignCorporaMode={this.props.manualAlignCorporaMode} />
+                            ? <this.props.liveAttrsCustomTT />
                             : null}
                         {this.state.attributes.map((attrObj) => {
                             return <TableTextTypeAttribute key={attrObj.name + ':list:' + attrObj.containsFullList()}

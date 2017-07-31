@@ -108,7 +108,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
  */
 export default function create(pluginApi:Kontext.PluginApi, textTypesStore:TextTypes.ITextTypesStore,
         selectedCorporaProvider:()=>Immutable.List<string>,
-        ttCheckStatusProvider:()=>boolean, bibAttr:string):RSVP.Promise<Kontext.PageStore> {
+        ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs):RSVP.Promise<PluginInterfaces.ILiveAttributes> {
     return new RSVP.Promise((resolve, reject) => {
         try {
             const store = new liveAttrsStore.LiveAttrsStore(
@@ -117,7 +117,7 @@ export default function create(pluginApi:Kontext.PluginApi, textTypesStore:TextT
                 textTypesStore,
                 selectedCorporaProvider,
                 ttCheckStatusProvider,
-                bibAttr
+                args
             );
             resolve(new LiveAttributesPlugin(pluginApi, store));
 

@@ -256,8 +256,7 @@ export function init(
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
                                         liveAttrsCustomTT={this.props.liveAttrsCustomTT}
-                                        attributes={this.props.attributes}
-                                        manualAlignCorporaMode={this.props.manualAlignCorporaMode} />
+                                        attributes={this.props.attributes} />
                                 : <TextTypesNotes description={this.state.textTypesNotes} />
                         }
                     </fieldset>

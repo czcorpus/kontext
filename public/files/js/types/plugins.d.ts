@@ -79,6 +79,15 @@ declare module PluginInterfaces {
     }
 
     /**
+     *
+     */
+    export interface ILiveAttrsInitArgs {
+        bibAttr:string;
+        availableAlignedCorpora:Array<{n:string; label:string}>;
+        manualAlignCorporaMode:boolean;
+    }
+
+    /**
      * A factory class for generating corplist page. The page is expected
      * to contain two blocks
      *  - a form (typically a filter)
@@ -140,7 +149,7 @@ declare module "plugins/liveAttributes/init" {
                      textTypesStore:TextTypes.ITextTypesStore,
                      selectedCorporaProvider:()=>Immutable.List<string>,
                      ttCheckStatusProvider:()=>boolean,
-                     bibAttr:string):RSVP.Promise<PluginInterfaces.ILiveAttributes>;
+                     args:PluginInterfaces.ILiveAttrsInitArgs):RSVP.Promise<PluginInterfaces.ILiveAttributes>;
 
 }
 
