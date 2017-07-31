@@ -169,7 +169,7 @@
         return (
             <a title={he.translate('concview__click_for_details')}
                     onClick={()=>props.refsDetailClickHandler(props.corpusId, props.tokenNumber, props.lineIdx)}>
-                {props.data.join(', ')}
+                {props.data.map(x => x !== '' ? x : props.emptyRefValPlaceholder).join(', ')}
             </a>
         );
     };
