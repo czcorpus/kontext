@@ -306,7 +306,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                                 tokenNumber={primaryLang.tokenNumber}
                                 lineIdx={this.props.lineIdx}
                                 data={primaryLang.ref}
-                                refsDetailClickHandler={this.props.refsDetailClickHandler} />
+                                refsDetailClickHandler={this.props.refsDetailClickHandler}
+                                emptyRefValPlaceholder={this.props.emptyRefValPlaceholder} />
                     </td>
                     {this._renderText(primaryLang, 0)}
                     {alignedCorpora.map((alCorp, i) => {
@@ -352,7 +353,8 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                 lineSelMode: this._getLineSelMode(),
                 numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
                 audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
-                useSafeFont: lineStore.getUseSafeFont()
+                useSafeFont: lineStore.getUseSafeFont(),
+                emptyRefValPlaceholder: lineStore.getEmptyRefValPlaceholder()
             };
         }
 
@@ -400,6 +402,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                          audioPlayerIsVisible={this.state.audioPlayerIsVisible}
                          concDetailClickHandler={this.props.concDetailClickHandler}
                          refsDetailClickHandler={this.props.refsDetailClickHandler}
+                         emptyRefValPlaceholder={this.state.emptyRefValPlaceholder}
                          catBgColor={catColor[0]}
                          catTextColor={catColor[1]}
                          supportsSyntaxView={this.props.supportsSyntaxView}

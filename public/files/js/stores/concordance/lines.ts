@@ -670,5 +670,9 @@ export class ConcLineStore extends SimplePageStore {
         return this.baseCorpname;
     }
 
+    getEmptyRefValPlaceholder():string {
+        return '\u2014';
+    }
+
 }
 
