@@ -114,7 +114,11 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             this.textTypesStore,
             null, // no corplist provider => manual aligned corp. selection mode
             () => this.textTypesStore.hasSelectedItems(),
-            textTypesData['bib_attr']
+            {
+                bibAttr: textTypesData['bib_attr'],
+                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                manualAlignCorporaMode: true
+            }
         );
         const p2 = p1.then(
             (liveAttrsPlugin:TextTypes.AttrValueTextInputListener) => {

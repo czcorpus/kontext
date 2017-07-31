@@ -143,7 +143,12 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             this.textTypesStore,
             () => this.queryStore.getCorpora(),
             () => this.textTypesStore.hasSelectedItems(),
-            textTypesData['bib_attr']
+            {
+                bibAttr: textTypesData['bib_attr'],
+                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                manualAlignCorporaMode: false
+            }
+
         ).then(
             (liveAttrsPlugin) => {
                 let liveAttrsViews;
@@ -307,7 +312,6 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 props['tagHelperView'] = taghelper.getWidgetView();
                 props['queryStorageView'] = qsplug.getWidgetView();
                 props['allowCorpusSelection'] = true;
-                props['manualAlignCorporaMode'] = false;
                 props['actionPrefix'] = '';
                 this.initQueryStore();
                 const corparchWidget = this.initCorplistComponent();
