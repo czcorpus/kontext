@@ -36,7 +36,6 @@ import * as RSVP from 'vendor/rsvp';
 
 
 export interface GeneralQueryFormProperties {
-    lposlist:Array<{v:string; n:string}>;
     forcedAttr:string;
     attrList:Array<{n:string; label:string}>;
     tagsetDocUrl:string;
@@ -78,8 +77,6 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected pageModel:PageModel;
 
-    protected lposlist:Immutable.List<{v:string; n:string}>;
-
     protected forcedAttr:string;
 
     protected attrList:Immutable.List<{n:string; label:string}>;
@@ -114,7 +111,6 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.pageModel = pageModel;
         this.textTypesStore = textTypesStore;
         this.queryContextStore = queryContextStore;
-        this.lposlist = Immutable.List<{v:string; n:string}>(props.lposlist);
         this.forcedAttr = props.forcedAttr;
         this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
         this.tagsetDocUrl = props.tagsetDocUrl;
@@ -147,10 +143,6 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void {
         this.onCorpusSelectionChangeActions = this.onCorpusSelectionChangeActions.push(fn);
-    }
-
-    getLposlist():Immutable.List<{v:string; n:string}> {
-        return this.lposlist;
     }
 
     getForcedAttr():string {

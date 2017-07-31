@@ -419,7 +419,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     {this.translate('query__pos')}:{'\u00a0'}
                     <select onChange={this._handleLposChange} value={this.props.lposValue}>
                         <option value="">{this.translate('query__not_specified')}</option>
-                        {this.props.lposlist.map(item => {
+                        {this.props.wPoSList.map(item => {
                             return <option key={item.v} value={item.v}>{item.n}</option>;
                         })}
                     </select>
@@ -571,7 +571,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 case 'char':
                     return null;
                 case 'lemma':
-                    return <LposSelector lposlist={this.props.lposlist}
+                    return <LposSelector wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValue}
                                 sourceId={this.props.sourceId}
                                 actionPrefix={this.props.actionPrefix}  />;
@@ -582,7 +582,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 case 'word':
                     return (
                         <span>
-                            <LposSelector lposlist={this.props.lposlist}
+                            <LposSelector wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValue}
                                 sourceId={this.props.sourceId}
                                 actionPrefix={this.props.actionPrefix}  />

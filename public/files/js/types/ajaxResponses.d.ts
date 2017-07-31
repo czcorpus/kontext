@@ -201,7 +201,6 @@ declare module AjaxResponse {
         textTypesData:any; // TODO type
         menuData:any; // TODO type
         Wposlist:Array<any>; // TODO type
-        Lposlist:Array<any>; // TODO type
         AttrList:Array<any>; // TODO type
         TagsetDocUrl:string;
         InputLanguages:{[corpname:string]:string};

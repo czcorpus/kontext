@@ -79,7 +79,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 sourceId={this.props.corpname}
                                 queryType={this.props.queryType}
                                 widgets={this.props.widgets}
-                                lposlist={this.props.lposlist}
+                                wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValue}
                                 matchCaseValue={this.props.matchCaseValue}
                                 forcedAttr={this.props.forcedAttr}
@@ -145,7 +145,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 corpname={item}
                                 queryType={this.props.queryTypes.get(item)}
                                 widgets={this.props.supportedWidgets.get(item)}
-                                lposlist={this.props.lposlist}
+                                wPoSList={this.props.wPoSList}
                                 lposValue={this.props.lposValues.get(item)}
                                 matchCaseValue={this.props.matchCaseValues.get(item)}
                                 forcedAttr={this.props.forcedAttr}

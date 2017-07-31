@@ -482,6 +482,10 @@ class Kontext(Controller):
         """
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
+    def _save_query_to_history(self, query_id, conc_data):
+        if plugins.has_plugin('query_storage') and conc_data.get('lastop_form', {}).get('form_type') == 'query':
+            plugins.get('query_storage').write(user_id=self._session_get('user', 'id'), query_id=query_id)
+
     def _store_conc_params(self):
         """
         Stores concordance operation if the conc_persistence plugin is installed
@@ -492,9 +496,11 @@ class Kontext(Controller):
         """
         if plugins.has_plugin('conc_persistence') and self.args.q:
             prev_data = self._prev_q_data if self._prev_q_data is not None else {}
+            curr_data = self.get_saveable_conc_data(prev_data)
             q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
-                                                         curr_data=self.get_saveable_conc_data(prev_data),
+                                                         curr_data=curr_data,
                                                          prev_data=self._prev_q_data)
+            self._save_query_to_history(q_id, curr_data)
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
                 prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])

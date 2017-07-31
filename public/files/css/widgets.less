@@ -589,9 +589,18 @@ fieldset.FieldsetOutputOptions {
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
-            padding: 0.3em 2em 0.3em 0;
+            padding: 0.3em 0.7em 0.3em 0.7em;
             font-family: @monospace-font-family;
-            max-width: 40em;
+            max-width: 120em;
+            background-color: @locked-attrs-bgcolor;
+            border: @input-border-style;
+            border-radius: @input-border-radius;
+        }
+
+        .query-type {
+            color: @color-light-text;
+            font-size: 80%;
+            padding-left: 0.7em;
         }
     }
 
@@ -641,8 +650,8 @@ fieldset.FieldsetOutputOptions {
         white-space: nowrap;
     }
 
-    .query-history-filter > *:nth-child(n+1) {
-        margin-right: 20px;
+    .query-history-filter label:not(first-child) {
+        margin-left: 1em;
     }
 }
 

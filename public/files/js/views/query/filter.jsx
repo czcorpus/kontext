@@ -38,7 +38,6 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
             return {
                 queryTypes: filterStore.getQueryTypes(),
                 supportedWidgets: filterStore.getSupportedWidgets(),
-                lposlist: filterStore.getLposlist(),
                 lposValues: filterStore.getLposValues(),
                 matchCaseValues: filterStore.getMatchCaseValues(),
                 forcedAttr: filterStore.getForcedAttr(),
@@ -176,7 +175,7 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                                 queryType={this.state.queryTypes.get(this.props.filterId)}
                                 widgets={this.state.supportedWidgets.get(this.props.filterId)}
                                 sourceId={this.props.filterId}
-                                lposlist={this.state.lposlist}
+                                wPoSList={this.state.wPoSList}
                                 lposValue={this.state.lposValues.get(this.props.filterId)}
                                 matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
                                 forcedAttr={this.state.forcedAttr}
@@ -261,7 +260,7 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                                 queryType={this.state.queryTypes.get(this.props.filterId)}
                                 widgets={this.state.supportedWidgets.get(this.props.filterId)}
                                 sourceId={this.props.filterId}
-                                lposlist={this.state.lposlist}
+                                wPoSList={this.state.wPoSList}
                                 lposValue={this.state.lposValues.get(this.props.filterId)}
                                 matchCaseValue={this.state.matchCaseValues.get(this.props.filterId)}
                                 forcedAttr={this.state.forcedAttr}

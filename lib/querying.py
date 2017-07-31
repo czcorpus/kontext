@@ -296,21 +296,6 @@ class Querying(Kontext):
                 ans[full_name] = self._request.args[full_name]
         return ans
 
-    def _save_query(self, query, query_type):
-        if plugins.has_plugin('query_storage'):
-            params = {}
-            if query_type == 'lemma':
-                params['lpos'] = self.args.lpos
-            elif query_type == 'word':
-                params['wpos'] = self.args.wpos
-                params['qmcase'] = self.args.qmcase
-            elif query_type == 'cql':
-                params['default_attr'] = self.args.default_attr
-            plugins.get('query_storage').write(
-                user_id=self._session_get('user', 'id'), corpname=self.args.corpname,
-                subcorpname=self.args.usesubcorp, query=query, query_type=query_type,
-                params=params)
-
     def _query_contains_within(self):
         """
         Tests (by a super-simplified CQL parsing) whether there is a

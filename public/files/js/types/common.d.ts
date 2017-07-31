@@ -427,16 +427,36 @@ declare module Kontext {
     }
 
     export interface QueryHistoryItem {
+        /**
+         * An index in list, always respecting offset (i.e. the
+         * server can return values starting from i > 0).
+         */
+        idx:number;
         corpname:string;
-        humanCorpname:string;
-        created:[string,string]; // date string and time string
-        details:string;
+        canonical_corpus_id:string;
+        human_corpname:string;
+        /**
+         * a UNIX timestamp in seconds
+         */
+        created:number;
         query:string;
-        query_form_url:string;
         query_type:string;
-        query_type_translated:string;
         subcorpname:string;
-        params:{[key:string]:any}
+        lpos:string;
+        qmcase:string;
+        pcq_pos_neg:string;
+        default_attr:string;
+        aligned:Array<{
+            query_type:string;
+            query:string;
+            corpname:string;
+            canonical_corpus_id: string;
+            human_corpname:string;
+            lpos:string;
+            qmcase:string;
+            pcq_pos_neg:string;
+            default_attr:string;
+        }>;
     }
 
     /**

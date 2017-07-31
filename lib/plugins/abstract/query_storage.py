@@ -23,30 +23,27 @@ Query storage plug-in works as a backend for the 'recent queries' function.
 
 class AbstractQueryStorage(object):
 
-    def write(self, user_id, corpname, subcorpname, query, query_type, params=None):
+    def write(self, user_id, query_id):
         """
         Write data as a new saved query
 
         arguments:
         user_id -- a numeric ID of a user
-        corpname -- corpus name
-        subcorpname -- subcorpus name (None if there is no subcorpus used)
-        query -- a query to be stored
-        query_type -- an identification of the query (iquery, cql, lemma,...)
-        params -- additional parameters of the query
+        query_id -- a query identifier as produced by query_storage plug-in
 
         returns:
         an ID of the query (either new or existing)
         """
         raise NotImplementedError()
 
-    def get_user_queries(self, user_id, from_date=None, to_date=None, query_type=None, corpname=None, offset=0,
-                         limit=None):
+    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, query_type=None, corpname=None,
+                         offset=0, limit=None):
         """
         Returns list of queries of a specific user.
 
         arguments:
         user_id -- database user ID
+        corpus_manager -- a corplib.CorpusManager instance
         from_date -- YYYY-MM-DD date string
         to_date -- YYY-MM-DD date string
         query_type -- one of {iquery, lemma, phrase, word, char, cql}
@@ -63,4 +60,3 @@ class AbstractQueryStorage(object):
         user_id -- user ID
         """
         raise NotImplementedError()
-

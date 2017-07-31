@@ -98,21 +98,16 @@ class User(Kontext):
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus):
         if plugins.has_plugin('query_storage'):
-            from query_history import Export
-
             if current_corpus:
-                corpname = self.args.corpname
+                corpname = self._canonical_corpname(self.args.corpname)
             else:
                 corpname = None
-
-            exporter = Export(corpus_manager=self.cm, corpname_canonizer=self._canonical_corpname,
-                              url_creator=self.create_url)
             rows = plugins.get('query_storage').get_user_queries(
                 self._session_get('user', 'id'),
+                self.cm,
                 offset=offset, limit=limit,
                 query_type=query_type, corpname=corpname,
                 from_date=from_date, to_date=to_date)
-            rows = filter(lambda x: x is not None, [exporter.export_row(row) for row in rows])
         else:
             rows = ()
         return rows
