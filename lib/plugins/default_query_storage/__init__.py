@@ -96,6 +96,7 @@ class QueryStorage(AbstractQueryStorage):
             ans['lpos'] = form_data['curr_lpos_values'][main_corp]
             ans['qmcase'] = form_data['curr_qmcase_values'][main_corp]
             ans['pcq_pos_neg'] = form_data['curr_pcq_pos_neg_values'][main_corp]
+            ans['selected_text_types'] = form_data.get('selected_text_types', {})
             ans['aligned'] = []
             for aitem in edata['corpora'][1:]:
                 ans['aligned'].append(dict(corpname=aitem,

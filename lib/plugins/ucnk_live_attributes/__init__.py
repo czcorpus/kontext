@@ -377,6 +377,14 @@ class LiveAttributes(AbstractLiveAttributes):
             ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
         return [(k, ans[i]) for k, i in col_map.items() if k != 'id']
 
+    def find_bib_titles(self, plugin_api, corpus_id, id_list):
+        corpus_info = plugins.get('corparch').get_corpus_info(plugin_api.user_lang, corpus_id)
+        label_attr = self.import_key(corpus_info.metadata.label_attr)
+        db = self.db(plugin_api.user_lang, corpus_id)
+        pch = ', '.join(['?'] * len(id_list))
+        ans = self.execute_sql(db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
+        return [(r[0], r[1]) for r in ans]
+
 
 @inject('corparch')
 def create_instance(settings, corparch):

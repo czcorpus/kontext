@@ -35,7 +35,7 @@ export function init(
     const contextViews = contextInit(dispatcher, mixins, queryContextStore);
     const ttViews = ttViewsInit(dispatcher, mixins, textTypesStore);
 
-    const util = mixins[0];
+    const he = mixins[0];
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
@@ -87,7 +87,7 @@ export function init(
 
         return (
             <tr>
-                <th>{util.translate('global__corpus')}:</th>
+                <th>{he.translate('global__corpus')}:</th>
                 <td>
                     <props.corparchWidget />
                 </td>
@@ -269,6 +269,27 @@ export function init(
         }
     });
 
+    // -------- <SelectedTextTypesLite /> ---------------------------
+
+    const SelectedTextTypesLite = (props) => {
+        return (
+            <fieldset id="specify-query-metainformation">
+                <legend>{he.translate('query__chosen_texts')}</legend>
+                <ul>
+                    {Object.keys(props.data).map(v => (
+                        <li key={v}>
+                            <strong>{v}</strong>
+                            {' \u2208 {' + props.data[v].map(v => `"${v}"`).join(', ') + '}'}
+                        </li>
+                    ))}
+                </ul>
+                <p className="hint">
+                    ({he.translate('query__chosen_texts_cannot_be_changed')})
+                </p>
+            </fieldset>
+        );
+    }
+
     // -------- <QueryFormLite /> ------------------------------------
 
     const QueryFormLite = React.createClass({
@@ -292,7 +313,9 @@ export function init(
                 hasLemmaAttr: queryStore.getHasLemmaAttr(),
                 wPoSList: queryStore.getwPoSList(),
                 contextFormVisible: false,
-                inputLanguages: queryStore.getInputLanguages()
+                inputLanguages: queryStore.getInputLanguages(),
+                hasSelectedTextTypes: textTypesStore.hasSelectedItems(),
+                textTypeSelections: textTypesStore.exportSelections()
             };
         },
 
@@ -396,6 +419,8 @@ export function init(
                                     wPoSList={this.state.wPoSList} />
                             : null}
                     </fieldset>
+                    {this.state.hasSelectedTextTypes ?
+                        <SelectedTextTypesLite data={this.state.textTypeSelections} /> : null}
 
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>

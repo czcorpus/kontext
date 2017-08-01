@@ -77,8 +77,17 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
 
     private attributes:Immutable.List<TextTypes.AttributeSelection>;
 
+    /**
+     * A text type attribute which serves as a title (possibly non-unique)
+     * of a bibliography item. The value can be undefined.
+     */
     private bibLabelAttr:string;
 
+    /**
+     * A text type attribute which is able to uniquely determine a single document.
+     * The value can be undefined (in such case we presume there are no bibliography
+     * items present)
+     */
     private bibIdAttr:string;
 
     /**
@@ -127,10 +136,9 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     private textInputPlaceholder:string;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, data:InitialData,
-            checkedItems:TextTypes.ServerCheckedValues={}) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, data:InitialData) {
         super(dispatcher);
-        this.attributes = Immutable.List(this.importInitialData(data, checkedItems));
+        this.attributes = Immutable.List(this.importInitialData(data));
         this.bibLabelAttr = data.bib_attr;
         this.bibIdAttr = data.id_attr;
         this.initialAttributes = this.attributes;
@@ -204,6 +212,74 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
             }
         });
     }
+
+    applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void {
+        Object.keys(checkedItems).forEach(k => {
+            const attrIdx = this.attributes.findIndex(v => k === this.bibIdAttr ? v.name === this.bibLabelAttr : v.name === k);
+            if (attrIdx === -1) {
+                console.warn(`Cannot apply checked value for ${k}`);
+                return;
+            }
+            let attr = this.attributes.get(attrIdx);
+            // now we must distinguish 4 cases:
+            // [structattr box is configured as bibliography list] x [structattr box is a list of items or a text input box]
+            if (attr.name === this.bibLabelAttr) {
+                if (attr instanceof TextInputAttributeSelection) {
+                    checkedItems[k].forEach(checkedVal => {
+                        attr = (<TextInputAttributeSelection>attr).addValue({
+                            ident: checkedVal,
+                            value: checkedVal in bibMapping ? bibMapping[checkedVal] : checkedVal,
+                            selected: true,
+                            locked: false,
+                            numGrouped: 0
+                        });
+                    });
+                    this.attributes = this.attributes.set(attrIdx, attr);
+
+                } else {
+                    this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
+                        return {
+                            ident: item.ident,
+                            value: item.ident in bibMapping ? bibMapping[item.ident] : item.value,
+                            selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
+                            locked: false,
+                            availItems: item.availItems,
+                            numGrouped: item.numGrouped,
+                            extendedInfo: item.extendedInfo
+                        }
+                    }));
+                }
+
+            } else {
+                if (attr instanceof TextInputAttributeSelection) {
+                    checkedItems[k].forEach(checkedVal => {
+                        attr = (<TextInputAttributeSelection>attr).addValue({
+                            ident: checkedVal,
+                            value: checkedVal,
+                            selected: true,
+                            locked: false,
+                            numGrouped: 0
+                        });
+                    });
+                    this.attributes = this.attributes.set(attrIdx, attr);
+
+                } else {
+                    this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
+                        return {
+                            ident: item.ident,
+                            value: item.value,
+                            selected: checkedItems[k].indexOf(item.value) > -1 ? true : false,
+                            locked: false,
+                            availItems: item.availItems,
+                            numGrouped: item.numGrouped,
+                            extendedInfo: item.extendedInfo
+                        }
+                    }));
+                }
+            }
+        });
+    }
+
 
     private clearExtendedInfo(attrName:string, ident:string):void {
         const attr = this.getAttribute(attrName);
@@ -298,7 +374,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.selectionChangeListeners.forEach(fn => fn(this));
     }
 
-    private importInitialData(data:InitialData, checkedValues:TextTypes.ServerCheckedValues):Array<TextTypes.AttributeSelection> {
+    private importInitialData(data:InitialData):Array<TextTypes.AttributeSelection> {
         const mergedBlocks:Array<BlockLine> = data.Blocks.reduce((prev:Array<BlockLine>, curr:Block) => {
             return prev.concat(curr.Line);
         }, []);
@@ -318,13 +394,12 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
                         Immutable.List([]), Immutable.List([]));
 
                 } else {
-                    const checkedInfo:Array<string> = checkedValues[attrItem.name] || [];
                     const values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
                         (valItem:{v:string, xcnt:number}) => {
                             return {
                                 value: valItem.v,
                                 ident: valItem.v, // TODO what about bib items?
-                                selected: checkedInfo.indexOf(valItem.v) > -1 ? true : false,
+                                selected: false,
                                 locked:false,
                                 availItems:valItem.xcnt,
                                 numGrouped: 1 // TODO here we expect that initial data do not have any name duplicities
@@ -346,6 +421,19 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
             });
         }
         return null;
+    }
+
+    syncFrom(fn:()=>RSVP.Promise<AjaxResponse.QueryFormArgs>):RSVP.Promise<AjaxResponse.QueryFormArgs> {
+        return fn().then(
+            (data) => {
+                this.applyCheckedItems(data.selected_text_types, data.bib_mapping);
+                return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
+                    (resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(data);
+                    }
+                );
+            }
+        );
     }
 
     private changeValueSelection(attrIdent:string, itemIdx:number):void {

@@ -184,7 +184,6 @@ class Subcorpus(Querying):
             structs_and_attrs[s].append(a)
 
         out = dict(SubcorpList=())
-        self._store_checked_text_types(request, out)
         self._attach_aligned_query_params(out)
         corpus_info = self.get_corpus_info(self.args.corpname)
         out.update(dict(

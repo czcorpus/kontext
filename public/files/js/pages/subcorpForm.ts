@@ -100,8 +100,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         this.textTypesStore = new TextTypesStore(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
-                textTypesData,
-                this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
+                textTypesData
         );
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
@@ -123,7 +122,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         const p2 = p1.then(
             (liveAttrsPlugin:TextTypes.AttrValueTextInputListener) => {
                 if (liveAttrsPlugin) {
-                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getListenerCallback());
+                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
                     this.textTypesStore.addSelectionChangeListener(target => {
                         liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
                                 liveAttrsPlugin.hasSelectedLanguages());

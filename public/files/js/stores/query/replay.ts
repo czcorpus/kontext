@@ -31,6 +31,7 @@ import {QueryStore, QueryFormUserEntries} from './main';
 import {FilterStore} from './filter';
 import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';
 import {SampleStore} from './sample';
+import {TextTypesStore} from '../textTypes/attrValues';
 
 
 /**
@@ -90,6 +91,7 @@ export interface ReplayStoreDeps {
     sortStore:SortStore;
     mlSortStore:MultiLevelSortStore;
     sampleStore:SampleStore;
+    textTypesStore:TextTypesStore;
 }
 
 
@@ -135,6 +137,8 @@ export class QueryReplayStore extends SimplePageStore {
 
     private sampleStore:SampleStore;
 
+    private textTypesStore:TextTypesStore;
+
     /**
      * Contains args used by different input forms involved in the current query operations.
      * The used key is the one used by conc_persistence to store operations to db.
@@ -178,6 +182,7 @@ export class QueryReplayStore extends SimplePageStore {
         this.sortStore = replayStoreDeps.sortStore;
         this.mlSortStore = replayStoreDeps.mlSortStore;
         this.sampleStore = replayStoreDeps.sampleStore;
+        this.textTypesStore = replayStoreDeps.textTypesStore;
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
         this.stopAfterOpIdx = null;
@@ -535,7 +540,7 @@ export class QueryReplayStore extends SimplePageStore {
      * @param opIdx an index of the operation in a respective query pipeline
      * @returns updated query store wrapped in a promise
      */
-    private syncQueryForm(opIdx:number):RSVP.Promise<AjaxResponse.QueryFormArgsResponse> {
+    private syncQueryForm(opIdx:number):RSVP.Promise<AjaxResponse.QueryFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
         if (queryKey !== undefined) { // cache hit
             return this.queryStore.syncFrom(() => {
@@ -557,15 +562,22 @@ export class QueryReplayStore extends SimplePageStore {
 
                 ).then(
                     (data) => {
-                        if (!data.contains_errors) {
-                            this.concArgsCache = this.concArgsCache.set(
-                                data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                            return data;
+                        this.concArgsCache = this.concArgsCache.set(
+                            data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
+                    }
 
-                        } else {
-                            throw new Error(data.messages[0]);
-                        }
+                ).then(
+                    (data) => {
+                        // syncFrom
+                        return this.textTypesStore.syncFrom(() => {
+                            return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
+                                (resolve:(d)=>void, reject:(err)=>void) => {
+                                    resolve(data);
+                                }
+                            );
+                        });
                     }
                 );
             });
@@ -600,15 +612,10 @@ export class QueryReplayStore extends SimplePageStore {
 
                 ).then(
                     (data) => {
-                        if (!data.contains_errors) {
-                            this.concArgsCache = this.concArgsCache.set(
-                                data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                            return data;
-
-                        } else {
-                            throw new Error(data.messages[0]);
-                        }
+                        this.concArgsCache = this.concArgsCache.set(
+                            data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
                     }
                 );
             });
@@ -663,7 +670,7 @@ export class QueryReplayStore extends SimplePageStore {
                     }
                 )
 
-            }).then<AjaxResponse.SortFormArgsResponse>(
+            }).then<AjaxResponse.SortFormArgs>(
                 (data) => {
                     const queryKey = this.opIdxToCachedQueryKey(opIdx); // now we know queryKey for sure
                     return this.mlSortStore.syncFrom(() => {

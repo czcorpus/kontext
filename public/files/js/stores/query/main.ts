@@ -65,6 +65,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     tagBuilderSupport:{[corpname:string]:boolean};
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
+    selectedTextTypes:{[structattr:string]:Array<string>};
 }
 
 export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;

@@ -235,7 +235,6 @@ class Actions(Querying):
         # query form data
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
         out['text_types_data'] = json.dumps(tt_data)
-        self._store_checked_text_types(self._request, out)
         self._attach_query_params(out)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
@@ -267,7 +266,6 @@ class Actions(Querying):
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
                                     MainMenu.VIEW('kwic-sentence'))
         out = {}
-        self._store_checked_text_types(request, out)
 
         if len(self._get_available_aligned_corpora()) == 1:
             self.args.align = []
@@ -292,6 +290,7 @@ class Actions(Querying):
             qf_args.curr_qmcase_values[cid] = bool(int(request.args.get('qmcase', '0')))
             qf_args.curr_pcq_pos_neg_values[cid] = request.args.get('pcq_pos_neg')
             qf_args.curr_default_attr_values[cid] = request.args.get('default_attr')
+            qf_args.selected_text_types, qf_args.bib_mapping = self._get_checked_text_types(request)
 
         for item in self.args.align:
             q_type = request.args.get('queryselector_{0}'.format(item), '')[:-3]
@@ -667,6 +666,7 @@ class Actions(Querying):
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
         qinfo = QueryFormArgs(corpora=corpora, persist=True)
+
         for i, corp in enumerate(corpora):
             suffix = '_{0}'.format(corp) if i > 0 else ''
             qtype = self.import_qs(getattr(self.args, 'queryselector' + suffix, None))
@@ -676,6 +676,7 @@ class Actions(Querying):
             qinfo.curr_lpos_values[corp] = getattr(self.args, 'lpos' + suffix, None)
             qinfo.curr_qmcase_values[corp] = bool(getattr(self.args, 'qmcase' + suffix, False))
             qinfo.curr_default_attr_values[corp] = getattr(self.args, 'default_attr' + suffix, 'word')
+            qinfo.selected_text_types, qinfo.bib_mapping = self._get_checked_text_types(self._request)
         self.add_conc_form_args(qinfo)
         # 2) process the query
         try:

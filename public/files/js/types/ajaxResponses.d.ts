@@ -115,6 +115,8 @@ declare module AjaxResponse {
         curr_qmcase_values:{[corpname:string]:boolean};
         curr_default_attr_values:{[corpname:string]:string};
         tag_builder_support:{[corpname:string]:boolean};
+        selected_text_types:TextTypes.ServerCheckedValues;
+        bib_mapping:TextTypes.BibMapping;
     }
 
     export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}

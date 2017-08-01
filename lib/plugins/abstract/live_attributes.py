@@ -81,3 +81,12 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
+    def find_bib_titles(self, plugin_api, corpus_id, id_list):
+        """
+        For a list of bibliography item IDs (= typically unique document IDs)
+        find respective titles.
+
+        Returns a list of pairs (bib_id, bib_title) where bib_id is the original
+        provided ID
+        """
+        raise NotImplementedError()

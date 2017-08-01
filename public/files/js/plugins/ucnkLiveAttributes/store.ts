@@ -486,7 +486,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         );
     }
 
-    getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any> {
+    getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any> {
         return (attrName:string, value:string) => {
             if (value.length > 2) {
                 let prom = this.loadAutocompleteHint(
