@@ -370,7 +370,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 this.setConf<any>('textTypesData', data.textTypesData); // TODO type
                 this.setConf<any>('menuData', data.menuData); // TODO type
                 this.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
-                this.setConf<Array<any>>('Lposlist', data.Lposlist); // TODO type
                 this.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
                 this.setConf<string>('TagsetDocUrl', data.TagsetDocUrl);
                 this.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);

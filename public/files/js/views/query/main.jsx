@@ -109,7 +109,6 @@ export function init(
                 supportsParallelCorpora: queryStore.supportsParallelCorpora(),
                 queryTypes: queryStore.getQueryTypes(),
                 supportedWidgets: queryStore.getSupportedWidgets(),
-                lposlist: queryStore.getLposlist(),
                 lposValues: queryStore.getLposValues(),
                 matchCaseValues: queryStore.getMatchCaseValues(),
                 forcedAttr: queryStore.getForcedAttr(),
@@ -201,7 +200,7 @@ export function init(
                                 queryType={this.state.queryTypes.get(primaryCorpname)}
                                 widgets={this.state.supportedWidgets.get(primaryCorpname)}
                                 sourceId={primaryCorpname}
-                                lposlist={this.state.lposlist}
+                                wPoSList={this.state.wPoSList}
                                 lposValue={this.state.lposValues.get(primaryCorpname)}
                                 matchCaseValue={this.state.matchCaseValues.get(primaryCorpname)}
                                 forcedAttr={this.state.forcedAttr}
@@ -220,7 +219,7 @@ export function init(
                                 alignedCorpora={this.state.corpora.rest()}
                                 queryTypes={this.state.queryTypes}
                                 supportedWidgets={this.state.supportedWidgets}
-                                lposlist={this.state.lposlist}
+                                wPoSList={this.state.wPoSList}
                                 lposValues={this.state.lposValues}
                                 matchCaseValues={this.state.matchCaseValues}
                                 forcedAttr={this.state.forcedAttr}
@@ -281,7 +280,6 @@ export function init(
                 corpora: queryStore.getCorpora(),
                 queryTypes: queryStore.getQueryTypes(),
                 supportedWidgets: queryStore.getSupportedWidgets(),
-                lposlist: queryStore.getLposlist(),
                 lposValues: queryStore.getLposValues(),
                 matchCaseValues: queryStore.getMatchCaseValues(),
                 forcedAttr: queryStore.getForcedAttr(),
@@ -372,7 +370,7 @@ export function init(
                                 queryType={this.state.queryTypes.get(this.props.corpname)}
                                 widgets={this.state.supportedWidgets.get(this.props.corpname)}
                                 sourceId={this.props.corpname}
-                                lposlist={this.state.lposlist}
+                                wPoSList={this.state.wPoSList}
                                 lposValue={this.state.lposValues.get(this.props.corpname)}
                                 matchCaseValue={this.state.matchCaseValues.get(this.props.corpname)}
                                 forcedAttr={this.state.forcedAttr}

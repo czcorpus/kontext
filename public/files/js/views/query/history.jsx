@@ -22,9 +22,18 @@ import * as React from 'vendor/react';
 import {init as inputInit} from './input';
 
 
-export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
+export function init(dispatcher, he, layoutViews, queryHistoryStore) {
 
     // -------------------- <QueryTypeSelector /> ------------------------
+
+    const queryTypes = {
+        'iquery': he.translate('query__qt_basic'),
+        'lemma': he.translate('query__qt_lemma'),
+        'phrase': he.translate('query__qt_phrase'),
+        'word': he.translate('query__qt_word_form'),
+        'char': he.translate('query__qt_word_part'),
+        'cql': he.translate('query__qt_cql')
+    };
 
     const QueryTypeSelector = (props) => {
 
@@ -40,25 +49,25 @@ export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
         return (
             <select value={props.value} onChange={handleChange}>
                 <option value="">
-                    {utils.translate('qhistory__sel_anytime')}
+                    {he.translate('qhistory__sel_anytime')}
                 </option>
                 <option value="iquery">
-                    {utils.translate('query__qt_basic')}
+                    {he.translate('query__qt_basic')}
                 </option>
                 <option value="lemma">
-                    {utils.translate('query__qt_lemma')}
+                    {he.translate('query__qt_lemma')}
                 </option>
                 <option value="phrase">
-                    {utils.translate('query__qt_phrase')}
+                    {he.translate('query__qt_phrase')}
                 </option>
                 <option value="word">
-                    {utils.translate('query__qt_word_form')}
+                    {he.translate('query__qt_word_form')}
                 </option>
                 <option value="char">
-                    {utils.translate('query__qt_word_part')}
+                    {he.translate('query__qt_word_part')}
                 </option>
                 <option value="cql">
-                    {utils.translate('query__qt_cql')}
+                    {he.translate('query__qt_cql')}
                 </option>
             </select>
         );
@@ -89,15 +98,14 @@ export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
             <form className="query-history-filter">
                 <fieldset>
                     <legend>
-                        {utils.translate('qhistory__filter_legend')}
+                        {he.translate('qhistory__filter_legend')}
                     </legend>
                     <label>
-                        {utils.translate('qhistory__curr_corp_only_label')}:{'\u00a0'}
+                        {he.translate('qhistory__curr_corp_only_label')}:{'\u00a0'}
                         <CurrentCorpCheckbox value={props.currentCorpusOnly} />
                     </label>
-                    {'\u00a0'}
                     <label>
-                        {utils.translate('qhistory__query_type_sel')}:{'\u00a0'}
+                        {he.translate('qhistory__query_type_sel')}:{'\u00a0'}
                         <QueryTypeSelector value={props.queryType} />
                     </label>
                 </fieldset>
@@ -112,34 +120,63 @@ export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
             <tr>
                 <th />
                 <th>
-                    {utils.translate('qhistory__th_query')}
+                    {he.translate('qhistory__th_query')}
                 </th>
                 <th>
-                    {utils.translate('qhistory__th_corpus')}
-                </th>
-                <th>
-                    {utils.translate('qhistory__th_query_type')}
-                </th>
-                <th>
-                    {utils.translate('qhistory__th_datetime')}
+                    {he.translate('qhistory__th_datetime')}
                 </th>
                 <th></th>
             </tr>
         );
     };
 
+    // -------------------- <AlignedQueryInfo /> ------------------------
+
+    const TRAlignedQueryInfo = (props) => {
+        return (
+            <tr>
+                <td className="corpname">
+                    {props.human_corpname}
+                    {'\u00a0\u23F5'}
+                </td>
+                <td className="query">{props.query}</td>
+                <td className="query-type">({queryTypes[props.query_type]})</td>
+            </tr>
+        );
+    };
+
+    // -------------------- <QueryInfo /> ------------------------
+
+    const QueryInfo = (props) => {
+
+        return (
+            <table>
+                <tbody>
+                    <tr>
+                        <td className="corpname">
+                            {props.human_corpname}
+                            {props.usesubcorp ? ':' + props.usesubcorp : ''}
+                            {'\u00a0\u23F5'}
+                        </td>
+                        <td className="query">{props.query}</td>
+                        <td className="query-type">({queryTypes[props.query_type]})</td>
+                    </tr>
+                    {props.aligned.map(v => <TRAlignedQueryInfo key={v.corpname}
+                                human_corpname={v.human_corpname} query={v.query} query_type={v.query_type} />)}
+                </tbody>
+            </table>
+        );
+    }
+
     // -------------------- <DataRow /> ------------------------
 
     const DataRow = (props) => {
 
         const handleFormClick = () => {
-            // (corpusId:string, queryType:string, query
             dispatcher.dispatch({
                 actionType: 'QUERY_STORAGE_OPEN_QUERY_FORM',
                 props: {
-                    corpusId: props.data.corpname,
-                    queryType: props.data.query_type,
-                    query: props.data.query
+                    idx: props.data.idx
                 }
             });
         };
@@ -147,25 +184,19 @@ export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
         return (
             <tr className="data-item">
                 <td className="num">
-                    {props.idx + 1}.
+                    {props.data.idx + 1}.
                 </td>
                 <td>
-                    <div className="query" title={props.data.query}>{props.data.query}</div>
-                    <div className="details">{props.data.details}</div>
-                </td>
-                <td className="corpname">
-                    {props.data.humanCorpname}
-                </td>
-                <td>
-                    {props.data.query_type_translated}
+                    <QueryInfo human_corpname={props.data.human_corpname} query={props.data.query}
+                            query_type={props.data.query_type} usesubcorp={props.data.usesubcorp}
+                            aligned={props.data.aligned} />
                 </td>
                 <td className="date">
-                    {props.data.created[0]}
-                    <strong>{props.data.created[1]}</strong>
+                    {he.formatDate(new Date(props.data.created * 1000), 1)}
                 </td>
                 <td>
                     <a onClick={handleFormClick}>
-                        {utils.translate('qhistory__open_in_form')}
+                        {he.translate('qhistory__open_in_form')}
                     </a>
                 </td>
             </tr>
@@ -185,28 +216,56 @@ export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
 
         return (
             <tr className="last-row">
-                <td colSpan="7">
+                <td colSpan="4">
                     <a onClick={handleClick}>
                         {props.storeIsBusy ?
-                        (<img src={utils.createStaticUrl('img/ajax-loader.gif')}
-                                alt={utils.translate('global__loading')} />) :
-                        <span>{utils.translate('qhistory__load_more_link')}</span>
+                        (<img src={he.createStaticUrl('img/ajax-loader.gif')}
+                                alt={he.translate('global__loading')} />) :
+                        <span>{he.translate('qhistory__load_more_link')}</span>
                         }
                     </a>
                 </td>
             </tr>
         );
-    }
+    };
+
+    // -------------------- <TRNoData /> ------------------------
+
+    const TRNoData = (props) => {
+        return (
+            <tr className="last-row">
+                <td colSpan="4">
+                    {he.translate('global__no_data_found')}
+                </td>
+            </tr>
+        );
+    };
+
+    const DataTableFooter = (props) => {
+        if (props.dataLength > 0) {
+            if (props.hasMoreItems) {
+                return <TRLoadMoreLink storeIsBusy={props.storeIsBusy} />
+
+            } else {
+                return null;
+            }
+
+        } else {
+            return <TRNoData />;
+        }
+    };
 
     // -------------------- <DataTable /> ------------------------
 
     const DataTable = (props) => {
+
         return (
             <table className="data">
                 <tbody>
                     <TRDataHeading />
-                    {props.data.map((item, i) => <DataRow key={i + props.offset} idx={i + props.offset} data={item} />)}
-                    <TRLoadMoreLink storeIsBusy={props.storeIsBusy} />
+                    {props.data.map((item, i) => <DataRow key={i + props.offset} data={item} />)}
+                    <DataTableFooter dataLength={props.data.size} storeIsBusy={props.storeIsBusy}
+                            hasMoreItems={props.hasMoreItems} />
                 </tbody>
             </table>
         );
@@ -228,7 +287,8 @@ export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
                 currentCorpusOnly: queryHistoryStore.getCurrentCorpusOnly(),
                 offset: queryHistoryStore.getOffset(),
                 data: queryHistoryStore.getData(),
-                storeIsBusy: queryHistoryStore.getIsBusy()
+                storeIsBusy: queryHistoryStore.getIsBusy(),
+                hasMoreItems: queryHistoryStore.getHasMoreItems()
             };
         }
 
@@ -251,7 +311,8 @@ export function init(dispatcher, utils, layoutViews, queryHistoryStore) {
                             currentCorpusOnly={this.state.currentCorpusOnly}
                             storeIsBusy={this.state.storeIsBusy} />
                     <DataTable data={this.state.data} offset={this.state.offset}
-                            storeIsBusy={this.state.storeIsBusy} />
+                            storeIsBusy={this.state.storeIsBusy}
+                            hasMoreItems={this.state.hasMoreItems} />
                 </div>
             );
         }

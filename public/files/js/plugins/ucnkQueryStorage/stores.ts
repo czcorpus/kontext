@@ -47,6 +47,8 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     private pageSize:number;
 
+    private hasMoreItems:boolean;
+
     constructor(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
@@ -57,6 +59,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         this.limit = limit;
         this.pageSize = pageSize;
         this.isBusy = false;
+        this.hasMoreItems = true; // TODO this should be based on initial data (n+1 items)
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -77,22 +80,32 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_OPEN_QUERY_FORM':
-                    this.openQueryForm(
-                        payload.props['corpusId'],
-                        payload.props['queryType'],
-                        payload.props['query']
-                    );
+                    this.openQueryForm(payload.props['idx']);
                     // page leaves here
                 break;
             }
         });
     }
 
-    private openQueryForm(corpusId:string, queryType:string, query:string):void {
+    private openQueryForm(idx:number):void {
+        const item = this.data.find(v => v.idx === idx);
         const args = new MultiDict();
-        args.set('corpname', corpusId);
-        args.set(queryType, query);
-        args.set('queryselector', queryType + 'row');
+        args.set('corpname', item.corpname);
+        args.set(item.query_type, item.query);
+        args.set('queryselector', item.query_type + 'row');
+        args.set('align', item.aligned.map(v => v.corpname));
+        args.set('lpos', item.lpos);
+        args.set('qmcase', item.qmcase ? '1' : '0');
+        args.set('default_attr', item.default_attr);
+        args.set('pcq_pos_neg', item.pcq_pos_neg);
+        item.aligned.forEach(v => {
+            args.set(`${v.query_type}_${v.canonical_corpus_id}`, v.query);
+            args.set(`queryselector_${v.canonical_corpus_id}`, v.query_type + 'row');
+            args.set(`lpos_${v.canonical_corpus_id}`, v.lpos);
+            args.set(`qmcase_${v.canonical_corpus_id}`, v.qmcase ? '1' : '0');
+            args.set(`default_attr_${v.canonical_corpus_id}`, v.default_attr);
+            args.set(`pcq_pos_neg_${v.canonical_corpus_id}`, v.pcq_pos_neg);
+        });
         window.location.href = this.pluginApi.createActionUrl('first_form', args);
     }
 
@@ -116,7 +129,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         const args = new MultiDict();
         args.set('corpname', this.pluginApi.getConf('corpname'));
         args.set('offset', this.offset);
-        args.set('limit', this.limit);
+        args.set('limit', this.limit + 1);
         args.set('query_type', this.queryType);
         args.set('current_corpus', this.currentCorpusOnly ? '1' : '0');
         return this.pluginApi.ajax(
@@ -126,7 +139,10 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
         ).then(
             (data:AjaxResponse.QueryHistory) => {
-                this.data = Immutable.List<Kontext.QueryHistoryItem>(data.data);
+                this.hasMoreItems = data.data.length === this.limit + 1;
+                this.data = this.hasMoreItems ?
+                    Immutable.List<Kontext.QueryHistoryItem>(data.data.slice(1)) :
+                    Immutable.List<Kontext.QueryHistoryItem>(data.data)
             }
         );
     }
@@ -157,6 +173,10 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     getIsBusy():boolean {
         return this.isBusy;
+    }
+
+    getHasMoreItems():boolean {
+        return this.hasMoreItems;
     }
 
 }

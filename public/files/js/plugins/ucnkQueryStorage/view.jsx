@@ -147,7 +147,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
                                     </em>
                                     {'\u00a0'}
                                     <span className="corpname">
-                                        ({this._renderParams(item.query_type_translated, item.params)})
+                                        ({this._renderParams(item.query_type, item.params)})
                                     </span>
                                 </span>
                             </li>

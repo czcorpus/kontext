@@ -283,10 +283,25 @@ class Actions(Querying):
         self._attach_aligned_query_params(out)
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False), persist=False)
+        cid = self.args.corpname
         if self.args.queryselector:
             q_type = self.args.queryselector[:-3]
-            qf_args.curr_query_types[self.args.corpname] = q_type
-            qf_args.curr_queries[self.args.corpname] = getattr(self.args, q_type)
+            qf_args.curr_query_types[cid] = q_type
+            qf_args.curr_queries[cid] = getattr(self.args, q_type)
+            qf_args.curr_lpos_values[cid] = request.args.get('lpos')
+            qf_args.curr_qmcase_values[cid] = bool(int(request.args.get('qmcase', '0')))
+            qf_args.curr_pcq_pos_neg_values[cid] = request.args.get('pcq_pos_neg')
+            qf_args.curr_default_attr_values[cid] = request.args.get('default_attr')
+
+        for item in self.args.align:
+            q_type = request.args.get('queryselector_{0}'.format(item), '')[:-3]
+            qf_args.curr_query_types[item] = q_type
+            qf_args.curr_queries[item] = request.args.get('{0}_{1}'.format(q_type, item))
+            qf_args.curr_lpos_values[item] = request.args.get('lpos_{0}'.format(item))
+            qf_args.curr_qmcase_values[item] = bool(int(request.args.get('qmcase_{0}'.format(item), '0')))
+            qf_args.curr_pcq_pos_neg_values[item] = request.args.get('pcq_pos_neg_{0}'.format(item))
+            qf_args.curr_default_attr_values[item] = request.args.get('default_attr_{0}'.format(item))
+
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
@@ -442,7 +457,6 @@ class Actions(Querying):
         lposlist = dict(self.cm.corpconf_pairs(thecorp, 'LPOSLIST'))
 
         if queryselector == 'iqueryrow':
-            self._save_query(iquery, 'iquery')
             if 'lc' in attrlist:
                 if 'lemma_lc' in attrlist:
                     qitem = '[lc="%(q)s"|lemma_lc="%(q)s"]'
@@ -473,7 +487,6 @@ class Actions(Querying):
                                 for q in iquery.split()])
 
         elif queryselector == 'lemmarow':
-            self._save_query(lemma, 'lemma')
             if not lpos:
                 return '[lemma="%s"]' % lemma
             elif 'lempos' in attrlist:
@@ -494,13 +507,11 @@ class Actions(Querying):
                                     + ' "%s"' % lpos)
                 return '[lemma="%s" & tag="%s"]' % (lemma, wpos)
         elif queryselector == 'phraserow':
-            self._save_query(phrase, 'phrase')
             if self.args.qmcase:
                 return ' '.join(['"%s"' % p for p in phrase.split()])
             else:
                 return ' '.join(['"(?i)%s"' % p for p in phrase.split()])
         elif queryselector == 'wordrow':
-            self._save_query(word, 'word')
             if qmcase:
                 wordattr = 'word="%s"' % word
             else:
@@ -517,15 +528,12 @@ class Actions(Querying):
                 raise ConcError(_('Undefined word form PoS') + ' "%s"' % wpos)
             return '[%s & tag="%s"]' % (wordattr, wpos)
         elif queryselector == 'charrow':
-            self._save_query(char, 'char')
             if not char:
                 raise ConcError(_('No char entered'))
             return '[word=".*%s.*"]' % char
         elif queryselector == 'tag':
-            self._save_query(self.args.tag, queryselector)
             return '[tag="%s"]' % self.args.tag
         else:
-            self._save_query(cql, 'cql')
             return re.sub(r'[\n\r]+', ' ', cql).strip()
 
     def _compile_query(self, qtype=None, cname=''):
