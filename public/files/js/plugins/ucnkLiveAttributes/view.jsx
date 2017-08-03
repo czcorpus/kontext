@@ -268,6 +268,7 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
 
         _fetchStoreState() {
             return {
+                hasAvailableAlignedCorpora: liveAttrsStore.hasAvailableAlignedCorpora(),
                 alignedCorpora: liveAttrsStore.getAlignedCorpora(),
                 isLocked: liveAttrsStore.hasLockedAlignedLanguages(),
                 manualAlignCorporaMode: liveAttrsStore.isManualAlignCorporaMode()
@@ -286,10 +287,6 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
             liveAttrsStore.removeChangeListener(this._changeHandler);
         }
 
-        _shouldRender() {
-            return !this.state.manualAlignCorporaMode || this.state.alignedCorpora.size > 0;
-        }
-
         _renderHint() {
             if (this.state.manualAlignCorporaMode) {
                 return he.translate('ucnkLA__subcorp_consider_aligned_corpora_manual');
@@ -300,7 +297,7 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
         }
 
         render() {
-            if (this._shouldRender()) {
+            if (this.state.hasAvailableAlignedCorpora) {
                 let classes = ['envelope', 'aligned'];
                 if (this.state.isLocked) {
                     classes.push('locked');
@@ -318,7 +315,7 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                                     <p>
                                         {this._renderHint()}
                                     </p>
-                                    {this.state.alignedCorpora.size > 0 ?
+                                    {this.state.hasAvailableAlignedCorpora && this.state.alignedCorpora.size > 0 ?
                                         null :
                                         <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
                                     }

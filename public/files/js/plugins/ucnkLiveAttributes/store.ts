@@ -391,6 +391,10 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         }
     }
 
+    hasAvailableAlignedCorpora():boolean {
+        return this.alignedCorpora.size > 0;
+    }
+
     getUnusedAttributes():Array<string> {
         const used = this.getUsedAttributes();
         return this.textTypesStore.getAttributesWithSelectedItems(true).filter((item) => {
