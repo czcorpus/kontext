@@ -32,7 +32,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf
     conf.textTypesData = $text_types_data;
     conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
     conf.Wposlist = $to_json($Wposlist);
-    conf.CheckedSca = $to_json($checked_sca);
     conf.ConcFormsArgs = $to_json($conc_forms_args);
     conf.SubcorpList = $to_json($SubcorpList);
     conf.CurrentSubcorp = $to_json($usesubcorp);

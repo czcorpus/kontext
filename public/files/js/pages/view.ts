@@ -358,19 +358,27 @@ export class ViewPage {
                 curr_lpos_values: {},
                 curr_qmcase_values: {},
                 curr_default_attr_values: {},
-                tag_builder_support: {}
+                tag_builder_support: {},
+                selected_text_types: {},
+                bib_mapping: {}
             };
         }
     }
 
     private initQueryForm():void {
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const queryFormArgs = this.fetchQueryFormArgs(concFormArgs);
+
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.queryStores.textTypesStore = new TextTypesStore(
             this.layoutModel.dispatcher,
             this.layoutModel.pluginApi(),
-            textTypesData,
-            this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
+            textTypesData
         );
+        // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
+        // the pop-up query form does not display text-types form (yet the values are still
+        // applied thanks to this).
+        this.queryStores.textTypesStore.applyCheckedItems(queryFormArgs.selected_text_types, {});
 
         this.queryStores.queryHintStore = new QueryHintStore(
             this.layoutModel.dispatcher,
@@ -381,9 +389,6 @@ export class ViewPage {
         this.queryStores.virtualKeyboardStore = new VirtualKeyboardStore(this.layoutModel.dispatcher,
                 this.layoutModel);
         this.queryStores.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
-
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const queryFormArgs = this.fetchQueryFormArgs(concFormArgs);
 
         const queryFormProps:QueryFormProperties = {
             corpora: this.getActiveCorpora(),
@@ -406,7 +411,8 @@ export class ViewPage {
             hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
-            textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes')
+            textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
+            selectedTextTypes: queryFormArgs.selected_text_types
         };
 
         this.queryStores.queryStore = new QueryStore(
@@ -597,7 +603,8 @@ export class ViewPage {
                 filterStore: this.queryStores.filterStore,
                 sortStore: this.queryStores.sortStore,
                 mlSortStore: this.queryStores.multiLevelSortStore,
-                sampleStore: this.queryStores.sampleStore
+                sampleStore: this.queryStores.sampleStore,
+                textTypesStore: this.queryStores.textTypesStore
             },
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')

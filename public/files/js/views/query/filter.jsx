@@ -241,7 +241,7 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                                     </label>
                                     {'\u00a0,\u00a0'}
                                     <label>
-                                        {this.translate('query_qfilter_include_kwic')}
+                                        {this.translate('query__qfilter_include_kwic')}
                                         <input type="checkbox" checked={this.state.inclKwicValue}
                                             onChange={this._handleInclKwicCheckbox} />
                                     </label>

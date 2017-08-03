@@ -128,6 +128,8 @@ class QueryFormArgs(ConcFormArgs):
         self.curr_qmcase_values = dict((c, None) for c in corpora)
         self.curr_default_attr_values = dict((c, None) for c in corpora)
         self.tag_builder_support = dict((c, None) for c in corpora)
+        self.selected_text_types = {}
+        self.bib_mapping = {}  # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
         for corp in self.tag_builder_support.keys():
             self.tag_builder_support[corp] = has_tag_support(corp)
 

@@ -446,6 +446,27 @@ declare module Kontext {
         qmcase:string;
         pcq_pos_neg:string;
         default_attr:string;
+
+        /**
+         * Text type values selected by user in query.
+         * In case of configured bibliography structattr,
+         * this is little bit more complicated as the values
+         * (IDs) are not the ones displayed to user (Titles)
+         * - see bib_mapping in this interface.
+         */
+        selected_text_types:TextTypes.ServerCheckedValues;
+
+        /**
+         * Mappings from unique bib_id (e.g. "the_great_gatsby_fsf_01")
+         * to an actual title (here: "The Great Gatsby"). For corpora
+         * where live-attributes does not have a bibliography structattr
+         * configured, this is typically empty as all the values
+         * checked/entered to text types are used directly because
+         * we don't care whether they map to unique books/newspapers/whatever
+         * (we just want matching values).
+         */
+        bib_mapping:TextTypes.BibMapping;
+
         aligned:Array<{
             query_type:string;
             query:string;
@@ -612,6 +633,10 @@ declare module TextTypes {
         [key:string]:Array<string>;
     }
 
+    export interface BibMapping {
+        [bib_id:string]:string;
+    }
+
     export interface AttrInfo {
 
         /**
@@ -758,6 +783,8 @@ declare module TextTypes {
      *
      */
     export interface ITextTypesStore extends Kontext.PageStore {
+
+        applyCheckedItems(checkedItems:TextTypes.ServerCheckedValues, bibMapping:TextTypes.BibMapping):void;
 
         /**
          * Return a defined structural attribute
@@ -916,7 +943,7 @@ declare module TextTypes {
      * (used whenever the number of items to display is too high).
      */
     export interface AttrValueTextInputListener {
-        getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any>;
+        getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
         getTextInputPlaceholder():string; // a text displayed in a respective text field
         addUpdateListener(fn:()=>void):void;
         removeUpdateListener(fn:()=>void):void;

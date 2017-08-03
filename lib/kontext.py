@@ -1235,17 +1235,31 @@ class Kontext(Controller):
             revers = False
         return k, revers
 
-    def _store_checked_text_types(self, request, out):
+    def _get_checked_text_types(self, request):
         """
+        Collects data required to restore checked/entered values in text types form. 
+
         arguments:
         request -- Werkzeug request instance
-        out -- an output dictionary the method will be writing to
+
+        returns:
+        2-tuple (dict structattr->[list of values], dict bib_id->bib_label)
         """
-        out['checked_sca'] = {}
+        ans = {}
+        bib_mapping = {}
         src_obj = request.args if self.get_http_method() == 'GET' else request.form
         for p in src_obj.keys():
             if p.startswith('sca_'):
-                out['checked_sca'][p[4:]] = src_obj.getlist(p)
+                ans[p[4:]] = src_obj.getlist(p)
+
+        if (plugins.has_plugin('live_attributes') and
+                plugins.get('live_attributes').is_enabled_for(self._plugin_api, self.args.corpname)):
+            ccn = plugins.get('auth').canonical_corpname(self.args.corpname)
+            corpus_info = plugins.get('corparch').get_corpus_info(self.ui_lang, ccn)
+            id_attr = corpus_info.metadata.id_attr
+            if id_attr in ans:
+                bib_mapping = dict(plugins.get('live_attributes').find_bib_titles(self._plugin_api, ccn, ans[id_attr]))
+        return ans, bib_mapping
 
     @staticmethod
     def _uses_internal_user_pages():

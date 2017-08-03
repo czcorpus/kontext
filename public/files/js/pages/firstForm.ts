@@ -130,12 +130,17 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     }
 
     createTTViews():RSVP.Promise<{[key:string]:any}> {
-        let textTypesData = this.layoutModel.getConf<any>('textTypesData');
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
+        const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesStore = new TextTypesStore(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
-                textTypesData,
-                this.layoutModel.getConf<TextTypes.ServerCheckedValues>('CheckedSca')
+                textTypesData
+        );
+        this.textTypesStore.applyCheckedItems(
+            queryFormArgs.selected_text_types,
+            queryFormArgs.bib_mapping
         );
 
         return liveAttributes(
@@ -168,7 +173,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                         }
                         liveAttrsPlugin.selectLanguages(corpora, true);
                     });
-                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getListenerCallback());
+                    this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
                     this.textTypesStore.addSelectionChangeListener(target => {
                         liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
                                 liveAttrsPlugin.hasSelectedLanguages());
@@ -221,7 +226,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
                 inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
-                textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes')
+                textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
+                selectedTextTypes: queryFormArgs.selected_text_types
             }
         );
         this.queryStore.registerCorpusSelectionListener((corpname, aligned, subcorp) =>

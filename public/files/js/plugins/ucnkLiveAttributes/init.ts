@@ -53,8 +53,8 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
         );
     }
 
-    getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any> {
-        return this.store.getListenerCallback();
+    getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any> {
+        return this.store.getAutoCompleteTrigger();
     }
 
     getTextInputPlaceholder():string {

@@ -106,6 +106,9 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
             args.set(`default_attr_${v.canonical_corpus_id}`, v.default_attr);
             args.set(`pcq_pos_neg_${v.canonical_corpus_id}`, v.pcq_pos_neg);
         });
+        Object.keys(item.selected_text_types).forEach(k => {
+            args.replace(`sca_${k}`, item.selected_text_types[k]);
+        });
         window.location.href = this.pluginApi.createActionUrl('first_form', args);
     }
 

@@ -391,6 +391,10 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         }
     }
 
+    hasAvailableAlignedCorpora():boolean {
+        return this.alignedCorpora.size > 0;
+    }
+
     getUnusedAttributes():Array<string> {
         const used = this.getUsedAttributes();
         return this.textTypesStore.getAttributesWithSelectedItems(true).filter((item) => {
@@ -486,7 +490,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         );
     }
 
-    getListenerCallback():(attrName:string, value:string)=>RSVP.Promise<any> {
+    getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any> {
         return (attrName:string, value:string) => {
             if (value.length > 2) {
                 let prom = this.loadAutocompleteHint(
