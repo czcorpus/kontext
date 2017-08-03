@@ -93,7 +93,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         args.set('corpname', item.corpname);
         args.set(item.query_type, item.query);
         args.set('queryselector', item.query_type + 'row');
-        args.set('align', item.aligned.map(v => v.corpname));
+        args.replace('align', item.aligned.map(v => v.corpname));
         args.set('lpos', item.lpos);
         args.set('qmcase', item.qmcase ? '1' : '0');
         args.set('default_attr', item.default_attr);
