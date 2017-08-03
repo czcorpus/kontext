@@ -200,7 +200,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         const p2 = p1.then(
             (ttComponent) => {
                 return corplistComponent.createWidget(
-                    'subcorpus/subcorp_form',
+                    this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
                     this.layoutModel.pluginApi(),
                     {
                         getCurrentSubcorpus: () => null,

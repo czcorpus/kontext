@@ -91,7 +91,7 @@ export class SubcorpFormStore extends SimplePageStore {
         const args = this.getSubmitArgs();
         if (this.subcname != '') {
             this.pageModel.setLocationPost(
-                '/subcorpus/subcorp',
+                this.pageModel.createActionUrl('/subcorpus/subcorp'),
                 args.items()
             );
 
