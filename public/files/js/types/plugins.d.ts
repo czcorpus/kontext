@@ -82,8 +82,33 @@ declare module PluginInterfaces {
      *
      */
     export interface ILiveAttrsInitArgs {
+
+        /**
+         * A structural attribute used to uniquely identify a bibliographic
+         * item (i.e. a book). Typically something like "doc.id".
+         */
         bibAttr:string;
+
+        /**
+         * A list of aligned corpora available to be attached to
+         * the current corpus.
+         */
         availableAlignedCorpora:Array<{n:string; label:string}>;
+
+        /**
+         * Enable "refine" button when component is initialized?
+         * (e.g. for restoring some previous state where user
+         * already selected some values).
+         */
+        refineEnabled:boolean;
+
+        /**
+         * If manual mode is disabled then the list of
+         * aligned corpora is synced automatically from
+         * the query form (i.e. if user selects/drops an aligned
+         * corpus then the store's internal list is updated
+         * accordingly)
+         */
         manualAlignCorporaMode:boolean;
     }
 

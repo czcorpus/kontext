@@ -140,10 +140,18 @@ class QueryStorage(AbstractQueryStorage):
             if 'query_id' in item:
                 full_data.append(self._merge_conc_data(item))
             else:
+                # deprecated type of record (this will vanish soon as there
+                # are no persistent history records based on the old format)
                 tmp = {}
                 tmp.update(item)
+                tmp['canonical_corpus_id'] = self._auth.canonical_corpname(tmp['corpname'])
+                tmp['default_attr'] = None
+                tmp['lpos'] = None
+                tmp['qmcase'] = None
+                tmp['pcq_pos_neg'] = None
+                tmp['selected_text_types'] = {}
                 tmp['aligned'] = []
-                full_data.append(tmp)   # deprecated type of record
+                full_data.append(tmp)
 
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]

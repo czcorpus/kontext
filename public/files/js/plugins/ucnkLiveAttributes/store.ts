@@ -144,7 +144,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         this.userData = null;
         this.bibliographyAttribute = args.bibAttr;
         this.manualAlignCorporaMode = args.manualAlignCorporaMode;
-        this.controlsEnabled = false; // it is enabled when user selects one or more items (via )
+        this.controlsEnabled = false; // it is enabled when user selects one or more items
         this.textTypesStore = textTypesStore;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
         this.alignedCorpora = Immutable.List(args.availableAlignedCorpora
@@ -162,6 +162,9 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         this.selectedCorporaProvider = selectedCorporaProvider;
         this.ttCheckStatusProvider = ttCheckStatusProvider;
         textTypesStore.setTextInputPlaceholder(this.getTextInputPlaceholder());
+        // initial enabled/disabled state:
+        this.setControlsEnabled(args.refineEnabled);
+
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
