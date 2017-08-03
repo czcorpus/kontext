@@ -121,7 +121,7 @@ export function init(
                 hasLemmaAttr: queryStore.getHasLemmaAttr(),
                 wPoSList: queryStore.getwPoSList(),
                 contextFormVisible: false, // TODO use data from session?
-                textTypesFormVisible: false, // dtto,
+                textTypesFormVisible: textTypesStore.hasSelectedItems(),
                 inputLanguages: queryStore.getInputLanguages(),
                 textTypesNotes: queryStore.getTextTypesNotes()
             };
@@ -131,7 +131,7 @@ export function init(
             return this._fetchStoreState();
         },
 
-        _storeChangeHandler : function (store, action) {
+        _storeChangeHandler : function () {
             const state = this._fetchStoreState();
             state['contextFormVisible'] = this.state.contextFormVisible;
             state['textTypesFormVisible'] = this.state.textTypesFormVisible;
@@ -174,10 +174,12 @@ export function init(
 
         componentDidMount : function () {
             queryStore.addChangeListener(this._storeChangeHandler);
+            textTypesStore.addChangeListener(this._storeChangeHandler);
         },
 
         componentWillUnmount : function () {
             queryStore.removeChangeListener(this._storeChangeHandler);
+            textTypesStore.removeChangeListener(this._storeChangeHandler);
         },
 
         render : function () {

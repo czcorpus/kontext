@@ -116,6 +116,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                refineEnabled: true,
                 manualAlignCorporaMode: true
             }
         );

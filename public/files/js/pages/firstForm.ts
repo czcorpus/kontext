@@ -151,6 +151,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             {
                 bibAttr: textTypesData['bib_attr'],
                 availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                refineEnabled: this.layoutModel.getConf<Array<string>>('alignedCorpora').length > 0 ||
+                                    Object.keys(queryFormArgs.selected_text_types).length > 0,
                 manualAlignCorporaMode: false
             }
 
