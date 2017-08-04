@@ -56,17 +56,22 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
         },
 
         _renderTextTypesSel : function (item) {
-            return item.attributes.map((attr, i) => {
-                return (
-                    <span key={i}>
-                        {i > 0 ? ', ' : ''}
-                        <strong>{attr}</strong>
-                            {'\u00a0\u2208\u00a0'}
-                            {'{' + this._shortenValues(item.values.get(attr), ', ') + '}'}
-                            <br />
-                    </span>
-                );
-            });
+            if (item.error) {
+                return <span>{item.error}</span>;
+
+            } else {
+                return item.attributes.map((attr, i) => {
+                    return (
+                        <span key={i}>
+                            {i > 0 ? ', ' : ''}
+                            <strong>{attr}</strong>
+                                {'\u00a0\u2208\u00a0'}
+                                {'{' + this._shortenValues(item.values.get(attr), ', ') + '}'}
+                                <br />
+                        </span>
+                    );
+                });
+            }
         },
 
         _renderLoading : function (idx) {
@@ -102,9 +107,7 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                                                 ? this._renderAlignedLangsSel(item)
                                                 : this._renderTextTypesSel(item)
                                             }
-                                            {item.numPosInfo
-                                                ? this.translate('ucnkLA__num_positions', {num_pos: item.numPosInfo})
-                                                : null}
+                                            {this.translate('ucnkLA__num_positions', {num_pos: item.numPosInfo})}
                                         </td>
                                     </tr>
                                 </tbody>

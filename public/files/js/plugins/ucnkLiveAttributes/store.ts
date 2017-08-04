@@ -40,15 +40,14 @@ interface ServerRefineResponse {
     contains_errors:boolean;
     error?:string;
     aligned:Array<string>;
-    poscount:string; // formatted number of positions
-    attr_values:{[ident:string]:Array<string>}
+    poscount:number;
+    attr_values:TextTypes.ServerCheckedValues;
 }
-
 
 export interface SelectionStep {
     num:number;
     attributes:Immutable.List<string>;
-    numPosInfo:string;
+    numPosInfo:number;
 }
 
 export interface TTSelectionStep extends SelectionStep {
@@ -270,48 +269,43 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
                 }
             });
         });
-        let prom = this.loadFilteredData(this.textTypesStore.exportSelections(false));
-        return prom.then(
+        const selections = this.textTypesStore.exportSelections(false);
+        return this.loadFilteredData(selections).then(
             (data:ServerRefineResponse) => {
-                if (!data.contains_errors) {
-                    let filterData = this.importFilter(data.attr_values);
-                    let k; // mut be defined here (ES5 cannot handle for(let k...) here)
-                    for (k in filterData) {
-                        this.textTypesStore.updateItems(k, filterData[k].map(v => v.ident));
-                        this.textTypesStore.mapItems(k, (v, i) => {
-                            if (filterData[k][i]) {
-                                return {
-                                    ident: filterData[k][i].ident,
-                                    value: filterData[k][i].v,
-                                    selected: v.selected,
-                                    locked: v.locked,
-                                    numGrouped: filterData[k][i].numGrouped,
-                                    availItems: filterData[k][i].availItems,
-                                    extendedInfo: v.extendedInfo
-                                };
+                const filterData = this.importFilter(data.attr_values);
+                let k; // mut be defined here (ES5 cannot handle for(let k...) here)
+                for (k in filterData) {
+                    this.textTypesStore.updateItems(k, filterData[k].map(v => v.ident));
+                    this.textTypesStore.mapItems(k, (v, i) => {
+                        if (filterData[k][i]) {
+                            return {
+                                ident: filterData[k][i].ident,
+                                value: filterData[k][i].v,
+                                selected: v.selected,
+                                locked: v.locked,
+                                numGrouped: filterData[k][i].numGrouped,
+                                availItems: filterData[k][i].availItems,
+                                extendedInfo: v.extendedInfo
+                            };
 
-                            } else {
-                                return null;
-                            }
-                        });
-                        this.textTypesStore.filter(k, (item) => item !== null);
-                    }
-                    this.alignedCorpora = this.alignedCorpora.map((value) => {
-                        let newVal:TextTypes.AlignedLanguageItem = {
-                            label: value.label,
-                            value: value.value,
-                            locked: value.selected ? true : false,
-                            selected: value.selected
+                        } else {
+                            return null;
                         }
-                        return newVal;
-                    }).filter(item=>item.locked).toList();
-                    this.updateSelectionSteps(data);
-                    if (isArr(filterData[this.bibliographyAttribute])) {
-                        this.attachBibData(filterData);
+                    });
+                    this.textTypesStore.filter(k, (item) => item !== null);
+                }
+                this.alignedCorpora = this.alignedCorpora.map((value) => {
+                    let newVal:TextTypes.AlignedLanguageItem = {
+                        label: value.label,
+                        value: value.value,
+                        locked: value.selected ? true : false,
+                        selected: value.selected
                     }
-
-                } else {
-                    throw new Error(data.error);
+                    return newVal;
+                }).filter(item=>item.locked).toList();
+                this.updateSelectionSteps(selections, data);
+                if (isArr(filterData[this.bibliographyAttribute])) {
+                    this.attachBibData(filterData);
                 }
             },
             (err) => {
@@ -335,15 +329,15 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         return this.selectionSteps.size > 0;
     }
 
-    private updateSelectionSteps(data:any):void {
-        const newAttrs = this.getUnusedAttributes();
+    private updateSelectionSteps(selections:TextTypes.ServerCheckedValues, data:ServerRefineResponse):void {
+        const newAttrs = this.getUnusedAttributes(selections);
         const selectedAligned = this.alignedCorpora.filter(item=>item.selected);
 
         if (this.selectionSteps.size === 0 && selectedAligned.size > 0) {
             const mainLang = this.pluginApi.getConf<string>('corpname');
             const newStep:AlignedLangSelectionStep = {
                 num: 1,
-                numPosInfo: newAttrs.length > 0 ? null : data['poscount'],
+                numPosInfo: newAttrs.length > 0 ? 0 : data.poscount,
                 attributes : Immutable.List([]),
                 languages : this.alignedCorpora
                                     .splice(0, 0, {
@@ -352,17 +346,18 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
                                         selected: true,
                                         locked: true
                                     })
-                                    .filter((item)=>item.selected).map((item)=>item.value).toArray()
-            }
+                                    .filter((item)=>item.selected)
+                                    .map((item)=>item.value).toArray()
+            };
             this.selectionSteps = this.selectionSteps.push(newStep);
         }
         if (this.selectionSteps.size > 0 && newAttrs.length > 0 || selectedAligned.size == 0) {
             const newStep:TTSelectionStep = {
                 num: this.selectionSteps.size + 1,
-                numPosInfo: data['poscount'],
+                numPosInfo: data.poscount,
                 attributes: Immutable.List(newAttrs),
                 values: Immutable.Map<string, Array<string>>(newAttrs.map((item) => {
-                    return [item, this.textTypesStore.getAttribute(item).exportSelections(false)];
+                    return [item, selections[item]];
                 }))
             };
             this.selectionSteps = this.selectionSteps.push(newStep);
@@ -398,11 +393,14 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         return this.alignedCorpora.size > 0;
     }
 
-    getUnusedAttributes():Array<string> {
+    /**
+     * Return already selected attributes which are not
+     * yet present here in selectionSteps. These are
+     * expected to compose the latest selection step.
+     */
+    getUnusedAttributes(selections:TextTypes.ServerCheckedValues):Array<string> {
         const used = this.getUsedAttributes();
-        return this.textTypesStore.getAttributesWithSelectedItems(true).filter((item) => {
-            return used.indexOf(item) === -1;
-        });
+        return Object.keys(selections).filter(v => used.indexOf(v) === -1);
     }
 
     getUsedAttributes():Array<string> {
@@ -458,12 +456,11 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
             {
                 corpname: this.pluginApi.getConf<string>('corpname'),
                 id: bibId
-            },
-            {contentType : 'application/x-www-form-urlencoded'}
+            }
         );
     }
 
-    private loadFilteredData(selections:any):RSVP.Promise<any> {
+    private loadFilteredData(selections:TextTypes.ServerCheckedValues):RSVP.Promise<any> {
         let aligned = this.alignedCorpora.filter((item)=>item.selected).map((item)=>item.value).toArray();
         return this.pluginApi.ajax(
             'POST',
@@ -472,8 +469,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
                 corpname: this.pluginApi.getConf<string>('corpname'),
                 attrs: JSON.stringify(selections),
                 aligned: JSON.stringify(aligned)
-            },
-            {contentType : 'application/x-www-form-urlencoded'}
+            }
         );
     }
 
@@ -488,8 +484,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
                 patternAttr: patternAttr,
                 attrs: JSON.stringify(selections),
                 aligned: JSON.stringify(aligned)
-            },
-            {contentType : 'application/x-www-form-urlencoded'}
+            }
         );
     }
 

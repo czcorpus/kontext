@@ -810,7 +810,7 @@ declare module TextTypes {
         /**
          * Export checkbox selections (e.g. for ajax requests)
          */
-        exportSelections(lockedOnesOnly:boolean):Kontext.GeneralProps;
+        exportSelections(lockedOnesOnly:boolean):TextTypes.ServerCheckedValues;
 
         /**
          * Reset store state
