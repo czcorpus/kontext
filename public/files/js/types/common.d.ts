@@ -917,6 +917,20 @@ declare module TextTypes {
          * themselves accordingly.
          */
         addSelectionChangeListener(fn:(target:TextTypes.ITextTypesStore)=>void):void;
+
+        /**
+         * Save the currect selection to object's local history.
+         * This is mainly for UNDO function.
+         */
+        snapshotState():void;
+
+        /**
+         * Return selection state back to the previous
+         * one stored via snapshotState().
+         */
+        undoState():void;
+
+        canUndoState():boolean;
     }
 
     /**

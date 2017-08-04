@@ -12,10 +12,12 @@
         "ucnkLA__subcorp_consider_aligned_corpora_auto": "Only texts found also in these corpora will be searched.",
         "ucnkLA__subcorp_consider_aligned_corpora_manual": "Only texts found also in selected corpora will be included in the subcorpus.",
         "ucnkLA__refine_selection_btn": "Refine selection",
+        "ucnkLA__undo_selection_btn": "Undo",
         "ucnkLA__reset_selection_btn": "Reset selection",
         "ucnkLA__start_writing_for_suggestions": "Start writing\u2026",
         "ucnkLA__aligned_lang_cannot_be_set_here": "The list of aligned corpora in this box is determined automatically by corpora added to the query form",
-        "ucnkLA__the_selection_is_empty_msg": "The current selection does not provide any result."
+        "ucnkLA__the_selection_is_empty_msg": "The current selection does not provide any result.",
+        "ucnkLA__are_you_sure_to_reset": "The whole text type selection will be lost. Are you sure to reset?"
     },
     "cs-CZ": {
         "ucnkLA__bib_list_warning": "Vzhledem k velkému počtu odpovídajících položek se konkrétní tituly objeví až po dalším filtrování a zúžení výběru.",
@@ -30,9 +32,11 @@
         "ucnkLA__subcorp_consider_aligned_corpora_auto": "Zahrnuty budou pouze texty nalezené současně i v následujících korpusech.",
         "ucnkLA__subcorp_consider_aligned_corpora_manual": "Subkorpus bude obsahovat pouze texty nalezené současně i ve vybraných korpusech.",
         "ucnkLA__refine_selection_btn": "Zúžit výběr",
+        "ucnkLA__undo_selection_btn": "Krok zpět",
         "ucnkLA__reset_selection_btn": "Zrušit výběr",
         "ucnkLA__start_writing_for_suggestions": "Začněte psát\u2026",
         "ucnkLA__aligned_lang_cannot_be_set_here": "Seznam zarovnaných korpusů v tomto poli je dán automaticky korpusy přidanými do formuláře dotazu.",
-        "ucnkLA__the_selection_is_empty_msg": "Aktuální výběr neposkytuje žádné položky."
+        "ucnkLA__the_selection_is_empty_msg": "Aktuální výběr neposkytuje žádné položky.",
+        "ucnkLA__are_you_sure_to_reset": "Celý výběr textů bude ztracen. Chcete provést?"
 	}
 }

@@ -118,6 +118,8 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
 
     private controlsEnabled:boolean;
 
+    private isBusy:boolean;
+
     private selectedCorporaProvider:()=>Immutable.List<string>;
 
     /**
@@ -138,13 +140,13 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
             textTypesStore:TextTypes.ITextTypesStore, selectedCorporaProvider:()=>Immutable.List<string>,
             ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs) {
         super(dispatcher);
-        let self = this;
         this.pluginApi = pluginApi;
         this.userData = null;
         this.bibliographyAttribute = args.bibAttr;
         this.manualAlignCorporaMode = args.manualAlignCorporaMode;
         this.controlsEnabled = false; // it is enabled when user selects one or more items
         this.textTypesStore = textTypesStore;
+        this.isBusy = false;
         this.selectionSteps = Immutable.List<SelectionStep>([]);
         this.alignedCorpora = Immutable.List(args.availableAlignedCorpora
                         .map((item) => {
@@ -164,41 +166,60 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         // initial enabled/disabled state:
         this.setControlsEnabled(args.refineEnabled);
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
-                    self.processRefine().then(
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
+                    this.processRefine().then(
                         (v) => {
-                            self.updateListeners.forEach(item => item());
-                            self.textTypesStore.notifyChangeListeners();
-                            self.notifyChangeListeners();
+                            this.updateListeners.forEach(item => item());
+                            this.textTypesStore.snapshotState();
+                            this.textTypesStore.notifyChangeListeners();
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            console.error(err);
-                            self.pluginApi.showMessage('error', err);
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.pluginApi.showMessage('error', err);
                         }
                     );
                 break;
                 case 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED':
-                    let item = self.alignedCorpora.get(payload.props['idx']);
+                    const item = this.alignedCorpora.get(payload.props['idx']);
                     if (item) {
-                        let idx = self.alignedCorpora.indexOf(item);
-                        let newItem:TextTypes.AlignedLanguageItem = {
+                        const idx = this.alignedCorpora.indexOf(item);
+                        const newItem:TextTypes.AlignedLanguageItem = {
                             value: item.value,
                             label: item.label,
                             locked: item.locked,
                             selected: !item.selected
                         };
-                        self.alignedCorpora = self.alignedCorpora.set(idx, newItem);
+                        this.alignedCorpora = this.alignedCorpora.set(idx, newItem);
                     }
-                    self.setControlsEnabled(self.ttCheckStatusProvider() || self.hasSelectedLanguages());
-                    self.updateListeners.forEach(fn => fn());
-                    self.notifyChangeListeners();
+                    this.setControlsEnabled(this.ttCheckStatusProvider() || this.hasSelectedLanguages());
+                    this.updateListeners.forEach(fn => fn());
+                    this.notifyChangeListeners();
                 break;
                 case 'LIVE_ATTRIBUTES_RESET_CLICKED':
-                    self.reset();
-                    self.textTypesStore.notifyChangeListeners();
-                    self.notifyChangeListeners();
+                    if (window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'))) {
+                        this.reset();
+                        this.textTypesStore.notifyChangeListeners();
+                    }
+                    this.notifyChangeListeners();
+                break;
+                case 'LIVE_ATTRIBUTES_UNDO_CLICKED':
+                    /*
+                     * Please note that textTypesStore and selection steps are
+                     * coupled only loosely (the two lists must match for all
+                     * items). Once some other function starts to call snapshotState()
+                     * on TextTypesStore, the UNDO function here gets broken.
+                     */
+                    this.textTypesStore.undoState();
+                    this.textTypesStore.notifyChangeListeners();
+                    this.selectionSteps = this.selectionSteps.pop();
+                    this.notifyChangeListeners();
                 break;
             }
         });
@@ -539,5 +560,13 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
 
     isManualAlignCorporaMode():boolean {
         return this.manualAlignCorporaMode;
+    }
+
+    canUndoRefine():boolean {
+        return this.textTypesStore.canUndoState();
+    }
+
+    getIsBusy():boolean {
+        return this.isBusy;
     }
 }

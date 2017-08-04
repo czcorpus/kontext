@@ -18,20 +18,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
 export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liveAttrsStore) {
 
     const he = mixins[0];
 
+    // ----------------------------- <StepLoader /> --------------------------
+
+    const StepLoader = (props) => {
+        return (
+            <div className="step-block">
+                <table className="step">
+                    <tbody>
+                        <tr>
+                            <td className="num">{props.idx}</td>
+                            <td className="data">
+                                <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
     // ----------------------------- <SelectionSteps /> --------------------------
 
-    const SelectionSteps = React.createClass({
+    const SelectionSteps = (props) => {
 
-        mixins : mixins,
-
-        _shortenValues : function (values, joinChar) {
+        const shortenValues = (values, joinChar) => {
             let ans;
             if (values.length > 5) {
                 ans = values.slice(0, 2);
@@ -44,18 +61,18 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
             return ans
                 .map(item => item.substr(0, 1) !== '@' ? item : item.substr(1))
                 .join(joinChar);
-        },
+        };
 
-        _renderAlignedLangsSel : function (item) {
+        const renderAlignedLangsSel = (item) => {
             return (
                 <span>
-                {this._shortenValues(item.languages, ' + ')}
+                {shortenValues(item.languages, ' + ')}
                 <br />
                 </span>
             );
-        },
+        };
 
-        _renderTextTypesSel : function (item) {
+        const renderTextTypesSel = (item) => {
             if (item.error) {
                 return <span>{item.error}</span>;
 
@@ -66,112 +83,106 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                             {i > 0 ? ', ' : ''}
                             <strong>{attr}</strong>
                                 {'\u00a0\u2208\u00a0'}
-                                {'{' + this._shortenValues(item.values.get(attr), ', ') + '}'}
+                                {'{' + shortenValues(item.values.get(attr), ', ') + '}'}
                                 <br />
                         </span>
                     );
                 });
             }
-        },
+        };
 
-        _renderLoading : function (idx) {
-            return (
-                <div className="step-block">
-                    <table className="step">
-                        <tbody>
-                            <tr>
-                                <td className="num">{idx}</td>
-                                <td className="data">
-                                    <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            );
-        },
-
-        render : function () {
-            return (
-                <div className="steps">
-                {this.props.items.map((item, i) => {
-                    return (
-                        <div className="step-block" key={i}>
-                            <table className="step">
-                                <tbody>
-                                    <tr>
-                                        <td className="num">{item.num}</td>
-                                        <td className="data">
-                                            {i > 0 ? '\u2026\u00a0&\u00a0' : ''}
-                                            {item.num === 1 && item['languages']
-                                                ? this._renderAlignedLangsSel(item)
-                                                : this._renderTextTypesSel(item)
-                                            }
-                                            {this.translate('ucnkLA__num_positions', {num_pos: item.numPosInfo})}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    );
-                })}
-                {this.props.isLoading ? this._renderLoading(this.props.items.length + 1) : null}
-                </div>
-            );
-        }
-    });
+        return (
+            <div className="steps">
+            {props.items.map((item, i) => {
+                return (
+                    <div className="step-block" key={i}>
+                        <table className="step">
+                            <tbody>
+                                <tr>
+                                    <td className="num">{item.num}</td>
+                                    <td className="data">
+                                        {i > 0 ? '\u2026\u00a0&\u00a0' : ''}
+                                        {item.num === 1 && item['languages']
+                                            ? renderAlignedLangsSel(item)
+                                            : renderTextTypesSel(item)
+                                        }
+                                        {he.translate('ucnkLA__num_positions', {num_pos: item.numPosInfo})}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            })}
+            {props.isLoading ? <StepLoader idx={props.items.length + 1} /> : null}
+            </div>
+        );
+    };
 
     // ----------------------------- <RefineButton /> --------------------------
 
-    const RefineButton = React.createClass({
+    const RefineButton = (props) => {
 
-        mixins : mixins,
+        if (props.enabled) {
+            return (
+                <a className="util-button" onClick={props.clickHandler('refine')}>
+                    {he.translate('ucnkLA__refine_selection_btn')}
+                </a>
+            );
 
-        render : function () {
-            if (this.props.enabled) {
-                return (
-                    <a className="util-button" onClick={this.props.clickHandler('refine')}>
-                        {this.translate('ucnkLA__refine_selection_btn')}
-                    </a>
-                );
-
-            } else {
-                return <a className="util-button disabled">{this.translate('ucnkLA__refine_selection_btn')}</a>
-            }
+        } else {
+            return <a className="util-button disabled">{he.translate('ucnkLA__refine_selection_btn')}</a>
         }
-    });
+    };
+
+    // ----------------------------- <UndoButton /> --------------------------
+
+    const UndoButton = (props) => {
+        if (props.enabled) {
+            return (
+                <a className="util-button cancel" onClick={props.clickHandler('undo')}>
+                    {he.translate('ucnkLA__undo_selection_btn')}
+                </a>
+            );
+
+        } else {
+            return <a className="util-button cancel disabled">{he.translate('ucnkLA__undo_selection_btn')}</a>
+        }
+    }
 
     // ----------------------------- <ResetButton /> --------------------------
 
-    const ResetButton = React.createClass({
+    const ResetButton = (props) => {
 
-        mixins : mixins,
+        if (props.enabled) {
+            return (
+                <a className="util-button cancel" onClick={props.clickHandler('reset')}>
+                    {he.translate('ucnkLA__reset_selection_btn')}
+                </a>
+            );
 
-        render : function () {
-            if (this.props.enabled) {
-                return (
-                    <a className="util-button cancel" onClick={this.props.clickHandler('reset')}>
-                        {this.translate('ucnkLA__reset_selection_btn')}
-                    </a>
-                );
-
-            } else {
-                return <a className="util-button cancel disabled">{this.translate('ucnkLA__reset_selection_btn')}</a>
-            }
+        } else {
+            return <a className="util-button cancel disabled">{he.translate('ucnkLA__reset_selection_btn')}</a>
         }
-    });
+    };
 
     // ----------------------------- <LiveAttrsView /> --------------------------
 
-    const LiveAttrsView = React.createClass({
+    class LiveAttrsView extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._changeHandler = this._changeHandler.bind(this);
+            this._mkClickHandler = this._mkClickHandler.bind(this);
+        }
 
-        _mkClickHandler : function (action) {
+        _mkClickHandler(action) {
             const actionMap = {
                 refine: 'LIVE_ATTRIBUTES_REFINE_CLICKED',
                 reset: 'LIVE_ATTRIBUTES_RESET_CLICKED',
-            }
+                undo: 'LIVE_ATTRIBUTES_UNDO_CLICKED'
+            };
             return (evt) => {
                 this.setState(React.addons.update(this.state, {isLoading: {$set: true}}));
                 dispatcher.dispatch({
@@ -179,42 +190,38 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                     props: {}
                 });
             }
-        },
+        }
 
-        _changeHandler : function () {
-            this.setState({
-                selectionSteps: liveAttrsStore.getSelectionSteps(),
-                alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLoading: false,
-                controlsEnabled: liveAttrsStore.getControlsEnabled()
-            })
-        },
-
-        componentDidMount : function () {
-            textTypesStore.addChangeListener(this._changeHandler);
-            liveAttrsStore.addChangeListener(this._changeHandler);
-        },
-
-        componentWillUnmount : function () {
-            textTypesStore.removeChangeListener(this._changeHandler);
-            liveAttrsStore.removeChangeListener(this._changeHandler);
-        },
-
-        _widgetIsActive : function () {
-            return this.state.alignedCorpora.size > 0 && this.state.selectionSteps.length > 1
-                || this.state.alignedCorpora.size === 0 && this.state.selectionSteps.length > 0;
-        },
-
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 selectionSteps: liveAttrsStore.getSelectionSteps(),
                 alignedCorpora: liveAttrsStore.getAlignedCorpora(),
-                isLoading: false,
-                controlsEnabled: liveAttrsStore.getControlsEnabled()
+                isLoading: liveAttrsStore.getIsBusy(),
+                controlsEnabled: liveAttrsStore.getControlsEnabled(),
+                canUndoRefine: liveAttrsStore.canUndoRefine()
             };
-        },
+        }
 
-        render : function () {
+        _changeHandler() {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
+            textTypesStore.addChangeListener(this._changeHandler);
+            liveAttrsStore.addChangeListener(this._changeHandler);
+        }
+
+        componentWillUnmount() {
+            textTypesStore.removeChangeListener(this._changeHandler);
+            liveAttrsStore.removeChangeListener(this._changeHandler);
+        }
+
+        _widgetIsActive() {
+            return this.state.alignedCorpora.size > 0 && this.state.selectionSteps.length > 1
+                || this.state.alignedCorpora.size === 0 && this.state.selectionSteps.length > 0;
+        }
+
+        render() {
             return (
                 <div className="live-attributes">
                     <ul className="controls">
@@ -222,7 +229,10 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                             <RefineButton enabled={this.state.controlsEnabled} clickHandler={this._mkClickHandler} />
                         </li>
                         <li>
-                            <ResetButton enabled={this.state.controlsEnabled} clickHandler={this._mkClickHandler} />
+                            <UndoButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} clickHandler={this._mkClickHandler} />
+                        </li>
+                        <li>
+                            <ResetButton enabled={this.state.controlsEnabled && this.state.canUndoRefine} clickHandler={this._mkClickHandler} />
                         </li>
                         {SubcmixerComponent ?
                             (<li>
@@ -234,7 +244,7 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                 </div>
             );
         }
-    });
+    }
 
     // ----------------------------- <AlignedLangItem /> --------------------------
 
