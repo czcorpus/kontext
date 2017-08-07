@@ -110,6 +110,17 @@ class RedisDb(KeyValueStorage):
         """
         return self.redis.llen(key)
 
+    def list_set(self, key, idx, value):
+        """
+        Sets the list element at index to value
+
+        arguments:
+        key -- list access key
+        idx -- a zero based index where the set should be performed
+        value -- a JSON-serializable value to be inserted
+        """
+        return self.redis.lset(key, idx, json.dumps(value))
+
     def list_trim(self, key, keep_left, keep_right):
         """
         Trims the list from the beginning to keep_left - 1 and from keep_right to the end.
