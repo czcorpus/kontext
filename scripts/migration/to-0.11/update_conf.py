@@ -26,6 +26,12 @@ def update_1(doc):
         srch.getparent().remove(srch)
 
 
+def update_2(doc):
+    srch = doc.find('/plugins/query_storage/js_module')
+    if srch is not None and srch.text == 'ucnkQueryStorage':
+        srch.text = 'defaultQueryStorage'
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.9.x/0.10.x '
