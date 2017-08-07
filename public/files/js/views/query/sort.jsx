@@ -19,7 +19,7 @@
  */
 
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
 export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortStore) {

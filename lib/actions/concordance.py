@@ -260,6 +260,13 @@ class Actions(Querying):
             fill_patterns=fill_patterns,
             fill_ids=[x[0] for x in fill_patterns])
 
+    @exposed(access_level=1, return_type='json', http_method='POST')
+    def save_query(self, request):
+        ans = plugins.get('query_storage').make_persistent(self._session_get('user', 'id'),
+                                                           request.form['query_id'],
+                                                           request.form['name'])
+        return dict(saved=ans)
+
     @exposed(apply_semi_persist_args=True)
     def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,

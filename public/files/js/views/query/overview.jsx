@@ -18,168 +18,161 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
+import {init as saveViewInit} from './save';
 
 
 
-export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore, mainMenuStore) {
+export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore, mainMenuStore, querySaveAsStore) {
 
-    function formTypeToTitle(opFormType) {
+    const he = mixins[0];
+
+    const saveViews = saveViewInit(dispatcher, mixins[0], layoutViews, querySaveAsStore);
+
+    const formTypeToTitle = (opFormType) => {
         switch (opFormType) {
             case 'query':
-                return mixins[0].translate('query__operation_name_query');
+                return he.translate('query__operation_name_query');
             case 'filter':
-                return mixins[0].translate('query__operation_name_filter');
+                return he.translate('query__operation_name_filter');
             case 'sort':
-                return mixins[0].translate('query__operation_name_sort');
+                return he.translate('query__operation_name_sort');
             case 'sample':
-                return mixins[0].translate('query__operation_name_sample');
+                return he.translate('query__operation_name_sample');
             case 'shuffle':
-                return mixins[0].translate('query__operation_name_shuffle');
+                return he.translate('query__operation_name_shuffle');
             default:
                 return null;
         }
-    }
+    };
 
 
     // ------------------------ <QueryReplayView /> --------------------------------
 
-    const QueryReplayView = React.createClass({
+    const QueryReplayView = (props) => {
 
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                    <layoutViews.PopupBox customClass="query-replay-box" onCloseClick={()=>undefined}>
-                        <div>
-                            <h3>{this.translate('query__replay_replaying_query')}{'\u2026'}</h3>
-                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                    alt={this.translate('global__loading_icon')} />
-                            <div />
-                        </div>
-                    </layoutViews.PopupBox>
-                </layoutViews.ModalOverlay>
-            );
-        }
-    });
+        return (
+            <layoutViews.ModalOverlay onCloseKey={()=>undefined}>
+                <layoutViews.PopupBox customClass="query-replay-box" onCloseClick={()=>undefined}>
+                    <div>
+                        <h3>{he.translate('query__replay_replaying_query')}{'\u2026'}</h3>
+                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={he.translate('global__loading_icon')} />
+                        <div />
+                    </div>
+                </layoutViews.PopupBox>
+            </layoutViews.ModalOverlay>
+        );
+    };
 
     // ------------------------ <ExecutionOptions /> --------------------------------
 
-    const ExecutionOptions = React.createClass({
+    const ExecutionOptions = (props) => {
 
-        mixins : mixins,
-
-        _handleRadioInputChange : function (evt) {
+        const handleRadioInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'QUERY_SET_STOP_AFTER_IDX',
                 props: {
-                    operationIdx: this.props.operationIdx,
-                    value: evt.target.value === 'continue' ? null : this.props.operationIdx
+                    operationIdx: props.operationIdx,
+                    value: evt.target.value === 'continue' ? null : props.operationIdx
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <fieldset className="query-exec-opts">
-                    <legend>
-                        {this.translate('query__execution_opts_fieldset')}
-                    </legend>
-                    <ul>
-                        <li>
-                            <label className={this.props.modeRunFullQuery ? 'active' : null}>
-                                <input type="radio" name="exec-opts" style={{verticalAlign: 'middle'}} value="continue"
-                                        checked={this.props.modeRunFullQuery}
-                                        onChange={this._handleRadioInputChange} />
-                                {this.translate('query__behaviour_apply_and_continue')}
-                            </label>
-                        </li>
-                        <li>
-                            <label className={!this.props.modeRunFullQuery ? 'active' : null}>
-                                <input type="radio" name="exec-opts" style={{verticalAlign: 'middle'}} value="stop"
-                                        checked={!this.props.modeRunFullQuery}
-                                        onChange={this._handleRadioInputChange} />
-                                {this.translate('query__behaviour_apply_and_stop')}
-                            </label>
-                        </li>
-                    </ul>
-                </fieldset>
-            );
-        }
-    });
+        return (
+            <fieldset className="query-exec-opts">
+                <legend>
+                    {he.translate('query__execution_opts_fieldset')}
+                </legend>
+                <ul>
+                    <li>
+                        <label className={props.modeRunFullQuery ? 'active' : null}>
+                            <input type="radio" name="exec-opts" style={{verticalAlign: 'middle'}} value="continue"
+                                    checked={props.modeRunFullQuery}
+                                    onChange={handleRadioInputChange} />
+                            {he.translate('query__behaviour_apply_and_continue')}
+                        </label>
+                    </li>
+                    <li>
+                        <label className={!props.modeRunFullQuery ? 'active' : null}>
+                            <input type="radio" name="exec-opts" style={{verticalAlign: 'middle'}} value="stop"
+                                    checked={!props.modeRunFullQuery}
+                                    onChange={handleRadioInputChange} />
+                            {he.translate('query__behaviour_apply_and_stop')}
+                        </label>
+                    </li>
+                </ul>
+            </fieldset>
+        );
+    };
 
     // ------------------------ <QueryEditor /> --------------------------------
 
-    const QueryEditor = React.createClass({
+    const QueryEditor = (props) => {
 
-        mixins : mixins,
+        const renderEditorComponent = () => {
+            if (props.isLoading) {
+                return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
 
-        _renderEditorComponent : function () {
-            if (this.props.isLoading) {
-                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} alt={this.translate('global__loading')} />;
-
-            } else if (!this.props.opKey || this.props.editIsLocked) {
+            } else if (!props.opKey || props.editIsLocked) {
                 return (
                     <div>
                         <p>
-                            <img src={this.createStaticUrl('img/warning-icon.svg')}
-                                alt={this.translate('global__warning_icon')}
+                            <img src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning_icon')}
                                  style={{verticalAlign: 'middle', marginRight: '0.5em'}} />
-                            {this.translate('query__replay_op_cannot_be_edited_msg')}.
+                            {he.translate('query__replay_op_cannot_be_edited_msg')}.
                         </p>
                         <div style={{textAlign: 'center', marginTop: '2em'}}>
-                            <a className="default-button" href={this.createActionLink(`view?${this.props.opEncodedArgs}`)}>
-                                {this.translate('query__replay_view_the_result')}
+                            <a className="default-button" href={he.createActionLink(`view?${props.opEncodedArgs}`)}>
+                                {he.translate('query__replay_view_the_result')}
                             </a>
                         </div>
                     </div>
                 );
 
-            } else if (this.props.operationIdx === 0) {
-                return <viewDeps.QueryFormView {...this.props.editorProps} operationIdx={this.props.operationIdx} />;
+            } else if (props.operationIdx === 0) {
+                return <viewDeps.QueryFormView {...props.editorProps} operationIdx={props.operationIdx} />;
 
-            } else if (this.props.operationFormType === 'filter') {
+            } else if (props.operationFormType === 'filter') {
                 return <viewDeps.FilterFormView {...this.props.editorProps}
-                            operationIdx={this.props.operationIdx}
-                            filterId={this.props.opKey} />;
+                            operationIdx={props.operationIdx}
+                            filterId={props.opKey} />;
 
-            } else if (this.props.operationFormType === 'sort') {
-                return <viewDeps.SortFormView sortId={this.props.opKey} operationIdx={this.props.operationIdx} />;
+            } else if (props.operationFormType === 'sort') {
+                return <viewDeps.SortFormView sortId={props.opKey} operationIdx={props.operationIdx} />;
 
-            } else if (this.props.operationFormType === 'sample') {
-                return <viewDeps.SampleFormView sampleId={this.props.opKey} operationIdx={this.props.operationIdx} />;
+            } else if (props.operationFormType === 'sample') {
+                return <viewDeps.SampleFormView sampleId={props.opKey} operationIdx={props.operationIdx} />;
 
-            } else if (this.props.operationFormType === 'shuffle') {
-                return <viewDeps.ShuffleFormView {...this.props.editorProps} shuffleId={this.props.opKey}
-                            shuffleMinResultWarning={this.props.shuffleMinResultWarning}
-                            lastOpSize={this.props.resultSize}
-                            operationIdx={this.props.operationIdx} />;
+            } else if (props.operationFormType === 'shuffle') {
+                return <viewDeps.ShuffleFormView {...props.editorProps} shuffleId={props.opKey}
+                            shuffleMinResultWarning={props.shuffleMinResultWarning}
+                            lastOpSize={props.resultSize}
+                            operationIdx={props.operationIdx} />;
 
             } else {
                 return <div>???</div>;
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
-                    <layoutViews.CloseableFrame
-                            customClass="query-form-spa"
-                            label={this.translate('query__edit_current_hd_{operation}',
-                                    {operation: formTypeToTitle(this.props.operationFormType)})}
-                            onCloseClick={this.props.closeClickHandler}>
-                        {this.props.operationIdx < this.props.numOps - 1 ?
-                            <ExecutionOptions modeRunFullQuery={this.props.modeRunFullQuery}
-                                    operationIdx={this.props.operationIdx} />
-                            : null
-                        }
-                        {this._renderEditorComponent()}
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            );
-        }
-    });
+        return (
+            <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
+                <layoutViews.CloseableFrame
+                        customClass="query-form-spa"
+                        label={he.translate('query__edit_current_hd_{operation}',
+                                {operation: formTypeToTitle(props.operationFormType)})}
+                        onCloseClick={props.closeClickHandler}>
+                    {props.operationIdx < props.numOps - 1 ?
+                        <ExecutionOptions modeRunFullQuery={props.modeRunFullQuery}
+                                operationIdx={props.operationIdx} />
+                        : null
+                    }
+                    {renderEditorComponent()}
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        );
+    };
 
     // ------------------------ <QueryOpInfo /> --------------------------------
 
@@ -555,23 +548,34 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
             }
         },
 
-        _activeItemIsOurs : function () {
+        _renderOperationForm : function () {
             const actions = [
                 'MAIN_MENU_SHOW_SORT',
                 'MAIN_MENU_APPLY_SHUFFLE',
                 'MAIN_MENU_SHOW_SAMPLE',
                 'MAIN_MENU_SHOW_FILTER'
             ];
-            return this.state.activeItem !== null && actions.indexOf(this.state.activeItem.actionName) > -1;
+            if (this.state.activeItem !== null && actions.indexOf(this.state.activeItem.actionName) > -1) {
+                return <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem}
+                            lastOpSize={this.state.lastOpSize} />
+
+            } else {
+                return null;
+            }
+        },
+
+        _renderSaveForm : function () {
+            if (this.state.activeItem && this.state.activeItem.actionName === 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM') {
+                return <saveViews.QuerySaveAsForm />;
+            }
         },
 
         render : function () {
             return (
                 <div>
                     <QueryOverview {...this.props} />
-                    {this._activeItemIsOurs() ?
-                        <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem}
-                            lastOpSize={this.state.lastOpSize} /> : null}
+                    {this._renderOperationForm()}
+                    {this._renderSaveForm()}
                 </div>
             );
         }

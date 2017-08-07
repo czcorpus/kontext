@@ -432,6 +432,12 @@ declare module Kontext {
          * server can return values starting from i > 0).
          */
         idx:number;
+
+        /**
+         * If not null then the item is persistent
+         */
+        name?:string;
+
         corpname:string;
         canonical_corpus_id:string;
         human_corpname:string;
@@ -441,6 +447,7 @@ declare module Kontext {
         created:number;
         query:string;
         query_type:string;
+        query_id:string;
         subcorpname:string;
         lpos:string;
         qmcase:string;

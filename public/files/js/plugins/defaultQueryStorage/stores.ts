@@ -24,7 +24,7 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 
 
-import {SimplePageStore} from '../../stores/base';
+import {SimplePageStore, cloneRecord} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
 
@@ -49,6 +49,12 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     private hasMoreItems:boolean;
 
+    private archivedOnly:boolean;
+
+    private editingQueryId:string;
+
+    private editingQueryName:string;
+
     constructor(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
@@ -60,6 +66,9 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         this.pageSize = pageSize;
         this.isBusy = false;
         this.hasMoreItems = true; // TODO this should be based on initial data (n+1 items)
+        this.archivedOnly = false;
+        this.editingQueryId = null;
+        this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -69,6 +78,10 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                 break;
                 case 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY':
                     this.currentCorpusOnly = payload.props['value'];
+                    this.performLoadAction();
+                break;
+                case 'QUERY_STORAGE_SET_ARCHIVED_ONLY':
+                    this.archivedOnly = payload.props['value'];
                     this.performLoadAction();
                 break;
                 case 'QUERY_STORAGE_LOAD_MORE':
@@ -82,6 +95,47 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                 case 'QUERY_STORAGE_OPEN_QUERY_FORM':
                     this.openQueryForm(payload.props['idx']);
                     // page leaves here
+                break;
+                case 'QUERY_STORAGE_SET_EDITING_QUERY_ID':
+                    this.editingQueryId = payload.props['value'];
+                    const srch = this.data.find(v => v.query_id === this.editingQueryId);
+                    if (srch) {
+                        this.editingQueryName = srch.name ? srch.name : '';
+                    }
+                    this.notifyChangeListeners();
+                break;
+                case 'QUERY_STORAGE_CLEAR_EDITING_QUERY_ID':
+                    this.editingQueryId = null;
+                    this.editingQueryName = null;
+                    this.notifyChangeListeners();
+                break;
+                case 'QUERY_STORAGE_EDITOR_SET_NAME':
+                    this.editingQueryName = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'QUERY_STORAGE_EDITOR_CLICK_SAVE':
+                    if (!this.editingQueryName) {
+                        this.pluginApi.showMessage('error',
+                            this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
+                        this.notifyChangeListeners();
+
+                    } else {
+                        this.isBusy = true;
+                        this.notifyChangeListeners();
+                        this.saveItem(this.editingQueryId, this.editingQueryName).then(
+                            () => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                this.pluginApi.showMessage('info',
+                                        this.pluginApi.translate('query__save_as_item_saved'));
+                            },
+                            (err) => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                this.pluginApi.showMessage('error', err);
+                            }
+                        );
+                    }
                 break;
             }
         });
@@ -135,6 +189,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         args.set('limit', this.limit + 1);
         args.set('query_type', this.queryType);
         args.set('current_corpus', this.currentCorpusOnly ? '1' : '0');
+        args.set('archived_only', this.archivedOnly ? '1' : '0');
         return this.pluginApi.ajax(
             'GET',
             this.pluginApi.createActionUrl('user/ajax_query_history'),
@@ -144,11 +199,36 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
             (data:AjaxResponse.QueryHistory) => {
                 this.hasMoreItems = data.data.length === this.limit + 1;
                 this.data = this.hasMoreItems ?
-                    Immutable.List<Kontext.QueryHistoryItem>(data.data.slice(1)) :
-                    Immutable.List<Kontext.QueryHistoryItem>(data.data)
+                    Immutable.List<Kontext.QueryHistoryItem>(data.data.slice(0, data.data.length - 1)) :
+                    Immutable.List<Kontext.QueryHistoryItem>(data.data);
             }
         );
     }
+
+    private saveItem(queryId:string, name:string):RSVP.Promise<boolean> {
+        const args = new MultiDict();
+        args.set('query_id', queryId);
+        args.set('name', name);
+        return this.pluginApi.ajax<any>(
+            'POST',
+            this.pluginApi.createActionUrl('save_query'),
+            args
+
+        ).then(
+            (data) => {
+                const editIdx = this.data.findIndex(v => v.query_id === this.editingQueryId);
+                if (editIdx > -1) {
+                    const newItem = cloneRecord<Kontext.QueryHistoryItem>(this.data.get(editIdx)); // shallow copy...
+                    newItem.name = this.editingQueryName;
+                    this.data = this.data.set(editIdx, newItem);
+                    this.editingQueryId = null;
+                    this.editingQueryName = null;
+                }
+                return true;
+            }
+        );
+    }
+
 
     importData(data:Array<Kontext.QueryHistoryItem>):void {
         this.data = Immutable.List<Kontext.QueryHistoryItem>(data);
@@ -182,4 +262,15 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         return this.hasMoreItems;
     }
 
+    getArchivedOnly():boolean {
+        return this.archivedOnly;
+    }
+
+    getEditingQueryId():string {
+        return this.editingQueryId;
+    }
+
+    getEditingQueryName():string {
+        return this.editingQueryName;
+    }
 }

@@ -568,40 +568,86 @@ fieldset.FieldsetOutputOptions {
 
 .RecentQueriesPageList {
 
-    table.data {
+    .last-row {
+        text-align: center;
+        padding: 10px 0;
+    }
+
+    .history-entry {
+
         margin-top: 1em;
 
-        .last-row td {
-            text-align: center;
-            padding: 10px 0;
+        .heading {
+            font-size: 1.2em;
+
+            .corpname {
+
+            }
         }
 
-        .details {
-            color: @color-light-text;
-            font-size: 80%;
-        }
-
-        .corpname {
+        .saved-name {
             color: @color-logo-pink;
         }
 
-        .query {
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            padding: 0.3em 0.7em 0.3em 0.7em;
-            font-family: @monospace-font-family;
-            max-width: 120em;
-            background-color: @locked-attrs-bgcolor;
-            border: @input-border-style;
-            border-radius: @input-border-radius;
+        .save-action {
+            color: @color-logo-pink;
         }
 
-        .query-type {
+        .edit-action {
             color: @color-light-text;
-            font-size: 80%;
-            padding-left: 0.7em;
         }
+
+        .edit-action:hover {
+            color: @color-logo-pink;
+        }
+
+        .query-info {
+
+            margin-top: 0.3em;
+            margin-bottom: 0.7em;
+
+            .query {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                padding: 0.3em 0.7em 0.3em 0.7em;
+                font-family: @monospace-font-family;
+                background-color: @locked-attrs-bgcolor;
+                border: @input-border-style;
+                border-radius: @input-border-radius;
+            }
+
+            .query-type {
+                color: @color-light-text;
+                font-size: 80%;
+                padding-left: 0.7em;
+            }
+        }
+
+        div.footer {
+            text-align: right;
+            font-size: 0.8em;
+            margin-bottom: 1em;
+
+            a.open-in-form {
+
+            }
+        }
+
+        .date {
+            color: #999999;
+            float: right;
+
+            strong {
+                padding-left: 0.4em;
+            }
+        }
+    }
+
+    .history-entry:not(:last-of-type) {
+        border-color: @color-light-grey;
+        border-width: 0 0 1px 0;
+        border-style: solid;
     }
 
     .options {
@@ -620,20 +666,6 @@ fieldset.FieldsetOutputOptions {
         white-space: nowrap;
     }
 
-    .date {
-        color: #999999;
-
-        strong {
-            padding-left: 0.4em;
-        }
-    }
-
-    .link,
-    .date {
-        text-align: left;
-        min-width: 15em;
-    }
-
     .selectable {
         display: inline-block;
         border: @input-border-style;
@@ -650,8 +682,12 @@ fieldset.FieldsetOutputOptions {
         white-space: nowrap;
     }
 
-    .query-history-filter label:not(first-child) {
-        margin-left: 1em;
+    .query-history-filter {
+        margin-bottom: 2.3em;
+
+        label:not(first-child) {
+            margin-left: 1em;
+        }
     }
 }
 

@@ -708,7 +708,7 @@ class Controller(object):
         processed but before any output or HTTP headers.
         """
         if type(result) is dict:
-            result['messages'] = self._system_messages
+            result['messages'] = result.get('messages', []) + self._system_messages
             result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
         if self._request.args.get('format') == 'json' or self._request.form.get('format') == 'json':
             action_metadata['return_type'] = 'json'
@@ -812,6 +812,7 @@ class Controller(object):
             else:
                 self.handle_dispatch_error(ex)
             methodname, tmpl, result = self.process_action('message', path, named_args)
+
         # Let's test whether process_method actually invoked requested method.
         # If not (e.g. there was an error and a fallback has been used) then reload action metadata
         if methodname != path[0]:
@@ -819,7 +820,6 @@ class Controller(object):
 
         self._proc_time = round(time.time() - self._proc_time, 4)
         self._post_dispatch(methodname, action_metadata, tmpl, result)
-
         # response rendering
         headers += self.output_headers(action_metadata.get('return_type', 'html'))
         output = StringIO.StringIO()
@@ -848,7 +848,6 @@ class Controller(object):
         else:
             user_msg = _('Failed to process your request. '
                          'Please try again later or contact system support.')
-
         return_type = self._get_method_metadata(action_name, 'return_type')
         if return_type == 'json':
             return (

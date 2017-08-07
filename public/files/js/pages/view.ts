@@ -39,6 +39,7 @@ import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} f
 import {QueryReplayStore, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
 import {SampleStore, SampleFormProperties, fetchSampleFormArgs} from '../stores/query/sample';
+import {QuerySaveAsFormStore} from '../stores/query/save';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
@@ -88,6 +89,7 @@ export class QueryStores {
     sortStore:SortStore;
     multiLevelSortStore:MultiLevelSortStore;
     sampleStore:SampleStore;
+    saveAsFormStore:QuerySaveAsFormStore;
 }
 
 /**
@@ -389,6 +391,11 @@ export class ViewPage {
         this.queryStores.virtualKeyboardStore = new VirtualKeyboardStore(this.layoutModel.dispatcher,
                 this.layoutModel);
         this.queryStores.queryContextStore = new QueryContextStore(this.layoutModel.dispatcher);
+        this.queryStores.saveAsFormStore = new QuerySaveAsFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.layoutModel.getConf<string>('concPersistenceOpId')
+        );
 
         const queryFormProps:QueryFormProperties = {
             corpora: this.getActiveCorpora(),
@@ -621,7 +628,8 @@ export class ViewPage {
                 ShuffleFormView: this.sampleFormViews.ShuffleFormView
             },
             this.queryStores.queryReplayStore,
-            this.layoutModel.getStores().mainMenuStore
+            this.layoutModel.getStores().mainMenuStore,
+            this.queryStores.saveAsFormStore
         );
 
         this.layoutModel.renderReactComponent(
