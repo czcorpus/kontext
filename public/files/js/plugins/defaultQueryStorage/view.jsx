@@ -18,16 +18,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
 export function init(dispatcher, mixins, queryStorageStore) {
 
-    const QueryStorage = React.createClass({
+    const he = mixins[0];
 
-        mixins : mixins,
+    class QueryStorage extends React.Component {
 
-        _keyPressHandler : function (evt) {
+        constructor(props) {
+            super(props);
+            this.state = {
+                data: queryStorageStore.getData(),
+                currentItem: 0
+            };
+            this._keyPressHandler = this._keyPressHandler.bind(this);
+            this._handleClickSelection = this._handleClickSelection.bind(this);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._globalKeyEventHandler = this._globalKeyEventHandler.bind(this);
+            this._handleBlurEvent = this._handleBlurEvent.bind(this);
+            this._handleFocusEvent = this._handleFocusEvent.bind(this);
+        }
+
+        _keyPressHandler(evt) {
             const inc = Number({38: this.state.data.size - 1, 40: 1}[evt.keyCode]);
             const modulo = this.state.data.size > 0 ? this.state.data.size : 1;
             if (!isNaN(inc)) {
@@ -58,9 +72,9 @@ export function init(dispatcher, mixins, queryStorageStore) {
             } else if (evt.keyCode === 27) { // ESC key
                 this.props.onCloseTrigger();
             }
-        },
+        }
 
-        _handleClickSelection : function (itemNum) {
+        _handleClickSelection(itemNum) {
             const historyItem = this.state.data.get(itemNum);
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
@@ -76,36 +90,29 @@ export function init(dispatcher, mixins, queryStorageStore) {
                     query: historyItem.query
                 }
             });
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             queryStorageStore.addChangeListener(this._handleStoreChange);
             dispatcher.dispatch({
                 actionType: 'QUERY_STORAGE_LOAD_HISTORY',
                 props: {}
             });
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             queryStorageStore.removeChangeListener(this._handleStoreChange);
-            this.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
-        },
+            he.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
+        }
 
-        _handleStoreChange : function () {
+        _handleStoreChange() {
             this.setState({
                 data: queryStorageStore.getData(),
                 currentItem: this.state.currentItem
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                data: queryStorageStore.getData(),
-                currentItem: 0
-            };
-        },
-
-        _renderParams : function (qtype, params) {
+        _renderParams(qtype, params) {
             const ans = [qtype];
             for (let p in params || {}) {
                 if (params.hasOwnProperty(p)) {
@@ -113,23 +120,23 @@ export function init(dispatcher, mixins, queryStorageStore) {
                 }
             }
             return ans.join(', ');
-        },
+        }
 
-        _globalKeyEventHandler : function (evt) {
+        _globalKeyEventHandler(evt) {
             if (evt.keyCode === 27) {
                 this.props.onCloseTrigger();
             }
-        },
+        }
 
-        _handleBlurEvent : function (evt) {
+        _handleBlurEvent(evt) {
             this.addGlobalKeyEventHandler(this._globalKeyEventHandler);
-        },
+        }
 
-        _handleFocusEvent : function (evt) {
-            this.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
-        },
+        _handleFocusEvent(evt) {
+            he.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
+        }
 
-        render : function () {
+        render() {
             return (
                 <ol className="rows"
                         onKeyDown={this._keyPressHandler}
@@ -156,8 +163,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
                 </ol>
             );
         }
-    });
-
+    }
 
     return {
         QueryStorage: QueryStorage
