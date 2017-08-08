@@ -263,8 +263,9 @@ declare module "views/query/overview" {
             mixins:any,
             layoutViews:Kontext.LayoutViews,
             viewDeps:QueryToolbarViewDeps,
-            queryReplayStore:any,
-            mainMenuStore:any):QueryToolbarViews;
+            queryReplayStore:Kontext.PageStore,
+            mainMenuStore:Kontext.PageStore,
+            saveAsFormStore:Kontext.PageStore):QueryToolbarViews;
 }
 
 
@@ -276,6 +277,17 @@ declare module "views/query/history" {
 
     export function init(dispatcher:Kontext.FluxDispatcher, utils:any,
                     layoutViews:Kontext.LayoutViews, queryHistoryStore:any):RecentQueriesPageViews;
+}
+
+
+declare module "views/query/save" {
+
+    export interface QuerySaveViews {
+        QuerySaveAsForm:React.ReactClass;
+    }
+
+    export function init(dispatcher:Kontext.FluxDispatcher, helpers:any,
+                    layoutViews:Kontext.LayoutViews, saveAsFormStore:Kontext.PageStore);
 }
 
 
@@ -369,7 +381,7 @@ declare module "views/overview" {
     }
 
     export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            corpusInfoStore:any, popupBoxComponent:React.ReactClass):OverviewViews;
+            corpusInfoStore:Kontext.PageStore, popupBoxComponent:React.ReactClass):OverviewViews;
 }
 
 

@@ -96,7 +96,7 @@ class User(Kontext):
             self.add_system_message('error', e)
         return {}
 
-    def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus):
+    def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus, archived_only):
         if plugins.has_plugin('query_storage'):
             if current_corpus:
                 corpname = self._canonical_corpname(self.args.corpname)
@@ -107,7 +107,8 @@ class User(Kontext):
                 self.cm,
                 offset=offset, limit=limit,
                 query_type=query_type, corpname=corpname,
-                from_date=from_date, to_date=to_date)
+                from_date=from_date, to_date=to_date,
+                archived_only=archived_only)
         else:
             rows = ()
         return rows
@@ -123,9 +124,11 @@ class User(Kontext):
         to_date = request.args.get('to_date')
         query_type = request.args.get('query_type')
         current_corpus = int(request.args.get('current_corpus', '0'))
+        archived_only = bool(int(request.args.get('archived_only', '0')))
 
-        rows = self._load_query_history(from_date=from_date, query_type=query_type, current_corpus=current_corpus,
-                                        to_date=to_date, offset=offset, limit=num_records * pages)
+        rows = self._load_query_history(query_type=query_type, current_corpus=current_corpus,
+                                        from_date=from_date, to_date=to_date, archived_only=archived_only,
+                                        offset=offset, limit=num_records * pages)
         return dict(
             data=rows,
             from_date=from_date,
@@ -141,8 +144,10 @@ class User(Kontext):
         limit = int(request.args.get('limit'))
         query_type = request.args.get('query_type')
         current_corpus = int(request.args.get('current_corpus', '0'))
-        rows = self._load_query_history(offset=offset, limit=limit, query_type=query_type,
-                                        current_corpus=current_corpus, from_date=None, to_date=None)
+        archived_only = bool(int(request.args.get('archived_only', '0')))
+        rows = self._load_query_history(query_type=query_type, current_corpus=current_corpus,
+                                        from_date=None, to_date=None, archived_only=archived_only,
+                                        offset=offset, limit=limit)
         return dict(
             data=rows,
             from_date=None,

@@ -421,8 +421,13 @@ class MenuGenerator(object):
                                           _('Sample'), 'MAIN_MENU_SHOW_SAMPLE').mark_indirect()
 
         self.query_overview = (
-            EventTriggeringItem(MainMenu.CONCORDANCE('query-overview'), _
-                                ('Query overview'), 'OVERVIEW_SHOW_QUERY_INFO')
+            EventTriggeringItem(MainMenu.CONCORDANCE('query-overview'),
+                                _('Query overview'), 'OVERVIEW_SHOW_QUERY_INFO')
+        )
+
+        self.query_save_as = (
+            EventTriggeringItem(MainMenu.CONCORDANCE('query-save-as'),
+                                _('Save query as'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM').mark_indirect()
         )
 
         self.query_undo = (
@@ -568,7 +573,7 @@ class MenuGenerator(object):
             (MainMenu.CONCORDANCE.name, dict(
                 label=_('Concordance'),
                 items=exp(self.curr_conc, self.sorting, self.shuffle, self.sample, self.query_overview,
-                          self.query_undo),
+                          self.query_save_as, self.query_undo),
                 disabled=is_disabled(MainMenu.CONCORDANCE)
             )),
             (MainMenu.FILTER.name, dict(

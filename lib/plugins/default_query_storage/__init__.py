@@ -69,14 +69,27 @@ class QueryStorage(AbstractQueryStorage):
         stores information about a query
 
         arguments:
-        user_id -- a numeric ID of a user
-        query_id -- a query identifier as produced by query_storage plug-in
+        see the super class
         """
         data_key = self._mk_key(user_id)
-        item = dict(created=self._current_timestamp(), query_id=query_id)
+        item = dict(
+            created=self._current_timestamp(), query_id=query_id, name=None)
         self.db.list_append(data_key, item)
         if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(data_key)
+
+    def make_persistent(self, user_id, query_id, name):
+        k = self._mk_key(user_id)
+        data = self.db.list_get(k)
+        for i, item in enumerate(data):
+            if item.get('query_id', None) == query_id:
+                item['name'] = name
+                self.db.list_set(k, i, item)
+                return True
+        return False
+
+    def delete(self, user_id, query_id):
+        raise NotImplementedError()
 
     def _merge_conc_data(self, data):
         q_id = data['query_id']
@@ -110,19 +123,12 @@ class QueryStorage(AbstractQueryStorage):
         return ans
 
     def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, query_type=None, corpname=None,
-                         offset=0, limit=None):
+                         archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
 
         arguments:
-        user_id -- database user ID
-        corpus_manager -- a corplib.CorpusManager instance
-        from_date -- YYYY-MM-DD date string
-        to_date -- YYY-MM-DD date string
-        query_type -- one of {iquery, lemma, phrase, word, char, cql}
-        corpus_name -- internal corpus name (i.e. including possible path-like prefix)
-        offset -- where to start the list (starts from zero)
-        limit -- how many rows will be selected
+        see the super-class
         """
 
         def matches_corp_prop(data, prop_name, value):
@@ -151,6 +157,7 @@ class QueryStorage(AbstractQueryStorage):
                 tmp['pcq_pos_neg'] = None
                 tmp['selected_text_types'] = {}
                 tmp['aligned'] = []
+                tmp['name'] = None
                 full_data.append(tmp)
 
         if from_date:
@@ -168,6 +175,9 @@ class QueryStorage(AbstractQueryStorage):
 
         if corpname:
             full_data = filter(lambda x: matches_corp_prop(x, 'canonical_corpus_id', corpname), full_data)
+
+        if archived_only:
+            full_data = filter(lambda x: x.get('name', None) is not None, full_data)
 
         if limit is None:
             limit = len(full_data)

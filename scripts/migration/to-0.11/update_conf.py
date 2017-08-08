@@ -32,6 +32,12 @@ def update_2(doc):
         srch.text = 'defaultQueryStorage'
 
 
+def update_3(doc):
+    srch = doc.find('/plugins/db/module')
+    if srch is not None and srch.text == 'default_db':
+        srch.text = 'sqlite3_db'
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.9.x/0.10.x '

@@ -33,7 +33,7 @@ import time
 
 import sqlite3
 
-from abstract.general_storage import KeyValueStorage
+from plugins.abstract.general_storage import KeyValueStorage
 
 thread_local = threading.local()
 
@@ -55,9 +55,9 @@ class DefaultDb(KeyValueStorage):
             thread_local.conn = sqlite3.connect(self.conf.get('default:db_path'))
         return thread_local.conn
 
-    def _load_raw_data(self, path):
+    def _load_raw_data(self, key):
         cursor = self._conn().cursor()
-        cursor.execute('SELECT value, updated FROM data WHERE key = ?', (path,))
+        cursor.execute('SELECT value, updated FROM data WHERE key = ?', (key,))
         ans = cursor.fetchone()
         if ans:
             return ans
@@ -93,6 +93,11 @@ class DefaultDb(KeyValueStorage):
     def list_len(self, key):
         return len(self.list_get(key))
 
+    def list_set(self, key, idx, value):
+        data = self.list_get(key)
+        data[idx] = value
+        self.set(key, data)
+
     def list_trim(self, key, keep_left, keep_right):
         data = self.list_get(key, keep_left, keep_right)
         self.set(key, data)
@@ -100,7 +105,7 @@ class DefaultDb(KeyValueStorage):
     def hash_get(self, key, field):
         data = self.get(key)
         if type(data) is not dict:
-            raise TypeError('hash_get - required value "%s" is not a dict' % key)
+            return {}
         return data.get(field, None)
 
     def hash_set(self, key, field, value):
@@ -118,6 +123,12 @@ class DefaultDb(KeyValueStorage):
         data[field] = value
         self.set(key, data)
 
+    def hash_del(self, key, field):
+        sdata = self._load_raw_data(key)
+        data = json.loads(sdata[0])
+        del data[field]
+        self._save_raw_data(key, json.dumps(data))
+
     def hash_get_all(self, key):
         """
         Returns a complete hash object (= Python dict) stored under the passed
@@ -126,10 +137,8 @@ class DefaultDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        data = self.get(key)
-        if type(data) is not dict:
-            raise TypeError('hash_get_all - required value "%s" is not a dict' % key)
-        return data if data is not None else {}
+        sdata = self._load_raw_data(key)
+        return json.loads(sdata[0]) if sdata is not None else {}
 
     def get(self, key, default=None):
         """
@@ -159,7 +168,11 @@ class DefaultDb(KeyValueStorage):
         key -- an access key
         data -- a dictionary containing data to be saved
         """
-        self._save_raw_data(key, json.dumps(data))
+        if type(data) is dict:
+            d2 = dict((k, v) for k, v in data.items() if not k.startswith('__') and not k.endswith('__'))
+        else:
+            d2 = data
+        self._save_raw_data(key, json.dumps(d2))
 
     def remove(self, key):
         """

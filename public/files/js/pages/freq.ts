@@ -30,6 +30,7 @@ import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
+import {QuerySaveAsFormStore} from '../stores/query/save';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
@@ -57,6 +58,8 @@ class FreqPage {
     private collFormStore:CollFormStore;
 
     private queryReplayStore:IndirectQueryReplayStore;
+
+    private querySaveAsFormStore:QuerySaveAsFormStore;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -178,6 +181,11 @@ class FreqPage {
             this.layoutModel,
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || []
         );
+        this.querySaveAsFormStore = new QuerySaveAsFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.layoutModel.getConf<string>('concPersistenceOpId')
+        );
         const queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
@@ -190,7 +198,8 @@ class FreqPage {
                 ShuffleFormView: null
             },
             this.queryReplayStore,
-            this.layoutModel.getStores().mainMenuStore
+            this.layoutModel.getStores().mainMenuStore,
+            this.querySaveAsFormStore
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,

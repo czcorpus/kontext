@@ -65,6 +65,17 @@ class KeyValueStorage(object):
         """
         raise NotImplementedError()
 
+    def list_set(self, key, idx, value):
+        """
+        Sets the list element at index to value
+
+        arguments:
+        key -- list access key
+        idx -- a zero based index where the set should be performed
+        value -- a value to be inserted
+        """
+        raise NotImplementedError()
+
     def list_trim(self, key, keep_left, keep_right):
         """
         Trim the list from the beginning to keep_left - 1 and from keep_right to the end.

@@ -27,6 +27,7 @@ import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
+import {QuerySaveAsFormStore} from '../stores/query/save';
 import {CollResultStore, CollResultData, CollResultHeading} from '../stores/coll/result';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
@@ -54,6 +55,8 @@ export class CollPage {
     private queryReplayStore:IndirectQueryReplayStore;
 
     private collResultStore:CollResultStore;
+
+    private querySaveAsFormStore:QuerySaveAsFormStore;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -199,6 +202,11 @@ export class CollPage {
             this.layoutModel,
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || []
         );
+        this.querySaveAsFormStore = new QuerySaveAsFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.layoutModel.getConf<string>('concPersistenceOpId')
+        );
         const queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
@@ -211,7 +219,8 @@ export class CollPage {
                 ShuffleFormView: null
             },
             this.queryReplayStore,
-            this.layoutModel.getStores().mainMenuStore
+            this.layoutModel.getStores().mainMenuStore,
+            this.querySaveAsFormStore
         );
         this.layoutModel.renderReactComponent(
             queryOverviewViews.NonViewPageQueryToolbar,

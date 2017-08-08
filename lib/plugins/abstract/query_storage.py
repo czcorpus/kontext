@@ -36,8 +36,31 @@ class AbstractQueryStorage(object):
         """
         raise NotImplementedError()
 
+    def make_persistent(self, user_id, query_id, name):
+        """
+        Finds (if implemented) a specific query history
+        record based on its respective concordance record.
+        If not supported then the function
+
+        arguments:
+        user_id -- a user ID
+        query_id -- a query ID (in URLs: q=~[query_id])
+        name -- a name user gave to the query
+        """
+        raise NotImplementedError()
+
+    def delete(self, user_id, query_id):
+        """
+        Delete a named query from the storage.
+
+        arguments:
+        user_id -- a user ID
+        conc_id -- a concordance ID
+        """
+        raise NotImplementedError()
+
     def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, query_type=None, corpname=None,
-                         offset=0, limit=None):
+                         archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
 
@@ -48,6 +71,7 @@ class AbstractQueryStorage(object):
         to_date -- YYY-MM-DD date string
         query_type -- one of {iquery, lemma, phrase, word, char, cql}
         corpus_name -- internal corpus name (i.e. including possible path-like prefix)
+        archived_only -- if True then only archived items should be displayed
         offset -- where to start the list (starts from zero)
         limit -- how many rows will be selected
         """

@@ -124,3 +124,17 @@ export function validateNumber(s:string):boolean {
 export function validateGzNumber(s:string):boolean {
     return !!/^([1-9]\d*)?$/.exec(s);
 }
+
+/**
+ * Create a shallow copy of an object.
+ * @param obj
+ */
+export function cloneRecord<T extends Object>(obj:T):T {
+    const ans:any = {};
+    for (let p in obj) {
+        if (obj.hasOwnProperty(p)) {
+            ans[p] = obj[p];
+        }
+    }
+    return <T>ans;
+}
