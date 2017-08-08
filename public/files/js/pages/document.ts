@@ -516,12 +516,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             if (message instanceof XMLHttpRequest) {
                 const respText = (<XMLHttpRequest>message).responseText;
                 try {
-                    let respObj = JSON.parse(respText);
+                    const respObj = JSON.parse(respText);
                     if (respObj['contains_errors'] && respObj['error_code']) {
                         outMsg = this.translate(respObj['error_code'], respObj['error_args'] || {});
 
                     } else if (respObj['contains_errors'] && respObj['messages']) {
-                        outMsg = respObj['messages'].map(x => x[1]).join(', ');
+                        outMsg = respObj['messages'].join(', ');
 
                     } else {
                         outMsg = `${message.status}: ${message.statusText}`;

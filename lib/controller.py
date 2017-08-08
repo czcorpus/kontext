@@ -915,7 +915,7 @@ class Controller(object):
             else:
                 method_ans = self._invoke_legacy_action(method, pos_args, named_args)
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
-        except (UserActionException, RuntimeError) as ex:
+        except Exception as ex:
             return self.handle_action_error(ex, methodname, pos_args, named_args)
 
     def recode_input(self, x, decode=1):
