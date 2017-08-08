@@ -22,6 +22,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 
 
 import {SimplePageStore, cloneRecord} from '../../stores/base';
@@ -55,6 +56,8 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     private editingQueryName:string;
 
+    private editingQueryKeepArchived:boolean;
+
     constructor(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
@@ -69,6 +72,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         this.archivedOnly = false;
         this.editingQueryId = null;
         this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
+        this.editingQueryKeepArchived = true;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -113,8 +117,12 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                     this.editingQueryName = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
+                case 'QUERY_STORAGE_EDITOR_SET_KEEP_ARCHIVED':
+                    this.editingQueryKeepArchived = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
                 case 'QUERY_STORAGE_EDITOR_CLICK_SAVE':
-                    if (!this.editingQueryName) {
+                    if (!this.editingQueryName && this.editingQueryKeepArchived) {
                         this.pluginApi.showMessage('error',
                             this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
                         this.notifyChangeListeners();
@@ -123,11 +131,10 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                         this.isBusy = true;
                         this.notifyChangeListeners();
                         this.saveItem(this.editingQueryId, this.editingQueryName).then(
-                            () => {
+                            (msg) => {
                                 this.isBusy = false;
                                 this.notifyChangeListeners();
-                                this.pluginApi.showMessage('info',
-                                        this.pluginApi.translate('query__save_as_item_saved'));
+                                this.pluginApi.showMessage('info', msg);
                             },
                             (err) => {
                                 this.isBusy = false;
@@ -205,30 +212,44 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         );
     }
 
-    private saveItem(queryId:string, name:string):RSVP.Promise<boolean> {
-        const args = new MultiDict();
-        args.set('query_id', queryId);
-        args.set('name', name);
-        return this.pluginApi.ajax<any>(
-            'POST',
-            this.pluginApi.createActionUrl('save_query'),
-            args
+    private saveItem(queryId:string, name:string):RSVP.Promise<string> {
+        return (() => {
+            const args = new MultiDict();
+            args.set('query_id', queryId);
+            args.set('name', name);
+            if (this.editingQueryKeepArchived) {
+                return this.pluginApi.ajax<any>(
+                    'POST',
+                    this.pluginApi.createActionUrl('save_query'),
+                    args
+
+                );
+
+            } else {
+                const args = new MultiDict();
+                args.set('query_id', queryId);
+                return this.pluginApi.ajax<any>(
+                    'POST',
+                    this.pluginApi.createActionUrl('delete_query'),
+                    args
+                );
+            }
+        })().then(
+            (data) => {
+                this.editingQueryId = null;
+                this.editingQueryKeepArchived = true;
+                this.editingQueryName = null;
+                return this.loadData();
+            }
 
         ).then(
-            (data) => {
-                const editIdx = this.data.findIndex(v => v.query_id === this.editingQueryId);
-                if (editIdx > -1) {
-                    const newItem = cloneRecord<Kontext.QueryHistoryItem>(this.data.get(editIdx)); // shallow copy...
-                    newItem.name = this.editingQueryName;
-                    this.data = this.data.set(editIdx, newItem);
-                    this.editingQueryId = null;
-                    this.editingQueryName = null;
-                }
-                return true;
+            () => {
+                return this.editingQueryKeepArchived ?
+                    this.pluginApi.translate('query__save_as_item_saved') :
+                    this.pluginApi.translate('query__save_as_item_removed');
             }
         );
     }
-
 
     importData(data:Array<Kontext.QueryHistoryItem>):void {
         this.data = Immutable.List<Kontext.QueryHistoryItem>(data);
@@ -272,5 +293,9 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     getEditingQueryName():string {
         return this.editingQueryName;
+    }
+
+    getEditingQueryKeepArchived():boolean {
+        return this.editingQueryKeepArchived;
     }
 }
