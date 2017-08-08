@@ -132,9 +132,9 @@ class QueryStorage(AbstractQueryStorage):
         """
 
         def matches_corp_prop(data, prop_name, value):
-            if data[prop_name] == value:
+            if data.get(prop_name, None) == value:
                 return True
-            for aligned in data['aligned']:
+            for aligned in data.get('aligned', []):
                 if aligned[prop_name] == value:
                     return True
             return False
