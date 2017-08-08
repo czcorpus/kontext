@@ -97,12 +97,25 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
 
     private pnFilterValues:Immutable.Map<string, string>;
 
+    /**
+     * Highlighted token FIRST/LAST. Specifies which token is highlighted.
+     * This applies in case multiple matching tokens are found.
+     */
     private filflValues:Immutable.Map<string, string>;
 
+    /**
+     * Left range
+     */
     private filfposValues:Immutable.Map<string, string>;
 
+    /**
+     * Right range
+     */
     private filtposValues:Immutable.Map<string, string>;
 
+    /**
+     * Include kwic checkbox
+     */
     private inclkwicValues:Immutable.Map<string, boolean>;
 
     private tagBuilderSupport:Immutable.Map<string, boolean>;

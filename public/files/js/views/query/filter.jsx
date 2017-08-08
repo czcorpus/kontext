@@ -213,16 +213,22 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                                     </select>
                                 </td>
                             </tr>
-                            <tr>
-                                <th>{this.translate('query__qlfilter_sel_token')}:</th>
-                                <td>
-                                    <select onChange={this._handleSelTokenSelect}
-                                            value={this.state.filflValue}>
-                                        <option value="f">{this.translate('query__token_first')}</option>
-                                        <option value="l">{this.translate('query__token_last')}</option>
-                                    </select>
-                                </td>
-                            </tr>
+                            {this.state.pnFilterValue === 'p' ?
+                                (<tr>
+                                    <th>{this.translate('query__qlfilter_sel_token')}:</th>
+                                    <td>
+                                        <select onChange={this._handleSelTokenSelect}
+                                                value={this.state.filflValue}>
+                                            <option value="f">{this.translate('query__token_first')}</option>
+                                            <option value="l">{this.translate('query__token_last')}</option>
+                                        </select>
+                                        {'\u00a0'}
+                                        <span className="hint">
+                                            ({this.translate('query__qlfilter_sel_token_hint')})
+                                        </span>
+                                    </td>
+                                </tr>) : null
+                            }
                             <tr>
                                 <th>{this.translate('query__qfilter_range_srch_th')}:</th>
                                 <td>
