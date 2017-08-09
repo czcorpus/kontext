@@ -30,6 +30,13 @@ import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
 
 
+export interface InputBoxHistoryItem {
+    query:string;
+    query_type:string;
+    created:number;
+}
+
+
 export class QueryStorageStore extends SimplePageStore implements PluginInterfaces.IQueryStorageStore {
 
     private pluginApi:Kontext.PluginApi;
@@ -257,6 +264,14 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     getData():Immutable.List<Kontext.QueryHistoryItem> {
         return this.data;
+    }
+
+    getFlatData():Immutable.List<InputBoxHistoryItem> {
+        return this.data.flatMap(v => {
+            return Immutable.List<InputBoxHistoryItem>()
+                .push({query: v.query, query_type: v.query_type, created: v.created})
+                .concat(v.aligned.map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created})));
+        }).toList();
     }
 
     getOffset():number {

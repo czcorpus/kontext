@@ -30,7 +30,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
         constructor(props) {
             super(props);
             this.state = {
-                data: queryStorageStore.getData(),
+                data: queryStorageStore.getFlatData(),
                 currentItem: 0
             };
             this._keyPressHandler = this._keyPressHandler.bind(this);
@@ -46,7 +46,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
             const modulo = this.state.data.size > 0 ? this.state.data.size : 1;
             if (!isNaN(inc)) {
                 this.setState({
-                    data: queryStorageStore.getData(),
+                    data: queryStorageStore.getFlatData(),
                     currentItem: (this.state.currentItem + inc) % modulo
                 });
 
@@ -107,7 +107,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
 
         _handleStoreChange() {
             this.setState({
-                data: queryStorageStore.getData(),
+                data: queryStorageStore.getFlatData(),
                 currentItem: this.state.currentItem
             });
         }
@@ -129,7 +129,7 @@ export function init(dispatcher, mixins, queryStorageStore) {
         }
 
         _handleBlurEvent(evt) {
-            this.addGlobalKeyEventHandler(this._globalKeyEventHandler);
+            he.addGlobalKeyEventHandler(this._globalKeyEventHandler);
         }
 
         _handleFocusEvent(evt) {
@@ -146,7 +146,8 @@ export function init(dispatcher, mixins, queryStorageStore) {
                         onFocus={this._handleFocusEvent}>
                     {this.state.data.map((item, i) => {
                         return (
-                            <li key={i} title={item.created} className={i === this.state.currentItem ? 'selected' : null}
+                            <li key={i} title={he.formatDate(new Date(item.created * 1000), 1)}
+                                    className={i === this.state.currentItem ? 'selected' : null}
                                     onClick={this._handleClickSelection.bind(this, i)}>
                                 <span className="wrapper">
                                     <em>
