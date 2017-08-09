@@ -233,8 +233,7 @@ class Actions(Querying):
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # query form data
-        tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
-        out['text_types_data'] = json.dumps(tt_data)
+        out['text_types_data'] = json.dumps(get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
         self._attach_query_params(out)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
@@ -285,7 +284,7 @@ class Actions(Querying):
         else:
             self.args.align = [ac for ac in self.args.align if ac in self._get_available_aligned_corpora()]
         out['aligned_corpora'] = self.args.align
-        tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)  # TODO deprecated
+        tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
         out['text_types_data'] = json.dumps(tt_data)
 
