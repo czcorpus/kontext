@@ -573,64 +573,91 @@ fieldset.FieldsetOutputOptions {
         padding: 10px 0;
     }
 
-    .history-entry {
+    ul.history-entries {
 
-        margin-top: 1em;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
 
-        .heading {
-            font-size: 1.2em;
+        > li {
+            margin-left: 0;
+            margin-top: 1em;
+            border-color: @color-light-grey;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: @border-radius-default;
+            padding: 0.7em;
 
-            .corpname {
-
-            }
-        }
-
-        .saved-name {
-            color: @color-logo-pink;
-        }
-
-        .save-action {
-            color: @color-logo-pink;
-        }
-
-        .edit-action {
-            color: @color-light-text;
-        }
-
-        .edit-action:hover {
-            color: @color-logo-pink;
-        }
-
-        .query-info {
-
-            margin-top: 0.3em;
-            margin-bottom: 0.7em;
-
-            .query {
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                padding: 0.3em 0.7em 0.3em 0.7em;
-                font-family: @monospace-font-family;
-                background-color: @locked-attrs-bgcolor;
-                border: @input-border-style;
-                border-radius: @input-border-radius;
+            .heading {
+                font-size: 1.1em;
             }
 
-            .query-type {
-                color: @color-light-text;
-                font-size: 80%;
-                padding-left: 0.7em;
+            .saved-name {
+                color: @color-logo-pink;
+                padding-right: 0.7em;
             }
+
+            .query-info {
+
+                margin-top: 0.3em;
+                margin-bottom: 0.7em;
+                margin-left: 0.7em;
+
+                .query-line {
+
+                    margin-top: 0.7em;
+                    margin-bottom: 1em;
+
+                    .query {
+                        overflow: hidden;
+                        white-space: nowrap;
+                        padding: 0.3em 0.7em 0.3em 0.7em;
+                        font-family: @monospace-font-family;
+                        background-color: @locked-attrs-bgcolor;
+                        border: @input-border-style;
+                        border-radius: @input-border-radius;
+                    }
+
+                    .query-type {
+                        color: @color-light-text;
+                        font-size: 80%;
+                        padding-right: 0.3em;
+                    }
+                }
+
+                .text-types-info {
+
+                    a.switch {
+                        text-decoration: none;
+                        font-size: 0.8em;
+                        color: @color-logo-blue;
+                    }
+
+                    a.switch:hover {
+                        text-decoration: underline;
+                        color: @color-logo-blue-shining;
+                    }
+
+                    ul {
+                        margin: 0;
+                    }
+                }
+            }
+
         }
 
         div.footer {
-            text-align: right;
             font-size: 0.8em;
-            margin-bottom: 1em;
+            padding-bottom: 0.4em;
+            margin-top: 0.3em;
 
             a.open-in-form {
+                float: right;
+                color: @color-logo-blue;
+            }
 
+            a.open-in-form:hover {
+                color: @color-logo-blue-shining;
             }
         }
 
@@ -644,11 +671,13 @@ fieldset.FieldsetOutputOptions {
         }
     }
 
+    /*
     .history-entry:not(:last-of-type) {
         border-color: @color-light-grey;
         border-width: 0 0 1px 0;
         border-style: solid;
     }
+    */
 
     .options {
         text-align: left;

@@ -133,13 +133,52 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
 
     // -------------------- <AlignedQueryInfo /> ------------------------
 
-    const TRAlignedQueryInfo = (props) => {
+    const AlignedQueryInfo = (props) => {
         return (
-            <tr>
-                <td className="query">{props.query}</td>
-                <td className="query-type">({queryTypes[props.query_type]})</td>
-            </tr>
+            <div className="query-line">
+                <span className="query-type">{queryTypes[props.query_type]}:{'\u00a0'}</span>
+                <span className="query">{props.query}</span>
+            </div>
         );
+    };
+
+    // -------------------- <TextTypesInfo /> ------------------------
+
+    class TextTypesInfo extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {
+                expanded: false
+            };
+            this._handleExpandClick = this._handleExpandClick.bind(this);
+        }
+
+        _handleExpandClick() {
+            this.setState({expanded: !this.state.expanded});
+        }
+
+        render() {
+            if (Object.keys(this.props.textTypes).length > 0) {
+                return (
+                    <div className="text-types-info">
+                        <a className="switch" onClick={this._handleExpandClick}
+                                title={he.translate(this.state.expanded ? 'global__click_to_hide' : 'global__click_to_expand')}>
+                            {he.translate('qhistory__attached_text_types')}
+                        </a>
+                        {this.state.expanded ? ':' : '\u00a0\u2026'}
+                        {this.state.expanded ?
+                            (<ul>
+                                {Object.keys(this.props.textTypes).map(k => <li key={k}><strong>{k}</strong>: {this.props.textTypes[k].join(', ')}</li>)}
+                            </ul>) : null
+                        }
+                    </div>
+                );
+
+            } else {
+                return null;
+            }
+        }
     };
 
     // -------------------- <QueryInfo /> ------------------------
@@ -147,16 +186,15 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
     const QueryInfo = (props) => {
 
         return (
-            <table className="query-info">
-                <tbody>
-                    <tr>
-                        <td className="query">{props.query}</td>
-                        <td className="query-type">({queryTypes[props.query_type]})</td>
-                    </tr>
-                    {props.aligned.map(v => <TRAlignedQueryInfo key={v.corpname}
-                                query={v.query} query_type={v.query_type} />)}
-                </tbody>
-            </table>
+            <div className="query-info">
+                <div className="query-line">
+                    <span className="query-type">{queryTypes[props.query_type]}:{'\u00a0'}</span>
+                    <span className="query">{props.query}</span>
+                </div>
+                {props.aligned.map(v => <AlignedQueryInfo key={v.corpname}
+                            query={v.query} query_type={v.query_type} />)}
+                <TextTypesInfo textTypes={props.textTypes} />
+            </div>
         );
     }
 
@@ -174,7 +212,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
         };
 
         if (props.hasEditor) {
-            return <SaveItemForm name={props.editingQueryName} />
+            return <SaveItemForm name={props.editingQueryName} keepArchived={props.editingQueryKeepArchived} />;
 
         } else {
             if (props.name) {
@@ -183,17 +221,15 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                         {he.translate('query__save_as_saved_as')}:{'\u00a0'}
                         <span className="saved-name">{props.name}</span>
                         {'\u00a0'}
-                        <span className="edit-action">
-                        (<a onClick={handleClick}>{he.translate('global__edit')}</a>)
-                        </span>
+                        <a className="util-button" onClick={handleClick}>{he.translate('global__edit')}{'\u2026'}</a>
                     </div>
                 );
 
             } else {
                 return (
                     <div>
-                        <a className="save-action" onClick={handleClick}>
-                            {he.translate('global__save')}
+                        <a className="util-button" onClick={handleClick}>
+                            {he.translate('global__save')}{'\u2026'}
                         </a>
                     </div>
                 );
@@ -228,21 +264,45 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
             });
         };
 
+        const handleKeepArchivedChange = () => {
+            dispatcher.dispatch({
+                actionType: 'QUERY_STORAGE_EDITOR_SET_KEEP_ARCHIVED',
+                props: {
+                    value: !props.keepArchived
+                }
+            });
+        };
+
+        const handleKeyDown = (evt) => {
+            if (evt.keyCode === 27) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                handleCloseClick();
+            }
+        };
+
         return (
-            <form>
+            <form onKeyDown={handleKeyDown}>
                 <a onClick={handleCloseClick}>
                     <img src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')}
                                 style={{width: '1em', verticalAlign: 'middle'}} />
                 </a>
                 {'\u00a0'}
-                <input type="text" style={{width: '15em'}} value={props.name}
-                        onChange={handleInputChange}
+                <input type="text" style={{width: '15em'}}
+                        value={props.keepArchived ? props.name : ''}
+                        onChange={handleInputChange} disabled={!props.keepArchived}
                         ref={item => item ? item.focus() : null} />
                 {'\u00a0'}
                 <button type="button" className="default-button"
                         onClick={handleSubmitClick}>
                     {he.translate('global__save')}
                 </button>
+                <br />
+                <label>
+                    {he.translate('query__save_as_keep_archived')}
+                    <input type="checkbox" checked={props.keepArchived}
+                            onChange={handleKeepArchivedChange} style={{verticalAlign: 'middle'}} />
+                </label>
             </form>
         );
     };
@@ -261,33 +321,37 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
         };
 
         return (
-            <div className="history-entry">
+            <li>
                 <span className="date">
                     {he.formatDate(new Date(props.data.created * 1000), 1)}
                 </span>
                 <div className="heading">
                     <strong>
-                        {props.data.idx + 1}{'\u00a0\u23F5'}
+                        {props.data.idx + 1}{'\u23F5'}
                     </strong>
                     {'\u00a0'}
                     <span className="corpname">
                         {props.data.human_corpname}
                         {props.data.usesubcorp ? ':' + props.data.usesubcorp : ''}
                     </span>
-                    {props.data.aligned.map(v => <span className="corpname"> + {v.human_corpname}</span>)}
+                    {props.data.aligned.map(v => <span key={v.corpname} className="corpname"> + {v.human_corpname}</span>)}
                 </div>
                 <QueryInfo human_corpname={props.data.human_corpname} query={props.data.query}
                         query_type={props.data.query_type} usesubcorp={props.data.usesubcorp}
-                        aligned={props.data.aligned} />
-                <SavedNameInfo name={props.data.name} queryId={props.data.query_id}
-                        hasEditor={props.hasEditor}
-                        editingQueryName={props.editingQueryName} />
+                        aligned={props.data.aligned} textTypes={props.data.selected_text_types} />
                 <div className="footer">
                     <a className="open-in-form" onClick={handleFormClick}>
                         {he.translate('qhistory__open_in_form')}
                     </a>
+                    {props.data.query_id ?
+                    <SavedNameInfo name={props.data.name} queryId={props.data.query_id}
+                            hasEditor={props.hasEditor}
+                            editingQueryName={props.editingQueryName}
+                            editingQueryKeepArchived={props.editingQueryKeepArchived} /> :
+                            null /* legacy query history record cannot be archived  */
+                    }
                 </div>
-            </div>
+            </li>
         );
     };
 
@@ -346,11 +410,14 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
     const DataTable = (props) => {
         return (
             <div>
-                    {props.data.map((item, i) => {
-                        const hasEditor = item.query_id === props.editingQueryId;
-                        return <DataRow key={i + props.offset} data={item} hasEditor={hasEditor}
-                                        editingQueryName={hasEditor ? props.editingQueryName : undefined} />;
-                    })}
+                    <ul className="history-entries">
+                        {props.data.map((item, i) => {
+                            const hasEditor = item.query_id === props.editingQueryId;
+                            return <DataRow key={i + props.offset} data={item} hasEditor={hasEditor}
+                                            editingQueryName={hasEditor ? props.editingQueryName : undefined}
+                                            editingQueryKeepArchived={hasEditor ? props.editingQueryKeepArchived : undefined} />;
+                        })}
+                    </ul>
                     <DataTableFooter dataLength={props.data.size} storeIsBusy={props.storeIsBusy}
                             hasMoreItems={props.hasMoreItems} />
             </div>
@@ -377,7 +444,8 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                 hasMoreItems: queryHistoryStore.getHasMoreItems(),
                 archivedOnly: queryHistoryStore.getArchivedOnly(),
                 editingQueryId: queryHistoryStore.getEditingQueryId(),
-                editingQueryName: queryHistoryStore.getEditingQueryName()
+                editingQueryName: queryHistoryStore.getEditingQueryName(),
+                editingQueryKeepArchived: queryHistoryStore.getEditingQueryKeepArchived()
             };
         }
 
@@ -404,7 +472,8 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                             storeIsBusy={this.state.storeIsBusy}
                             hasMoreItems={this.state.hasMoreItems}
                             editingQueryId={this.state.editingQueryId}
-                            editingQueryName={this.state.editingQueryName} />
+                            editingQueryName={this.state.editingQueryName}
+                            editingQueryKeepArchived={this.state.editingQueryKeepArchived} />
                 </div>
             );
         }

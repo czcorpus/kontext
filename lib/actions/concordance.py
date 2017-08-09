@@ -267,6 +267,12 @@ class Actions(Querying):
                                                            request.form['name'])
         return dict(saved=ans)
 
+    @exposed(access_level=1, return_type='json', http_method='POST')
+    def delete_query(self, request):
+        ans = plugins.get('query_storage').delete(self._session_get('user', 'id'),
+                                                  request.form['query_id'])
+        return dict(deleted=ans)
+
     @exposed(apply_semi_persist_args=True)
     def first_form(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,

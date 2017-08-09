@@ -89,7 +89,14 @@ class QueryStorage(AbstractQueryStorage):
         return False
 
     def delete(self, user_id, query_id):
-        raise NotImplementedError()
+        k = self._mk_key(user_id)
+        data = self.db.list_get(k)
+        for i, item in enumerate(data):
+            if item.get('query_id', None) == query_id:
+                item['name'] = None
+                self.db.list_set(k, i, item)
+                return True
+        return False
 
     def _merge_conc_data(self, data):
         q_id = data['query_id']
@@ -132,9 +139,9 @@ class QueryStorage(AbstractQueryStorage):
         """
 
         def matches_corp_prop(data, prop_name, value):
-            if data[prop_name] == value:
+            if data.get(prop_name, None) == value:
                 return True
-            for aligned in data['aligned']:
+            for aligned in data.get('aligned', []):
                 if aligned[prop_name] == value:
                     return True
             return False
