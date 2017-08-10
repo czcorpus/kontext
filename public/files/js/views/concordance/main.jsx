@@ -231,7 +231,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
         getInitialState : function () {
             return {
-                canCalculateAdHocIpm: lineStore.providesAdHocIpm(),
+                canCalculateAdHocIpm: lineStore.getProvidesAdHocIpm(),
+                fastAdHocIpm: lineStore.getFastAdHocIpm(),
                 adHocIpm: lineStore.getAdHocIpm(),
                 subCorpName: lineStore.getSubCorpName(),
                 isWaiting: false
@@ -240,7 +241,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
 
         _storeChangeHandler : function (store, action) {
             this.setState({
-                canCalculateAdHocIpm: lineStore.providesAdHocIpm(),
+                canCalculateAdHocIpm: lineStore.getProvidesAdHocIpm(),
+                fastAdHocIpm: lineStore.getFastAdHocIpm(),
                 adHocIpm: lineStore.getAdHocIpm(),
                 subCorpName: lineStore.getSubCorpName(),
                 isWaiting: action === '$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC' ? false : this.state.isWaiting
@@ -278,24 +280,40 @@ export function init(dispatcher, mixins, layoutViews, stores) {
         _getIpmDesc : function () {
             if (this.state.canCalculateAdHocIpm) {
                 if (this.state.adHocIpm) {
-                    return '(' + this.translate('concview__ipm_rel_to_adhoc') + ')';
+                    return (
+                        <span className="ipm-note">(
+                        <img src={this.createStaticUrl('img/info-icon.svg')} alt={this.translate('global__info_icon')} />
+                            {this.translate('concview__ipm_rel_to_adhoc')}
+                        )</span>
+                    );
 
                 } else {
                     return null;
                 }
 
             } else if (this.state.subCorpName) {
-                return '(' + this.translate('concview__ipm_rel_to_the_{subcname}',
-                        {subcname: this.state.subCorpName}) + ')';
+                return (
+                    <span className="ipm-note">(
+                        <img src={this.createStaticUrl('img/info-icon.svg')} alt={this.translate('global__info_icon')} />
+                        {this.translate('concview__ipm_rel_to_the_{subcname}',
+                        {subcname: this.state.subCorpName})}
+                    )</span>
+                );
 
             } else {
-                return '(' + this.translate('concview__ipm_rel_to_the_{corpname}',
-                        {corpname: this.props.corpname}) + ')';
+                return (
+                    <span className="ipm-note">(
+                        <img src={this.createStaticUrl('img/warning-icon.svg')} alt={this.translate('global__warning_icon')} />
+                        {this.translate('concview__ipm_rel_to_the_{corpname}',
+                            {corpname: this.props.corpname})}
+                    )</span>
+                );
             }
         },
 
         _handleCalcIpmClick : function () {
-            let userConfirm = window.confirm(this.translate('global__ipm_calc_may_take_time'));
+            const userConfirm = this.state.fastAdHocIpm ?
+                    true : window.confirm(this.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
                 this.setState(React.addons.update(this.state, {isWaiting: {$set: true}}));
                 dispatcher.dispatch({

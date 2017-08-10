@@ -536,7 +536,6 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 attr2: ctFreqDataRowsStore.getAttr2(),
                 sortDim1: ctFreqDataRowsStore.getSortDim1(),
                 sortDim2: ctFreqDataRowsStore.getSortDim2(),
-                adHocSubcWarning: ctFreqDataRowsStore.getQueryContainsWithin(),
                 minAbsFreq: ctFreqDataRowsStore.getMinAbsFreq(),
                 viewQuantity: 'ipm',
                 highlightedCoord: null,

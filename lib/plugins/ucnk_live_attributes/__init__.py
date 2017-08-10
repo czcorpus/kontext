@@ -271,6 +271,20 @@ class LiveAttributes(AbstractLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
+    def get_subc_size(self, plugin_api, corpus, attr_map):
+        db = self.db(plugin_api.user_lang, corpus.corpname)
+        attr_where = [corpus.corpname]
+        attr_where_tmpl = [u'corpus_id = ?']
+        for k, vlist in attr_map.items():
+            tmp = []
+            for v in vlist:
+                attr_where.append(v)
+                tmp.append(u'%s = ?' % (self.import_key(k), ))  # TODO escape the 'k'
+            attr_where_tmpl.append(u'({0})'.format(u' OR '.join(tmp)))
+        cur = self.execute_sql(db, u'SELECT SUM(poscount) FROM item WHERE {0}'.format(u' AND '.join(attr_where_tmpl)),
+                               attr_where)
+        return cur.fetchone()[0]
+
     @cached
     def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
         """

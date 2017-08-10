@@ -51,7 +51,6 @@ export interface CTFormProperties extends CTFormInputs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
     multiSattrAllowedStructs:Array<string>;
-    queryContainsWithin:boolean;
 }
 
 
@@ -88,8 +87,6 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     protected setupError:string;
 
-    protected queryContainsWithin:boolean;
-
     protected minAbsFreq:string;
 
     protected alignType1:string;
@@ -117,7 +114,6 @@ export abstract class GeneralCTStore extends SimplePageStore {
         this.minAbsFreq = props.ctminfreq;
         this.alphaLevel = '0.05';
         this.availAlphaLevels = this.importAvailAlphaLevels();
-        this.queryContainsWithin = props.queryContainsWithin;
         [this.ctxIndex1, this.alignType1] = this.importCtxValue(props.ctfcrit1);
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
     }
@@ -305,10 +301,6 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     getSetupError():string {
         return this.setupError;
-    }
-
-    getQueryContainsWithin():boolean {
-        return this.queryContainsWithin;
     }
 
     getMinAbsFreq():string {

@@ -122,13 +122,12 @@ export interface ViewConfiguration {
     Unfinished:boolean;
 
     /**
-     * A flag specifying whether the client should
-     * offer an on-demand calculation of i.p.m.
-     * in case Manatee provides results related to
-     * a whole corpus while user wants to see
-     * a result related to his ad-hoc corpus.
+     * If true then we don't have to notify
+     * user that the calculation will take quite a long time
+     * as we are able to calc. the stuff quicker
+     * (due to the liveattrs plugin).
      */
-    ContainsWithin:boolean;
+    FastAdHocIpm:boolean;
 
     /**
      * If true then a concordance toolbar providing
@@ -294,9 +293,9 @@ export class ConcLineStore extends SimplePageStore {
 
     private concSummary:ConcSummary;
 
-    private containsWithin:boolean;
-
     private adHocIpm:number;
+
+    private fastAdHocIpm:boolean;
 
     private useSafeFont:boolean;
 
@@ -306,14 +305,17 @@ export class ConcLineStore extends SimplePageStore {
 
     private supportsSyntaxView:boolean;
 
+    private ttStore:TextTypes.ITextTypesStore
+
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
-            saveStore:ConcSaveStore, syntaxViewStore:PluginInterfaces.ISyntaxViewer, lineViewProps:ViewConfiguration,
-            initialData:Array<ServerLineData>) {
+            saveStore:ConcSaveStore, syntaxViewStore:PluginInterfaces.ISyntaxViewer,
+            ttStore:TextTypes.ITextTypesStore, lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveStore = saveStore;
         this.syntaxViewStore = syntaxViewStore;
+        this.ttStore = ttStore;
         this.viewMode = lineViewProps.ViewMode;
         this.showLineNumbers = lineViewProps.ShowLineNumbers;
         this.kwicCorps = Immutable.List(lineViewProps.KWICCorps);
@@ -322,12 +324,12 @@ export class ConcLineStore extends SimplePageStore {
         this.subCorpName = lineViewProps.subCorpName;
         this.mainCorp = lineViewProps.mainCorp;
         this.unfinishedCalculation = lineViewProps.Unfinished;
+        this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
         this.concSummary = lineViewProps.concSummary;
         this.lines = importData(initialData);
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
-        this.containsWithin = lineViewProps.ContainsWithin;
         this.useSafeFont = lineViewProps.useSafeFont;
         this.supportsSyntaxView = lineViewProps.supportsSyntaxView;
         this.audioPlayer = new AudioPlayer(
@@ -558,18 +560,23 @@ export class ConcLineStore extends SimplePageStore {
     }
 
     private calculateAdHocIpm():RSVP.Promise<number> {
+        const selections = this.ttStore.exportSelections(false);
+        const args = new MultiDict();
+        args.set('corpname', this.baseCorpname);
+        for (let p in selections) {
+            args.replace(`sca_${p}`, selections[p]);
+        }
         return this.layoutModel.ajax<AjaxResponse.WithinMaxHits>(
-            'GET',
+            'POST',
             this.layoutModel.createActionUrl('ajax_get_within_max_hits'),
-            this.layoutModel.getConcArgs(),
-            {contentType : 'application/x-www-form-urlencoded'}
+            args
 
         ).then(
             (data) => {
                 this.adHocIpm = this.concSummary.fullSize / data.total * 1e6;
                 return this.adHocIpm;
             }
-        )
+        );
     }
 
     hasKwic(corpusId:string):boolean {
@@ -628,12 +635,16 @@ export class ConcLineStore extends SimplePageStore {
         return this.concSummary;
     }
 
-    providesAdHocIpm():boolean {
-        return this.containsWithin;
+    getProvidesAdHocIpm():boolean {
+        return this.ttStore.hasSelectedItems();
     }
 
     getAdHocIpm():number {
         return this.adHocIpm;
+    }
+
+    getFastAdHocIpm():boolean {
+        return this.fastAdHocIpm;
     }
 
     getSubCorpName():string {

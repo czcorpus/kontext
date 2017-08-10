@@ -413,17 +413,6 @@ export class ViewPage {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = this.fetchQueryFormArgs(concFormArgs);
 
-        const textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.queryStores.textTypesStore = new TextTypesStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel.pluginApi(),
-            textTypesData
-        );
-        // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
-        // the pop-up query form does not display text-types form (yet the values are still
-        // applied thanks to this).
-        this.queryStores.textTypesStore.applyCheckedItems(queryFormArgs.selected_text_types, {});
-
         this.queryStores.queryHintStore = new QueryHintStore(
             this.layoutModel.dispatcher,
             this.layoutModel.getConf<Array<string>>('queryHints')
@@ -770,7 +759,6 @@ export class ViewPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
-            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ctminfreq: ctFormInputs.ctminfreq
         };
 
@@ -841,7 +829,23 @@ export class ViewPage {
         )
     }
 
-    private initStores(syntaxViewer:PluginInterfaces.ISyntaxViewer):ViewConfiguration {
+    private initTextTypesStore():TextTypes.ITextTypesStore {
+        this.queryStores.textTypesStore = new TextTypesStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel.pluginApi(),
+            this.layoutModel.getConf<any>('textTypesData')
+        );
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const queryFormArgs = this.fetchQueryFormArgs(concFormArgs);
+        // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
+        // the pop-up query form does not display text-types form (yet the values are still
+        // applied thanks to this).
+        this.queryStores.textTypesStore.applyCheckedItems(queryFormArgs.selected_text_types, {});
+        return this.queryStores.textTypesStore;
+    }
+
+    private initStores(ttStore:TextTypes.ITextTypesStore, syntaxViewer:PluginInterfaces.ISyntaxViewer):ViewConfiguration {
+
         const concSummaryProps:ConcSummary = {
             concSize: this.layoutModel.getConf<number>('ConcSize'),
             fullSize: this.layoutModel.getConf<number>('FullSize'),
@@ -865,8 +869,8 @@ export class ViewPage {
             mainCorp: this.layoutModel.getConcArgs()['maincorp'],
             concSummary: concSummaryProps,
             Unfinished: this.layoutModel.getConf<boolean>('Unfinished'),
+            FastAdHocIpm: this.layoutModel.getConf<boolean>('FastAdHocIpm'),
             canSendEmail: this.layoutModel.getConf<boolean>('can_send_mail'),
-            ContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
             SpeakerColors: this.lineGroupsChart.extendBaseColorPalette(1),
@@ -890,6 +894,7 @@ export class ViewPage {
                 syntaxViewer.close();
             }
         };
+
         this.viewStores = new ViewPageStores();
         this.viewStores.userInfoStore = this.layoutModel.getStores().userInfoStore;
         this.viewStores.mainMenuStore = this.layoutModel.getStores().mainMenuStore;
@@ -903,6 +908,7 @@ export class ViewPage {
                     s=>this.setDownloadLink(s)
                 ),
                 syntaxViewer,
+                ttStore,
                 lineViewProps,
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
@@ -965,7 +971,8 @@ export class ViewPage {
 
         ).then(
             (sv) => {
-                const lineViewProps = this.initStores(sv);
+                const ttStore = this.initTextTypesStore();
+                const lineViewProps = this.initStores(ttStore, sv);
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
                     this.showGroupsStats(<HTMLElement>document.querySelector('#selection-actions .chart-area'),
