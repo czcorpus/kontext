@@ -323,13 +323,7 @@ class Actions(Querying):
     def get_cached_conc_sizes(self):
         from concworker import GeneralWorker
         self._headers['Content-Type'] = 'text/plain'
-        cs = self.call_function(GeneralWorker().get_cached_conc_sizes, (self.corp,))
-        return {
-            'finished': cs["finished"],
-            'concsize': cs["concsize"],
-            'relconcsize': cs["relconcsize"],
-            'fullsize': cs["fullsize"]
-        }
+        return self.call_function(GeneralWorker().get_cached_conc_sizes, (self.corp,))
 
     def get_conc_sizes(self, conc):
         i = 1
@@ -343,16 +337,16 @@ class Actions(Querying):
 
         for j in range(i + 1, len(self.args.q)):
             if self.args.q[j][0] in ('p', 'n'):
-                return {'concsize': concsize, 'sampled_size': 0,
-                        'relconcsize': 0, 'fullsize': fullsize,
-                        'finished': conc.finished()}
+                return dict(concsize=concsize, sampled_size=0, relconcsize=0, fullsize=fullsize,
+                            finished=conc.finished())
         if sampled_size:
             orig_conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
                                            q=self.args.q[:i])
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
+
         return dict(sampled_size=sampled_size, concsize=concsize,
-                    relconcsize=1000000.0 * fullsize / self.corp.search_size(),
+                    relconcsize=1e6 * fullsize / self.corp.search_size(),
                     fullsize=fullsize, finished=conc.finished())
 
     @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)

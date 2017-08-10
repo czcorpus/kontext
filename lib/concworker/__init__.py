@@ -28,7 +28,8 @@ from plugins.abstract import conc_cache
 
 import plugins
 from conclib import PyConc
-from corplib import CorpusManager
+from corplib import CorpusManager, is_subcorpus
+import manatee
 
 
 class GeneralWorker(object):
@@ -53,14 +54,15 @@ class GeneralWorker(object):
             finished : 0/1,
             concsize : int,
             fullsize : int,
-            relconcsize : float (concordance size recalculated to a million corpus)
+            relconcsize : float (concordance size recalculated to a million corpus),
+            arf : ARF of the result (this is calculated only for the finished result, i.e. no intermediate values)
         }
         """
         import struct
 
         if q is None:
             q = []
-        ans = {'finished': False, 'concsize': None, 'fullsize': None, 'relconcsize': None}
+        ans = dict(finished=False, concsize=None, fullsize=None, relconcsize=None)
         if not cachefile:  # AJAX call
             q = tuple(q)
             subchash = getattr(corp, 'subchash', None)
@@ -80,10 +82,17 @@ class GeneralWorker(object):
             else:
                 relconcsize = 1000000.0 * concsize / corp.search_size()
 
+            if finished and not is_subcorpus(corp):
+                conc = manatee.Concordance(corp, cachefile)
+                result_arf = round(conc.compute_ARF(), 2)
+            else:
+                result_arf = None
+
             ans['finished'] = finished
             ans['concsize'] = concsize
             ans['fullsize'] = fullsize
             ans['relconcsize'] = relconcsize
+            ans['arf'] = result_arf
         return ans
 
     def compute_conc(self, corp, q, samplesize):
