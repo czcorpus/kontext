@@ -92,12 +92,10 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     #if $running_calc
     conf.numLines = $len($Lines);
     conf.Unfinished = true;
-    var model = pageSelf.init(conf);
-    model.reloadHits(conf);
     #else
     conf.Unfinished = false;
-    var model = pageSelf.init(conf);
     #end if
+    pageSelf.init(conf);
 });
 #end def
 

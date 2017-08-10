@@ -23,6 +23,7 @@ import itertools
 import manatee
 from l10n import import_string, export_string
 from structures import FixedDict
+from corplib import is_subcorpus
 
 
 def lngrp_sortcrit(lab, separator='.'):
@@ -278,12 +279,12 @@ class Kwic(object):
             pagination.last_page = 1
         out.concsize = self.conc.size()
 
-        if type(self.corpus) == manatee.SubCorpus:
+        if is_subcorpus(self.corpus):
             out.result_arf = ''
         else:
             out.result_arf = round(self.conc.compute_ARF(), 2)
 
-        if type(self.corpus) is manatee.SubCorpus:
+        if is_subcorpus(self.corpus):
             corpsize = self.corpus.search_size(
             )  # TODO this is unverified solution trying to bypass possible manatee bug
         else:

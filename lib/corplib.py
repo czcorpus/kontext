@@ -80,6 +80,10 @@ def subcorpus_from_conc(path, conc, struct=None):
     return manatee.create_subcorpus(path, conc.RS(), struct)
 
 
+def is_subcorpus(corp_obj):
+    return type(corp_obj) == manatee.SubCorpus
+
+
 def create_str_vector():
     """
     Creates a new manatee.StrVector instance

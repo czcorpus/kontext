@@ -75,11 +75,17 @@ declare module AjaxResponse {
     }
 
     export interface ConcStatus extends Kontext.AjaxResponse {
-        end:any; // TODO
         relconcsize:number;
         concsize:number;
         finished:boolean;
         fullsize:number;
+
+        /**
+         * ARF metrics; please note that this value
+         * is non-empty only once the status has
+         * finished = true (i.e. the result is complete)
+         */
+        arf:number;
     }
 
     export interface QueryHistory extends Kontext.AjaxResponse {

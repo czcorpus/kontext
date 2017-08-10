@@ -266,6 +266,48 @@ export class ViewPage {
         return ans;
     }
 
+    reloadHits():void {
+        const linesPerPage = this.layoutModel.getConf<number>('numLines');
+        const applyData = (data:AjaxResponse.ConcStatus) => {
+            this.layoutModel.dispatcher.dispatch({
+                actionType: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
+                props: {
+                    finished: !!data.finished,
+                    concsize: data.concsize,
+                    relconcsize: data.relconcsize,
+                    arf: data.arf,
+                    fullsize: data.fullsize,
+                    availPages: Math.ceil(data.concsize / linesPerPage)
+                }
+            });
+        };
+        const loop = (idx:number, delay:number, decay:number) => {
+            window.setTimeout(() => {
+                this.layoutModel.ajax(
+                    'GET',
+                    this.layoutModel.createActionUrl('get_cached_conc_sizes'),
+                    this.layoutModel.getConcArgs()
+
+                ).then(
+                    (data:AjaxResponse.ConcStatus) => {
+                        if (!data.finished) {
+                            if (data.fullsize > 0) {
+                                applyData(data); // partial result
+                            }
+                            if (idx < ViewPage.CHECK_CONC_MAX_ATTEMPTS) {
+                                loop(idx + 1, delay * decay, decay);
+                            }
+
+                        } else {
+                            applyData(data);
+                        }
+                    }
+                );
+            }, delay);
+        }
+        loop(0, ViewPage.CHECK_CONC_DELAY, ViewPage.CHECK_CONC_DECAY);
+    }
+
     /**
      * Ensures that view's URL is always reusable (which is not always
      * guaranteed implicitly - e.g. in case the form was submitted via POST
@@ -979,6 +1021,9 @@ export class ViewPage {
                 this.initAnalysisViews();
                 this.updateMainMenu();
                 this.updateHistory();
+                if (this.layoutModel.getConf<boolean>('Unfinished')) {
+                    this.reloadHits();
+                }
             }
         );
     }

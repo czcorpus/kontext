@@ -311,7 +311,6 @@ export class ConcLineStore extends SimplePageStore {
             saveStore:ConcSaveStore, syntaxViewStore:PluginInterfaces.ISyntaxViewer, lineViewProps:ViewConfiguration,
             initialData:Array<ServerLineData>) {
         super(dispatcher);
-        let self = this;
         this.layoutModel = layoutModel;
         this.saveStore = saveStore;
         this.syntaxViewStore = syntaxViewStore;
@@ -334,64 +333,63 @@ export class ConcLineStore extends SimplePageStore {
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
-                self.notifyChangeListeners();
+                this.notifyChangeListeners();
             },
             this.setStopStatus.bind(this),
             () => {
-                self.audioPlayer.stop();
-                self.setStopStatus();
-                self.layoutModel.showMessage('error',
-                        self.layoutModel.translate('concview__failed_to_play_audio'));
+                this.audioPlayer.stop();
+                this.setStopStatus();
+                this.layoutModel.showMessage('error',
+                        this.layoutModel.translate('concview__failed_to_play_audio'));
             }
         );
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
-                    self.changeMainCorpus(payload.props['maincorp']);
+                    this.changeMainCorpus(payload.props['maincorp']);
                 break;
                 case 'CONCORDANCE_PLAY_AUDIO_SEGMENT':
-                    self.playAudio(payload.props['lineIdx'], payload.props['chunks']);
-                    self.notifyChangeListeners();
+                    this.playAudio(payload.props['lineIdx'], payload.props['chunks']);
+                    this.notifyChangeListeners();
                 break;
                 case 'AUDIO_PLAYER_CLICK_CONTROL':
-                    self.handlePlayerControls(payload.props['action']);
-                    self.notifyChangeListeners();
+                    this.handlePlayerControls(payload.props['action']);
+                    this.notifyChangeListeners();
                 break;
                 case 'CONCORDANCE_CHANGE_PAGE':
                 case 'CONCORDANCE_REVISIT_PAGE':
-                    let action = payload.props['action'];
-                    self.changePage(payload.props['action'], payload.props['pageNum']).then(
+                    const action = payload.props['action'];
+                    this.changePage(payload.props['action'], payload.props['pageNum']).then(
                         (data) => {
                             if (payload.actionType === 'CONCORDANCE_CHANGE_PAGE') {
-                                self.pushHistoryState(self.currentPage);
+                                this.pushHistoryState(this.currentPage);
                             }
-                            self.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.notifyChangeListeners();
-                            self.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                 break;
-                case 'CONCORDANCE_UPDATE_NUM_AVAIL_PAGES':
-                    self.pagination.lastPage = payload.props['availPages'];
-                    self.notifyChangeListeners();
-                break;
                 case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    self.unfinishedCalculation = !payload.props['finished'];
-                    self.concSummary.fullSize = payload.props['fullsize'];
-                    self.concSummary.concSize = payload.props['concsize'];
-                    self.notifyChangeListeners();
+                    this.unfinishedCalculation = !payload.props['finished'];
+                    this.concSummary.concSize = payload.props['concsize'];
+                    this.concSummary.fullSize = payload.props['fullsize'];
+                    this.concSummary.ipm = payload.props['relconcsize'];
+                    this.concSummary.arf = payload.props['arf'];
+                    this.pagination.lastPage = payload.props['availPages'];
+                    this.notifyChangeListeners();
                 break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
-                    self.calculateAdHocIpm().then(
+                    this.calculateAdHocIpm().then(
                         (data) => {
-                            self.notifyChangeListeners('$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC');
+                            this.notifyChangeListeners('$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC');
                         },
                         (err) => {
                             console.error(err);
-                            self.layoutModel.showMessage('error', self.layoutModel.translate('global__failed_to_calc_ipm'));
+                            this.layoutModel.showMessage('error', this.layoutModel.translate('global__failed_to_calc_ipm'));
                         }
                     );
                 break;
