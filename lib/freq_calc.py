@@ -387,8 +387,9 @@ class CTCalculation(object):
         return [norms2_dict.get(x[sattr_idx], 0) for x in words]
 
     def _calc_2sattr_norms(self, words, sattr1, sattr2):
-        if plugins.has_plugin('live_attributes'):
-            return plugins.get('live_attributes').get_sattr_pair_sizes(self._corp.corpname, sattr1, sattr2, words)
+        if plugins.runtime.LIVE_ATTRIBUTES.exists:
+            return plugins.runtime.LIVE_ATTRIBUTES.instance.get_sattr_pair_sizes(self._corp.corpname, sattr1, sattr2,
+                                                                                 words)
         else:
             return [1e6] * len(words)
 

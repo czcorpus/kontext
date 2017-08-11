@@ -37,8 +37,8 @@ if __name__ == '__main__':
         src_data = filter(lambda x: x.get('id', None) == args.specific_id, src_data)
 
     if len(src_data) > 0:
-        query_storage = plugins.get('query_storage')
-        db = plugins.get('db')
+        query_storage = plugins.runtime.QUERY_STORAGE.instance
+        db = plugins.runtime.DB.instance
 
         for item in src_data:
             user_key = 'user:%d' % item['id']

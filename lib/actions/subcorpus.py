@@ -132,10 +132,11 @@ class Subcorpus(Querying):
         if result is not False:
             if plugins.has_plugin('subc_restore'):
                 try:
-                    plugins.get('subc_restore').store_query(user_id=self._session_get('user', 'id'),
-                                                            corpname=self.args.corpname,
-                                                            subcname=subcname,
-                                                            cql=full_cql.strip().split('[]', 1)[-1])
+                    with plugins.runtime.SUBC_RESTORE as sr:
+                        sr.store_query(user_id=self._session_get('user', 'id'),
+                                       corpname=self.args.corpname,
+                                       subcname=subcname,
+                                       cql=full_cql.strip().split('[]', 1)[-1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self.add_system_message('warning',
@@ -230,7 +231,7 @@ class Subcorpus(Querying):
         filter_args = dict(show_deleted=bool(int(request.args.get('show_deleted', 0))),
                            corpname=request.args.get('corpname'))
         data = []
-        user_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id')).values()
+        user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self._session_get('user', 'id')).values()
         related_corpora = set()
         for corp in user_corpora:
             try:
@@ -260,7 +261,8 @@ class Subcorpus(Querying):
 
         if plugins.has_plugin('subc_restore'):
             try:
-                full_list = plugins.get('subc_restore').extend_subc_list(self._plugin_api, data, filter_args, 0)
+                full_list = plugins.runtime.SUBC_RESTORE.instance.extend_subc_list(self._plugin_api, data,
+                                                                                   filter_args, 0)
             except Exception as e:
                 logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
                 full_list = data
@@ -296,10 +298,10 @@ class Subcorpus(Querying):
             'extended_info': {}
         }
         if plugins.has_plugin('subc_restore'):
-            tmp = plugins.get('subc_restore').get_info(self._session_get('user', 'id'),
-                                                       self.args.corpname, subcname)
-            if tmp:
-                ans['extended_info'].update(tmp)
+            with plugins.runtime.SUBC_RESTORE as sr:
+                tmp = sr.get_info(self._session_get('user', 'id'), self.args.corpname, subcname)
+                if tmp:
+                    ans['extended_info'].update(tmp)
         return ans
 
     @exposed(access_level=1, return_type='json')
@@ -307,8 +309,8 @@ class Subcorpus(Querying):
         if plugins.has_plugin('subc_restore'):
             corpus_id = request.form['corpname']
             subcorp_name = request.form['subcname']
-            plugins.get('subc_restore').delete_query(self._session_get('user', 'id'),
-                                                     corpus_id, subcorp_name)
+            with plugins.runtime.SUBC_RESTORE as sr:
+                sr.delete_query(self._session_get('user', 'id'), corpus_id, subcorp_name)
             self.add_system_message('info',
                                     _('Subcorpus %s has been deleted permanently.') % subcorp_name)
         else:

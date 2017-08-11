@@ -141,7 +141,7 @@ def _get_cached_conc(corp, subchash, q, minsize):
     start_time = time.time()
     q = tuple(q)
 
-    cache_map = plugins.get('conc_cache').get_mapping(corp)
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     cache_map.refresh_map()
     if _contains_shuffle_seq(q):
         srch_from = 1
@@ -200,7 +200,7 @@ def _get_async_conc(corp, user_id, q, save, subchash, samplesize, fullsize, mins
     else:
         raise ValueError('Unknown concordance calculation backend: %s' % (backend,))
 
-    cache_map = plugins.get('conc_cache').get_mapping(corp)
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     try:
         _wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     except Exception as e:
@@ -216,7 +216,7 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
     status.finished = True
     status.concsize = conc.size()
     if save:
-        cache_map = plugins.get('conc_cache').get_mapping(corp)
+        cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
         cachefile, stored_pidfile = cache_map.add_to_map(subchash, q[:1], conc.size(), calc_status=status)
         conc.save(cachefile)
         # update size in map file
@@ -284,7 +284,7 @@ def get_conc(corp, user_id, minsize=None, q=None, fromp=0, pagesize=0, async=0, 
         if command in 'gae':  # user specific/volatile actions, cannot save
             save = 0
         if save:
-            cache_map = plugins.get('conc_cache').get_mapping(corp)
+            cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
             cachefile, stored_status = cache_map.add_to_map(subchash, q[:act + 1], conc.size(),
                                                             calc_status=worker.create_new_calc_status())
             if stored_status and not stored_status.finished:
@@ -315,7 +315,7 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
     translate -- if True then all the messages are translated according to the current
                  thread's locale information
     """
-    cache_map = plugins.get('conc_cache').get_mapping(corpus)
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corpus)
     q = tuple(q)
 
     def get_size(pos):

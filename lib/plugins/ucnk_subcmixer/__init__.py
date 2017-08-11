@@ -33,10 +33,11 @@ from database import Database
 @exposed(return_type='json', acess_level=1)
 def subcmixer_run_calc(ctrl, request):
     try:
-        return plugins.get('subcmixer').process(plugin_api=ctrl._plugin_api, corpus=ctrl.corp,
-                                                corpname=request.form['corpname'],
-                                                aligned_corpora=request.form.getlist('aligned_corpora'),
-                                                args=json.loads(request.form['expression']))
+        with plugins.runtime.SUBCMIXER as sm:
+            return sm.process(plugin_api=ctrl._plugin_api, corpus=ctrl.corp,
+                              corpname=request.form['corpname'],
+                              aligned_corpora=request.form.getlist('aligned_corpora'),
+                              args=json.loads(request.form['expression']))
     except ResultNotFoundException as ex:
         ctrl.add_system_message('error', ex.message)
         return {}

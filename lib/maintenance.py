@@ -69,8 +69,8 @@ class MaintenanceController(object):
     def load_topbar(self):
         if plugins.has_plugin('application_bar'):
             import urlparse
-
-            html = plugins.get('application_bar').get_contents(self.cookies, 'en', '/')
+            with plugins.runtime.APPLICATION_BAR as ab:
+                html = ab.get_contents(self.cookies, 'en', '/')
             parts = urlparse.urlparse(self.environ['REQUEST_URI'])
             css = '<link rel="stylesheet" type="text/css" href="%s://www.korpus.cz/toolbar/css/cnc-toolbar.css" />' \
                 % parts.scheme

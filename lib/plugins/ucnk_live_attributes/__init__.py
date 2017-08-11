@@ -88,8 +88,9 @@ def cached(f):
 def filter_attributes(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     aligned = json.loads(request.form.get('aligned', '[]'))
-    return plugins.get('live_attributes').get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
-                                                          aligned_corpora=aligned)
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        return lattr.get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
+                                     aligned_corpora=aligned)
 
 
 @exposed(return_type='json', http_method='POST')
@@ -97,9 +98,10 @@ def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     aligned = json.loads(request.form.get('aligned', '[]'))
     attrs[request.form['patternAttr']] = '%%%s%%' % request.form['pattern']
-    return plugins.get('live_attributes').get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
-                                                          aligned_corpora=aligned,
-                                                          autocomplete_attr=request.form['patternAttr'])
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        return lattr.get_attr_values(self._plugin_api, corpus=self.corp, attr_map=attrs,
+                                     aligned_corpora=aligned,
+                                     autocomplete_attr=request.form['patternAttr'])
 
 
 class LiveAttributes(AbstractLiveAttributes):
@@ -392,7 +394,8 @@ class LiveAttributes(AbstractLiveAttributes):
         return [(k, ans[i]) for k, i in col_map.items() if k != 'id']
 
     def find_bib_titles(self, plugin_api, corpus_id, id_list):
-        corpus_info = plugins.get('corparch').get_corpus_info(plugin_api.user_lang, corpus_id)
+        with plugins.runtime.CORPARCH as ca:
+            corpus_info = ca.get_corpus_info(plugin_api.user_lang, corpus_id)
         label_attr = self.import_key(corpus_info.metadata.label_attr)
         db = self.db(plugin_api.user_lang, corpus_id)
         pch = ', '.join(['?'] * len(id_list))

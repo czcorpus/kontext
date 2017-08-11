@@ -59,7 +59,7 @@ def ajax_get_tag_variants(ctrl, pattern=''):
     """
     """
     try:
-        tag_loader = plugins.get('taghelper').loader(
+        tag_loader = plugins.runtime.TAGHELPER.instance.loader(
             ctrl.args.corpname,
             ctrl.get_corpus_info(ctrl.args.corpname)['tagset'],
             ctrl.ui_lang)

@@ -258,15 +258,15 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='json', http_method='POST')
     def save_query(self, request):
-        ans = plugins.get('query_storage').make_persistent(self._session_get('user', 'id'),
-                                                           request.form['query_id'],
-                                                           request.form['name'])
+        with plugins.runtime.QUERY_STORAGE as qs:
+            ans = qs.make_persistent(self._session_get('user', 'id'), request.form['query_id'],
+                                     request.form['name'])
         return dict(saved=ans)
 
     @exposed(access_level=1, return_type='json', http_method='POST')
     def delete_query(self, request):
-        ans = plugins.get('query_storage').delete(self._session_get('user', 'id'),
-                                                  request.form['query_id'])
+        with plugins.runtime.QUERY_STORAGE as qs:
+            ans = qs.delete(self._session_get('user', 'id'), request.form['query_id'])
         return dict(deleted=ans)
 
     @exposed(apply_semi_persist_args=True)
@@ -1006,7 +1006,7 @@ class Actions(Querying):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-freq-distrib.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
-            writer = plugins.get('export').load_plugin(saveformat, subtype='freq')
+            writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='freq')
 
             # Here we expect that when saving multi-block items, all the block have
             # the same number of columns which is quite bad. But currently there is
@@ -1164,7 +1164,7 @@ class Actions(Querying):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-collocations.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
-            writer = plugins.get('export').load_plugin(saveformat, subtype='coll')
+            writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
             writer.set_col_types(int, unicode, *(8 * (float,)))
 
             self._headers['Content-Type'] = writer.content_type()
@@ -1230,7 +1230,8 @@ class Actions(Querying):
         if not ref_corpname:
             ref_corpname = self.args.corpname
         if hasattr(self, 'compatible_corpora'):
-            out['CompatibleCorpora'] = plugins.get('corparch').get_list(self._plugin_api, self.permitted_corpora())
+            out['CompatibleCorpora'] = plugins.runtime.CORPARCH.instance.get_list(self._plugin_api,
+                                                                                  self.permitted_corpora())
         refcm = corplib.CorpusManager(self.subcpath)
         out['RefSubcorp'] = refcm.subcorp_names(ref_corpname)
         out['ref_corpname'] = ref_corpname
@@ -1420,7 +1421,7 @@ class Actions(Querying):
         elif saveformat in ('csv', 'xml', 'xlsx'):
             mkfilename = lambda suffix: '%s-word-list.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
-            writer = plugins.get('export').load_plugin(saveformat, subtype='wordlist')
+            writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='wordlist')
             writer.set_col_types(int, unicode, float)
 
             self._headers['Content-Type'] = writer.content_type()
@@ -1537,7 +1538,7 @@ class Actions(Querying):
                 output['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(contains_within=False)
                 output['Desc'] = self.concdesc_json()['Desc']
             elif saveformat in ('csv', 'xlsx', 'xml'):
-                writer = plugins.get('export').load_plugin(saveformat, subtype='concordance')
+                writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='concordance')
 
                 self._headers['Content-Type'] = writer.content_type()
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
@@ -1688,7 +1689,7 @@ class Actions(Querying):
     @exposed(return_type='json', http_method='POST', legacy=False)
     def ajax_send_group_selection_link_to_mail(self, request):
         import mailing
-        ans = mailing.send_concordance_url(plugins.get('auth'), self._plugin_api,
+        ans = mailing.send_concordance_url(plugins.runtime.AUTH.instance, self._plugin_api,
                                            request.form.get('email'),
                                            request.form.get('url'))
         return dict(ok=ans)

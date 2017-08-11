@@ -65,9 +65,10 @@ def get_syntax_data(ctrl, request):
     """
     try:
         canonical_corpname = getattr(ctrl, '_canonical_corpname')(ctrl.corp.corpname)
-        data = plugins.get('syntax_viewer').search_by_token_id(ctrl.corp, canonical_corpname,
-                                                               int(request.args.get('kwic_id')),
-                                                               int(request.args.get('kwic_len')))
+        with plugins.runtime.SYNTAX_VIEWER as sv:
+            data = sv.search_by_token_id(ctrl.corp, canonical_corpname,
+                                        int(request.args.get('kwic_id')),
+                                        int(request.args.get('kwic_len')))
     except MaximumContextExceeded:
         data = dict(contains_errors=True,
                     error=_('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))

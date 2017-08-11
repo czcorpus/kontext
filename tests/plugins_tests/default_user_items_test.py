@@ -34,7 +34,7 @@ def create_corpus_obj(name='korpus syn 2010', corpus_id='public/syn2010', canoni
 class TestDefaultUserItems(unittest.TestCase):
 
     def setUp(self):
-        plugins.get('db').reset()
+        plugins.runtime.DB.instance.reset()
         self._plugin = create_instance({})
 
     def test_id(self):
