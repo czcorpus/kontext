@@ -7,6 +7,52 @@ from abstract import PluginException
 _plugins = {}
 
 
+class _ID(object):
+
+    def __init__(self, ident):
+        self._ident = ident
+
+    @property
+    def instance(self):
+        if has_plugin(self._ident):
+            return _plugins[self._ident]
+        return None
+
+    def __call__(self, fn):
+        if has_plugin(self._ident):
+            fn()
+
+    @property
+    def name(self):
+        return self._ident
+
+
+class _Names(object):
+    DB = _ID('db')
+    SESSIONS = _ID('sessions')
+    SETTINGS_STORAGE = _ID('settings_storage')
+    AUTH = _ID('auth')
+    CONC_PERSISTENCE = _ID('conc_persistence')
+    CONC_CACHE = _ID('conc_cache')
+    EXPORT = _ID('export')
+    USER_ITEMS = _ID('user_items')
+    MENU_ITEMS = _ID('menu_items')
+
+    GETLANG = _ID('getlang')
+    CORPARCH = _ID('corparch')
+    QUERY_STORAGE = _ID('query_storage')
+    APPLICATION_BAR = _ID('application_bar')
+    FOOTER_BAR = _ID('footer_bar')
+    LIVE_ATTRIBUTES = _ID('live_attributes')
+    SUBC_RESTORE = _ID('subc_restore')
+    TAGHELPER = _ID('taghelper')
+    SYNTAX_VIEWER = _ID('syntax_viewer')
+    SUBCMIXER = _ID('subcmixer')
+
+
+runtime = _Names()
+
+
 def install_plugin(name, module, config):
     if isinstance(module.create_instance, PluginFactory):
         _plugins[name] = apply(module.create_instance, (config,))
@@ -52,6 +98,10 @@ def _factory(name):
 
 
 def get(*names):
+    """
+    This function is deprecated. Use
+    plugins.runtime.PLUGIN_NAME instead.
+    """
     if len(names) == 1:
         return _factory(names[0])
     else:

@@ -50,6 +50,7 @@ from translation import ugettext as _
 from controller import exposed
 from controller import UserActionException
 import plugins
+from plugins.abstract.taghelper import AbstractTaghelper
 from actions import corpora
 
 
@@ -79,7 +80,7 @@ class TagHelperException(Exception):
     pass
 
 
-class Taghelper(object):
+class Taghelper(AbstractTaghelper):
 
     def __init__(self, conf):
         self._conf = conf

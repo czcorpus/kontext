@@ -48,7 +48,7 @@ import json
 import os
 
 import plugins
-from plugins.abstract.syntax_viewer import SyntaxViewerPlugin, MaximumContextExceeded
+from plugins.abstract.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
 from actions import concordance
 from controller import exposed
 from manatee_backend import ManateeBackend
@@ -78,7 +78,7 @@ class SyntaxDataProviderError(Exception):
     pass
 
 
-class SyntaxDataProvider(SyntaxViewerPlugin):
+class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
 
     def __init__(self, corpora_conf, backend, auth):
         self._conf = corpora_conf
