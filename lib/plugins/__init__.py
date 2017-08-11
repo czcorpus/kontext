@@ -18,9 +18,14 @@ class _ID(object):
             return _plugins[self._ident]
         return None
 
-    def __call__(self, fn):
+    def __enter__(self):
         if has_plugin(self._ident):
-            fn()
+            return self.instance
+        return None
+
+    def __exit__(self, type, value, traceback):
+        # we ignore accessing plugins which are not installed
+        return self.instance is None and type is AttributeError
 
     @property
     def name(self):

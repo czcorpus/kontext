@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Any, List, Callable
+from typing import TypeVar, Generic, Any, List
 
 from .abstract.general_storage import KeyValueStorage
 from .abstract.settings_storage import AbstractSettingsStorage
@@ -28,7 +28,9 @@ class _ID(Generic[T]):
     @property
     def instance(self) -> T: ...
 
-    def __call__(self, fn:Callable[None, None]) -> None: ...
+    def __enter__(self) -> T: ...
+
+    def __exit__(self, type, value, traceback) -> bool: ...
 
     @property
     def name(self) -> str: ...
