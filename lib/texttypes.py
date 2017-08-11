@@ -167,6 +167,11 @@ class TextTypeCollector(object):
             raise ValueError('Invalid source object (must be either argmapping.Args or Request): %s' % (
                              src_obj.__class__.__name__,))
 
+    def get_attrmap(self):
+        scas = [(a[4:], self._access_fn(self._src_obj, a))
+                for a in self._attr_producer_fn(self._src_obj) if a.startswith('sca_')]
+        return dict(scas)
+
     def get_query(self):
             """
             returns:

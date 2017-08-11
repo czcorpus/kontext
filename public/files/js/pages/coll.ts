@@ -103,7 +103,6 @@ export class CollPage {
             ctfcrit1: ctFormInputs.ctfcrit1,
             ctfcrit2: ctFormInputs.ctfcrit2,
             multiSattrAllowedStructs: this.layoutModel.getConf<Array<string>>('multiSattrAllowedStructs'),
-            queryContainsWithin: this.layoutModel.getConf<boolean>('ContainsWithin'),
             ctminfreq: ctFormInputs.ctminfreq
         };
 

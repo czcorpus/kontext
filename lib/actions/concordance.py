@@ -23,7 +23,6 @@ from controller import UserActionException, exposed
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
-from querying import Querying, CQLDetectWithin
 import settings
 import conclib
 import corplib
@@ -38,6 +37,7 @@ from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 from main_menu import MenuGenerator
+from querying import Querying
 
 
 class ConcError(UserActionException):
@@ -193,7 +193,6 @@ class Actions(Querying):
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
                                              enc=self.self_encoding())
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-        out['query_contains_within'] = self._query_contains_within()
 
         out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
@@ -241,11 +240,9 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, out)
 
         out['query_history_page_num_records'] = int(settings.get('plugins', 'query_storage')['page_num_records'])
+        out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname)
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
-        if not out['finished'] and self.args.async and self.args.save and not out['sampled_size']:
-            out['running_calc'] = True
-        else:
-            out['running_calc'] = False
+        out['running_calc'] = not out['finished'] and self.args.async and self.args.save and not out['sampled_size']
         return out
 
     @exposed(template='chart.tmpl', page_model='chart')
@@ -843,8 +840,6 @@ class Actions(Querying):
             rel_mode = 1
         else:
             rel_mode = 0
-        result['freq_ipm_warn_enabled'] = (
-            not fcrit_is_all_nonstruct and self._query_contains_within())
         corp_info = self.get_corpus_info(self.args.corpname)
 
         args = freq_calc.FreqCalsArgs()
@@ -975,7 +970,6 @@ class Actions(Querying):
             self._add_flux_save_menu_item('TXT', save_format='text')
             self._add_flux_save_menu_item(_('Custom'))
 
-        result['query_contains_within'] = self._query_contains_within()
         result['freq_type'] = 'ml' if ml > 0 else 'tt'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
@@ -1094,7 +1088,6 @@ class Actions(Querying):
             attr1=self.args.ctattr1,
             attr2=self.args.ctattr2,
             data=ans,
-            query_contains_within=self._query_contains_within(),
             freq_form_args=FreqFormArgs().update(self.args).to_dict(),
             coll_form_args=CollFormArgs().update(self.args).to_dict(),
             ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
@@ -1138,7 +1131,6 @@ class Actions(Querying):
         self._add_flux_save_menu_item(_('Custom'))
 
         ans = coll_calc.calculate_colls(calc_args)
-        ans['query_contains_within'] = self._query_contains_within()
         ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
@@ -1724,19 +1716,22 @@ class Actions(Querying):
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
 
-    @exposed(return_type='json', legacy=True)
-    def ajax_get_within_max_hits(self):
-        query = self.args.q[0]
-        m = re.match(r'([\w]+,)(.+)', query)
-        if m:
-            query_pref = m.groups()[0]
-            query_suff = m.groups()[1]
-            self.args.q[0] = u'%s[] %s' % (query_pref, CQLDetectWithin().get_within_part(query_suff))
+    @exposed(return_type='json')
+    def ajax_get_within_max_hits(self, request):
+        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
+            # a faster solution based on liveattrs
+            with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
+                attr_map = TextTypeCollector(self.corp, request).get_attrmap()
+                size = liveatt.get_subc_size(self._plugin_api, self.corp, attr_map)
+                return dict(total=size)
+        else:
+            tt_query = TextTypeCollector(self.corp, request).get_query()
+            query = 'aword,[] within %s' % (' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
+            query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
+            self.args.q = [query]
             conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')), async=0)
             conc.sync()
-            return {'total': conc.fullsize() if conc else None}
-        else:
-            return {'total': None}
+            return dict(total=conc.fullsize() if conc else None)
 
     @exposed(return_type='json', http_method='POST')
     def ajax_switch_corpus(self, request):

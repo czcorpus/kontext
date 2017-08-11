@@ -46,6 +46,15 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
+    def get_subc_size(self, plugin_api, corpus, attr_map):
+        """
+        Return a size (in tokens) of a subcorpus defined by selected attributes
+        
+        plugin_api --
+        corpus -- a manatee.Corpus instance
+        attr_map -- a dict containing selected attributes and respective values 
+        """
+
     def get_sattr_pair_sizes(self, corpname, sattr1, sattr2, sattr_values):
         """
         Find token numbers for all the provided structural attribute

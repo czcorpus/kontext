@@ -18,6 +18,7 @@ from .abstract.subc_restore import AbstractSubcRestore
 from .abstract.taghelper import AbstractTaghelper
 from .abstract.syntax_viewer import AbstractSyntaxViewerPlugin
 from .abstract.subcmixer import AbstractSubcMixer
+from ..kontext import PluginApi
 
 T = TypeVar('T')
 
@@ -34,6 +35,11 @@ class _ID(Generic[T]):
 
     @property
     def name(self) -> str: ...
+
+    @property
+    def exists(self) -> bool: ...
+
+    def is_enabled_for(self, plugin_api:PluginApi, corpus_id:str) -> bool: ...
 
 
 class _Names(object):

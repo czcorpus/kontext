@@ -58,7 +58,6 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.ResultShuffled = $to_json($result_shuffled);
     conf.NumLinesInGroups = $num_lines_in_groups;
     conf.LinesGroupsNumbers = $to_json($lines_groups_numbers);
-    conf.ContainsWithin = $to_json($getVar('query_contains_within', False));
     conf.SpeakerIdAttr = $to_json($speaker_id_attr);
     conf.SpeechOverlapAttr = $to_json($speech_overlap_attr);
     conf.SpeechOverlapVal = $to_json($speech_overlap_val);
@@ -86,6 +85,7 @@ require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) 
     conf.FreqFormProps = $to_json($freq_form_args);
     conf.CTFreqFormProps = $to_json($ctfreq_form_args);
     conf.CollFormProps = $to_json($coll_form_args);
+    conf.FastAdHocIpm = $to_json($fast_adhoc_ipm);
     ##
     conf.QueryHistoryPageNumRecords = $to_json($query_history_page_num_records);
 

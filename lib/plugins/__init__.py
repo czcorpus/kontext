@@ -14,6 +14,11 @@ class _ID(object):
 
     @property
     def instance(self):
+        """
+        Returns an instance of the plug-in. The instance
+        is shared between all the requests (within a single
+        web server worker)
+        """
         if has_plugin(self._ident):
             return _plugins[self._ident]
         return None
@@ -30,6 +35,29 @@ class _ID(object):
     @property
     def name(self):
         return self._ident
+
+    @property
+    def exists(self):
+        """
+        Returns True if the plug-in is instantiated (i.e. it
+        is properly configured in config.xml). For corpus-dependent
+        plug-ins (e.g. live_attributes) please use method
+        is_enabled_for()
+        """
+        return _plugins.get(self._ident) is not None
+
+    def is_enabled_for(self, plugin_api, corpus_id):
+        """
+        Returns True if the plugin exists and is enabled for a specified
+        corpus or it is corpus independent (e.g. db plugin, session,...)
+        """
+        if self.exists:
+            if hasattr(self.instance, 'is_enabled_for'):
+                return self.instance.is_enabled_for(plugin_api, corpus_id)
+            else:
+                return True
+        else:
+            return False
 
 
 class _Names(object):
