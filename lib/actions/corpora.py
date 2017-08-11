@@ -30,27 +30,26 @@ class Corpora(Kontext):
     @exposed(skip_corpus_init=True)
     def corplist(self, request):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
-        corparch_plugin = plugins.get('corparch')
-        if isinstance(corparch_plugin, AbstractSearchableCorporaArchive):
-            params = corparch_plugin.initial_search_params(self._plugin_api, request.args.get('query'),
-                                                           request.args)
-            data = corparch_plugin.search(plugin_api=self._plugin_api,
-                                          query=False,
-                                          offset=0,
-                                          limit=request.args.get('limit', None),
-                                          filter_dict=request.args)
-        else:
-            params = {}
-            data = corparch_plugin.get_all(self._plugin_api)
-        return dict(corplist_params=params, corplist_data=data)
+        with plugins.runtime.CORPARCH as corparch_plugin:
+            if isinstance(corparch_plugin, AbstractSearchableCorporaArchive):
+                params = corparch_plugin.initial_search_params(self._plugin_api, request.args.get('query'),
+                                                               request.args)
+                data = corparch_plugin.search(plugin_api=self._plugin_api,
+                                              query=False,
+                                              offset=0,
+                                              limit=request.args.get('limit', None),
+                                              filter_dict=request.args)
+            else:
+                params = {}
+                data = corparch_plugin.get_all(self._plugin_api)
+            return dict(corplist_params=params, corplist_data=data)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_list_corpora(self, request):
-        return plugins.get('corparch').search(plugin_api=self._plugin_api,
-                                              query=request.args['query'],
-                                              offset=request.args.get('offset', None),
-                                              limit=request.args.get('limit', None),
-                                              filter_dict=request.args)
+        with plugins.runtime.CORPARCH as cp:
+            return cp.search(plugin_api=self._plugin_api, query=request.args['query'],
+                             offset=request.args.get('offset', None), limit=request.args.get('limit', None),
+                             filter_dict=request.args)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_get_corp_details(self, request):
@@ -103,5 +102,5 @@ class Corpora(Kontext):
 
     @exposed(return_type='json', legacy=True)
     def bibliography(self, id=''):
-        bib_data = plugins.get('live_attributes').get_bibliography(self._plugin_api, self.corp, item_id=id)
-        return {'bib_data': bib_data}
+        with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
+            return dict(bib_data=liveatt.get_bibliography(self._plugin_api, self.corp, item_id=id))

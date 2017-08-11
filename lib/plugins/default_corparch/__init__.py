@@ -353,7 +353,8 @@ class DeafultCorplistProvider(CorplistProvider):
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    return plugins.get('corparch').export_favorite(ctrl._plugin_api)
+    with plugins.runtime.CORPARCH as ca:
+        return ca.export_favorite(ctrl._plugin_api)
 
 
 class CorpusArchive(AbstractSearchableCorporaArchive):
@@ -694,7 +695,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
     def export_favorite(self, plugin_api):
         ans = []
-        for item in plugins.get('user_items').get_user_items(plugin_api):
+        for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api):
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
                 plugin_api, self._manatee_corpora.get_info(item.main_corpus_canonical_id).description)

@@ -34,7 +34,7 @@ class User(Kontext):
 
     @staticmethod
     def _is_anonymous_id(user_id):
-        return plugins.get('auth').is_anonymous(user_id)
+        return plugins.runtime.AUTH.instance.is_anonymous(user_id)
 
     @exposed(skip_corpus_init=True)
     def login(self, request):
@@ -44,9 +44,8 @@ class User(Kontext):
     @exposed(template='user/login.tmpl', skip_corpus_init=True)
     def loginx(self, request):
         ans = {}
-        self._session['user'] = plugins.get('auth').validate_user(self._plugin_api,
-                                                                  request.form['username'],
-                                                                  request.form['password'])
+        self._session['user'] = plugins.runtime.AUTH.instance.validate_user(self._plugin_api, request.form['username'],
+                                                                            request.form['password'])
 
         if self._session['user'].get('id', None):
             self._redirect('%sfirst_form' % (self.get_root_url(), ))
@@ -59,10 +58,10 @@ class User(Kontext):
     @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True)
     def logoutx(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
-        plugins.get('auth').logout(self._session)
+        plugins.runtime.AUTH.instance.logout(self._session)
         self._init_session()
         self.refresh_session_id()
-        plugins.get('auth').logout_hook(self._plugin_api)
+        plugins.runtime.AUTH.instance.logout_hook(self._plugin_api)
         return dict(message=('info', _('You have been logged out')))
 
     @exposed(access_level=1, template='user/user_password_form.tmpl')
@@ -73,42 +72,43 @@ class User(Kontext):
 
     @exposed(access_level=1, template='user/user_password.tmpl')
     def user_password(self, request):
-        auth = plugins.get('auth')
-        try:
-            curr_passwd = request.form['curr_passwd']
-            new_passwd = request.form['new_passwd']
-            new_passwd2 = request.form['new_passwd2']
+        with plugins.runtime.AUTH as auth:
+            try:
+                curr_passwd = request.form['curr_passwd']
+                new_passwd = request.form['new_passwd']
+                new_passwd2 = request.form['new_passwd2']
 
-            if not self._uses_internal_user_pages():
-                raise UserActionException(_('This function is disabled.'))
-            logged_in = auth.validate_user(self._plugin_api, self._session_get('user', 'user'), curr_passwd)
+                if not self._uses_internal_user_pages():
+                    raise UserActionException(_('This function is disabled.'))
+                logged_in = auth.validate_user(self._plugin_api, self._session_get('user', 'user'), curr_passwd)
 
-            if self._is_anonymous_id(logged_in['id']):
-                raise UserActionException(_('Invalid user or password'))
-            if new_passwd != new_passwd2:
-                raise UserActionException(_('New password and its confirmation do not match.'))
+                if self._is_anonymous_id(logged_in['id']):
+                    raise UserActionException(_('Invalid user or password'))
+                if new_passwd != new_passwd2:
+                    raise UserActionException(_('New password and its confirmation do not match.'))
 
-            if not auth.validate_new_password(new_passwd):
-                raise UserActionException(auth.get_required_password_properties())
+                if not auth.validate_new_password(new_passwd):
+                    raise UserActionException(auth.get_required_password_properties())
 
-            auth.update_user_password(self._session_get('user', 'id'), new_passwd)
-        except UserActionException as e:
-            self.add_system_message('error', e)
-        return {}
+                auth.update_user_password(self._session_get('user', 'id'), new_passwd)
+            except UserActionException as e:
+                self.add_system_message('error', e)
+            return {}
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus, archived_only):
-        if plugins.has_plugin('query_storage'):
+        if plugins.runtime.QUERY_STORAGE.exists:
             if current_corpus:
                 corpname = self._canonical_corpname(self.args.corpname)
             else:
                 corpname = None
-            rows = plugins.get('query_storage').get_user_queries(
-                self._session_get('user', 'id'),
-                self.cm,
-                offset=offset, limit=limit,
-                query_type=query_type, corpname=corpname,
-                from_date=from_date, to_date=to_date,
-                archived_only=archived_only)
+            with plugins.runtime.QUERY_STORAGE as qs:
+                rows = qs.get_user_queries(
+                    self._session_get('user', 'id'),
+                    self.cm,
+                    offset=offset, limit=limit,
+                    query_type=query_type, corpname=corpname,
+                    from_date=from_date, to_date=to_date,
+                    archived_only=archived_only)
         else:
             rows = ()
         return rows
@@ -158,20 +158,21 @@ class User(Kontext):
 
     @exposed(return_type='html', legacy=True, skip_corpus_init=True)
     def ajax_get_toolbar(self):
-        return plugins.get('application_bar').get_contents(plugin_api=self._plugin_api,
-                                                           return_url=self.return_url)
+        with plugins.runtime.APPLICATION_BAR as ab:
+            return ab.get_contents(plugin_api=self._plugin_api, return_url=self.return_url)
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_user_info(self, request):
-        user_info = plugins.get('auth').get_user_info(self._session_get('user', 'id'))
-        if not self.user_is_anonymous():
-            return {'user': user_info}
-        else:
-            return {'user': {'username': user_info['username']}}
+        with plugins.runtime.AUTH as auth:
+            user_info = auth.get_user_info(self._session_get('user', 'id'))
+            if not self.user_is_anonymous():
+                return {'user': user_info}
+            else:
+                return {'user': {'username': user_info['username']}}
 
     @exposed(skip_corpus_init=True, http_method='POST')
     def switch_language(self, request):
-        if plugins.has_plugin('getlang'):
+        if plugins.runtime.GETLANG.exists:
             pass  # TODO should the plug-in do something here?
         else:
             path_prefix = settings.get_str('global', 'action_path_prefix')

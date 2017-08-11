@@ -530,7 +530,7 @@ class MenuGenerator(object):
         def custom_menu_items(section):
             return map(
                 lambda item: dict(label=item.label, url=item.url, openInBlank=item.open_in_blank),
-                plugins.get('menu_items').get_items(section.name, lang=ui_lang)
+                plugins.runtime.MENU_ITEMS.instance.get_items(section.name, lang=ui_lang)
             )
 
         def is_disabled(menu_item):

@@ -218,7 +218,7 @@ class Kontext(Controller):
         self._files_path = settings.get('global', 'static_files_prefix', u'../files')
         self._lines_groups = LinesGroups(data=[])
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
-        self.get_corpus_info = partial(plugins.get('corparch').get_corpus_info, self._plugin_api.user_lang)
+        self.get_corpus_info = partial(plugins.runtime.CORPARCH.instance.get_corpus_info, self._plugin_api.user_lang)
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -305,7 +305,7 @@ class Kontext(Controller):
         are filtered out).
         """
         if self._user_has_persistent_settings():
-            data = plugins.get('settings_storage').load(self._session_get('user', 'id'))
+            data = plugins.runtime.SETTINGS_STORAGE.instance.load(self._session_get('user', 'id'))
         else:
             data = self._session_get('settings')
             if not data:
@@ -399,13 +399,13 @@ class Kontext(Controller):
         # data must be loaded (again) because in-memory settings are
         # in general a subset of the ones stored in db (and we want
         # to store (again) even values not used in this particular request)
-        settings_storage = plugins.get('settings_storage')
-        if self._user_has_persistent_settings():
-            options = normalize_opts(settings_storage.load(self._session_get('user', 'id')))
-            settings_storage.save(self._session_get('user', 'id'), options)
-        else:
-            options = normalize_opts(self._session_get('settings'))
-            self._session['settings'] = options
+        with plugins.runtime.SETTINGS_STORAGE as settings_storage:
+            if self._user_has_persistent_settings():
+                options = normalize_opts(settings_storage.load(self._session_get('user', 'id')))
+                settings_storage.save(self._session_get('user', 'id'), options)
+            else:
+                options = normalize_opts(self._session_get('settings'))
+                self._session['settings'] = options
 
     def _restore_prev_conc_params(self):
         """
@@ -420,21 +420,21 @@ class Kontext(Controller):
         UserActionException will be raised.
         """
         url_q = self.args.q[:]
-        conc_persistence = plugins.get('conc_persistence')
-        if plugins.has_plugin('conc_persistence') and self.args.q and conc_persistence.is_valid_id(url_q[0]):
-            self._q_code = url_q[0][1:]
-            self._prev_q_data = conc_persistence.open(self._q_code)
-            # !!! must create a copy here otherwise _q_data (as prev query)
-            # will be rewritten by self.args.q !!!
-            if self._prev_q_data is not None:
-                self.args.q = self._prev_q_data['q'][:] + url_q[1:]
-                self._lines_groups = LinesGroups.deserialize(
-                    self._prev_q_data.get('lines_groups', []))
-            else:
-                # !!! we have to reset the invalid query, otherwise _store_conc_params
-                # generates a new key pointing to it
-                self.args.q = []
-                raise UserActionException(_('Invalid or expired query'))
+        with plugins.runtime.CONC_PERSISTENCE as conc_persistence:
+            if plugins.has_plugin('conc_persistence') and self.args.q and conc_persistence.is_valid_id(url_q[0]):
+                self._q_code = url_q[0][1:]
+                self._prev_q_data = conc_persistence.open(self._q_code)
+                # !!! must create a copy here otherwise _q_data (as prev query)
+                # will be rewritten by self.args.q !!!
+                if self._prev_q_data is not None:
+                    self.args.q = self._prev_q_data['q'][:] + url_q[1:]
+                    self._lines_groups = LinesGroups.deserialize(
+                        self._prev_q_data.get('lines_groups', []))
+                else:
+                    # !!! we have to reset the invalid query, otherwise _store_conc_params
+                    # generates a new key pointing to it
+                    self.args.q = []
+                    raise UserActionException(_('Invalid or expired query'))
 
     def get_saveable_conc_data(self, prev_data):
         """
@@ -483,8 +483,8 @@ class Kontext(Controller):
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
     def _save_query_to_history(self, query_id, conc_data):
-        if plugins.has_plugin('query_storage') and conc_data.get('lastop_form', {}).get('form_type') == 'query':
-            plugins.get('query_storage').write(user_id=self._session_get('user', 'id'), query_id=query_id)
+        if plugins.runtime.QUERY_STORAGE.exists and conc_data.get('lastop_form', {}).get('form_type') == 'query':
+            plugins.runtime.QUERY_STORAGE.instance.write(user_id=self._session_get('user', 'id'), query_id=query_id)
 
     def _store_conc_params(self):
         """
@@ -494,20 +494,17 @@ class Kontext(Controller):
         returns:
         string ID of the stored operation or None if nothing was done (from whatever reason)
         """
-        if plugins.has_plugin('conc_persistence') and self.args.q:
-            prev_data = self._prev_q_data if self._prev_q_data is not None else {}
-            curr_data = self.get_saveable_conc_data(prev_data)
-            q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
-                                                         curr_data=curr_data,
-                                                         prev_data=self._prev_q_data)
-            self._save_query_to_history(q_id, curr_data)
-            lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
-            for q_idx, op in self._auto_generated_conc_ops:
-                prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
-                curr = dict(lines_groups=lines_groups, q=self.args.q[:q_idx+1], lastop_form=op.to_dict())
-                q_id = plugins.get('conc_persistence').store(self._session_get('user', 'id'),
-                                                             curr_data=curr,
-                                                             prev_data=prev)
+        if plugins.runtime.CONC_PERSISTENCE.exists and self.args.q:
+            with plugins.runtime.CONC_PERSISTENCE as cp:
+                prev_data = self._prev_q_data if self._prev_q_data is not None else {}
+                curr_data = self.get_saveable_conc_data(prev_data)
+                q_id = cp.store(self._session_get('user', 'id'), curr_data=curr_data, prev_data=self._prev_q_data)
+                self._save_query_to_history(q_id, curr_data)
+                lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
+                for q_idx, op in self._auto_generated_conc_ops:
+                    prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
+                    curr = dict(lines_groups=lines_groups, q=self.args.q[:q_idx+1], lastop_form=op.to_dict())
+                    q_id = cp.store(self._session_get('user', 'id'), curr_data=curr, prev_data=prev)
         else:
             q_id = None
         return q_id
@@ -614,7 +611,7 @@ class Kontext(Controller):
         self.args.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
-        allowed_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id'))
+        allowed_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self._session_get('user', 'id'))
         if not action_metadata.get('skip_corpus_init', False):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if fallback_url:
@@ -795,10 +792,10 @@ class Kontext(Controller):
         # but we do not know whether user has access to it
 
         # 1) reload permissions in case of no access and if available
-        auth = plugins.get('auth')
-        if cn not in corp_list and isinstance(auth, plugins.abstract.auth.AbstractRemoteAuth):
-            auth.refresh_user_permissions(self._plugin_api)
-            corp_list = auth.permitted_corpora(self._session_get('user', 'id'))
+        with plugins.runtime.AUTH as auth:
+            if cn not in corp_list and isinstance(auth, plugins.abstract.auth.AbstractRemoteAuth):
+                auth.refresh_user_permissions(self._plugin_api)
+                corp_list = auth.permitted_corpora(self._session_get('user', 'id'))
         # 2) try alternative corpus configuration (e.g. with restricted access)
         # automatic restricted/unrestricted corpus name selection
         # according to user rights
@@ -861,7 +858,7 @@ class Kontext(Controller):
         returns:
         a dict (canonical_id, id)
         """
-        return plugins.get('auth').permitted_corpora(self._session_get('user', 'id'))
+        return plugins.runtime.AUTH.instance.permitted_corpora(self._session_get('user', 'id'))
 
     def _add_corpus_related_globals(self, result, maincorp):
         """
@@ -1027,12 +1024,13 @@ class Kontext(Controller):
             data['theme']['css'] = None
 
     def _configure_auth_urls(self, out):
-        if plugins.has_plugin('auth') and isinstance(plugins.get('auth'), AbstractInternalAuth):
-            out['login_url'] = plugins.get('auth').get_login_url(self.return_url)
-            out['logout_url'] = plugins.get('auth').get_logout_url(self.get_root_url())
-        else:
-            out['login_url'] = None
-            out['logout_url'] = None
+        with plugins.runtime.AUTH as auth:
+            if plugins.runtime.AUTH.exists and isinstance(auth, AbstractInternalAuth):
+                out['login_url'] = auth.get_login_url(self.return_url)
+                out['logout_url'] = auth.get_logout_url(self.get_root_url())
+            else:
+                out['login_url'] = None
+                out['logout_url'] = None
 
     def _add_globals(self, result, methodname, action_metadata):
         """
@@ -1075,8 +1073,8 @@ class Kontext(Controller):
 
         self._configure_auth_urls(result)
 
-        if plugins.has_plugin('application_bar'):
-            application_bar = plugins.get('application_bar')
+        if plugins.runtime.APPLICATION_BAR.exists:
+            application_bar = plugins.runtime.APPLICATION_BAR.instance
             result['app_bar'] = application_bar.get_contents(plugin_api=self._plugin_api,
                                                              return_url=self.return_url)
             result['app_bar_css'] = application_bar.get_styles(plugin_api=self._plugin_api)
@@ -1086,12 +1084,11 @@ class Kontext(Controller):
             result['app_bar_css'] = []
             result['app_bar_js'] = None
 
-        if plugins.has_plugin('footer_bar'):
-            result['footer_bar'] = plugins.get('footer_bar').get_contents(self._plugin_api, self.return_url)
-            result['footer_bar_css'] = plugins.get('footer_bar').get_css_url()
-        else:
-            result['footer_bar'] = None
-            result['footer_bar_css'] = None
+        result['footer_bar'] = None
+        result['footer_bar_css'] = None
+        with plugins.runtime.FOOTER_BAR as fb:
+            result['footer_bar'] = fb.get_contents(self._plugin_api, self.return_url)
+            result['footer_bar_css'] = fb.get_css_url()
 
         self._apply_theme(result)
 
@@ -1140,11 +1137,9 @@ class Kontext(Controller):
 
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
 
-        if plugins.has_plugin('live_attributes'):
-            result['multi_sattr_allowed_structs'] = (
-                plugins.get('live_attributes').get_supported_structures(self.args.corpname))
-        else:
-            result['multi_sattr_allowed_structs'] = []
+        result['multi_sattr_allowed_structs'] = []
+        with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(self.args.corpname)
 
         result['corpus_ident'] = dict(id=self.args.corpname, canonicalId=self._canonical_corpname(self.args.corpname),
                                       name=self._human_readable_corpname())
@@ -1179,7 +1174,7 @@ class Kontext(Controller):
         to support multiple configurations per single corpus.
         (e.g. 'public/bnc' will transform into just 'bnc')
         """
-        return plugins.get('auth').canonical_corpname(c)
+        return plugins.runtime.AUTH.instance.canonical_corpname(c)
 
     def _human_readable_corpname(self):
         """
@@ -1252,18 +1247,18 @@ class Kontext(Controller):
             if p.startswith('sca_'):
                 ans[p[4:]] = src_obj.getlist(p)
 
-        if (plugins.has_plugin('live_attributes') and
-                plugins.get('live_attributes').is_enabled_for(self._plugin_api, self.args.corpname)):
-            ccn = plugins.get('auth').canonical_corpname(self.args.corpname)
-            corpus_info = plugins.get('corparch').get_corpus_info(self.ui_lang, ccn)
+        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
+            ccn = plugins.runtime.AUTH.instance.canonical_corpname(self.args.corpname)
+            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self.ui_lang, ccn)
             id_attr = corpus_info.metadata.id_attr
             if id_attr in ans:
-                bib_mapping = dict(plugins.get('live_attributes').find_bib_titles(self._plugin_api, ccn, ans[id_attr]))
+                bib_mapping = dict(plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(self._plugin_api, ccn,
+                                                                                            ans[id_attr]))
         return ans, bib_mapping
 
     @staticmethod
     def _uses_internal_user_pages():
-        return isinstance(plugins.get('auth'), AbstractInternalAuth)
+        return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
 
     def get_async_tasks(self, category=None):
         """
@@ -1403,7 +1398,7 @@ class PluginApi(object):
         return self._controller.corp
 
     def get_canonical_corpname(self, c):
-        return plugins.get('auth').canonical_corpname(c)
+        return plugins.runtime.AUTH.instance.canonical_corpname(c)
 
     @property
     def current_url(self):

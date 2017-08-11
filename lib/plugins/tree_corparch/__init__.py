@@ -114,7 +114,7 @@ def ajax_get_corptree_data(ctrl, request):
     """
     An exposed HTTP action required by client-side widget.
     """
-    return plugins.get('corparch').get_all(ctrl._plugin_api)
+    return plugins.runtime.CORPARCH.instance.get_all(ctrl._plugin_api)
 
 
 class TreeCorparch(AbstractCorporaArchive):

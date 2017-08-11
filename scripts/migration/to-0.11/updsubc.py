@@ -24,7 +24,7 @@ initializer.init_plugin('db')
 
 if __name__ == '__main__':
     subc_root = autoconf.settings.get('corpora', 'users_subcpath')
-    for username, user_key in plugins.get('db').hash_get_all('user_index').items():
+    for username, user_key in plugins.runtime.DB.instance.hash_get_all('user_index').items():
         user_id = user_key.split(':')[1]
 
         from_path = os.path.join(subc_root, username)

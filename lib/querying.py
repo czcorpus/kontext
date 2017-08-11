@@ -210,18 +210,18 @@ class Querying(Kontext):
     @staticmethod
     def _load_pipeline_ops(last_id):
         ans = []
-        if plugins.has_plugin('conc_persistence'):
-            cp = plugins.get('conc_persistence')
-            data = cp.open(last_id)
-            if data is not None:
-                ans.append(build_conc_form_args(data['lastop_form'], data['id']))
-            limit = 100
-            while data is not None and data.get('prev_id') and limit > 0:
-                data = cp.open(data['prev_id'])
-                ans.insert(0, build_conc_form_args(data['lastop_form'], data['id']))
-                limit -= 1
-                if limit == 0:
-                    logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
-                        last_id))
+        if plugins.runtime.CONC_PERSISTENCE.exists:
+            with plugins.runtime.CONC_PERSISTENCE.exists as cp:
+                data = cp.open(last_id)
+                if data is not None:
+                    ans.append(build_conc_form_args(data['lastop_form'], data['id']))
+                limit = 100
+                while data is not None and data.get('prev_id') and limit > 0:
+                    data = cp.open(data['prev_id'])
+                    ans.insert(0, build_conc_form_args(data['lastop_form'], data['id']))
+                    limit -= 1
+                    if limit == 0:
+                        logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
+                            last_id))
         return ans
 

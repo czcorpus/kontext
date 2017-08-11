@@ -221,7 +221,7 @@ class TextTypes(object):
         self._corp = corp
         self._corpname = corpname
         self._plugin_api = plugin_api
-        self._tt_cache = TextTypesCache(plugins.get('db'))
+        self._tt_cache = TextTypesCache(plugins.runtime.DB.instance)
 
     def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
@@ -242,7 +242,7 @@ class TextTypes(object):
             raise TextTypesException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
-        corpus_info = plugins.get('corparch').get_corpus_info(self._plugin_api.user_lang, self._corpname)
+        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_api.user_lang, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
@@ -272,7 +272,7 @@ class TextTypes(object):
             struct_calc = collections.OrderedDict()
             for item in subcorp_attr_list:
                 k = item.split('.')[0]
-                struct_calc[k] = CachedStructNormsCalc(self._corp, k, subcnorm, db=plugins.get('db'))
+                struct_calc[k] = CachedStructNormsCalc(self._corp, k, subcnorm, db=plugins.runtime.DB.instance)
             for col in reduce(lambda p, c: p + c['Line'], tt, []):
                 if 'textboxlength' not in col:
                     structname, attrname = col['name'].split('.')
@@ -302,7 +302,7 @@ class TextTypes(object):
         return normslist
 
     def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.get('corparch').get_corpus_info(self._plugin_api.user_lang, self._corpname)['metadata']
+        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_api.user_lang, self._corpname)['metadata']
         for line in tt:
             for item in line.get('Line', ()):
                 item['is_interval'] = int(item['label'] in metadata.get('interval_attrs', []))

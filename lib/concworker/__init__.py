@@ -35,7 +35,7 @@ import manatee
 class GeneralWorker(object):
 
     def __init__(self, task_id=None, cache_factory=None):
-        self._cache_factory = cache_factory if cache_factory is not None else plugins.get('conc_cache')
+        self._cache_factory = cache_factory if cache_factory is not None else plugins.runtime.CONC_CACHE.instance
         self._task_id = task_id
 
     def create_new_calc_status(self):

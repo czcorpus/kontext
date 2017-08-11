@@ -19,7 +19,10 @@ import plugins
 
 
 def has_tag_support(corpname):
-    return plugins.has_plugin('taghelper') and plugins.get('taghelper').tag_variants_file_exists(corpname)
+    ans = False
+    with plugins.runtime.TAGHELPER as th:
+        ans = th.tag_variants_file_exists(corpname)
+    return ans
 
 
 class ConcFormArgs(object):

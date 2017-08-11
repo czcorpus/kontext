@@ -37,7 +37,8 @@ def create_task(user_id, corp, subchash, q, samplesize):
     initial_args = reg_fn(corpus_id, subcname, subchash, q, samplesize)
     if not initial_args['already_running']:  # we are first trying to calc this
         def run():
-            task = concworker.ConcCalculation(task_id=task_id, cache_factory=plugins.get('conc_cache').fork())
+            with plugins.runtime.CONC_CACHE as cc:
+                task = concworker.ConcCalculation(task_id=task_id, cache_factory=cc.fork())
             subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
             return task(initial_args, subc_path, corpus_id, subcname, subchash, q, samplesize)
         proc = Process(target=run)

@@ -71,15 +71,16 @@ def set_favorite_item(ctrl, request):
         size=main_size,
         size_info=l10n.simplify_num(main_size)
     ))
-    plugins.get('user_items').add_user_item(ctrl._plugin_api, item)
-    return dict(id=item.ident)
+    with plugins.runtime.USER_ITEMS as uit:
+        uit.add_user_item(ctrl._plugin_api, item)
+        return dict(id=item.ident)
 
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def unset_favorite_item(ctrl, request):
-    plugins.get('user_items').delete_user_item(
-        ctrl._plugin_api, request.form['id'])
-    return {}
+    with plugins.runtime.USER_ITEMS as uit:
+        uit.delete_user_item(ctrl._plugin_api, request.form['id'])
+        return {}
 
 
 class UserItems(AbstractUserItems):

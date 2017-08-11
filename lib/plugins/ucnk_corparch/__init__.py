@@ -111,15 +111,16 @@ class UcnkCorplistProvider(DeafultCorplistProvider):
 
 @exposed(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
-    return plugins.get('corparch').export_favorite(ctrl._plugin_api)
+    return plugins.runtime.CORPARCH.instance.export_favorite(ctrl._plugin_api)
 
 
 @exposed(acess_level=1, return_type='json', skip_corpus_init=True)
 def ask_corpus_access(ctrl, request):
     ans = {}
-    status = plugins.get('corparch').send_request_email(corpus_id=request.form['corpusId'],
-                                                        plugin_api=getattr(ctrl, '_plugin_api'),
-                                                        custom_message=request.form['customMessage'])
+    with plugins.runtime.CORPARCH as ca:
+        status = ca.send_request_email(corpus_id=request.form['corpusId'],
+                                       plugin_api=getattr(ctrl, '_plugin_api'),
+                                       custom_message=request.form['customMessage'])
     if status is False:
         ans['error'] = _(
             'Failed to send e-mail. Please try again later or contact system administrator')

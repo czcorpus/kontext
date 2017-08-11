@@ -260,18 +260,18 @@ class Controller(object):
         creates an empty dictionary with some predefined keys to allow other
         parts of the application to operate properly)
         """
-        auth = plugins.get('auth')
-        if 'user' not in self._session:
-            self._session['user'] = auth.anonymous_user()
-
-        if hasattr(plugins.get('auth'), 'revalidate'):
-            try:
-                auth.revalidate(self._plugin_api)
-            except Exception as ex:
+        with plugins.runtime.AUTH as auth:
+            if 'user' not in self._session:
                 self._session['user'] = auth.anonymous_user()
-                logging.getLogger(__name__).error('Revalidation error: %s' % ex)
-                self.add_system_message('error', _('User authentication error. Please try to reload the page or '
-                                                   'contact system administrator.'))
+
+            if hasattr(auth, 'revalidate'):
+                try:
+                    auth.revalidate(self._plugin_api)
+                except Exception as ex:
+                    self._session['user'] = auth.anonymous_user()
+                    logging.getLogger(__name__).error('Revalidation error: %s' % ex)
+                    self.add_system_message('error', _('User authentication error. Please try to reload the page or '
+                                                       'contact system administrator.'))
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
     def _session(self):
@@ -990,7 +990,8 @@ class Controller(object):
             outf.write(str(result))
 
     def user_is_anonymous(self):
-        return plugins.get('auth').is_anonymous(self._session_get('user', 'id'))
+        with plugins.runtime.AUTH as auth:
+            return auth.is_anonymous(self._session_get('user', 'id'))
 
     @exposed()
     def nop(self, request, *args):

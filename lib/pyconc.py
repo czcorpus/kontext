@@ -31,7 +31,7 @@ import plugins
 
 
 def canonical_corpname(corpname):
-    return plugins.get('auth').canonical_corpname(corpname)
+    return plugins.runtime.AUTH.instance.canonical_corpname(corpname)
 
 
 def get_conc_labelmap(infopath):
