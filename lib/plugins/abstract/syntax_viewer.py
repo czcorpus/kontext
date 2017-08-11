@@ -16,7 +16,7 @@
 from plugins.abstract import CorpusDependentPlugin
 
 
-class SyntaxViewerPlugin(CorpusDependentPlugin):
+class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):
 
     def search_by_token_id(self, corp, canonical_corpname, token_id, kwic_len):
         raise NotImplementedError()
