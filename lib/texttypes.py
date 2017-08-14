@@ -252,7 +252,7 @@ class TextTypes(object):
         if len(subcorp_attr_list_tmp) != len(subcorp_attr_list):
             logging.getLogger(__name__).warning('Duplicate SUBCORPATTRS item found')
 
-        if plugins.has_plugin('live_attributes'):
+        if plugins.runtime.LIVE_ATTRIBUTES.exists:
             ans['bib_attr'] = corpus_info['metadata']['label_attr']
             ans['id_attr'] = corpus_info['metadata']['id_attr']
             list_none = (ans['bib_attr'], )

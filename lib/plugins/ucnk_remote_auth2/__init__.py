@@ -70,6 +70,7 @@ import httplib
 import re
 import json
 
+import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
 from plugins import inject
 
@@ -259,7 +260,7 @@ class CentralAuth(AbstractRemoteAuth):
         return sync_user_db,
 
 
-@inject('db', 'sessions')
+@inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
 def create_instance(conf, db_provider, sessions):
     return CentralAuth(db=db_provider, sessions=sessions, conf=conf)
 

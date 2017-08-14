@@ -52,6 +52,7 @@ import json
 import sqlite3
 import uuid
 
+import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
 import actions.concordance
@@ -252,7 +253,7 @@ class ConcPersistence(AbstractConcPersistence):
         return {actions.concordance.Actions: [create_arch_conc_action(self.db, self._archive)]}
 
 
-@inject('db', 'auth')
+@inject(plugins.runtime.DB, plugins.runtime.AUTH)
 def create_instance(settings, db, auth):
     """
     Creates a plugin instance.

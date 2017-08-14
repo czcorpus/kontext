@@ -12,7 +12,8 @@
 
 import json
 
-from ..abstract.settings_storage import AbstractSettingsStorage
+from plugins.abstract.settings_storage import AbstractSettingsStorage
+import plugins
 from plugins import inject
 
 
@@ -62,6 +63,6 @@ class SettingsStorage(AbstractSettingsStorage):
         return current_settings
 
 
-@inject('db')
+@inject(plugins.runtime.DB)
 def create_instance(conf, db):
     return SettingsStorage(conf, db)

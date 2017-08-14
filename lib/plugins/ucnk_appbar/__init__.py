@@ -23,6 +23,7 @@ element application_bar {
   element css_url { text } # URL of an external CSS file specifying imported HTML visuals
 }
 """
+import plugins
 from plugins import inject
 from plugins.abstract.appbar import AbstractApplicationBar
 
@@ -43,7 +44,7 @@ class ApplicationBar(AbstractApplicationBar):
         return '<div class="appbar-loading-msg" data-reload-toolbar="1"><span>loading toolbar...</span></div>'
 
 
-@inject('auth')
+@inject(plugins.runtime.AUTH)
 def create_instance(settings, auth):
     return ApplicationBar(auth=auth,
                           css_url=settings.get('plugins', 'application_bar')['ucnk:css_url'])

@@ -95,8 +95,8 @@ class WsgiApp(object):
         """
         cookies = KonTextCookie(environ.get('HTTP_COOKIE', ''))
 
-        if plugins.has_plugin('getlang'):
-            lgs_string = plugins.get('getlang').fetch_current_language(cookies)
+        if plugins.runtime.GETLANG.exists:
+            lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
         else:
             lang_cookie = cookies.get('kontext_ui_lang')
             if not lang_cookie:
@@ -192,7 +192,7 @@ class KonTextWsgiApp(WsgiApp):
         if app_url_prefix and environ['PATH_INFO'].startswith(app_url_prefix):
             environ['PATH_INFO'] = environ['PATH_INFO'][len(app_url_prefix):]
 
-        sessions = plugins.get('sessions')
+        sessions = plugins.runtime.SESSIONS.instance
         request = Request(environ)
         sid = request.cookies.get(sessions.get_cookie_name())
         if sid is None:

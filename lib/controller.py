@@ -681,9 +681,9 @@ class Controller(object):
         then attaches functions they provide to itself (if exported function's required
         controller class matches current instance's one).
         """
-        for p in plugins.get_plugins().values():
-            if callable(getattr(p, 'export_actions', None)):
-                exported = p.export_actions()
+        for plg in plugins.runtime:
+            if callable(getattr(plg.instance, 'export_actions', None)):
+                exported = plg.instance.export_actions()
                 if self.__class__ in exported:
                     for action in exported[self.__class__]:
                         if not hasattr(self, action.__name__):

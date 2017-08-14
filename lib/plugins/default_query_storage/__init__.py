@@ -40,6 +40,7 @@ import random
 
 from plugins.abstract.query_storage import AbstractQueryStorage
 from plugins import inject
+import plugins
 
 
 class QueryStorage(AbstractQueryStorage):
@@ -210,7 +211,7 @@ class QueryStorage(AbstractQueryStorage):
             self.db.list_trim(data_key, num_over, -1)
 
 
-@inject('db', 'conc_persistence', 'auth')
+@inject(plugins.runtime.DB, plugins.runtime.CONC_PERSISTENCE, plugins.runtime.AUTH)
 def create_instance(settings, db, conc_persistence, auth):
     """
     arguments:

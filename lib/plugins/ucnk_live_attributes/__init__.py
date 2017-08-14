@@ -403,7 +403,7 @@ class LiveAttributes(AbstractLiveAttributes):
         return [(r[0], r[1]) for r in ans]
 
 
-@inject('corparch')
+@inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
     """
     creates an instance of the plugin

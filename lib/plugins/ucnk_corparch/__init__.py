@@ -270,7 +270,7 @@ class UcnkCorpArch(CorpusArchive):
         return {actions.user.User: [ask_corpus_access, get_favorite_corpora]}
 
 
-@inject('auth', 'user_items')
+@inject(plugins.runtime.AUTH, plugins.runtime.USER_ITEMS)
 def create_instance(conf, auth, user_items):
     """
     Interface function called by KonText creates new plugin instance

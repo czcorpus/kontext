@@ -19,6 +19,7 @@ import urllib
 
 from abstract.auth import AbstractInternalAuth, AuthException
 from translation import ugettext as _
+import plugins
 from plugins import inject
 
 
@@ -170,7 +171,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         return self.db.get(user_key)
 
 
-@inject('db', 'sessions')
+@inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
 def create_instance(conf, db, sessions):
     """
     This function must be always implemented. KonText uses it to create an instance of your

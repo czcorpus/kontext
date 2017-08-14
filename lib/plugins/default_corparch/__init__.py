@@ -732,7 +732,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         return {actions.user.User: [get_favorite_corpora]}
 
 
-@inject('auth', 'user_items')
+@inject(plugins.runtime.AUTH, plugins.runtime.USER_ITEMS)
 def create_instance(conf, auth, user_items):
     """
     Interface function called by KonText creates new plugin instance

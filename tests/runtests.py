@@ -11,21 +11,23 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+from __future__ import absolute_import
 import sys
 import os
 import unittest
 
 sys.path.insert(0, os.path.realpath('%s/../lib' % os.path.dirname(os.path.realpath(__file__))))  # application libraries
 
-PLUGIN_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'lib', 'plugins', 'ucnk_conc_persistence2')
+PLUGIN_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'lib', 'plugins')
 CORE_TEST_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
 VERBOSITY = 2
 
 if __name__ == '__main__':
+    import translation
+    translation.activate('en_US')
     root_suite = unittest.TestSuite()
-    root_suite.addTest(unittest.TestLoader().discover(start_dir=PLUGIN_PATH, ))
     root_suite.addTest(unittest.TestLoader().discover(start_dir=CORE_TEST_PATH, ))
+    root_suite.addTest(unittest.TestLoader().discover(start_dir=PLUGIN_PATH, ))
     ans = unittest.TextTestRunner(verbosity=VERBOSITY).run(root_suite)
     if len(ans.failures) + len(ans.errors) > 0:
         sys.exit(1)

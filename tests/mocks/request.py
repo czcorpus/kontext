@@ -17,24 +17,36 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from fallback_corpus import EmptyCorpus
+from mocks import MultiDict
+from mocks.manatee import CorpusManager
 
 
-def version():
-    return 'manatee-mock'
+class PluginApi(object):
+    user_id = 3
+    user_lang = 'en_US'
 
 
-class Concordance(object):
-    pass
+class Controller(object):
+
+    def __init__(self):
+        self.cm = CorpusManager()
+        self._plugin_api = PluginApi()
+
+    def _canonical_corpname(self, corpname):
+        return corpname
 
 
-class CorpusManager(object):
+class Request(object):
 
-    def get_Corpus(self, name, subcname=None):
-        ans = EmptyCorpus()
-        ans.corpname = name
-        ans.subcname = subcname
-        ans.size = 3000
-        ans.search_size = lambda: 4000
-        return ans
+    def __init__(self, url, args=None, form=None):
+        self._url = url
+        self._args = MultiDict(args if args is not None else {})
+        self._form = MultiDict(form if form is not None else {})
 
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def form(self):
+        return self._form

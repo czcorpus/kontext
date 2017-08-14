@@ -22,7 +22,7 @@ import struct
 from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
 import plugins
-from plugins import PluginException
+from plugins.abstract import PluginException
 from category_tree import CategoryTree, CategoryExpression
 from metadata_model import MetadataModel
 from controller import exposed
@@ -150,7 +150,7 @@ class SubcMixer(AbstractSubcMixer):
         return {actions.subcorpus.Subcorpus: [subcmixer_run_calc, subcmixer_create_subcorpus]}
 
 
-@inject('corparch')
+@inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
     return SubcMixer(corparch)
 

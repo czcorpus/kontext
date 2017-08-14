@@ -30,6 +30,7 @@ import re
 import uuid
 
 from abstract.conc_persistence import AbstractConcPersistence
+import plugins
 from plugins import inject
 
 
@@ -157,7 +158,7 @@ class ConcPersistence(AbstractConcPersistence):
         return latest_id
 
 
-@inject('db', 'auth')
+@inject(plugins.runtime.DB, plugins.runtime.AUTH)
 def create_instance(settings, db, auth):
     """
     Creates a plugin instance.
