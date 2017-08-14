@@ -27,6 +27,9 @@ class TestingKeyValueStorage(KeyValueStorage):
     def list_get(self, key, from_idx=0, to_idx=-1):
         return self._data[key][from_idx:to_idx]
 
+    def list_set(self, key, idx, value):
+        self._data[key][idx] = value
+
     def list_append(self, key, value):
         if key not in self._data:
             self._data[key] = []
@@ -53,7 +56,7 @@ class TestingKeyValueStorage(KeyValueStorage):
         raise NotImplementedError()
 
     def _check_valid_hash(self, key):
-        if key not in self._data or type(self._data[key]) is not dict:
+        if key in self._data and type(self._data[key]) is not dict:
             raise Exception('Not a hash type')  # TODO exception type
 
     def _check_valid_str(self, key):
@@ -62,7 +65,7 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def hash_get(self, key, field):
         self._check_valid_hash(key)
-        return self._data[key].get(field, None)
+        return self._data[key].get(field, {})
 
     def hash_set(self, key, field, value):
         if key not in self._data:
@@ -94,3 +97,6 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def set_ttl(self, key, ttl):
         pass
+
+    def fork(self):
+        return self

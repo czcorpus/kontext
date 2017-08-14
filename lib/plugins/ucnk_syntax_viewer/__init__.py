@@ -74,7 +74,7 @@ class UcnkManateeBackend(mbk.ManateeBackend):
         return template.export(), mbk.TreeNodeEncoder
 
 
-@plugins.inject('auth')
+@plugins.inject(plugins.runtime.AUTH)
 def create_instance(conf, auth):
     corpora_conf = dsv.load_plugin_conf(conf)
     return dsv.SyntaxDataProvider(corpora_conf, UcnkManateeBackend(corpora_conf), auth)

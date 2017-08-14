@@ -130,7 +130,7 @@ class Subcorpus(Querying):
         else:
             raise UserActionException(_('Nothing specified!'))
         if result is not False:
-            if plugins.has_plugin('subc_restore'):
+            if plugins.runtime.SUBC_RESTORE.exists:
                 try:
                     with plugins.runtime.SUBC_RESTORE as sr:
                         sr.store_query(user_id=self._session_get('user', 'id'),
@@ -259,7 +259,7 @@ class Subcorpus(Querying):
         elif filter_args['corpname'] is None:
             filter_args['corpname'] = ''  # JS code requires non-null value
 
-        if plugins.has_plugin('subc_restore'):
+        if plugins.runtime.SUBC_RESTORE.exists:
             try:
                 full_list = plugins.runtime.SUBC_RESTORE.instance.extend_subc_list(self._plugin_api, data,
                                                                                    filter_args, 0)
@@ -297,7 +297,7 @@ class Subcorpus(Querying):
             'created': time.strftime(l10n.datetime_formatting(), sc.created.timetuple()),
             'extended_info': {}
         }
-        if plugins.has_plugin('subc_restore'):
+        if plugins.runtime.SUBC_RESTORE.exists:
             with plugins.runtime.SUBC_RESTORE as sr:
                 tmp = sr.get_info(self._session_get('user', 'id'), self.args.corpname, subcname)
                 if tmp:
@@ -306,7 +306,7 @@ class Subcorpus(Querying):
 
     @exposed(access_level=1, return_type='json')
     def ajax_wipe_subcorpus(self, request):
-        if plugins.has_plugin('subc_restore'):
+        if plugins.runtime.SUBC_RESTORE.exists:
             corpus_id = request.form['corpname']
             subcorp_name = request.form['subcname']
             with plugins.runtime.SUBC_RESTORE as sr:

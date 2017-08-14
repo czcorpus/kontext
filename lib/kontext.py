@@ -31,6 +31,7 @@ import corplib
 import conclib
 from controller import Controller, UserActionException, ForbiddenException, convert_types, exposed
 import plugins
+import plugins.abstract
 import settings
 import l10n
 from l10n import format_number, corpus_get_conf
@@ -421,7 +422,7 @@ class Kontext(Controller):
         """
         url_q = self.args.q[:]
         with plugins.runtime.CONC_PERSISTENCE as conc_persistence:
-            if plugins.has_plugin('conc_persistence') and self.args.q and conc_persistence.is_valid_id(url_q[0]):
+            if plugins.runtime.CONC_PERSISTENCE.exists and self.args.q and conc_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
                 self._prev_q_data = conc_persistence.open(self._q_code)
                 # !!! must create a copy here otherwise _q_data (as prev query)
@@ -532,7 +533,7 @@ class Kontext(Controller):
         op_id -- unique operation ID
         tpl_data -- a dictionary used along with HTML template to render the output
         """
-        if plugins.has_plugin('conc_persistence'):
+        if plugins.runtime.CONC_PERSISTENCE.exists:
             if op_id:
                 tpl_data['Q'] = ['~%s' % op_id]
                 tpl_data['conc_persistence_op_id'] = op_id
@@ -710,9 +711,9 @@ class Kontext(Controller):
             if access_level and self.user_is_anonymous():
                 raise ForbiddenException(_('Access forbidden'))
         # plugins setup
-        for p in plugins.get_plugins().values():
-            if callable(getattr(p, 'setup', None)):
-                p.setup(self)
+        for p in plugins.runtime:
+            if callable(getattr(p.instance, 'setup', None)):
+                p.instance.setup(self)
         return path, named_args
 
     def _post_dispatch(self, methodname, action_metadata, tmpl, result):
@@ -929,16 +930,15 @@ class Kontext(Controller):
         import plugins
         ans = {}
         result['active_plugins'] = []
-        for opt_plugin in plugins.get_plugins(include_missing=True).keys():
-            ans[opt_plugin] = None
-            if plugins.has_plugin(opt_plugin):
-                plugin_obj = plugins.get(opt_plugin)
-                js_file = settings.get('plugins', opt_plugin, {}).get('js_module')
+        for opt_plugin in plugins.runtime:
+            ans[opt_plugin.name] = None
+            if opt_plugin.exists:
+                js_file = settings.get('plugins', opt_plugin.name, {}).get('js_module')
                 if js_file:
-                    ans[opt_plugin] = js_file
-                    if (not (isinstance(plugin_obj, plugins.abstract.CorpusDependentPlugin)) or
-                            plugin_obj.is_enabled_for(self._plugin_api, self.args.corpname)):
-                        result['active_plugins'].append(opt_plugin)
+                    ans[opt_plugin.name] = js_file
+                    if (not (isinstance(opt_plugin.instance, plugins.abstract.CorpusDependentPlugin)) or
+                            opt_plugin.is_enabled_for(self._plugin_api, self.args.corpname)):
+                        result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
     def _get_attrs(self, attr_names, force_values=None):
@@ -1098,7 +1098,7 @@ class Kontext(Controller):
         result['bib_conf'] = self.get_corpus_info(self.args.corpname).metadata
 
         # available languages; used just by UI language switch
-        if plugins.has_plugin('getlang'):
+        if plugins.runtime.GETLANG.exists:
             result['avail_languages'] = ()  # getlang plug-in provides customized switch
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
@@ -1131,7 +1131,7 @@ class Kontext(Controller):
         else:
             result['ui_state_ttl'] = 3600 * 12
 
-        result['has_subcmixer'] = plugins.has_plugin('subcmixer')
+        result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
 
         result['can_send_mail'] = bool(settings.get('mailing'))
 
@@ -1147,9 +1147,9 @@ class Kontext(Controller):
         # we export plug-ins data KonText core does not care about (it is used
         # by a respective plug-in client-side code)
         result['plugin_data'] = {}
-        for plg_name, plg in plugins.get_plugins().items():
-            if hasattr(plg, 'export'):
-                result['plugin_data'][plg_name] = plg.export(self._plugin_api)
+        for plg in plugins.runtime:
+            if hasattr(plg.instance, 'export'):
+                result['plugin_data'][plg.name] = plg.instance.export(self._plugin_api)
 
         # main menu
         menu_items = MenuGenerator(result, self.args).generate(disabled_items=self.disabled_menu_items,

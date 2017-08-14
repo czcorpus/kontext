@@ -1,5 +1,20 @@
-"""
-"""
+# Copyright (c) 2014 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
 
 from abstract import PluginException
@@ -8,6 +23,13 @@ _plugins = {}
 
 
 class _ID(object):
+    """
+    A wrapper class used to represent a plug-in as
+    an abstract entity which is always instantiated
+    (even if its respective plug-in does not exist)
+    and which can be asked for basic information
+    (name, exists?, is avail. for a corpus?,...).
+    """
 
     def __init__(self, ident):
         self._ident = ident
@@ -19,12 +41,12 @@ class _ID(object):
         is shared between all the requests (within a single
         web server worker)
         """
-        if has_plugin(self._ident):
+        if _has_plugin(self._ident):
             return _plugins[self._ident]
         return None
 
     def __enter__(self):
-        if has_plugin(self._ident):
+        if _has_plugin(self._ident):
             return self.instance
         return None
 
@@ -82,23 +104,29 @@ class _Names(object):
     SYNTAX_VIEWER = _ID('syntax_viewer')
     SUBCMIXER = _ID('subcmixer')
 
+    def __iter__(self):
+        return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
+                     self.CONC_CACHE, self.EXPORT, self.USER_ITEMS, self.MENU_ITEMS, self.GETLANG, self.CORPARCH,
+                     self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES,
+                     self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER])
+
 
 runtime = _Names()
 
 
 def install_plugin(name, module, config):
-    if isinstance(module.create_instance, PluginFactory):
+    if isinstance(module.create_instance, _PluginFactory):
         _plugins[name] = apply(module.create_instance, (config,))
     else:  # modules without @inject will get just the configuration
         _plugins[name] = apply(module.create_instance, (config,))
 
 
-def inject_plugin(name, obj):
+def inject_plugin(ident, obj):
     """
     Inject a plug-in object directly. This is mainly
     for testing.
     """
-    _plugins[name] = obj
+    _plugins[ident.name] = obj
 
 
 def add_missing_plugin(name):
@@ -109,7 +137,7 @@ def flush_plugins():
     _plugins.clear()
 
 
-def has_plugin(name):
+def _has_plugin(name):
     return _plugins.get(name) is not None
 
 
@@ -123,36 +151,7 @@ def load_plugin_module(name):
     return module
 
 
-def _factory(name):
-    if has_plugin(name):
-        return _plugins[name]
-    else:
-        raise PluginException('Plugin %s not installed' % name)
-
-
-def get(*names):
-    """
-    This function is deprecated. Use
-    plugins.runtime.PLUGIN_NAME instead.
-    """
-    if len(names) == 1:
-        return _factory(names[0])
-    else:
-        return tuple([_factory(obj) for obj in names])
-
-
-def get_plugins(include_missing=False):
-    """
-    returns:
-    a dict (plugin_name, plugin_object)
-    """
-    if not include_missing:
-        return dict([(k, v) for k, v in _plugins.items() if v is not None])
-    else:
-        return _plugins
-
-
-class PluginFactory(object):
+class _PluginFactory(object):
     def __init__(self, fn, *args):
         self._fn = fn
         self._args = args
@@ -168,7 +167,7 @@ def inject(*args):
     as positional arguments. The first argument is always
     the 'settings' object.
 
-    @inject('db', 'sessions', 'auth')
+    @inject(plugins.runtime.DB, plugins.runtime.SESSIONS, plugins.runtime.AUTH)
     def create_instance(conf, db, sessions, auth):
       pass
 
@@ -176,5 +175,5 @@ def inject(*args):
     one or more plug-in names (see the example)
     """
     def wrapper(func):
-        return PluginFactory(func, *[get(v) for v in args])
+        return _PluginFactory(func, *[p.instance for p in args])
     return wrapper

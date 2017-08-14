@@ -157,13 +157,12 @@ class CustomTasks(object):
     a single function 'vacuum()' then the class adds a new
     task 'db.vacuum'.
     """
-    def __init__(self, plugin_names):
-        for plugin_name in plugin_names:
-            plg = plugins.get(plugin_name)
-            if callable(getattr(plg, 'export_tasks', None)):
-                for tsk in plg.export_tasks():
+    def __init__(self):
+        for p in plugins.runtime:
+            if callable(getattr(p.instance, 'export_tasks', None)):
+                for tsk in p.instance.export_tasks():
                     setattr(self, tsk.__name__,
-                            app.task(tsk, name='%s.%s' % (plugin_name, tsk.__name__,)))
+                            app.task(tsk, name='%s.%s' % (p.name, tsk.__name__,)))
 
 
 # ----------------------------- CONCORDANCE -----------------------------------
@@ -359,4 +358,4 @@ def create_subcorpus(user_id, corp_id, path, tt_query, cql):
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
 
-custom_tasks = CustomTasks(plugins.get_plugins())
+custom_tasks = CustomTasks()

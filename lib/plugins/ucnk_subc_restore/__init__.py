@@ -39,8 +39,8 @@ import urllib
 import logging
 
 import werkzeug.urls
+import plugins
 from plugins.abstract.subc_restore import AbstractSubcRestore
-import datetime
 from plugins import inject
 import sqlite3
 
@@ -171,6 +171,6 @@ class UCNKSubcRestore(AbstractSubcRestore):
         return subc_list + deleted_items
 
 
-@inject('corparch')
+@inject(plugins.runtime.CORPARCH)
 def create_instance(conf, corparch):
     return UCNKSubcRestore(conf, corparch)

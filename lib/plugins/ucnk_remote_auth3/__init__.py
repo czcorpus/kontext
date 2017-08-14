@@ -88,6 +88,7 @@ import json
 import logging
 import MySQLdb
 
+import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
 from plugins import inject
 
@@ -263,8 +264,7 @@ class CentralAuth(AbstractRemoteAuth):
         return self._auth_conf.logout_url % (urllib.quote(return_url) if return_url is not None else '')
 
 
-
-@inject('db', 'sessions')
+@inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
 def create_instance(conf, db_provider, sessions):
     return CentralAuth(db=db_provider, sessions=sessions, conf=conf)
 

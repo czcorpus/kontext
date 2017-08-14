@@ -150,7 +150,7 @@ def _load_corplist(corptree_path):
     return dict((k, k) for k in metadata.keys())
 
 
-@plugins.inject('sessions')
+@plugins.inject(plugins.runtime.SESSIONS)
 def create_instance(conf, sessions):
     plugin_conf = conf.get('plugins', 'auth')
     allowed_corplist = _load_corplist(conf.get('plugins', 'auth')['lindat:corptree_path'])

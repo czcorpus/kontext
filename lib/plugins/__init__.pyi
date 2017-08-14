@@ -1,4 +1,5 @@
-from typing import TypeVar, Generic, Any, List
+from typing import TypeVar, Generic, Any, List, Iterator, Callable
+import werkzeug.contrib.sessions
 
 from .abstract.general_storage import KeyValueStorage
 from .abstract.settings_storage import AbstractSettingsStorage
@@ -64,6 +65,9 @@ class _Names(object):
     SYNTAX_VIEWER:_ID[AbstractSyntaxViewerPlugin]
     SUBCMIXER:_ID[AbstractSubcMixer]
 
+    def __iter__(self) -> Iterator[_ID]: ...
+
+
 
 runtime:_Names
 
@@ -77,6 +81,6 @@ def flush_plugins() -> None: ...
 
 def has_plugin(name:str) -> bool: ...
 
-def get(*names:List[str]) -> List[Any]: ...
+def inject(*args:List[_ID]) -> Callable[Any, Any]: ...
 
-def get_plugins(include_missing:bool) -> List[Any]: ...
+def load_plugin_module(name:str) -> module: ...

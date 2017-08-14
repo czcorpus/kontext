@@ -67,7 +67,7 @@ class MaintenanceController(object):
         }
 
     def load_topbar(self):
-        if plugins.has_plugin('application_bar'):
+        if plugins.runtime.APPLICATION_BAR.exists:
             import urlparse
             with plugins.runtime.APPLICATION_BAR as ab:
                 html = ab.get_contents(self.cookies, 'en', '/')

@@ -49,6 +49,7 @@ import random
 
 from werkzeug.contrib.sessions import SessionStore, Session
 
+import plugins
 from plugins import inject
 
 
@@ -110,7 +111,7 @@ class DefaultSessions(SessionStore):
             self.save(session)
 
 
-@inject('db')
+@inject(plugins.runtime.DB)
 def create_instance(config, db):
     """
     This is an expected plugin module method to create instance of the service

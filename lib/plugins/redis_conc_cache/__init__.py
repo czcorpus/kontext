@@ -36,6 +36,7 @@ import os
 import hashlib
 import json
 
+import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, CalcStatus
 from plugins import inject
 
@@ -208,6 +209,6 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         return conc_cache_cleanup, conc_cache_monitor
 
 
-@inject('db')
+@inject(plugins.runtime.DB)
 def create_instance(settings, db):
     return CacheMappingFactory(cache_dir=settings.get('plugins', 'conc_cache')['default:cache_dir'], db=db)

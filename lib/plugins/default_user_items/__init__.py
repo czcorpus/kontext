@@ -12,7 +12,7 @@
 
 import json
 
-from abstract.user_items import AbstractUserItems, UserItemException, FavoriteItem
+from plugins.abstract.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
 import plugins
 import l10n
@@ -135,6 +135,6 @@ class UserItems(AbstractUserItems):
         return {UserController: [set_favorite_item, unset_favorite_item]}
 
 
-@inject('db', 'auth')
+@inject(plugins.runtime.DB, plugins.runtime.AUTH)
 def create_instance(settings, db, auth):
     return UserItems(settings, db, auth)

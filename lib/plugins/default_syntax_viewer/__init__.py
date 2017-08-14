@@ -108,7 +108,7 @@ def load_plugin_conf(conf):
         return conf_data.get('corpora', {})
 
 
-@plugins.inject('auth')
+@plugins.inject(plugins.runtime.AUTH)
 def create_instance(conf, auth):
     corpora_conf = load_plugin_conf(conf)
     return SyntaxDataProvider(corpora_conf, ManateeBackend(corpora_conf), auth)
