@@ -104,7 +104,7 @@ class TestPlugin(unittest.TestCase):
         papi = PluginApi()
         papi.user_id = 7
         item1 = {'size': 150426, 'name': 'susanne - the testing one', 'subcorpus_id': '',
-                 'corpora': [{'canonical_id': 'susanne', 'name': 'susanne - the testing one', 'id': 'susanne'}],
+                 'corpora': [{'canonical_id': 'susanne', 'name': 'A) susanne - the testing one', 'id': 'susanne'}],
                  'id': '6287f558d64ba0e0885d0e89492e457f', 'size_info': '150k'}
         plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',
@@ -112,7 +112,7 @@ class TestPlugin(unittest.TestCase):
             json.dumps(item1)
         )
         item2 = {'size': 120748715, 'name': 'SYN2015 (local)', 'subcorpus_id': '',
-                 'corpora': [{'canonical_id': 'syn2015', 'name': 'SYN2015 (local)', 'id': 'syn2015'}],
+                 'corpora': [{'canonical_id': 'syn2015', 'name': 'B) SYN2015 (local)', 'id': 'syn2015'}],
                  'id': 'f68842708bb9a89690793106738e8690', 'size_info': '121M'}
         plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',
