@@ -71,7 +71,7 @@ adapters, authentication method, corpus listing widgets, HTTP session management
     * versions from *2.83.3* to *2.150* are supported (the latest one is highly recommended); unless there is an incompatible change in Manatee, newer versions should work too
 * a key-value storage
     * any custom implementation ([Redis](http://redis.io/) and [SQLite](https://sqlite.org/) backends are available by default) 
-* (optional) [Celery task queue](http://www.celeryproject.org/) task queue for background concordance calculation and maintenance tasks
+* (optional) [Celery task queue](http://www.celeryproject.org/) task queue for (asynchronous) background calculations and maintenance tasks
 
 
 ## Build and installation
