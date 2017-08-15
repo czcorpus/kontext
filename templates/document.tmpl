@@ -147,7 +147,6 @@ define('conf', [], function () {
     conf.uiLang = "$uiLang";
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.uiStateTTL = ${ui_state_ttl};
-    conf.historyMaxQuerySize = ${history_max_query_size};
     #if $varExists('aligned_corpora')
     conf.alignedCorpora = $to_json($aligned_corpora);
     #end if

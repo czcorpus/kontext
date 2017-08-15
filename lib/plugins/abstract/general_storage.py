@@ -24,6 +24,13 @@ class KeyValueStorage(object):
     with other back-ends too.
     """
 
+    def rename(self, key, new_key):
+        """
+        Rename an existing key to a new one. If the new value already
+        exists then the record is overwritten.
+        """
+        raise NotImplementedError()
+
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
         Return a stored list. If there is a non-list value stored with the passed key

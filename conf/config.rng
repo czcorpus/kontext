@@ -477,9 +477,6 @@
                         <a:documentation>A plug-in for storing current queries for later retrieval</a:documentation>
                         <ref name="plugin_common" />
                         <interleave>
-                            <element name="history_max_query_size">
-                                <data type="integer" />
-                            </element>
                             <element name="page_append_records">
                                 <data type="integer" />
                             </element>

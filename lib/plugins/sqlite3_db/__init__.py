@@ -69,6 +69,11 @@ class DefaultDb(KeyValueStorage):
                        (path, data, int(time.time())))
         self._conn().commit()
 
+    def rename(self, key, new_key):
+        cursor = self._conn().cursor()
+        cursor.execute('UPDATE data SET key = ? WHERE key = ?', (key, new_key))
+        self._conn().commit()
+
     def list_get(self, key, from_idx=0, to_idx=-1):
         data = []
         raw_data = self._load_raw_data(key)
