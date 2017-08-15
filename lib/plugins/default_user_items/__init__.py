@@ -35,16 +35,15 @@ def import_legacy_record(data):
     return ans
 
 
-def import_from_json(src):
+def import_record(obj):
     """
     Provides a consistent decoding of JSON-encoded GeneralItem objects.
     If a new GeneralItem implementation occurs then this method must
     be updated accordingly.
 
     arguments:
-    src -- a JSON representation of a favorite item
+    obj -- a dictionary as loaded from store
     """
-    obj = json.loads(src)
     if 'type' in obj:
         return import_legacy_record(obj)
     else:
@@ -117,7 +116,7 @@ class UserItems(AbstractUserItems):
         ans = []
         if self._auth.anonymous_user()['id'] != plugin_api.user_id:
             for item_id, item in self._db.hash_get_all(self._mk_key(plugin_api.user_id)).items():
-                ans.append(import_from_json(item))
+                ans.append(import_record(item))
             ans = l10n.sort(ans, plugin_api.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 
@@ -126,7 +125,7 @@ class UserItems(AbstractUserItems):
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        self._db.hash_set(self._mk_key(plugin_api.user_id), item.ident, self.serialize(item))
+        self._db.hash_set(self._mk_key(plugin_api.user_id), item.ident, item.to_dict())
 
     def delete_user_item(self, plugin_api, item_id):
         self._db.hash_del(self._mk_key(plugin_api.user_id), item_id)

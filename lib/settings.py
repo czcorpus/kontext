@@ -94,18 +94,21 @@ def get_full(section, key):
         return d, m
 
 
-def get_bool(section, key, default=None):
-    """
-    The same as get() but returns a bool type
-    (True for 'true', '1' values, False for 'false', '0' values)
-    """
-    fixed_key = str(get(section, str(key).lower(), default)).lower()
+def import_bool(v):
     return {
         'true': True,
         '1': True,
         'false': False,
         '0': False
-    }[fixed_key]
+    }[v]
+
+
+def get_bool(section, key, default=None):
+    """
+    The same as get() but returns a bool type
+    (True for 'true', '1' values, False for 'false', '0' values)
+    """
+    return import_bool(str(get(section, str(key).lower(), default)))
 
 
 def get_int(section, key, default=-1):

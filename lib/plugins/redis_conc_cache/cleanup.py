@@ -150,7 +150,7 @@ class CacheCleanup(CacheFiles):
             cache_map = self._db.hash_get_all(cache_key)
             if cache_map:
                 try:
-                    for item_hash, v in cache_map.items():
+                    for item_hash, _ in cache_map.items():
                         if item_hash in to_del:
                             if not dry_run:
                                 os.unlink(to_del[item_hash])

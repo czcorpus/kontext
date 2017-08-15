@@ -109,7 +109,7 @@ class TestPlugin(unittest.TestCase):
         plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',
             '6287f558d64ba0e0885d0e89492e457f',
-            json.dumps(item1)
+            item1
         )
         item2 = {'size': 120748715, 'name': 'SYN2015 (local)', 'subcorpus_id': '',
                  'corpora': [{'canonical_id': 'syn2015', 'name': 'B) SYN2015 (local)', 'id': 'syn2015'}],
@@ -117,7 +117,7 @@ class TestPlugin(unittest.TestCase):
         plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',
             'f68842708bb9a89690793106738e8690',
-            json.dumps(item2)
+            item2
         )
         items = self.plugin.get_user_items(papi)
         self.assertEqual(item1['size'], items[0].size)
