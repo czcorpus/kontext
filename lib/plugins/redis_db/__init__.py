@@ -74,6 +74,9 @@ class RedisDb(KeyValueStorage):
             'default:id': self._db
         })
 
+    def rename(self, key, new_key):
+        return self.redis.rename(key, new_key)
+
     def list_get(self, key, from_idx=0, to_idx=-1):
         """
         Returns a stored list. If there is a non-list value stored with the passed key
@@ -141,7 +144,8 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
-        return self.redis.hget(key, field)
+        v = self.redis.hget(key, field)
+        return json.loads(v) if v else None
 
     def hash_set(self, key, field, value):
         """
@@ -152,7 +156,7 @@ class RedisDb(KeyValueStorage):
         field -- hash table entry key
         value -- a value to be stored
         """
-        self.redis.hset(key, field, value)
+        self.redis.hset(key, field, json.dumps(value))
 
     def hash_del(self, key, *fields):
         """
@@ -172,7 +176,7 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        return self.redis.hgetall(key)
+        return dict((k, json.loads(v)) for k, v in self.redis.hgetall(key).items())
 
     def get(self, key, default=None):
         """

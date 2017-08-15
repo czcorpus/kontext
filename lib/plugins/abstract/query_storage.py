@@ -77,10 +77,14 @@ class AbstractQueryStorage(object):
         """
         raise NotImplementedError()
 
-    def delete_old_records(self, db, user_id):
+    def delete_old_records(self, user_id):
         """
+        Remove old records to keep the query history
+        list of a reasonable size. There are no
+        strict rules on how this should behave - it
+        is up to a concrete plug-in implementation.
+
         arguments:
-        db -- a database connection adapter
         user_id -- user ID
         """
         raise NotImplementedError()

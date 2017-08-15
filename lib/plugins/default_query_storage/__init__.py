@@ -31,6 +31,9 @@ element query_storage {
     attribute extension-by { "default" }
     text # how many records to load in case user clicks 'more'
   }
+  element clear_async {
+    attribute extension-by { "default" }
+    "1" | "0" | "true" | "false"  # if true then old records are removed in a separate task
 }
 """
 
@@ -45,7 +48,9 @@ import plugins
 
 class QueryStorage(AbstractQueryStorage):
 
-    PROB_DELETE_OLD_RECORDS = 0.1
+    PROB_DELETE_OLD_RECORDS = 0.2
+
+    CLEANUP_QUEUE_KEY = 'query_history_cleanup_queue'
 
     def __init__(self, conf, db, conc_persistence, auth):
         """
@@ -54,6 +59,7 @@ class QueryStorage(AbstractQueryStorage):
         db -- default_db storage backend
         """
         tmp = conf.get('plugins', 'query_storage').get('default:num_kept_records', None)
+        self._async_cleanup = conf.import_bool(conf.get('plugins', 'query_storage').get('default:async_cleanup', '0'))
         self.num_kept_records = int(tmp) if tmp else 10
         self.db = db
         self._conc_persistence = conc_persistence
@@ -65,6 +71,9 @@ class QueryStorage(AbstractQueryStorage):
     def _mk_key(self, user_id):
         return 'query_history:user:%d' % user_id
 
+    def _mk_tmp_key(self, user_id):
+        return 'query_history:user:%d:new' % user_id
+
     def write(self, user_id, query_id):
         """
         stores information about a query
@@ -72,12 +81,12 @@ class QueryStorage(AbstractQueryStorage):
         arguments:
         see the super class
         """
-        data_key = self._mk_key(user_id)
-        item = dict(
-            created=self._current_timestamp(), query_id=query_id, name=None)
-        self.db.list_append(data_key, item)
-        if random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
-            self.delete_old_records(data_key)
+        item = dict(created=self._current_timestamp(), query_id=query_id, name=None)
+        self.db.list_append(self._mk_key(user_id), item)
+        if self._async_cleanup:
+            self.db.hash_set(self.CLEANUP_QUEUE_KEY, user_id, int(user_id))
+        elif random.random() < QueryStorage.PROB_DELETE_OLD_RECORDS:
+            self.delete_old_records(user_id)
 
     def make_persistent(self, user_id, query_id, name):
         k = self._mk_key(user_id)
@@ -189,7 +198,7 @@ class QueryStorage(AbstractQueryStorage):
 
         if limit is None:
             limit = len(full_data)
-        tmp = sorted(full_data, key=lambda x: x['created'], reverse=True)[offset:(offset + limit)]
+        tmp = [v for v in reversed(full_data)][offset:(offset + limit)]
         corp_cache = {}
         for i, item in enumerate(tmp):
             item['idx'] = offset + i
@@ -202,13 +211,34 @@ class QueryStorage(AbstractQueryStorage):
                 ac['human_corpname'] = corp_cache[ac['corpname']].get_conf('NAME')
         return tmp
 
-    def delete_old_records(self, data_key):
+    def delete_old_records(self, user_id):
         """
-        Deletes oldest records until the final length of the list equals <num_kept_records> configuration value
+        Deletes oldest records until the final length of the list equals
+        <num_kept_records> configuration value. Named records are
+        kept intact.
         """
-        num_over = max(0, self.db.list_len(data_key) - self.num_kept_records)
-        if num_over > 0:
-            self.db.list_trim(data_key, num_over, -1)
+        data_key = self._mk_key(user_id)
+        curr_data = self.db.list_get(data_key)
+        tmp_key = self._mk_tmp_key(user_id)
+        self.db.remove(tmp_key)
+        limit = 0
+        new_list = []
+        for item in reversed(curr_data):
+            if item.get('name', None) is not None:
+                new_list.append(item)
+            elif limit < self.num_kept_records:
+                new_list.append(item)
+                limit += 1
+        for item in reversed(new_list):
+            self.db.list_append(tmp_key, item)
+        self.db.rename(tmp_key, data_key)
+
+    def export_tasks(self):
+        def clean_history():
+            for str_id, user_id in self.db.hash_get_all(self.CLEANUP_QUEUE_KEY).items():
+                self.delete_old_records(user_id)
+                self.db.hash_del(self.CLEANUP_QUEUE_KEY, str_id)
+        return clean_history,
 
 
 @inject(plugins.runtime.DB, plugins.runtime.CONC_PERSISTENCE, plugins.runtime.AUTH)

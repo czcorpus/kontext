@@ -60,8 +60,7 @@ def _uniqname(subchash, query):
 class RedisCacheMapping(AbstractConcCache):
     """
     This class provides cache mapping between subchash+query and cached information
-    stored within Redis (as opposed to the "default_conc_cache" which uses a special
-    pickle-serialized mapping file).
+    stored within Redis.
 
     Mapping looks like this:
     md5(subchash, q) => [stored_conc_size, calc_status, hash_of(subchash, q[0])]
@@ -77,13 +76,14 @@ class RedisCacheMapping(AbstractConcCache):
     def _get_entry(self, subchash, q):
         val = self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
         if val:
-            tmp = json.loads(val)
-            return [tmp[0], CalcStatus().update(tmp[1]), tmp[2]]
+            if type(val[1]) is not dict:
+                return None
+            return [val[0], CalcStatus().update(val[1]), val[2]]
         return None
 
     def _set_entry(self, subchash, q, data):
         tmp = [data[0], data[1].to_dict(), data[2]]
-        self._db.hash_set(self._mk_key(), _uniqname(subchash, q), json.dumps(tmp))
+        self._db.hash_set(self._mk_key(), _uniqname(subchash, q), tmp)
 
     def _mk_key(self):
         return RedisCacheMapping.KEY_TEMPLATE % self._corpus.corpname
@@ -152,8 +152,7 @@ class RedisCacheMapping(AbstractConcCache):
         self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
     def del_full_entry(self, subchash, q):
-        for k, v in self._db.hash_get_all(self._mk_key()).items():
-            stored = json.loads(v)
+        for k, stored in self._db.hash_get_all(self._mk_key()).items():
             if _uniqname(subchash, q[:1]) == stored[2]:  # stored[2] = q0hash
                 # original record's key must be used (k ~ entry_key match can be partial)
                 self._db.hash_del(self._mk_key(), k)  # must use direct access here (no del_entry())
