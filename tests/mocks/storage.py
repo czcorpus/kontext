@@ -10,6 +10,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import json
+
 from plugins.abstract.general_storage import KeyValueStorage
 
 
@@ -65,12 +67,12 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def hash_get(self, key, field):
         self._check_valid_hash(key)
-        return self._data[key].get(field, {})
+        return json.loads(self._data[key].get(field, '{}'))
 
     def hash_set(self, key, field, value):
         if key not in self._data:
             self._data[key] = {}
-        self._data[key][field] = value
+        self._data[key][field] = json.dumps(value)
 
     def hash_del(self, key, *fields):
         self._check_valid_hash(key)
@@ -79,7 +81,7 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def hash_get_all(self, key):
         self._check_valid_hash(key)
-        return self._data[key]
+        return dict((k, json.loads(v)) for k, v in self._data[key].items())
 
     def get(self, key, default=None):
         self._check_valid_str(key)

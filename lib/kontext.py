@@ -484,8 +484,9 @@ class Kontext(Controller):
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
     def _save_query_to_history(self, query_id, conc_data):
-        if plugins.runtime.QUERY_STORAGE.exists and conc_data.get('lastop_form', {}).get('form_type') == 'query':
-            plugins.runtime.QUERY_STORAGE.instance.write(user_id=self._session_get('user', 'id'), query_id=query_id)
+        if conc_data.get('lastop_form', {}).get('form_type') == 'query' and not self.user_is_anonymous():
+            with plugins.runtime.QUERY_STORAGE as qh:
+                qh.write(user_id=self._session_get('user', 'id'), query_id=query_id)
 
     def _store_conc_params(self):
         """
@@ -1103,8 +1104,6 @@ class Kontext(Controller):
         else:
             result['avail_languages'] = settings.get_full('global', 'translations')
 
-        hmqs = settings.get('plugins', 'query_storage').get('history_max_query_size', None)
-        result['history_max_query_size'] = int(hmqs) if hmqs else None
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
         if settings.contains('global', 'intl_polyfill_url'):

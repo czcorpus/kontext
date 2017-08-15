@@ -31,8 +31,8 @@ class SettingsMockedDataTest(unittest.TestCase):
                 'height': '1000',
                 'weight': '37.828',
                 'empty': None,
-                'visible': 'TruE',
-                'invisible': 'FALSE',
+                'visible': 'true',
+                'invisible': 'false',
                 'forbidden': '0',
                 'permitted': '1',
                 'items': ['a', 'b', 'c']
