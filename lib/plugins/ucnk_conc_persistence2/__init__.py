@@ -240,6 +240,9 @@ class ConcPersistence(AbstractConcPersistence):
 
         return latest_id
 
+    def archive(self, conc_id):
+        pass  # we don't have to do anything here as we archive all the queries by default
+
     def export_tasks(self):
         """
         Export tasks for Celery worker(s)

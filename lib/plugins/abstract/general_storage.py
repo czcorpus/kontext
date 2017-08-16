@@ -194,7 +194,16 @@ class KeyValueStorage(object):
         arguments:
         key -- data access key
         ttl -- number of seconds to wait before the value is removed
-        (please note that update actions may reset the timer to zero)
+               (please note that update actions may reset the timer to zero
+               which means you have to set_ttl again)
+        """
+        pass
+
+    def clear_ttl(self, key):
+        """
+        Make the record persistent again.
+
+        key -- data access key
         """
         pass
 

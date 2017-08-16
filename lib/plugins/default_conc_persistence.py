@@ -154,8 +154,10 @@ class ConcPersistence(AbstractConcPersistence):
             latest_id = curr_data['id']
         else:
             latest_id = prev_data['id']
-
         return latest_id
+
+    def archive(self, conc_id):
+        self.db.clear_ttl(conc_id)
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)

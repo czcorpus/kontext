@@ -95,6 +95,7 @@ class QueryStorage(AbstractQueryStorage):
             if item.get('query_id', None) == query_id:
                 item['name'] = name
                 self.db.list_set(k, i, item)
+                self._conc_persistence.archive(query_id)
                 return True
         return False
 

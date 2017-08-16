@@ -213,6 +213,9 @@ class RedisDb(KeyValueStorage):
         """
         self.redis.expire(key, ttl)
 
+    def clear_ttl(self, key):
+        self.redis.persist(key)
+
     def remove(self, key):
         """
         Removes a value specified by a key
