@@ -185,7 +185,8 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
     reg_fn = concworker.TaskRegistration(task_id=self.request.id)
-    initial_args = reg_fn(corpus_id, subc_name, subchash, query, samplesize)
+    subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
+    initial_args = reg_fn(corpus_id, subc_name, subchash, subc_path, query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
         conc_calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
     return initial_args

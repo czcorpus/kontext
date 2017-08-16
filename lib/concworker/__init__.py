@@ -111,9 +111,9 @@ class TaskRegistration(GeneralWorker):
     def __init__(self, task_id):
         super(TaskRegistration, self).__init__(task_id=task_id)
 
-    def __call__(self, corpus_name, subc_name, subchash, query, samplesize):
-        corpus_manager = CorpusManager()
-        corpus_obj = corpus_manager.get_Corpus(corpus_name)
+    def __call__(self, corpus_name, subc_name, subchash, subcpath, query, samplesize):
+        corpus_manager = CorpusManager(subcpath=(subcpath,))
+        corpus_obj = corpus_manager.get_Corpus(corpus_name, subc_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         new_status = self.create_new_calc_status()
         cachefile, prev_status = cache_map.add_to_map(subchash, query, 0, new_status)
