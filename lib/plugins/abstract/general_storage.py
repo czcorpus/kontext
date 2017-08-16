@@ -19,9 +19,16 @@
 
 class KeyValueStorage(object):
     """
-    A general key-value storage as needed by typical KonText plugins. The interface
-    was written with Redis in mind but it should be easy to implement a solution
-    with other back-ends too.
+    A general key-value storage is a core data storage for KonText and its default
+    plug-ins. The interface was written with [Redis](https://redis.io/) in mind
+    but it should be easy to implement a solution with other back-ends too
+    (including relational databases).
+
+    Please note that the values passed to the storage are expected to be
+    JSON-serializable (= int, float, bool, str, list, dict and no circular references).
+    This applies not just for 'get', 'set' but also for 'hash_*', 'list_*'. I.e. calls
+    like 'hash_set('foo', 'bar', {'x': 100}) must be accepted and the value must be
+    properly serialized.
     """
 
     def rename(self, key, new_key):
