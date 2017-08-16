@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,7 @@ It relies on default_db module which requires no database backend.
 import hashlib
 import urllib
 
-from abstract.auth import AbstractInternalAuth, AuthException
+from plugins.abstract.auth import AbstractInternalAuth, AuthException
 from translation import ugettext as _
 import plugins
 from plugins import inject
