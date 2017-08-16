@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -239,6 +241,9 @@ class ConcPersistence(AbstractConcPersistence):
             latest_id = prev_data[ID_KEY]
 
         return latest_id
+
+    def archive(self, conc_id):
+        pass  # we don't have to do anything here as we archive all the queries by default
 
     def export_tasks(self):
         """

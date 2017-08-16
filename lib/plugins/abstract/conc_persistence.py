@@ -63,3 +63,14 @@ class AbstractConcPersistence(object):
         new operation ID if a new record is created or current ID if no new operation is defined
         """
         raise NotImplementedError()
+
+    def archive(self, conc_id):
+        """
+        Make the concordance record persistent. For implementations which
+        archive concordances automatically this can be just an empty
+        function.
+
+        arguments:
+        conc_id -- an identifier of the concordance
+        """
+        raise NotImplementedError()

@@ -95,6 +95,7 @@ class QueryStorage(AbstractQueryStorage):
             if item.get('query_id', None) == query_id:
                 item['name'] = name
                 self.db.list_set(k, i, item)
+                self._conc_persistence.archive(query_id)
                 return True
         return False
 
@@ -111,10 +112,10 @@ class QueryStorage(AbstractQueryStorage):
     def _merge_conc_data(self, data):
         q_id = data['query_id']
         edata = self._conc_persistence.open(q_id)
-        ans = {}
-        ans.update(data)
 
         if edata and 'lastop_form' in edata:
+            ans = {}
+            ans.update(data)
             form_data = edata['lastop_form']
             main_corp = edata['corpora'][0]
             ans['query_type'] = form_data['curr_query_types'][main_corp]
@@ -137,7 +138,9 @@ class QueryStorage(AbstractQueryStorage):
                                            lpos=form_data['curr_lpos_values'][aitem],
                                            qmcase=form_data['curr_qmcase_values'][aitem],
                                            pcq_pos_neg=form_data['curr_pcq_pos_neg_values'][aitem]))
-        return ans
+            return ans
+        else:
+            return None   # persistent result not available
 
     def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, query_type=None, corpname=None,
                          archived_only=False, offset=0, limit=None):
@@ -161,7 +164,9 @@ class QueryStorage(AbstractQueryStorage):
 
         for item in data:
             if 'query_id' in item:
-                full_data.append(self._merge_conc_data(item))
+                tmp = self._merge_conc_data(item)
+                if tmp:
+                    full_data.append(tmp)
             else:
                 # deprecated type of record (this will vanish soon as there
                 # are no persistent history records based on the old format)

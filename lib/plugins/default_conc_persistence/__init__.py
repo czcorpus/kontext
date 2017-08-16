@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -154,8 +156,10 @@ class ConcPersistence(AbstractConcPersistence):
             latest_id = curr_data['id']
         else:
             latest_id = prev_data['id']
-
         return latest_id
+
+    def archive(self, conc_id):
+        self.db.clear_ttl(conc_id)
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)

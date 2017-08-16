@@ -61,3 +61,4 @@ if __name__ == '__main__':
             f.write(result_xml)
             print('DONE!\nConverted config written to %s\n' % output_path)
     print('\nPlease do not forget to update subcorpora paths by running updsubc.py!\n')
+    print('\nPlease do not forget to update user_index by running upd_user_index.py!\n')
