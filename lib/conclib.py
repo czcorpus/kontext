@@ -52,7 +52,7 @@ def _wait_for_conc(cache_map, q, subchash, minsize):
     subchash -- a hash of a subcorpus (if any)
     minsize -- what intermediate concordance size we will wait for (-1 => whole conc.)
     """
-    hard_limit = 3000  # num iterations (time = hard_limit / 10)
+    hard_limit = 70  # num iterations to wait for at least something
     i = 1
     while _min_conc_unfinished(cache_map, q, subchash, minsize) and i < hard_limit:
         time.sleep(i * 0.1)

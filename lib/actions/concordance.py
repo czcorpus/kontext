@@ -177,7 +177,7 @@ class Actions(Querying):
                 del self.args.q[i]
             i += 1
 
-        conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
+        conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id')),
                                   samplesize=corpus_info.sample_size)
         self._apply_linegroups(conc)
         conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -337,7 +337,7 @@ class Actions(Querying):
                 return dict(concsize=concsize, sampled_size=0, relconcsize=0, fullsize=fullsize,
                             finished=conc.finished())
         if sampled_size:
-            orig_conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')),
+            orig_conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id')),
                                            q=self.args.q[:i])
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
@@ -846,7 +846,7 @@ class Actions(Querying):
         args.corpname = self.corp.corpname
         args.subcname = getattr(self.corp, 'subcname', None)
         args.subcpath = self.subcpath
-        args.user_id = self._session_get('user', 'user')
+        args.user_id = self._session_get('user', 'id')
         args.minsize = None
         args.q = self.args.q
         args.fromp = self.args.fromp
@@ -947,7 +947,7 @@ class Actions(Querying):
             if freq > 0 and err_block > -1 and corr_block > -1:
                 pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
                 cc = self.call_function(conclib.get_conc,
-                                        (self.corp, self._session_get('user', 'user')),
+                                        (self.corp, self._session_get('user', 'id')),
                                         q=self.args.q + [pfilter[0][1]])
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
@@ -1075,7 +1075,7 @@ class Actions(Querying):
         args.corpname = self.corp.corpname
         args.subcname = getattr(self.corp, 'subcname', None)
         args.subcpath = self.subcpath
-        args.user_id = self._session_get('user', 'user')
+        args.user_id = self._session_get('user', 'id')
         args.minsize = None
         args.q = self.args.q
         args.ctminfreq = int(request.args.get('ctminfreq', '1'))
@@ -1107,7 +1107,7 @@ class Actions(Querying):
         calc_args.corpname = self.args.corpname
         calc_args.subcname = getattr(self.corp, 'subcname', None)
         calc_args.subcpath = self.subcpath
-        calc_args.user_id = self._session_get('user', 'user')
+        calc_args.user_id = self._session_get('user', 'id')
         calc_args.q = self.args.q
         calc_args.minsize = None  # TODO ??
         calc_args.save = self.args.save
@@ -1497,7 +1497,7 @@ class Actions(Querying):
 
         try:
             corpus_info = self.get_corpus_info(self.args.corpname)
-            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user'),
+            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id'),
                                                          corpus_info.sample_size))
             self._apply_linegroups(conc)
             kwic = Kwic(self.corp, self.args.corpname, conc)
@@ -1730,7 +1730,7 @@ class Actions(Querying):
             query = 'aword,[] within %s' % (' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
             query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
             self.args.q = [query]
-            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'user')), async=0)
+            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id')), async=0)
             conc.sync()
             return dict(total=conc.fullsize() if conc else None)
 
