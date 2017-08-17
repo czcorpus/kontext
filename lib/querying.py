@@ -21,7 +21,6 @@ This module contains a functionality related to
 extended, re-editable query processing.
 """
 import logging
-import re
 
 from kontext import Kontext
 import corplib
@@ -77,11 +76,11 @@ class Querying(Kontext):
         """
         self._curr_conc_form_args = item
 
-    def get_saveable_conc_data(self, prev_data):
+    def get_saveable_conc_data(self):
         """
         Export data stored by conc_persistence
         """
-        ans = super(Querying, self).get_saveable_conc_data(prev_data)
+        ans = super(Querying, self).get_saveable_conc_data()
 
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
             ans.update(lastop_form=self._curr_conc_form_args.to_dict())

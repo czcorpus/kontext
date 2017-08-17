@@ -46,7 +46,6 @@ import plugins
 import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
-import fallback_corpus
 
 
 codecs.register_error('replacedot', lambda err: (u'.', err.end))
@@ -59,11 +58,14 @@ def exposed(**kwargs):
     always an implicit property '__exposed__' set to True.
 
     Currently detected properties:
-    access_level -- 0,1,...
+    access_level -- 0,1,... (0 = public user, 1 = logged in user)
     template -- a Cheetah template source path
     vars -- deprecated; do not use
     page_model -- a JavaScript page module
     legacy -- True/False
+    skip_corpus_init -- True/False
+    http_method -- required HTTP method (POST, GET, PUT,...)
+    accept_kwargs -- True/False
 
     arguments:
     **kwargs -- all the keyword args will be converted into a dict
@@ -214,10 +216,10 @@ class Controller(object):
     target method processing, result rendering, generates required http headers etc.
 
     Request processing composes of the following phases:
-      1) pre-dispatch (_pre_dispatch() method)
+      1) pre-dispatch (pre_dispatch() method)
       2) validation of registered callbacks (_pre_action_validate() method)
       3) processing of mapped action method
-      4) post-dispatch (_post_dispatch() method)
+      4) post-dispatch (post_dispatch() method)
       5) building output headers and body
     """
 
@@ -298,7 +300,7 @@ class Controller(object):
     def refresh_session_id(self):
         """
         This tells the wrapping WSGI app to create a new session with
-        the same data the current one has.
+        the same data as the current session.
         """
         self._uses_valid_sid = False
 
@@ -326,7 +328,7 @@ class Controller(object):
         """
         self._system_messages.append((msg_type, text))
 
-    def is_template(self, template):
+    def _is_template(self, template):
         """
         Tests whether the provided template name corresponds
         to a respective python module (= compiled template).
@@ -350,7 +352,8 @@ class Controller(object):
         s = werkzeug.http.HTTP_STATUS_CODES.get(self._status, '')
         return '%s  %s' % (self._status, s)
 
-    def self_encoding(self):
+    @property
+    def corp_encoding(self):
         return 'iso-8859-1'
 
     def _add_globals(self, result, methodname, action_metadata):
@@ -599,7 +602,7 @@ class Controller(object):
         """
         raise NotImplementedError('Each action controller must implement method get_mapping_url_prefix()')
 
-    def import_req_path(self):
+    def _import_req_path(self):
         """
         Parses PATH_INFO into a list of elements
 
@@ -619,7 +622,7 @@ class Controller(object):
             path = [Controller.NO_OPERATION]
         return path
 
-    def _redirect(self, url, code=303):
+    def redirect(self, url, code=303):
         """
         Sets Controller to output HTTP redirection headers.
         Please note that the header output is not immediate -
@@ -693,7 +696,7 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def _pre_dispatch(self, path, args, action_metadata=None):
+    def pre_dispatch(self, path, args, action_metadata=None):
         """
         Allows specific operations to be performed before the action itself is processed.
         """
@@ -702,7 +705,7 @@ class Controller(object):
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return path, args
 
-    def _post_dispatch(self, methodname, action_metadata, tmpl, result):
+    def post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.
@@ -713,12 +716,8 @@ class Controller(object):
         if self._request.args.get('format') == 'json' or self._request.form.get('format') == 'json':
             action_metadata['return_type'] = 'json'
 
-    @staticmethod
-    def _method_is_exposed(metadata):
-        return '__exposed__' in metadata
-
-    def is_action(self, action_name):
-        return callable(getattr(self, action_name, None))
+    def is_action(self, action_name, metadata):
+        return callable(getattr(self, action_name, None)) and '__exposed__' in metadata
 
     def _normalize_error(self, err):
         """
@@ -746,7 +745,7 @@ class Controller(object):
             if type(err.message) == unicode:
                 text = err.message
             else:
-                text = str(err.message).decode(self.self_encoding(), errors='replace')
+                text = str(err.message).decode(self.corp_encoding, errors='replace')
         else:
             text = unicode(err)
             err.message = text  # in case we return the original error
@@ -773,6 +772,9 @@ class Controller(object):
         return new_err
 
     def contains_errors(self):
+        """
+        Tests whether system messages contain at least one message of type 'error'
+        """
         for item in self._system_messages:
             if item[0] == 'error':
                 return True
@@ -790,14 +792,14 @@ class Controller(object):
         """
         self._install_plugin_actions()
         self._proc_time = time.time()
-        path = path if path is not None else self.import_req_path()
+        path = path if path is not None else self._import_req_path()
         named_args = {}
         headers = []
         action_metadata = self._get_method_metadata(path[0])
         try:
             self._init_session()
-            if self.is_action(path[0]) and self._method_is_exposed(action_metadata):
-                path, named_args = self._pre_dispatch(path, named_args, action_metadata)
+            if self.is_action(path[0], action_metadata):
+                path, named_args = self.pre_dispatch(path, named_args, action_metadata)
                 self._pre_action_validate()
                 methodname, tmpl, result = self.process_action(path[0], path, named_args)
             else:
@@ -819,7 +821,7 @@ class Controller(object):
             action_metadata = self._get_method_metadata(methodname)
 
         self._proc_time = round(time.time() - self._proc_time, 4)
-        self._post_dispatch(methodname, action_metadata, tmpl, result)
+        self.post_dispatch(methodname, action_metadata, tmpl, result)
         # response rendering
         headers += self.output_headers(action_metadata.get('return_type', 'html'))
         output = StringIO.StringIO()
@@ -859,15 +861,14 @@ class Controller(object):
                      error_args=getattr(ex, 'error_args', {}))
             )
         else:
-            if not self._exceptmethod and self.is_template(action_name + '_form'):
+            if not self._exceptmethod and self._is_template(action_name + '_form'):
                 self._exceptmethod = action_name + '_form'
             if not self._exceptmethod:  # let general error handlers in run() handle the error
                 raise e2
             else:
                 self.add_system_message('error', user_msg)
 
-            self._pre_dispatch(self._exceptmethod, named_args,
-                               self._get_method_metadata(self._exceptmethod))
+            self.pre_dispatch(self._exceptmethod, named_args, self._get_method_metadata(self._exceptmethod))
             em, self._exceptmethod = self._exceptmethod, None
             return self.process_action(em, pos_args, named_args)
 
@@ -903,7 +904,7 @@ class Controller(object):
             self.args.reload = None
             if methodname != 'subcorp':
                 reload_template = methodname + '_form'
-                if self.is_template(reload_template):
+                if self._is_template(reload_template):
                     return self.process_action(reload_template, pos_args, named_args)
         method = getattr(self, methodname)
         try:
@@ -916,19 +917,6 @@ class Controller(object):
             return methodname, getattr(method, 'template', default_tpl_path), method_ans
         except Exception as ex:
             return self.handle_action_error(ex, methodname, pos_args, named_args)
-
-    def recode_input(self, x, decode=1):
-        """
-        converts a query into the encoding of current corpus
-        """
-        if type(x) is ListType:
-            return [self.recode_input(v, decode) for v in x]
-        if decode:
-            try:
-                x = x.decode('utf-8')
-            except UnicodeDecodeError:
-                x = x.decode('latin1')
-        return x
 
     def urlencode(self, key_val_pairs):
         """

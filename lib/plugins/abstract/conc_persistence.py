@@ -20,9 +20,18 @@
 class AbstractConcPersistence(object):
     """
     Custom conc_persistence plug-in implementations should inherit from this class.
-    Concordance persistence plug-in is expected to store current query (typically represented
-    by a list/tuple containing manatee query args) and represent the value by a
-    (short) identifier.
+
+    Concordance persistence plug-in is expected to store current query and provide
+    access to it via a string identifier.
+
+    Please note that by 'query' we actually mean two representations:
+    1) data entered by user via query form (query, additional options,
+       checked checkboxes of text types,...)
+    2) encoded version of (1) (controller's self.args.q attribute)
+
+    The essential part is to store values from (2) but for a more convenient
+    user experience (1) should be stored too as it allows easy restoring
+    of a state of respective forms.
     """
 
     def is_valid_id(self, data_id):
@@ -52,7 +61,7 @@ class AbstractConcPersistence(object):
         Store a current operation (defined in curr_data) into the database. If also prev_date argument is
         provided then a comparison is performed and based on the result, new record is created and new
         ID is returned. In case there is no reason to store anything (e.g. curr and prev data are the same)
-        it is valid to do nothing and return the same ID.
+        it is valid to do nothing and return the previous operation ID.
 
         arguments:
         user_id -- database ID of the current user

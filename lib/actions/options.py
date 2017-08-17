@@ -122,7 +122,7 @@ class Options(Kontext):
         elif self.args.q:
             self._redirect_to_conc()
         else:
-            self._redirect('/first_form')
+            self.redirect('/first_form')
 
     @exposed(access_level=1, return_type='json', http_method='GET')
     def viewopts(self, _):

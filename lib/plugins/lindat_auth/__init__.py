@@ -73,7 +73,7 @@ class LINDATAuth(AbstractSemiInternalAuth):
         returns:
         a dict with user properties or empty dict
         """
-        getenv = plugin_api.get_environ
+        getenv = plugin_api.get_from_environ
         if username is not None and username != '':
             cols = ('id', 'user', 'pass', 'firstName', 'surname')
             cursor = self.db_conn.cursor()

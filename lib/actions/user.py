@@ -48,7 +48,7 @@ class User(Kontext):
                                                                             request.form['password'])
 
         if self._session['user'].get('id', None):
-            self._redirect('%sfirst_form' % (self.get_root_url(), ))
+            self.redirect('%sfirst_form' % (self.get_root_url(), ))
         else:
             self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
             self.add_system_message('error', _('Incorrect username or password'))
@@ -180,5 +180,5 @@ class User(Kontext):
             self._new_cookies['kontext_ui_lang']['path'] = path_prefix if path_prefix else '/'
             self._new_cookies['kontext_ui_lang']['expires'] = time.strftime('%a, %d %b %Y %T GMT',
                                                                             time.gmtime(time.time() + 180 * 24 * 3600))
-            self._redirect(request.form.get('continue'))
+            self.redirect(request.form.get('continue'))
         return {}
