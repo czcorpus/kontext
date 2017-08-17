@@ -319,13 +319,10 @@ class KwicSenModeSwitchItem(ConcMenuItem):
                 self._args = [('viewmode', 'sen')]
         else:
             if out_data['viewmode'] == 'kwic':
-                self._label = _('KWIC/Sentence/Alignment')
-                self._args = [('viewmode', 'sen')]
-            elif out_data['viewmode'] == 'sen':
-                self._label = _('KWIC/Sentence/Alignment')
+                self._label = _('KWIC/Alignment')
                 self._args = [('viewmode', 'align')]
             elif out_data['viewmode'] == 'align':
-                self._label = _('KWIC/Sentence/Alignment')
+                self._label = _('KWIC/Alignment')
                 self._args = [('viewmode', 'kwic')]
         return super(KwicSenModeSwitchItem, self).create(out_data)
 

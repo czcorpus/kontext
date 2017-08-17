@@ -566,8 +566,8 @@ msgstr "Atribut nebyl nalezen."
 msgid "%s Please make sure the query and selected query type are correct."
 msgstr "%s Zkontrolujte prosím zadání a zvolený typ dotazu."
 
-msgid "KWIC/Sentence/Alignment"
-msgstr "KWIC/věta/zarovnání"
+msgid "KWIC/Alignment"
+msgstr "KWIC/zarovnání"
 
 msgid "case sensitive"
 msgstr "rozlišovat velikost písmen"
