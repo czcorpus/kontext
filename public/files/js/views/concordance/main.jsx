@@ -702,7 +702,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                         <div className="info-level">
                             <paginationViews.Paginator {...this.props} />
                             <ConcSummary {...this.state.concSummary}
-                                corpname={this.props.baseCorpname}
+                                corpname={this.props.baseCanonicalCorpname}
                                 isUnfinishedCalculation={this.state.isUnfinishedCalculation}
                                 />
                         </div>

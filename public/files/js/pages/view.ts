@@ -854,6 +854,7 @@ export class ViewPage {
             arf: this.layoutModel.getConf<number>('ResultArf'),
             isShuffled: this.layoutModel.getConf<boolean>('ResultShuffled')
         };
+        const corpIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
         const lineViewProps:ViewConfiguration = {
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
@@ -862,7 +863,8 @@ export class ViewPage {
             CorporaColumns: this.layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
-            baseCorpname: this.layoutModel.getConf<string>('corpname'),
+            baseCorpname: corpIdent.id,
+            baseCanonicalCorpname: corpIdent.canonicalId,
             subCorpName: this.layoutModel.getConf<string>('subcorpname'),
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),
