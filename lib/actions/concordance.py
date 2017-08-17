@@ -18,7 +18,7 @@ import re
 import json
 from collections import defaultdict
 
-from kontext import MainMenu, LinesGroups, Kontext
+from kontext import LinesGroups, Kontext
 from controller import UserActionException, exposed
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
@@ -29,14 +29,13 @@ import corplib
 import freq_calc
 import coll_calc
 import plugins
-import butils
 from kwiclib import Kwic, KwicPageArgs
 import l10n
 from l10n import import_string, corpus_get_conf
 from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
-from main_menu import MenuGenerator
+from main_menu import MenuGenerator, MainMenu
 from querying import Querying
 
 
@@ -191,7 +190,7 @@ class Actions(Querying):
         out = kwic.kwicpage(kwic_args)
 
         out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
-                                             enc=self.self_encoding())
+                                             enc=self.corp_encoding)
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
 
         out.update(self.get_conc_sizes(conc))
@@ -653,7 +652,7 @@ class Actions(Querying):
         for al_corpname in self.args.align:
             if al_corpname in nopq and not getattr(self.args,
                                                    'include_empty_' + al_corpname, ''):
-                if butils.manatee_min_version('2.130.6'):
+                if corplib.manatee_min_version('2.130.6'):
                     self.args.q.append('X%s' % al_corpname)
                 else:
                     self.args.q.append('x-%s' % al_corpname)
@@ -1456,11 +1455,6 @@ class Actions(Querying):
                     raise task.ExternalTaskError('Task %s failed' % (t,))
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
 
-    @exposed(legacy=True)
-    def attr_vals(self, avattr='', avpat=''):
-        self._headers['Content-Type'] = 'application/json'
-        return corplib.attr_vals(self.args.corpname, avattr, avpat)
-
     @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/saveconc.tmpl')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0,
                  leftctx='-40', rightctx='40'):
@@ -1792,7 +1786,7 @@ class Actions(Querying):
             numQueryOps=0,
             textTypesData=get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False),
             menuData=MenuGenerator(tmp_out, self.args).generate(disabled_items=self.disabled_menu_items,
-                                                                save_items=self.save_menu,
+                                                                save_items=self._save_menu,
                                                                 corpus_dependent=tmp_out['uses_corp_instance'],
                                                                 ui_lang=self.ui_lang),
 

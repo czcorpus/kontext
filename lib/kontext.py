@@ -20,7 +20,6 @@ import logging
 import inspect
 import urllib
 import os.path
-import copy
 import time
 from types import DictType
 
@@ -32,6 +31,7 @@ import conclib
 from controller import Controller, UserActionException, ForbiddenException, convert_types, exposed
 import plugins
 import plugins.abstract
+from plugins.abstract.auth import AbstractInternalAuth, AbstractRemoteAuth
 import settings
 import l10n
 from l10n import format_number, corpus_get_conf
@@ -40,8 +40,7 @@ import scheduled
 import templating
 import fallback_corpus
 from argmapping import ConcArgsMapping, Parameter, GlobalArgs
-from main_menu import MainMenu, MenuGenerator, ConcMenuItem, EventTriggeringItem
-from plugins.abstract.auth import AbstractInternalAuth
+from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from texttypes import get_tt
 
 
@@ -179,8 +178,9 @@ class Kontext(Controller):
     A controller.Controller extension implementing
     KonText-specific requirements.
     """
+
     # main menu items disabled for public users (this is applied automatically during
-    # _post_dispatch())
+    # post_dispatch())
     ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
                                  MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
                                  MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
@@ -195,12 +195,7 @@ class Kontext(Controller):
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
-    BASE_ATTR = 'word'
-
-    # Default corpus must be accessible to any user, otherwise KonText messes up trying
-    # to infer some default corpus name and redirect user there. Hopefully, future releases
-    # will avoid this.
-    DEFAULT_CORPUS = 'susanne'
+    BASE_ATTR = 'word'  # TODO this value is actually hardcoded throughout the code
 
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
@@ -209,15 +204,29 @@ class Kontext(Controller):
 
     def __init__(self, request, ui_lang):
         super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
-        self._curr_corpus = None  # Note: always use _corp() method to access current corpus even from inside the class
+        # Note: always use _corp() method to access current corpus even from inside the class
+        self._curr_corpus = None
+
         self.return_url = None
-        self.cm = None  # a CorpusManager instance (created in _pre_dispatch() phase)
+
+        # a CorpusManager instance (created in pre_dispatch() phase)
+        # generates (sub)corpus objects with additional properties
+        self.cm = None
+
         self.disabled_menu_items = []
-        self.save_menu = []
+
+        # menu items - they should not be handled directly
+        self._save_menu = []
+
         self.subcpath = []
+
         self._conc_dir = u''
+
         self._files_path = settings.get('global', 'static_files_prefix', u'../files')
+
+        # data of the current manual concordance line selection/categorization
         self._lines_groups = LinesGroups(data=[])
+
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
         self.get_corpus_info = partial(plugins.runtime.CORPARCH.instance.get_corpus_info, self._plugin_api.user_lang)
 
@@ -437,15 +446,12 @@ class Kontext(Controller):
                     self.args.q = []
                     raise UserActionException(_('Invalid or expired query'))
 
-    def get_saveable_conc_data(self, prev_data):
+    def get_saveable_conc_data(self):
         """
         Return values to be stored as a representation
         of user's query (here we mean all the data needed
         to reach the current result page including data
         needed to restore involved query forms).
-
-        Method is guaranteed to have prev_data != None
-        and self.args.q with at least one element.
         """
         if len(self._auto_generated_conc_ops) > 0:
             q_limit = self._auto_generated_conc_ops[0][0]
@@ -473,7 +479,7 @@ class Kontext(Controller):
         a way to edit them, KonText must store them too.
 
         Please note that it is expected that these operations
-        follow the query (no matter what q_idx says - it is
+        come right after the query (no matter what q_idx says - it is
         used just to split original encoded query when storing
         the multi-operation as separate entities in query storage).
 
@@ -499,7 +505,7 @@ class Kontext(Controller):
         if plugins.runtime.CONC_PERSISTENCE.exists and self.args.q:
             with plugins.runtime.CONC_PERSISTENCE as cp:
                 prev_data = self._prev_q_data if self._prev_q_data is not None else {}
-                curr_data = self.get_saveable_conc_data(prev_data)
+                curr_data = self.get_saveable_conc_data()
                 q_id = cp.store(self._session_get('user', 'id'), curr_data=curr_data, prev_data=self._prev_q_data)
                 self._save_query_to_history(q_id, curr_data)
                 lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
@@ -524,7 +530,7 @@ class Kontext(Controller):
         else:
             args += [('q', q) for q in self.args.q]
         href = werkzeug.urls.Href(self.get_root_url() + 'view')
-        self._redirect(href(MultiDict(args)))
+        self.redirect(href(MultiDict(args)))
 
     def _update_output_with_conc_params(self, op_id, tpl_data):
         """
@@ -618,7 +624,7 @@ class Kontext(Controller):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if fallback_url:
                 path = [Controller.NO_OPERATION]
-                self._redirect(fallback_url)
+                self.redirect(fallback_url)
         elif len(allowed_corpora) > 0:
             self.args.corpname = ''
         else:
@@ -659,12 +665,12 @@ class Kontext(Controller):
         self._session['semi_persistent_attrs'] = tmp.items(multi=True)
 
     # TODO: decompose this method (phase 2)
-    def _pre_dispatch(self, path, named_args, action_metadata=None):
+    def pre_dispatch(self, path, named_args, action_metadata=None):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args.
         """
-        super(Kontext, self)._pre_dispatch(path, named_args, action_metadata)
+        super(Kontext, self).pre_dispatch(path, named_args, action_metadata)
 
         def validate_corpus():
             if isinstance(self.corp, fallback_corpus.ErrorCorpus):
@@ -717,14 +723,14 @@ class Kontext(Controller):
                 p.instance.setup(self)
         return path, named_args
 
-    def _post_dispatch(self, methodname, action_metadata, tmpl, result):
+    def post_dispatch(self, methodname, action_metadata, tmpl, result):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
         if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
-        super(Kontext, self)._post_dispatch(methodname, action_metadata, tmpl, result)
+        super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result)
         # create and store concordance query key
         if type(result) is DictType:
             new_query_key = self._store_conc_params()
@@ -733,27 +739,14 @@ class Kontext(Controller):
         self._log_request(self._get_items_by_persistence(Parameter.PERSISTENT), '%s' % methodname,
                           proc_time=self._proc_time)
 
-    def _add_save_menu_item(self, label, action, params, save_format=None):
-        params = copy.copy(params)
-        if save_format:
-            if type(params) is dict:
-                params['saveformat'] = save_format
-                params = params.items()
-            elif type(params) is list:
-                params.append(('saveformat', save_format))
-            else:
-                raise ValueError('Unsupported argument type: %s' % type(params))
-        item_id = '%s-%s' % (action.replace('/', '_'), save_format)
-        self.save_menu.append(ConcMenuItem(MainMenu.SAVE(item_id), label, action).add_args(*params))
-
     def _add_flux_save_menu_item(self, label, save_format=None):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
-            self.save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name).mark_indirect())
+            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name).mark_indirect())
 
         else:
             event_name = 'MAIN_MENU_DIRECT_SAVE'
-            self.save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name
+            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name
                                                       ).add_args(('saveformat', save_format)))
 
     def _determine_curr_corpus(self, form, corp_list):
@@ -795,7 +788,7 @@ class Kontext(Controller):
 
         # 1) reload permissions in case of no access and if available
         with plugins.runtime.AUTH as auth:
-            if cn not in corp_list and isinstance(auth, plugins.abstract.auth.AbstractRemoteAuth):
+            if cn not in corp_list and isinstance(auth, AbstractRemoteAuth):
                 auth.refresh_user_permissions(self._plugin_api)
                 corp_list = auth.permitted_corpora(self._session_get('user', 'id'))
         # 2) try alternative corpus configuration (e.g. with restricted access)
@@ -814,7 +807,8 @@ class Kontext(Controller):
             fallback = '%scorpora/corplist' % self.get_root_url()  # TODO hardcoded '/corpora/'
         return cn, fallback
 
-    def self_encoding(self):
+    @property
+    def corp_encoding(self):
         enc = corpus_get_conf(self.corp, 'ENCODING')
         return enc if enc else 'iso-8859-1'
 
@@ -1152,7 +1146,7 @@ class Kontext(Controller):
 
         # main menu
         menu_items = MenuGenerator(result, self.args).generate(disabled_items=self.disabled_menu_items,
-                                                               save_items=self.save_menu,
+                                                               save_items=self._save_menu,
                                                                corpus_dependent=result['uses_corp_instance'],
                                                                ui_lang=self.ui_lang)
         result['menu_data'] = menu_items
@@ -1312,14 +1306,14 @@ class Kontext(Controller):
             u2.append(('corpname', self.args.corpname))
             if self.args.usesubcorp:
                 u2.append(('usesubcorp', self.args.usesubcorp))
-            out['Desc'].append({
-                'op': o,
-                'opid': opid,
-                'arg': a,
-                'nicearg': nicearg(a),
-                'churl': self.urlencode(u1),
-                'tourl': self.urlencode(u2),
-                'size': s})
+            out['Desc'].append(dict(
+                op=o,
+                opid=opid,
+                arg=a,
+                nicearg=nicearg(a),
+                churl=self.urlencode(u1),
+                ourl=self.urlencode(u2),
+                size=s))
         return out
 
     @exposed(return_type='json', skip_corpus_init=True)
@@ -1363,7 +1357,7 @@ class PluginApi(object):
     def get_shared(self, key, default=None):
         return self._shared_data.get(key, default)
 
-    def get_environ(self, key, default=None):
+    def get_from_environ(self, key, default=None):
         """
         Return a WSGI environment variable
         """

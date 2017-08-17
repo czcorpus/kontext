@@ -401,7 +401,7 @@ class MenuGenerator(object):
         # -------------------------------- menu-save ------------------------------------
 
         # save items are generated dynamically during action processing
-        # (see Kontext._add_save_menu_item())
+        # (see Kontext._add_flux_save_menu_item())
 
         # ----------------------------- menu-concordance --------------------------------
 

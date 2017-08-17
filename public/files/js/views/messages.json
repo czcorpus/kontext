@@ -218,7 +218,7 @@
         "query__filter_th": "Filter",
         "query__qfilter_pos": "positive",
         "query__qfilter_neg": "negative",
-        "query__qlfilter_sel_token": "Highligh",
+        "query__qlfilter_sel_token": "Highlight",
         "query__qlfilter_sel_token_hint": "Applies in case of multiple matches on a line.",
         "query__token_first": "first match",
         "query__token_last": "last match",

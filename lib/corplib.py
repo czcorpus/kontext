@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2003-2013  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Milos Husak, Vit Baisa
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright(c) 2014 Charles University in Prague, Faculty of Arts,
+#                   Institute of the Czech National Corpus
+# Copyright(c) 2014 Tomas Machalek <tomas.machalek @ gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,18 +38,24 @@ def manatee_version():
     return manatee.version()
 
 
+def manatee_min_version(ver):
+    """
+    Tests whether the provided version string represents a newer or
+    equal version than the one currently configured.
+
+    arguments:
+    ver -- a version signature string 'X.Y.Z' (e.g. '2.130.7')
+    """
+    ver = int(''.join(map(lambda x: '%03d' % int(x), ver.split('.'))))
+    actual = int(''.join(map(lambda x: '%03d' % int(x), manatee.version().split('-')[-1].split('.'))))
+    return ver <= actual
+
+
 def open_corpus(*args, **kwargs):
     """
     Creates a manatee.Corpus instance
     """
     return manatee.Corpus(*args, **kwargs)
-
-
-def find_subcorpora(*args, **kwargs):
-    """
-    Lists subcorpora at a specified path
-    """
-    return manatee.find_subcorpora(*args, **kwargs)
 
 
 def create_subcorpus(path, corpus, structname, subquery):
@@ -92,6 +100,10 @@ def create_str_vector():
 
 
 def conf_bool(v):
+    """
+    Tests whether the provided string 
+    represents an encoded 'true' value ('1', 't', ...) 
+    """
     return v in ('y', 'yes', 'true', 't', '1')
 
 
@@ -146,8 +158,11 @@ class CorpusManager(object):
 
     def corpconf_pairs(self, corp, label):
         """
+        Encodes some specific corpus registry file configuration values
+        where a list of pairs is actually flattened (k1, v1, k2, v2,..., kN, vN).
+        This applies e.g. for WPOSLIST and LPOSLIST.
         Returns:
-             dict: label->value pairs
+             a list of pairs
         """
         if type(corp) is basestring:
             corp = self.get_Corpus(corp)
@@ -156,9 +171,9 @@ class CorpusManager(object):
             val = val[1:].split(val[0])
         else:
             val = ''
-        return [val[i:i + 2] for i in range(0, len(val), 2)]
+        return [(val[i], val[i+1]) for i in range(0, len(val), 2)]
 
-    def subcorpora(self, corpname):
+    def subc_files(self, corpname):
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
         enc_corpname = corpname.encode('utf-8')
         subc = []
@@ -175,16 +190,7 @@ class CorpusManager(object):
 
     def subcorp_names(self, corpname):
         return [{'n': os.path.splitext(os.path.basename(s))[0], 'v': os.path.splitext(os.path.basename(s))[0]}
-                for s in self.subcorpora(corpname)]
-
-    def last_subcorp_names(self, corpname, maxitems=25):
-
-        subc = [os.path.isfile(c[:-4] + 'used') and c[:-4] + 'used' or c
-                for c in self.subcorpora(corpname)]
-        subc = [(os.stat(c).st_ctime, c) for c in subc]
-        subc.sort(reverse=True)
-        return [{'n': os.path.splitext(os.path.basename(s))[0]}
-                for t, s in subc[:maxitems]]
+                for s in self.subc_files(corpname)]
 
 
 def add_block_items(items, attr='class', val='even', block_size=3):
@@ -285,19 +291,6 @@ def doc_sizes(corp, struct, attrname, i, normvals):
     return cnt
 
 
-def attr_vals(corpname, avattr, avpattern, avmaxitems=20):
-    attr = manatee.findPosAttr(corpname, avattr)
-    gen = attr.regexp2ids('.*%s.*' % avpattern.strip(), True)
-    items = []
-    while not gen.end() and avmaxitems > 0:
-        items.append(attr.id2str(gen.next()))
-        avmaxitems -= 1
-    if not items:
-        return "{query:'%s',suggestions:['%s']}" % (avpattern, '--nothing found--')
-    return "{query:'%s',suggestions:[%s]}" % \
-           (avpattern, ','.join(["'" + item + "'" for item in items]))
-
-
 def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
     """
     arguments:
@@ -369,7 +362,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
 
                 if hsep:  # hierarchical
                     attrval['hierarchical'] = hsep
-                    attrval['Values'] = get_attr_hierarchy(vals, hsep, multisep)
+                    attrval['Values'] = _get_attr_hierarchy(vals, hsep)
                 elif conf_bool(corp.get_conf(n + '.NUMERIC')):
                     attrval['Values'] = sorted(vals, key=lambda item: item['v'])
                 elif collator_locale:
@@ -381,7 +374,7 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
     return attrlines
 
 
-def get_attr_hierarchy(vals, hsep, multisep):
+def _get_attr_hierarchy(vals, hsep):
     result = {}
     values = set([])
     for v in vals:
@@ -392,10 +385,10 @@ def get_attr_hierarchy(vals, hsep, multisep):
             key, value = value.split(hsep, 1)
             level = level[key]
         level[value] = {}
-    return print_attr_hierarchy(result, hsep=hsep)
+    return _print_attr_hierarchy(result, hsep=hsep)
 
 
-def print_attr_hierarchy(layer, level=0, label='', hsep='::'):
+def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
     if not layer:
         return []
     result = []
@@ -404,7 +397,7 @@ def print_attr_hierarchy(layer, level=0, label='', hsep='::'):
     else:
         startdiv = False
     for item in sorted(layer):
-        sub = print_attr_hierarchy(layer[item], level + 1, label + hsep + item, hsep)
+        sub = _print_attr_hierarchy(layer[item], level + 1, label + hsep + item, hsep)
         if sub:
             display_plus = True
         else:
@@ -423,7 +416,8 @@ def print_attr_hierarchy(layer, level=0, label='', hsep='::'):
         })
         startdiv = False
         result.extend(sub)
-    if level > 0: result[-1]['enddiv'] += 1
+    if level > 0:
+        result[-1]['enddiv'] += 1
     return result
 
 
@@ -513,26 +507,9 @@ def frq_db(corp, attrname, nums='frq', id_range=0):
     return frq
 
 
-def subc_keywords3(sc, scref, attrname, minarf=10, maxitems=100):
-    f = frq_db(sc, attrname)
-    fref = frq_db(scref, attrname)
-    p = sum(fref) / sum(f)
-    attr = sc.get_attr(attrname)
-    items = [(p * (f[i] + 1) / (fref[i] + 1), i)
-             for i in xrange(attr.id_range())
-             if f[i] >= minarf and (fref[i] == 0 or p * f[i] / fref[i] > 2.0)
-    ]
-    items.sort(reverse=True)
-    del items[maxitems:]
-    fsf = frq_db(sc, attrname)
-    fcf = frq_db(scref, attrname)
-    return [(s, attr.id2str(i), f[i], fref[i], fsf[i], fcf[i], i)
-            for s, i in items]
-
-
 def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
-                        wlmaxitems=100, simple_n=100, wlwords=[],
-                        blacklist=[], include_nonwords=0, wlnums='frq'):
+                        wlmaxitems=100, simple_n=100, wlwords=None,
+                        blacklist=None, include_nonwords=0, wlnums='frq'):
     f = frq_db(sc, attrname, wlnums)
     fref = frq_db(scref, attrname, wlnums)
     size = sum(f)
@@ -540,6 +517,11 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
     p = size_ref / size
     attr = sc.get_attr(attrname)
     attrref = scref.get_attr(attrname)
+    if wlwords is None:
+        wlwords = []
+    if blacklist is None:
+        blacklist = []
+
     items = []
     if not include_nonwords:
         nwre = sc.get_conf('NONWORDRE')

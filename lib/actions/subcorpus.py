@@ -70,7 +70,6 @@ class Subcorpus(Querying):
         subcname = request.form['subcname']
         within_json = request.form.get('within_json')
         raw_cql = request.form.get('cql')
-        corp_encoding = self.corp.get_conf('ENCODING')
 
         if raw_cql:
             aligned_corpora = []
@@ -90,10 +89,11 @@ class Subcorpus(Querying):
             tmp = ['<%s %s />' % item for item in tt_query]
             aligned_corpora = request.form.getlist('aligned_corpora')
             if len(aligned_corpora) > 0:
-                tmp.extend(map(lambda cn: '%s: []' % export_string(cn, to_encoding=corp_encoding), aligned_corpora))
+                tmp.extend(map(lambda cn: '%s: []' % export_string(cn, to_encoding=self.corp_encoding),
+                               aligned_corpora))
             full_cql = ' within '.join(tmp)
             full_cql = 'aword,[] within %s' % full_cql
-            full_cql = import_string(full_cql, from_encoding=corp_encoding)
+            full_cql = import_string(full_cql, from_encoding=self.corp_encoding)
             imp_cql = (full_cql,)
 
         basecorpname = self.args.corpname.split(':')[0]
@@ -152,7 +152,7 @@ class Subcorpus(Querying):
     def subcorp(self, request):
         try:
             ans = self._create_subcorpus(request)
-            self._redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
+            self.redirect('subcorpus/subcorp_list?corpname=%s' % self.args.corpname)
         except (SubcorpusError, UserActionException, RuntimeError) as e:
             self.add_system_message('error', getattr(e, 'message', e.__repr__()))
             ans = self.subcorp_form(request)
