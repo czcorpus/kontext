@@ -237,9 +237,11 @@ declare module "views/query/sampleShuffle" {
     export interface SampleFormViews {
         SampleFormView:React.ReactClass;
         ShuffleFormView:React.ReactClass;
+        SwitchMainCorpFormView:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, sampleStore:any):SampleFormViews;
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
+            sampleStore:Kontext.PageStore, switchMcStore:Kontext.PageStore):SampleFormViews;
 }
 
 
@@ -251,6 +253,7 @@ declare module "views/query/overview" {
         SortFormView:React.ReactClass;
         SampleFormView:React.ReactClass;
         ShuffleFormView:React.ReactClass;
+        SwitchMainCorpFormView:React.ReactClass;
     }
 
     export interface QueryToolbarViews {

@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict
+from typing import Dict, Any, Optional, Callable, List
 from kontext import Kontext
 from argmapping.query import ConcFormArgs
 import werkzeug.wrappers
@@ -29,3 +29,9 @@ class Querying(Kontext):
     def import_qs(qs:str) -> str: ...
 
     def ajax_fetch_conc_form_args(self, request:werkzeug.wrappers.Request) -> Dict[str, Any]: ...
+
+    def export_aligned_form_params(self, aligned_corp:str, state_only:bool,
+                                   name_filter:Optional[Callable[str, bool]]) -> Dict[str, Any]: ...
+
+    @staticmethod
+    def load_pipeline_ops(last_id:str) -> List[ConcFormArgs]: ...

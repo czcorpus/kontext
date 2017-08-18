@@ -95,7 +95,7 @@ class Querying(Kontext):
         return qs[:-3] if qs is not None else None
 
     def _select_current_aligned_corpora(self, active_only):
-        return self._get_current_aligned_corpora() if active_only else self._get_available_aligned_corpora()
+        return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
 
     def _attach_query_params(self, tpl_out):
         """
@@ -174,7 +174,7 @@ class Querying(Kontext):
             out['SubcorpList'] = []
         out['SubcorpList'].extend(subcorp_list)
 
-    def _export_aligned_form_params(self, aligned_corp, state_only, name_filter=None):
+    def export_aligned_form_params(self, aligned_corp, state_only, name_filter=None):
         """
         Collects aligned corpora-related arguments with dynamic names
         (i.e. the names with corpus name as a suffix)
@@ -196,10 +196,10 @@ class Querying(Kontext):
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request):
         try:
-            # we must include only regular (i.e. the ones visible in the breadcrumb-like navigation bar)
-            # operations - otherwise the indices would not match.
+            # we must include only regular (i.e. the ones visible in the breadcrumb-like
+            # navigation bar) operations - otherwise the indices would not match.
             pipeline = filter(lambda x: x.form_type != 'nop',
-                              self._load_pipeline_ops(request.args['last_key']))
+                              self.load_pipeline_ops(request.args['last_key']))
             op_data = pipeline[int(request.args['idx'])]
             return op_data.to_dict()
         except (IndexError, KeyError):
@@ -207,10 +207,10 @@ class Querying(Kontext):
             return {}
 
     @staticmethod
-    def _load_pipeline_ops(last_id):
+    def load_pipeline_ops(last_id):
         ans = []
         if plugins.runtime.CONC_PERSISTENCE.exists:
-            with plugins.runtime.CONC_PERSISTENCE.exists as cp:
+            with plugins.runtime.CONC_PERSISTENCE as cp:
                 data = cp.open(last_id)
                 if data is not None:
                     ans.append(build_conc_form_args(data['lastop_form'], data['id']))

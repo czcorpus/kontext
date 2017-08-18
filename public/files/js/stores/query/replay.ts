@@ -31,6 +31,7 @@ import {QueryStore, QueryFormUserEntries} from './main';
 import {FilterStore} from './filter';
 import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';
 import {SampleStore} from './sample';
+import {SwitchMainCorpStore} from './switchmc';
 import {TextTypesStore} from '../textTypes/attrValues';
 
 
@@ -72,6 +73,9 @@ function mapOpIdToFormType(opId:string):string {
 
     } else if (opId === 'f') {
         return 'shuffle';
+
+    } else if (opId === 'x') {
+        return 'switchmc';
     }
 }
 
@@ -92,6 +96,7 @@ export interface ReplayStoreDeps {
     mlSortStore:MultiLevelSortStore;
     sampleStore:SampleStore;
     textTypesStore:TextTypesStore;
+    switchMcStore:SwitchMainCorpStore;
 }
 
 
@@ -136,6 +141,8 @@ export class QueryReplayStore extends SimplePageStore {
     private mlSortStore:MultiLevelSortStore;
 
     private sampleStore:SampleStore;
+
+    private switchMcStore:SwitchMainCorpStore;
 
     private textTypesStore:TextTypesStore;
 
@@ -182,6 +189,7 @@ export class QueryReplayStore extends SimplePageStore {
         this.sortStore = replayStoreDeps.sortStore;
         this.mlSortStore = replayStoreDeps.mlSortStore;
         this.sampleStore = replayStoreDeps.sampleStore;
+        this.switchMcStore = replayStoreDeps.switchMcStore;
         this.textTypesStore = replayStoreDeps.textTypesStore;
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
@@ -440,6 +448,25 @@ export class QueryReplayStore extends SimplePageStore {
                     return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                         resolve(() => {
                             window.location.href = targetUrl;
+                        });
+                    });
+                }
+            };
+
+        } else if (formType === 'switchmc') {
+            return () => {
+                const url = this.switchMcStore.getSubmitUrl(opKey);
+                if (opIdx < numOps - 1) {
+                    return this.pageModel.ajax(
+                        'GET',
+                        url,
+                        {format: 'json'}
+                    );
+
+                } else {
+                    return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                        resolve(() => {
+                            window.location.href = url;
                         });
                     });
                 }
@@ -745,16 +772,44 @@ export class QueryReplayStore extends SimplePageStore {
 
             ).then(
                 (data) => {
-                    if (!data.contains_errors) {
+                    this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                    this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                    return data;
+                }
+            );
+        }
+    }
+
+    private syncSwitchMcForm(opIdx:number):RSVP.Promise<any> {
+        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+        if (queryKey !== undefined) {
+            return this.switchMcStore.syncFrom(() => {
+                return new RSVP.Promise<AjaxResponse.SwitchMainCorpArgs>(
+                    (resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
+                    }
+                );
+            });
+
+        } else {
+            return this.switchMcStore.syncFrom(() => {
+                return this.pageModel.ajax<AjaxResponse.SwitchMainCorpArgs>(
+                    'GET',
+                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                    {
+                        corpname: this.getActualCorpname(),
+                        last_key: this.getCurrentQueryKey(),
+                        idx: opIdx
+                    }
+
+                ).then(
+                    (data) => {
                         this.concArgsCache = this.concArgsCache.set(data.op_key, data);
                         this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
                         return data;
-
-                    } else {
-                        throw new Error(data.messages[0]);
                     }
-                }
-            );
+                );
+            });
         }
     }
 
@@ -781,6 +836,9 @@ export class QueryReplayStore extends SimplePageStore {
 
         } else if (formType === 'shuffle') {
             return this.syncShuffleForm(opIdx);
+
+        } else if (formType === 'switchmc') {
+            return this.syncSwitchMcForm(opIdx);
         }
     }
 

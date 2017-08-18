@@ -215,7 +215,8 @@ export class CollPage {
                 FilterFormView: null,
                 SortFormView: null,
                 SampleFormView: null,
-                ShuffleFormView: null
+                ShuffleFormView: null,
+                SwitchMainCorpFormView: null
             },
             this.queryReplayStore,
             this.layoutModel.getStores().mainMenuStore,

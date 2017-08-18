@@ -21,7 +21,8 @@ from collections import defaultdict
 from kontext import LinesGroups, Kontext
 from controller import UserActionException, exposed
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
-                              LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv)
+                              LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
+                              KwicSwitchArgs)
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 import settings
 import conclib
@@ -100,7 +101,7 @@ class Actions(Querying):
         args = {}
         if self.args.align:
             for aligned_lang in self.args.align:
-                args.update(self._export_aligned_form_params(aligned_lang, state_only=True))
+                args.update(self.export_aligned_form_params(aligned_lang, state_only=True))
         result['globals'] += '&' + self.urlencode(args)
         result['Globals'] = result['Globals'].update(args)
         result['query_overview'] = self.concdesc_json().get('Desc', [])
@@ -202,7 +203,7 @@ class Actions(Querying):
                                    'NAME') or w}
                               for w in self.corp.get_conf('ALIGNED').split(',')]
         if self.args.align and not self.args.maincorp:
-            self.args.maincorp = os.path.basename(self.args.corpname)
+            self.args.maincorp = self._canonical_corpname(self.args.corpname)
         if len(out['Lines']) == 0:
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
@@ -275,10 +276,10 @@ class Actions(Querying):
                                     MainMenu.VIEW('kwic-sentence'))
         out = {}
 
-        if len(self._get_available_aligned_corpora()) == 1:
+        if len(self.get_available_aligned_corpora()) == 1:
             self.args.align = []
         else:
-            self.args.align = [ac for ac in self.args.align if ac in self._get_available_aligned_corpora()]
+            self.args.align = [ac for ac in self.args.align if ac in self.get_available_aligned_corpora()]
         out['aligned_corpora'] = self.args.align
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
@@ -609,8 +610,8 @@ class Actions(Querying):
         par_query = ''
         nopq = []
         for al_corpname in self.args.align:
-            pcq_args = self._export_aligned_form_params(al_corpname, state_only=False,
-                                                        name_filter=lambda v: v.startswith('pcq_pos_neg'))
+            pcq_args = self.export_aligned_form_params(al_corpname, state_only=False,
+                                                       name_filter=lambda v: v.startswith('pcq_pos_neg'))
             wnot = '' if pcq_args.get('pcq_pos_neg_' + al_corpname) == 'pos' else '!'
             pq = self._compile_basic_query(suff='_' + al_corpname,
                                            cname=al_corpname)
@@ -719,6 +720,14 @@ class Actions(Querying):
             ff_args = q_conv(q)
             self.acknowledge_auto_generated_conc_op(op_idx, ff_args)
             self.args.q.append(q)
+        return self.view()
+
+    @exposed(template='view.tmpl', page_model='view')
+    def switch_main_corp(self, request):
+        maincorp = request.args['maincorp']
+        self.args.q.append('x-{0}'.format(maincorp))
+        ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
+        self.add_conc_form_args(ksargs)
         return self.view()
 
     @exposed(access_level=1, template='view.tmpl', vars=('orig_query', ), page_model='view')
@@ -1640,7 +1649,7 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST', legacy=True)
     def ajax_unset_lines_groups(self):
-        pipeline = self._load_pipeline_ops(self._q_code)
+        pipeline = self.load_pipeline_ops(self._q_code)
         i = len(pipeline) - 1
         # we have to go back before the current block
         # of lines-groups operations and find an
@@ -1806,5 +1815,5 @@ class Actions(Querying):
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, request):
-        pipeline = self._load_pipeline_ops(self._q_code)
+        pipeline = self.load_pipeline_ops(self._q_code)
         return dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])

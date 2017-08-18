@@ -518,8 +518,7 @@ export class ConcLineStore extends SimplePageStore {
         if (this.hasKwic(corpusId)) {
             args.set('maincorp', corpusId);
             args.set('viewmode', 'align');
-            args.add('q', 'x-' + corpusId);
-            window.location.href = this.layoutModel.createActionUrl('view', args.items());
+            window.location.href = this.layoutModel.createActionUrl('switch_main_corp', args.items());
 
         } else {
             throw new Error('Cannot set corpus as main - no KWIC');

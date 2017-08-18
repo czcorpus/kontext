@@ -39,6 +39,7 @@ import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} f
 import {QueryReplayStore, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
 import {SampleStore, SampleFormProperties, fetchSampleFormArgs} from '../stores/query/sample';
+import {SwitchMainCorpStore, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs} from '../stores/query/switchmc';
 import {QuerySaveAsFormStore} from '../stores/query/save';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
@@ -89,6 +90,7 @@ export class QueryStores {
     sortStore:SortStore;
     multiLevelSortStore:MultiLevelSortStore;
     sampleStore:SampleStore;
+    switchMcStore:SwitchMainCorpStore;
     saveAsFormStore:QuerySaveAsFormStore;
 }
 
@@ -599,12 +601,12 @@ export class ViewPage {
         );
     }
 
-    private initSampleForm():void {
+    private initSampleForm(switchMcStore:SwitchMainCorpStore):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const fetchArgs = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>fetchSampleFormArgs(concFormsArgs, key);
+        const fetchArg = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>fetchSampleFormArgs(concFormsArgs, key);
 
         const sampleStoreProps:SampleFormProperties = {
-            rlines: fetchArgs<string>(item => item.rlines)
+            rlines: fetchArg<string>(item => item.rlines)
         };
 
         this.queryStores.sampleStore = new SampleStore(
@@ -625,7 +627,34 @@ export class ViewPage {
         this.sampleFormViews = sampleFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.exportMixins(),
-            this.queryStores.sampleStore
+            this.queryStores.sampleStore,
+            switchMcStore
+        );
+    }
+
+    private initSwitchMainCorpForm():void {
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const fetchArg = <T>(key:(item:AjaxResponse.SwitchMainCorpArgs)=>T):Array<[string, T]>=>fetchSwitchMainCorpFormArgs(concFormsArgs, key);
+
+        const switchMainCorpProps:SwitchMainCorpFormProperties = {
+            maincorp: fetchArg<string>(item => item.maincorp)
+        };
+
+        this.queryStores.switchMcStore = new SwitchMainCorpStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            switchMainCorpProps
+        );
+
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_SHOW_SWITCHMC',
+            (args:Kontext.GeneralProps) => {
+                return this.queryStores.switchMcStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.SwitchMainCorpArgs>((resolve:(v)=>void, reject:(err)=>void) => {
+                        resolve(updateProps(this.concFormsInitialArgs.sample, args));
+                    });
+                });
+            }
         );
     }
 
@@ -642,7 +671,8 @@ export class ViewPage {
                 sortStore: this.queryStores.sortStore,
                 mlSortStore: this.queryStores.multiLevelSortStore,
                 sampleStore: this.queryStores.sampleStore,
-                textTypesStore: this.queryStores.textTypesStore
+                textTypesStore: this.queryStores.textTypesStore,
+                switchMcStore: this.queryStores.switchMcStore
             },
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
@@ -656,7 +686,8 @@ export class ViewPage {
                 FilterFormView: this.filterFormViews.FilterForm,
                 SortFormView: this.sortFormViews.SortFormView,
                 SampleFormView: this.sampleFormViews.SampleFormView,
-                ShuffleFormView: this.sampleFormViews.ShuffleFormView
+                ShuffleFormView: this.sampleFormViews.ShuffleFormView,
+                SwitchMainCorpFormView: this.sampleFormViews.SwitchMainCorpFormView
             },
             this.queryStores.queryReplayStore,
             this.layoutModel.getStores().mainMenuStore,
@@ -691,6 +722,8 @@ export class ViewPage {
                         const args = this.layoutModel.getConcArgs();
                         window.location.href = this.layoutModel.createActionUrl('shuffle', args.items());
                     }
+                },
+                switchMcFormProps: {
                 }
             }
         );
@@ -1025,7 +1058,8 @@ export class ViewPage {
                 this.initQueryForm();
                 this.initFilterForm();
                 this.initSortForm();
-                this.initSampleForm();
+                this.initSwitchMainCorpForm();
+                this.initSampleForm(this.queryStores.switchMcStore);
                 this.initQueryOverviewArea(tagh, qs);
                 this.initAnalysisViews();
                 this.updateMainMenu();
