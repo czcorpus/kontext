@@ -133,7 +133,7 @@ def create_arch_conc_action(concdb, archdb):
             row = cursor.fetchone()
             return dict(data=json.loads(row[1]) if row is not None else None)
         else:
-            ctrl._set_not_found()
+            ctrl.set_not_found()
             return {}
 
     return archive_concordance

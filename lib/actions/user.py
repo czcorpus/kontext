@@ -59,7 +59,7 @@ class User(Kontext):
     def logoutx(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         plugins.runtime.AUTH.instance.logout(self._session)
-        self._init_session()
+        self.init_session()
         self.refresh_session_id()
         plugins.runtime.AUTH.instance.logout_hook(self._plugin_api)
         return dict(message=('info', _('You have been logged out')))
@@ -80,7 +80,7 @@ class User(Kontext):
 
                 if not self._uses_internal_user_pages():
                     raise UserActionException(_('This function is disabled.'))
-                logged_in = auth.validate_user(self._plugin_api, self._session_get('user', 'user'), curr_passwd)
+                logged_in = auth.validate_user(self._plugin_api, self.session_get('user', 'user'), curr_passwd)
 
                 if self._is_anonymous_id(logged_in['id']):
                     raise UserActionException(_('Invalid user or password'))
@@ -90,7 +90,7 @@ class User(Kontext):
                 if not auth.validate_new_password(new_passwd):
                     raise UserActionException(auth.get_required_password_properties())
 
-                auth.update_user_password(self._session_get('user', 'id'), new_passwd)
+                auth.update_user_password(self.session_get('user', 'id'), new_passwd)
             except UserActionException as e:
                 self.add_system_message('error', e)
             return {}
@@ -103,7 +103,7 @@ class User(Kontext):
                 corpname = None
             with plugins.runtime.QUERY_STORAGE as qs:
                 rows = qs.get_user_queries(
-                    self._session_get('user', 'id'),
+                    self.session_get('user', 'id'),
                     self.cm,
                     offset=offset, limit=limit,
                     query_type=query_type, corpname=corpname,
@@ -164,7 +164,7 @@ class User(Kontext):
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_user_info(self, request):
         with plugins.runtime.AUTH as auth:
-            user_info = auth.get_user_info(self._session_get('user', 'id'))
+            user_info = auth.get_user_info(self.session_get('user', 'id'))
             if not self.user_is_anonymous():
                 return {'user': user_info}
             else:

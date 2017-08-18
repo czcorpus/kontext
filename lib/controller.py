@@ -77,7 +77,7 @@ def exposed(**kwargs):
     return wrapper
 
 
-def function_defaults(fun):
+def _function_defaults(fun):
     """
     Returns a dictionary containing default argument names and
     their respective values. This is used when invoking legacy
@@ -101,6 +101,8 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     Converts string values as received from GET/POST data into types
     defined by actions' parameters (type is inferred from function's default
     argument values).
+
+    The function returns the same object as passed via 'args'
     """
     # TODO - there is a potential conflict between global Parameter types and function defaults
     corr_func = {type(0): int, type(0.0): float, TupleType: lambda x: [x]}
@@ -135,7 +137,7 @@ def get_traceback():
     return traceback.format_exception(err_type, err_value, err_trace)
 
 
-def fetch_exception_msg(ex):
+def _fetch_exception_msg(ex):
     msg = getattr(ex, 'message', None)
     if not msg:
         try:
@@ -163,10 +165,10 @@ class CheetahResponseFile(object):
     Provides utf-8 compatible output for Cheetah renderer
     """
     def __init__(self, outfile):
-        self.outfile = codecs.getwriter('utf-8')(outfile)
+        self._outfile = codecs.getwriter('utf-8')(outfile)
 
     def response(self):
-        return self.outfile
+        return self._outfile
 
 
 class FunctionNotSupported(Exception):
@@ -255,7 +257,7 @@ class Controller(object):
         if not os.path.isdir(self._template_dir):
             self._template_dir = imp.find_module('cmpltmpl')[1]
 
-    def _init_session(self):
+    def init_session(self):
         """
         Starts/reloads user's web session data. It can be called even
         if there is no 'sessions' plugin installed (in such case, it just
@@ -279,11 +281,11 @@ class Controller(object):
     def _session(self):
         return self._request.session
 
-    def _session_get(self, *nested_keys):
+    def session_get(self, *nested_keys):
         """
         This is just a convenience method to retrieve session's nested values:
         E.g. self._session['user']['car']['name'] can be rewritten
-        as self._session_get('user', 'car', 'name').
+        as self.session_get('user', 'car', 'name').
         If no matching keys are found then None is returned.
 
         Arguments:
@@ -356,7 +358,7 @@ class Controller(object):
     def corp_encoding(self):
         return 'iso-8859-1'
 
-    def _add_globals(self, result, methodname, action_metadata):
+    def add_globals(self, result, methodname, action_metadata):
         """
         This method is expected to fill-in global values needed by output template
         (e.g. each page contains user name or current corpus).
@@ -396,7 +398,7 @@ class Controller(object):
         module = imp.load_module(name, tpl_file, pathname, description)
         return getattr(module, name)
 
-    def _get_current_url(self):
+    def get_current_url(self):
         """
         Returns an URL representing current application state
         """
@@ -404,7 +406,7 @@ class Controller(object):
         query = '?' + self.environ.get('QUERY_STRING') if self.environ.get('QUERY_STRING') else ''
         return self.get_root_url() + action_str + query
 
-    def _updated_current_url(self, params):
+    def updated_current_url(self, params):
         """
         Modifies current URL using passed parameters.
 
@@ -423,7 +425,7 @@ class Controller(object):
         import urlparse
         import urllib
 
-        parsed_url = list(urlparse.urlparse(self._get_current_url()))
+        parsed_url = list(urlparse.urlparse(self.get_current_url()))
         old_params = urlparse.parse_qsl(parsed_url[4])
         new_params = []
         for k, v in old_params:
@@ -532,7 +534,7 @@ class Controller(object):
             del_nondef = 0
         else:
             del_nondef = 1
-        convert_types(na, function_defaults(action), del_nondef=del_nondef)
+        convert_types(na, _function_defaults(action), del_nondef=del_nondef)
         return action(*args[1:], **na)
 
     def call_function(self, func, args, **named_args):
@@ -552,7 +554,7 @@ class Controller(object):
         """
         na = self.clone_args()
         na.update(named_args)
-        convert_types(na, function_defaults(func), 1)
+        convert_types(na, _function_defaults(func), 1)
         return func(*args, **na)
 
     def clone_args(self):
@@ -565,23 +567,23 @@ class Controller(object):
                 na[a] = getattr(self.args, a)
         return na
 
-    def _get_method_metadata(self, method_name, data_name=None):
+    def _get_method_metadata(self, method_name, attr_name=None):
         """
         Returns metadata attached to method's __dict__ object. This
         is typically written on a higher level via @exposed annotation.
 
         arguments:
         method_name -- name of a method
-        data_name -- optional data item key; if omitted then all the metadata is retuned
+        attr_name -- optional metadata attribute key; if omitted then all the metadata is returned
 
         returns:
         a dictionary of all metadata or a specific metadata item (which could be anything)
         """
         method_obj = getattr(self, method_name, None)
-        if data_name is not None:
+        if attr_name is not None:
             ans = None
-            if method_obj is not None and hasattr(method_obj, data_name):
-                ans = getattr(method_obj, data_name)
+            if method_obj is not None and hasattr(method_obj, attr_name):
+                ans = getattr(method_obj, attr_name)
         else:
             ans = {}
             if method_obj is not None:
@@ -641,7 +643,7 @@ class Controller(object):
             url = url.encode('utf-8')
         self._headers['Location'] = url
 
-    def _set_not_found(self):
+    def set_not_found(self):
         """
         Sets Controller to output HTTP 404 Not Found response
         """
@@ -797,7 +799,7 @@ class Controller(object):
         headers = []
         action_metadata = self._get_method_metadata(path[0])
         try:
-            self._init_session()
+            self.init_session()
             if self.is_action(path[0], action_metadata):
                 path, named_args = self.pre_dispatch(path, named_args, action_metadata)
                 self._pre_action_validate()
@@ -810,7 +812,7 @@ class Controller(object):
             logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
             if settings.is_debug_mode():
                 self._status = 500
-                self.add_system_message('error', fetch_exception_msg(ex))
+                self.add_system_message('error', _fetch_exception_msg(ex))
             else:
                 self.handle_dispatch_error(ex)
             methodname, tmpl, result = self.process_action('message', path, named_args)
@@ -964,7 +966,7 @@ class Controller(object):
             json.dump(result, outf)
         # Template
         elif type(result) is DictType:
-            self._add_globals(result, methodname, action_metadata)
+            self.add_globals(result, methodname, action_metadata)
             if template.endswith('.tmpl'):
                 template_class = self._get_template_class(template[:-5])
                 tpl_ans = template_class(searchList=[result, self.args])
@@ -979,7 +981,7 @@ class Controller(object):
 
     def user_is_anonymous(self):
         with plugins.runtime.AUTH as auth:
-            return auth.is_anonymous(self._session_get('user', 'id'))
+            return auth.is_anonymous(self.session_get('user', 'id'))
 
     @exposed()
     def nop(self, request, *args):
