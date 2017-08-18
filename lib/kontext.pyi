@@ -113,6 +113,8 @@ class Kontext(Controller):
 
 class PluginApi(object):
 
+    _controller:Kontext
+
     def __init__(self, controller:Kontext, cookies:KonTextCookie, session:werkzeug.contrib.sessions.Session): ...
 
     def set_shared(self, key:str, value:Any): ...

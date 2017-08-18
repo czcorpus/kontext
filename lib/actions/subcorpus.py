@@ -112,7 +112,7 @@ class Subcorpus(Querying):
                 import task
                 app = task.get_celery_app(conf['conf'])
                 res = app.send_task('worker.create_subcorpus',
-                                    (self._session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
+                                    (self.session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                                                        label=u'%s:%s' % (self._canonical_corpname(basecorpname),
@@ -123,7 +123,7 @@ class Subcorpus(Querying):
                 import subc_calc
                 import functools
                 import multiprocessing
-                worker = subc_calc.CreateSubcorpusTask(user_id=self._session_get('user', 'id'),
+                worker = subc_calc.CreateSubcorpusTask(user_id=self.session_get('user', 'id'),
                                                        corpus_id=self.args.corpname)
                 multiprocessing.Process(target=functools.partial(worker.run, tt_query, imp_cql, path)).start()
                 result = {}
@@ -133,7 +133,7 @@ class Subcorpus(Querying):
             if plugins.runtime.SUBC_RESTORE.exists:
                 try:
                     with plugins.runtime.SUBC_RESTORE as sr:
-                        sr.store_query(user_id=self._session_get('user', 'id'),
+                        sr.store_query(user_id=self.session_get('user', 'id'),
                                        corpname=self.args.corpname,
                                        subcname=subcname,
                                        cql=full_cql.strip().split('[]', 1)[-1])
@@ -231,7 +231,7 @@ class Subcorpus(Querying):
         filter_args = dict(show_deleted=bool(int(request.args.get('show_deleted', 0))),
                            corpname=request.args.get('corpname'))
         data = []
-        user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self._session_get('user', 'id')).values()
+        user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user', 'id')).values()
         related_corpora = set()
         for corp in user_corpora:
             try:
@@ -299,7 +299,7 @@ class Subcorpus(Querying):
         }
         if plugins.runtime.SUBC_RESTORE.exists:
             with plugins.runtime.SUBC_RESTORE as sr:
-                tmp = sr.get_info(self._session_get('user', 'id'), self.args.corpname, subcname)
+                tmp = sr.get_info(self.session_get('user', 'id'), self.args.corpname, subcname)
                 if tmp:
                     ans['extended_info'].update(tmp)
         return ans
@@ -310,7 +310,7 @@ class Subcorpus(Querying):
             corpus_id = request.form['corpname']
             subcorp_name = request.form['subcname']
             with plugins.runtime.SUBC_RESTORE as sr:
-                sr.delete_query(self._session_get('user', 'id'), corpus_id, subcorp_name)
+                sr.delete_query(self.session_get('user', 'id'), corpus_id, subcorp_name)
             self.add_system_message('info',
                                     _('Subcorpus %s has been deleted permanently.') % subcorp_name)
         else:

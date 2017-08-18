@@ -263,9 +263,9 @@ class Kontext(Controller):
             elif val == 'action':
                 log_data['action'] = action_name
             elif val == 'user_id':
-                log_data['user_id'] = self._session_get('user', 'id')
+                log_data['user_id'] = self.session_get('user', 'id')
             elif val == 'user':
-                log_data['user'] = self._session_get('user', 'user')
+                log_data['user'] = self.session_get('user', 'user')
             elif val == 'params':
                 log_data['params'] = dict([(k, v) for k, v in params.items() if v])
             elif val == 'settings':
@@ -288,7 +288,7 @@ class Kontext(Controller):
             options['shuffle'] = 1
 
     def _setup_user_paths(self):
-        user_id = self._session_get('user', 'id')
+        user_id = self.session_get('user', 'id')
         if not self.user_is_anonymous():
             self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))]
         self._conc_dir = '%s/%s' % (settings.get('corpora', 'conc_dir'), user_id)
@@ -300,7 +300,7 @@ class Kontext(Controller):
             excluded_users = []
         else:
             excluded_users = [int(x) for x in excluded_users]
-        return self._session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
+        return self.session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
 
     def _get_current_aligned_corpora(self):
         return [self.args.corpname] + self.args.align
@@ -315,9 +315,9 @@ class Kontext(Controller):
         are filtered out).
         """
         if self._user_has_persistent_settings():
-            data = plugins.runtime.SETTINGS_STORAGE.instance.load(self._session_get('user', 'id'))
+            data = plugins.runtime.SETTINGS_STORAGE.instance.load(self.session_get('user', 'id'))
         else:
-            data = self._session_get('settings')
+            data = self.session_get('settings')
             if not data:
                 data = {}
         return [x for x in data.items() if x[0] != 'queryselector']
@@ -411,10 +411,10 @@ class Kontext(Controller):
         # to store (again) even values not used in this particular request)
         with plugins.runtime.SETTINGS_STORAGE as settings_storage:
             if self._user_has_persistent_settings():
-                options = normalize_opts(settings_storage.load(self._session_get('user', 'id')))
-                settings_storage.save(self._session_get('user', 'id'), options)
+                options = normalize_opts(settings_storage.load(self.session_get('user', 'id')))
+                settings_storage.save(self.session_get('user', 'id'), options)
             else:
-                options = normalize_opts(self._session_get('settings'))
+                options = normalize_opts(self.session_get('settings'))
                 self._session['settings'] = options
 
     def _restore_prev_conc_params(self):
@@ -492,7 +492,7 @@ class Kontext(Controller):
     def _save_query_to_history(self, query_id, conc_data):
         if conc_data.get('lastop_form', {}).get('form_type') == 'query' and not self.user_is_anonymous():
             with plugins.runtime.QUERY_STORAGE as qh:
-                qh.write(user_id=self._session_get('user', 'id'), query_id=query_id)
+                qh.write(user_id=self.session_get('user', 'id'), query_id=query_id)
 
     def _store_conc_params(self):
         """
@@ -506,13 +506,13 @@ class Kontext(Controller):
             with plugins.runtime.CONC_PERSISTENCE as cp:
                 prev_data = self._prev_q_data if self._prev_q_data is not None else {}
                 curr_data = self.get_saveable_conc_data()
-                q_id = cp.store(self._session_get('user', 'id'), curr_data=curr_data, prev_data=self._prev_q_data)
+                q_id = cp.store(self.session_get('user', 'id'), curr_data=curr_data, prev_data=self._prev_q_data)
                 self._save_query_to_history(q_id, curr_data)
                 lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
                 for q_idx, op in self._auto_generated_conc_ops:
                     prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
                     curr = dict(lines_groups=lines_groups, q=self.args.q[:q_idx+1], lastop_form=op.to_dict())
-                    q_id = cp.store(self._session_get('user', 'id'), curr_data=curr, prev_data=prev)
+                    q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
         else:
             q_id = None
         return q_id
@@ -619,7 +619,7 @@ class Kontext(Controller):
         self.args.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
-        allowed_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self._session_get('user', 'id'))
+        allowed_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user', 'id'))
         if not action_metadata.get('skip_corpus_init', False):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if fallback_url:
@@ -707,7 +707,7 @@ class Kontext(Controller):
         if self.args.corpname:
             args['corpname'] = self.args.corpname
         if self.get_http_method() == 'GET':
-            self.return_url = self._updated_current_url(args)
+            self.return_url = self.updated_current_url(args)
         else:
             self.return_url = '%sfirst_form?%s' % (self.get_root_url(),
                                                    '&'.join(['%s=%s' % (k, v)
@@ -790,7 +790,7 @@ class Kontext(Controller):
         with plugins.runtime.AUTH as auth:
             if cn not in corp_list and isinstance(auth, AbstractRemoteAuth):
                 auth.refresh_user_permissions(self._plugin_api)
-                corp_list = auth.permitted_corpora(self._session_get('user', 'id'))
+                corp_list = auth.permitted_corpora(self.session_get('user', 'id'))
         # 2) try alternative corpus configuration (e.g. with restricted access)
         # automatic restricted/unrestricted corpus name selection
         # according to user rights
@@ -798,7 +798,7 @@ class Kontext(Controller):
         if canonical_name in corp_list:  # user has "some" access to the corpus
             if corp_list[canonical_name] != cn:  # user has access to a variant of the corpus
                 cn = canonical_name
-                fallback = self._updated_current_url({'corpname': corp_list[canonical_name]})
+                fallback = self.updated_current_url({'corpname': corp_list[canonical_name]})
             else:
                 cn = corp_list[canonical_name]
                 fallback = None
@@ -854,7 +854,7 @@ class Kontext(Controller):
         returns:
         a dict (canonical_id, id)
         """
-        return plugins.runtime.AUTH.instance.permitted_corpora(self._session_get('user', 'id'))
+        return plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user', 'id'))
 
     def _add_corpus_related_globals(self, result, maincorp):
         """
@@ -1027,13 +1027,13 @@ class Kontext(Controller):
                 out['login_url'] = None
                 out['logout_url'] = None
 
-    def _add_globals(self, result, methodname, action_metadata):
+    def add_globals(self, result, methodname, action_metadata):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        Controller._add_globals(self, result, methodname, action_metadata)
+        Controller.add_globals(self, result, methodname, action_metadata)
         result['base_attr'] = Kontext.BASE_ATTR
         result['root_url'] = self.get_root_url()
         result['files_path'] = self._files_path
@@ -1046,7 +1046,7 @@ class Kontext(Controller):
         result['Globals'].set('q', [q for q in result.get('Q')])
         result['human_corpname'] = None
         result['multilevel_freq_dist_max_levels'] = settings.get('corpora', 'multilevel_freq_dist_max_levels', 3)
-        result['last_num_levels'] = self._session_get('last_freq_level')  # TODO enable this
+        result['last_num_levels'] = self.session_get('last_freq_level')  # TODO enable this
 
         if self.args.maincorp:
             thecorp = corplib.open_corpus(self.args.maincorp)
@@ -1395,7 +1395,7 @@ class PluginApi(object):
 
     @property
     def current_url(self):
-        return getattr(self._controller, '_get_current_url')()
+        return self.controller.get_current_url()
 
     @property
     def root_url(self):

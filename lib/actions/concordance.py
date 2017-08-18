@@ -95,8 +95,8 @@ class Actions(Querying):
             return tuple(segment_str.split('.'))
         return None
 
-    def _add_globals(self, result, methodname, action_metadata):
-        super(Actions, self)._add_globals(result, methodname, action_metadata)
+    def add_globals(self, result, methodname, action_metadata):
+        super(Actions, self).add_globals(result, methodname, action_metadata)
         args = {}
         if self.args.align:
             for aligned_lang in self.args.align:
@@ -176,7 +176,7 @@ class Actions(Querying):
                 del self.args.q[i]
             i += 1
 
-        conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id')),
+        conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
                                   samplesize=corpus_info.sample_size)
         self._apply_linegroups(conc)
         conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -258,14 +258,14 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='json', http_method='POST')
     def save_query(self, request):
         with plugins.runtime.QUERY_STORAGE as qs:
-            ans = qs.make_persistent(self._session_get('user', 'id'), request.form['query_id'],
+            ans = qs.make_persistent(self.session_get('user', 'id'), request.form['query_id'],
                                      request.form['name'])
         return dict(saved=ans)
 
     @exposed(access_level=1, return_type='json', http_method='POST')
     def delete_query(self, request):
         with plugins.runtime.QUERY_STORAGE as qs:
-            ans = qs.delete(self._session_get('user', 'id'), request.form['query_id'])
+            ans = qs.delete(self.session_get('user', 'id'), request.form['query_id'])
         return dict(deleted=ans)
 
     @exposed(apply_semi_persist_args=True)
@@ -336,7 +336,7 @@ class Actions(Querying):
                 return dict(concsize=concsize, sampled_size=0, relconcsize=0, fullsize=fullsize,
                             finished=conc.finished())
         if sampled_size:
-            orig_conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id')),
+            orig_conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
                                            q=self.args.q[:i])
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
@@ -845,7 +845,7 @@ class Actions(Querying):
         args.corpname = self.corp.corpname
         args.subcname = getattr(self.corp, 'subcname', None)
         args.subcpath = self.subcpath
-        args.user_id = self._session_get('user', 'id')
+        args.user_id = self.session_get('user', 'id')
         args.minsize = None
         args.q = self.args.q
         args.fromp = self.args.fromp
@@ -946,7 +946,7 @@ class Actions(Querying):
             if freq > 0 and err_block > -1 and corr_block > -1:
                 pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
                 cc = self.call_function(conclib.get_conc,
-                                        (self.corp, self._session_get('user', 'id')),
+                                        (self.corp, self.session_get('user', 'id')),
                                         q=self.args.q + [pfilter[0][1]])
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
@@ -1074,7 +1074,7 @@ class Actions(Querying):
         args.corpname = self.corp.corpname
         args.subcname = getattr(self.corp, 'subcname', None)
         args.subcpath = self.subcpath
-        args.user_id = self._session_get('user', 'id')
+        args.user_id = self.session_get('user', 'id')
         args.minsize = None
         args.q = self.args.q
         args.ctminfreq = int(request.args.get('ctminfreq', '1'))
@@ -1106,7 +1106,7 @@ class Actions(Querying):
         calc_args.corpname = self.args.corpname
         calc_args.subcname = getattr(self.corp, 'subcname', None)
         calc_args.subcpath = self.subcpath
-        calc_args.user_id = self._session_get('user', 'id')
+        calc_args.user_id = self.session_get('user', 'id')
         calc_args.q = self.args.q
         calc_args.minsize = None  # TODO ??
         calc_args.save = self.args.save
@@ -1491,7 +1491,7 @@ class Actions(Querying):
 
         try:
             corpus_info = self.get_corpus_info(self.args.corpname)
-            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id'),
+            conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id'),
                                                          corpus_info.sample_size))
             self._apply_linegroups(conc)
             kwic = Kwic(self.corp, self.args.corpname, conc)
@@ -1607,7 +1607,7 @@ class Actions(Querying):
                         os.path.getsize(rpath) - 1, os.path.getsize(rpath))
                 return f.read()
         else:
-            self._set_not_found()
+            self.set_not_found()
             return None
 
     def _collect_conc_next_url_params(self, query_id):
@@ -1724,7 +1724,7 @@ class Actions(Querying):
             query = 'aword,[] within %s' % (' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
             query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
             self.args.q = [query]
-            conc = self.call_function(conclib.get_conc, (self.corp, self._session_get('user', 'id')), async=0)
+            conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')), async=0)
             conc.sync()
             return dict(total=conc.fullsize() if conc else None)
 
