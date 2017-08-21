@@ -1398,7 +1398,7 @@ class PluginApi(object):
 
     @property
     def current_url(self):
-        return self.controller.get_current_url()
+        return self._controller.get_current_url()
 
     @property
     def root_url(self):
