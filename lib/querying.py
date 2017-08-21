@@ -210,7 +210,7 @@ class Querying(Kontext):
     def _load_pipeline_ops(last_id):
         ans = []
         if plugins.runtime.CONC_PERSISTENCE.exists:
-            with plugins.runtime.CONC_PERSISTENCE.exists as cp:
+            with plugins.runtime.CONC_PERSISTENCE as cp:
                 data = cp.open(last_id)
                 if data is not None:
                     ans.append(build_conc_form_args(data['lastop_form'], data['id']))

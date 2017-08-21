@@ -135,7 +135,7 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 return <viewDeps.QueryFormView {...props.editorProps} operationIdx={props.operationIdx} />;
 
             } else if (props.operationFormType === 'filter') {
-                return <viewDeps.FilterFormView {...this.props.editorProps}
+                return <viewDeps.FilterFormView {...props.editorProps}
                             operationIdx={props.operationIdx}
                             filterId={props.opKey} />;
 
