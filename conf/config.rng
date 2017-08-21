@@ -599,6 +599,12 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
+                    <element name="chart_export">
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
+                    </element>
                 </interleave>
             </element>
         </element>

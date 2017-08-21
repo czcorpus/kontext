@@ -150,6 +150,9 @@
         <user_items>
             <module>default_user_items</module>
         </user_items>
+        <chart_export>
+            <module>default_chart_export</module>
+        </chart_export>
     </plugins>
 </kontext>
 

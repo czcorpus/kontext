@@ -1,5 +1,7 @@
 # Copyright (c) 2003-2009  Pavel Rychly
-# Copyright (c) 2013  Institute of the Czech National Corpus
+# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -243,18 +245,10 @@ class Actions(Querying):
         out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname)
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
         out['running_calc'] = not out['finished'] and self.args.async and self.args.save and not out['sampled_size']
+        out['chart_export_formats'] = []
+        with plugins.runtime.CHART_EXPORT as ce:
+            out['chart_export_formats'].extend(ce.get_supported_types())
         return out
-
-    @exposed(template='chart.tmpl', page_model='chart')
-    def chart(self, request):
-        ptr_path = os.path.join(os.path.dirname(__file__), '../../public/files/js/charts/fills.json')
-        with open(ptr_path, 'rb') as fr:
-            fill_patterns = json.load(fr)
-        return dict(
-            data=json.loads(request.form['data']),
-            chart_type=request.form['chart_type'],
-            fill_patterns=fill_patterns,
-            fill_ids=[x[0] for x in fill_patterns])
 
     @exposed(access_level=1, return_type='json', http_method='POST')
     def save_query(self, request):
@@ -1719,6 +1713,18 @@ class Actions(Querying):
         self._lines_groups = LinesGroups(data=new_groups)
         self.add_conc_form_args(LgroupOpArgs(persist=True))
         return {}
+
+    @exposed(access_level=1, return_type='plain')
+    def export_line_groups_chart(self, request):
+        with plugins.runtime.CHART_EXPORT as ce:
+            format = request.args.get('cformat')
+            filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
+            self._headers['Content-Type'] = ce.get_content_type(format)
+            self._headers['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
+            data = sorted(json.loads(request.args.get('data', '{}')).items(), key=lambda x: int(x[0]))
+            total = sum(x[1] for x in data)
+            data = [('#{0} ({1}%)'.format(x[0], round(x[1] / float(total) * 100, 1)), x[1]) for x in data]
+            return ce.export_pie_chart(data=data, title=request.args.get('title', '??'), format=format)
 
     @exposed(return_type='json')
     def ajax_get_within_max_hits(self, request):

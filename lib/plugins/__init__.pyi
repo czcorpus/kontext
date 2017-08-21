@@ -19,6 +19,7 @@ from .abstract.subc_restore import AbstractSubcRestore
 from .abstract.taghelper import AbstractTaghelper
 from .abstract.syntax_viewer import AbstractSyntaxViewerPlugin
 from .abstract.subcmixer import AbstractSubcMixer
+from .abstract.chart_export import AbstractChartExportPlugin
 from ..kontext import PluginApi
 
 T = TypeVar('T')
@@ -64,6 +65,7 @@ class _Names(object):
     TAGHELPER:_ID[AbstractTaghelper]
     SYNTAX_VIEWER:_ID[AbstractSyntaxViewerPlugin]
     SUBCMIXER:_ID[AbstractSubcMixer]
+    CHART_EXPORT:_ID[AbstractChartExportPlugin]
 
     def __iter__(self) -> Iterator[_ID]: ...
 

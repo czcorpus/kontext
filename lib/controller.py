@@ -959,7 +959,9 @@ class Controller(object):
         """
         from Cheetah.Template import Template
         # any result with custom serialization
-        if callable(result):
+        if action_metadata.get('return_type') == 'plain':
+            outf.write(str(result))
+        elif callable(result):
             outf.write(result())
         # JSON with simple serialization (dict -> string)
         elif action_metadata.get('return_type') == 'json':
@@ -975,9 +977,6 @@ class Controller(object):
             if return_template:
                 return tpl_ans
             tpl_ans.respond(CheetahResponseFile(outf))
-        # Other (string)
-        else:
-            outf.write(str(result))
 
     def user_is_anonymous(self):
         with plugins.runtime.AUTH as auth:
