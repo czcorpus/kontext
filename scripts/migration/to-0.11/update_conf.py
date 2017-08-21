@@ -38,6 +38,13 @@ def update_3(doc):
         srch.text = 'sqlite3_db'
 
 
+def update_4(doc):
+    srch = doc.findall('/global/error_report_params/param')
+    for item in srch:
+        if item.text == '@_get_current_url':
+            item.text = '@get_current_url'
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.9.x/0.10.x '

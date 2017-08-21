@@ -223,6 +223,14 @@ class ShuffleFormArgs(ConcFormArgs):
         self.form_type = 'shuffle'
 
 
+class KwicSwitchArgs(ConcFormArgs):
+
+    def __init__(self, maincorp, persist):
+        super(KwicSwitchArgs, self).__init__(persist)
+        self.form_type = 'switchmc'
+        self.maincorp = maincorp
+
+
 def build_conc_form_args(data, op_key):
     """
     A factory method to create a conc form args
@@ -240,6 +248,8 @@ def build_conc_form_args(data, op_key):
         return SampleFormArgs(persist=False).updated(data, op_key)
     elif tp == 'shuffle':
         return ShuffleFormArgs(persist=False).updated(data, op_key)
+    elif tp == 'switchmc':
+        return KwicSwitchArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key)
     elif tp == 'lgroup':
         return LgroupOpArgs(persist=False).updated(data, op_key)
     elif tp == 'locked':

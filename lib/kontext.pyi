@@ -110,6 +110,13 @@ class Kontext(Controller):
 
     def remove_task_info(self, request:werkzeug.wrappers.Request) -> Dict[str, Any]: ...
 
+    def get_current_aligned_corpora(self) -> List[str]: ...
+
+    def get_available_aligned_corpora(self) -> List[str]: ...
+
+    @staticmethod
+    def _canonical_corpname(c:str) -> str: ...
+
 
 class PluginApi(object):
 

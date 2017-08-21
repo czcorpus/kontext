@@ -181,6 +181,10 @@ declare module AjaxResponse {
         rlines:string;
     }
 
+    export interface SwitchMainCorpArgs extends ConcFormArgs {
+        maincorp:string;
+    }
+
     export interface SampleFormArgsResponse extends SampleFormArgs, Kontext.AjaxResponse {}
 
     export interface ConcFormArgsResponse extends Kontext.AjaxResponse, ConcFormArgs {}
@@ -190,6 +194,7 @@ declare module AjaxResponse {
         filter:FilterFormArgs;
         sort:SortFormArgs;
         sample:SampleFormArgs;
+        switchmc:{};
     }
 
     export interface CorpusSwitchResponse extends Kontext.AjaxConcResponse {

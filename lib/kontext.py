@@ -302,10 +302,10 @@ class Kontext(Controller):
             excluded_users = [int(x) for x in excluded_users]
         return self.session_get('user', 'id') not in excluded_users and not self.user_is_anonymous()
 
-    def _get_current_aligned_corpora(self):
+    def get_current_aligned_corpora(self):
         return [self.args.corpname] + self.args.align
 
-    def _get_available_aligned_corpora(self):
+    def get_available_aligned_corpora(self):
         return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
 
     def _get_valid_settings(self):
@@ -461,22 +461,25 @@ class Kontext(Controller):
             # we don't want to store all the items from self.args.q in case auto generated
             # operations are present (we will store them individually later).
             q=self.args.q[:q_limit],
-            corpora=self._get_current_aligned_corpora(),
+            corpora=self.get_current_aligned_corpora(),
             usesubcorp=self.args.usesubcorp,
             lines_groups=self._lines_groups.serialize()
         )
 
     def acknowledge_auto_generated_conc_op(self, q_idx, query_form_args):
         """
-        In some cases KonText may automatically (either
+        In some cases, KonText automatically (either
         based on user's settings or for an internal reason)
-        append user-editable (which is a different situation
+        appends user-editable (which is a different situation
         compared e.g. with aligned corpora where there are
         also auto-added "q" elements but this is hidden from
-        user) operations right after the initial query.
+        user) operations right after the current operation
+        in self.args.q.
 
-        To be able to chain these operations and offer
-        a way to edit them, KonText must store them too.
+        E.g. user adds OP1, but we have to add also OP2, OP3
+        where all the operations are user-editable (e.g. filters).
+        In such case we must add OP1 but also "acknowledge"
+        OP2 and OP3.
 
         Please note that it is expected that these operations
         come right after the query (no matter what q_idx says - it is

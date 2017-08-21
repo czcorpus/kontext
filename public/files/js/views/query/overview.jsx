@@ -41,6 +41,8 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 return he.translate('query__operation_name_sample');
             case 'shuffle':
                 return he.translate('query__operation_name_shuffle');
+            case 'switchmc':
+                return he.translate('query__operation_name_switchmc');
             default:
                 return null;
         }
@@ -109,7 +111,6 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
     // ------------------------ <QueryEditor /> --------------------------------
 
     const QueryEditor = (props) => {
-
         const renderEditorComponent = () => {
             if (props.isLoading) {
                 return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
@@ -135,7 +136,7 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 return <viewDeps.QueryFormView {...props.editorProps} operationIdx={props.operationIdx} />;
 
             } else if (props.operationFormType === 'filter') {
-                return <viewDeps.FilterFormView {...this.props.editorProps}
+                return <viewDeps.FilterFormView {...props.editorProps}
                             operationIdx={props.operationIdx}
                             filterId={props.opKey} />;
 
@@ -150,6 +151,11 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                             shuffleMinResultWarning={props.shuffleMinResultWarning}
                             lastOpSize={props.resultSize}
                             operationIdx={props.operationIdx} />;
+
+            } else if (props.operationFormType === 'switchmc') {
+                return <viewDeps.SwitchMainCorpFormView {...props.editorProps}
+                                operationIdx={props.operationIdx}
+                                operationId={props.opKey} />;
 
             } else {
                 return <div>???</div>;
@@ -176,130 +182,126 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
 
     // ------------------------ <QueryOpInfo /> --------------------------------
 
-    const QueryOpInfo = React.createClass({
+    const QueryOpInfo = (props) => {
 
-        mixins : mixins,
-
-        _renderLabel : function () {
-            if (this.props.idx === 0) {
+        const renderLabel = () => {
+            if (props.idx === 0) {
                 return [
                     '\u00a0|\u00a0',
-                    <strong key="op">{this.props.item.op}</strong>
+                    <strong key="op">{props.item.op}</strong>
                 ];
 
             } else {
                 return [
                     <span key="transit" className="transition">{'\u00A0\u25B6\u00A0'}</span>,
-                    <strong key="op">{this.props.item.op}</strong>
+                    <strong key="op">{props.item.op}</strong>
                 ];
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <li>
-                    {this._renderLabel()}{':\u00a0'}
-                    {this.props.item.nicearg ?
-                        (<a className="args" onClick={this.props.clickHandler} title={this.translate('query__click_to_edit_the_op')}>
-                            {this.props.item.nicearg}
-                        </a>)
-                        : (<a className="args" onClick={this.props.clickHandler} title={this.translate('query__click_to_edit_the_op')}>
-                            {'\u2713'}</a>)
-                        }
-                    {this.props.item.size ?
-                         '\u00a0(' + this.translate('query__overview_hits_{num_hits}',
-                            {num_hits: this.props.item.size}) + ')'
-                        : null}
-                    {this.props.hasOpenEditor ?
-                        <QueryEditor
-                            editorProps={this.props.editorProps}
-                            closeClickHandler={this.props.closeEditorHandler}
-                            operationIdx={this.props.idx}
-                            operationId={this.props.item.opid}
-                            operationFormType={this.props.item.formType}
-                            opKey={this.props.editOpKey}
-                            opEncodedArgs={this.props.item.tourl}
-                            isLoading={this.props.isLoading}
-                            modeRunFullQuery={this.props.modeRunFullQuery}
-                            numOps={this.props.numOps}
-                            shuffleMinResultWarning={this.props.shuffleMinResultWarning}
-                            resultSize={this.props.item.size}
-                            editIsLocked={this.props.editIsLocked} />
-                        : null}
-                </li>
-            );
-        }
-    });
+        return (
+            <li>
+                {renderLabel()}{':\u00a0'}
+                {props.item.nicearg ?
+                    (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
+                        {props.item.nicearg}
+                    </a>)
+                    : (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
+                        {'\u2713'}</a>)
+                    }
+                {props.item.size ?
+                        '\u00a0(' + he.translate('query__overview_hits_{num_hits}',
+                        {num_hits: props.item.size}) + ')'
+                    : null}
+                {props.hasOpenEditor ?
+                    <QueryEditor
+                        editorProps={props.editorProps}
+                        closeClickHandler={props.closeEditorHandler}
+                        operationIdx={props.idx}
+                        operationId={props.item.opid}
+                        operationFormType={props.item.formType}
+                        opKey={props.editOpKey}
+                        opEncodedArgs={props.item.tourl}
+                        isLoading={props.isLoading}
+                        modeRunFullQuery={props.modeRunFullQuery}
+                        numOps={props.numOps}
+                        shuffleMinResultWarning={props.shuffleMinResultWarning}
+                        resultSize={props.item.size}
+                        editIsLocked={props.editIsLocked} />
+                    : null}
+            </li>
+        );
+    };
 
     // ----------------------------- <QueryOverivewTable /> --------------------------
 
-    const QueryOverivewTable = React.createClass({
+    const QueryOverivewTable = (props) => {
 
-        mixins : mixins,
-
-        _handleCloseClick : function () {
+        const handleCloseClick = () => {
             dispatcher.dispatch({
                 actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
                 props: {}
             });
-        },
+        };
 
-        _handleEditClick : function (idx) {
-            dispatcher.dispatch({
-                actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
-                props: {}
-            }); // this is synchronous
-            this.props.onEditClick(idx);
-        },
+        const handleEditClickFn = (idx) => {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
+                    props: {}
+                }); // this is synchronous
+                props.onEditClick(idx);
+            };
+        };
 
-        render : function () {
-            return (
-                <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={this._handleCloseClick}>
-                    <div>
-                        <h3>{this.translate('global__query_overview')}</h3>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>{this.translate('global__operation')}</th>
-                                    <th>{this.translate('global__parameters')}</th>
-                                    <th>{this.translate('global__num_of_hits')}</th>
-                                    <th></th>
-                                    <th></th>
+        return (
+            <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={handleCloseClick}>
+                <div>
+                    <h3>{he.translate('global__query_overview')}</h3>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>{he.translate('global__operation')}</th>
+                                <th>{he.translate('global__parameters')}</th>
+                                <th>{he.translate('global__num_of_hits')}</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            {props.data.map((item, i) => (
+                                <tr key={i}>
+                                    <td>{item.op}</td>
+                                    <td>{item.arg}</td>
+                                    <td>{item.size}</td>
+                                    <td>
+                                        <a href={he.createActionLink('view?' + item.tourl)}>
+                                            {he.translate('global__view_result')}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a onClick={handleEditClickFn(i)}>
+                                            {he.translate('query__overview_edit_query')}
+                                        </a>
+                                    </td>
                                 </tr>
-                                {this.props.data.map((item, i) => (
-                                    <tr key={i}>
-                                        <td>{item.op}</td>
-                                        <td>{item.arg}</td>
-                                        <td>{item.size}</td>
-                                        <td>
-                                            <a href={this.createActionLink('view?' + item.tourl)}>
-                                                {this.translate('global__view_result')}
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <a onClick={this._handleEditClick.bind(this, i)}>
-                                                {this.translate('query__overview_edit_query')}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </layoutViews.PopupBox>
-            );
-        }
-    });
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </layoutViews.PopupBox>
+        );
+    };
 
 
     // ------------------------ <QueryOverview /> --------------------------------
 
-    const QueryOverview = React.createClass({
+    class QueryOverview extends React.Component {
 
-        mixins : mixins,
-
-        getInitialState : function () {
-            return {
+        constructor(props) {
+            super(props);
+            this._handleEditClick = this._handleEditClick.bind(this);
+            this._handleEditorClose = this._handleEditorClose.bind(this);
+            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this.state = {
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
                 editOpIdx: null,
@@ -309,16 +311,16 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 modeRunFullQuery: queryReplayStore.getRunFullQuery(),
                 editIsLocked: queryReplayStore.editIsLocked()
             };
-        },
+        }
 
-        _handleEditClick : function (idx) {
+        _handleEditClick(idx) {
             dispatcher.dispatch({
                 actionType: 'EDIT_QUERY_OPERATION',
                 props: {operationIdx: idx}
             });
-        },
+        }
 
-        _handleEditorClose : function () {
+        _handleEditorClose() {
             this.setState({
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
@@ -329,9 +331,9 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 modeRunFullQuery: queryReplayStore.getRunFullQuery(),
                 editIsLocked: queryReplayStore.editIsLocked()
             });
-        },
+        }
 
-        _storeChangeListener : function (store, action) {
+        _storeChangeListener(store, action) {
             this.setState({
                 replayIsRunning: queryReplayStore.getBranchReplayIsRunning(),
                 ops: queryReplayStore.getCurrEncodedOperations(),
@@ -342,17 +344,17 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 modeRunFullQuery: queryReplayStore.getRunFullQuery(),
                 editIsLocked: queryReplayStore.editIsLocked()
             });
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             queryReplayStore.addChangeListener(this._storeChangeListener);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             queryReplayStore.removeChangeListener(this._storeChangeListener);
-        },
+        }
 
-        _getEditorProps : function (opIdx, opId) {
+        _getEditorProps(opIdx, opId) {
             if (['a', 'q'].indexOf(opId) > -1) {
                 return this.props.queryFormProps;
 
@@ -371,12 +373,15 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                     }
                 }
 
+            } else if (opId === 'x') {
+                return this.props.switchMcFormProps;
+
             } else {
                 return {};
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div>
                     {this.state.queryOverview ?
@@ -411,144 +416,137 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 </div>
             );
         }
-    });
+    }
 
 
     // ------------------------ <RedirectingQueryOverview /> -------------------------------
 
-    const RedirectingQueryOverview = React.createClass({
+    const RedirectingQueryOverview = (props) => {
 
-        mixins : mixins,
-
-        getInitialState : function () {
-            return {
-                ops: queryReplayStore.getCurrEncodedOperations()
+        const handleEditClickFn = (opIdx) => {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'REDIRECT_TO_EDIT_QUERY_OPERATION',
+                    props: {
+                        operationIdx: opIdx
+                    }
+                });
             };
-        },
+        };
 
-        _handleEditClick : function (opIdx) {
-            dispatcher.dispatch({
-                actionType: 'REDIRECT_TO_EDIT_QUERY_OPERATION',
-                props: {
-                    operationIdx: opIdx
-                }
-
-            });
-        },
-
-        render : function () {
-            return (
-                <ul id="query-overview-bar">
-                        {this.props.humanCorpname ?
-                                <layoutViews.CorpnameInfoTrigger
-                                        corpname={this.props.corpname}
-                                        humanCorpname={this.props.humanCorpname}
-                                        usesubcorp={this.props.usesubcorp} />
-                                : null}
-                        {this.state.ops.map((item, i) => {
-                            return <QueryOpInfo
-                                        key={`op_${i}`}
-                                        idx={i}
-                                        item={item}
-                                        clickHandler={this._handleEditClick.bind(this, i)}
-                                        hasOpenEditor={this.state.editOpIdx === i && !this.state.replayIsRunning}
-                                        editorProps={this.state.editOpIdx === i ? this._getEditorProps(i, item.opid) : null}
-                                        closeEditorHandler={this._handleEditorClose}
-                                        isLoading={this.state.isLoading}
-                                        modeRunFullQuery={this.state.modeRunFullQuery}
-                                        numOps={this.state.ops.size}
-                                        shuffleMinResultWarning={this.props.shuffleFormProps.shuffleMinResultWarning}
-                                        editIsLocked={this.state.editIsLocked} />;
-                        })}
-                </ul>
-            );
-        }
-
-    });
+        return (
+            <ul id="query-overview-bar">
+                    {props.humanCorpname ?
+                            <layoutViews.CorpnameInfoTrigger
+                                    corpname={props.corpname}
+                                    humanCorpname={props.humanCorpname}
+                                    usesubcorp={props.usesubcorp} />
+                            : null}
+                    {props.ops.map((item, i) => {
+                        return <QueryOpInfo
+                                    key={`op_${i}`}
+                                    idx={i}
+                                    item={item}
+                                    clickHandler={handleEditClickFn(i)}
+                                    hasOpenEditor={false}
+                                    editorProps={null}
+                                    closeEditorHandler={()=>undefined}
+                                    isLoading={false}
+                                    modeRunFullQuery={false}
+                                    numOps={props.ops.size}
+                                    shuffleMinResultWarning=""
+                                    editIsLocked={true} />;
+                    })}
+            </ul>
+        );
+    }
 
 
     // ------------------------ <AppendOperationOverlay /> --------------------------------
 
-    const AppendOperationOverlay = React.createClass({
+    const AppendOperationOverlay = (props) => {
 
-        mixins : mixins,
-
-        _handleCloseClick : function () {
+        const handleCloseClick = () => {
             dispatcher.dispatch({
                 actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
                 props: {}
             });
-        },
+        };
 
-        _createActionBasedForm : function () {
-            switch (this.props.menuActiveItem.actionName) {
+        const createActionBasedForm = () => {
+            switch (props.menuActiveItem.actionName) {
                 case 'MAIN_MENU_SHOW_FILTER':
-                    return <viewDeps.FilterFormView {...this.props.filterFormProps} filterId="__new__" />;
+                    return <viewDeps.FilterFormView {...props.filterFormProps} filterId="__new__" />;
                 case 'MAIN_MENU_SHOW_SORT':
                     return <viewDeps.SortFormView sortId="__new__" />;
                 case 'MAIN_MENU_SHOW_SAMPLE':
                     return <viewDeps.SampleFormView sampleId="__new__" />;
                 case 'MAIN_MENU_APPLY_SHUFFLE':
-                    return <viewDeps.ShuffleFormView {...this.props.shuffleFormProps}
-                                lastOpSize={this.props.lastOpSize} sampleId="__new__" />;
+                    return <viewDeps.ShuffleFormView {...props.shuffleFormProps}
+                                lastOpSize={props.lastOpSize} sampleId="__new__" />;
+                case 'MAIN_MENU_SHOW_SWITCHMC':
+                    return <viewDeps.SwitchMainCorpFormView {...props.switchMcFormProps}
+                                lastOpSize={props.lastOpSize} sampleId="__new__" />;
                 default:
-                    return <div>unknown...</div>;
+                    return <div>??</div>;
             }
-        },
+        };
 
-        _createTitle : function () {
+        const createTitle = () => {
             const m = {
                 MAIN_MENU_SHOW_FILTER: 'filter',
                 MAIN_MENU_SHOW_SORT: 'sort',
                 MAIN_MENU_SHOW_SAMPLE: 'sample',
-                MAIN_MENU_APPLY_SHUFFLE: 'shuffle'
+                MAIN_MENU_APPLY_SHUFFLE: 'shuffle',
+                MAIN_MENU_SHOW_SWITCHMC: 'switchmc'
             };
-            const ident = formTypeToTitle(m[this.props.menuActiveItem.actionName]);
-            return this.translate('query__add_an_operation_title_{opname}', {opname: ident});
-        },
+            const ident = formTypeToTitle(m[props.menuActiveItem.actionName]);
+            return he.translate('query__add_an_operation_title_{opname}', {opname: ident});
+        };
 
-        render : function () {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
-                    <layoutViews.CloseableFrame
-                            customClass="query-form-spa"
-                            onCloseClick={this._handleCloseClick}
-                            label={this._createTitle()}>
-                        {this._createActionBasedForm()}
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            );
-        }
-    });
+        return (
+            <layoutViews.ModalOverlay onCloseKey={handleCloseClick}>
+                <layoutViews.CloseableFrame
+                        customClass="query-form-spa"
+                        onCloseClick={handleCloseClick}
+                        label={createTitle()}>
+                    {createActionBasedForm()}
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        );
+    };
 
 
     // ------------------------ <QueryToolbar /> --------------------------------
 
-    const QueryToolbar = React.createClass({
+    class QueryToolbar extends React.Component {
 
-        _mainMenuStoreChangeListener : function () {
-            this.setState({
-                activeItem: mainMenuStore.getActiveItem(),
-                lastOpSize: queryReplayStore.getCurrEncodedOperations().get(-1).size
-            });
-        },
+        constructor(props) {
+            super(props);
+            this._mainMenuStoreChangeListener = this._mainMenuStoreChangeListener.bind(this);
+            this.state = this._fetchStoreState();
+        }
 
-        componentDidMount : function () {
-            mainMenuStore.addChangeListener(this._mainMenuStoreChangeListener);
-        },
-
-        componentWillUnmount : function () {
-            mainMenuStore.removeChangeListener(this._mainMenuStoreChangeListener);
-        },
-
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 activeItem: mainMenuStore.getActiveItem(),
                 lastOpSize: queryReplayStore.getCurrEncodedOperations().get(-1).size
-            }
-        },
+            };
+        }
 
-        _renderOperationForm : function () {
+        _mainMenuStoreChangeListener() {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
+            mainMenuStore.addChangeListener(this._mainMenuStoreChangeListener);
+        }
+
+        componentWillUnmount() {
+            mainMenuStore.removeChangeListener(this._mainMenuStoreChangeListener);
+        }
+
+        _renderOperationForm() {
             const actions = [
                 'MAIN_MENU_SHOW_SORT',
                 'MAIN_MENU_APPLY_SHUFFLE',
@@ -562,15 +560,15 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
             } else {
                 return null;
             }
-        },
+        }
 
-        _renderSaveForm : function () {
+        _renderSaveForm() {
             if (this.state.activeItem && this.state.activeItem.actionName === 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM') {
                 return <saveViews.QuerySaveAsForm />;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div>
                     <QueryOverview {...this.props} />
@@ -579,23 +577,28 @@ export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore
                 </div>
             );
         }
-    });
+    }
 
 
     // ------------------------ <NonViewPageQueryToolbar /> --------------------------------
 
-    const NonViewPageQueryToolbar = React.createClass({
+    class NonViewPageQueryToolbar extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this.state = {
+                ops: queryReplayStore.getCurrEncodedOperations()
+            };
+        }
 
-        render : function () {
+        render() {
             return (
                 <div>
-                    <RedirectingQueryOverview {...this.props} />
+                    <RedirectingQueryOverview {...this.props} ops={this.state.ops} />
                 </div>
             );
         }
-    });
+    };
 
 
     return {
