@@ -55,6 +55,12 @@ def update_5(doc):
     mod_elm.tail = '\n        '
 
 
+def update_6(doc):
+    srch = doc.find('corpora/calc_pid_dir')
+    if srch:
+        srch.getparent().remove(srch)
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.9.x/0.10.x '
