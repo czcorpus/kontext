@@ -67,10 +67,7 @@ export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore 
             return this.layoutModel.ajax<{user:Kontext.UserCredentials}>(
                 'GET',
                 this.layoutModel.createActionUrl('user/ajax_user_info'),
-                {},
-                {
-                    contentType : 'application/x-www-form-urlencoded'
-                }
+                {}
             );
 
         } else {

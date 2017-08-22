@@ -23,6 +23,12 @@
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 
+
+declare interface ObjectConstructor {
+    assign(target: any, ...sources: any[]): any;
+}
+
+
 /**
  *
  */
@@ -275,21 +281,63 @@ declare module Kontext {
         InlineHelp:React.ReactClass;
         Messages:React.ReactClass;
         EmptyQueryOverviewBar:React.ReactClass;
+        ImgWithMouseover:React.ReactClass;
     }
 
     /**
      * Convenient functions used by KonText's React components
      */
     export interface ComponentHelpers {
+
+        /**
+         * Translate a message key (and possible passed placeholder
+         * replacement values) based on KonText translation mapping
+         * JSON file.
+         */
         translate(s:string, values?:any):string;
-        getConf(k:string):any;
+
+        /**
+         * Create a proper action URL based on normalized format
+         * (e.g. 'first_form' translates to
+         * http://localhost/kontext/first_form depending
+         * on a concrete configuration).
+         */
         createActionLink(path:string):string;
+
+        /**
+         * Create a proper static resource URL based on normalized
+         * format (.e.g. 'img/foo.svg' translates to
+         * http://localhost/kontext/static/img/foo.svg' depending
+         * on a concrete configuration).
+         */
         createStaticUrl(path:string):string;
+
+        /**
+         * Format a number based on current UI locales.
+         */
         formatNumber(value:number, fractionDigits:number):string;
+
+        /**
+         * Format a date based on current UI locales.
+         */
         formatDate(d:Date, timeFormat?:number):string;
+
+        /**
+         * Provides access to shared (= related to page layout)
+         * components.
+         */
         getLayoutViews():Kontext.LayoutViews;
+
         addGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
+
         removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
+
+        /**
+         * Make a shallow copy of a (state) object.
+         * It is best used with state objects containing
+         * primitive values or Immutable.js instances.
+         */
+        cloneState<T>(obj:T):T;
     }
 
     export interface LayoutStores {
@@ -938,6 +986,8 @@ declare module TextTypes {
         undoState():void;
 
         canUndoState():boolean;
+
+        isBusy():boolean;
     }
 
     /**

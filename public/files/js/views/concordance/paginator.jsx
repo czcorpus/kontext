@@ -19,20 +19,20 @@
  */
 
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, lineStore) {
+export function init(dispatcher, he, lineStore) {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------------------- <JumpTo /> ---------------------------
+    // TODO implement a proper initialization of currently selected item
+    const JumpTo = (props) => {
 
-    let JumpTo = React.createClass({
-        // TODO implement a proper initialization of currently selected item
-        mixins : mixins,
-
-        _selectChangeHandler : function (event) {
-            if (typeof this.props.clickHandler === 'function') {
-                this.props.clickHandler();
+        const selectChangeHandler = (event) => {
+            if (typeof props.clickHandler === 'function') {
+                props.clickHandler();
             }
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_CHANGE_PAGE',
@@ -41,231 +41,188 @@ export function init(dispatcher, mixins, lineStore) {
                     pageNum: Number(event.currentTarget.value)
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <div className="jump-to">
-                    {this.translate('concview__sort_jump_to')}
-                    {'\u00A0'}
-                    <select onChange={this._selectChangeHandler}>
-                    {this.props.sortIdx.map((item) => {
-                        return <option key={item.page + ':' + item.label}
-                                    value={item.page}>{item.label}</option>;
-                    })}
-                    </select>
-                </div>
-            );
-        }
-    });
+        return (
+            <div className="jump-to">
+                {he.translate('concview__sort_jump_to')}
+                {'\u00A0'}
+                <select onChange={selectChangeHandler}>
+                {props.sortIdx.map((item) => {
+                    return <option key={item.page + ':' + item.label}
+                                value={item.page}>{item.label}</option>;
+                })}
+                </select>
+            </div>
+        );
+    };
 
     // ------------------------- <FirstPgButton /> ---------------------------
 
-    let NavigButton = React.createClass({
+    const NavigButton = (props) => {
 
-        mixins : mixins,
-
-        _clickHandler : function () {
-            if (typeof this.props.clickHandler === 'function') {
-                this.props.clickHandler();
+        const clickHandler = () => {
+            if (typeof props.clickHandler === 'function') {
+                props.clickHandler();
             }
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_CHANGE_PAGE',
                 props: {
-                    action: this.props.action
+                    action: props.action
                 }
             });
-        },
+        };
 
-        _onMouseOver : function () {
-            let image = this.state.image2;
-            let image2 = this.state.image;
-            this.setState({
-                image: image,
-                image2: image2
-            });
-        },
-
-        getInitialState : function () {
-            return {
-                image: this.createStaticUrl(this.props.image),
-                image2: this.createStaticUrl(this.props.image2)
-            };
-        },
-
-
-        render : function () {
-            return (
-                <a>
-                    <img src={this.state.image}
-                        alt={this.props.label}
-                        title={this.props.label}
-                        onClick={this._clickHandler}
-                        onMouseOver={this._onMouseOver}
-                        onMouseOut={this._onMouseOver} />
-                </a>
-            );
-        }
-    });
+        return (
+            <a onClick={clickHandler}>
+                <layoutViews.ImgWithMouseover
+                    src={he.createStaticUrl(props.image)}
+                    alt={props.label} />
+            </a>
+        );
+    };
 
     // ------------------------- <FirstPgButton /> ---------------------------
 
-    let FirstPgButton = React.createClass({
-        mixins : mixins,
-        render : function () {
-            return <NavigButton image="img/first-page.svg" image2="img/first-page_s.svg"
-                        action="firstPage" label={this.translate('concview__first_page_btn')}
-                        clickHandler={this.props.clickHandler} />;
-        }
-    });
+    const FirstPgButton = (props) => {
+
+        return <NavigButton image="img/first-page.svg"
+                    action="firstPage" label={he.translate('concview__first_page_btn')}
+                    clickHandler={props.clickHandler} />;
+    };
 
     // ------------------------- <PrevPgButton /> ---------------------------
 
-    let PrevPgButton = React.createClass({
-        mixins : mixins,
-        render : function () {
-            return <NavigButton image="img/prev-page.svg" image2="img/prev-page_s.svg"
-                        action="prevPage" label={this.translate('concview__prev_page_btn')}
-                        clickHandler={this.props.clickHandler} />;
-        }
-    });
+    const PrevPgButton = (props) => {
+
+        return <NavigButton image="img/prev-page.svg"
+                    action="prevPage" label={he.translate('concview__prev_page_btn')}
+                    clickHandler={props.clickHandler} />;
+    };
 
     // ------------------------- <NextPgButton /> ---------------------------
 
-    let NextPgButton = React.createClass({
-        mixins : mixins,
-        render : function () {
-            return <NavigButton image="img/next-page.svg" image2="img/next-page_s.svg"
-                        action="nextPage" label={this.translate('concview__next_page_btn')}
-                        clickHandler={this.props.clickHandler} />;
-        }
-    });
+    const NextPgButton = (props) => {
+
+        return <NavigButton image="img/next-page.svg"
+                    action="nextPage" label={he.translate('concview__next_page_btn')}
+                    clickHandler={props.clickHandler} />;
+    };
 
     // ------------------------- <LastPgButton /> ---------------------------
 
-    let LastPgButton = React.createClass({
-        mixins : mixins,
-        render : function () {
-            return <NavigButton image="img/last-page.svg" image2="img/last-page_s.svg"
-                        action="lastPage" label={this.translate('concview__last_page_btn')}
-                        clickHandler={this.props.clickHandler} />;
-        }
-    });
+    const LastPgButton = (props) => {
+
+        return <NavigButton image="img/last-page.svg"
+                    action="lastPage" label={he.translate('concview__last_page_btn')}
+                    clickHandler={props.clickHandler} />;
+    };
 
     // ------------------------- <PositionInfo /> ---------------------------
 
-    let PositionInfo = React.createClass({
+    const PositionInfo = (props) => {
 
-        mixins : mixins,
+        const inputChangeHandler = (event) => {
+            props.inputHandler(event);
+        };
 
-        _inputChangeHandler : function (event) {
-            this.setState({
-                currentPage: event.currentTarget.value
-            });
-        },
+        const inputKeyDownHandler = (event) => {
+            props.inputKeyDownHandler(event);
+        };
 
-        _inputKeyDownHandler : function (event) {
-            if (event.keyCode === 13) {
-                if (typeof this.props.enterHitHandler === 'function') {
-                    this.props.enterHitHandler();
-                }
-                dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_CHANGE_PAGE',
-                    props: {
-                        action: 'customPage',
-                        pageNum: this.state.currentPage
-                    }
-                });
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        },
-
-        _storeChangeListener : function (store, action) {
-            this.setState({currentPage: lineStore.getCurrentPage()});
-        },
-
-        componentDidMount : function () {
-            lineStore.addChangeListener(this._storeChangeListener);
-        },
-
-        componentWillUnmount : function () {
-            lineStore.removeChangeListener(this._storeChangeListener);
-        },
-
-        getInitialState : function () {
-            return {
-                currentPage: this.props.currentPage
-            };
-        },
-
-        _renderCurrentPage : function (totalPages) {
-            if (this.props.loader) {
-                return <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')} />;
+        const renderCurrentPage = (totalPages) => {
+            if (props.loader) {
+                return <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')} />;
 
             } else if (totalPages > 1) {
-                return <input type="text" value={this.state.currentPage}
-                            onChange={this._inputChangeHandler}
-                            onKeyDown={this._inputKeyDownHandler} />;
+                return <input type="text" value={props.currentPageInput}
+                            onChange={inputChangeHandler}
+                            onKeyDown={inputKeyDownHandler} />;
 
             } else {
                 return <span>1</span>;
             }
-        },
+        };
 
-        render : function () {
-            let numPages = this.props.lastPage ? this.props.lastPage : this.props.currentPage;
-            return (
-                <div className="bonito-pagination-core">
-                    <span className="curr-page">{this._renderCurrentPage(numPages)}</span>
-                    {'\u00A0/\u00A0'}
-                    <span className="numofpages">{this.formatNumber(numPages)}</span>
-                </div>
-            );
-        }
-    });
+        const numPages = props.lastPage ? props.lastPage : props.currentPage;
+        return (
+            <div className="bonito-pagination-core">
+                <span className="curr-page">{renderCurrentPage(numPages)}</span>
+                {'\u00A0/\u00A0'}
+                <span className="numofpages">{he.formatNumber(numPages)}</span>
+            </div>
+        );
+    };
 
 
     // ------------------------- <Paginator /> ---------------------------
 
-    let Paginator = React.createClass({
+    class Paginator extends React.Component {
 
-        _importPaginationInfo : function () {
-            let pagination = lineStore.getPagination();
+        constructor(props) {
+            super(props);
+            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._navigActionHandler = this._navigActionHandler.bind(this);
+            this._pageInputHandler = this._pageInputHandler.bind(this);
+            this._inputKeyDownHandler = this._inputKeyDownHandler.bind(this);
+            this.state = this._importPaginationInfo();
+        }
+
+        _importPaginationInfo() {
+            const pagination = lineStore.getPagination();
             return {
                 firstPage: pagination.firstPage,
                 prevPage: pagination.prevPage,
                 nextPage: pagination.nextPage,
                 lastPage: pagination.lastPage,
-                currentPage: lineStore.getCurrentPage()
+                currentPage: lineStore.getCurrentPage(),
+                currentPageInput: lineStore.getCurrentPage(),
+                loader: false
             };
-        },
+        }
 
-        _storeChangeListener : function (store, action) {
-            let state = this._importPaginationInfo();
-            state['loader'] = false;
+        _storeChangeListener() {
+            const state = this._importPaginationInfo();
+            state.loader = false;
             this.setState(state);
-        },
+        }
 
-        getInitialState : function () {
-            let state = this._importPaginationInfo();
-            state['loader'] = false;
-            return state;
-        },
+        _navigActionHandler() {
+            const newState = he.cloneState(this.state);
+            newState.loader = true;
+            this.setState(newState);
+        }
 
-        componentDidMount : function () {
+        _pageInputHandler(event) {
+            const newState = he.cloneState(this.state);
+            newState.currentPageInput = event.currentTarget.value
+            this.setState(newState);
+        }
+
+        _inputKeyDownHandler(event) {
+            if (event.keyCode === 13) {
+               this._navigActionHandler();
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_CHANGE_PAGE',
+                    props: {
+                        action: 'customPage',
+                        pageNum: this.state.currentPageInput
+                    }
+                });
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }
+
+        componentDidMount() {
             lineStore.addChangeListener(this._storeChangeListener);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineStore.removeChangeListener(this._storeChangeListener);
-        },
+        }
 
-        _navigActionHandler : function () {
-            this.setState(React.addons.update(this.state, {loader: {$set: true}}));
-        },
-
-        render : function () {
+        render() {
             return (
                 <div className="bonito-pagination">
                     {this.state.currentPage > 1 ?
@@ -274,9 +231,14 @@ export function init(dispatcher, mixins, lineStore) {
                             <PrevPgButton clickHandler={this._navigActionHandler} />
                         </div>) : null}
 
-                    <PositionInfo currentPage={this.state.currentPage}
-                        lastPage={this.state.lastPage} loader={this.state.loader}
-                        enterHitHandler={this._navigActionHandler} />
+                    <PositionInfo
+                        currentPage={this.state.currentPage}
+                        currentPageInput={this.state.currentPageInput}
+                        lastPage={this.state.lastPage}
+                        loader={this.state.loader}
+                        enterHitHandler={this._navigActionHandler}
+                        inputHandler={this._pageInputHandler}
+                        inputKeyDownHandler={this._inputKeyDownHandler} />
 
                     {this.state.currentPage < this.state.lastPage ?
                         (<div className="bonito-pagination-right">
@@ -289,7 +251,7 @@ export function init(dispatcher, mixins, lineStore) {
                 </div>
             );
         }
-    });
+    }
 
     return {
         Paginator: Paginator

@@ -138,6 +138,8 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
      */
     private textInputPlaceholder:string;
 
+    private _isBusy:boolean;
+
 
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, data:InitialData) {
         super(dispatcher);
@@ -156,59 +158,64 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.extendedInfoCallbacks = Immutable.Map<string, (ident:string)=>RSVP.Promise<any>>();
         this.selectionChangeListeners = Immutable.List<(target:TextTypes.ITextTypesStore)=>void>();
         this.textInputPlaceholder = null;
-        const self = this;
+        this._isBusy = false;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
-                    self.changeValueSelection(payload.props['attrName'], payload.props['itemIdx']);
+                    this.changeValueSelection(payload.props['attrName'], payload.props['itemIdx']);
                     break;
                 case 'TT_SELECT_ALL_CHECKBOX_CLICKED':
-                    self.applySelectAll(payload.props['attrName']);
+                    this.applySelectAll(payload.props['attrName']);
                     break;
                 case 'TT_RANGE_BUTTON_CLICKED':
-                    self.applyRange(payload.props['attrName'], payload.props['fromVal'],
+                    this.applyRange(payload.props['attrName'], payload.props['fromVal'],
                             payload.props['toVal'], payload.props['strictInterval'],
                             payload.props['keepCurrent']);
                     break;
                 case 'TT_TOGGLE_RANGE_MODE':
-                    self.setRangeMode(payload.props['attrName'], !self.getRangeModes().get(payload.props['attrName']));
-                    self.notifyChangeListeners();
+                    this.setRangeMode(payload.props['attrName'], !this.getRangeModes().get(payload.props['attrName']));
+                    this.notifyChangeListeners();
                     break;
                 case 'TT_EXTENDED_INFORMATION_REQUEST':
-                    self.fetchExtendedInfo(payload.props['attrName'], payload.props['ident']).then(
+                    this._isBusy = true;
+                    this.notifyChangeListeners();
+                    this.fetchExtendedInfo(payload.props['attrName'], payload.props['ident']).then(
                         (v) => {
-                            self.notifyChangeListeners();
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.pluginApi.showMessage('error', err);
+                            this._isBusy = false;
+                            this.pluginApi.showMessage('error', err);
+                            this.notifyChangeListeners();
                         }
                     );
                     break;
                 case 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST':
-                    self.clearExtendedInfo(payload.props['attrName'], payload.props['ident']);
-                    self.notifyChangeListeners();
+                    this.clearExtendedInfo(payload.props['attrName'], payload.props['ident']);
+                    this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED':
-                    self.setTextInputAttrValue(payload.props['attrName'], payload.props['ident'],
+                    this.setTextInputAttrValue(payload.props['attrName'], payload.props['ident'],
                             payload.props['label'], payload.props['append']);
-                    self.notifyChangeListeners();
+                    this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED':
-                    self.handleAttrTextInputChange(payload.props['attrName'], payload.props['value']);
-                    self.notifyChangeListeners();
+                    this.handleAttrTextInputChange(payload.props['attrName'], payload.props['value']);
+                    this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET':
-                    self.resetAutoComplete(payload.props['attrName']);
-                    self.notifyChangeListeners();
+                    this.resetAutoComplete(payload.props['attrName']);
+                    this.notifyChangeListeners();
                     break;
                 case 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST':
-                    self.handleAttrTextInputAutoCompleteRequest(payload.props['attrName'], payload.props['value']).then(
+                    this.handleAttrTextInputAutoCompleteRequest(payload.props['attrName'], payload.props['value']).then(
                         (v) => {
-                            self.notifyChangeListeners();
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.pluginApi.showMessage('error', err);
+                            this.pluginApi.showMessage('error', err);
                             console.error(err);
                         }
                     );
@@ -684,5 +691,10 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     getRangeModes():Immutable.Map<string, boolean> {
         return this.rangeSelector.getRangeModes();
     }
+
+    isBusy():boolean {
+        return this._isBusy;
+    }
+
 
 }

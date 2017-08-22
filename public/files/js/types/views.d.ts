@@ -138,8 +138,7 @@ declare module "views/subcorp/list" {
         SubcorpList:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:Kontext.LayoutViews, subcorpListStore:any):SubcorpListViews;
+    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, subcorpListStore:any):SubcorpListViews;
 }
 
 

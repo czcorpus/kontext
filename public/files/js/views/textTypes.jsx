@@ -18,18 +18,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
 export function init(dispatcher, mixins, textTypesStore) {
 
+    const he = mixins[0];
+    const layoutViews = he.getLayoutViews();
+
     // ----------------------------- <RangeSelector /> --------------------------
 
-    const RangeSelector = React.createClass({
+    class RangeSelector extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._confirmClickHandler = this._confirmClickHandler.bind(this);
+            this._mkInputChangeHandler = this._mkInputChangeHandler.bind(this);
+            this._keyboardHandler = this._keyboardHandler.bind(this);
+            this._helpClickHandler = this._helpClickHandler.bind(this);
+            this._helpCloseHandler = this._helpCloseHandler.bind(this);
+            this.state = {
+                fromValue: null,
+                toValue: null,
+                keepCurrent: false,
+                intervalBehavior: 'strict',
+                hasSelectedValues: textTypesStore.hasSelectedItems(this.props.attrName),
+                showHelp: false
+            };
+        }
 
-        _confirmClickHandler : function () {
+        _confirmClickHandler() {
             dispatcher.dispatch({
                 actionType: 'TT_RANGE_BUTTON_CLICKED',
                 props: {
@@ -40,9 +58,9 @@ export function init(dispatcher, mixins, textTypesStore) {
                     strictInterval: this.state.intervalBehavior === 'strict'
                 }
             });
-        },
+        }
 
-        _mkInputChangeHandler : function (name) {
+        _mkInputChangeHandler(name) {
             return (evt) => {
                 let upd = {};
                 if (name !== 'keepCurrent') {
@@ -53,42 +71,34 @@ export function init(dispatcher, mixins, textTypesStore) {
                 }
                 this.setState(React.addons.update(this.state, upd));
             };
-        },
+        }
 
-        _keyboardHandler : function (evt) {
+        _keyboardHandler(evt) {
             if (evt.keyCode === 13) {
                 this._confirmClickHandler(evt);
                 evt.preventDefault();
             }
-        },
+        }
 
-        _helpClickHandler : function () {
-            this.setState(React.addons.update(this.state, {showHelp: {$set: true}}));
-        },
+        _helpClickHandler() {
+            const newState = he.cloneState(this.state);
+            newState.showHelp = true;
+            this.setState(newState);
+        }
 
-        _helpCloseHandler : function () {
-            this.setState(React.addons.update(this.state, {showHelp: {$set: false}}));
-        },
+        _helpCloseHandler() {
+            const newState = he.cloneState(this.state);
+            newState.showHelp = false;
+            this.setState(newState);
+        }
 
-        getInitialState : function () {
-            return {
-                fromValue: null,
-                toValue: null,
-                keepCurrent: false,
-                intervalBehavior: 'strict',
-                hasSelectedValues: textTypesStore.hasSelectedItems(this.props.attrName),
-                showHelp: false
-            };
-        },
-
-        render : function () {
-            let layoutViews = this.getLayoutViews();
+        render() {
             return (
                 <div className="range-selector">
-                    <h3>{this.translate('query__tt_define_range')}</h3>
+                    <h3>{he.translate('query__tt_define_range')}</h3>
                     <div>
                         <label className="date">
-                            {this.translate('query__tt_from')}:{'\u00A0'}
+                            {he.translate('query__tt_from')}:{'\u00A0'}
                             <input onChange={this._mkInputChangeHandler('fromValue')}
                                     onKeyDown={this._keyboardHandler}
                                     className="from-value"
@@ -96,7 +106,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                         </label>
                         {'\u00A0'}
                         <label className="date">
-                            {this.translate('query__tt_to')}:{'\u00A0'}
+                            {he.translate('query__tt_to')}:{'\u00A0'}
                             <input onChange={this._mkInputChangeHandler('toValue')}
                                     onKeyDown={this._keyboardHandler}
                                     className="to-value"
@@ -107,7 +117,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                         this.state.hasSelectedValues
                         ? (
                             <label className="keep-current">
-                                {this.translate('query__tt_keep_current_selection')}:{'\u00A0'}
+                                {he.translate('query__tt_keep_current_selection')}:{'\u00A0'}
                                 <input type="checkbox" onChange={this._mkInputChangeHandler('keepCurrent')} />
                             </label>
                         )
@@ -116,39 +126,45 @@ export function init(dispatcher, mixins, textTypesStore) {
                     <div className="interval-switch">
                         <div>
                             <span className="label">
-                                {this.translate('query__tt_interval_inclusion_policy')}:{'\u00A0'}
+                                {he.translate('query__tt_interval_inclusion_policy')}:{'\u00A0'}
                             </span>
                             <select className="interval-behavior" defaultValue={this.state.intervalBehavior}
                                     onChange={this._mkInputChangeHandler('intervalBehavior')}>
-                                <option value="relaxed">{this.translate('query__tt_partial_interval')}</option>
-                                <option value="strict">{this.translate('query__tt_strict_interval')}</option>
+                                <option value="relaxed">{he.translate('query__tt_partial_interval')}</option>
+                                <option value="strict">{he.translate('query__tt_strict_interval')}</option>
                             </select>
                             <a className="context-help">
-                                <img src="../files/img/question-mark.svg"
-                                     className="over-img"
-                                     onClick={this._helpClickHandler} />
+                                <layoutViews.ImgWithMouseover
+                                     src={he.createStaticUrl('img/question-mark.svg')}
+                                     htmlClass="over-img"
+                                     clickHandler={this._helpClickHandler} />
                             </a>
                             {this.state.showHelp
                                 ? <layoutViews.PopupBox onCloseClick={this._helpCloseHandler}
                                         status="info" autoSize={true}>
-                                        <div>{this.translate('query__tt_range_help_text')}</div>
+                                        <div>{he.translate('query__tt_range_help_text')}</div>
                                     </layoutViews.PopupBox>
                                 : null}
                         </div>
                     </div>
                     <button type="button" className="default-button confirm-range"
-                            onClick={this._confirmClickHandler}>{this.translate('query__tt_range_OK')}</button>
+                            onClick={this._confirmClickHandler}>{he.translate('query__tt_range_OK')}</button>
                 </div>
             );
         }
-    });
+    }
 
 
     // ----------------------------- <CheckboxItem /> --------------------------
 
-    const CheckBoxItem = React.createClass({
+    class CheckBoxItem extends React.Component {
 
-        _clickHandler : function () {
+        constructor(props) {
+            super(props);
+            this._clickHandler = this._clickHandler.bind(this);
+        }
+
+        _clickHandler() {
             dispatcher.dispatch({
                 actionType: 'TT_VALUE_CHECKBOX_CLICKED',
                 props: {
@@ -156,13 +172,15 @@ export function init(dispatcher, mixins, textTypesStore) {
                     itemIdx: this.props.itemIdx
                 }
             });
-        },
-        shouldComponentUpdate: function(nextProps, nextState) {
-            return this.props.itemValue !== nextProps.itemValue
-                    || this.props.itemIsSelected !== nextProps.itemIsSelected
-                    || this.props.itemIsLocked !== nextProps.itemIsLocked;
-        },
-        render : function () {
+        }
+
+        shouldComponentUpdate(nextProps, nextState) {
+            return this.props.itemValue !== nextProps.itemValue ||
+                    this.props.itemIsSelected !== nextProps.itemIsSelected ||
+                    this.props.itemIsLocked !== nextProps.itemIsLocked;
+        }
+
+        render() {
             const itemName = 'sca_' + this.props.itemName;
             return (
                 <label className={this.props.itemIsLocked ? 'locked' : null}>
@@ -181,58 +199,57 @@ export function init(dispatcher, mixins, textTypesStore) {
                 </label>
             );
         }
-    });
+    }
 
     // ----------------------------- <ExtendedInfoBox /> --------------------------
 
-    const ExtendedInfoBox = React.createClass({
+    const ExtendedInfoBox = (props) => {
 
-        mixins : mixins,
-
-        _clickCloseHandler : function () {
+        const clickCloseHandler = () => {
             dispatcher.dispatch({
                 actionType: 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST',
                 props: {
-                    attrName: this.props.attrName,
-                    ident: this.props.ident
+                    attrName: props.attrName,
+                    ident: props.ident
                 }
             });
-        },
+        };
 
-        _renderContent : function () {
-            if (this.props.data.has('__message__')) {
-                return <div className="message"><p>{this.props.data.get('__message__')}</p></div>;
+        const renderContent = () => {
+            if (props.data.has('__message__')) {
+                return <div className="message"><p>{props.data.get('__message__')}</p></div>;
 
             } else {
                 return (
                     <ul>
-                        {this.props.data.entrySeq().map((item) => {
+                        {props.data.entrySeq().map((item) => {
                             return <li key={item[0]}><strong>{item[0]}:</strong>{'\u00A0'}{item[1]}</li>;
                         })}
                     </ul>
                 );
             }
-        },
+        };
 
-        render : function () {
-            let layoutViews = this.getLayoutViews();
-            return (
-                <layoutViews.PopupBox onCloseClick={this._clickCloseHandler}
-                            customClass="metadata-detail"
-                            customStyle={{marginLeft: '5em'}}>
-                    {this._renderContent()}
-                </layoutViews.PopupBox>
-            );
-        }
-    });
+        return (
+            <layoutViews.PopupBox onCloseClick={clickCloseHandler}
+                        customClass="metadata-detail"
+                        customStyle={{marginLeft: '5em'}}>
+                {renderContent()}
+            </layoutViews.PopupBox>
+        );
+    };
 
     // ----------------------------- <ExtendedInfoButton /> ------------------------------
 
-    const ExtendedInfoButton = React.createClass({
+    class ExtendedInfoButton extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = {isWaiting: false};
+        }
 
-        _mkHandleClick : function (idx) {
+        _mkHandleClick(idx) {
             return (evt) => {
                 this.setState({isWaiting: true});
                 dispatcher.dispatch({
@@ -243,30 +260,26 @@ export function init(dispatcher, mixins, textTypesStore) {
                     }
                 });
             }
-        },
+        }
 
-        getInitialState : function () {
-            return {isWaiting: false};
-        },
-
-        _storeChangeHandler : function (store, action) {
+        _storeChangeHandler(store, action) {
             if (this.state.isWaiting && this.props.containsExtendedInfo) {
-                this.setState({isWaiting: false});
+                this.setState({isWaiting: textTypesStore.isBusy()});
             }
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             textTypesStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             textTypesStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             if (this.state.isWaiting) {
-                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={this.translate('global__loading')} />;
+                return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={he.translate('global__loading')} />;
 
             } else if (this.props.numGrouped < 2) {
                 return <a onClick={this._mkHandleClick(this.props.idx)} className="bib-info">i</a>;
@@ -276,33 +289,30 @@ export function init(dispatcher, mixins, textTypesStore) {
             }
 
         }
-    })
+    }
 
     // ----------------------------- <FullListContainer /> --------------------------
 
-    const FullListContainer = React.createClass({
+    const FullListContainer = (props) => {
 
-        mixins : mixins,
-
-        _renderListOfCheckBoxes : function () {
-            let hasExtendedInfo = textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name);
+        const renderListOfCheckBoxes = () => {
             return (
                 <table>
                     <tbody>
-                    {this.props.attrObj.getValues().map((item, i) => {
+                    {props.attrObj.getValues().map((item, i) => {
                         return (
                             <tr key={item.value + String(i)}>
                                 <td><CheckBoxItem
                                         itemIdx={i}
-                                        itemName={this.props.attrObj.name}
+                                        itemName={props.attrObj.name}
                                         itemValue={item.value}
                                         itemIsSelected={item.selected}
                                         itemIsLocked={item.locked}
                                             /></td>
-                                <td className="num">{item.availItems ? this.formatNumber(item.availItems) : ''}</td>
+                                <td className="num">{item.availItems ? he.formatNumber(item.availItems) : ''}</td>
                                 <td className="extended-info">
-                                {hasExtendedInfo ?
-                                    <ExtendedInfoButton ident={item.ident} attrName={this.props.attrObj.name}
+                                {props.hasExtendedInfo ?
+                                    <ExtendedInfoButton ident={item.ident} attrName={props.attrObj.name}
                                             numGrouped={item.numGrouped} containsExtendedInfo={!!item.extendedInfo} />
                                     : null
                                 }
@@ -313,28 +323,31 @@ export function init(dispatcher, mixins, textTypesStore) {
                     </tbody>
                 </table>
             );
-        },
+        };
 
-        render : function () {
-            return (
-                <div>
-                    {
-                        this.props.rangeIsOn
-                        ? <RangeSelector attrName={this.props.attrObj.name} />
-                        : this._renderListOfCheckBoxes()
-                    }
-                </div>
-            );
-        }
-    });
+        return (
+            <div>
+                {
+                    props.rangeIsOn ? <RangeSelector attrName={props.attrObj.name} /> :
+                        renderListOfCheckBoxes()
+                }
+            </div>
+        );
+    };
 
     // ----------------------------- <AutoCompleteBox /> --------------------------
 
-    const AutoCompleteBox = React.createClass({
+    class AutoCompleteBox extends React.Component {
 
-        _outsideClick : false,
+        constructor(props) {
+            super(props);
+            this._outsideClick = false;
+            this._handleAutoCompleteHintClick = this._handleAutoCompleteHintClick.bind(this);
+            this._handleDocumentClick = this._handleDocumentClick.bind(this);
+            this._handleAutoCompleteAreaClick = this._handleAutoCompleteAreaClick.bind(this);
+        }
 
-        _handleAutoCompleteHintClick : function (item) {
+        _handleAutoCompleteHintClick(item) {
             if (typeof this.props.customAutoCompleteHintClickHandler === 'function') {
                 this.props.customAutoCompleteHintClickHandler(item);
 
@@ -349,9 +362,9 @@ export function init(dispatcher, mixins, textTypesStore) {
                     }
                 });
             }
-        },
+        }
 
-        _handleDocumentClick : function (event) {
+        _handleDocumentClick(event) {
             if (event.eventPhase === Event.CAPTURING_PHASE) {
                 this._outsideClick = true;
 
@@ -366,23 +379,23 @@ export function init(dispatcher, mixins, textTypesStore) {
                     this._outsideClick = false;
                 }
             }
-        },
+        }
 
-        _handleAutoCompleteAreaClick : function (event) {
+        _handleAutoCompleteAreaClick(event) {
             this._outsideClick = false;
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             window.document.addEventListener('click', this._handleDocumentClick, true);
             window.document.addEventListener('click', this._handleDocumentClick, false);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             window.document.removeEventListener('click', this._handleDocumentClick, true);
             window.document.removeEventListener('click', this._handleDocumentClick, false);
-        },
+        }
 
-        render : function () {
+        render() {
             let data = this.props.attrObj.getAutoComplete();
             return (
                 <ul className="auto-complete"
@@ -390,7 +403,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                 {data.map((item) => {
                     return (
                         <li key={item.ident}>
-                            <a onClick={this._handleAutoCompleteHintClick.bind(this, item)}>
+                            <a onClick={()=>this._handleAutoCompleteHintClick(item)}>
                                 {item.label}
                             </a>
                         </li>
@@ -399,16 +412,21 @@ export function init(dispatcher, mixins, textTypesStore) {
                 </ul>
             );
         }
-    });
+    }
 
     // ----------------------------- <RawInputContainer /> --------------------------
 
-    const RawInputContainer = React.createClass({
+    class RawInputContainer extends React.Component {
 
-        throttlingTimer : null,
+        constructor(props) {
+            super(props);
+            this.throttlingTimer = null;
+            this._throttlingIntervalMs = 300;
+            this._inputChangeHandler = this._inputChangeHandler.bind(this);
+        }
 
-        _inputChangeHandler : function (evt) {
-            let v = evt.target.value;
+        _inputChangeHandler(evt) {
+            const v = evt.target.value;
 
             dispatcher.dispatch({
                 actionType: 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED',
@@ -429,10 +447,10 @@ export function init(dispatcher, mixins, textTypesStore) {
                         value: v
                     }
                 });
-            }, 300);
-        },
+            }, this._throttlingIntervalMs);
+        }
 
-        _renderAutoComplete : function () {
+        _renderAutoComplete() {
             if (this.props.attrObj.getAutoComplete().size > 0) {
                 return <AutoCompleteBox attrObj={this.props.attrObj}
                                 customAutoCompleteHintClickHandler={this.props.customAutoCompleteHintClickHandler} />;
@@ -440,9 +458,9 @@ export function init(dispatcher, mixins, textTypesStore) {
             } else {
                 return null;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <table>
                     <tbody>
@@ -465,42 +483,41 @@ export function init(dispatcher, mixins, textTypesStore) {
                 </table>
             );
         }
-    });
+    }
 
     // ----------------------------- <RawInputMultiValueContainer /> --------------------------
 
-    const RawInputMultiValueContainer = React.createClass({
+    const RawInputMultiValueContainer = (props) => {
 
-        _handleAutoCompleteHintClick : function (item) { // typeof item = TextTypes.AutoCompleteItem
+        const handleAutoCompleteHintClick = (item) => { // typeof item = TextTypes.AutoCompleteItem
             dispatcher.dispatch({
                 actionType: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
                 props: {
-                    attrName: this.props.attrObj.name,
+                    attrName: props.attrObj.name,
                     ident: item.ident,
                     label: item.label,
                     append: true
                 }
             });
-        },
+        };
 
-        _renderCheckboxes : function () {
-            let values = this.props.attrObj.getValues();
-            let hasExtendedInfo = textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name);
+        const renderCheckboxes = () => {
+            const values = props.attrObj.getValues();
             return values.map((item, i) => {
                 return (
                     <tr key={item.value + String(i)}>
                         <td>
                             <CheckBoxItem
                                     itemIdx={i}
-                                    itemName={this.props.attrObj.name}
+                                    itemName={props.attrObj.name}
                                     itemValue={item.value}
                                     itemIsSelected={item.selected}
                                     itemIsLocked={item.locked}
                                         />
                         </td>
                         <td>
-                            {hasExtendedInfo
-                                ? <ExtendedInfoButton ident={item.ident} attrName={this.props.attrObj.name}
+                            {props.hasExtendedInfo
+                                ? <ExtendedInfoButton ident={item.ident} attrName={props.attrObj.name}
                                         numGrouped={item.numGrouped}
                                         containsExtendedInfo={!!item.extendedInfo} />
                                 : null }
@@ -508,57 +525,66 @@ export function init(dispatcher, mixins, textTypesStore) {
                     </tr>
                 );
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <div>
-                    <table>
-                        <tbody>
-                            {this._renderCheckboxes()}
-                        </tbody>
-                    </table>
-                    <RawInputContainer attrObj={this.props.attrObj}
-                                        isLocked={this.props.isLocked}
-                                        inputTextOnChange={this.props.inputTextOnChange}
-                                        customInputName={null}
-                                        customAutoCompleteHintClickHandler={this._handleAutoCompleteHintClick} />
-                </div>
-            );
-        }
-    });
+        return (
+            <div>
+                <table>
+                    <tbody>
+                        {renderCheckboxes()}
+                    </tbody>
+                </table>
+                <RawInputContainer attrObj={props.attrObj}
+                                    isLocked={props.isLocked}
+                                    inputTextOnChange={props.inputTextOnChange}
+                                    customInputName={null}
+                                    customAutoCompleteHintClickHandler={handleAutoCompleteHintClick} />
+            </div>
+        );
+    };
 
     // ----------------------------- <ValueSelector /> --------------------------
 
-    const ValueSelector = React.createClass({
+    const ValueSelector = (props) => {
 
-        render : function () {
-            return (
-                <div className="scrollable">
-                {this.props.attrObj.containsFullList() || this.props.rangeIsOn
-                    ? <FullListContainer attrObj={this.props.attrObj} rangeIsOn={this.props.rangeIsOn}
-                            isLocked={this.props.isLocked} />
-                    : <RawInputMultiValueContainer
-                            attrObj={this.props.attrObj}
-                            isLocked={this.props.isLocked}
-                            inputTextOnChange={this.props.inputTextOnChange} />
-                }
-                </div>
-            );
-        }
-    });
+        return (
+            <div className="scrollable">
+            {props.attrObj.containsFullList() || props.rangeIsOn
+                ? <FullListContainer attrObj={props.attrObj} rangeIsOn={props.rangeIsOn}
+                        isLocked={props.isLocked}
+                        hasExtendedInfo={props.hasExtendedInfo} />
+                : <RawInputMultiValueContainer
+                        attrObj={props.attrObj}
+                        isLocked={props.isLocked}
+                        inputTextOnChange={props.inputTextOnChange}
+                        hasExtendedInfo={props.hasExtendedInfo} />
+            }
+            </div>
+        );
+    };
 
     // ----------------------------- <TableTextTypeAttribute /> --------------------------
 
-    const TableTextTypeAttribute = React.createClass({
+    class TableTextTypeAttribute extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._selectAllHandler = this._selectAllHandler.bind(this);
+            this._intervalModeSwitchHandler = this._intervalModeSwitchHandler.bind(this);
+            this._metaInfoHelpClickHandler = this._metaInfoHelpClickHandler.bind(this);
+            this._helpCloseHandler = this._helpCloseHandler.bind(this);
+            this.state = {
+                metaInfoHelpVisible: false,
+                hasExtendedInfo: textTypesStore.hasDefinedExtendedInfo(this.props.attrObj.name),
+                metaInfo: textTypesStore.getAttrSummary().get(this.props.attrObj.name)
+            };
+        }
 
-        _renderModeSwitch : function (obj) {
+        _renderModeSwitch(obj) {
             if (this.props.attrObj.isInterval) {
-                let label = this.props.rangeIsOn
-                    ? this.translate('query__tt_select_individual')
-                    : this.translate('query__tt_select_range');
+                const label = this.props.rangeIsOn
+                    ? he.translate('query__tt_select_individual')
+                    : he.translate('query__tt_select_range');
                 return (
                     <td>
                         <a className="util-button" onClick={this._intervalModeSwitchHandler}>{label}</a>
@@ -566,62 +592,67 @@ export function init(dispatcher, mixins, textTypesStore) {
                 );
             }
             return null;
-        },
+        }
 
-        _selectAllHandler : function () {
+        _selectAllHandler() {
             dispatcher.dispatch({
                 actionType: 'TT_SELECT_ALL_CHECKBOX_CLICKED',
                 props: {
                     attrName: this.props.attrObj.name
                 }
             });
-        },
+        }
 
-        _intervalModeSwitchHandler : function () {
+        _intervalModeSwitchHandler() {
             dispatcher.dispatch({
                 actionType: 'TT_TOGGLE_RANGE_MODE',
                 props: {
                     attrName: this.props.attrObj.name
                 }
             });
-        },
+        }
 
-        _renderFooter : function () {
+        _renderFooter() {
             if (this.props.attrObj.containsFullList() && !this.props.attrObj.isLocked()) {
                 return (
                     <label className="select-all" style={{display: 'inline-block'}}>
                         <input type="checkbox" className="select-all" onClick={this._selectAllHandler} />
-                        {this.translate('global__select_all')}
+                        {he.translate('global__select_all')}
                         </label>
                 );
 
             } else {
                 return null;
             }
-        },
+        }
 
-        _metaInfoHelpClickHandler : function () {
-            this.setState({metaInfoHelpVisible: true});
-        },
+        _metaInfoHelpClickHandler() {
+            const newState = he.cloneState(this.state);
+            newState.metaInfoHelpVisible = true;
+            this.setState(newState);
+        }
 
-        _helpCloseHandler : function () {
-            this.setState({metaInfoHelpVisible: false});
-        },
+        _helpCloseHandler() {
+            const newState = he.cloneState(this.state);
+            newState.metaInfoHelpVisible = false;
+            this.setState(newState);
+        }
 
-        _renderMetaInfo : function () {
-            let layoutViews = this.getLayoutViews();
-            let metaInfo = textTypesStore.getAttrSummary().get(this.props.attrObj.name);
-            if (metaInfo) {
+        _renderMetaInfo() {
+            if (this.state.metaInfo) {
                 return (
                     <span>
-                        {metaInfo.text}
+                        {this.state.metaInfo.text}
                         {'\u00A0'}
                         <a className="context-help" onClick={this._metaInfoHelpClickHandler}>
-                            <img src={this.createStaticUrl('img/question-mark.svg')} className="over-img" />
+                            <layoutViews.ImgWithMouseover
+                                src={he.createStaticUrl('img/question-mark.svg')}
+                                htmlClass="over-img"
+                                src={he.translate('global__alt_hint')} />
                         </a>
                         {this.state.metaInfoHelpVisible
                             ? (<layoutViews.PopupBox onCloseClick={this._helpCloseHandler} status="info" autoSize={true}>
-                                {metaInfo.help}
+                                {this.state.metaInfo.help}
                                 </layoutViews.PopupBox>)
                             : null}
                     </span>
@@ -630,21 +661,15 @@ export function init(dispatcher, mixins, textTypesStore) {
             } else {
                 return null;
             }
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                metaInfoHelpVisible: false
-            };
-        },
-
-        shouldComponentUpdate : function (nextProps, nextState) {
+        shouldComponentUpdate(nextProps, nextState) {
             return this.props.attrObj !== nextProps.attrObj
                     || this.props.rangeIsOn !== nextProps.rangeIsOn
                     || this.state.metaInfoHelpVisible !== nextState.metaInfoHelpVisible;
-        },
+        }
 
-        _renderExtendedInfo : function () {
+        _renderExtendedInfo() {
             const srch = this.props.attrObj.getValues().findEntry(item => !!item.extendedInfo);
             if (srch) {
                 const [srchIdx, item] = srch;
@@ -654,23 +679,23 @@ export function init(dispatcher, mixins, textTypesStore) {
             } else {
                 return null;
             }
-        },
+        }
 
-        _renderAttrInfo : function () {
+        _renderAttrInfo() {
             if (this.props.attrObj.attrInfo.doc) {
                 return (
                     <span className="info-link">{'\u00a0'}(
                         <a target="_blank" href={this.props.attrObj.attrInfo.doc}
-                                title={this.translate('query__tt_click_to_see_attr_info')}>
+                                title={he.translate('query__tt_click_to_see_attr_info')}>
                             {this.props.attrObj.attrInfo.docLabel}
                         </a>)
                     </span>
                 );
             }
             return null;
-        },
+        }
 
-        render : function () {
+        render() {
             const classes = ['envelope'];
             if (this.props.attrObj.isLocked()) {
                 classes.push('locked');
@@ -693,7 +718,8 @@ export function init(dispatcher, mixins, textTypesStore) {
                             <td>
                                 <ValueSelector attrObj={this.props.attrObj}
                                         rangeIsOn={this.props.rangeIsOn}
-                                        isLocked={this.props.attrObj.isLocked()}  />
+                                        isLocked={this.props.attrObj.isLocked()}
+                                        hasExtendedInfo={this.state.hasExtendedInfo}  />
                             </td>
                         </tr>
                         <tr className="metadata">
@@ -713,39 +739,41 @@ export function init(dispatcher, mixins, textTypesStore) {
                 </table>
             );
         }
-    });
+    }
 
     // ----------------------------- <TextTypesPanel /> --------------------------
 
-    const TextTypesPanel = React.createClass({
-        mixins: mixins,
+    class TextTypesPanel extends React.Component {
 
-        _storeChangeHandler : function (store, action) {
-            this.setState({
-                attributes: textTypesStore.getAttributes(),
-                rangeModes: textTypesStore.getRangeModes()
-            });
-        },
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchStoreState();
+        }
 
-        componentDidMount: function () {
-            textTypesStore.addChangeListener(this._storeChangeHandler);
-            if (typeof this.props.onReady === 'function') {
-                this.props.onReady();
-            }
-        },
-
-        componentWillUnmount: function () {
-            textTypesStore.removeChangeListener(this._storeChangeHandler);
-        },
-
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 attributes: textTypesStore.getAttributes(),
                 rangeModes: textTypesStore.getRangeModes()
             };
-        },
+        }
 
-        render : function () {
+        _storeChangeHandler(store, action) {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
+            textTypesStore.addChangeListener(this._storeChangeHandler);
+            if (typeof this.props.onReady === 'function') {
+                this.props.onReady();
+            }
+        }
+
+        componentWillUnmount() {
+            textTypesStore.removeChangeListener(this._storeChangeHandler);
+        }
+
+        render() {
             return (
                 <div>
                     <div className="plugin-controls">
@@ -767,7 +795,7 @@ export function init(dispatcher, mixins, textTypesStore) {
                 </div>
             );
         }
-    });
+    }
 
     return {
         TextTypesPanel: TextTypesPanel

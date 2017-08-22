@@ -26,7 +26,7 @@ import {init as concDetailViewsInit} from 'views/concordance/detail';
 import {init as concSaveViewsInit} from 'views/concordance/save';
 
 
-export function init(dispatcher, mixins, layoutViews, stores) {
+export function init(dispatcher, he, layoutViews, stores) {
 
     const lineSelectionStore = stores.lineSelectionStore;
     const lineStore = stores.lineViewStore;
@@ -37,45 +37,48 @@ export function init(dispatcher, mixins, layoutViews, stores) {
     const mainMenuStore = stores.mainMenuStore;
     const syntaxViewStore = lineStore.getSyntaxViewStore();
 
-    const util = mixins[0];
-
-    const lineSelViews = lineSelViewsInit(dispatcher, mixins, lineSelectionStore, userInfoStore);
-    const paginationViews = paginatorViewsInit(dispatcher, mixins, lineStore);
-    const linesViews = linesViewInit(dispatcher, mixins, lineStore, lineSelectionStore);
-    const concDetailViews = concDetailViewsInit(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore);
-    const concSaveViews = concSaveViewsInit(dispatcher, util, layoutViews, concSaveStore);
+    const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionStore, userInfoStore);
+    const paginationViews = paginatorViewsInit(dispatcher, he, lineStore);
+    const linesViews = linesViewInit(dispatcher, he, lineStore, lineSelectionStore);
+    const concDetailViews = concDetailViewsInit(dispatcher, he, layoutViews, concDetailStore, refsDetailStore, lineStore);
+    const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, concSaveStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
 
-    const LineSelectionMenu = React.createClass({
+    class LineSelectionMenu extends React.Component {
 
-        _renderContents : function () {
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+        }
+
+        _renderContents() {
             if (this.props.numItemsInLockedGroups > 0) {
                 return <lineSelViews.LockedLineGroupsMenu
                         chartCallback={this.props.onChartFrameReady}
-                        canSendMail={this.props.canSendMail} />;
+                        canSendEmail={this.props.canSendEmail} />;
 
             } else {
                 return <lineSelViews.LineSelectionMenu />;
             }
-        },
+        }
 
-        _storeChangeHandler : function (store, action) {
-            if (action === '$STATUS_UPDATED') {
+        _storeChangeHandler(store, action) {
+            if (action === '$STATUS_UPDATED') { // TODO this is kind of an antipattern
                 this.props.onCloseClick();
             }
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             lineSelectionStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineSelectionStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
@@ -84,74 +87,77 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 </layoutViews.PopupBox>
             );
         }
-    });
+    }
 
     // ------------------------- <LineSelectionOps /> ---------------------------
 
-    const LineSelectionOps = React.createClass({
+    class LineSelectionOps extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._selectChangeHandler = this._selectChangeHandler.bind(this);
+            this._selectMenuTriggerHandler = this._selectMenuTriggerHandler.bind(this);
+            this._closeMenuHandler = this._closeMenuHandler.bind(this);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = {
+                menuVisible: false
+            };
+        }
 
-        _selectChangeHandler : function (event) {
+        _selectChangeHandler(event) {
             dispatcher.dispatch({
                 actionType: 'CONCORDANCE_SET_LINE_SELECTION_MODE',
                 props: {
                     mode: event.currentTarget.value
                 }
             });
-        },
+        }
 
-        _selectMenuTriggerHandler : function () {
+        _selectMenuTriggerHandler() {
             this.setState({
                 menuVisible: true
             });
-        },
+        }
 
-        _closeMenuHandler : function () {
+        _closeMenuHandler() {
             this.setState({
                 menuVisible: false
             });
-        },
+        }
 
-        _storeChangeHandler : function () {
+        _storeChangeHandler() {
             this.setState({
                 menuVisible: false // <- data of lines changed => no need for menu
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                menuVisible: false
-            };
-        },
-
-        componentDidMount : function () {
+        componentDidMount() {
             lineStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        _getMsgStatus : function () {
+        _getMsgStatus() {
             if (this.props.numItemsInLockedGroups > 0) {
                 return [
-                    'img/info-icon.svg',
-                    this.translate('linesel__you_have_saved_line_groups')
+                    he.createStaticUrl('img/info-icon.svg'),
+                    he.translate('linesel__you_have_saved_line_groups')
                 ];
 
             } else if (this.props.numSelected > 0) {
                 return [
-                    '/img/warning-icon.svg',
-                    this.translate('linesel__you_have_unsaved_line_sel')
+                    he.createStaticUrl('/img/warning-icon.svg'),
+                    he.translate('linesel__you_have_unsaved_line_sel')
                 ];
 
             } else {
                 return ['', null];
             }
-        },
+        }
 
-        _renderNumSelected : function () {
+        _renderNumSelected() {
             const [statusImg, elmTitle] = this._getMsgStatus();
             const numSelected = this.props.numSelected > 0 ?
                     this.props.numSelected : this.props.numItemsInLockedGroups;
@@ -161,30 +167,30 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                         {'\u00A0'}
                         (<a key="numItems" onClick={this._selectMenuTriggerHandler}>
                         <span className="value">{numSelected}</span>
-                        {'\u00A0'}{this.translate('concview__num_sel_lines')}</a>
+                        {'\u00A0'}{he.translate('concview__num_sel_lines')}</a>
                         )
                         {statusImg ?
-                            <img src={this.createStaticUrl(statusImg)} alt="" title="" /> : null}
+                            <img src={statusImg} alt="" title="" /> : null}
                     </span>
                 );
 
             } else {
                 return null;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             const mode = this.props.numItemsInLockedGroups > 0 ? 'groups' : lineSelectionStore.getMode();
             return (
                 <div className="lines-selection-controls">
-                    {this.translate('concview__line_sel')}:{'\u00A0'}
+                    {he.translate('concview__line_sel')}:{'\u00A0'}
                     {/* TODO remove id */}
                     <select id="selection-mode-switch"
                             disabled={this.props.numItemsInLockedGroups > 0 ? true : false}
                             onChange={this._selectChangeHandler}
                             defaultValue={mode}>
-                        <option value="simple">{this.translate('concview__line_sel_simple')}</option>
-                        <option value="groups">{this.translate('concview__line_sel_groups')}</option>
+                        <option value="simple">{he.translate('concview__line_sel_simple')}</option>
+                        <option value="groups">{he.translate('concview__line_sel_groups')}</option>
                     </select>
                     {this._renderNumSelected()}
                     {this.state.menuVisible ?
@@ -192,98 +198,99 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                                 onCloseClick={this._closeMenuHandler}
                                 numItemsInLockedGroups={this.props.numItemsInLockedGroups}
                                 onChartFrameReady={this.props.onChartFrameReady}
-                                canSendMail={this.props.canSendMail} />
+                                canSendEmail={this.props.canSendEmail} />
                         :  null}
                 </div>
             );
         }
-    });
-
+    }
 
 
     // ------------------------- <ConcSummary /> ---------------------------
 
-    const ConcSummary = React.createClass({
+    class ConcSummary extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleCalcIpmClick = this._handleCalcIpmClick.bind(this);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchStoreState();
+        }
 
-        _renderNumHits : function () {
-            const ans = [];
-            if (this.props.isUnfinishedCalculation) {
-                ans.push(<span key="hits:1" id="conc-loader">
-                            <img src={this.createStaticUrl('img/ajax-loader-bar.gif')} title={this.translate('global__processing')}
-                                alt={this.translate('global__processing')} />
-                        </span>);
-            }
-            if (this.props.concSize === this.props.fullSize || this.props.fullSize === -1) { // TODO concSize vs. fullSize
-                ans.push(<strong key="hits:2" id="fullsize" title={this.props.concSize}>
-                        {this.formatNumber(this.props.concSize)}</strong>);
-
-            } else {
-                ans.push(<a key="hits:1b" className="size-warning"><img src={this.createStaticUrl('img/warning-icon.svg')} /></a>);
-                ans.push(<span key="hits:2b" id="loader"></span>);
-                ans.push(<strong key="hits:3b">{this.formatNumber(this.props.concSize)}</strong>);
-                ans.push('\u00a0' + this.translate('concview__out_of_total') + '\u00a0');
-                ans.push(<span key="hits:4b" id="fullsize" title={this.props.fullSize}>{this.formatNumber(this.props.fullSize)}</span>);
-            }
-            return ans;
-        },
-
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 canCalculateAdHocIpm: lineStore.getProvidesAdHocIpm(),
                 fastAdHocIpm: lineStore.getFastAdHocIpm(),
                 adHocIpm: lineStore.getAdHocIpm(),
                 subCorpName: lineStore.getSubCorpName(),
                 isWaiting: false
+            };
+        }
+
+        _renderNumHits() {
+            const ans = [];
+            if (this.props.isUnfinishedCalculation) {
+                ans.push(<span key="hits:1" id="conc-loader">
+                            <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} title={he.translate('global__processing')}
+                                alt={he.translate('global__processing')} />
+                        </span>);
             }
-        },
+            if (this.props.concSize === this.props.fullSize || this.props.fullSize === -1) { // TODO concSize vs. fullSize
+                ans.push(<strong key="hits:2" id="fullsize" title={this.props.concSize}>
+                        {he.formatNumber(this.props.concSize)}</strong>);
 
-        _storeChangeHandler : function (store, action) {
-            this.setState({
-                canCalculateAdHocIpm: lineStore.getProvidesAdHocIpm(),
-                fastAdHocIpm: lineStore.getFastAdHocIpm(),
-                adHocIpm: lineStore.getAdHocIpm(),
-                subCorpName: lineStore.getSubCorpName(),
-                isWaiting: action === '$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC' ? false : this.state.isWaiting
-            });
-        },
+            } else {
+                ans.push(<a key="hits:1b" className="size-warning"><img src={he.createStaticUrl('img/warning-icon.svg')} /></a>);
+                ans.push(<span key="hits:2b" id="loader"></span>);
+                ans.push(<strong key="hits:3b">{he.formatNumber(this.props.concSize)}</strong>);
+                ans.push('\u00a0' + he.translate('concview__out_of_total') + '\u00a0');
+                ans.push(<span key="hits:4b" id="fullsize" title={this.props.fullSize}>{he.formatNumber(this.props.fullSize)}</span>);
+            }
+            return ans;
+        }
 
-        componentDidMount : function () {
+        _storeChangeHandler(store, action) {
+            const newState = this._fetchStoreState();
+            // TODO antipattern here:
+            newState.isWaiting = action === '$CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC' ? false : this.state.isWaiting;
+            this.setState(newState);
+        }
+
+        componentDidMount() {
             lineStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        _getIpm : function () {
+        _getIpm() {
             if (this.state.isWaiting) {
-                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={this.translate('global__calculating')}
-                            title={this.translate('global__calculating')} />;
+                return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={he.translate('global__calculating')}
+                            title={he.translate('global__calculating')} />;
 
             } else if (this.props.ipm && !this.state.canCalculateAdHocIpm) {
-                return <span className="ipm">{this.formatNumber(this.props.ipm)}</span>;
+                return <span className="ipm">{he.formatNumber(this.props.ipm)}</span>;
 
             } else if (this.state.adHocIpm) {
-                return <span className="ipm">{this.formatNumber(this.state.adHocIpm)}</span>;
+                return <span className="ipm">{he.formatNumber(this.state.adHocIpm)}</span>;
 
             } else if (this.state.canCalculateAdHocIpm) {
-                return <a onClick={this._handleCalcIpmClick}>{this.translate('global__calculate')}</a>;
+                return <a onClick={this._handleCalcIpmClick}>{he.translate('global__calculate')}</a>;
 
             } else {
                 return null;
             }
-        },
+        }
 
-        _getIpmDesc : function () {
+        _getIpmDesc() {
             if (this.state.canCalculateAdHocIpm) {
                 if (this.state.adHocIpm) {
                     return (
                         <span className="ipm-note">(
-                        <img src={this.createStaticUrl('img/info-icon.svg')} alt={this.translate('global__info_icon')} />
-                            {this.translate('concview__ipm_rel_to_adhoc')}
+                        <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
+                                {he.translate('concview__ipm_rel_to_adhoc')}
                         )</span>
                     );
 
@@ -294,8 +301,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
             } else if (this.state.subCorpName) {
                 return (
                     <span className="ipm-note">(
-                        <img src={this.createStaticUrl('img/info-icon.svg')} alt={this.translate('global__info_icon')} />
-                        {this.translate('concview__ipm_rel_to_the_{subcname}',
+                        <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
+                        {he.translate('concview__ipm_rel_to_the_{subcname}',
                         {subcname: this.state.subCorpName})}
                     )</span>
                 );
@@ -303,17 +310,17 @@ export function init(dispatcher, mixins, layoutViews, stores) {
             } else {
                 return (
                     <span className="ipm-note">(
-                        <img src={this.createStaticUrl('img/warning-icon.svg')} alt={this.translate('global__warning_icon')} />
-                        {this.translate('concview__ipm_rel_to_the_{corpname}',
+                        <img src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__warning_icon')} />
+                        {he.translate('concview__ipm_rel_to_the_{corpname}',
                             {corpname: this.props.corpname})}
                     )</span>
                 );
             }
-        },
+        }
 
-        _handleCalcIpmClick : function () {
+        _handleCalcIpmClick() {
             const userConfirm = this.state.fastAdHocIpm ?
-                    true : window.confirm(this.translate('global__ipm_calc_may_take_time'));
+                    true : window.confirm(he.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
                 this.setState(React.addons.update(this.state, {isWaiting: {$set: true}}));
                 dispatcher.dispatch({
@@ -321,26 +328,26 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     props: {}
                 });
             }
-        },
+        }
 
-        _getArf : function () {
+        _getArf() {
             if (this.props.arf) {
-                return <strong id="arf">{this.formatNumber(this.props.arf)}</strong>;
+                return <strong id="arf">{he.formatNumber(this.props.arf)}</strong>;
 
             } else {
-                return <strong id="arf" title={this.translate('concview__arf_not_avail')}>-</strong>;
+                return <strong id="arf" title={he.translate('concview__arf_not_avail')}>-</strong>;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div id="result-info">
-                    {this.translate('concview__hits_label')}:  {this._renderNumHits()}
+                    {he.translate('concview__hits_label')}:  {this._renderNumHits()}
                     <span id="conc-calc-info" title="90"></span>
                     <span className="separ">|</span>
                     <abbr>i.p.m.</abbr>
                     <layoutViews.InlineHelp customStyle={{minWidth: '25em'}}>
-                        {this.translate('concview__ipm_help')}
+                        {he.translate('concview__ipm_help')}
                     </layoutViews.InlineHelp>
                     :{'\u00A0'}
                     {this._getIpm()}
@@ -350,68 +357,68 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                     <span className="separ">|</span>
                     <abbr>ARF</abbr>
                     <layoutViews.InlineHelp customStyle={{minWidth: '20em'}}>
-                    {this.translate('concview__arf_help')}
+                    {he.translate('concview__arf_help')}
                     </layoutViews.InlineHelp>
                     :{'\u00A0'}
                     {this._getArf()}
                     <span className="separ">|</span>
                     <span className="notice-shuffled">
                     {this.props.isShuffled ?
-                        this.translate('concview__result_shuffled')
-                        : this.translate('concview__result_sorted')}
+                        he.translate('concview__result_shuffled') :
+                        he.translate('concview__result_sorted')}
                     </span>
                 </div>
             );
         }
-    });
+    }
 
     // ------------------------- <ConcOptions /> ---------------------------
 
-    const ConcOptions = React.createClass({
+    class ConcOptions extends React.Component {
 
-        mixins : mixins,
-
-        _storeChangeHandler : function () {
-            this.setState({currViewAttrs: lineStore.getViewAttrs()});
-        },
-
-        getInitialState : function () {
-            return {
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = {
                 currViewAttrs: lineStore.getViewAttrs()
             };
-        },
+        }
 
-        componentDidMount : function () {
+        _storeChangeHandler() {
+            this.setState({currViewAttrs: lineStore.getViewAttrs()});
+        }
+
+        componentDidMount() {
             lineStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        _renderMouseOverInfo : function () {
+        _renderMouseOverInfo() {
             let mouseoverImg;
             let mouseoverAlt;
             if (this.props.usesMouseoverAttrs) {
-                mouseoverImg = 'img/mouseover-available.svg';
-                mouseoverAlt = this.translate('options__attribs_are_on_mouseover_{attrs}',
+                mouseoverImg = he.createStaticUrl('img/mouseover-available.svg');
+                mouseoverAlt = he.translate('options__attribs_are_on_mouseover_{attrs}',
                         {attrs: this.state.currViewAttrs.slice(1).join('/')});;
 
             } else {
-                mouseoverImg = 'img/mouseover-not-available.svg';
-                mouseoverAlt = this.translate('options__attribs_are_not_mouseover');
+                mouseoverImg = he.createStaticUrl('img/mouseover-not-available.svg');
+                mouseoverAlt = he.translate('options__attribs_are_not_mouseover');
             }
             return (
                 <span>
-                    {this.translate('options__vmode_status_label')}
+                    {he.translate('options__vmode_status_label')}
                     {':\u00a0'}
                     <img key="bubb" className="mouseover-available"
-                            src={this.createStaticUrl(mouseoverImg)} alt={mouseoverAlt} title={mouseoverAlt} />
+                            src={mouseoverImg} alt={mouseoverAlt} title={mouseoverAlt} />
                 </span>
             );
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="conc-toolbar">
                     <span className="separ">|</span>
@@ -419,52 +426,54 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                 </div>
             );
         }
-
-    });
-
-
-    // ------------------------- <ConcToolbar /> ---------------------------
+    }
 
 
-    const ConcToolbarWrapper = React.createClass({
+    // ------------------------- <ConcToolbarWrapper /> ---------------------------
 
-        getInitialState : function () {
+
+    class ConcToolbarWrapper extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchStoreState();
+        }
+
+        _fetchStoreState() {
             return {
                 numSelected: lineSelectionStore.size(),
                 numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
             };
-        },
+        }
 
-        _storeChangeHandler : function (store, action) {
-            this.setState({
-                numSelected: lineSelectionStore.size(),
-                numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups()
-            });
-        },
+        _storeChangeHandler() {
+            this.setState(this._fetchStoreState());
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             lineSelectionStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineSelectionStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="toolbar-level">
                     <LineSelectionOps
                             numSelected={this.state.numSelected}
                             numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                             onChartFrameReady={this.props.onChartFrameReady}
-                            canSendMail={this.props.canSendMail} />
+                            canSendEmail={this.props.canSendEmail} />
                     {this.props.showConcToolbar ?
                         <ConcOptions usesMouseoverAttrs={this.props.usesMouseoverAttrs} />
                         : null}
                 </div>
             );
         }
-    });
+    }
 
 
     // ------------------------- <AnonymousUserLoginPopup /> ---------------------------
@@ -483,14 +492,14 @@ export function init(dispatcher, mixins, layoutViews, stores) {
             <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true}
                 customStyle={{left: '50%', width: '30em', marginLeft: '-15em'}}>
                 <p>
-                    <img className="info-icon" src={util.createStaticUrl('img/warning-icon.svg')} alt={util.translate('global__info_icon')} />
-                    {util.translate('global__anonymous_user_warning')}
+                    <img className="info-icon" src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__info_icon')} />
+                    {he.translate('global__anonymous_user_warning')}
                 </p>
                 <p>
                     <button type="button" className="default-button"
                             ref={elm => elm ? elm.focus() : null}
                             onClick={handleLoginClick}>
-                        {util.translate('global__login_label')}
+                        {he.translate('global__login_label')}
                     </button>
                 </p>
             </layoutViews.PopupBox>
@@ -536,8 +545,8 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                         <div id="syntax-view-pane" className="SyntaxViewPane">
                             {this.state.waiting ?
                                 (<div className="ajax-loader">
-                                    <img src={util.createStaticUrl('img/ajax-loader.gif')}
-                                            alt={util.translate('global__loading')} />
+                                    <img src={he.createStaticUrl('img/ajax-loader.gif')}
+                                            alt={he.translate('global__loading')} />
                                 </div>) : null
                             }
                         </div>
@@ -708,7 +717,7 @@ export function init(dispatcher, mixins, layoutViews, stores) {
                         </div>
                         <ConcToolbarWrapper numItemsInLockedGroups={this.props.NumItemsInLockedGroups}
                                 onChartFrameReady={this.props.onChartFrameReady}
-                                canSendMail={this.props.canSendMail}
+                                canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
                                 usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
                         {this.state.showAnonymousUserWarn ?

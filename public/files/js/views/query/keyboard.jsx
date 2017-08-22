@@ -18,181 +18,206 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
-import {init as keyboardInit} from './keyboard';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
+export function init(dispatcher, he, queryStore, virtualKeyboardStore) {
 
     // -------------------- <Key /> ----------------------------
 
-    const Key = React.createClass({
+    class Key extends React.Component {
 
-        _handleClick : function () {
+        constructor(props) {
+            super(props);
+            this._handleClick = this._handleClick.bind(this);
+        }
+
+        _handleClick() {
             this.props.handleClick(this.props.value);
-        },
+        }
 
-        componentDidUpdate : function (prevProps, prevState) {
+        componentDidUpdate(prevProps, prevState) {
             if (!prevProps.triggered && this.props.triggered) {
                 this._handleClick();
             }
-        },
+        }
 
-        render : function () {
+        render() {
             const htmlClass = this.props.triggered ? 'active' : null;
             return <button type="button" onClick={this._handleClick} className={htmlClass}>{this.props.value}</button>;
         }
-    });
+    }
 
     // -------------------- <DummyKey /> ----------------------------
 
-    const DummyKey = React.createClass({
-
-        render : function () {
-            return <span className="dummy">{this.props.value}</span>;
-        }
-    });
+    const DummyKey = (props) => {
+        return <span className="dummy">{props.value}</span>;
+    };
 
     // -------------------- <ShiftKey /> ----------------------------
 
-    const ShiftKey = React.createClass({
-
-        render : function () {
-            const classes = ['spec'];
-            if (this.props.shiftOn) {
-                classes.push('active');
-            }
-            return <button type="button" className={classes.join(' ')} onClick={this.props.handleShift}>{'\u21E7'}</button>;
+    const ShiftKey = (props) => {
+        const classes = ['spec'];
+        if (props.shiftOn) {
+            classes.push('active');
         }
-    });
+        return (
+            <button type="button" className={classes.join(' ')} onClick={props.handleShift}>
+                {'\u21E7'}
+            </button>
+        );
+    };
 
     // -------------------- <CapsKey /> ----------------------------
 
-    const CapsKey = React.createClass({
+    class CapsKey extends React.Component {
 
-        componentDidUpdate : function (prevProps, prevState) {
+        componentDidUpdate(prevProps, prevState) {
             if (!prevProps.triggered && this.props.triggered) {
                 this.props.handleCaps();
             }
-        },
+        }
 
-        render : function () {
+        render() {
             const classes = ['spec', 'caps'];
             if (this.props.capsOn) {
                 classes.push('active');
             }
-            return <button type="button" className={classes.join(' ')} onClick={this.props.handleCaps}>Caps</button>;
+            return (
+                <button type="button" className={classes.join(' ')} onClick={this.props.handleCaps}>
+                    Caps
+                </button>
+            );
         }
 
-    });
+    }
 
     // -------------------- <SpaceKey /> ----------------------------
 
-    const SpaceKey = React.createClass({
+    class SpaceKey extends React.Component {
 
-        componentDidUpdate : function (prevProps, prevState) {
+        constructor(props) {
+            super(props);
+            this._handleClick = this._handleClick.bind(this);
+        }
+
+        componentDidUpdate(prevProps, prevState) {
             if (!prevProps.triggered && this.props.triggered) {
                 this.props.handleClick(this.props.value);
             }
-        },
+        }
 
-        render : function () {
+        _handleClick() {
+            this.props.handleClick(this.props.value);
+        }
+
+        render() {
            const htmlClasses = ['space', 'spec'];
             if (this.props.triggered) {
                 htmlClasses.push('active');
             }
-            return <button type="button" className={htmlClasses.join(' ')} onClick={this.props.handleClick}>Space</button>;
+            return (
+                <button type="button" className={htmlClasses.join(' ')} onClick={this._handleClick}>
+                    Space
+                </button>
+            );
         }
-    });
+    }
 
-    // -------------------- <SpaceKey /> ----------------------------
+    // -------------------- <BackspaceKey /> ----------------------------
 
-    const BackspaceKey = React.createClass({
+    class BackspaceKey extends React.Component {
 
-        componentDidUpdate : function (prevProps, prevState) {
+        componentDidUpdate(prevProps, prevState) {
             if (!prevProps.triggered && this.props.triggered) {
                 this.props.handleBackspace();
             }
-        },
+        }
 
-        render : function () {
+        render() {
             const htmlClasses = ['backspace', 'spec'];
             if (this.props.triggered) {
                 htmlClasses.push('active');
             }
-            return <button type="button" className={htmlClasses.join(' ')} onClick={this.props.handleBackspace}>Bksp</button>;
+            return (
+                <button type="button" className={htmlClasses.join(' ')} onClick={this.props.handleBackspace}>
+                    Bksp
+                </button>
+            );
         }
-    });
+    }
 
     // -------------------- <KeysRow /> ----------------------------
 
-    const KeysRow = React.createClass({
+    const KeysRow = (props) => {
 
-        _selectValue : function (v) {
-            if (this.props.shiftOn || this.props.capsOn) {
+        const selectValue = (v) => {
+            if (props.shiftOn || props.capsOn) {
                 return v[1];
 
             } else {
                 return v[0];
             }
-        },
+        };
 
-        _selectKeyType : function (item, i) {
+        const selectKeyType = (item, i) => {
             if (item[0].length > 1) {
                 switch (item[0]) {
                     case 'Shift':
                         return <ShiftKey
                                     key={`${item[0]}-${i}`}
-                                    handleShift={this.props.handleShift}
-                                    shiftOn={this.props.shiftOn} />;
+                                    handleShift={props.handleShift}
+                                    shiftOn={props.shiftOn} />;
 
                     case 'Caps':
                         return <CapsKey key={`${item[0]}-${i}`}
-                                    handleCaps={this.props.handleCaps}
-                                    capsOn={this.props.capsOn}
-                                    triggered={i === this.props.passTriggerIdx} />;
+                                    handleCaps={props.handleCaps}
+                                    capsOn={props.capsOn}
+                                    triggered={i === props.passTriggerIdx} />;
 
                     case 'Bksp':
                         return <BackspaceKey key={`${item[0]}-${i}`}
-                                    handleBackspace={this.props.handleBackspace}
-                                    triggered={i === this.props.passTriggerIdx} />;
+                                    handleBackspace={props.handleBackspace}
+                                    triggered={i === props.passTriggerIdx} />;
                     default:
                         return <DummyKey
                                     key={`${item[0]}-${i}`}
-                                    value={this._selectValue(item)} />;
+                                    value={selectValue(item)} />;
                 }
 
             } else if (item[0] === ' ') {
-                return <SpaceKey key="space-k" triggered={i === this.props.passTriggerIdx} value=" "
-                                handleClick={this.props.handleClick} />;
+                return <SpaceKey key="space-k" triggered={i === props.passTriggerIdx} value=" "
+                                handleClick={props.handleClick} />;
 
             } else {
                 return <Key
                             key={item[0]}
-                            value={this._selectValue(item)}
-                            handleClick={this.props.handleClick}
-                            triggered={i === this.props.passTriggerIdx} />;
+                            value={selectValue(item)}
+                            handleClick={props.handleClick}
+                            triggered={i === props.passTriggerIdx} />;
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <div className="key-row">
-                {this.props.data.map(this._selectKeyType)}
-                </div>
-            );
-        }
-
-    });
+        return (
+            <div className="key-row">
+            {props.data.map(selectKeyType)}
+            </div>
+        );
+    };
 
     // -------------------- <Keyboard /> ----------------------------
 
-    const Keyboard = React.createClass({
+    class Keyboard extends React.Component {
 
-        mixins : mixins,
-
-        getInitialState : function () {
-            return {
+        constructor(props) {
+            super(props);
+            this._handleClick = this._handleClick.bind(this);
+            this._handleShift = this._handleShift.bind(this);
+            this._handleCaps = this._handleCaps.bind(this);
+            this._handleBackspace = this._handleBackspace.bind(this);
+            this._handleLayoutChange = this._handleLayoutChange.bind(this);
+            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this.state = {
                 shiftOn: false,
                 capsOn: false,
                 layout: null,
@@ -200,9 +225,9 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                 currentLayoutIdx: null,
                 triggeredKey: null
             };
-        },
+        }
 
-        _handleClick : function (v) {
+        _handleClick(v) {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                 props: {
@@ -213,63 +238,45 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                     triggeredKey: this.state.triggeredKey
                 }
             });
-            this.setState({
-                shiftOn: false,
-                capsOn: this.state.capsOn,
-                layout: this.state.layout,
-                layoutNames: this.state.layoutNames,
-                currentLayoutIdx: this.state.currentLayoutIdx,
-                triggeredKey: this.state.triggeredKey
-            });
-        },
+            const newState = he.cloneState(this.state);
+            newState.shiftOn = false;
+            this.setState(newState);
+        }
 
-        _handleShift : function () {
-            this.setState({
-                shiftOn: !this.state.shiftOn,
-                capsOn: false,
-                layout: this.state.layout,
-                layoutNames: this.state.layoutNames,
-                currentLayoutIdx: this.state.currentLayoutIdx,
-                triggeredKey: this.state.triggeredKey
-            });
-        },
+        _handleShift() {
+            const newState = he.cloneState(this.state);
+            newState.shiftOn = !this.state.shiftOn;
+            newState.capsOn = false;
+            this.setState(newState);
+        }
 
-        _handleCaps : function () {
-            this.setState({
-                shiftOn: false,
-                capsOn: !this.state.capsOn,
-                layout: this.state.layout,
-                layoutNames: this.state.layoutNames,
-                currentLayoutIdx: this.state.currentLayoutIdx,
-                triggeredKey: this.state.triggeredKey
-            });
-        },
+        _handleCaps() {
+            const newState = he.cloneState(this.state);
+            newState.shiftOn = false;
+            newState.capsOn = !this.state.capsOn;
+            this.setState(newState);
+        }
 
-        _handleBackspace : function () {
+        _handleBackspace() {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_REMOVE_LAST_CHAR',
                 props: {
                     sourceId: this.props.sourceId
                 }
             });
-            this.setState({
-                shiftOn: false,
-                capsOn: this.state.capsOn,
-                layout: this.state.layout,
-                layoutNames: this.state.layoutNames,
-                currentLayoutIdx: this.state.currentLayoutIdx,
-                triggeredKey: this.state.triggeredKey
-            });
-        },
+            const newState = he.cloneState(this.state);
+            newState.shiftOn = false;
+            this.setState(newState);
+        }
 
-        _handleLayoutChange : function (evt) {
+        _handleLayoutChange(evt) {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT',
                 props: {idx: evt.target.value}
             });
-        },
+        }
 
-        _storeChangeListener : function () {
+        _storeChangeListener() {
             this.setState({
                 shiftOn: this.state.shiftOn,
                 capsOn: this.state.capsOn,
@@ -278,9 +285,9 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                 currentLayoutIdx: virtualKeyboardStore.getCurrentLayoutIdx(),
                 triggeredKey: virtualKeyboardStore.getActiveKey()
             });
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             virtualKeyboardStore.addChangeListener(this._storeChangeListener);
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS',
@@ -288,17 +295,17 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                     inputLanguage: this.props.inputLanguage
                 }
             });
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             virtualKeyboardStore.removeChangeListener(this._storeChangeListener);
-        },
+        }
 
-        _renderContents : function () {
+        _renderContents() {
             return (
                 <div>
                     <div className="layout-selection">
-                        <h3>{this.translate('query__kb_layout')}:</h3>
+                        <h3>{he.translate('query__kb_layout')}:</h3>
                         <select onChange={this._handleLayoutChange} value={this.state.currentLayoutIdx}>
                         {this.state.layoutNames.map((item, i) => {
                             return <option key={i} value={i} title={item[1]}>{item[0]}</option>;
@@ -319,19 +326,19 @@ export function init(dispatcher, mixins, queryStore, virtualKeyboardStore) {
                     })}
                 </div>
             );
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="virtual-keyboard-buttons">
                     {this.state.layout && this.state.layoutNames ?
                         this._renderContents()
-                        : <img src={this.createStaticUrl('img/ajax-loader.gif')} alt={this.translate('global__loading')} />
+                        : <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />
                     }
                 </div>
             );
         }
-    });
+    }
 
     return {
         Keyboard: Keyboard

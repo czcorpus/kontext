@@ -26,7 +26,7 @@ import {init as keyboardInit} from './keyboard';
 export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore,
         withinBuilderStore, virtualKeyboardStore) {
 
-    const keyboardViews = keyboardInit(dispatcher, mixins, queryStore, virtualKeyboardStore);
+    const keyboardViews = keyboardInit(dispatcher, mixins[0], queryStore, virtualKeyboardStore);
 
     // -------------- <QueryHints /> --------------------------------------------
 

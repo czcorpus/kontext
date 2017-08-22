@@ -265,8 +265,11 @@ export class ViewPage {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             props.onReady = () => resolve(null);
             try {
-                this.layoutModel.renderReactComponent(this.concViews.ConcordanceView,
-                    window.document.getElementById('conc-wrapper'), props);
+                this.layoutModel.renderReactComponent(
+                    this.concViews.ConcordanceView,
+                    window.document.getElementById('conc-wrapper'),
+                    props
+                );
 
             } catch (e) {
                 console.error(e.stack);
@@ -758,7 +761,7 @@ export class ViewPage {
         );
         this.collFormViews = collFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             this.collFormStore
         );
@@ -1027,7 +1030,7 @@ export class ViewPage {
 
             	this.concViews = concViewsInit(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins(),
+                    this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     this.viewStores
                 );

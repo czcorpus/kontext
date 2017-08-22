@@ -18,18 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, lineStore) {
+export function init(dispatcher, he, lineStore) {
 
     // ------------------------- <ConcColsHeading /> ---------------------------
 
-    const AudioPlayer = React.createClass({
+    class AudioPlayer extends React.Component {
 
-        _handleControlClick : function (action) {
+        constructor(props) {
+            super(props);
+            // no need to bind this._handleControlClick
+            this._handleLineStoreChange = this._handleLineStoreChange.bind(this);
+            this.state = {
+                activeButton: lineStore.getAudioPlayerStatus()
+            };
+        }
+
+        _handleControlClick(action) {
             this.setState({activeButton: action});
             dispatcher.dispatch({
                 actionType: 'AUDIO_PLAYER_CLICK_CONTROL',
@@ -37,32 +44,26 @@ export function init(dispatcher, mixins, lineStore) {
                     action: action
                 }
             });
-        },
+        }
 
-        _handleLineStoreChange : function () {
+        _handleLineStoreChange() {
             const playerStatus = lineStore.getAudioPlayerStatus();
             if (playerStatus !== 'stop') {
                 this.setState({
                     activeButton: playerStatus
                 });
             }
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             lineStore.addChangeListener(this._handleLineStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineStore.removeChangeListener(this._handleLineStoreChange);
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                activeButton: lineStore.getAudioPlayerStatus()
-            };
-        },
-
-        _autoSetHtmlClass : function (buttonId) {
+        _autoSetHtmlClass(buttonId) {
             const ans = [];
             switch (buttonId) {
                 case 'play':
@@ -82,9 +83,9 @@ export function init(dispatcher, mixins, lineStore) {
                 break;
             }
             return ans.join(' ');
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div id="audio-wrapper">
                     <div className="audio-controls">
@@ -95,7 +96,7 @@ export function init(dispatcher, mixins, lineStore) {
                 </div>
             );
         }
-    });
+    }
 
     return {
         AudioPlayer: AudioPlayer

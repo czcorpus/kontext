@@ -18,262 +18,242 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
-
-    // ---------------------------- <ItemAndNumRow /> -----------------------------
-
-    const ItemAndNumRow = React.createClass({
-        render: function () {
-            if (this.props.brackets) {
-                return (
-                    <tr className="dynamic">
-                        <th>&lt;{this.props.label}&gt;</th>
-                        <td className="numeric">{this.props.value}</td>
-                    </tr>
-                );
-
-            } else {
-                return (
-                    <tr className="dynamic">
-                        <th>{this.props.label}</th>
-                        <td className="numeric">{this.props.value}</td>
-                    </tr>
-                );
-            }
-        }
-    });
+export function init(dispatcher, he, corpusInfoStore, PopupBoxComponent) {
 
     // ---------------------------- <ItemAndNumRow /> -----------------------------
 
-    const AttributeList = React.createClass({
-        mixins: mixins,
+    const ItemAndNumRow = (props) => {
 
-        render: function () {
-            var values;
-
-            if (!this.props.rows.error) {
-                values = this.props.rows.map(function (row, i) {
-                    return <ItemAndNumRow key={i} label={row.name} value={row.size} />
-                });
-
-            } else {
-                values = <tr><td colSpan="2">{this.translate('failed to load')}</td></tr>;
-            }
-
+        if (props.brackets) {
             return (
-                <table className="attrib-list">
-                    <tbody>
-                    <tr>
-                        <th colSpan="2" className="attrib-heading">{this.translate('global__attributes') }</th>
-                    </tr>
-                    {values}
-                    </tbody>
-                </table>
+                <tr className="dynamic">
+                    <th>&lt;{props.label}&gt;</th>
+                    <td className="numeric">{props.value}</td>
+                </tr>
+            );
+
+        } else {
+            return (
+                <tr className="dynamic">
+                    <th>{props.label}</th>
+                    <td className="numeric">{props.value}</td>
+                </tr>
             );
         }
-    });
+    };
 
-    /**
-     * Structure list table
-     */
-    let StructureList = React.createClass({
-        mixins: mixins,
-        render: function () {
-            return (
-                <table className="struct-list">
-                    <tbody>
-                    <tr>
-                        <th colSpan="2" className="attrib-heading">{this.translate('global__structures')}</th>
-                    </tr>
-                    {this.props.rows.map(function (row, i) {
-                        return <ItemAndNumRow key={i} brackets={true} label={row.name} value={row.size} />
-                    })}
-                    </tbody>
-                </table>
-            );
+    // ---------------------------- <AttributeList /> -----------------------------
+
+    const AttributeList = (props) => {
+
+        let values;
+
+        if (!props.rows.error) {
+            values = props.rows.map((row, i) =>
+                    <ItemAndNumRow key={i} label={row.name} value={row.size} />);
+
+        } else {
+            values = <tr><td colSpan="2">{he.translate('failed to load')}</td></tr>;
         }
-    });
+
+        return (
+            <table className="attrib-list">
+                <tbody>
+                <tr>
+                    <th colSpan="2" className="attrib-heading">
+                        {he.translate('global__attributes') }
+                    </th>
+                </tr>
+                {values}
+                </tbody>
+            </table>
+        );
+    };
+
+    // ---------------------------- <StructureList /> -----------------------------
+
+    const StructureList = (props) => {
+
+        return (
+            <table className="struct-list">
+                <tbody>
+                <tr>
+                    <th colSpan="2" className="attrib-heading">{he.translate('global__structures')}</th>
+                </tr>
+                {props.rows.map((row, i) =>
+                    <ItemAndNumRow key={i} brackets={true} label={row.name} value={row.size} />)}
+                </tbody>
+            </table>
+        );
+    };
 
     // ---------------------- <CorpusInfoBox /> ------------------------------------
 
-    let CorpusInfoBox = React.createClass({
+    const CorpusInfoBox = (props) => {
 
-        mixins: mixins,
-
-        _renderWebLink() {
-            if (this.props.data.web_url) {
-                return <a href={this.props.data.web_url} target="_blank">{this.props.data.web_url}</a>;
+        const renderWebLink = () => {
+            if (props.data.web_url) {
+                return <a href={props.data.web_url} target="_blank">{props.data.web_url}</a>;
 
             } else {
                 return '-';
             }
-        },
+        };
 
-        render: function () {
-            if (!this.props.data || !this.props.data.corpname) {
-                return (
-                    <div id="corpus-details-box">
-                        <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader.gif')}
-                            alt={this.translate('global__loading')} title={this.translate('global__loading')} />
-                    </div>
-                );
-
-            } else {
-                return (
-                    <div id="corpus-details-box">
-                        <div className="top">
-                            <h2 className="corpus-name">{this.props.data.corpname}</h2>
-                            <p className="corpus-description">{this.props.data.description}</p>
-                            <p className="metadata">
-                                <strong>{this.translate('global__size')}: </strong>
-                                <span className="size">{this.props.data.size}</span> {this.translate('global__positions')}<br />
-
-                                <strong className="web_url">{this.translate('global__website')}: </strong>
-                                {this._renderWebLink()}
-                            </p>
-                        </div>
-
-                        <h3>{this.translate('global__corpus_info_metadata_heading')}</h3>
-
-                        <table className="structs-and-attrs">
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <AttributeList rows={this.props.data.attrlist} />
-                                    </td>
-                                    <td style={{paddingLeft: '4em'}}>
-                                        <StructureList rows={this.props.data.structlist} />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p className="note">{this.translate('global__remark_figures_denote_different_attributes')}</p>
-                        <CorpusReference corpname={this.props.data.corpname}
-                                data={this.props.data.citation_info} />
-                    </div>
-                );
-            }
-        }
-    });
-
-    // --------------------- <SubcorpusInfo /> -------------------------------------
-
-    let SubcorpusInfo = React.createClass({
-
-        mixins: mixins,
-
-        render: function () {
+        if (!props.data || !props.data.corpname) {
             return (
-                <div id="subcorpus-info-box">
-                    <h2 className="subcorpus-name">
-                    {this.props.data.corpusName}:<strong>{this.props.data.subCorpusName}</strong></h2>
-                    <div className="item">
-                        <strong>{this.translate('global__size_in_tokens')}:</strong>
-                        {'\u00A0'}{this.props.data.subCorpusSize}
+                <div id="corpus-details-box">
+                    <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
+                        alt={he.translate('global__loading')} title={he.translate('global__loading')} />
+                </div>
+            );
+
+        } else {
+            return (
+                <div id="corpus-details-box">
+                    <div className="top">
+                        <h2 className="corpus-name">{props.data.corpname}</h2>
+                        <p className="corpus-description">{props.data.description}</p>
+                        <p className="metadata">
+                            <strong>{he.translate('global__size')}: </strong>
+                            <span className="size">{props.data.size}</span> {he.translate('global__positions')}<br />
+
+                            <strong className="web_url">{he.translate('global__website')}: </strong>
+                            {renderWebLink()}
+                        </p>
                     </div>
-                    <div className="item">
-                        <strong>{this.translate('global__subcorp_created_at')}:</strong>
-                        {'\u00A0'}{this.props.data.created}
-                    </div>
-                    <div className="subc-query">
-                        <h3>{this.translate('global__subc_query')}:</h3>
-                        {
-                            this.props.data.extended_info.cql ?
-                            <textarea readOnly="true" value={this.props.data.extended_info.cql} style={{width: '100%'}} />
-                            : <span>{this.translate('global__subc_def_not_avail')}</span>
-                        }
-                    </div>
+
+                    <h3>{he.translate('global__corpus_info_metadata_heading')}</h3>
+
+                    <table className="structs-and-attrs">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <AttributeList rows={props.data.attrlist} />
+                                </td>
+                                <td style={{paddingLeft: '4em'}}>
+                                    <StructureList rows={props.data.structlist} />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p className="note">
+                        {he.translate('global__remark_figures_denote_different_attributes')}
+                    </p>
+                    <CorpusReference corpname={props.data.corpname}
+                            data={props.data.citation_info} />
                 </div>
             );
         }
-    });
+    };
+
+    // --------------------- <SubcorpusInfo /> -------------------------------------
+
+    const SubcorpusInfo = (props) => {
+
+        return (
+            <div id="subcorpus-info-box">
+                <h2 className="subcorpus-name">
+                {props.data.corpusName}:<strong>{props.data.subCorpusName}</strong></h2>
+                <div className="item">
+                    <strong>{he.translate('global__size_in_tokens')}:</strong>
+                    {'\u00A0'}{props.data.subCorpusSize}
+                </div>
+                <div className="item">
+                    <strong>{he.translate('global__subcorp_created_at')}:</strong>
+                    {'\u00A0'}{props.data.created}
+                </div>
+                <div className="subc-query">
+                    <h3>{he.translate('global__subc_query')}:</h3>
+                    {
+                        props.data.extended_info.cql ?
+                        <textarea readOnly="true" value={props.data.extended_info.cql} style={{width: '100%'}} />
+                        : <span>{he.translate('global__subc_def_not_avail')}</span>
+                    }
+                </div>
+            </div>
+        );
+    };
 
     // ---------------------- <CorpusReference /> ------------------------------------
 
-    let CorpusReference = React.createClass({
+    const CorpusReference = (props) => {
 
-        mixins: mixins,
+        if (props.data['article_ref'] || props.data['default_ref']
+                || props.data['other_bibliography']) {
+            return (
+                <div>
+                    <h3>{he.translate('global__how_to_cite_corpus')}</h3>
+                    <h4>
+                        {he.translate('global__corpus_as_resource_{corpus}', {corpus: props.corpname})}
+                    </h4>
+                    <div dangerouslySetInnerHTML={{__html: props.data.default_ref}} />
+                    {props.data.article_ref ?
+                        (<div>
+                            <h4>{he.translate('global__references')}</h4>
+                            <ul>
+                            {props.data.article_ref.map((item, i) => {
+                                return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
+                            })}
+                            </ul>
+                        </div>) :
+                        null}
+                    {props.data.other_bibliography ?
+                        (<div>
+                            <h4>{he.translate('global__general_references')}</h4>
+                            <div dangerouslySetInnerHTML={{__html: props.data.other_bibliography}} />
+                        </div>) :
+                        null}
+                </div>
+            );
 
-        render: function () {
-            if (this.props.data['article_ref'] || this.props.data['default_ref']
-                    || this.props.data['other_bibliography']) {
-                return (
-                    <div>
-                        <h3>{this.translate('global__how_to_cite_corpus')}</h3>
-                        <h4>
-                            {this.translate('global__corpus_as_resource_{corpus}', {corpus: this.props.corpname})}
-                        </h4>
-                        <div dangerouslySetInnerHTML={{__html: this.props.data.default_ref}} />
-                        {
-                            this.props.data.article_ref
-                            ?   <div>
-                                    <h4>{this.translate('global__references')}</h4>
-                                    <ul>
-                                    {this.props.data.article_ref.map((item, i) => {
-                                        return <li key={i} dangerouslySetInnerHTML={{__html: item }} />;
-                                    })}
-                                    </ul>
-                                </div>
-                            : null
-                        }
-                        {
-                            this.props.data.other_bibliography
-                            ? <div>
-                                <h4>{this.translate('global__general_references')}</h4>
-                                <div dangerouslySetInnerHTML={{__html: this.props.data.other_bibliography}} />
-                                </div>
-                            : null
-                        }
-                    </div>
-                );
-
-            } else {
-                return <div className="empty-citation-info">{this.translate('global__no_citation_info')}</div>
-            }
+        } else {
+            return <div className="empty-citation-info">{he.translate('global__no_citation_info')}</div>
         }
-    });
+    };
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    const OverviewArea = React.createClass({
+    class OverviewArea extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleCloseClick = this._handleCloseClick.bind(this);
+            this.state = this._fetchStoreState();
+        }
 
-        _handleStoreChange : function () {
-            this.setState({
-                infoType: corpusInfoStore.getCurrentInfoType(),
-                data: corpusInfoStore.getCurrentInfoData(),
-                isLoading: corpusInfoStore.isLoading()
-            });
-        },
-
-        componentDidMount : function () {
-            corpusInfoStore.addChangeListener(this._handleStoreChange);
-        },
-
-        componentWillUnmount : function () {
-            corpusInfoStore.removeChangeListener(this._handleStoreChange);
-        },
-
-        getInitialState : function () {
+        _fetchStoreState() {
             return {
                 infoType: corpusInfoStore.getCurrentInfoType(),
                 data: corpusInfoStore.getCurrentInfoData(),
                 isLoading: corpusInfoStore.isLoading()
             };
-        },
+        }
 
-        _handleCloseClick : function () {
+        _handleStoreChange() {
+            this.setState(this._fetchStoreState());
+        }
+
+        _handleCloseClick() {
             dispatcher.dispatch({
                 actionType: 'OVERVIEW_CLOSE',
                 props: {}
             });
-        },
+        }
 
-        _renderInfo : function () {
+        componentDidMount() {
+            corpusInfoStore.addChangeListener(this._handleStoreChange);
+        }
+
+        componentWillUnmount() {
+            corpusInfoStore.removeChangeListener(this._handleStoreChange);
+        }
+
+        _renderInfo() {
             switch (this.state.infoType) {
                 case 'corpus-info':
                     return <CorpusInfoBox data={this.state.data} />;
@@ -284,17 +264,17 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
                 default:
                     return null;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             const ans = this._renderInfo();
             if (this.state.isLoading) {
                 return (
                     <PopupBoxComponent customClass="centered"
                             onCloseClick={this._handleCloseClick}
                             takeFocus={true}>
-                        <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader.gif')}
-                                alt={this.translate('global__loading')} title={this.translate('global__loading')} />
+                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
+                                alt={he.translate('global__loading')} title={he.translate('global__loading')} />
                     </PopupBoxComponent>
                 );
 
@@ -310,7 +290,7 @@ export function init(dispatcher, mixins, corpusInfoStore, PopupBoxComponent) {
                 return null;
             }
         }
-    });
+    }
 
 
     return {

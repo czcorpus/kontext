@@ -42,6 +42,7 @@ export interface TTInitData {
     component:React.ReactClass;
     props:{[p:string]:any};
     ttStore:TextTypesStore;
+    attachedAlignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 }
 
 
@@ -122,7 +123,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         );
         const p2 = p1.then(
             (liveAttrsPlugin:TextTypes.AttrValueTextInputListener) => {
-                if (liveAttrsPlugin) {
+                if (this.layoutModel.pluginIsActive('live_attributes')) {
                     this.textTypesStore.setTextInputChangeCallback(liveAttrsPlugin.getAutoCompleteTrigger());
                     this.textTypesStore.addSelectionChangeListener(target => {
                         liveAttrsPlugin.setControlsEnabled(target.hasSelectedItems() ||
@@ -155,6 +156,10 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     subcMixerComponent,
                     this.textTypesStore
                 );
+
+                const attachedAlignedCorporaProvider = this.layoutModel.pluginIsActive('live_attributes') ?
+                    () => liveAttrs.getAlignedCorpora() : () => Immutable.List<TextTypes.AlignedLanguageItem>();
+
                 return {
                     component: ttViewComponents.TextTypesPanel,
                     props: {
@@ -164,7 +169,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                         alignedCorpora: this.layoutModel.getConf<Array<any>>('availableAlignedCorpora'),
                         manualAlignCorporaMode: true
                     },
-                    ttStore: this.textTypesStore
+                    ttStore: this.textTypesStore,
+                    attachedAlignedCorporaProvider: attachedAlignedCorporaProvider
                 };
             }
         );
@@ -191,7 +197,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     this.layoutModel,
                     this.subcorpWithinFormStore,
                     ttComponent.ttStore,
-                    this.layoutModel.getConf<string>('corpname')
+                    this.layoutModel.getConf<string>('corpname'),
+                    ttComponent.attachedAlignedCorporaProvider
                 );
                 return ttComponent;
             }
