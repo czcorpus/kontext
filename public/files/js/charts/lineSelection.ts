@@ -33,6 +33,9 @@ export type LineGroupChartData = Array<{groupId:number; group:string; count:numb
 
 export type LineGroupStats = {[groupId:number]:number};
 
+/**
+ *
+ */
 export class LineSelGroupsRatiosChart {
 
     /**
@@ -48,19 +51,19 @@ export class LineSelGroupsRatiosChart {
 
     private lastGroupStats:LineGroupStats; // group stats cache
 
-    private fillIds:Array<string>;
-
     private currWidth:number;
 
     private currHeight:number;
 
+    private exportFormats:Array<string>;
 
-    constructor(layoutModel:PageModel, data?:LineGroupStats, fillIds?:Array<string>) {
+
+    constructor(layoutModel:PageModel, exportFormats:Array<string>, data?:LineGroupStats) {
         this.layoutModel = layoutModel;
+        this.exportFormats = exportFormats;
         if (data) {
             this.lastGroupStats = data;
         }
-        this.fillIds = fillIds ? fillIds : [];
         this.currWidth = 200;
         this.currHeight = 200;
     }
@@ -108,18 +111,10 @@ export class LineSelGroupsRatiosChart {
                 .attr('class', 'arc');
 
         const color = this.extendBaseColorPalette();
-        const fillFn = (() => {
-            if (this.fillIds.length > 0) {
-                return (d:any) => `url(#${this.fillIds[d.data['groupId']]})`
-
-            } else {
-                return (d:any) => color[d.data['groupId']]
-            }
-        })();
 
         g.append('path')
             .attr('d', arc)
-            .style('fill', fillFn);
+            .style('fill', (d:any) => color[d.data['groupId']]);
 
         if (pieData.length <= 5) { // direct labels only for small num of portions
             g.append('text')
@@ -137,15 +132,6 @@ export class LineSelGroupsRatiosChart {
             return (item['count'] / total * 100).toFixed(1) + '%';
         };
 
-        const fillFn = (() => {
-            if (this.fillIds.length > 0) {
-                return (d:any) => `url(#${this.fillIds[d['groupId']]})`
-
-            } else {
-                return (d:any) => colors[d['groupId']];
-            }
-        })();
-
         const trSel = d3.select(labelWrapper)
             .attr('class', 'chart-label')
             .append(() => tbody)
@@ -162,7 +148,7 @@ export class LineSelGroupsRatiosChart {
                 .append('rect')
                 .attr('width', '100%')
                 .attr('height', '100%')
-                .style('fill', fillFn);
+                .style('fill', (d:any) => colors[d['groupId']]);
         trSel.append('th')
             .attr('class', 'num')
             .text((d) => d['group']);
@@ -175,25 +161,35 @@ export class LineSelGroupsRatiosChart {
         rootElm.append(() => labelWrapper);
     }
 
-    private renderExportLink(rootElm:d3.Selection<any>) {
-        const div = rootElm.append('div');
-        div.attr('class', 'footer');
-        const aElm = div.append('a');
-        aElm.attr('class', 'export');
-        aElm.text('export');
-        aElm.on('click', () => {
-            const args = new MultiDict();
-            args.set('data', JSON.stringify(this.lastGroupStats));
-            args.set('chart_type', 'line_group_ratios');
-            this.layoutModel.setLocationPost(
-                this.layoutModel.createActionUrl('chart'),
-                args.items(),
-                true
-            );
-        });
+    private renderExportLinks(rootElm:d3.Selection<any>, canonicalCorpusId:string) {
+        if (this.exportFormats.length > 0) {
+            const div = rootElm.append('div');
+            div.attr('class', 'footer');
+            const sElm = div.append('span');
+            sElm.text('export: '); // TODO
+
+            this.exportFormats.forEach((ef, i) => {
+                if (i > 0) {
+                    const sep = div.append('span');
+                    sep.text(', ');
+                }
+                const aElm = div.append('a')
+                aElm.attr('class', 'export');
+                aElm.text(ef);
+                aElm.on('click', () => {
+                    const args = new MultiDict();
+                    args.set('corpname', canonicalCorpusId);
+                    args.set('data', JSON.stringify(this.lastGroupStats));
+                    args.set('cformat', ef);
+                    args.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
+                    const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
+                    iframe.src = this.layoutModel.createActionUrl('export_line_groups_chart', args);
+                });
+            });
+        }
     }
 
-    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean, size:[number, number]):void {
+    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean, canonicalCorpusId:string, size:[number, number]):void {
         [this.currWidth, this.currHeight] = size;
         (() => {
             if (this.lastGroupStats && usePrevData) {
@@ -234,7 +230,7 @@ export class LineSelGroupsRatiosChart {
                     .text(this.layoutModel.translate('linesel__groups_stats_heading'));
                 const colors = this.renderChart(d3Root, chartData);
                 this.renderLabels(chartData, colors, d3Root);
-                this.renderExportLink(d3Root);
+                this.renderExportLinks(d3Root, canonicalCorpusId);
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);

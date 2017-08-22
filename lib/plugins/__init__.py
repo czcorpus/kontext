@@ -103,12 +103,13 @@ class _Names(object):
     TAGHELPER = _ID('taghelper')
     SYNTAX_VIEWER = _ID('syntax_viewer')
     SUBCMIXER = _ID('subcmixer')
+    CHART_EXPORT = _ID('chart_export')
 
     def __iter__(self):
         return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
                      self.CONC_CACHE, self.EXPORT, self.USER_ITEMS, self.MENU_ITEMS, self.GETLANG, self.CORPARCH,
                      self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES,
-                     self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER])
+                     self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT])
 
 
 runtime = _Names()

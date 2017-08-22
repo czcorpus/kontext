@@ -45,6 +45,16 @@ def update_4(doc):
             item.text = '@get_current_url'
 
 
+def update_5(doc):
+    srch = doc.find('/plugins')
+    new_elm = etree.SubElement(srch, 'chart_export')
+    new_elm.tail = '\n      '
+    new_elm.text = '\n            '
+    mod_elm = etree.SubElement(new_elm, 'module')
+    mod_elm.text = 'default_chart_export'
+    mod_elm.tail = '\n        '
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.9.x/0.10.x '

@@ -159,7 +159,10 @@ export class ViewPage {
         this.hasLockedGroups = hasLockedGroups;
         this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
         this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
-        this.lineGroupsChart = new LineSelGroupsRatiosChart(this.layoutModel);
+        this.lineGroupsChart = new LineSelGroupsRatiosChart(
+            this.layoutModel,
+            this.layoutModel.getConf<Array<string>>('ChartExportFormats')
+        );
     }
 
     private translate(s:string, values?:any):string {
@@ -211,7 +214,12 @@ export class ViewPage {
      * @param usePrevData
      */
     showGroupsStats(rootElm:HTMLElement, usePrevData:boolean):void {
-        this.lineGroupsChart.showGroupsStats(rootElm, usePrevData, [200, 200]);
+        this.lineGroupsChart.showGroupsStats(
+            rootElm,
+            usePrevData,
+            this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent').canonicalId,
+            [200, 200]
+        );
     }
 
     private handleBeforeUnload(event:any):void {
@@ -1010,8 +1018,10 @@ export class ViewPage {
                 const lineViewProps = this.initStores(ttStore, sv);
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
-                    this.showGroupsStats(<HTMLElement>document.querySelector('#selection-actions .chart-area'),
-                            usePrevData);
+                    this.showGroupsStats(
+                        <HTMLElement>document.querySelector('#selection-actions .chart-area'),
+                        usePrevData
+                    );
                 };
                 this.initUndoFunction();
 
