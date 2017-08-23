@@ -18,122 +18,104 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, concArgHandler, mainMenuStore, asyncTaskStore, layoutViews) {
+export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskStore, layoutViews) {
 
     // ----------------------------- <ConcDependentItem /> --------------------------
 
-    const ConcDependentItem = React.createClass({
+    const ConcDependentItem = (props) => {
 
-        mixins : mixins,
+        const createLink = () => {
+            return he.createActionLink(props.data.action + '?' +
+                    concArgHandler.exportConcArgs(props.data.args, props.data.q));
+        };
 
-        _createLink : function () {
-            return this.createActionLink(this.props.data.action + '?' +
-                    concArgHandler.exportConcArgs(this.props.data.args, this.props.data.q));
-        },
-
-        render : function () {
-            return (
-                <li>
-                    <a href={this._createLink()}>
-                        {this.props.data.label}
-                        {this.props.data.indirect ? '\u2026' : null}
-                    </a>
-                </li>
-            );
-        }
-    });
+        return (
+            <li>
+                <a href={createLink()}>
+                    {props.data.label}
+                    {props.data.indirect ? '\u2026' : null}
+                </a>
+            </li>
+        );
+    };
 
     // ----------------------------- <Item /> --------------------------
 
-    const Item = React.createClass({
+    const Item = (props) => {
 
-        mixins : mixins,
+        const createLink = () => {
+            if (props.data.url) {
+                return props.data.url;
 
-        _createLink : function () {
-            if (this.props.data.url) {
-                return this.props.data.url;
+            } else if (props.data.action && typeof props.data.args === 'string') {
+                return he.createActionLink(props.data.action + '?' + props.data.args);
 
-            } else if (this.props.data.action && typeof this.props.data.args === 'string') {
-                return this.createActionLink(this.props.data.action + '?' + this.props.data.args);
-
-            } else if (this.props.data.action) {
-                return this.createActionLink(this.props.data.action, this.props.data.args);
+            } else if (props.data.action) {
+                return he.createActionLink(props.data.action, props.data.args);
             }
             return undefined;
-        },
+        };
 
-        render : function () {
-            return (
-                <li>
-                    <a href={this._createLink()} onClick={this.props.onClick}
-                            target={this.props.data.openInBlank ? '_blank' : null}>
-                        {this.props.data.label}
-                        {this.props.data.indirect ? '\u2026' : null}
-                    </a>
-                </li>
-            );
-        }
-    });
+        return (
+            <li>
+                <a href={createLink()} onClick={props.onClick}
+                        target={props.data.openInBlank ? '_blank' : null}>
+                    {props.data.label}
+                    {props.data.indirect ? '\u2026' : null}
+                </a>
+            </li>
+        );
+    };
 
 
     // ----------------------------- <DisabledItem /> ----------------------
 
-    const DisabledItem = React.createClass({
+    const DisabledItem = (props) => {
 
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <span className="disabled">
-                    {this.props.data.label}
-                </span>
-            );
-        }
-    });
+        return (
+            <span className="disabled">
+                {props.data.label}
+            </span>
+        );
+    };
 
     // ----------------------------- <EventTriggeringItem /> -----------------
 
-    const EventTriggeringItem = React.createClass({
+    const EventTriggeringItem = (props) => {
 
-        mixins : mixins,
-
-        _handleClick : function () {
+        const handleClick = () => {
             dispatcher.dispatch({
-                actionType: this.props.data.message,
-                props: this.props.data.args
+                actionType: props.data.message,
+                props: props.data.args
             });
-            this.props.closeActiveSubmenu();
-        },
+            props.closeActiveSubmenu();
+        };
 
-        render : function () {
-            return (
-                <li>
-                    <a onClick={this._handleClick}>
-                        {this.translate(this.props.data.label)}
-                        {this.props.data.indirect ? '\u2026' : null}
-                    </a>
-                </li>
-            );
-        }
-    });
+        return (
+            <li>
+                <a onClick={handleClick}>
+                    {he.translate(props.data.label)}
+                    {props.data.indirect ? '\u2026' : null}
+                </a>
+            </li>
+        );
+    };
 
 
     // ----------------------------- <SubMenu /> --------------------------
 
-    const SubMenu = React.createClass({
+    const SubMenu = (props) => {
 
-        mixins : mixins,
-
-        _createItem : function (item, key) {
+        const createItem = (item, key) => {
             if (item.disabled) {
                 return <DisabledItem key={key} data={item} />;
 
             } else if (item.message) {
                 return <EventTriggeringItem key={key} data={item}
-                            closeActiveSubmenu={this.props.closeActiveSubmenu} />;
+                            closeActiveSubmenu={props.closeActiveSubmenu} />;
 
             } else if (item.currConc) {
                 return <ConcDependentItem key={key} data={item} />;
@@ -141,152 +123,160 @@ export function init(dispatcher, mixins, concArgHandler, mainMenuStore, asyncTas
             } else {
                 return <Item key={key} data={item} />;
             }
-        },
+        };
 
-        _renderSubmenu : function () {
-            if (this.props.items.length > 0) {
+        const renderSubmenu = () => {
+            if (props.items.length > 0) {
                 return (
                     <ul className="submenu">
-                        {this.props.items.map((item, i) => this._createItem(item, i))}
+                        {props.items.map((item, i) => createItem(item, i))}
                     </ul>
                 );
 
             } else {
                 return null;
             }
-        },
+        };
 
-        render : function () {
-            const htmlClasses = [];
+        const htmlClasses = [];
 
-            if (this.props.isOpened) {
-                htmlClasses.push('active');
-            }
-            if (this.props.items.length === 0 || this.props.isDisabled) {
-                htmlClasses.push('disabled');
-            }
-
-            return (
-                <li className={htmlClasses.join(' ')}
-                        onMouseOver={this.props.handleMouseOver}
-                        onMouseLeave={this.props.handleMouseOut}>
-                    <a className="trigger"
-                        title="">{this.props.label}</a>
-                    {this.props.isOpened ? this._renderSubmenu() : null}
-                </li>
-            );
+        if (props.isOpened) {
+            htmlClasses.push('active');
         }
-    });
+        if (props.items.length === 0 || props.isDisabled) {
+            htmlClasses.push('disabled');
+        }
+
+        return (
+            <li className={htmlClasses.join(' ')}
+                    onMouseOver={props.handleMouseOver}
+                    onMouseLeave={props.handleMouseOut}>
+                <a className="trigger"
+                    title="">{props.label}</a>
+                {props.isOpened ? renderSubmenu() : null}
+            </li>
+        );
+    };
 
     // ----------------------------- <AsyncTaskList /> --------------------------
 
-    const AsyncTaskList = React.createClass({
+    const AsyncTaskList = (props) => {
 
-        mixins : mixins,
+        return (
+            <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
+                <layoutViews.PopupBox onCloseClick={props.closeClickHandler} customClass="async-task-list">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>{he.translate('global__task_category')}</th>
+                                <th>{he.translate('global__task_label')}</th>
+                                <th>{he.translate('global__task_created')}</th>
+                                <th>{he.translate('global__task_status')}</th>
+                            </tr>
+                            {props.items.map(item => (
+                                <tr key={item.ident}>
+                                    <td>{he.translate(`task__type_${item.category}`)}</td>
+                                    <td>{item.label}</td>
+                                    <td>{he.formatDate(new Date(item.created * 1000), 2)}</td>
+                                    <td className="status">
+                                        {he.translate(`task__status_${item.status}`)}
+                                        {item.status === 'FAILURE' ?
+                                            <img src={he.createStaticUrl('img/error-icon.svg')} alt={item.status} />
+                                            : null }
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <div>
+                        <div className="options">
+                            <label>
+                                <input type="checkbox"
+                                        onChange={props.handleClearOnCloseCheckbox}
+                                        checked={props.clearOnCloseCheckboxStatus} />
+                                {he.translate('global__remove_finished_tasks_info')}
+                            </label>
+                        </div>
+                        <button type="button" className="default-button"
+                                onClick={props.handleOkButtonClick}>
+                            {props.clearOnCloseCheckboxStatus ?
+                                he.translate('global__close_and_clear_the_list') :
+                                he.translate('global__close')}
+                        </button>
+                    </div>
+                </layoutViews.PopupBox>
+            </layoutViews.ModalOverlay>
+        );
+    };
 
-        getInitialState : function () {
-            return {removeFinishedOnSubmit: true};
-        },
+    // ----------------------------- <LiAsyncTaskNotificator /> --------------------------
 
-        _handleButtonClick : function (evt) {
+    class LiAsyncTaskNotificator extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._handleCloseClick = this._handleCloseClick.bind(this);
+            this._handleViewListClick = this._handleViewListClick.bind(this);
+            this._handleClearOnCloseCheckbox = this._handleClearOnCloseCheckbox.bind(this);
+            this._handleOkButtonClick = this._handleOkButtonClick.bind(this);
+            this.state = {
+                taskList: null,
+                removeFinishedOnSubmit: true
+            };
+        }
+
+        _handleCloseClick() {
+            this.setState({
+                taskList: null,
+                removeFinishedOnSubmit: true
+            });
+        }
+
+        _handleViewListClick() {
+            this.setState({
+                taskList: asyncTaskStore.getAsyncTasks(),
+                removeFinishedOnSubmit: this.state.removeFinishedOnSubmit
+            });
+        }
+
+        _handleClearOnCloseCheckbox() {
+            this.setState({
+                taskList: this.state.taskList,
+                removeFinishedOnSubmit: !this.state.removeFinishedOnSubmit
+            });
+        }
+
+        _handleOkButtonClick(evt) {
             if (this.state.removeFinishedOnSubmit) {
                 dispatcher.dispatch({
                     actionType: 'INBOX_CLEAR_FINISHED_TASKS',
                     props: {}
                 });
             }
-            this.props.closeClickHandler(evt);
-        },
-
-        _handleCheckboxClick : function () {
-            this.setState({removeFinishedOnSubmit: !this.state.removeFinishedOnSubmit});
-        },
-
-        render : function () {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
-                    <layoutViews.PopupBox onCloseClick={this.props.closeClickHandler} customClass="async-task-list">
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>{this.translate('global__task_category')}</th>
-                                    <th>{this.translate('global__task_label')}</th>
-                                    <th>{this.translate('global__task_created')}</th>
-                                    <th>{this.translate('global__task_status')}</th>
-                                </tr>
-                                {this.props.items.map(item => (
-                                    <tr key={item.ident}>
-                                        <td>{this.translate(`task__type_${item.category}`)}</td>
-                                        <td>{item.label}</td>
-                                        <td>{this.formatDate(new Date(item.created * 1000), 2)}</td>
-                                        <td className="status">
-                                            {this.translate(`task__status_${item.status}`)}
-                                            {item.status === 'FAILURE' ?
-                                                <img src={this.createStaticUrl('img/error-icon.svg')} alt={item.status} />
-                                                : null }
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <div>
-                            <div className="options">
-                                <label>
-                                    <input type="checkbox" onChange={this._handleCheckboxClick}
-                                            checked={this.state.removeFinishedOnSubmit} />
-                                    {this.translate('global__remove_finished_tasks_info')}
-                                </label>
-                            </div>
-                            <button type="button" className="default-button"
-                                onClick={this._handleButtonClick}>{this.translate('global__close')}</button>
-                        </div>
-                    </layoutViews.PopupBox>
-                </layoutViews.ModalOverlay>
-            );
+            this._handleCloseClick();
         }
-    });
 
-    // ----------------------------- <LiAsyncTaskNotificator /> --------------------------
-
-    const LiAsyncTaskNotificator = React.createClass({
-
-        mixins : mixins,
-
-        _handleCloseClick : function () {
-            this.setState({taskList: null});
-        },
-
-        _handleViewListClick : function () {
-            this.setState({
-                taskList: asyncTaskStore.getAsyncTasks()
-            });
-        },
-
-        getInitialState : function () {
-            return {
-                taskList: null
-            };
-        },
-
-        _renderHourglass : function () {
+        _renderHourglass() {
             if (this.props.numRunning > 0) {
-                return <a title={this.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning})}>{'\u231B'}</a>;
+                const title = he.translate('global__there_are_tasks_running_{num_tasks}', {num_tasks: this.props.numRunning});
+                return <a title={title}>{'\u231B'}</a>;
 
             } else {
                 return null;
             }
-        },
+        }
 
-        _renderEnvelope : function () {
+        _renderEnvelope() {
             if (this.props.numFinished > 0) {
-                return <a title={this.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished})}>{'\u2709'}</a>;
+                const title = he.translate('global__there_are_tasks_finished_{num_tasks}', {num_tasks: this.props.numFinished});
+                return <a title={title}>{'\u2709'}</a>;
 
             } else {
                 return null;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             if (this.props.numFinished > 0 || this.props.numRunning > 0) {
                 return (
                     <li className="notifications">
@@ -296,7 +286,11 @@ export function init(dispatcher, mixins, concArgHandler, mainMenuStore, asyncTas
                             {this._renderEnvelope()}
                         </span>
                         {this.state.taskList !== null ?
-                            <AsyncTaskList items={this.state.taskList} closeClickHandler={this._handleCloseClick} />
+                            <AsyncTaskList items={this.state.taskList}
+                                    closeClickHandler={this._handleCloseClick}
+                                    handleOkButtonClick={this._handleOkButtonClick}
+                                    handleClearOnCloseCheckbox={this._handleClearOnCloseCheckbox}
+                                    clearOnCloseCheckboxStatus={this.state.removeFinishedOnSubmit} />
                             : null}
                     </li>
                 );
@@ -305,58 +299,63 @@ export function init(dispatcher, mixins, concArgHandler, mainMenuStore, asyncTas
                 return null;
             }
         }
-    });
-
+    }
 
 
     // ----------------------------- <MainMenu /> --------------------------
 
-    const MainMenu = React.createClass({
+    class MainMenu extends React.Component {
 
-        mixins : mixins,
-
-        getInitialState : function () {
-            return {
+        constructor(props) {
+            super(props);
+            this._handleHoverChange = this._handleHoverChange.bind(this);
+            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._closeActiveSubmenu = this._closeActiveSubmenu.bind(this);
+            this.state = {
                 currFocus: null,
                 numRunningTasks: asyncTaskStore.getNumRunningTasks(),
                 numFinishedTasks: asyncTaskStore.getNumFinishedTasks(),
                 menuItems: mainMenuStore.getData()
             };
-        },
+        }
 
-        _handleHoverChange : function (ident, enable) {
+        _handleHoverChange(ident, enable) {
+            const newState = he.cloneState(this.state);
             if (!enable) {
-                this.setState(React.addons.update(this.state, {currFocus: {$set: null}}));
+                newState.currFocus = null;
 
             } else {
-                this.setState(React.addons.update(this.state, {currFocus: {$set: ident}}));
+                newState.currFocus = ident;
             }
-        },
+            this.setState(newState);
+        }
 
-        _storeChangeListener : function (store, action) {
+        _storeChangeListener(store, action) {
             this.setState({
                 currFocus: this.state.currFocus,
                 numRunningTasks: asyncTaskStore.getNumRunningTasks(),
                 numFinishedTasks: asyncTaskStore.getNumFinishedTasks(),
                 menuItems: mainMenuStore.getData()
             });
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             asyncTaskStore.addChangeListener(this._storeChangeListener);
             mainMenuStore.addChangeListener(this._storeChangeListener);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             asyncTaskStore.removeChangeListener(this._storeChangeListener);
             mainMenuStore.removeChangeListener(this._storeChangeListener);
-        },
+        }
 
-        _closeActiveSubmenu : function () {
-            this.setState(React.addons.update(this.state, {currFocus: {$set: null}}));
-        },
+        _closeActiveSubmenu() {
+            const newState = he.cloneState(this.state);
+            newState.currFocus = null;
+            this.setState(newState);
+        }
 
-        render : function () {
+        render() {
             return (
                 <ul id="menu-level-1">
                     {this.state.menuItems.map(item => {
@@ -375,8 +374,7 @@ export function init(dispatcher, mixins, concArgHandler, mainMenuStore, asyncTas
                 </ul>
             );
         }
-
-    });
+    }
 
 
     return {

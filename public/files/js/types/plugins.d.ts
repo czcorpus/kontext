@@ -75,6 +75,7 @@ declare module PluginInterfaces {
 
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
         getViews(subcMixerView:React.ReactClass, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
+        getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
         notifyChangeListeners():void;
     }
 

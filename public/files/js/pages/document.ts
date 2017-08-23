@@ -187,9 +187,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             translate:(s:string, values?:any):string => {
                 return this.translate(s, values);
             },
-            getConf:(k:string):any => {
-                return this.getConf(k);
-            },
             createActionLink:(path:string, args?:Array<[string,string]>):string => {
                 return this.createActionUrl(path, args);
             },
@@ -210,6 +207,20 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             },
             removeGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {
                 this.removeGlobalKeyEventHandler(fn);
+            },
+            cloneState:<T extends {[key:string]:any}>(obj:T):T => {
+                if (Object.assign) {
+                    return <T>Object.assign({}, obj);
+
+                } else {
+                    const ans:{[key:string]:any} = {};
+                    for (let p in obj) {
+                        if (obj.hasOwnProperty(p)) {
+                            ans[p] = obj[p];
+                        }
+                    }
+                    return <T>ans;
+                }
             }
         };
     }
@@ -239,6 +250,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *
      * @param mixins Additional mixins
      * @returns a list of mixins
+     * @deprecated
      */
     exportMixins(...mixins:any[]):any[] {
         return mixins ? mixins.concat([this.componentTools]) : [this.componentTools];
@@ -845,7 +857,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *
      */
     private initMainMenu():void {
-        const menuViews = menuViewsInit(this.dispatcher, this.exportMixins(), this,
+        const menuViews = menuViewsInit(this.dispatcher, this.getComponentHelpers(), this,
                 this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
         this.renderReactComponent(
             menuViews.MainMenu,
@@ -860,7 +872,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     private initOverviewArea():void {
         const overviewViews = overviewAreaViewsInit(
             this.dispatcher,
-            this.exportMixins(),
+            this.getComponentHelpers(),
             this.corpusInfoStore,
             this.layoutViews.PopupBox
         );
@@ -958,7 +970,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
                 this.layoutViews = documentViewsInit(
                     this.dispatcher,
-                    this.exportMixins(),
+                    this.getComponentHelpers(),
                     this.getStores()
                 );
 

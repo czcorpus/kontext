@@ -20,104 +20,97 @@
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
+export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
-    let SimpleSelectionModeSwitch = React.createClass({
-        mixins: mixins,
+    const SimpleSelectionModeSwitch = (props) => {
 
-        render : function () {
-            return (
-                <select name="actions" defaultValue={this.props.initialAction}
-                        onChange={this.props.switchHandler}>
-                    <option value="-">--</option>
-                    <option value="remove">{this.translate('linesel__remove_selected_lines')}</option>
-                    <option value="remove_inverted">{this.translate('linesel__remove_all_but_selected_lines')}</option>
-                    <option value="clear">{this.translate('linesel__clear_the_selection')}</option>
-                </select>
-            );
-        }
-    });
+        return (
+            <select name="actions" defaultValue={props.initialAction}
+                    onChange={props.switchHandler}>
+                <option value="-">--</option>
+                <option value="remove">{he.translate('linesel__remove_selected_lines')}</option>
+                <option value="remove_inverted">{he.translate('linesel__remove_all_but_selected_lines')}</option>
+                <option value="clear">{he.translate('linesel__clear_the_selection')}</option>
+            </select>
+        );
+    };
 
     // ----------------------------- <GroupsSelectionModelSwitch /> --------------------------
 
-    let GroupsSelectionModelSwitch = React.createClass({
-        mixins : mixins,
+    const GroupsSelectionModelSwitch = (props) => {
 
-        render : function () {
-            return (
-                <select name="actions" defaultValue={this.props.initialAction}
-                        onChange={this.props.switchHandler}>
-                    <option value="-">--</option>
-                    <option value="apply">{this.translate('linesel__apply_marked_lines')}</option>
-                    <option value="clear">{this.translate('linesel__clear_the_selection')}</option>
-                </select>
-            );
-        }
-    });
+        return (
+            <select name="actions" defaultValue={props.initialAction}
+                    onChange={props.switchHandler}>
+                <option value="-">--</option>
+                <option value="apply">{he.translate('linesel__apply_marked_lines')}</option>
+                <option value="clear">{he.translate('linesel__clear_the_selection')}</option>
+            </select>
+        );
+    };
 
     // ----------------------------- <LineSelectionMenu /> --------------------------
 
-    let LineSelectionMenu = React.createClass({
+    class LineSelectionMenu extends React.Component {
 
-        mixins: mixins,
+        constructor(props) {
+            super(props);
+            this._changeHandler = this._changeHandler.bind(this);
+            this._actionChangeHandler = this._actionChangeHandler.bind(this);
+            this.state = {
+                mode: 'simple',
+                waiting: false
+            };
+        }
 
-        _changeHandler : function (store, status) {
+        _changeHandler(store, status) {
             if (status === '$STATUS_UPDATED') {
-                this.setState(React.addons.update(this.state,
-                    {
-                        mode: {$set: lineSelectionStore.getMode()},
-                        waiting: {$set: false}
-                    }
-                ));
+                const newState = he.cloneState(this.state);
+                newState.mode = lineSelectionStore.getMode();
+                newState.waiting = false;
+                this.setState(newState);
             }
-        },
+        }
 
-        _actionChangeHandler : function (evt) {
-            let actionMap = {
+        _actionChangeHandler(evt) {
+            const actionMap = {
                 clear: 'LINE_SELECTION_RESET',
                 remove: 'LINE_SELECTION_REMOVE_LINES',
                 remove_inverted: 'LINE_SELECTION_REMOVE_OTHER_LINES',
                 apply: 'LINE_SELECTION_MARK_LINES'
             };
-            let eventId = actionMap[evt.target.value] || null;
+            const eventId = actionMap[evt.target.value] || null;
 
             if (eventId) {
-                this.setState(React.addons.update(this.state,
-                        {waiting: {$set: true}}));
+                const newState = he.cloneState(this.state);
+                newState.waiting = true;
+                this.setState(newState);
                 dispatcher.dispatch({
                     actionType: eventId,
                     props: {}
                 });
             }
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                mode: 'simple',
-                waiting: false
-            };
-        },
-
-        componentDidMount : function () {
+        componentDidMount() {
             lineSelectionStore.addChangeListener(this._changeHandler);
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_STATUS_REQUEST',
                 props: {}
             });
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineSelectionStore.removeChangeListener(this._changeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             let switchComponent = null;
-
             if (this.state.mode === 'simple') {
                 switchComponent = <SimpleSelectionModeSwitch initialAction="-"
                                     switchHandler={this._actionChangeHandler} />;
@@ -129,57 +122,66 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
 
             let heading;
             if (this.state.mode === 'simple') {
-                heading = this.translate('linesel__unsaved_line_selection_heading');
+                heading = he.translate('linesel__unsaved_line_selection_heading');
 
             } else if (this.state.mode === 'groups') {
-                heading = this.translate('linesel__unsaved_line_groups_heading');
+                heading = he.translate('linesel__unsaved_line_groups_heading');
             }
 
             return (
                 <div id="selection-actions">
                     <h3>{heading}</h3>
-                    {this.translate('global__actions')}:{'\u00A0'}
+                    {he.translate('global__actions')}:{'\u00A0'}
                     {switchComponent}
                     {this.state.waiting ?
-                        <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={this.translate('global__loading')} />
+                        <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                title={he.translate('global__loading')} />
                         : null}
                     {this.state.mode === 'groups' ?
-                        <p style={{marginTop: '1em'}}>({this.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
+                        <p style={{marginTop: '1em'}}>({he.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
                 </div>
             );
         }
-    });
+    }
 
     // --------------------------- <EmailDialog /> ----------------------------
 
-    let EmailDialog = React.createClass({
+    const EmailDialog = (props) => {
 
-        mixins: mixins,
-
-        render: function () {
-            return (
-                <div>
-                    <input className="email" type="text" style={{width: '20em'}}
-                            defaultValue={this.props.defaultEmail}
-                            onChange={this.props.emailChangeHandler} />
-                    <button className="ok" type="button" value="send" onClick={this.props.handleEmailDialogButton}>{this.translate('global__send')}</button>
-                    <button type="button" value="cancel" onClick={this.props.handleEmailDialogButton}>{this.translate('global__cancel')}</button>
-                </div>
-            );
-        }
-    });
+        return (
+            <div>
+                <input className="email" type="text" style={{width: '20em'}}
+                        defaultValue={props.defaultEmail}
+                        onChange={props.emailChangeHandler} />
+                <button className="ok" type="button" value="send" onClick={props.handleEmailDialogButton}>{he.translate('global__send')}</button>
+                <button type="button" value="cancel" onClick={props.handleEmailDialogButton}>{he.translate('global__cancel')}</button>
+            </div>
+        );
+    };
 
 
     // ----------------------------- <RenameLabelPanel /> ------------------------------
 
 
-    let RenameLabelPanel = React.createClass({
+    class RenameLabelPanel extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleConfirmClick = this._handleConfirmClick.bind(this);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleSrcInputChange = this._handleSrcInputChange.bind(this);
+            this._handleDstInputChange = this._handleDstInputChange.bind(this);
+            this.state = {
+                srcGroupNum: '',
+                dstGroupNum: '',
+                waiting: false
+            };
+        }
 
-        _handleConfirmClick : function () {
-            this.setState(React.addons.update(this.state, {waiting: {$set: true}}));
+        _handleConfirmClick() {
+            const newState = he.cloneState(this.state);
+            newState.waiting = true;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_GROUP_RENAME',
                 props: {
@@ -187,99 +189,175 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                     dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
                 }
             });
-        },
+        }
 
-        _handleStoreChange : function (store, action) {
+        _handleStoreChange(store, action) {
             if (action === '$LINE_SELECTION_USER_ERROR') {
-                this.setState(React.addons.update(this.state, {waiting: {$set: false}}));
+                const newState = he.cloneState(this.state);
+                newState.waiting = false;
+                this.setState(newState);
             }
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             lineSelectionStore.addChangeListener(this._handleStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineSelectionStore.removeChangeListener(this._handleStoreChange);
-        },
+        }
 
-        getInitialState : function () {
-            return {srcGroupNum: '', dstGroupNum: '', waiting: false};
-        },
+        _handleSrcInputChange(evt) {
+            const newState = he.cloneState(this.state);
+            newState.srcGroupNum = evt.target.value ? parseInt(evt.target.value) : null;
+            this.setState(newState);
+        }
 
-        _handleSrcInputChange : function (evt) {
-            let val = evt.target.value ? parseInt(evt.target.value) : null;
-            this.setState(React.addons.update(this.state, {srcGroupNum: {$set: val}}));
-        },
+        _handleDstInputChange(evt) {
+            const newState = he.cloneState(this.state);
+            newState.dstGroupNum = evt.target.value ? parseInt(evt.target.value) : null;
+            this.setState(newState);
+        }
 
-        _handleDstInputChange : function (evt) {
-            let val = evt.target.value ? parseInt(evt.target.value) : null;
-            this.setState(React.addons.update(this.state, {dstGroupNum: {$set: val}}));
-        },
-
-        render : function () {
+        render() {
             return (
                 <fieldset>
-                    <legend>{this.translate('linesel__rename_drop_heading')}</legend>
-                    <label>{this.translate('linesel__old_label_name')}:</label>
+                    <legend>{he.translate('linesel__rename_drop_heading')}</legend>
+                    <label>{he.translate('linesel__old_label_name')}:</label>
                     {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleSrcInputChange} />
                     <span className="arrow">{'\u00A0\u21E8\u00A0'}</span>
-                    <label>{this.translate('linesel__new_label_name')}:</label>
+                    <label>{he.translate('linesel__new_label_name')}:</label>
                     {'\u00A0'}#<input type="text" style={{width: '2em'}} onChange={this._handleDstInputChange} />
                     <ul className="note">
-                        <li>{this.translate('linesel__if_empty_lab_then_remove')}</li>
-                        <li>{this.translate('linesel__if_existing_lab_then_merge')}</li>
+                        <li>{he.translate('linesel__if_empty_lab_then_remove')}</li>
+                        <li>{he.translate('linesel__if_existing_lab_then_merge')}</li>
                     </ul>
                     {this.state.waiting ?
-                        <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={this.translate('global__loading')} />
-                        : <button className="ok" type="button" onClick={this._handleConfirmClick}>{this.translate('global__ok')}</button>
+                        <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                title={he.translate('global__loading')} />
+                        : <button className="ok" type="button" onClick={this._handleConfirmClick}>{he.translate('global__ok')}</button>
                     }
-                    <button type="button" onClick={this.props.handleCancel}>{this.translate('global__cancel')}</button>
+                    <button type="button" onClick={this.props.handleCancel}>{he.translate('global__cancel')}</button>
                 </fieldset>
             );
         }
-    });
+    }
+
+    // ----------------------------- <ActionSwitch /> ------------------------------
+
+    const ActionSwitch = (props) => {
+        return (
+            <div className="actions">
+                {he.translate('global__actions')}:{'\u00A0'}
+                <select onChange={props.changeHandler}>
+                    <option value="">--</option>
+                    <option value="edit-groups">{he.translate('linesel__continue_editing_groups')}</option>
+                    <option value="sort-groups">{he.translate('linesel__view_sorted_groups')}</option>
+                    <option value="rename-group-label">{he.translate('linesel__rename_label')}...</option>
+                    <option value="remove-other-lines">{he.translate('linesel__remove_non_group_lines')}</option>
+                    <option value="clear-groups">{he.translate('linesel__clear_line_groups')}</option>
+                </select>
+                {props.waiting ?
+                    <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                        title={he.translate('global__loading')} />
+                    : null}
+            </div>
+        );
+    };
+
+    // ----------------------------- <SelectionLinkAndTools /> ------------------------------
+
+    const SelectionLinkAndTools = (props) => {
+
+        const openEmailDialogButtonHandler = () => {
+            dispatcher.dispatch({
+                actionType: 'USER_INFO_REQUESTED',
+                props: {}
+            });
+        };
+
+        const renderEmailButton = () => {
+            if (props.canSendEmail) {
+                return (
+                    <button type="button" onClick={openEmailDialogButtonHandler}>
+                        {he.translate('linesel__send_the_link_to_mail')}
+                    </button>
+                );
+            }
+            return null;
+        };
+
+        return (
+            <fieldset className="generated-link">
+                <legend>{he.translate('linesel__line_selection_link_heading')}</legend>
+                <input className="conc-link" type="text" readOnly="true"
+                        onClick={(e)=> e.target.select()}
+                        value={props.lastCheckpointUrl} />
+                {props.emailDialog ?
+                    <EmailDialog
+                            defaultEmail={props.email}
+                            handleEmailDialogButton={props.handleEmailDialogButton}
+                            emailChangeHandler={props.emailChangeHandler} /> :
+                    renderEmailButton()
+                }
+            </fieldset>
+        );
+    };
+
 
     // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
 
-    let LockedLineGroupsMenu = React.createClass({
+    class LockedLineGroupsMenu extends React.Component {
 
-        mixins: mixins,
+        constructor(props) {
+            super(props);
+            this._changeHandler = this._changeHandler.bind(this);
+            this._actionSwitchHandler = this._actionSwitchHandler.bind(this);
+            this._handleEmailDialogButton = this._handleEmailDialogButton.bind(this);
+            this._emailChangeHandler = this._emailChangeHandler.bind(this);
+            this._handleRenameCancel = this._handleRenameCancel.bind(this);
+            this.state = {
+                dataChanged: true,
+                emailDialog: false,
+                renameLabelDialog: false,
+                email: null,
+                waiting: false,
+                lastCheckpointUrl: lineSelectionStore.getLastCheckpointUrl()
+            };
+        }
 
-        _changeHandler : function (store, status) {
+        _changeHandler(store, status) {
             if (status === '$STATUS_UPDATED') {
-                this.setState(React.addons.update(this.state,
-                        {
-                            dataChanged: {$set: true},
-                            waiting: {$set: false}
-                        }
-                ));
+                const newState = he.cloneState(this.state);
+                newState.dataChanged = true;
+                newState.waiting = false;
+                newState.lastCheckpointUrl = lineSelectionStore.getLastCheckpointUrl();
+                this.setState(newState);
 
             } else if (status === 'USER_INFO_REFRESHED') {
-                this.setState(React.addons.update(this.state,
-                    {
-                        email: {$set: userInfoStore.getCredentials()['email']},
-                        emailDialog: {$set: true},
-                        dataChanged: {$set: false}
-                    }
-                ));
+                const newState = he.cloneState(this.state);
+                newState.email = userInfoStore.getCredentials()['email'];
+                newState.emailDialog = true;
+                newState.dataChanged = false;
+                newState.lastCheckpointUrl = lineSelectionStore.getLastCheckpointUrl();
+                this.setState(newState);
 
             } else if (status === 'LINE_SELECTION_URL_SENT_TO_EMAIL') {
-                this.setState(React.addons.update(this.state,
-                    {
-                        email: {$set: null},
-                        emailDialog: {$set: false},
-                        dataChanged: {$set: false}
-                    }
-                ));
+                const newState = he.cloneState(this.state);
+                newState.email = null;
+                newState.emailDialog = false;
+                newState.dataChanged = false;
+                newState.lastCheckpointUrl = lineSelectionStore.getLastCheckpointUrl();
+                this.setState(newState);
             }
-        },
+        }
 
-        _actionSwitchHandler : function (evt) {
+        _actionSwitchHandler(evt) {
             switch (evt.target.value) {
                 case 'edit-groups':
-                    this.setState(React.addons.update(this.state, {waiting: {$set: true}}));
+                    const newState1 = he.cloneState(this.state);
+                    newState1.waiting = true;
+                    this.setState(newState1);
                     dispatcher.dispatch({
                         actionType: 'LINE_SELECTION_REENABLE_EDIT',
                         props: {}
@@ -304,32 +382,20 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                     });
                     break;
                 case 'rename-group-label':
-                    this.setState(React.addons.update(this.state,
-                        {
-                            renameLabelDialog: {$set: true},
-                            dataChanged: {$set: false}
-                        }
-                    ));
+                    const newState2 = he.cloneState(this.state);
+                    newState2.renameLabelDialog = true;
+                    newState2.dataChanged = false;
+                    this.setState(newState2);
                     break;
-
             }
-        },
+        }
 
-        _openEmailDialogButtonHandler : function () {
-            dispatcher.dispatch({
-                actionType: 'USER_INFO_REQUESTED',
-                props: {}
-            });
-        },
-
-        _handleEmailDialogButton : function (evt) {
+        _handleEmailDialogButton(evt) {
             if (evt.target.value === 'cancel') {
-                this.setState(React.addons.update(this.state,
-                    {
-                        emailDialog: {$set: false},
-                        dataChanged: {$set: false}
-                    }
-                ));
+                const newState = he.cloneState(this.state);
+                newState.emailDialog = false;
+                newState.dataChanged = false;
+                this.setState(newState);
 
             } else if (evt.target.value === 'send') {
                 dispatcher.dispatch({
@@ -339,18 +405,16 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                     }
                 })
             }
-        },
+        }
 
-        _emailChangeHandler : function (evt) {
-            this.setState(React.addons.update(this.state,
-                {
-                    email: {$set: evt.target.value},
-                    dataChanged: {$set: false}
-                }
-            ));
-        },
+        _emailChangeHandler(evt) {
+            const newState = he.cloneState(this.state);
+            newState.email = evt.target.value;
+            newState.dataChanged = false;
+            this.setState(newState);
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             lineSelectionStore.addChangeListener(this._changeHandler);
             userInfoStore.addChangeListener(this._changeHandler);
             dispatcher.dispatch({
@@ -359,101 +423,52 @@ export function init(dispatcher, mixins, lineSelectionStore, userInfoStore) {
                     email: this.state.email
                 }
             });
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             lineSelectionStore.removeChangeListener(this._changeHandler);
             userInfoStore.removeChangeListener(this._changeHandler);
-        },
+        }
 
-        componentDidUpdate : function (prevProps, prevState) {
+        componentDidUpdate(prevProps, prevState) {
             // we must inform non-react chart building function to redraw d3 charts
             if (typeof this.props.chartCallback === 'function') {
                 this.props.chartCallback(!this.state.dataChanged);
             }
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                dataChanged: true,
-                emailDialog: false,
-                renameLabelDialog: false,
-                email: null,
-                waiting: false
-            };
-        },
+        _handleRenameCancel() {
+            const newState = he.cloneState(this.state);
+            newState.renameLabelDialog = false;
+            newState.dataChanged = false;
+            this.setState(newState);
+        }
 
-        _handleRenameCancel : function () {
-            this.setState(React.addons.update(this.state,
-                {
-                    renameLabelDialog: {$set: false},
-                    dataChanged: {$set: false}
-                }
-            ));
-        },
-
-        _renderActionArea : function () {
-            if (this.state.renameLabelDialog) {
-                return <RenameLabelPanel handleCancel={this._handleRenameCancel} />;
-
-            } else {
-                return (
-                    <div className="actions">
-                        {this.translate('global__actions')}:{'\u00A0'}
-                        <select onChange={this._actionSwitchHandler}>
-                            <option value="">--</option>
-                            <option value="edit-groups">{this.translate('linesel__continue_editing_groups')}</option>
-                            <option value="sort-groups">{this.translate('linesel__view_sorted_groups')}</option>
-                            <option value="rename-group-label">{this.translate('linesel__rename_label')}...</option>
-                            <option value="remove-other-lines">{this.translate('linesel__remove_non_group_lines')}</option>
-                            <option value="clear-groups">{this.translate('linesel__clear_line_groups')}</option>
-                        </select>
-                        {this.state.waiting ?
-                            <img className="ajax-loader-bar" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={this.translate('global__loading')} />
-                            : null}
-                    </div>
-                );
-            }
-        },
-
-        _renderEmailButton : function () {
-            if (this.props.canSendMail) {
-                return <button type="button" onClick={this._openEmailDialogButtonHandler}>{this.translate('linesel__send_the_link_to_mail')}</button>;
-            }
-            return null;
-        },
-
-        render: function () {
+        render() {
             return (
                 <div id="selection-actions">
-                    <h3>{this.translate('linesel__saved_line_groups_heading')}</h3>
+                    <h3>{he.translate('linesel__saved_line_groups_heading')}</h3>
 
-                    {this._renderActionArea()}
+                    {this.state.renameLabelDialog ?
+                        <RenameLabelPanel handleCancel={this._handleRenameCancel} /> :
+                        <ActionSwitch waiting={this.state.waiting} changeHandler={this._actionSwitchHandler} />}
 
                     <fieldset className="chart-area">
-                        <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                title={this.translate('global__loading')} />
+                        <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                title={he.translate('global__loading')} />
                     </fieldset>
 
-                    <fieldset className="generated-link">
-                        <legend>{this.translate('linesel__line_selection_link_heading')}</legend>
-                        <input className="conc-link" type="text" readOnly="true"
-                                onClick={(e)=> e.target.select()}
-                                value={lineSelectionStore.getLastCheckpointUrl()} />
-                        {
-                            this.state.emailDialog
-                            ? <EmailDialog
-                                    defaultEmail={this.state.email}
-                                    handleEmailDialogButton={this._handleEmailDialogButton}
-                                    emailChangeHandler={this._emailChangeHandler} />
-                            : this._renderEmailButton()
-                        }
-                    </fieldset>
+                    <SelectionLinkAndTools
+                            lastCheckpointUrl={this.state.lastCheckpointUrl}
+                            email={this.state.email}
+                            emailDialog={this.state.emailDialog}
+                            canSendEmail={this.props.canSendEmail}
+                            handleEmailDialogButton={this._handleEmailDialogButton}
+                            emailChangeHandler={this._emailChangeHandler} />
                 </div>
             )
         }
-    });
+    }
 
     return {
         LineSelectionMenu: LineSelectionMenu,

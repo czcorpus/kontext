@@ -39,7 +39,7 @@ import * as dcInit from '../defaultCorparch/init';
 export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage {
     const overviewViews = overviewViewInit(
         pluginApi.dispatcher(),
-        pluginApi.exportMixins(),
+        pluginApi.getComponentHelpers(),
         pluginApi.getStores().corpusInfoStore,
         pluginApi.getViews().PopupBox
     );

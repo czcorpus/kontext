@@ -18,18 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str} from '../../util';
 
 
-export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetailStore, lineStore) {
+export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailStore, lineStore) {
 
-    const mediaViews = initMediaViews(dispatcher, mixins, lineStore);
-    const he = mixins[0];
+    const mediaViews = initMediaViews(dispatcher, he, lineStore);
 
 
     // ------------------------- <RefLine /> ---------------------------
@@ -437,74 +434,70 @@ export function init(dispatcher, mixins, layoutViews, concDetailStore, refsDetai
 
     // ------------------------- <TRSingleSpeech /> ---------------------------
 
-    const TRSingleSpeech = React.createClass({
+    const TRSingleSpeech = (props) => {
 
-        render : function () {
-            const style = {
-                backgroundColor: color2str(this.props.speech.colorCode),
-                color: color2str(calcTextColorFromBg(this.props.speech.colorCode))
-            };
-            return (
-                <tr key={`speech-${this.props.idx}`} className="speech">
-                    <th>
-                        <strong className="speaker" title={exportMetadata(this.props.speech.metadata)}
-                                style={style}>
-                            {this.props.speech.speakerId}
-                        </strong>
-                    </th>
-                    <td className="text">
-                        <SpeechText data={this.props.speech.text} key={this.props.idx}
-                                bulletColor={color2str(this.props.speech.colorCode)}
-                                handleClick={this.props.handlePlayClick}
-                                handleStopClick={this.props.handleStopClick}
-                                isPlaying={this.props.isPlaying}
-                                canStartPlayback={this.props.canStartPlayback} />
-                    </td>
-                </tr>
-            );
-        }
-    });
+        const style = {
+            backgroundColor: color2str(props.speech.colorCode),
+            color: color2str(calcTextColorFromBg(props.speech.colorCode))
+        };
+        return (
+            <tr key={`speech-${props.idx}`} className="speech">
+                <th>
+                    <strong className="speaker" title={exportMetadata(props.speech.metadata)}
+                            style={style}>
+                        {props.speech.speakerId}
+                    </strong>
+                </th>
+                <td className="text">
+                    <SpeechText data={props.speech.text} key={props.idx}
+                            bulletColor={color2str(props.speech.colorCode)}
+                            handleClick={props.handlePlayClick}
+                            handleStopClick={props.handleStopClick}
+                            isPlaying={props.isPlaying}
+                            canStartPlayback={props.canStartPlayback} />
+                </td>
+            </tr>
+        );
+    };
 
     // ------------------------- <TROverlappingSpeeches /> ---------------------------
 
-    const TROverlappingSpeeches = React.createClass({
+    const TROverlappingSpeeches = (props) => {
 
-        _renderOverlappingSpeakersLabel : function () {
+        const renderOverlappingSpeakersLabel = () => {
             const ans = [];
-            this.props.speeches.forEach((speech, i) => {
+            props.speeches.forEach((speech, i) => {
                 if (i > 0) {
-                    ans.push(<span key={`p-${this.props.idx}:${i}`} className="plus">{'\u00a0'}+{'\u00a0'}</span>);
+                    ans.push(<span key={`p-${props.idx}:${i}`} className="plus">{'\u00a0'}+{'\u00a0'}</span>);
                 }
                 const css = {
                     backgroundColor: color2str(speech.colorCode),
                     color: color2str(calcTextColorFromBg(speech.colorCode))
                 };
-                ans.push(<strong key={`${this.props.idx}:${i}`} className="speaker"
+                ans.push(<strong key={`${props.idx}:${i}`} className="speaker"
                                 title={exportMetadata(speech.metadata)}
                                 style={css}>{speech.speakerId}</strong>);
             });
             return ans;
-        },
+        };
 
-        render : function () {
-            return (
-                <tr key={`speech-${this.props.idx}`} className="speech">
-                    <th>
-                        {this._renderOverlappingSpeakersLabel(this.props.speeches)}
-                    </th>
-                    <td className="text overlapping-block">
-                        {this.props.speeches.map((speech, i) => <SpeechText data={speech.text}
-                                    key={`${this.props.idx}:${i}`}
-                                    bulletColor={color2str(speech.colorCode)}
-                                    handleClick={this.props.handlePlayClick}
-                                    handleStopClick={this.props.handleStopClick}
-                                    isPlaying={this.props.isPlaying}
-                                    canStartPlayback={this.props.canStartPlayback} />)}
-                    </td>
-                </tr>
-            );
-        }
-    });
+        return (
+            <tr key={`speech-${props.idx}`} className="speech">
+                <th>
+                    {renderOverlappingSpeakersLabel(props.speeches)}
+                </th>
+                <td className="text overlapping-block">
+                    {props.speeches.map((speech, i) => <SpeechText data={speech.text}
+                                key={`${props.idx}:${i}`}
+                                bulletColor={color2str(speech.colorCode)}
+                                handleClick={props.handlePlayClick}
+                                handleStopClick={props.handleStopClick}
+                                isPlaying={props.isPlaying}
+                                canStartPlayback={props.canStartPlayback} />)}
+                </td>
+            </tr>
+        );
+    };
 
     // ------------------------- <SpeechView /> ---------------------------
 

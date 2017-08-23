@@ -16,38 +16,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
-import ReactDOM from 'vendor/react-dom';
+import * as React from 'vendor/react';
+import * as ReactDOM from 'vendor/react-dom';
 
 
 const ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 
-export function init(dispatcher, mixins, storeProvider) {
-
-    const util = mixins[0];
+export function init(dispatcher, he, storeProvider) {
 
     // ------------------------------ <ModalOverlay /> -----------------------------
 
-    const ModalOverlay = React.createClass({
+    class ModalOverlay extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._keyPressHandler = this._keyPressHandler.bind(this);
+        }
 
-        _keyPressHandler : function (evt) {
+        _keyPressHandler(evt) {
             if (evt.keyCode === 27 && typeof this.props.onCloseKey === 'function') {
                 this.props.onCloseKey();
             }
-        },
+        }
 
-        componentDidMount : function () {
-            this.addGlobalKeyEventHandler(this._keyPressHandler);
-        },
+        componentDidMount() {
+            he.addGlobalKeyEventHandler(this._keyPressHandler);
+        }
 
-        componentWillUnmount : function () {
-            this.removeGlobalKeyEventHandler(this._keyPressHandler);
-        },
+        componentWillUnmount() {
+            he.removeGlobalKeyEventHandler(this._keyPressHandler);
+        }
 
-        render : function () {
+        render() {
             const style = {};
             if (this.props.isScrollable) {
                 style['overflow'] = 'auto';
@@ -58,7 +59,7 @@ export function init(dispatcher, mixins, storeProvider) {
                 </div>
             );
         }
-    });
+    }
 
 
     // ------------------------------ <PopupBox /> -----------------------------
@@ -78,21 +79,27 @@ export function init(dispatcher, mixins, storeProvider) {
      *                        by a custom handler (see the next prop)
      * keyPressHandler -- an optional function called in case of a 'onKeyDown' event
      */
-    const PopupBox = React.createClass({
+    class PopupBox extends React.Component {
 
-        closeClickHandler: function () {
-            if (typeof this.props.onCloseClick === 'function') {
-                this.props.onCloseClick.call(this);
-            }
-        },
+        constructor(props) {
+            super(props);
+            this._handleKeyPress = this._handleKeyPress.bind(this);
+            this._closeClickHandler = this._closeClickHandler.bind(this);
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             if (this.props.onReady) {
                 this.props.onReady(ReactDOM.findDOMNode(this));
             }
-        },
+        }
 
-        _renderStatusIcon : function () {
+        _closeClickHandler() {
+            if (typeof this.props.onCloseClick === 'function') {
+                this.props.onCloseClick.call(this);
+            }
+        }
+
+        _renderStatusIcon() {
             const m = {
                 info: 'img/info-icon.svg',
                 message: 'img/message-icon.png',
@@ -105,14 +112,14 @@ export function init(dispatcher, mixins, storeProvider) {
             } else {
                 return (
                     <div>
-                        <img className="info-icon" src={this.createStaticUrl(m[this.props.status])}
+                        <img className="info-icon" src={he.createStaticUrl(m[this.props.status])}
                                 alt={this.props.status} />
                     </div>
                 );
             }
-        },
+        }
 
-        _createStyle : function () {
+        _createStyle() {
             let css = {};
             for (let p in this.props.customStyle) {
                 if (this.props.customStyle.hasOwnProperty(p)) {
@@ -120,39 +127,39 @@ export function init(dispatcher, mixins, storeProvider) {
                 }
             }
             return css;
-        },
+        }
 
-        _handleKeyPress : function (evt) {
+        _handleKeyPress(evt) {
             if (evt.keyCode === 27) {
-                 this.closeClickHandler();
+                 this._closeClickHandler();
             }
             if (typeof this.props.keyPressHandler === 'function') {
                 this.props.keyPressHandler(evt);
             }
             evt.preventDefault();
             evt.stopPropagation();
-        },
+        }
 
-        _renderCloseButton : function () {
+        _renderCloseButton() {
              if (this.props.takeFocus) {
                 return <button className="close-link"
-                            onClick={this.closeClickHandler}
+                            onClick={this._closeClickHandler}
                             onKeyDown={this._handleKeyPress}
                             ref={item => item ? item.focus() : null} />;
 
              } else {
                  return <button type="button" className="close-link"
-                            onClick={this.closeClickHandler}
+                            onClick={this._closeClickHandler}
                             onKeyDown={this._handleKeyPress} />;
              }
-        },
+        }
 
-        render: function () {
-            let classes = ['tooltip-box'];
+        render() {
+            const classes = ['tooltip-box'];
             if (this.props.customClass) {
                 classes.push(this.props.customClass);
             }
-            let css = this._createStyle();
+            const css = this._createStyle();
             if (this.props.autoSize) {
                 css['width'] = '31.9%';
             }
@@ -167,170 +174,181 @@ export function init(dispatcher, mixins, storeProvider) {
                 </div>
             );
         }
-    });
+    }
+
+    // ------------------------------ <ImgWithMouseover /> -----------------------------
+
+    class ImgWithMouseover extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._handleCloseMouseover = this._handleCloseMouseover.bind(this);
+            this._handleCloseMouseout = this._handleCloseMouseout.bind(this);
+            this.state = {isMouseover : false};
+        }
+
+        _handleCloseMouseover() {
+            this.setState({isMouseover: true});
+        }
+
+        _handleCloseMouseout() {
+            this.setState({isMouseover: false});
+        }
+
+        _mkAltSrc(s) {
+            const tmp = s.split('.');
+            return `${tmp.slice(0, -1).join('.')}_s.${tmp[tmp.length - 1]}`;
+        }
+
+        render() {
+            const src2 = this.props.src2 ? this.props.src2 : this._mkAltSrc(this.props.src);
+            return <img className={this.props.htmlClass}
+                        src={this.state.isMouseover ? src2 : this.props.src}
+                        onClick={this.props.clickHandler}
+                        alt={this.props.alt}
+                        title={this.props.alt}
+                        onMouseOver={this._handleCloseMouseover}
+                        onMouseOut={this._handleCloseMouseout}  />;
+        }
+    }
 
     // ------------------------------ <CloseableFrame /> -----------------------------
 
-    const CloseableFrame = React.createClass({
+    const CloseableFrame = (props) => {
 
-        mixins : mixins,
-
-        _closeClickHandler : function () {
-            if (typeof this.props.onCloseClick === 'function') {
-                this.props.onCloseClick.call(this);
+        const closeClickHandler = () => {
+            if (typeof props.onCloseClick === 'function') {
+                props.onCloseClick();
             }
-        },
-
-        getInitialState : function () {
-            return {
-                isMouseover : false
-            };
-        },
-
-        _handleCloseMouseover : function () {
-            this.setState({isMouseover: true});
-        },
-
-        _handleCloseMouseout : function () {
-            this.setState({isMouseover: false});
-        },
-
-        render : function () {
-            const style = {
-                width: '1.5em',
-                height: '1.5em',
-                float: 'right',
-                cursor: 'pointer',
-                fontSize: '1em'
-            };
-            const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
-            return (
-                <section className={htmlClass} style={this.props.scrollable ? {overflowY: 'auto'} : {}}>
-                    <div className="heading">
-                        <div className="control">
-                            <img className="close-icon"
-                                    src={this.state.isMouseover ? this.createStaticUrl('img/close-icon_s.svg')
-                                        : this.createStaticUrl('img/close-icon.svg')}
-                                    onClick={this._closeClickHandler}
-                                    alt={this.translate('global__close_the_window')}
-                                    title={this.translate('global__close_the_window')}
-                                    onMouseOver={this._handleCloseMouseover}
-                                    onMouseOut={this._handleCloseMouseout}  />
-                        </div>
-                        <h2>
-                            {this.props.label}
-                        </h2>
+        };
+        const style = {
+            width: '1.5em',
+            height: '1.5em',
+            float: 'right',
+            cursor: 'pointer',
+            fontSize: '1em'
+        };
+        const htmlClass = 'closeable-frame' + (props.customClass ? ` ${props.customClass}` : '');
+        return (
+            <section className={htmlClass} style={props.scrollable ? {overflowY: 'auto'} : {}}>
+                <div className="heading">
+                    <div className="control">
+                        <ImgWithMouseover htmlClass="close-icon"
+                                src={he.createStaticUrl('img/close-icon_s.svg')}
+                                src2={he.createStaticUrl('img/close-icon.svg')}
+                                clickHandler={closeClickHandler}
+                                alt={he.translate('global__close_the_window')} />
                     </div>
-                    {this.props.children}
-                </section>
-            );
-        }
-
-    });
+                    <h2>
+                        {props.label}
+                    </h2>
+                </div>
+                {props.children}
+            </section>
+        );
+    };
 
     // ------------------------------ <InlineHelp /> -----------------------------
 
-    const InlineHelp = React.createClass({
+    class InlineHelp extends React.Component {
 
-        mixins : mixins,
-
-        _clickHandler : function () {
-            this.setState({helpVisible: !this.state.helpVisible});
-        },
-
-        getInitialState : function () {
-            return {helpVisible: false};
-        },
-
-        render : function () {
-            return (
-                <sup style={{display: 'inline-block'}}>
-                    <a className="context-help" onClick={this._clickHandler}>
-                        <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')}
-                                data-alt-img={this.createStaticUrl('img/question-mark_s.svg')} />
-                    </a>
-                    {this.state.helpVisible ?
-                        <PopupBox onCloseClick={this._clickHandler}
-                                customStyle={this.props.customStyle}>
-                            {this.props.children}
-                        </PopupBox>
-                        : null}
-                </sup>
-            );
+        constructor(props) {
+            super(props);
+            this._clickHandler = this._clickHandler.bind(this);
+            this.state = {helpVisible: false};
         }
 
-    });
+        _clickHandler() {
+            this.setState({helpVisible: !this.state.helpVisible});
+        }
+
+        render() {
+            return (
+                <span>
+                    <sup style={{display: 'inline-block'}}>
+                        <a className="context-help" onClick={this._clickHandler}>
+                            <ImgWithMouseover
+                                    htmlClass="over-img"
+                                    src={he.createStaticUrl('img/question-mark.svg')} />
+                        </a>
+                    </sup>
+                    {this.state.helpVisible ?
+                            <PopupBox onCloseClick={this._clickHandler}
+                                    customStyle={this.props.customStyle}>
+                                {this.props.children}
+                            </PopupBox>
+                            : null}
+                </span>
+            );
+        }
+    }
 
 
     // ------------------------------ <Message /> -----------------------------
     // (info/error/warning message box)
 
-    const Message = React.createClass({
+    const Message = (props) => {
 
-        mixins: mixins,
-
-        _handleCloseClick : function (e) {
+        const handleCloseClick = (e) => {
             e.preventDefault();
             dispatcher.dispatch({
                 actionType: 'MESSAGE_CLOSED',
-                sender: this,
                 props: {
-                    messageId: this.props.messageId
+                    messageId: props.messageId
                 }
             });
-        },
+        };
 
-        render : function () {
-            var typeIconMap = {
-                info: this.createStaticUrl('img/info-icon.svg'),
-                warning: this.createStaticUrl('img/warning-icon.svg'),
-                error: this.createStaticUrl('img/error-icon.svg'),
-                mail: this.createStaticUrl('img/message-icon.png')
-            },
-            classes = 'message ' + this.props.messageType;
+        const typeIconMap = {
+            info: he.createStaticUrl('img/info-icon.svg'),
+            warning: he.createStaticUrl('img/warning-icon.svg'),
+            error: he.createStaticUrl('img/error-icon.svg'),
+            mail: he.createStaticUrl('img/message-icon.png')
+        };
 
-            return (
-                <div className={classes}>
-                    <div className="button-box">
-                        <a className="close-icon">
-                            <img src={this.createStaticUrl('img/close-icon.svg')}
-                                onClick={this._handleCloseClick } />
-                        </a>
-                    </div>
-                    <div className="icon-box">
-                        <img className="icon" alt="message"
-                                src={ typeIconMap[this.props.messageType] } />
-                    </div>
-                    <div className="message-text">
-                        <span>{ this.props.messageText }</span>
-                    </div>
+        return (
+            <div className={'message ' + props.messageType}>
+                <div className="button-box">
+                    <a className="close-icon">
+                        <img src={he.createStaticUrl('img/close-icon.svg')}
+                            onClick={handleCloseClick } />
+                    </a>
                 </div>
-            );
-        }
-    });
+                <div className="icon-box">
+                    <img className="icon" alt="message"
+                            src={ typeIconMap[props.messageType] } />
+                </div>
+                <div className="message-text">
+                    <span>{props.messageText}</span>
+                </div>
+            </div>
+        );
+    };
 
     // ------------------------------ <Messages /> -----------------------------
 
-    const Messages = React.createClass({
+    class Messages extends React.Component {
 
-        getInitialState : function () {
-            return {messages: []};
-        },
+        constructor(props) {
+            super(props);
+            this._changeListener = this._changeListener.bind(this);
+            this.state = {messages: []};
+        }
 
-        _changeListener : function (store) {
-            this.setState({messages: store.getMessages()});
-        },
+        _changeListener() {
+            this.setState({messages: storeProvider.messageStore.getMessages()});
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             storeProvider.messageStore.addChangeListener(this._changeListener);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             storeProvider.messageStore.removeChangeListener(this._changeListener);
-        },
+        }
 
-        render: function () {
-            var messages = this.state.messages.map(function (item, i) {
+        render() {
+            const messages = this.state.messages.map((item, i) => {
                 return <Message key={i} messageType={item.messageType}
                                 messageText={item.messageText}
                                 messageId={item.messageId} />;
@@ -338,7 +356,8 @@ export function init(dispatcher, mixins, storeProvider) {
             if (messages) {
                 return (
                     <div className="messages">
-                        <ReactCSSTransitionGroup transitionName="msganim" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
+                        <ReactCSSTransitionGroup transitionName="msganim"
+                                transitionEnterTimeout={500} transitionLeaveTimeout={300}>
                         {messages}
                         </ReactCSSTransitionGroup>
                     </div>
@@ -348,7 +367,7 @@ export function init(dispatcher, mixins, storeProvider) {
                 return null;
             }
         }
-    });
+    }
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
@@ -357,37 +376,35 @@ export function init(dispatcher, mixins, storeProvider) {
      * - humanCorpname
      * - usesubcorp
      */
-    const CorpnameInfoTrigger = React.createClass({
+    const CorpnameInfoTrigger = (props) => {
 
-        mixins : mixins,
-
-        _handleCorpnameClick : function () {
+        const handleCorpnameClick = () => {
             dispatcher.dispatch({
                 actionType: 'OVERVIEW_CORPUS_INFO_REQUIRED',
                 props: {
-                    corpusId: this.props.corpname
+                    corpusId: props.corpname
                 }
             });
-        },
+        };
 
-        _handleSubcnameClick : function () {
+        const handleSubcnameClick = () => {
             dispatcher.dispatch({
                 actionType: 'OVERVIEW_SHOW_SUBCORPUS_INFO',
                 props: {
-                    corpusId: this.props.corpname,
-                    subcorpusId: this.props.usesubcorp
+                    corpusId: props.corpname,
+                    subcorpusId: props.usesubcorp
                 }
             });
-        },
+        };
 
-        _renderSubcorp : function () {
-            if (this.props.usesubcorp) {
+        const renderSubcorp = () => {
+            if (props.usesubcorp) {
                 return (
                     <span>
                         <strong>:</strong>
-                        <a className="subcorpus" title={this.translate('global__subcorpus')}
-                                    onClick={this._handleSubcnameClick}>
-                            {this.props.usesubcorp}
+                        <a className="subcorpus" title={he.translate('global__subcorpus')}
+                                    onClick={handleSubcnameClick}>
+                            {props.usesubcorp}
                         </a>
                     </span>
                 );
@@ -395,38 +412,34 @@ export function init(dispatcher, mixins, storeProvider) {
             } else {
                 return null;
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <li id="active-corpus">
-                    <strong>{this.translate('global__corpus')}:{'\u00a0'}</strong>
-                    <a className="corpus-desc" title="click for details"
-                                onClick={this._handleCorpnameClick}>
-                        {this.props.humanCorpname}
-                    </a>
-                    {this._renderSubcorp()}
-                </li>
-            );
-        }
-    });
+        return (
+            <li id="active-corpus">
+                <strong>{he.translate('global__corpus')}:{'\u00a0'}</strong>
+                <a className="corpus-desc" title="click for details"
+                            onClick={handleCorpnameClick}>
+                    {props.humanCorpname}
+                </a>
+                {renderSubcorp()}
+            </li>
+        );
+    };
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    const EmptyQueryOverviewBar = React.createClass({
+    const EmptyQueryOverviewBar = (props) => {
 
-        render : function () {
-            return (
-                <ul id="query-overview-bar">
-                    <CorpnameInfoTrigger
-                            corpname={this.props.corpname}
-                            humanCorpname={this.props.humanCorpname}
-                            usesubcorp={this.props.usesubcorp} />
-                </ul>
-            );
-        }
+        return (
+            <ul id="query-overview-bar">
+                <CorpnameInfoTrigger
+                        corpname={props.corpname}
+                        humanCorpname={props.humanCorpname}
+                        usesubcorp={props.usesubcorp} />
+            </ul>
+        );
 
-    });
+    };
 
 
     // ------------------------------------------------------------------------------------
@@ -438,6 +451,7 @@ export function init(dispatcher, mixins, storeProvider) {
         InlineHelp: InlineHelp,
         Messages: Messages,
         CorpnameInfoTrigger: CorpnameInfoTrigger,
-        EmptyQueryOverviewBar: EmptyQueryOverviewBar
+        EmptyQueryOverviewBar: EmptyQueryOverviewBar,
+        ImgWithMouseover: ImgWithMouseover
     };
 }

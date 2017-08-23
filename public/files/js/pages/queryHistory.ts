@@ -40,7 +40,7 @@ class QueryHistoryPage {
     private initCorpnameLink():void {
         const corpInfoViews = corpnameLinkInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.getStores().corpusInfoStore,
             this.layoutModel.layoutViews.PopupBox
         );

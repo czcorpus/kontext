@@ -19,12 +19,10 @@
  */
 
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, collFormStore) {
-
-    const util = mixins[0];
+export function init(dispatcher, he, layoutViews, collFormStore) {
 
     // -------------------- <AttrSelection /> --------------------------------------------
 
@@ -74,7 +72,7 @@ export function init(dispatcher, mixins, layoutViews, collFormStore) {
             <div>
                 <input type="text" style={{width: '3em'}} value={props.cfromw}
                     onChange={handleFromValChange} />
-                {'\u00a0'}{util.translate('coll__to')}{'\u00a0'}
+                {'\u00a0'}{he.translate('coll__to')}{'\u00a0'}
                 <input type="text" style={{width: '3em'}} value={props.ctow}
                     onChange={handleToValChange} />
             </div>
@@ -189,11 +187,16 @@ export function init(dispatcher, mixins, layoutViews, collFormStore) {
 
     // -------------------- <CollocationsForm /> --------------------------------------------
 
-    const CollocationsForm = React.createClass({
+    class CollocationsForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._storeChangeListener = this._storeChangeListener.bind(this);
+            this._handleSubmitClick = this._handleSubmitClick.bind(this);
+            this.state = this._getStoreState();
+        }
 
-        _getStoreState : function () {
+        _getStoreState() {
             return {
                 attrList: collFormStore.getAttrList(),
                 cattr: collFormStore.getCattr(),
@@ -205,56 +208,52 @@ export function init(dispatcher, mixins, layoutViews, collFormStore) {
                 availCbgrfns: collFormStore.getAvailCbgrfns(),
                 csortfn: collFormStore.getCsortfn()
             };
-        },
+        }
 
-        getInitialState : function () {
-            return this._getStoreState();
-        },
-
-        _storeChangeListener : function () {
+        _storeChangeListener() {
             this.setState(this._getStoreState());
-        },
+        }
 
-        componentDidMount : function () {
-            collFormStore.addChangeListener(this._storeChangeListener);
-        },
-
-        componentWillUnmount : function () {
-            collFormStore.removeChangeListener(this._storeChangeListener);
-        },
-
-        _handleSubmitClick : function () {
+        _handleSubmitClick() {
             dispatcher.dispatch({
                 actionType: 'COLL_FORM_SUBMIT',
                 props: {}
             });
-        },
+        }
 
-        render : function () {
+        componentDidMount() {
+            collFormStore.addChangeListener(this._storeChangeListener);
+        }
+
+        componentWillUnmount() {
+            collFormStore.removeChangeListener(this._storeChangeListener);
+        }
+
+        render() {
             return (
-                <form className="collocations-form" action="collx">
+                <form className="collocations-form">
                     <table className="form">
                         <tbody>
                             <tr>
-                                <th>{this.translate('coll__attribute_label')}:</th>
+                                <th>{he.translate('coll__attribute_label')}:</th>
                                 <td>
                                     <AttrSelection attrList={this.state.attrList} cattr={this.state.cattr} />
                                 </td>
                             </tr>
                             <tr>
-                                <th>{this.translate('coll__coll_window_span')}:</th>
+                                <th>{he.translate('coll__coll_window_span')}:</th>
                                 <td>
                                     <WindowSpanInput cfromw={this.state.cfromw} ctow={this.state.ctow} />
                                 </td>
                             </tr>
                             <tr>
-                                <th>{this.translate('coll__min_coll_freq_in_corpus')}:</th>
+                                <th>{he.translate('coll__min_coll_freq_in_corpus')}:</th>
                                 <td>
                                     <MinCollFreqCorpInput cminfreq={this.state.cminfreq} />
                                 </td>
                             </tr>
                             <tr>
-                                <th>{this.translate('coll__min_coll_freq_in_span')}:</th>
+                                <th>{he.translate('coll__min_coll_freq_in_span')}:</th>
                                 <td>
                                     <MinCollFreqSpanInput cminbgr={this.state.cminbgr} />
                                 </td>
@@ -263,14 +262,14 @@ export function init(dispatcher, mixins, layoutViews, collFormStore) {
                                 <td colSpan="2">
                                     <fieldset className="colloc-metrics">
                                         <legend>
-                                            {this.translate('coll__show_measures_legend')}
+                                            {he.translate('coll__show_measures_legend')}
                                         </legend>
                                         <CollMetricsSelection cbgrfns={this.state.cbgrfns}
                                                 availCbgrfns={this.state.availCbgrfns} />
                                     </fieldset>
                                     <fieldset className="colloc-metrics">
                                         <legend>
-                                            {this.translate('coll__sort_by_legend')}
+                                            {he.translate('coll__sort_by_legend')}
                                         </legend>
                                         <CollSortBySelection csortfn={this.state.csortfn}
                                                 availCbgrfns={this.state.availCbgrfns} />
@@ -282,13 +281,13 @@ export function init(dispatcher, mixins, layoutViews, collFormStore) {
                     <div className="buttons">
                         <button type="button" className="default-button"
                                 onClick={this._handleSubmitClick}>
-                            {this.translate('coll__make_candidate_list')}
+                            {he.translate('coll__make_candidate_list')}
                         </button>
                     </div>
                 </form>
             );
         }
-    });
+    }
 
     return {
         CollForm: CollocationsForm

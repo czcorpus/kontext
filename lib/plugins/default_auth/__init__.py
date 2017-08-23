@@ -64,11 +64,11 @@ class DefaultAuthHandler(AbstractInternalAuth):
                     valid_pwd = True
 
             if user_data['username'] == username and valid_pwd:
-                return {
-                    'id': user_data['id'],
-                    'user': user_data['username'],
-                    'fullname': '%s %s' % (user_data['firstname'], user_data['lastname'])
-                }
+                return dict(
+                    id=user_data['id'],
+                    user=user_data['username'],
+                    fullname='{0} {1}'.format(user_data['firstname'], user_data['lastname']),
+                    email=user_data.get('email', None))
         return self.anonymous_user()
 
     def logout(self, session):

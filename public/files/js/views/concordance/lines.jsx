@@ -18,19 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str, importColor} from '../../util';
 import {init as lineExtrasViewsInit} from './lineExtras';
 
 
-export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
+export function init(dispatcher, he, lineStore, lineSelectionStore) {
 
-    const mediaViews = initMediaViews(dispatcher, mixins, lineStore);
-    const he = mixins[0];
+    const mediaViews = initMediaViews(dispatcher, he, lineStore);
     const extras = lineExtrasViewsInit(dispatcher, he);
 
     // ------------------------- <ConcColsHeading /> ---------------------------

@@ -146,7 +146,7 @@ export class CollPage {
         );
         const collFormViews = collFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             this.collFormStore
         );
