@@ -538,11 +538,16 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
             }
         },
 
-        _inputArrowKeyHandler : function (evt) {
+        _inputKeyHandler : function (evt) {
             if (this.props.widgets.indexOf('history') > -1 &&
                     evt.keyCode === 40 && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
+
+            } else if (evt.keyCode === 13) {
+                this.props.onEnterKey();
+                evt.stopPropagation();
+                evt.preventDefault();
             }
         },
 
@@ -556,12 +561,12 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     return <input className="simple-input" type="text"
                                 ref={item => this._queryInputElement = item}
                                 onChange={this._handleInputChange} value={this.state.query}
-                                onKeyDown={this._inputArrowKeyHandler} />;
+                                onKeyDown={this._inputKeyHandler} />;
                 case 'cql':
                     return <textarea className="cql-input" rows="2" cols="60" name="cql"
                                 ref={item => this._queryInputElement = item}
                                 onChange={this._handleInputChange} value={this.state.query}
-                                onKeyDown={this._inputArrowKeyHandler} />;
+                                onKeyDown={this._inputKeyHandler} />;
             }
         },
 

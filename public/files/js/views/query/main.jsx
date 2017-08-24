@@ -202,7 +202,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(primaryCorpname)}
-                                actionPrefix={this.props.actionPrefix} />
+                                actionPrefix={this.props.actionPrefix}
+                                onEnterKey={this._handleSubmit} />
                         </tbody>
                     </table>
                     {this.state.supportsParallelCorpora ?
@@ -395,7 +396,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
-                                actionPrefix={this.props.actionPrefix} />
+                                actionPrefix={this.props.actionPrefix}
+                                onEnterKey={this._handleSubmit} />
                         </tbody>
                     </table>
                     <fieldset id="specify-context">
