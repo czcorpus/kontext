@@ -308,7 +308,6 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         const attr = this.getAttribute(attrName);
         const attrIdx = this.attributes.indexOf(attr);
         const srchIdx = attr.getValues().findIndex(v => v.ident === ident);
-
         if (srchIdx > - 1 && attr.getValues().get(srchIdx).numGrouped < 2) {
             this.attributes = this.attributes.set(attrIdx, attr.mapValues(item => {
                 return {
@@ -338,7 +337,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
             );
             this.setExtendedInfo(attrName, ident, Immutable.Map({__message__: message}));
             return new RSVP.Promise((resolve: (v:any)=>void, reject:(e:any)=>void) => {
-                reject(null);
+                resolve(null);
             });
 
         } else {
