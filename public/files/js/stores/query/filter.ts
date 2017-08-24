@@ -255,7 +255,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                     this.opLocks = this.opLocks.set(filterId, false);
                     return data;
 
-                } else if (data.form_type === 'locked') {
+                } else if (data.form_type === 'locked' || data.form_type == 'lgroup') {
                     this.opLocks = this.opLocks.set(filterId, true);
                     return data;
 
