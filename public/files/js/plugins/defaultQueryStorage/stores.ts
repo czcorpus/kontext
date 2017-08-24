@@ -159,6 +159,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         const item = this.data.find(v => v.idx === idx);
         const args = new MultiDict();
         args.set('corpname', item.corpname);
+        args.set('usesubcorp', item.subcorpname);
         args.set(item.query_type, item.query);
         args.set('queryselector', item.query_type + 'row');
         args.replace('align', item.aligned.map(v => v.corpname));

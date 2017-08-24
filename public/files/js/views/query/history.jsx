@@ -332,12 +332,15 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                     {'\u00a0'}
                     <span className="corpname">
                         {props.data.human_corpname}
-                        {props.data.usesubcorp ? ':' + props.data.usesubcorp : ''}
+                        {props.data.subcorpname ?
+                            <em className="subcorpname" title={he.translate('global__subcorpus')}>: {props.data.subcorpname}</em> :
+                            null
+                        }
                     </span>
                     {props.data.aligned.map(v => <span key={v.corpname} className="corpname"> + {v.human_corpname}</span>)}
                 </div>
                 <QueryInfo human_corpname={props.data.human_corpname} query={props.data.query}
-                        query_type={props.data.query_type} usesubcorp={props.data.usesubcorp}
+                        query_type={props.data.query_type} subcorpname={props.data.subcorpname}
                         aligned={props.data.aligned} textTypes={props.data.selected_text_types} />
                 <div className="footer">
                     <a className="open-in-form" onClick={handleFormClick}>
