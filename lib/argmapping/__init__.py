@@ -231,7 +231,7 @@ class GlobalArgs(object):
     attr_allpos = Parameter(u'kw')
     attr_vmode = Parameter(u'visible', persistent=Parameter.PERSISTENT)
     allpos = Parameter(u'kw')
-    structs = Parameter(u'p,g,err,corr', persistent=Parameter.PERSISTENT)
+    structs = Parameter(u'', persistent=Parameter.PERSISTENT)
     q = Parameter([])
     pagesize = Parameter(40, persistent=Parameter.PERSISTENT)
     wlpagesize = Parameter(25, persistent=Parameter.PERSISTENT)
