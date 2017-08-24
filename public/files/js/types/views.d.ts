@@ -176,8 +176,7 @@ declare module "views/query/main" {
 
     export function init(
             dispatcher:Kontext.FluxDispatcher,
-            mixins:any,
-            layoutViews:Kontext.LayoutViews,
+            componentHelpers:any,
             CorparchWidget:React.Component,
             queryStore:any,
             textTypesStore:any,

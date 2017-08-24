@@ -19,70 +19,60 @@
  */
 
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 import {init as inputInit} from './input';
 import {init as alignedInit} from './aligned';
 import {init as contextInit} from './context';
 import {init as ttViewsInit} from '../textTypes';
 
 
-export function init(
-        dispatcher, mixins, layoutViews, CorparchWidget, queryStore, textTypesStore, queryHintStore,
+export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore, queryHintStore,
         withinBuilderStore, virtualKeyboardStore, queryContextStore) {
-    const inputViews = inputInit(
-        dispatcher, mixins, layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
-    const alignedViews = alignedInit(dispatcher, mixins, layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
-    const contextViews = contextInit(dispatcher, mixins, queryContextStore);
-    const ttViews = ttViewsInit(dispatcher, mixins, textTypesStore);
 
-    const he = mixins[0];
+    const inputViews = inputInit(
+        dispatcher, [he], layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+    const alignedViews = alignedInit(dispatcher, [he], layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+    const contextViews = contextInit(dispatcher, [he], queryContextStore);
+    const ttViews = ttViewsInit(dispatcher, [he], textTypesStore);
+    const layoutViews = he.getLayoutViews();
+
 
     // ------------------- <AdvancedFormLegend /> -----------------------------
 
-    const AdvancedFormLegend = React.createClass({
+    const AdvancedFormLegend = (props) => {
 
-        mixins : mixins,
-
-        render : function () {
-            const htmlClasses = ['form-extension-switch'];
-            htmlClasses.push(this.props.formVisible ? 'collapse' : 'expand');
-            return (
-                <legend>
-                    <a className={htmlClasses.join(' ')}
-                            onClick={this.props.handleClick}>
-                        {this.props.title}
-                    </a>
-                </legend>
-            );
-        }
-    });
+        const htmlClasses = ['form-extension-switch'];
+        htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
+        return (
+            <legend>
+                <a className={htmlClasses.join(' ')}
+                        onClick={props.handleClick}>
+                    {props.title}
+                </a>
+            </legend>
+        );
+    };
 
     // ------------------- <TextTypesNote /> -----------------------------
 
-    const TextTypesNotes = React.createClass({
+    const TextTypesNotes = (props) => {
 
-        mixins : mixins,
+        if (props.description) {
+            return (
+                <div style={{paddingLeft: '1em', paddingRight: '25%'}}>
+                    <img src={he.createStaticUrl('img/info-icon.svg')}
+                            style={{width: '1em', verticalAlign: 'middle', marginRight: '0.7em'}} />
+                    <div dangerouslySetInnerHTML={{__html: props.description}} />
+                </div>
+            );
 
-        render : function () {
-            if (this.props.description) {
-                return (
-                    <div style={{paddingLeft: '1em', paddingRight: '25%'}}>
-                        <img src={this.createStaticUrl('img/info-icon.svg')}
-                                style={{width: '1em', verticalAlign: 'middle', marginRight: '0.7em'}} />
-                        <div dangerouslySetInnerHTML={{__html: this.props.description}} />
-                    </div>
-                );
-
-            } else {
-                return <span />;
-            }
+        } else {
+            return <span />;
         }
-    });
+    };
 
-    /**
-     *
-     * @param {*} props
-     */
+    // ------------------- <TRCorpusField /> -----------------------------
+
     const TRCorpusField = (props) => {
 
         return (
@@ -98,11 +88,19 @@ export function init(
 
     // ------------------- <QueryForm /> -----------------------------
 
-    const QueryForm = React.createClass({
+    class QueryForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._handleSubmit = this._handleSubmit.bind(this);
+            this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
+            this._handleTextTypesFormVisibility = this._handleTextTypesFormVisibility.bind(this);
+            this._keyEventHandler = this._keyEventHandler.bind(this);
+            this.state = this._fetchStoreState();
+        }
 
-        _fetchStoreState : function () {
+        _fetchStoreState() {
             return {
                 corpora: queryStore.getCorpora(),
                 availableAlignedCorpora: queryStore.getAvailableAlignedCorpora(),
@@ -125,43 +123,35 @@ export function init(
                 inputLanguages: queryStore.getInputLanguages(),
                 textTypesNotes: queryStore.getTextTypesNotes()
             };
-        },
+        }
 
-        getInitialState : function () {
-            return this._fetchStoreState();
-        },
-
-        _storeChangeHandler : function () {
+        _storeChangeHandler() {
             const state = this._fetchStoreState();
             state['contextFormVisible'] = this.state.contextFormVisible;
             state['textTypesFormVisible'] = this.state.textTypesFormVisible;
             this.setState(state);
-        },
+        }
 
-        _handleSubmit : function () {
+        _handleSubmit() {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SUBMIT',
                 props: {}
             });
-        },
+        }
 
-        _handleContextFormVisibility : function () {
-            this.setState(React.addons.update(this.state,
-                {
-                    contextFormVisible: {$set: !this.state.contextFormVisible}
-                }
-            ));
-        },
+        _handleContextFormVisibility() {
+            const newState = he.cloneState(this.state);
+            newState.contextFormVisible = !this.state.contextFormVisible;
+            this.setState(newState);
+        }
 
-        _handleTextTypesFormVisibility : function () {
-            this.setState(React.addons.update(this.state,
-                {
-                    textTypesFormVisible: {$set: !this.state.textTypesFormVisible}
-                }
-            ));
-        },
+        _handleTextTypesFormVisibility() {
+            const newState = he.cloneState(this.state);
+            newState.textTypesFormVisible = !this.state.textTypesFormVisible;
+            this.setState(newState);
+        }
 
-        _keyEventHandler : function (evt) {
+        _keyEventHandler(evt) {
             if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
                 dispatcher.dispatch({
                     actionType: 'QUERY_INPUT_SUBMIT',
@@ -170,22 +160,22 @@ export function init(
                 evt.stopPropagation();
                 evt.preventDefault();
             }
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             queryStore.addChangeListener(this._storeChangeHandler);
             textTypesStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             queryStore.removeChangeListener(this._storeChangeHandler);
             textTypesStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             const primaryCorpname = this.state.corpora.get(0);
             return (
-                <form className="query-form" onKeyDown={this._keyEventHandler}>
+                <form className="query-form">
                     <table className="form primary-language">
                         <tbody>
                             {this.props.allowCorpusSelection ?
@@ -239,7 +229,7 @@ export function init(
                         <AdvancedFormLegend
                                 formVisible={this.state.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
-                                title={this.translate('query__specify_context')} />
+                                title={he.translate('query__specify_context')} />
                         {this.state.contextFormVisible ?
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.state.lemmaWindowSizes}
@@ -252,7 +242,7 @@ export function init(
                         <AdvancedFormLegend
                                 formVisible={this.state.textTypesFormVisible}
                                 handleClick={this._handleTextTypesFormVisibility}
-                                title={this.translate('query__specify_tt')} />
+                                title={he.translate('query__specify_tt')} />
                         {this.state.textTypesFormVisible ?
                                 <ttViews.TextTypesPanel
                                         liveAttrsView={this.props.liveAttrsView}
@@ -263,13 +253,13 @@ export function init(
                     </fieldset>
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
-                            {this.translate('query__search_btn')}
+                            {he.translate('query__search_btn')}
                         </button>
                     </div>
                 </form>
             );
         }
-    });
+    }
 
     // -------- <SelectedTextTypesLite /> ---------------------------
 
@@ -294,11 +284,17 @@ export function init(
 
     // -------- <QueryFormLite /> ------------------------------------
 
-    const QueryFormLite = React.createClass({
+    class QueryFormLite extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._keyEventHandler = this._keyEventHandler.bind(this);
+            this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = this._fetchStoreState();
+        }
 
-        _fetchStoreState : function () {
+        _fetchStoreState() {
             return {
                 corpora: queryStore.getCorpora(),
                 queryTypes: queryStore.getQueryTypes(),
@@ -319,9 +315,9 @@ export function init(
                 hasSelectedTextTypes: textTypesStore.hasSelectedItems(),
                 textTypeSelections: textTypesStore.exportSelections()
             };
-        },
+        }
 
-        _keyEventHandler : function (evt) {
+        _keyEventHandler(evt) {
             if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
@@ -338,21 +334,15 @@ export function init(
                 evt.stopPropagation();
                 evt.preventDefault();
             }
-        },
+        }
 
-        _handleContextFormVisibility : function () {
-            this.setState(React.addons.update(this.state,
-                {
-                    contextFormVisible: {$set: !this.state.contextFormVisible}
-                }
-            ));
-        },
+        _handleContextFormVisibility() {
+            const newState = he.cloneState(this.state);
+            newState.contextFormVisible = !this.state.contextFormVisible;
+            this.setState(newState);
+        }
 
-        getInitialState : function () {
-            return this._fetchStoreState()
-        },
-
-        _handleSubmit : function () {
+        _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
                 dispatcher.dispatch({
                     actionType: 'BRANCH_QUERY',
@@ -365,23 +355,23 @@ export function init(
                     props: {}
                 });
             }
-        },
+        }
 
-        _storeChangeHandler : function (store, action) {
+        _storeChangeHandler(store, action) {
             const state = this._fetchStoreState();
             state['contextFormVisible'] = this.state.contextFormVisible;
             this.setState(state);
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             queryStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             queryStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form primary-language">
@@ -412,7 +402,7 @@ export function init(
                         <AdvancedFormLegend
                                 formVisible={this.state.contextFormVisible}
                                 handleClick={this._handleContextFormVisibility}
-                                title={this.translate('query__specify_context')} />
+                                title={he.translate('query__specify_context')} />
                         {this.state.contextFormVisible ?
                             <contextViews.SpecifyContextForm
                                     lemmaWindowSizes={this.state.lemmaWindowSizes}
@@ -427,14 +417,14 @@ export function init(
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
                             {this.props.operationIdx !== undefined ?
-                                    this.translate('global__proceed')
-                                    : this.translate('query__search_btn')}
+                                    he.translate('global__proceed')
+                                    : he.translate('query__search_btn')}
                         </button>
                     </div>
                 </form>
             );
         }
-    });
+    }
 
     return {
         QueryForm: QueryForm,

@@ -242,8 +242,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
         const queryFormComponents = queryFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this.layoutModel.layoutViews,
+            this.layoutModel.getComponentHelpers(),
             corparchWidget,
             this.queryStore,
             this.textTypesStore,
