@@ -458,17 +458,19 @@ export function init(dispatcher, util, layoutViews, widgetStore, queryStore) {
         }
 
         _handleKeypress(evt) {
-            switch (evt.keyCode) {
-                case 9:
-                    this._handleTabSwitch(1 - this.state.activeTab);
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                break;
-                case 27:
-                    this._handleCloseClick();
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                break;
+            if (this.state.visible) {
+                switch (evt.keyCode) {
+                    case 9:
+                        this._handleTabSwitch(1 - this.state.activeTab);
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                    break;
+                    case 27:
+                        this._handleCloseClick();
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                    break;
+                }
             }
         }
 
