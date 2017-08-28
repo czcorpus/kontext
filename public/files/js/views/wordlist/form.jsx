@@ -73,10 +73,10 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                 </td>
                 <td>
                     <select value={props.wlattr} onChange={handleChange}>
-                        <optgroup label={util.translate('wordlist__attrsel_group_pos_attrs')}>
+                        <optgroup label={util.translate('global__attrsel_group_pos_attrs')}>
                             {props.attrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
                         </optgroup>
-                        <optgroup label={util.translate('wordlist__attrsel_group_struct_attrs')}>
+                        <optgroup label={util.translate('global__attrsel_group_struct_attrs')}>
                             {props.structAttrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
                         </optgroup>
                     </select>

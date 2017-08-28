@@ -177,14 +177,12 @@ export abstract class GeneralCTStore extends SimplePageStore {
         );
     }
 
-    /**
-     * Return both positional and structural attributes
-     * as a single list (positional first).
-     */
-    getAllAvailAttrs():Immutable.List<Kontext.AttrItem> {
-        return this.availAttrList
-                .concat([{n: null, label: '--------------------'}])
-                .concat(this.availStructAttrList.sort(sortAttrVals)).toList();
+    getPosAttrs():Immutable.List<Kontext.AttrItem> {
+        return this.availAttrList;
+    }
+
+    getStructAttrs():Immutable.List<Kontext.AttrItem> {
+        return this.availStructAttrList.sort(sortAttrVals).toList();
     }
 
     protected validateAttrs():void {
