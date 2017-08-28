@@ -112,6 +112,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                     const srch = this.data.find(v => v.query_id === this.editingQueryId);
                     if (srch) {
                         this.editingQueryName = srch.name ? srch.name : '';
+                        this.editingQueryKeepArchived = true;
                     }
                     this.notifyChangeListeners();
                 break;

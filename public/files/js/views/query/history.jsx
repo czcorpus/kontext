@@ -101,7 +101,8 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
             });
         };
 
-        return <input type="checkbox" checked={props.value} onChange={handleChange} />;
+        return <input type="checkbox" checked={props.value} onChange={handleChange}
+                    style={{verticalAlign: 'middle'}} />;
     }
 
 
@@ -136,7 +137,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
     const AlignedQueryInfo = (props) => {
         return (
             <div className="query-line">
-                <span className="query-type">{queryTypes[props.query_type]}:{'\u00a0'}</span>
+                <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u23F5\u00a0'}</span>
                 <span className="query">{props.query}</span>
             </div>
         );
@@ -165,8 +166,9 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                         <a className="switch" onClick={this._handleExpandClick}
                                 title={he.translate(this.state.expanded ? 'global__click_to_hide' : 'global__click_to_expand')}>
                             {he.translate('qhistory__attached_text_types')}
+                            {!this.state.expanded ? '\u00a0\u2026' : null}
                         </a>
-                        {this.state.expanded ? ':' : '\u00a0\u2026'}
+                        {this.state.expanded ? ':' : null}
                         {this.state.expanded ?
                             (<ul>
                                 {Object.keys(this.props.textTypes).map(k => <li key={k}><strong>{k}</strong>: {this.props.textTypes[k].join(', ')}</li>)}
@@ -188,7 +190,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
         return (
             <div className="query-info">
                 <div className="query-line">
-                    <span className="query-type">{queryTypes[props.query_type]}:{'\u00a0'}</span>
+                    <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u23F5\u00a0'}</span>
                     <span className="query">{props.query}</span>
                 </div>
                 {props.aligned.map(v => <AlignedQueryInfo key={v.corpname}
@@ -237,6 +239,27 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
         }
     }
 
+    // -------------------- <ArchiveFlagSelection /> ------------------------
+
+    const ArchiveFlagSelection = (props) => {
+
+        const handleKeepArchivedChange = () => {
+            dispatcher.dispatch({
+                actionType: 'QUERY_STORAGE_EDITOR_SET_KEEP_ARCHIVED',
+                props: {
+                    value: !props.keepArchived
+                }
+            });
+        };
+
+        return (
+            <select value={props.keepArchived} onChange={handleKeepArchivedChange} style={{verticalAlign: 'middle'}}>
+                <option value={true}>{he.translate('query__save_as_keep_archived')}</option>
+                <option value={false}>{he.translate('query__save_as_transient')}</option>
+            </select>
+        );
+    };
+
     // -------------------- <SaveItemForm /> ------------------------
 
     const SaveItemForm = (props) => {
@@ -264,20 +287,16 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
             });
         };
 
-        const handleKeepArchivedChange = () => {
-            dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_EDITOR_SET_KEEP_ARCHIVED',
-                props: {
-                    value: !props.keepArchived
-                }
-            });
-        };
-
         const handleKeyDown = (evt) => {
             if (evt.keyCode === 27) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 handleCloseClick();
+
+            } else if (evt.keyCode === 13) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                handleSubmitClick();
             }
         };
 
@@ -288,21 +307,21 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                                 style={{width: '1em', verticalAlign: 'middle'}} />
                 </a>
                 {'\u00a0'}
-                <input type="text" style={{width: '15em'}}
-                        value={props.keepArchived ? props.name : ''}
-                        onChange={handleInputChange} disabled={!props.keepArchived}
-                        ref={item => item ? item.focus() : null} />
+                <ArchiveFlagSelection keepArchived={props.keepArchived} />
+                {'\u00a0'}
+                {props.keepArchived ?
+                    <input type="text" style={{width: '15em'}}
+                            value={props.keepArchived ? props.name : ''}
+                            onChange={handleInputChange} disabled={!props.keepArchived}
+                            ref={item => item ? item.focus() : null} /> :
+                    null
+                }
                 {'\u00a0'}
                 <button type="button" className="default-button"
                         onClick={handleSubmitClick}>
                     {he.translate('global__save')}
                 </button>
                 <br />
-                <label>
-                    {he.translate('query__save_as_keep_archived')}
-                    <input type="checkbox" checked={props.keepArchived}
-                            onChange={handleKeepArchivedChange} style={{verticalAlign: 'middle'}} />
-                </label>
             </form>
         );
     };
@@ -327,7 +346,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                 </span>
                 <div className="heading">
                     <strong>
-                        {props.data.idx + 1}{'\u23F5'}
+                        {props.data.idx + 1}.
                     </strong>
                     {'\u00a0'}
                     <span className="corpname">
