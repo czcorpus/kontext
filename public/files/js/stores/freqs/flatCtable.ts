@@ -154,7 +154,6 @@ export class CTFlatStore extends GeneralCTStore {
     }
 
     importData(data:FreqResultResponse.CTFreqResultData):void {
-        const calcIpm = (v:FreqResultResponse.CTFreqResultItem) => Math.round(v[2] / v[3] * 1e6 * 10) / 10;
         this.origData = Immutable.List<FreqDataItem>(data.map(item => {
             const confInt = confInterval(item[2], item[3], this.alphaLevel);
             return {
@@ -162,7 +161,7 @@ export class CTFlatStore extends GeneralCTStore {
                 val2: item[1],
                 abs: item[2],
                 absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
-                ipm: calcIpm(item),
+                ipm: this.calcIpm(item),
                 ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
                 domainSize: item[3],
                 pfilter: this.generatePFilter(item[0], item[1])

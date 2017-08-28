@@ -118,6 +118,10 @@ export abstract class GeneralCTStore extends SimplePageStore {
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
     }
 
+    protected calcIpm(v:FreqResultResponse.CTFreqResultItem) {
+        return Math.round(v[2] / v[3] * 1e6 * 100) / 100;
+    }
+
     private importAvailAlphaLevels():Immutable.List<[string, string]> {
         return Immutable.List<[string, string]>(
             getAvailConfLevels()

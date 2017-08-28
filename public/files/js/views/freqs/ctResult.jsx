@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/react.d.ts" />
-
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 
-
+/* TODO remove layoutViews */
 export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFlatFreqDataRowsStore) {
+
+    const formatIpm = (v) => v >= 0.1 ? mixins.formatNumber(v, 1) : '\u2248 0';
 
     /**
      *
@@ -164,29 +164,85 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         );
     };
 
+    // ----------------------- <ConfidenceIntervalHint /> --------------------
+
+    const ConfidenceIntervalHint = (props) => {
+        return (
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick}>
+                <p>
+                    {mixins.translate('freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}',
+                        {threshold: props.confIntervalWarnRatio * 100, maxWidth: 50 * props.confIntervalWarnRatio})}
+                </p>
+                <p>{mixins.translate('freq__ct_references')}:</p>
+                <ul className="references">
+                    <li>
+                        Newcombe, Robert G.: <a href="https://books.google.cz/books?id=hQxvnp2b47YC&lpg=PA65&dq=%22Clopper-Pearson%22%20interval&pg=PP1#v=onepage&q=%22Clopper-Pearson%22%20interval&f=false">
+                        Confidence Intervals for Proportions and Related Measures of Effect Size</a> (CRC Press 2013)
+                    </li>
+                    <li>
+                        <a href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval">Binomial proportion confidence interval</a> (Wikipedia)
+                    </li>
+                </ul>
+            </layoutViews.PopupBox>
+        );
+    };
+
     /**
      *
      * @param {*} props
      */
-    const AlphaLevelSelect = (props) => {
-        const onChange = (evt) => {
+    class AlphaLevelSelect extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._onChange = this._onChange.bind(this);
+            this._onHintClick = this._onHintClick.bind(this);
+            this._onHintCloseClick = this._onHintCloseClick.bind(this);
+            this.state = {hintVisible: false};
+        }
+
+        _onChange(evt) {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_SET_ALPHA_LEVEL',
                 props: {
                     value: evt.target.value
                 }
             });
-        };
+        }
 
-        return (
-            <label>
-                {mixins.translate('freq__ct_conf_level_label')}:{'\u00a0'}
-                <select value={props.alphaLevel} onChange={onChange}>
-                    {props.availAlphaLevels.map(item =>
-                        <option key={item[0]} value={item[0]}>{item[1]}</option>)}
-                </select>
-            </label>
-        );
+        _onHintClick() {
+            this.setState({hintVisible: true});
+        }
+
+        _onHintCloseClick() {
+            this.setState({hintVisible: false});
+        }
+
+        render() {
+            return (
+                <span>
+                    <label htmlFor="confidence-level-selection">
+                        {mixins.translate('freq__ct_conf_level_label')}
+                    </label>
+                    <span>
+                        <sup className="hint" onClick={this._onHintClick}>
+                            <img src={mixins.createStaticUrl('img/info-icon.svg')}
+                                    alt={mixins.translate('global__info_icon')} />
+                        </sup>
+                        {this.state.hintVisible ?
+                            <ConfidenceIntervalHint onCloseClick={this._onHintCloseClick}
+                                confIntervalWarnRatio={this.props.confIntervalWarnRatio} /> :
+                            null
+                        }
+                    </span>
+                    :{'\u00a0'}
+                    <select id="confidence-level-selection" value={this.props.alphaLevel} onChange={this._onChange}>
+                        {this.props.availAlphaLevels.map(item =>
+                            <option key={item[0]} value={item[0]}>{item[1]}</option>)}
+                    </select>
+                </span>
+            );
+        }
     };
 
     /**
@@ -209,7 +265,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                             <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
                         </li>
                         <li>
-                            <AlphaLevelSelect alphaLevel={props.alphaLevel} availAlphaLevels={props.availAlphaLevels} />
+                            <AlphaLevelSelect alphaLevel={props.alphaLevel} availAlphaLevels={props.availAlphaLevels}
+                                    confIntervalWarnRatio={props.confIntervalWarnRatio} />
                         </li>
                     </ul>
                 </fieldset>
@@ -255,7 +312,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                     <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
                     {mixins.translate('freq__ct_ipm_freq_label')}:
                     {'\u00a0'}
-                    {mixins.formatNumber(props.data.ipm, 1)}
+                    {formatIpm(props.data.ipm)}
                     {'\u00a0'}
                     ({mixins.formatNumber(props.data.ipmConfInterval[0], 1)}
                     {'\u00a0'}
@@ -319,7 +376,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             if (isNonEmpty()) {
                 switch (props.quantity) {
                     case 'ipm':
-                        return mixins.formatNumber(props.data.ipm, 1);
+                        return formatIpm(props.data.ipm);
                     case 'abs':
                         return mixins.formatNumber(props.data.abs, 0);
                     default:
@@ -357,11 +414,11 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         const renderWarning = (props) => {
             if (shouldWarn(props)) {
                 const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
-                return <span style={linkStyle}
+                return <strong className="warn" style={linkStyle}
                             title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
                                 {threshold: props.confIntervalWarnRatio * 100})}>
                             {'\u26A0'}{'\u00a0'}
-                        </span>;
+                        </strong>;
 
             } else {
                 return '';
@@ -610,7 +667,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                 sortDim1={this.state.sortDim1}
                                 sortDim2={this.state.sortDim2}
                                 alphaLevel={this.state.alphaLevel}
-                                availAlphaLevels={this.state.availAlphaLevels} />
+                                availAlphaLevels={this.state.availAlphaLevels}
+                                confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
                     </div>
                     {this.state.isWaiting ?
                         <WaitingAnim attr1={this.state.attr1}
@@ -650,10 +708,10 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         const renderWarning = () => {
             if (shouldWarn(props)) {
                 return (
-                <span title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
+                <strong className="warn" title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
                             {threshold: props.confIntervalWarnRatio * 100})}>
                         {'\u26A0'}{'\u00a0'}
-                </span>
+                </strong>
                 );
 
             } else {
@@ -766,7 +824,8 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                     </li>
                                     <li>
                                         <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
-                                                availAlphaLevels={this.state.availAlphaLevels} />
+                                                availAlphaLevels={this.state.availAlphaLevels}
+                                                confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
                                     </li>
                                 </ul>
                             </fieldset>

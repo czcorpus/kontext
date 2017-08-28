@@ -302,7 +302,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 });
             }
         })().then(
-            (data) => {
+            (data:any) => { // TODO type
                 this.isWaiting = false;
                 if (data !== null) {
                     this.serverMinAbsFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
@@ -431,9 +431,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
         const tableData:Data2DTable = {};
-        const calcIpm = (v:FreqResultResponse.CTFreqResultItem) => Math.round(v[2] / v[3] * 1e6 * 10) / 10;
-        let fMin = calcIpm(data[0]);
-        let fMax = calcIpm(data[0]);
+        let fMin = this.calcIpm(data[0]);
+        let fMax = this.calcIpm(data[0]);
 
         data.forEach(item => {
             d1Labels[item[0]] = true;
@@ -442,7 +441,7 @@ export class ContingencyTableStore extends GeneralCTStore {
             if (tableData[item[0]] === undefined) {
                 tableData[item[0]] = {};
             }
-            const ipm = calcIpm(item);
+            const ipm = this.calcIpm(item);
             const confInt = confInterval(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
                 ipm: ipm,
