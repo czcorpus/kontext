@@ -237,7 +237,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
 
         _fetchState() {
             return {
-                allAttrs: ctFreqStore.getAllAvailAttrs(),
+                posAttrs: ctFreqStore.getPosAttrs(),
+                structAttrs: ctFreqStore.getStructAttrs(),
                 attr1: ctFreqStore.getAttr1(),
                 attr1IsStruct: ctFreqStore.getAttr1IsStruct(),
                 attr2: ctFreqStore.getAttr2(),
@@ -341,8 +342,14 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 1)}
                                             value={this.state.attr1}>
-                                        {this.state.allAttrs.map(item =>
-                                            <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
+                                        <optgroup label={util.translate('global__attrsel_group_pos_attrs')}>
+                                            {this.state.posAttrs.map(item =>
+                                                <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
+                                        </optgroup>
+                                        <optgroup label={util.translate('global__attrsel_group_struct_attrs')}>
+                                            {this.state.structAttrs.map(item =>
+                                                <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
+                                        </optgroup>
                                     </select>
                                 </td>
                             </tr>
@@ -360,7 +367,14 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 2)}
                                             value={this.state.attr2}>
-                                        {this.state.allAttrs.map(item => <option key={item.n} value={item.n}>{item.label}</option>)}
+                                        <optgroup label={util.translate('global__attrsel_group_pos_attrs')}>
+                                            {this.state.posAttrs.map(item =>
+                                                <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
+                                        </optgroup>
+                                        <optgroup label={util.translate('global__attrsel_group_struct_attrs')}>
+                                            {this.state.structAttrs.map(item =>
+                                                <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
+                                        </optgroup>
                                     </select>
                                 </td>
                             </tr>

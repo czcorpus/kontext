@@ -358,17 +358,28 @@ div.CTFreqResultView {
     div.toolbar {
         margin-bottom: 1em;
 
-        ul.items {
+        > form > fieldset > ul.items {
             list-style-type: none;
             margin: 0;
             padding: 0;
 
-            li {
+            > li {
                 padding: 0;
                 margin: 0 1em 0 0;
                 display: inline-block;
+
+                ul.references {
+                    list-style-type: circle;
+                }
             }
         }
+    }
+
+    sup.hint {
+        img {
+            width: 0.9em;
+        }
+        cursor: pointer;
     }
 }
 
@@ -421,6 +432,13 @@ div.CT2dFreqResultView {
 
             a:hover {
                 text-decoration: underline;
+            }
+
+            .warn {
+                padding-right: 0.4em;
+                font-size: 1.4em;
+                font-weight: normal;
+                vertical-align: middle;
             }
 
             .menu {
