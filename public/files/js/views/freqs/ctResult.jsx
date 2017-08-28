@@ -22,9 +22,11 @@ import * as React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 
 /* TODO remove layoutViews */
-export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFlatFreqDataRowsStore) {
+export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStore) {
 
-    const formatIpm = (v) => v >= 0.1 ? mixins.formatNumber(v, 1) : '\u2248 0';
+    const layoutViews = he.getLayoutViews();
+
+    const formatIpm = (v) => v >= 0.1 ? he.formatNumber(v, 1) : '\u2248 0';
 
     /**
      *
@@ -37,7 +39,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <label>
-                {mixins.translate('freq__ct_quantity_label')}:{'\u00a0'}
+                {he.translate('freq__ct_quantity_label')}:{'\u00a0'}
                 <select value={props.currValue} onChange={handleSelectChange}>
                     <option value="ipm">i.p.m.</option>
                     <option value="abs">absolute freq.</option>
@@ -60,7 +62,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <label>
-                {mixins.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                {he.translate('freq__ct_min_freq_label')}:{'\u00a0'}
                 <input type="text" style={{width: '3em'}} value={props.currVal}
                         onChange={handleInputChange} />
             </label>
@@ -81,7 +83,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <label>
-                {mixins.translate('freq__ct_hide_zero_vectors')}:{'\u00a0'}
+                {he.translate('freq__ct_hide_zero_vectors')}:{'\u00a0'}
                 <input type="checkbox" onChange={handleCheckboxChange}
                         checked={props.hideEmptyVectors} />
             </label>
@@ -101,7 +103,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <label>
-                {mixins.translate('freq__ct_transpose_table')}:{'\u00a0'}
+                {he.translate('freq__ct_transpose_table')}:{'\u00a0'}
                 <input type="checkbox" checked={props.isChecked} onChange={handleClickTranspose}
                         style={{verticalAlign: 'middle'}} />
             </label>
@@ -126,11 +128,11 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <label>
-                {mixins.translate('freq__ct_sort_row_label')}:{'\u00a0'}
+                {he.translate('freq__ct_sort_row_label')}:{'\u00a0'}
                 <select onChange={handleChange} value={props.sortAttr}>
-                    <option value="ipm">{mixins.translate('freq__ct_sort_row_opt_ipm')}</option>
-                    <option value="abs">{mixins.translate('freq__ct_sort_row_opt_abs')}</option>
-                    <option value="attr">{mixins.translate('freq__ct_sort_col_opt_attr')}</option>
+                    <option value="ipm">{he.translate('freq__ct_sort_row_opt_ipm')}</option>
+                    <option value="abs">{he.translate('freq__ct_sort_row_opt_abs')}</option>
+                    <option value="attr">{he.translate('freq__ct_sort_col_opt_attr')}</option>
                 </select>
             </label>
         );
@@ -154,11 +156,11 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <label>
-                {mixins.translate('freq__ct_sort_col_label')}:{'\u00a0'}
+                {he.translate('freq__ct_sort_col_label')}:{'\u00a0'}
                 <select onChange={handleChange} value={props.sortAttr}>
-                    <option value="ipm">{mixins.translate('freq__ct_sort_col_opt_ipm')}</option>
-                    <option value="abs">{mixins.translate('freq__ct_sort_col_opt_abs')}</option>
-                    <option value="attr">{mixins.translate('freq__ct_sort_col_opt_attr')}</option>
+                    <option value="ipm">{he.translate('freq__ct_sort_col_opt_ipm')}</option>
+                    <option value="abs">{he.translate('freq__ct_sort_col_opt_abs')}</option>
+                    <option value="attr">{he.translate('freq__ct_sort_col_opt_attr')}</option>
                 </select>
             </label>
         );
@@ -170,10 +172,10 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         return (
             <layoutViews.PopupBox onCloseClick={props.onCloseClick}>
                 <p>
-                    {mixins.translate('freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}',
+                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}',
                         {threshold: props.confIntervalWarnRatio * 100, maxWidth: 50 * props.confIntervalWarnRatio})}
                 </p>
-                <p>{mixins.translate('freq__ct_references')}:</p>
+                <p>{he.translate('freq__ct_references')}:</p>
                 <ul className="references">
                     <li>
                         Newcombe, Robert G.: <a href="https://books.google.cz/books?id=hQxvnp2b47YC&lpg=PA65&dq=%22Clopper-Pearson%22%20interval&pg=PP1#v=onepage&q=%22Clopper-Pearson%22%20interval&f=false">
@@ -222,12 +224,12 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             return (
                 <span>
                     <label htmlFor="confidence-level-selection">
-                        {mixins.translate('freq__ct_conf_level_label')}
+                        {he.translate('freq__ct_conf_level_label')}
                     </label>
                     <span>
                         <sup className="hint" onClick={this._onHintClick}>
-                            <img src={mixins.createStaticUrl('img/info-icon.svg')}
-                                    alt={mixins.translate('global__info_icon')} />
+                            <img src={he.createStaticUrl('img/info-icon.svg')}
+                                    alt={he.translate('global__info_icon')} />
                         </sup>
                         {this.state.hintVisible ?
                             <ConfidenceIntervalHint onCloseClick={this._onHintCloseClick}
@@ -253,7 +255,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         return (
             <form className="CTTableModForm">
                 <fieldset>
-                    <legend>{mixins.translate('freq__ct_data_parameters_legend')}</legend>
+                    <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
                     <ul className="items">
                         <li>
                             <QuantitySelect currVal={props.viewQuantity} changeQuantity={props.changeQuantity} />
@@ -271,7 +273,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                     </ul>
                 </fieldset>
                 <fieldset>
-                    <legend>{mixins.translate('freq__ct_view_parameters_legend')}</legend>
+                    <legend>{he.translate('freq__ct_view_parameters_legend')}</legend>
                     <ul className="items">
                         <li>
                             <TableSortRowsSelect sortAttr={props.sortDim1} />
@@ -309,32 +311,32 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         return (
             <layoutViews.PopupBox onCloseClick={handleCloseClick} customClass="menu">
                 <fieldset className="detail">
-                    <legend>{mixins.translate('freq__ct_detail_legend')}</legend>
-                    {mixins.translate('freq__ct_ipm_freq_label')}:
+                    <legend>{he.translate('freq__ct_detail_legend')}</legend>
+                    {he.translate('freq__ct_ipm_freq_label')}:
                     {'\u00a0'}
                     {formatIpm(props.data.ipm)}
                     {'\u00a0'}
-                    ({mixins.formatNumber(props.data.ipmConfInterval[0], 1)}
+                    ({he.formatNumber(props.data.ipmConfInterval[0], 1)}
                     {'\u00a0'}
                     -
                     {'\u00a0'}
-                    {mixins.formatNumber(props.data.ipmConfInterval[1], 1)})
+                    {he.formatNumber(props.data.ipmConfInterval[1], 1)})
                     <br />
-                    {mixins.translate('freq__ct_abs_freq_label')}:
+                    {he.translate('freq__ct_abs_freq_label')}:
                     {'\u00a0'}
-                    {mixins.formatNumber(props.data.abs, 0)}
+                    {he.formatNumber(props.data.abs, 0)}
                     {'\u00a0'}
-                    ({mixins.formatNumber(props.data.absConfInterval[0], 0)}
+                    ({he.formatNumber(props.data.absConfInterval[0], 0)}
                     {'\u00a0'}
                     -
                     {'\u00a0'}
-                    {mixins.formatNumber(props.data.absConfInterval[1], 0)})
+                    {he.formatNumber(props.data.absConfInterval[1], 0)})
 
 
                 </fieldset>
                 <form>
                     <fieldset>
-                        <legend>{mixins.translate('freq__ct_pfilter_legend')}</legend>
+                        <legend>{he.translate('freq__ct_pfilter_legend')}</legend>
                         <table>
                             <tbody>
                                 <tr>
@@ -358,7 +360,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                         <p>
                             <button type="button" className="default-button"
                                     onClick={handlePosClick}>
-                                {mixins.translate('freq__ct_pfilter_btn_label')}
+                                {he.translate('freq__ct_pfilter_btn_label')}
                             </button>
                         </p>
                     </fieldset>
@@ -378,7 +380,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                     case 'ipm':
                         return formatIpm(props.data.ipm);
                     case 'abs':
-                        return mixins.formatNumber(props.data.abs, 0);
+                        return he.formatNumber(props.data.abs, 0);
                     default:
                         return NaN;
                 }
@@ -415,7 +417,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             if (shouldWarn(props)) {
                 const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
                 return <strong className="warn" style={linkStyle}
-                            title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
+                            title={he.translate('freq__ct_conf_interval_too_wide_{threshold}',
                                 {threshold: props.confIntervalWarnRatio * 100})}>
                             {'\u26A0'}{'\u00a0'}
                         </strong>;
@@ -439,7 +441,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 <td className={tdClasses.join(' ')} style={bgStyle}>
                     {renderWarning(props)}
                     <a onClick={handleItemClick} style={linkStyle}
-                            title={mixins.translate('freq__ct_click_for_details')}>
+                            title={he.translate('freq__ct_click_for_details')}>
                         {getValue()}
                     </a>
                     {props.isHighlighted ? <CTCellMenu onClose={props.onClose}
@@ -470,7 +472,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <th className="attr-label">
-                <a onClick={handleClick} title={mixins.translate('freq__ct_change_attrs')}>
+                <a onClick={handleClick} title={he.translate('freq__ct_change_attrs')}>
                     {props.attr1}
                     {'\u005C'}
                     {props.attr2}
@@ -562,7 +564,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                     <tr>
                         <th>{'\u22EE'}</th>
                         <td style={{padding: '2em'}}>
-                            <img src={mixins.createStaticUrl('img/ajax-loader.gif')} alt={mixins.translate('global__loading')} />
+                            <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />
                         </td>
                     </tr>
                 </tbody>
@@ -630,9 +632,9 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
             if (this.state.adHocSpfilterVisibleubcWarning) {
                 return (
                     <p className="warning">
-                        <img src={mixins.createStaticUrl('img/warning-icon.svg')}
-                                alt={mixins.translate('global__warning')} />
-                        {mixins.translate('freq__ct_uses_ad_hoc_subcorpus_warn')}
+                        <img src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning')} />
+                        {he.translate('freq__ct_uses_ad_hoc_subcorpus_warn')}
                     </p>
                 );
             }
@@ -702,13 +704,13 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         };
 
         const formatRange = (interval) => {
-            return interval.map(x => mixins.formatNumber(x, 1)).join('-');
+            return interval.map(x => he.formatNumber(x, 1)).join('-');
         };
 
         const renderWarning = () => {
             if (shouldWarn(props)) {
                 return (
-                <strong className="warn" title={mixins.translate('freq__ct_conf_interval_too_wide_{threshold}',
+                <strong className="warn" title={he.translate('freq__ct_conf_interval_too_wide_{threshold}',
                             {threshold: props.confIntervalWarnRatio * 100})}>
                         {'\u26A0'}{'\u00a0'}
                 </strong>
@@ -755,10 +757,10 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
         const renderFlag = () => {
             if (props.isActive) {
                 if (props.isReversed) {
-                    return <img src={mixins.createStaticUrl('img/sort_desc.svg')} />;
+                    return <img src={he.createStaticUrl('img/sort_desc.svg')} />;
 
                 } else {
-                    return <img src={mixins.createStaticUrl('img/sort_asc.svg')} />;
+                    return <img src={he.createStaticUrl('img/sort_asc.svg')} />;
                 }
             }
             return null;
@@ -766,7 +768,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
 
         return (
             <th className="sort-col">
-                <a onClick={handleClick} title={mixins.translate('global__sort_by_this_col')}>
+                <a onClick={handleClick} title={he.translate('global__sort_by_this_col')}>
                     {props.label}
                     {renderFlag()}
                 </a>
@@ -817,7 +819,7 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                     <div className="toolbar">
                         <form>
                             <fieldset>
-                                <legend>{mixins.translate('freq__ct_data_parameters_legend')}</legend>
+                                <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
                                 <ul className="items">
                                     <li>
                                         <MinFreqInput currVal={this.state.minAbsFreq} />
@@ -840,11 +842,11 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                                         isReversed={this.state.sortCol === this.state.attr1 && this.state.sortColIsReversed}
                                          />
                                 <th>{this.state.attr2}</th>
-                                <THSortableCol label={mixins.translate('freq__ct_abs_freq_label')}
+                                <THSortableCol label={he.translate('freq__ct_abs_freq_label')}
                                         value="abs" isActive={this.state.sortCol === 'abs'}
                                         isReversed={this.state.sortCol === 'abs' && this.state.sortColIsReversed}
                                         />
-                                <THSortableCol label={mixins.translate('freq__ct_ipm_freq_label')}
+                                <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
                                         value="ipm" isActive={this.state.sortCol === 'ipm'}
                                         isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} />
                             </tr>
@@ -888,10 +890,10 @@ export function init(dispatcher, mixins, layoutViews, ctFreqDataRowsStore, ctFla
                 <div className="CTFreqResultView">
                     <p className="mode-switch">
                         <label>
-                            {mixins.translate('freq__ct_view_mode')}:{'\u00a0'}
+                            {he.translate('freq__ct_view_mode')}:{'\u00a0'}
                             <select onChange={this._handleModeSwitch}>
-                                <option value="table">{mixins.translate('freq__ct_switch_table_view')}</option>
-                                <option value="list">{mixins.translate('freq__ct_switch_list_view')}</option>
+                                <option value="table">{he.translate('freq__ct_switch_table_view')}</option>
+                                <option value="list">{he.translate('freq__ct_switch_list_view')}</option>
                             </select>
                         </label>
                     </p>
