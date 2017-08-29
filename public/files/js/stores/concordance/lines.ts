@@ -80,6 +80,12 @@ export interface ConcSummary {
     isShuffled: boolean;
 }
 
+export interface CorpColumn {
+    n:string;
+    label:string;
+    visible:boolean;
+}
+
 export interface ViewConfiguration {
 
     anonymousUser:boolean;
@@ -93,7 +99,7 @@ export interface ViewConfiguration {
 
     KWICCorps:Array<string>;
 
-    CorporaColumns:Array<{n:string; label:string}>;
+    CorporaColumns:Array<CorpColumn>;
 
     SortIdx:Array<{page:number; label:string}>;
 
@@ -273,7 +279,7 @@ export class ConcLineStore extends SimplePageStore {
 
     private kwicCorps:Immutable.List<string>;
 
-    private corporaColumns:Immutable.List<{n:string; label:string}>;
+    private corporaColumns:Immutable.List<CorpColumn>;
 
     private baseCorpname:string;
 
@@ -397,8 +403,27 @@ export class ConcLineStore extends SimplePageStore {
                         }
                     );
                 break;
+                case 'CONCORDANCE_CHANGE_LANG_VISIBILITY':
+                    this.changeColVisibility(payload.props['corpusId'], payload.props['value']);
+                    this.notifyChangeListeners();
+                break;
             }
         });
+    }
+
+    private changeColVisibility(corpusId:string, status:boolean):void {
+        const srchIdx = this.corporaColumns.findIndex(v => v.n === corpusId);
+        if (srchIdx > -1) {
+            const srch = this.corporaColumns.get(srchIdx);
+            this.corporaColumns = this.corporaColumns.set(srchIdx, {
+                n: srch.n,
+                label: srch.label,
+                visible: status
+            });
+
+        } else {
+            throw new Error(`column for ${corpusId} not found`);
+        }
     }
 
     updateOnViewOptsChange():void {
@@ -682,6 +707,10 @@ export class ConcLineStore extends SimplePageStore {
 
     getEmptyRefValPlaceholder():string {
         return '\u2014';
+    }
+
+    getCorporaColumns():Immutable.List<CorpColumn> {
+        return this.corporaColumns;
     }
 
 }
