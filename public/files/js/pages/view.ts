@@ -604,8 +604,7 @@ export class ViewPage {
 
         this.sortFormViews = sortFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this.layoutModel.layoutViews,
+            this.layoutModel.getComponentHelpers(),
             this.queryStores.sortStore,
             this.queryStores.multiLevelSortStore
         );

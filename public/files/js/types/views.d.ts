@@ -225,8 +225,7 @@ declare module "views/query/sort" {
         SortFormView:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher,
-        mixins:any, layoutViews:Kontext.LayoutViews, sortStore:any, multiLevelSortStore:any):SortFormViews;
+    export function init(dispatcher:Kontext.FluxDispatcher, helpers:any, sortStore:any, multiLevelSortStore:any):SortFormViews;
 }
 
 
@@ -336,7 +335,6 @@ declare module "views/options/structsAttrs" {
     export function init(
             dispatcher:Kontext.FluxDispatcher,
             helpers:Kontext.ComponentHelpers,
-            layoutViews:Kontext.LayoutViews,
             corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
             mainMenustore:Kontext.PageStore):StructsAndAttrsViews;
 }

@@ -22,21 +22,41 @@
  */
 declare module React {
 
-    export interface ReactElement {
-    }
+    export type Props = {[name:string]:any};
 
-    export interface Component {
+    export function createClass(src:{[attr:string]:any}):ReactClass;
+
+    export interface ReactElement {
     }
 
     export interface ReactClass {
     }
 
     export interface Component {
-        state:any;
-    }
 
-    export interface Props {
-        [key:string]:any;
+        state:Props;
+
+        render():ReactElement;
+
+        componentWillMount();
+
+        componentDidMount();
+
+        componentWillReceiveProps(nextProps:Props);
+
+        shouldComponentUpdate(nextProps:Props, nextState:Props);
+
+        componentWillUpdate(nextProps:Props, nextState:Props);
+
+        componentDidUpdate(prevProps:Props, prevState:Props);
+
+        componentWillUnmount(updater, [callback]);
+
+        setState(newState:Props, callback?:() => any);
+        setState(updater:(prevState:Props, props:Props) => Props, callback?:() => any);
+
+        forceUpdate(callback?:() => any);
+
     }
 
     export function createElement(elmType:ReactClass, props:Props,

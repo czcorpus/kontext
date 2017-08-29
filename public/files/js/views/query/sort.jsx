@@ -18,79 +18,89 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortStore) {
+export function init(dispatcher, he, sortStore, multiLevelSortStore) {
+
+    const layoutViews = he.getLayoutViews();
+
 
     // -------------------------- <AttributeList /> ---------------------------------
 
-    const AttributeList = React.createClass({
+    const AttributeList = (props) => {
 
-        _handleSelectChange : function (evt) {
-            this.props.onAttrSelect(evt.target.value);
-        },
+        const handleSelectChange = (evt) => {
+            props.onAttrSelect(evt.target.value);
+        };
 
-        render : function () {
-            return (
-                <select value={this.props.currValue} onChange={this._handleSelectChange}>
-                    {this.props.availAttrs.map((item, i) => <option key={`attr_${i}`} value={item.n}>{item.label}</option>)}
-                </select>
-            );
-        }
-    });
+        return (
+            <select value={props.currValue} onChange={handleSelectChange}>
+                {props.availAttrs.map((item, i) => <option key={`attr_${i}`} value={item.n}>{item.label}</option>)}
+            </select>
+        );
+    };
 
     // -------------------------- <SortKeySelector /> ---------------------------------
 
-    const SortKeySelector = React.createClass({
+    const SortKeySelector = (props) => {
 
-        mixins : mixins,
+        const handleSelectFn = (value) => {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'SORT_FORM_SET_SKEY',
+                    props: {
+                        sortId: props.sortId,
+                        value: value
+                    }
+                });
+            };
+        };
 
-        _handleSelect : function (value) {
-            dispatcher.dispatch({
-                actionType: 'SORT_FORM_SET_SKEY',
-                props: {
-                    sortId: this.props.sortId,
-                    value: value
-                }
-            });
-        },
-
-        render : function () {
-            return (
-                <table className="radio-like-sel">
-                    <tbody>
-                        <tr>
-                            <td className={this.props.currValue === 'lc' ? 'selected' : null}>
-                                <a onClick={this._handleSelect.bind(this, 'lc')}>
-                                    {'\u2026' + this.translate('query__sort_label_left_context') + '\u2026'}
-                                </a>
-                            </td>
-                            <td className={this.props.currValue === 'kw' ? 'selected' : null}>
-                                <a onClick={this._handleSelect.bind(this, 'kw')}>
-                                    {this.translate('query__sort_label_node')}
-                                </a>
-                            </td>
-                            <td className={this.props.currValue === 'rc' ? 'selected' : null}>
-                                <a onClick={this._handleSelect.bind(this, 'rc')}>
-                                    {'\u2026' + this.translate('query__sort_label_right_context') + '\u2026'}
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            );
-        }
-    });
+        return (
+            <table className="radio-like-sel">
+                <tbody>
+                    <tr>
+                        <td className={props.currValue === 'lc' ? 'selected' : null}>
+                            <a onClick={handleSelectFn('lc')}>
+                                {'\u2026' + he.translate('query__sort_label_left_context') + '\u2026'}
+                            </a>
+                        </td>
+                        <td className={props.currValue === 'kw' ? 'selected' : null}>
+                            <a onClick={handleSelectFn('kw')}>
+                                {he.translate('query__sort_label_node')}
+                            </a>
+                        </td>
+                        <td className={props.currValue === 'rc' ? 'selected' : null}>
+                            <a onClick={handleSelectFn('rc')}>
+                                {'\u2026' + he.translate('query__sort_label_right_context') + '\u2026'}
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        );
+    };
 
     // -------------------------- <SimpleSortForm /> ---------------------------------
 
-    const SimpleSortForm = React.createClass({
+    class SimpleSortForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleAttrSelect = this._handleAttrSelect.bind(this);
+            this._handleSicaseCheck = this._handleSicaseCheck.bind(this);
+            this._handleSbwardCheck = this._handleSbwardCheck.bind(this);
+            this._handleSposChange = this._handleSposChange.bind(this);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._enableBackwardLabelHelp = this._enableBackwardLabelHelp.bind(this);
+            this._backwardLabelHelpClose = this._backwardLabelHelpClose.bind(this);
+            this.state = this._fetchStateValues();
+        }
 
-        _handleAttrSelect : function (value) {
+        _handleAttrSelect(value) {
             dispatcher.dispatch({
                 actionType: 'SORT_FORM_SET_SATTR',
                 props: {
@@ -98,9 +108,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: value
                 }
             });
-        },
+        }
 
-        _handleSicaseCheck : function (evt) {
+        _handleSicaseCheck(evt) {
             dispatcher.dispatch({
                 actionType: 'SORT_FORM_SET_SICASE',
                 props: {
@@ -108,9 +118,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: evt.target.checked ? 'i' : ''
                 }
             });
-        },
+        }
 
-        _handleSbwardCheck : function (evt) {
+        _handleSbwardCheck(evt) {
             dispatcher.dispatch({
                 actionType: 'SORT_FORM_SET_SBWARD',
                 props: {
@@ -118,9 +128,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: evt.target.checked ? 'r' : ''
                 }
             });
-        },
+        }
 
-        _handleSposChange : function (evt) {
+        _handleSposChange(evt) {
             dispatcher.dispatch({
                 actionType: 'SORT_FORM_SET_SPOS',
                 props: {
@@ -128,9 +138,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        _fetchStateValues : function () {
+        _fetchStateValues() {
             return {
                 availAttrs: sortStore.getAllAvailAttrs(),
                 sattr: sortStore.getSattrValues().get(this.props.sortId),
@@ -140,40 +150,36 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                 sbward: sortStore.getSbwardValues().get(this.props.sortId),
                 backwardLabelHelpVisible: false
             };
-        },
+        }
 
-        getInitialState : function () {
-            return this._fetchStateValues();
-        },
-
-        _handleStoreChange : function () {
+        _handleStoreChange() {
             this.setState(this._fetchStateValues());
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             sortStore.addChangeListener(this._handleStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             sortStore.removeChangeListener(this._handleStoreChange);
-        },
+        }
 
-        _enableBackwardLabelHelp : function () {
+        _enableBackwardLabelHelp() {
             const state = this._fetchStateValues();
             state['backwardLabelHelpVisible'] = true;
             this.setState(state);
-        },
+        }
 
-        _backwardLabelHelpClose : function () {
+        _backwardLabelHelpClose() {
             this.setState(this._fetchStateValues());
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <table className="form">
                     <tbody>
                         <tr>
-                            <th>{this.translate('query__sort_th_attribute')}:</th>
+                            <th>{he.translate('query__sort_th_attribute')}:</th>
                             <td>
                                 <AttributeList availAttrs={this.state.availAttrs}
                                         onAttrSelect={this._handleAttrSelect}
@@ -182,14 +188,14 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         </tr>
                         <tr>
                             <th>
-                                {this.translate('query__sort_th_sort_key')}:
+                                {he.translate('query__sort_th_sort_key')}:
                             </th>
                             <td>
                                 <SortKeySelector sortId={this.props.sortId} currValue={this.state.skey} />
                             </td>
                         </tr>
                         <tr>
-                            <th>{this.translate('query__sort_th_num_of_tokens_to_sort')}:</th>
+                            <th>{he.translate('query__sort_th_num_of_tokens_to_sort')}:</th>
                             <td>
                                 <input type="text" name="spos" style={{width: '2em'}}
                                     value={this.state.spos} onChange={this._handleSposChange} />
@@ -198,7 +204,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         <tr>
                             <th>
                                 <label htmlFor="sicase_checkbox">
-                                {this.translate('query__sort_th_ignore_case')}:
+                                {he.translate('query__sort_th_ignore_case')}:
                                 </label>
                             </th>
                             <td>
@@ -210,15 +216,15 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         <tr>
                             <th>
                                 <label htmlFor="sbward_checkbox">
-                                {this.translate('query__sort_th_backward')}
+                                {he.translate('query__sort_th_backward')}
                                 </label>
                                 <a className="context-help" onClick={this._enableBackwardLabelHelp}>
-                                    <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')} />
+                                    <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
                                 </a>
                                 <span>
                                     {this.state.backwardLabelHelpVisible ?
                                         <layoutViews.PopupBox onCloseClick={this._backwardLabelHelpClose}>
-                                            {this.translate('global__sorting_backwards_explanation')}
+                                            {he.translate('global__sorting_backwards_explanation')}
                                         </layoutViews.PopupBox>
                                         : null}
                                 </span>:
@@ -232,66 +238,77 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                 </table>
             );
         }
-    });
+    }
 
     // -------------------------- <MLCtxSelector /> ---------------------------------
 
-    const MLCtxSelector = React.createClass({
+    const MLCtxSelector = (props) => {
 
-        onChange : function () {
-        },
+        const setValFn = (idx) => {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'ML_SORT_FORM_SET_CTX',
+                    props: {
+                        sortId: props.sortId,
+                        levelIdx: props.level,
+                        index: idx
+                    }
+                });
+            };
+        };
 
-        _setVal : function (idx) {
-            dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_SET_CTX',
-                props: {
-                    sortId: this.props.sortId,
-                    levelIdx: this.props.level,
-                    index: idx
-                }
-            });
-        },
-
-        render : function () {
-            return (
-                <table className="radio-like-sel">
-                    <tbody>
-                        <tr>
-                            <td className={this.props.currentValue === 0 ? 'selected' : null}>
-                                <a onClick={this._setVal.bind(this, 0)}>3L</a>
-                            </td>
-                            <td className={this.props.currentValue === 1 ? 'selected' : null}>
-                                <a onClick={this._setVal.bind(this, 1)}>2L</a>
-                            </td>
-                            <td className={this.props.currentValue === 2 ? 'selected' : null}>
-                                <a onClick={this._setVal.bind(this, 2)}>1L</a>
-                            </td>
-                            <td className={this.props.currentValue === 3 ? 'selected' : null}>
-                                <a onClick={this._setVal.bind(this, 3)}>Node</a>
-                            </td>
-                            <td className={this.props.currentValue === 4 ? 'selected' : null}>
-                                <a onClick={this._setVal.bind(this, 4)}>1R</a>
-                            </td>
-                            <td className={this.props.currentValue === 5 ? 'selected' : null}>
-                                <a onClick={this._setVal.bind(this, 5)}>2R</a>
-                            </td>
-                            <td className={this.props.currentValue === 6 ? 'selected' : null}>
-                                <a onClick={this._setVal.bind(this, 6)}>3R</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            );
-        }
-    });
+        return (
+            <table className="radio-like-sel">
+                <tbody>
+                    <tr>
+                        <td className={props.currentValue === 0 ? 'selected' : null}>
+                            <a onClick={setValFn(0)}>3L</a>
+                        </td>
+                        <td className={props.currentValue === 1 ? 'selected' : null}>
+                            <a onClick={setValFn(1)}>2L</a>
+                        </td>
+                        <td className={props.currentValue === 2 ? 'selected' : null}>
+                            <a onClick={setValFn(2)}>1L</a>
+                        </td>
+                        <td className={props.currentValue === 3 ? 'selected' : null}>
+                            <a onClick={setValFn(3)}>Node</a>
+                        </td>
+                        <td className={props.currentValue === 4 ? 'selected' : null}>
+                            <a onClick={setValFn(4)}>1R</a>
+                        </td>
+                        <td className={props.currentValue === 5 ? 'selected' : null}>
+                            <a onClick={setValFn(5)}>2R</a>
+                        </td>
+                        <td className={props.currentValue === 6 ? 'selected' : null}>
+                            <a onClick={setValFn(6)}>3R</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        );
+    };
 
     // -------------------------- <MLSingleLevelFields /> ---------------------------------
 
-    const MLSingleLevelFields = React.createClass({
+    class MLSingleLevelFields extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleAttrSelect = this._handleAttrSelect.bind(this);
+            this._handleSicaseCheck = this._handleSicaseCheck.bind(this);
+            this._handleSbwardCheck = this._handleSbwardCheck.bind(this);
+            this._handleCtxAlignChange = this._handleCtxAlignChange.bind(this);
+            this._enableBackwardLabelHelp = this._enableBackwardLabelHelp.bind(this);
+            this._disableBackwardLabelHelp = this._disableBackwardLabelHelp.bind(this);
+            this._enableNodeStartAtHelp = this._enableNodeStartAtHelp.bind(this);
+            this._disableNodeStartAtHelp = this._disableNodeStartAtHelp.bind(this);
+            this.state = {
+                backwardLabelHelpVisible: false,
+                nodeStartAtHelpVisible: false
+            };
+        }
 
-        _handleAttrSelect : function (value) {
+        _handleAttrSelect(value) {
             dispatcher.dispatch({
                 actionType: 'ML_SORT_FORM_SET_SATTR',
                 props: {
@@ -300,9 +317,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: value
                 }
             });
-        },
+        }
 
-        _handleSicaseCheck : function (evt) {
+        _handleSicaseCheck(evt) {
             dispatcher.dispatch({
                 actionType: 'ML_SORT_FORM_SET_SICASE',
                 props: {
@@ -311,9 +328,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: evt.target.checked ? 'i' : ''
                 }
             });
-        },
+        }
 
-        _handleSbwardCheck : function (evt) {
+        _handleSbwardCheck(evt) {
             dispatcher.dispatch({
                 actionType: 'ML_SORT_FORM_SET_SBWARD',
                 props: {
@@ -322,9 +339,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: evt.target.checked ? 'r' : ''
                 }
             });
-        },
+        }
 
-        _handleCtxAlignChange : function (evt) {
+        _handleCtxAlignChange(evt) {
             dispatcher.dispatch({
                 actionType: 'ML_SORT_FORM_SET_CTX_ALIGN',
                 props : {
@@ -333,44 +350,37 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                backwardLabelHelpVisible: false,
-                nodeStartAtHelpVisible: false
-            }
-        },
-
-        _enableBackwardLabelHelp : function () {
+        _enableBackwardLabelHelp() {
             this.setState({
                 backwardLabelHelpVisible: true,
                 nodeStartAtHelpVisible: false
             });
-        },
+        }
 
-        _disableBackwardLabelHelp : function () {
+        _disableBackwardLabelHelp() {
             this.setState({
                 backwardLabelHelpVisible: false,
                 nodeStartAtHelpVisible: false
             });
-        },
+        }
 
-        _enableNodeStartAtHelp : function () {
+        _enableNodeStartAtHelp() {
             this.setState({
                 backwardLabelHelpVisible: false,
                 nodeStartAtHelpVisible: true
             });
-        },
+        }
 
-        _disableNodeStartAtHelp : function () {
+        _disableNodeStartAtHelp() {
             this.setState({
                 backwardLabelHelpVisible: false,
                 nodeStartAtHelpVisible: false
             });
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <table className="sort-level">
                     <tbody>
@@ -379,15 +389,15 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                                 {this.props.level + 1}.
                                 {this.props.level > 1 || this.props.numLevels > 1 ?
                                     (<a className="close-icon" onClick={this.props.onRemoveLevel}>
-                                        <img src={this.createStaticUrl('img/close-icon.svg')}
-                                            alt={this.translate('query__sort_remove_this_level_btn')}
-                                            title={this.translate('query__sort_remove_this_level_btn')} />
+                                        <img src={he.createStaticUrl('img/close-icon.svg')}
+                                            alt={he.translate('query__sort_remove_this_level_btn')}
+                                            title={he.translate('query__sort_remove_this_level_btn')} />
                                 </a>) : null}
                             </th>
                         </tr>
                         <tr>
                             <th>
-                                {this.translate('query__sort_th_attribute')}:
+                                {he.translate('query__sort_th_attribute')}:
                             </th>
                             <td>
                                 <AttributeList availAttrs={this.props.availAttrs}
@@ -398,7 +408,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         <tr>
                             <th>
                                 <label htmlFor="ml1icase_checkbox">
-                                    {this.translate('query__sort_th_ignore_case')}:
+                                    {he.translate('query__sort_th_ignore_case')}:
                                 </label>
                             </th>
                             <td>
@@ -410,15 +420,15 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         <tr>
                             <th>
                                 <label htmlFor="sbward_checkbox2">
-                                    {this.translate('query__sort_th_backward')}
+                                    {he.translate('query__sort_th_backward')}
                                 </label>
                                 <a className="context-help" onClick={this._enableBackwardLabelHelp}>
-                                    <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')} />
+                                    <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
                                 </a>
                                 <span>
                                     {this.state.backwardLabelHelpVisible ?
                                         <layoutViews.PopupBox onCloseClick={this._disableBackwardLabelHelp}>
-                                            {this.translate('global__sorting_backwards_explanation')}
+                                            {he.translate('global__sorting_backwards_explanation')}
                                         </layoutViews.PopupBox>
                                         : null}
                                 </span>:
@@ -431,7 +441,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         </tr>
                         <tr>
                             <th>
-                                {this.translate('query__sort_th_position')}:
+                                {he.translate('query__sort_th_position')}:
                             </th>
                             <td>
                                 <MLCtxSelector sortId={this.props.sortId} level={this.props.level}
@@ -441,14 +451,14 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                         </tr>
                         <tr>
                             <th>
-                                {this.translate('query__sort_th_node_start_at')}
+                                {he.translate('query__sort_th_node_start_at')}
                                 <a className="context-help" onClick={this._enableNodeStartAtHelp}>
-                                    <img className="over-img" src={this.createStaticUrl('img/question-mark.svg')} />
+                                    <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
                                 </a>
                                 <span>
                                 {this.state.nodeStartAtHelpVisible ?
                                         <layoutViews.PopupBox onCloseClick={this._disableNodeStartAtHelp}>
-                                            {this.translate('global__this_applies_only_for_mk')}
+                                            {he.translate('global__this_applies_only_for_mk')}
                                         </layoutViews.PopupBox>
                                         : null}
                                 </span>:
@@ -456,8 +466,8 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                             <td>
                                 <select value={this.props.ctxAlign}
                                         onChange={this._handleCtxAlignChange}>
-                                    <option value="left">{this.translate('query__sort_option_leftmost')}</option>
-                                    <option value="right">{this.translate('query__sort_option_rightmost')}</option>
+                                    <option value="left">{he.translate('query__sort_option_leftmost')}</option>
+                                    <option value="right">{he.translate('query__sort_option_rightmost')}</option>
                                 </select>
                             </td>
                         </tr>
@@ -465,42 +475,32 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                 </table>
             );
         }
-    });
+    }
 
     // -------------------------- <AddMLLevelButton /> ---------------------------------
 
-    const TDAddLevelButton = React.createClass({
+    const TDAddLevelButton = (props) => {
 
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <td className="add-level">
-                    <a onClick={this.props.onAddLevel}
-                        title={this.translate('query__sort_plus_btn_add_level')}>+</a>
-                </td>
-            );
-        }
-
-    });
+        return (
+            <td className="add-level">
+                <a onClick={props.onAddLevel}
+                    title={he.translate('query__sort_plus_btn_add_level')}>+</a>
+            </td>
+        );
+    };
 
     // -------------------------- <MultiLevelSortForm /> ---------------------------------
 
-    const MultiLevelSortForm = React.createClass({
+    class MultiLevelSortForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._addLevel = this._addLevel.bind(this);
+            this.state = this._fetchStateValues();
+        }
 
-        _handleAttrSelect : function (level, attrVal) {
-            dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_SET_SKEY',
-                props: {
-                    sortId: this.props.sortId,
-                    attrVal: attrVal
-                }
-            });
-        },
-
-        _fetchStateValues : function () {
+        _fetchStateValues() {
              return {
                 availAttrs: multiLevelSortStore.getAllAvailAttrs(),
                 levels: multiLevelSortStore.getLevelIndices(this.props.sortId),
@@ -511,44 +511,42 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                 ctxIndexValues: multiLevelSortStore.getCtxIndexValues(this.props.sortId),
                 ctxAlignValues: multiLevelSortStore.getCtxAlignValues(this.props.sortId)
             };
-        },
+        }
 
-        getInitialState : function () {
-            return this._fetchStateValues();
-        },
-
-        _handleStoreChange : function () {
+        _handleStoreChange() {
             this.setState(this._fetchStateValues());
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             multiLevelSortStore.addChangeListener(this._handleStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             multiLevelSortStore.removeChangeListener(this._handleStoreChange);
-        },
+        }
 
-        _addLevel : function () {
+        _addLevel() {
             dispatcher.dispatch({
                 actionType: 'ML_SORT_FORM_ADD_LEVEL',
                 props: {
                     sortId: this.props.sortId
                 }
             });
-        },
+        }
 
-        _removeLevel : function (levelIdx) {
-            dispatcher.dispatch({
-                actionType: 'ML_SORT_FORM_REMOVE_LEVEL',
-                props: {
-                    sortId: this.props.sortId,
-                    levelIdx: levelIdx
-                }
-            });
-        },
+        _removeLevelFn(levelIdx) {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'ML_SORT_FORM_REMOVE_LEVEL',
+                    props: {
+                        sortId: this.props.sortId,
+                        levelIdx: levelIdx
+                    }
+                });
+            };
+        }
 
-        render : function () {
+        render() {
             return (
                 <table className="multi-level-blocks">
                     <tbody>
@@ -560,7 +558,7 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                                             level={level}
                                             numLevels={this.state.levels.size}
                                             sortId={this.props.sortId}
-                                            onRemoveLevel={this._removeLevel.bind(this, level)}
+                                            onRemoveLevel={this._removeLevelFn(level)}
                                             mlxattr={this.state.mlxattrValues.get(level)}
                                             mlxicase={this.state.mlxicaseValues.get(level)}
                                             mlxbward={this.state.mlxbwardValues.get(level)}
@@ -576,21 +574,22 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                 </table>
             );
         }
-    });
+    }
 
     // -------------------------- <SortForm /> ---------------------------------
 
-    const SortForm = React.createClass({
+    class SortForm extends React.Component {
 
-        mixins : mixins,
-
-        getInitialState : function () {
-            return {
+        constructor(props) {
+            super(props);
+            this._handleSortTypeChange = this._handleSortTypeChange.bind(this);
+            this._handleFormSubmit = this._handleFormSubmit.bind(this);
+            this.state = {
                 sortType: this._getDefaultFormType()
             };
-        },
+        }
 
-        _handleSortTypeChange : function (evt) {
+        _handleSortTypeChange(evt) {
             dispatcher.dispatch({
                 actionType: 'SORT_SET_ACTIVE_STORE',
                 props: {
@@ -601,9 +600,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
             this.setState({
                 sortType: evt.target.value
             });
-        },
+        }
 
-        _handleFormSubmit : function () {
+        _handleFormSubmit() {
             if (this.props.operationIdx !== undefined) {
                 dispatcher.dispatch({
                     actionType: 'BRANCH_QUERY',
@@ -618,9 +617,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                     }
                 });
             }
-        },
+        }
 
-        _getDefaultFormType : function () {
+        _getDefaultFormType() {
             if (sortStore.isActiveActionValue(this.props.sortId)) {
                 return 'sortx';
 
@@ -630,9 +629,9 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
             } else {
                 throw new Error('Cannot determine default sorting action'); // TODO should we be so strict here?
             }
-        },
+        }
 
-        _renderFields : function () {
+        _renderFields() {
             switch (this.state.sortType) {
                 case 'sortx':
                     return <SimpleSortForm sortId={this.props.sortId} />;
@@ -641,17 +640,17 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                 default:
                     throw new Error('Unknown sort form type: ' + this.state.sortType);
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div>
                     <form>
                         <fieldset>
                             <legend>
                                 <select onChange={this._handleSortTypeChange} value={this.state.sortType}>
-                                    <option value="sortx">{this.translate('query__sort_type_simple_hd')}</option>
-                                    <option value="mlsortx">{this.translate('query__sort_type_multilevel_hd')}</option>
+                                    <option value="sortx">{he.translate('query__sort_type_simple_hd')}</option>
+                                    <option value="mlsortx">{he.translate('query__sort_type_multilevel_hd')}</option>
                                 </select>
                             </legend>
                             {this._renderFields()}
@@ -660,15 +659,15 @@ export function init(dispatcher, mixins, layoutViews, sortStore, multiLevelSortS
                             <button type="button" className="default-button"
                                     onClick={this._handleFormSubmit}>
                                 {this.props.operationIdx !== undefined ?
-                                    this.translate('global__proceed')
-                                    : this.translate('query__sort_concordance_btn')}
+                                    he.translate('global__proceed')
+                                    : he.translate('query__sort_concordance_btn')}
                             </button>
                         </p>
                     </form>
                 </div>
             );
         }
-    });
+    }
 
     return {
         SortFormView: SortForm

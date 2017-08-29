@@ -23,85 +23,84 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMenuStore) {
+export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
+
+    const layoutViews = helpers.getLayoutViews();
 
     // ---------------------------- <LiAttributeItem /> ----------------------
 
-    let LiAttributeItem = React.createClass({
+    const LiAttributeItem = (props) => {
 
-        _handleClick : function () {
+        const handleClick = () => {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
                 props: {
-                    idx: this.props.idx,
-                    ident: this.props.n
+                    idx: props.idx,
+                    ident: props.n
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <li>
-                    <label>
-                        <input type="checkbox" name="setattrs" value={this.props.n}
-                                checked={this.props.isSelected ? true : false}
-                                onChange={this._handleClick} />
-                        {this.props.label}
-                    </label>
-                </li>
-            );
-        }
-    });
+        return (
+            <li>
+                <label>
+                    <input type="checkbox" name="setattrs" value={props.n}
+                            checked={props.isSelected ? true : false}
+                            onChange={handleClick} />
+                    {props.label}
+                </label>
+            </li>
+        );
+    };
 
-    // ---------------------------- <FixedAttributeItem /> ----------------------
+    // ---------------------------- <LiFixedAttributeItem /> ----------------------
 
-    let LiFixedAttributeItem = React.createClass({
-        render : function () {
-            return (
-                <li>
-                    <input type="hidden" name="setattrs" value={this.props.n} />
-                    <label>
-                        <input type="checkbox" value={this.props.n} disabled checked />
-                        {this.props.label}
-                    </label>
-                </li>
-            );
-        }
-    });
+    const LiFixedAttributeItem = (props) => {
+
+        return (
+            <li>
+                <input type="hidden" name="setattrs" value={props.n} />
+                <label>
+                    <input type="checkbox" value={props.n} disabled checked />
+                    {props.label}
+                </label>
+            </li>
+        );
+    };
 
     // ---------------------------- <SelectAll /> ----------------------
 
-    let SelectAll = React.createClass({
+    const SelectAll = (props) => {
 
-        render : function () {
-            return (
-                <label className="select-all">
-                    <input className="select-all" type="checkbox"
-                            onChange={this.props.onChange} checked={this.props.isSelected} />
-                    {helpers.translate('global__select_all')}
-                </label>
-            );
-        }
-    });
+        return (
+            <label className="select-all">
+                <input className="select-all" type="checkbox"
+                        onChange={props.onChange} checked={props.isSelected} />
+                {helpers.translate('global__select_all')}
+            </label>
+        );
+    };
 
     // ---------------------------- <AttributesTweaks /> ----------------------
 
-    let AttributesTweaks = React.createClass({
+    const AttributesTweaks = (props) => {
 
-        _handleSelectChange : function (name, event) {
-            dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
-                props: {
-                    name: name,
-                    value: event.target.value
-                }
-            });
-        },
+        const handleSelectChangeFn = (name) => {
+            return (event) => {
+                dispatcher.dispatch({
+                    actionType: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
+                    props: {
+                        name: name,
+                        value: event.target.value
+                    }
+                });
+            }
+        };
 
-        _renderVmodeInfoIcon : function () {
+        const renderVmodeInfoIcon = () => {
             let src;
             let title;
-            if (this.props.attrsVmode === 'mouseover') {
+            if (props.attrsVmode === 'mouseover') {
                 src = helpers.createStaticUrl('img/mouseover-available.svg')
                 title = helpers.translate('options__vmode_switch_indicator_desc');
 
@@ -110,110 +109,104 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
                 title = helpers.translate('options__vmode_switch_indicator_desc');
             }
             return <img className="vmode-indicator" src={src} alt={title} title={title} />;
-        },
+        };
 
-        render : function () {
-            return (
+        return (
+            <div>
+                <h3 className="label">
+                    {helpers.translate('options__attr_apply_header')}
+                </h3>
                 <div>
-                    <h3 className="label">
-                        {helpers.translate('options__attr_apply_header')}
-                    </h3>
-                    <div>
-                        <select name="attr_vmode"
-                                value={this.props.attrsVmode}
-                                onChange={this._handleSelectChange.bind(this, 'attr_vmode')}
-                                className="no-label">
-                            <option value="visible">{helpers.translate('options__vmode_switch_visible')}</option>
-                            <option value="mouseover">{helpers.translate('options__vmode_switch_mouseover')}</option>
-                        </select>
-                        {this.props.showConcToolbar ? this._renderVmodeInfoIcon() : null}
-                    </div>
-                    <div>
-                        <select name="allpos"
-                                value={this.props.attrsAllpos}
-                                className="no-label"
-                                onChange={this._handleSelectChange.bind(this, 'allpos')}
-                                disabled={this.props.attrsVmode === 'mouseover'}
-                                title={this.props.attrsVmode === 'mouseover' ?
-                                        helpers.translate('options__locked_allpos_expl') : null}>
-                            <option value="all">{helpers.translate('options__attr_apply_all')}</option>
-                            <option value="kw">{helpers.translate('options__attr_apply_kwic')}</option>
-                        </select>
-                        {this.props.attrsVmode === 'mouseover' ?
-                            <input type="hidden" name="allpos" value="all" /> : null}
-                    </div>
+                    <select name="attr_vmode"
+                            value={props.attrsVmode}
+                            onChange={handleSelectChangeFn('attr_vmode')}
+                            className="no-label">
+                        <option value="visible">{helpers.translate('options__vmode_switch_visible')}</option>
+                        <option value="mouseover">{helpers.translate('options__vmode_switch_mouseover')}</option>
+                    </select>
+                    {props.showConcToolbar ? renderVmodeInfoIcon() : null}
                 </div>
-            );
-        }
-    });
+                <div>
+                    <select name="allpos"
+                            value={props.attrsAllpos}
+                            className="no-label"
+                            onChange={handleSelectChangeFn('allpos')}
+                            disabled={props.attrsVmode === 'mouseover'}
+                            title={props.attrsVmode === 'mouseover' ?
+                                    helpers.translate('options__locked_allpos_expl') : null}>
+                        <option value="all">{helpers.translate('options__attr_apply_all')}</option>
+                        <option value="kw">{helpers.translate('options__attr_apply_kwic')}</option>
+                    </select>
+                    {props.attrsVmode === 'mouseover' ?
+                        <input type="hidden" name="allpos" value="all" /> : null}
+                </div>
+            </div>
+        );
+    };
 
     // ---------------------------- <FieldsetAttributes /> ----------------------
 
-    let FieldsetAttributes = React.createClass({
+    const FieldsetAttributes = (props) => {
 
-        _handleSelectAll : function () {
+        const handleSelectAll = () => {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
                 props: {}
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <fieldset className="settings-group">
-                    <legend>{helpers.translate('options__attributes_hd')}</legend>
-                    <ul>
-                    {this.props.attrList.map((item, i) => {
-                        if (item.locked) {
-                            return <LiFixedAttributeItem key={'atrr:' + item.n} n={item.n} label={item.label} />;
+        return (
+            <fieldset className="settings-group">
+                <legend>{helpers.translate('options__attributes_hd')}</legend>
+                <ul>
+                {props.attrList.map((item, i) => {
+                    if (item.locked) {
+                        return <LiFixedAttributeItem key={'atrr:' + item.n} n={item.n} label={item.label} />;
 
-                        } else {
-                            return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
-                                            isSelected={item.selected} />;
-                        }
-                    })}
-                    </ul>
-                    <SelectAll onChange={this._handleSelectAll} isSelected={this.props.hasSelectAll} />
-                    <hr />
-                    <AttributesTweaks attrsVmode={this.props.attrsVmode} attrsAllpos={this.props.attrsAllpos}
-                            showConcToolbar={this.props.showConcToolbar} />
-                </fieldset>
-            );
-        }
-    });
+                    } else {
+                        return <LiAttributeItem key={'atrr:' + item.n} idx={i} n={item.n} label={item.label}
+                                        isSelected={item.selected} />;
+                    }
+                })}
+                </ul>
+                <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+                <hr />
+                <AttributesTweaks attrsVmode={props.attrsVmode} attrsAllpos={props.attrsAllpos}
+                        showConcToolbar={props.showConcToolbar} />
+            </fieldset>
+        );
+    };
 
     // ---------------------------- <StructAttrList /> ----------------------
 
-    let StructAttrList = React.createClass({
+    const StructAttrList = (props) => {
 
-        _checkboxHandler : function (value) {
-            this.props.handleClick(value);
-        },
+        const checkboxHandlerFn = (value) => {
+            return () => props.handleClick(value);
+        };
 
-        render : function () {
-            return (
-                <ul>
-                    {this.props.items.map((item, i) => {
-                        return (
-                            <li key={i}>
-                                <label>
-                                    <input type="checkbox" name="structattrs" value={`${this.props.struct}.${item.n}`}
-                                        checked={item.selected} onChange={this._checkboxHandler.bind(this, item.n)} />
-                                    {item.n}
-                                </label>
-                            </li>
-                        );
-                    })}
-                </ul>
-            );
-        }
-    });
+        return (
+            <ul>
+                {props.items.map((item, i) => {
+                    return (
+                        <li key={i}>
+                            <label>
+                                <input type="checkbox" name="structattrs" value={`${props.struct}.${item.n}`}
+                                    checked={item.selected} onChange={checkboxHandlerFn(item.n)} />
+                                {item.n}
+                            </label>
+                        </li>
+                    );
+                })}
+            </ul>
+        );
+    };
 
     // ---------------------------- <FieldsetStructures /> ----------------------
 
-    let FieldsetStructures = React.createClass({
+    const FieldsetStructures = (props) => {
 
-        _handleStructClick : function (event) {
+        const handleStructClick = (event) => {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
                 props: {
@@ -221,119 +214,114 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
                     structAttrIdent: null
                 }
             });
-        },
+        };
 
-        _handleStructAttrClick : function (structIdent, attrIdent) {
-            dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
-                props: {
-                    structIdent: structIdent,
-                    structAttrIdent: attrIdent
-                }
-            });
-        },
+        const handleStructAttrClickFn = (structIdent) => {
+            return (attrIdent) => {
+                dispatcher.dispatch({
+                    actionType: 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
+                    props: {
+                        structIdent: structIdent,
+                        structAttrIdent: attrIdent
+                    }
+                });
+            };
+        };
 
-        render : function () {
-            return (
-                <fieldset className="settings-group">
-                    <legend>{helpers.translate('options__structures_hd')}</legend>
-                    <ul>
-                        {this.props.availStructs.map((item) => {
-                            return (
-                                <li key={item.n}>
-                                    <label className="struct">
-                                        <input type="checkbox" name="setstructs" value={item.n}
-                                                checked={item.selected} onChange={this._handleStructClick} />
-                                        {'<' + item.n + '>'}
-                                    </label>
-                                    <StructAttrList struct={item.n}
-                                            items={this.props.structAttrs.get(item.n) || []}
-                                            handleClick={this._handleStructAttrClick.bind(this, item.n)} />
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </fieldset>
-            );
-        }
-    });
+        return (
+            <fieldset className="settings-group">
+                <legend>{helpers.translate('options__structures_hd')}</legend>
+                <ul>
+                    {props.availStructs.map((item) => {
+                        return (
+                            <li key={item.n}>
+                                <label className="struct">
+                                    <input type="checkbox" name="setstructs" value={item.n}
+                                            checked={item.selected} onChange={handleStructClick} />
+                                    {'<' + item.n + '>'}
+                                </label>
+                                <StructAttrList struct={item.n}
+                                        items={props.structAttrs.get(item.n) || []}
+                                        handleClick={handleStructAttrClickFn(item.n)} />
+                            </li>
+                        );
+                    })}
+                </ul>
+            </fieldset>
+        );
+    };
 
 
     // ---------------------------- <LiReferenceItem /> ----------------------
 
-
-    let LiReferenceItem = React.createClass({
-        render : function () {
-            return (
-                <li>
-                    <label>
-                        <input type="checkbox" name="setrefs" value={this.props.n}
-                                checked={this.props.isSelected} onChange={this.props.onChange} />
-                        {this.props.label}
-                    </label>
-                </li>
-            );
-        }
-    });
+    const LiReferenceItem = (props) => {
+        return (
+            <li>
+                <label>
+                    <input type="checkbox" name="setrefs" value={props.n}
+                            checked={props.isSelected} onChange={props.onChange} />
+                    {props.label}
+                </label>
+            </li>
+        );
+    };
 
 
     // ---------------------------- <FieldsetMetainformation /> ----------------------
 
+    const FieldsetMetainformation = (props) => {
 
-    let FieldsetMetainformation = React.createClass({
+        const handleCheckboxChangeFn = (idx) => {
+            return (evt) => {
+                dispatcher.dispatch({
+                    actionType: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
+                    props: {
+                        idx: idx
+                    }
+                });
+            };
+        };
 
-        _handleCheckboxChange : function (idx, evt) {
-            dispatcher.dispatch({
-                actionType: 'VIEW_OPTIONS_TOGGLE_REFERENCE',
-                props: {
-                    idx: idx
-                }
-            });
-        },
-
-        _handleSelectAll : function (evt) {
+        const handleSelectAll = (evt) => {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
                 props: {}
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <fieldset className="settings-group">
-                    <legend>{helpers.translate('options__references_hd')}</legend>
-                    <ul>
-                        {this.props.availRefs.map((item, i) => {
-                            return <LiReferenceItem
-                                        key={item.n}
-                                        idx={i}
-                                        n={item.n}
-                                        label={item.label}
-                                        isSelected={item.selected}
-                                        onChange={this._handleCheckboxChange.bind(this, i)} />;
-                        })}
-                    </ul>
-                    <SelectAll onChange={this._handleSelectAll} isSelected={this.props.hasSelectAll} />
-                </fieldset>
-            );
-        }
-    });
+        return (
+            <fieldset className="settings-group">
+                <legend>{helpers.translate('options__references_hd')}</legend>
+                <ul>
+                    {props.availRefs.map((item, i) => {
+                        return <LiReferenceItem
+                                    key={item.n}
+                                    idx={i}
+                                    n={item.n}
+                                    label={item.label}
+                                    isSelected={item.selected}
+                                    onChange={handleCheckboxChangeFn(i)} />;
+                    })}
+                </ul>
+                <SelectAll onChange={handleSelectAll} isSelected={props.hasSelectAll} />
+            </fieldset>
+        );
+    };
 
 
     // ---------------------------- <SubmitButtons /> ----------------------
 
+    const SubmitButtons = (props) => {
 
-    let SubmitButtons = React.createClass({
-
-        _handleSaveClick : function () {
+        const handleSaveClick = () => {
             dispatcher.dispatch({
                 actionType: 'VIEW_OPTIONS_SAVE_SETTINGS',
                 props: {}
             });
-        },
+        };
 
-        _renderSubmitButton : function () {
-            if (this.props.isWaiting) {
+        const renderSubmitButton = () => {
+            if (props.isWaiting) {
                 return <img key="save-waiting" className="ajax-loader"
                                 src={helpers.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={helpers.translate('global__processing')}
@@ -342,63 +330,65 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
             } else {
                 return (
                     <button key="save" type="button" className="default-button"
-                            onClick={this._handleSaveClick}>
+                            onClick={handleSaveClick}>
                         {helpers.translate('options__apply_btn')}
                     </button>
                 );
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <div className="buttons">
-                    {this._renderSubmitButton()}
-                </div>
-            );
-        }
-    });
+        return (
+            <div className="buttons">
+                {renderSubmitButton()}
+            </div>
+        );
+    };
 
 
     // ---------------------------- <StructsAndAttrsForm /> ----------------------
 
+    const StructsAndAttrsForm = (props) => {
 
-    const StructsAndAttrsForm = React.createClass({
-
-        render : function () {
-            if (this.props.hasLoadedData) {
-                return (
-                    <form method="POST" action={helpers.createActionLink('options/viewattrsx')}>
-                        <div>
-                            <FieldsetAttributes fixedAttr={this.props.fixedAttr} attrList={this.props.attrList}
-                                    hasSelectAll={this.props.hasSelectAllAttrs} attrsAllpos={this.props.attrsAllpos}
-                                    attrsVmode={this.props.attrsVmode} showConcToolbar={this.props.showConcToolbar} />
-                            <FieldsetStructures availStructs={this.props.availStructs} structAttrs={this.props.structAttrs} />
-                            <FieldsetMetainformation availRefs={this.props.availRefs}
-                                    hasSelectAll={this.props.hasSellectAllRefs} />
-                            <SubmitButtons isWaiting={this.props.isWaiting} />
-                        </div>
-                    </form>
-                );
-
-            } else {
-                return (
+        if (props.hasLoadedData) {
+            return (
+                <form method="POST" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
-                        <img src={helpers.createStaticUrl('img/ajax-loader.gif')}
-                            alt={helpers.translate('global__loading')} title={helpers.translate('global__loading')} />
+                        <FieldsetAttributes fixedAttr={props.fixedAttr} attrList={props.attrList}
+                                hasSelectAll={props.hasSelectAllAttrs} attrsAllpos={props.attrsAllpos}
+                                attrsVmode={props.attrsVmode} showConcToolbar={props.showConcToolbar} />
+                        <FieldsetStructures availStructs={props.availStructs} structAttrs={props.structAttrs} />
+                        <FieldsetMetainformation availRefs={props.availRefs}
+                                hasSelectAll={props.hasSellectAllRefs} />
+                        <SubmitButtons isWaiting={props.isWaiting} />
                     </div>
-                );
-            }
+                </form>
+            );
+
+        } else {
+            return (
+                <div>
+                    <img src={helpers.createStaticUrl('img/ajax-loader.gif')}
+                        alt={helpers.translate('global__loading')} title={helpers.translate('global__loading')} />
+                </div>
+            );
         }
-    });
+    };
 
 
     // ---------------------------- <StructAttrsViewOptions /> ----------------------
 
-    const StructAttrsViewOptions = React.createClass({
+    class StructAttrsViewOptions extends React.Component {
 
         // states: 0 - invisible, 1 - visible-pending,  2 - visible-waiting_to_close
 
-        _fetchStoreState : function () {
+        constructor(props) {
+            super(props);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleViewOptsStoreChange = this._handleViewOptsStoreChange.bind(this);
+            this.state = this._fetchStoreState();
+        }
+
+        _fetchStoreState() {
             return {
                 corpusIdent: viewOptionsStore.getCorpusIdent(),
                 fixedAttr: viewOptionsStore.getFixedAttr(),
@@ -415,9 +405,9 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
                 isWaiting: viewOptionsStore.getIsWaiting(),
                 isVisible: false
             };
-        },
+        }
 
-        _handleStoreChange : function () {
+        _handleStoreChange() {
             const activeItem = mainMenuStore.getActiveItem();
             if (activeItem &&
                     activeItem.actionName === 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS') {
@@ -425,9 +415,9 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
                 state.isVisible = true;
                 this.setState(state);
             }
-        },
+        }
 
-        _handleViewOptsStoreChange : function () {
+        _handleViewOptsStoreChange() {
             const state = this._fetchStoreState();
             if (this.state.isWaiting && !state.isWaiting) {
                 state.isVisible = false;
@@ -436,9 +426,9 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
                 state.isVisible = this.state.isVisible;
             }
             this.setState(state);
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             mainMenuStore.addChangeListener(this._handleStoreChange);
             viewOptionsStore.addChangeListener(this._handleViewOptsStoreChange);
             // ---> not needed (see action prerequisite)
@@ -448,18 +438,14 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
                     props: {}
                 });
             }
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             mainMenuStore.removeChangeListener(this._handleStoreChange);
             viewOptionsStore.removeChangeListener(this._handleViewOptsStoreChange);
-        },
+        }
 
-        getInitialState : function () {
-            return this._fetchStoreState();
-        },
-
-        render : function () {
+        render() {
             return (
                 <div className="StructAttrsViewOptions">
                     <StructsAndAttrsForm
@@ -478,7 +464,7 @@ export function init(dispatcher, helpers, layoutViews, viewOptionsStore, mainMen
                 </div>
             );
         }
-    });
+    }
 
     return {
         StructAttrsViewOptions: StructAttrsViewOptions

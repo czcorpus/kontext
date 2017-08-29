@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
- /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import * as React from 'vendor/react';
 import {init as generalViewsInit} from './general';
@@ -28,7 +28,7 @@ import {init as structsAttrsViewsInit} from './structsAttrs';
 export function init(dispatcher, helpers, layoutViews, generalOptionsStore, viewOptionsStore, mainMenuStore) {
 
     const generalOptionsViews = generalViewsInit(dispatcher, helpers, layoutViews, generalOptionsStore);
-    const structsAttrsOptionsViews = structsAttrsViewsInit(dispatcher, helpers, layoutViews, viewOptionsStore, mainMenuStore);
+    const structsAttrsOptionsViews = structsAttrsViewsInit(dispatcher, helpers, viewOptionsStore, mainMenuStore);
 
     class OptionsContainer extends React.Component {
 

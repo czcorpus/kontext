@@ -18,34 +18,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import * as React from 'vendor/react';
 import {init as inputInit} from './input';
 
 
-export function init(dispatcher, mixins, sampleStore, switchMcStore) {
-
-    const he = mixins[0];
+export function init(dispatcher, he, sampleStore, switchMcStore) {
 
     // ------------------------ <SampleForm /> --------------------------------
 
-    const SampleForm = React.createClass({
+    class SampleForm extends React.Component {
 
-        mixins : mixins,
-
-        getInitialState : function () {
-            return {
+        constructor(props) {
+            super(props);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleInputChange = this._handleInputChange.bind(this);
+            this._handleSubmitEvent = this._handleSubmitEvent.bind(this);
+            this.state = {
                 rlines: sampleStore.getRlinesValues().get(this.props.sampleId)
             };
-        },
+        }
 
-        _handleStoreChange : function (store, action) {
+        _handleStoreChange() {
             this.setState({
                 rlines: sampleStore.getRlinesValues().get(this.props.sampleId)
             })
-        },
+        }
 
-        _handleInputChange : function (evt) {
+        _handleInputChange(evt) {
             dispatcher.dispatch({
                 actionType: 'SAMPLE_FORM_SET_RLINES',
                 props: {
@@ -53,9 +54,9 @@ export function init(dispatcher, mixins, sampleStore, switchMcStore) {
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        _handleSubmitEvent : function (evt) {
+        _handleSubmitEvent(evt) {
             if (evt.keyCode === undefined || evt.keyCode === 13) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
@@ -72,96 +73,88 @@ export function init(dispatcher, mixins, sampleStore, switchMcStore) {
                 evt.preventDefault();
                 evt.stopPropagation();
             }
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             sampleStore.addChangeListener(this._handleStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             sampleStore.removeChangeListener(this._handleStoreChange);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <form onKeyDown={this._handleSubmitEvent}>
-                    <p>{this.translate('query__create_sample_desc')}.</p>
+                    <p>{he.translate('query__create_sample_desc')}.</p>
                     <p>
-                        {this.translate('query__create_sample_rlines_label')}:
+                        {he.translate('query__create_sample_rlines_label')}:
                         {'\u00a0'}<input type="text" name="rlines" value={this.state.rlines} style={{width: '4em'}}
                                 onChange={this._handleInputChange} />
                     </p>
                     <div className="buttons">
                         <button type="button" className="default-button"
                                 onClick={this._handleSubmitEvent}>
-                            {this.translate('query__create_sample_submit_btn')}
+                            {he.translate('query__create_sample_submit_btn')}
                         </button>
                     </div>
                 </form>
             );
         }
-    });
+    }
 
 
     // ------------------------ <ShuffleForm /> --------------------------------
 
-    const ShuffleForm = React.createClass({
+    class ShuffleForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
 
-        getInitialState : function () {
-            return {
+            this.state = {
                 isWarning: this.props.shuffleMinResultWarning <= this.props.lastOpSize,
                 isAutoSubmit: this.props.shuffleMinResultWarning > this.props.lastOpSize
                                 && this.props.operationIdx === undefined
             };
-        },
+        }
 
-        _renderWarningState : function () {
+        _renderWarningState() {
             return (
                 <div>
                     <p>
-                        <img src={this.createStaticUrl('img/warning-icon.svg')}
-                                alt={this.translate('global__warning_icon')}
+                        <img src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning_icon')}
                                 style={{verticalAlign: 'middle', marginRight: '0.4em'}} />
-                        {this.translate('query__shuffle_large_data_warn')}
+                        {he.translate('query__shuffle_large_data_warn')}
                     </p>
                     <button type="button" className="default-button"
                             onClick={()=>this.props.shuffleSubmitFn()}>
-                        {this.translate('global__submit_anyway')}
+                        {he.translate('global__submit_anyway')}
                     </button>
                 </div>
             );
-        },
+        }
 
-        _renderAutoSubmitState : function () {
-            return <div><img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={this.translate('global__loading')} /></div>;
-        },
+        _renderAutoSubmitState() {
+            return <div><img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={he.translate('global__loading')} /></div>;
+        }
 
-        _renderDefaultState : function () {
+        _renderDefaultState() {
             return (
                 <div>
-                    <p>{this.translate('query__shuffle_form_no_params_to_change')}.</p>
+                    <p>{he.translate('query__shuffle_form_no_params_to_change')}.</p>
                     <p>
                         <button type="button" className="default-button"
                                     onClick={()=>this.props.shuffleSubmitFn()}>
-                            {this.translate('global__proceed')}
+                            {he.translate('global__proceed')}
                         </button>
                     </p>
                 </div>
             );
-        },
+        }
 
-        componentDidMount : function () {
-            if (this.state.isAutoSubmit) {
-                window.setTimeout(() => {
-                    this.props.shuffleSubmitFn();
-                }, 0);
-            }
-        },
-
-        _renderContents : function () {
+        _renderContents() {
             if (this.state.isWarning) {
                 return this._renderWarningState();
 
@@ -171,12 +164,20 @@ export function init(dispatcher, mixins, sampleStore, switchMcStore) {
             } else {
                 return this._renderDefaultState();
             }
-        },
+        }
 
-        render : function () {
+        componentDidMount() {
+            if (this.state.isAutoSubmit) {
+                window.setTimeout(() => {
+                    this.props.shuffleSubmitFn();
+                }, 0);
+            }
+        }
+
+        render() {
             return <form>{this._renderContents()}</form>;
         }
-    });
+    };
 
     /**
      *

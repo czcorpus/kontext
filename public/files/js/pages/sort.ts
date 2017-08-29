@@ -75,8 +75,7 @@ class SortPage {
                 );
                 this.sortFormViews = sortFormInit(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins(),
-                    this.layoutModel.layoutViews,
+                    this.layoutModel.getComponentHelpers(),
                     this.sortStore,
                     this.multiLevelSortStore
                 );
