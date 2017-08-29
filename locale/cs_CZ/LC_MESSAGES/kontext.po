@@ -632,3 +632,6 @@ msgstr "Vzájemný vztah dvou atributů"
 msgid "Name the query"
 msgstr "Pojmenovat dotaz"
 
+msgid "Archive query"
+msgstr "Archivovat dotaz"
+

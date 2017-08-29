@@ -424,7 +424,7 @@ class MenuGenerator(object):
 
         self.query_save_as = (
             EventTriggeringItem(MainMenu.CONCORDANCE('query-save-as'),
-                                _('Save query as'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM').mark_indirect()
+                                _('Archive query'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM').mark_indirect()
         )
 
         self.query_undo = (

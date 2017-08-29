@@ -51,22 +51,28 @@ export class QuerySaveAsFormStore extends SimplePageStore {
                     this.notifyChangeListeners();
                 break;
                 case 'QUERY_SAVE_AS_FORM_SUBMIT':
-                    this.isBusy = true;
-                    this.notifyChangeListeners();
-                    this.submit().then(
-                        () => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.layoutModel.resetMenuActiveItemAndNotify();
-                            this.layoutModel.showMessage('info',
-                                    this.layoutModel.translate('query__save_as_item_saved'));
-                        },
-                        (err) => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                            this.layoutModel.showMessage('error', err);
-                        }
-                    );
+                    if (this.name) {
+                        this.isBusy = true;
+                        this.notifyChangeListeners();
+                        this.submit().then(
+                            () => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                this.layoutModel.resetMenuActiveItemAndNotify();
+                                this.layoutModel.showMessage('info',
+                                        this.layoutModel.translate('query__save_as_item_saved'));
+                            },
+                            (err) => {
+                                this.isBusy = false;
+                                this.notifyChangeListeners();
+                                this.layoutModel.showMessage('error', err);
+                            }
+                        );
+
+                    } else {
+                        this.layoutModel.showMessage('error',
+                                this.layoutModel.translate('query__save_as_cannot_have_empty_name'));
+                    }
                 break;
             }
         });
