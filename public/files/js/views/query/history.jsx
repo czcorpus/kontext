@@ -230,7 +230,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                 return (
                     <div>
                         <a className="util-button" onClick={handleClick}>
-                            {he.translate('global__save')}{'\u2026'}
+                            {he.translate('query__save_button')}{'\u2026'}
                         </a>
                     </div>
                 );
@@ -318,7 +318,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                 {'\u00a0'}
                 <button type="button" className="default-button"
                         onClick={handleSubmitClick}>
-                    {he.translate('global__save')}
+                    {he.translate('global__ok')}
                 </button>
                 <br />
             </form>
@@ -361,7 +361,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                         query_type={props.data.query_type} subcorpname={props.data.subcorpname}
                         aligned={props.data.aligned} textTypes={props.data.selected_text_types} />
                 <div className="footer">
-                    <a className="open-in-form" onClick={handleFormClick}>
+                    <a className="open-in-form util-button" onClick={handleFormClick}>
                         {he.translate('qhistory__open_in_form')}
                     </a>
                     {props.data.query_id ?
