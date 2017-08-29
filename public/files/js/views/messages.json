@@ -1027,7 +1027,7 @@
         "freq__ct_sort_row_opt_abs": "součtu abs. frekvencí v řádku",
         "freq__ct_conf_level_label": "koeficient spolehlivosti",
         "freq__ct_conf_interval_too_wide_{threshold}": "Interval spolehlivosti je příliš široký ve srování s vlastní hodnotou (více než {threshold}%)",
-        "freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}": "Interval spolehlivosti je počítán metodou Clopper–Pearson. KonText též kontroluje, zda je vypočtený interval dostatečně malý ve srovnání s pozorovanou hodnotou. V případě, že je šířka intervalu větší než {threshold}% této hodnoty, KonText u ní zobrazí varování. Např. pro pozorovanou hodnotu 50 a limitu 20% musí být šířka intervalu maximálně 10.",
+        "freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}": "Interval spolehlivosti je počítán metodou Clopper–Pearson. KonText též kontroluje, zda je vypočtený interval dostatečně malý ve srovnání s pozorovanou hodnotou. V případě, že je šířka intervalu větší než {threshold}% této hodnoty, KonText u ní zobrazí varování. Např. pro pozorovanou hodnotu 50 a limit {threshold}% musí být šířka intervalu maximálně {maxWidth}.",
         "freq__ct_references": "Odkazy",
         "wordlist__cannot_save_empty": "Prázdný výsledek nelze uložit.",
         "wordlist__save_wl_as_header": "Uložit seznam slov jako",
