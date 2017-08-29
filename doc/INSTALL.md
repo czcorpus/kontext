@@ -102,7 +102,7 @@ scales well.
 
 Let's assume you are going to install KonText into */opt/kontext-production*.
 
-First, define your Gunicorn configuration file */opt/kontext-production/conf/gunicorn-conr.py*
+First, define your Gunicorn configuration file */opt/kontext-production/conf/gunicorn-conf.py*
 (= common Python module) and place it to the *conf* directory.
 
 ```
