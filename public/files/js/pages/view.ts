@@ -34,7 +34,7 @@ import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
-import {ConcLineStore, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewStore} from '../stores/concordance/lines';
+import {ConcLineStore, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewStore} from '../stores/concordance/lines';
 import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} from '../stores/query/main';
 import {QueryReplayStore, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
@@ -902,7 +902,8 @@ export class ViewPage {
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
-            CorporaColumns: this.layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns'),
+            CorporaColumns: this.layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns').map(v =>
+                        ({n: v.n, label: v.label, visible: true})),
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
             baseCorpname: corpIdent.id,

@@ -30,6 +30,31 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
     const mediaViews = initMediaViews(dispatcher, he, lineStore);
     const extras = lineExtrasViewsInit(dispatcher, he);
 
+    // ------------------------- <ConcColHideSwitch /> ---------------------------
+
+    const ConcColHideSwitch = (props) => {
+
+        const handleChange = (_) => {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_CHANGE_LANG_VISIBILITY',
+                props: {
+                    corpusId: props.corpusId,
+                    value: !props.isVisible
+                }
+            });
+        }
+
+        const title = props.isVisible ?
+                he.translate('concview__click_to_hide_the_corpus') :
+                he.translate('concview__click_to_show_the_corpus');
+
+        return (
+            <input type="checkbox" style={{verticalAlign: 'middle'}}
+                title={title} checked={props.isVisible}
+                onChange={handleChange} />
+        );
+    }
+
     // ------------------------- <ConcColsHeading /> ---------------------------
 
     const ConcColsHeading = (props) => {
@@ -57,12 +82,18 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         const renderCol = (corpInfo) => {
             const colSpan = props.viewMode === 'kwic' ? 3 : 1;
 
+            const htmlClass = corpInfo.visible ? 'concordance-col-heading' : 'concordance-col-heading-hidden';
+
             return [
                 <td key={'ref:' + corpInfo.n}>{/* matches reference column */}</td>,
-                <td key={corpInfo.n} className="concordance-col-heading" colSpan={colSpan}>
-                    <a className="select-primary-lang" onClick={handleSetMainCorpClick.bind(null, corpInfo.n)}>
-                        {corpInfo.label}
+                <td key={corpInfo.n} className={htmlClass} colSpan={colSpan}>
+                    <a className="select-primary-lang" onClick={handleSetMainCorpClick.bind(null, corpInfo.n)}
+                                title={corpInfo.visible ? '' : corpInfo.label}>
+                        {corpInfo.visible ? corpInfo.label : '\u2026'}
                     </a>
+                    {props.hideable || !corpInfo.visible ?
+                        <ConcColHideSwitch corpusId={corpInfo.n} isVisible={corpInfo.visible} /> :
+                        null}
                 </td>
             ];
         };
@@ -236,13 +267,21 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         }
 
         _renderText(corpusOutput, corpusIdx) {
-            const corpname = this.props.cols[corpusIdx].n;
+            const corpname = this.props.cols.get(corpusIdx).n;
             if (this.props.viewMode === 'kwic') {
                 return this._renderTextKwicMode(corpname, corpusOutput);
 
             } else {
                 return this._renderTextParMode(corpname, corpusOutput);
             }
+        }
+
+        _renderTextSimple(corpusOutput, corpusIdx) {
+            const mp  = v => v.text;
+            return corpusOutput.left.map(mp)
+                    .concat(corpusOutput.kwic.map(mp))
+                    .concat(corpusOutput.right.map(mp))
+                    .join(' ');
         }
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
@@ -259,7 +298,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                     this.props.lineSelMode !== nextProps.lineSelMode ||
                     this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible ||
                     this.props.data.lineGroup !== nextProps.data.lineGroup ||
-                    this.props.catBgColor != nextProps.catBgColor;
+                    this.props.catBgColor != nextProps.catBgColor ||
+                    this.props.cols !== nextProps.cols;
         }
 
         componentDidMount() {
@@ -299,25 +339,39 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                         }
                     </td>
                     <td className="ref">
-                        <extras.RefInfo corpusId={this.props.cols[0].n}
-                                tokenNumber={primaryLang.tokenNumber}
-                                lineIdx={this.props.lineIdx}
-                                data={primaryLang.ref}
-                                refsDetailClickHandler={this.props.refsDetailClickHandler}
-                                emptyRefValPlaceholder={this.props.emptyRefValPlaceholder} />
-                    </td>
-                    {this._renderText(primaryLang, 0)}
-                    {alignedCorpora.map((alCorp, i) => {
-                        return [
-                            (<td className="ref">
-                                <extras.RefInfo corpusId={this.props.cols[i + 1].n}
-                                    tokenNumber={alCorp.tokenNumber}
+                        {this.props.cols.get(0).visible ?
+                            <extras.RefInfo corpusId={this.props.cols.get(0).n}
+                                    tokenNumber={primaryLang.tokenNumber}
                                     lineIdx={this.props.lineIdx}
-                                    data={alCorp.ref}
-                                    refsDetailClickHandler={this.props.refsDetailClickHandler} />
-                            </td>),
-                            this._renderText(alCorp, i + 1)
-                        ];
+                                    data={primaryLang.ref}
+                                    refsDetailClickHandler={this.props.refsDetailClickHandler}
+                                    emptyRefValPlaceholder={this.props.emptyRefValPlaceholder} /> :
+                            null}
+
+                    </td>
+                    {this.props.cols.get(0).visible ?
+                            this._renderText(primaryLang, 0) :
+                            <td key="par" title={this._renderTextSimple(primaryLang, 0)}>{'\u2026'}</td>
+                    }
+                    {alignedCorpora.map((alCorp, i) => {
+                        if (this.props.cols.get(i + 1).visible) {
+                            return [
+                                (<td className="ref">
+                                    <extras.RefInfo corpusId={this.props.cols.get(i + 1).n}
+                                        tokenNumber={alCorp.tokenNumber}
+                                        lineIdx={this.props.lineIdx}
+                                        data={alCorp.ref}
+                                        refsDetailClickHandler={this.props.refsDetailClickHandler} />
+                                </td>),
+                                this._renderText(alCorp, i + 1)
+                            ];
+
+                        } else {
+                            return [
+                                <td className="ref" />,
+                                <td key="par" title={this._renderTextSimple(alCorp, i + 1)}>{'\u2026'}</td>
+                            ];
+                        }
                     })}
                 </tr>
             );
@@ -330,8 +384,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
             this._storeChangeListener = this._storeChangeListener.bind(this);
+            this.state = this._fetchStoreState();
         }
 
         _getLineSelMode() {
@@ -351,7 +405,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                 numItemsInLockedGroups: lineStore.getNumItemsInLockedGroups(),
                 audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
                 useSafeFont: lineStore.getUseSafeFont(),
-                emptyRefValPlaceholder: lineStore.getEmptyRefValPlaceholder()
+                emptyRefValPlaceholder: lineStore.getEmptyRefValPlaceholder(),
+                corporaColumns: lineStore.getCorporaColumns()
             };
         }
 
@@ -388,7 +443,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
             return <Line key={String(i) + ':' + item.languages.first().tokenNumber}
                          lineIdx={i}
                          data={item}
-                         cols={this.props.CorporaColumns}
+                         cols={this.state.corporaColumns}
                          viewMode={this.props.ViewMode}
                          baseCorpname={this.props.baseCorpname}
                          mainCorp={this.props.mainCorp}
@@ -407,12 +462,13 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         }
 
         render() {
+            const numVisibleCols = this.state.corporaColumns.reduce((prev, c) => prev + (c.visible ? 1 : 0), 0);
             return (
                 <table id="conclines" className={this.state.useSafeFont ? 'safe' : null}>
                     <tbody>
-                        {this.props.CorporaColumns.length > 1 ?
-                            <ConcColsHeading cols={this.props.CorporaColumns} corpsWithKwic={this.props.KWICCorps}
-                                    viewMode={this.props.ViewMode} />
+                        {this.state.corporaColumns.size > 1 ?
+                            <ConcColsHeading cols={this.state.corporaColumns} corpsWithKwic={this.props.KWICCorps}
+                                    viewMode={this.props.ViewMode} hideable={numVisibleCols > 1} />
                             : null
                         }
                         {this.state.lines.map(this._renderLine.bind(this))}
