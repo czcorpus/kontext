@@ -67,6 +67,7 @@
                         '!public/files/js/min/vendor',
                         'public/files/js/min/vendor/immutable.min.js',
                         'public/files/js/min/vendor/react.dev.js',
+                        'public/files/js/min/vendor/react-transition-group.min.js',
                         'public/files/js/min/vendor/rsvp-ajax.js',
                         'public/files/js/min/vendor/cookies.js',
                         'public/files/js/min/vendor/less.js',
