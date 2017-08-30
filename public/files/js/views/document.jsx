@@ -18,9 +18,7 @@
 
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
-
-
-const ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+import {CSSTransitionGroup} from 'vendor/react-transition-group';
 
 
 export function init(dispatcher, he, storeProvider) {
@@ -356,10 +354,10 @@ export function init(dispatcher, he, storeProvider) {
             if (messages) {
                 return (
                     <div className="messages">
-                        <ReactCSSTransitionGroup transitionName="msganim"
+                        <CSSTransitionGroup transitionName="msganim"
                                 transitionEnterTimeout={500} transitionLeaveTimeout={300}>
                         {messages}
-                        </ReactCSSTransitionGroup>
+                        </CSSTransitionGroup>
                     </div>
                 );
 

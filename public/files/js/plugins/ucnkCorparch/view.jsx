@@ -24,7 +24,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
     const defaultComponents = defaultViewInit(dispatcher, mixins, layoutViews, CorpusInfoBox,
             formStore, listStore);
 
-    const util = mixins[0];
+    const he = mixins[0];
 
     /**
      *
@@ -100,7 +100,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         },
 
         _closeDialog : function () {
-            this.setState(React.addons.update(this.state, {hasDialog: {$set: false}}));
+            const newState = he.cloneState(this.state);
+            newState.hasDialog = false;
+            this.setState(newState);
         },
 
         _renderDialog : function () {
@@ -165,7 +167,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         const keywords = props.row.keywords.map((k, i) => {
             return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
         });
-        const link = util.createActionLink('first_form', [['corpname', props.row.id]]);
+        const link = he.createActionLink('first_form', [['corpname', props.row.id]]);
         const size = props.row.size_info ? props.row.size_info : '-';
 
         let userAction = null;
@@ -201,7 +203,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                     <p className="desc" style={{display: 'none'}}></p>
                     <a className="detail"
                             onClick={handleDetailClick.bind(null, props.row.id)}>
-                        {util.translate('defaultCorparch__corpus_details')}
+                        {he.translate('defaultCorparch__corpus_details')}
                     </a>
                 </td>
             </tr>
@@ -242,7 +244,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         },
 
         _detailClickHandler: function (corpusId) {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: true}}));
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = true;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
                 props: {
@@ -252,7 +256,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         },
 
         _detailCloseHandler: function () {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: false}}));
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = false;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
                 props: {}
@@ -318,7 +324,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         return (
             <tr className="load-more">
                 <td colSpan="5">
-                    <a onClick={linkClickHandler}>{util.translate('ucnkCorparch__load_all')}</a>
+                    <a onClick={linkClickHandler}>{he.translate('ucnkCorparch__load_all')}</a>
                 </td>
             </tr>
         );

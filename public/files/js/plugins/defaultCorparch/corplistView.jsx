@@ -176,7 +176,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         },
 
         _detailClickHandler: function (corpusId) {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: true}}));
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = true;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
                 props: {
@@ -186,7 +188,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         },
 
         _detailCloseHandler: function () {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: false}}));
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = false;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
                 props: {}
@@ -463,7 +467,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         },
 
         _handleLegendClick : function () {
-            this.setState(React.addons.update(this.state, {expanded: {$set: !this.state.expanded}}));
+            const newState = he.cloneState(this.state);
+            newState.expanded = !this.state.expanded;
+            this.setState(newState);
         },
 
         render: function () {

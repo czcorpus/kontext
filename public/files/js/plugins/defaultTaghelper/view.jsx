@@ -16,10 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
 export function init(dispatcher, mixins, tagHelperStore) {
+
+    const he = mixins[0];
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
@@ -273,18 +275,18 @@ export function init(dispatcher, mixins, tagHelperStore) {
 
         _changeListener : function (store, action) {
             if (action === 'TAGHELPER_WAITING_FOR_SERVER') {
-                this.setState(React.addons.update(this.state, {
-                    isWaiting: {$set: true}
-                }));
+                const newState = he.cloneState(this.state);
+                newState.isWaiting = true;
+                this.setState(newState);
 
             } else if (action === 'TAGHELPER_UPDATED_DATA_CHANGED' ||
                     action === 'TAGHELPER_INITIAL_DATA_RECEIVED') {
-                this.setState(React.addons.update(this.state, {
-                    isWaiting: {$set: false},
-                    positions: {$set: store.getPositions()},
-                    stateId: {$set: store.getStateId()},
-                    tagValue: {$set: store.exportCurrentPattern()}
-                }));
+                const newState = he.cloneState(this.state);
+                newState.isWaiting = false;
+                newState.positions = store.getPositions();
+                newState.stateId = store.getStateId();
+                newState.tagValue = store.exportCurrentPattern();
+                this.setState(newState);
             }
         },
 

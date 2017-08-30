@@ -508,15 +508,15 @@ export function init(dispatcher, he, subcorpLinesStore) {
         }
 
         _handleActionButton(idx, evt) {
-            this.setState(React.addons.update(this.state, {
-                actionBoxVisible: {$set: idx}
-            }));
+            const newState = he.cloneState(this.state);
+            newState.actionBoxVisible = idx;
+            this.setState(newState);
         }
 
         _handleActionsClose() {
-            this.setState(React.addons.update(this.state, {
-                actionBoxVisible: {$set: null}
-            }));
+            const newState = he.cloneState(this.state);
+            newState.actionBoxVisible = null;
+            this.setState(newState);
         }
 
         render() {
