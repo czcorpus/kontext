@@ -120,7 +120,7 @@ export class CollPage {
 
         const freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             this.mlFreqStore,
             this.ttFreqStore,
@@ -153,7 +153,7 @@ export class CollPage {
         // TODO: init freq form
         const analysisViews = analysisFrameInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             collFormViews,
             freqFormViews,
@@ -208,7 +208,7 @@ export class CollPage {
         );
         const queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             {
                 QueryFormView: null,

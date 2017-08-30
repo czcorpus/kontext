@@ -18,203 +18,183 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 import {init as keyboardInit} from './keyboard';
 
 
-export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore,
-        withinBuilderStore, virtualKeyboardStore) {
+export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore) {
 
-    const keyboardViews = keyboardInit(dispatcher, mixins[0], queryStore, virtualKeyboardStore);
+    const keyboardViews = keyboardInit(dispatcher, he, queryStore, virtualKeyboardStore);
+    const layoutViews = he.getLayoutViews();
+
 
     // -------------- <QueryHints /> --------------------------------------------
 
-    const QueryHints = React.createClass({
+    class QueryHints extends React.Component {
 
-        mixins: mixins,
+        constructor(props) {
+            super(props);
+            this._changeListener = this._changeListener.bind(this);
+            this._clickHandler = this._clickHandler.bind(this);
+            this.state = {hintText: queryHintStore.getHint()};
+        }
 
-        _changeListener : function () {
+        _changeListener() {
             this.setState({hintText: queryHintStore.getHint()});
-        },
+        }
 
-        getInitialState : function () {
-            return {hintText: queryHintStore.getHint()};
-        },
-
-        componentDidMount : function () {
-            queryHintStore.addChangeListener(this._changeListener);
-        },
-
-        componentWillUnmount : function () {
-            queryHintStore.removeChangeListener(this._changeListener);
-        },
-
-        _clickHandler : function () {
+        _clickHandler() {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'NEXT_QUERY_HINT',
                 props: {}
             });
-        },
+        }
 
-        render: function () {
+        componentDidMount() {
+            queryHintStore.addChangeListener(this._changeListener);
+        }
+
+        componentWillUnmount() {
+            queryHintStore.removeChangeListener(this._changeListener);
+        }
+
+        render() {
             return (
                 <div>
                     <span className="hint">{this.state.hintText}</span>
                     <span className="next-hint">
-                        (<a onClick={this._clickHandler}>{this.translate('global__next_tip')}</a>)
+                        (<a onClick={this._clickHandler}>{he.translate('global__next_tip')}</a>)
                     </span>
                 </div>
             );
         }
-    });
+    }
 
 
     // ------------------- <TRQueryTypeField /> -----------------------------
 
-    const TRQueryTypeField = React.createClass({
+    const TRQueryTypeField = (props) => {
 
-        mixins : mixins,
-
-        _handleSelection : function (evt) {
+        const handleSelection = (evt) => {
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
+                actionType: props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
                 props: {
-                    sourceId: this.props.sourceId,
+                    sourceId: props.sourceId,
                     queryType: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <tr>
-                    <th>{this.translate('query__select_type')}:</th>
-                    <td>
-                        <select value={this.props.queryType} onChange={this._handleSelection}>
-                            <option value="iquery">{this.translate('query__qt_basic')}</option>
-                            {this.props.hasLemmaAttr ? <option value="lemma">{this.translate('query__qt_lemma')}</option> : null}
-                            <option value="phrase">{this.translate('query__qt_phrase')}</option>
-                            <option value="word">{this.translate('query__qt_word_form')}</option>
-                            <option value="char">{this.translate('query__qt_word_part')}</option>
-                            <option value="cql">{this.translate('query__qt_cql')}</option>
-                        </select>
-                    </td>
-                </tr>
-            );
-        }
-    });
+        return (
+            <tr>
+                <th>{he.translate('query__select_type')}:</th>
+                <td>
+                    <select value={props.queryType} onChange={handleSelection}>
+                        <option value="iquery">{he.translate('query__qt_basic')}</option>
+                        {props.hasLemmaAttr ? <option value="lemma">{he.translate('query__qt_lemma')}</option> : null}
+                        <option value="phrase">{he.translate('query__qt_phrase')}</option>
+                        <option value="word">{he.translate('query__qt_word_form')}</option>
+                        <option value="char">{he.translate('query__qt_word_part')}</option>
+                        <option value="cql">{he.translate('query__qt_cql')}</option>
+                    </select>
+                </td>
+            </tr>
+        );
+    };
 
     // ------------------- <TRPcqPosNegField /> -----------------------------
 
-    const TRPcqPosNegField = React.createClass({
+    const TRPcqPosNegField = (props) => {
 
-        mixins : mixins,
-
-        _handleSelectChange : function (evt) {
+        const handleSelectChange = (evt) => {
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_PCQ_POS_NEG',
+                actionType: props.actionPrefix + 'QUERY_INPUT_SET_PCQ_POS_NEG',
                 props: {
-                    corpname: this.props.sourceId,
+                    corpname: props.sourceId,
                     value: evt.target.value
                 }
-            })
-        },
+            });
+        };
 
-        render : function () {
-            return (
-                <tr>
-                    <th />
-                    <td>
-                        <select value={this.props.value} onChange={this._handleSelectChange}>
-                            <option value="pos">{this.translate('query__align_contains')}</option>
-                            <option value="neg">{this.translate('query__align_not_contains')}</option>
-                        </select>
-                    </td>
-                </tr>
-            )
-        }
-    });
+        return (
+            <tr>
+                <th />
+                <td>
+                    <select value={props.value} onChange={handleSelectChange}>
+                        <option value="pos">{he.translate('query__align_contains')}</option>
+                        <option value="neg">{he.translate('query__align_not_contains')}</option>
+                    </select>
+                </td>
+            </tr>
+        );
+    };
 
     // ------------------- <TagWidget /> --------------------------------
 
-    const TagWidget = React.createClass({
+    const TagWidget = (props) => {
 
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <layoutViews.PopupBox
-                        onCloseClick={this.props.closeClickHandler}
-                        customClass="tag-builder-widget"
-                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                    <this.props.tagHelperView
-                            sourceId={this.props.sourceId}
-                            onInsert={this.props.closeClickHandler}
-                            onEscKey={this.props.closeClickHandler}
-                            actionPrefix={this.props.actionPrefix} />
-                </layoutViews.PopupBox>
-            );
-        }
-    });
+        return (
+            <layoutViews.PopupBox
+                    onCloseClick={props.closeClickHandler}
+                    customClass="tag-builder-widget"
+                    customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                <props.tagHelperView
+                        sourceId={props.sourceId}
+                        onInsert={props.closeClickHandler}
+                        onEscKey={props.closeClickHandler}
+                        actionPrefix={props.actionPrefix} />
+            </layoutViews.PopupBox>
+        );
+    };
 
     // ------------------- <WithinWidget /> --------------------------------
 
-    const WithinWidget = React.createClass({
+    class WithinWidget extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._handleInputChange = this._handleInputChange.bind(this);
+            this._handleAttrChange = this._handleAttrChange.bind(this);
+            this._handleInsert = this._handleInsert.bind(this);
+            this.state = {
+                data: withinBuilderStore.getData(),
+                query: withinBuilderStore.getQuery(),
+                attr: withinBuilderStore.getCurrAttrIdx(),
+                exportedQuery: withinBuilderStore.exportQuery()
+            };
+        }
 
-        componentDidMount : function () {
-            withinBuilderStore.addChangeListener(this._handleStoreChange);
-            dispatcher.dispatch({
-                actionType: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
-                props: {
-                    sourceId: this.props.sourceId
-                }
-            });
-        },
-
-        componentWillUnmount : function () {
-            withinBuilderStore.removeChangeListener(this._handleStoreChange);
-        },
-
-        _handleStoreChange : function () {
+        _handleStoreChange() {
             this.setState({
                 data: withinBuilderStore.getData(),
                 query: withinBuilderStore.getQuery(),
                 attr: withinBuilderStore.getCurrAttrIdx(),
                 exportedQuery: withinBuilderStore.exportQuery()
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                data: withinBuilderStore.getData(),
-                query: withinBuilderStore.getQuery(),
-                attr: withinBuilderStore.getCurrAttrIdx(),
-                exportedQuery: withinBuilderStore.exportQuery()
-            }
-        },
-
-        _handleInputChange : function (evt) {
+        _handleInputChange(evt) {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SET_WITHIN_VALUE',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        _handleAttrChange : function (evt) {
+        _handleAttrChange(evt) {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SET_WITHIN_ATTR',
                 props: {
                     idx: evt.target.value
                 }
             });
-        },
+        }
 
-        _handleInsert : function () {
+        _handleInsert() {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
                 props: {
@@ -224,14 +204,28 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     closeWhenDone: true
                 }
             });
-        },
+        }
 
-        render : function () {
+        componentDidMount() {
+            withinBuilderStore.addChangeListener(this._handleStoreChange);
+            dispatcher.dispatch({
+                actionType: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
+                props: {
+                    sourceId: this.props.sourceId
+                }
+            });
+        }
+
+        componentWillUnmount() {
+            withinBuilderStore.removeChangeListener(this._handleStoreChange);
+        }
+
+        render() {
             return (
                 <layoutViews.PopupBox
                         onCloseClick={this.props.closeClickHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                    <h3>{this.translate('query__create_within')}</h3>
+                    <h3>{he.translate('query__create_within')}</h3>
                     <div className="within-widget">
                         <select onChange={this._handleAttrChange} value={this.state.attr}>
                             {this.state.data.map((item, i) => {
@@ -245,85 +239,86 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     <p>
                         <button type="button" className="util-button"
                                 onClick={this._handleInsert}>
-                            {this.translate('query__insert_within')}
+                            {he.translate('query__insert_within')}
                         </button>
                     </p>
                 </layoutViews.PopupBox>
             );
         }
-    });
+    }
 
     // ------------------- <HistoryWidget /> -----------------------------
 
-    const HistoryWidget = React.createClass({
+    const HistoryWidget = (props) => {
 
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <div className="history-widget">
-                    <this.props.queryStorageView
-                            sourceId={this.props.sourceId}
-                            onCloseTrigger={this.props.onCloseTrigger}
-                            actionPrefix={this.props.actionPrefix} />
-                </div>
-            );
-        }
-    });
+        return (
+            <div className="history-widget">
+                <props.queryStorageView
+                        sourceId={props.sourceId}
+                        onCloseTrigger={props.onCloseTrigger}
+                        actionPrefix={props.actionPrefix} />
+            </div>
+        );
+    };
 
     // ------------------- <KeyboardWidget /> --------------------------------
 
-    const KeyboardWidget = React.createClass({
+    const KeyboardWidget = (props) => {
 
-        _keyHandler : function (evt) {
+        const keyHandler = (evt) => {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
                 props: {
                     keyCode: evt.keyCode
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <layoutViews.PopupBox
-                        onCloseClick={this.props.closeClickHandler}
-                        customStyle={{marginTop: '3.5em'}}
-                        takeFocus={true}
-                        keyPressHandler={this._keyHandler}>
-                    <keyboardViews.Keyboard sourceId={this.props.sourceId}
-                            inputLanguage={this.props.inputLanguage}
-                            actionPrefix={this.props.actionPrefix} />
-                </layoutViews.PopupBox>
-            );
-        }
-    });
+        return (
+            <layoutViews.PopupBox
+                    onCloseClick={props.closeClickHandler}
+                    customStyle={{marginTop: '3.5em'}}
+                    takeFocus={true}
+                    keyPressHandler={keyHandler}>
+                <keyboardViews.Keyboard sourceId={props.sourceId}
+                        inputLanguage={props.inputLanguage}
+                        actionPrefix={props.actionPrefix} />
+            </layoutViews.PopupBox>
+        );
+    };
 
     // ------------------- <QueryToolbox /> -----------------------------
 
-    const QueryToolbox = React.createClass({
+    class QueryToolbox extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleWidgetTrigger = this._handleWidgetTrigger.bind(this);
+            this._handleHistoryWidget = this._handleHistoryWidget.bind(this);
+            this._handleCloseWidget = this._handleCloseWidget.bind(this);
+            this._handleQueryStoreChange = this._handleQueryStoreChange.bind(this);
+            this.state = {activeWidget: queryStore.getActiveWidget(this.props.sourceId)};
+        }
 
-        _renderButtons : function () {
+        _renderButtons() {
             const ans = [];
 
             if (this.props.widgets.indexOf('tag') > -1) {
-                ans.push(<a onClick={this._handleWidgetTrigger.bind(this, 'tag')}>{this.translate('query__insert_tag_btn_link')}</a>);
+                ans.push(<a onClick={this._handleWidgetTrigger.bind(this, 'tag')}>{he.translate('query__insert_tag_btn_link')}</a>);
             }
             if (this.props.widgets.indexOf('within') > -1) {
-                ans.push(<a onClick={this._handleWidgetTrigger.bind(this, 'within')}>{this.translate('query__insert_within_link')}</a>);
+                ans.push(<a onClick={this._handleWidgetTrigger.bind(this, 'within')}>{he.translate('query__insert_within_link')}</a>);
             }
             if (this.props.widgets.indexOf('keyboard') > -1) {
-                ans.push(<a onClick={this._handleWidgetTrigger.bind(this, 'keyboard')}>{this.translate('query__keyboard_link')}</a>);
+                ans.push(<a onClick={this._handleWidgetTrigger.bind(this, 'keyboard')}>{he.translate('query__keyboard_link')}</a>);
             }
             if (this.props.widgets.indexOf('history') > -1) {
-                ans.push(<a onClick={this._handleHistoryWidget}>{this.translate('query__recent_queries_link')}</a>);
+                ans.push(<a onClick={this._handleHistoryWidget}>{he.translate('query__recent_queries_link')}</a>);
             }
             return ans;
-        },
+        }
 
-        _handleWidgetTrigger : function (name) {
+        _handleWidgetTrigger(name) {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
                 props: {
@@ -331,14 +326,14 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     value: name
                 }
             });
-        },
+        }
 
-        _handleHistoryWidget : function () {
+        _handleHistoryWidget() {
             this.setState({activeWidget: null});
             this.props.toggleHistoryWidget();
-        },
+        }
 
-        _handleCloseWidget : function () {
+        _handleCloseWidget() {
             dispatcher.dispatch({
                 actionType: 'QUERY_INPUT_SET_ACTIVE_WIDGET',
                 props: {
@@ -346,9 +341,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     value: null
                 }
             });
-        },
+        }
 
-        _renderWidget : function () {
+        _renderWidget() {
             switch (this.state.activeWidget) {
                 case 'tag':
                     return <TagWidget closeClickHandler={this._handleCloseWidget}
@@ -365,25 +360,21 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 default:
                     return null;
             }
-        },
+        }
 
-        getInitialState : function () {
-            return {activeWidget: queryStore.getActiveWidget(this.props.sourceId)};
-        },
-
-        _handleQueryStoreChange : function () {
+        _handleQueryStoreChange() {
             this.setState({activeWidget: queryStore.getActiveWidget(this.props.sourceId)});
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             queryStore.addChangeListener(this._handleQueryStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             queryStore.removeChangeListener(this._handleQueryStoreChange);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="query-toolbox">
                     {this._renderWidget()}
@@ -395,118 +386,108 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 </div>
             );
         }
-    });
+    }
 
     // ------------------- <LposSelector /> -----------------------------
 
-    const LposSelector = React.createClass({
+    const LposSelector = (props) => {
 
-        mixins : mixins,
-
-        _handleLposChange : function (evt) {
+        const handleLposChange = (evt) => {
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_LPOS',
+                actionType: props.actionPrefix + 'QUERY_INPUT_SET_LPOS',
                 props: {
-                    sourceId: this.props.sourceId,
+                    sourceId: props.sourceId,
                     lpos: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <span>
-                    {this.translate('query__pos')}:{'\u00a0'}
-                    <select onChange={this._handleLposChange} value={this.props.lposValue}>
-                        <option value="">{this.translate('query__not_specified')}</option>
-                        {this.props.wPoSList.map(item => {
-                            return <option key={item.v} value={item.v}>{item.n}</option>;
-                        })}
-                    </select>
-                </span>
-            );
-        }
-    });
+        return (
+            <span>
+                {he.translate('query__pos')}:{'\u00a0'}
+                <select onChange={handleLposChange} value={props.lposValue}>
+                    <option value="">{he.translate('query__not_specified')}</option>
+                    {props.wPoSList.map(item => {
+                        return <option key={item.v} value={item.v}>{item.n}</option>;
+                    })}
+                </select>
+            </span>
+        );
+    };
 
     // ------------------- <MatchCaseSelector /> -----------------------------
 
-    const MatchCaseSelector = React.createClass({
+    const MatchCaseSelector = (props) => {
 
-        mixins : mixins,
-
-        _handleCheckbox : function (evt) {
+        const handleCheckbox = (evt) => {
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_MATCH_CASE',
+                actionType: props.actionPrefix + 'QUERY_INPUT_SET_MATCH_CASE',
                 props: {
-                    sourceId: this.props.sourceId,
-                    value: !this.props.matchCaseValue
+                    sourceId: props.sourceId,
+                    value: !props.matchCaseValue
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <label>
-                    {this.translate('query__match_case')}:{'\u00a0'}
-                    <input type="checkbox" name="qmcase" value="1" checked={this.props.matchCaseValue}
-                        onChange={this._handleCheckbox} />
-                </label>
-            );
-        }
-    });
+        return (
+            <label>
+                {he.translate('query__match_case')}:{'\u00a0'}
+                <input type="checkbox" name="qmcase" value="1" checked={props.matchCaseValue}
+                    onChange={handleCheckbox} />
+            </label>
+        );
+    };
 
     // ------------------- <DefaultAttrSelector /> -----------------------------
 
-    const DefaultAttrSelector = React.createClass({
+    const DefaultAttrSelector = (props) => {
 
-        mixins : mixins,
-
-        _handleSelectChange : function (evt) {
+        const handleSelectChange = (evt) => {
             dispatcher.dispatch({
-                actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_DEFAULT_ATTR',
+                actionType: props.actionPrefix + 'QUERY_INPUT_SET_DEFAULT_ATTR',
                 props: {
-                    sourceId: this.props.sourceId,
+                    sourceId: props.sourceId,
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        render : function () {
-            if (this.props.forcedAttr) {
-                return (
-                    <select disabled="disabled" title={this.translate('query__implicit_attr_cannot_be_changed')}>
-                        <option>{this.props.forcedAttr}</option>
-                    </select>
-                );
+        if (props.forcedAttr) {
+            return (
+                <select disabled="disabled" title={he.translate('query__implicit_attr_cannot_be_changed')}>
+                    <option>{props.forcedAttr}</option>
+                </select>
+            );
 
-            } else {
-                return (
-                    <select value={this.props.defaultAttr} onChange={this._handleSelectChange}>
-                        {this.props.attrList.map(item => {
-                            return <option key={item.n} value={item.n}>{item.label}</option>;
-                        })}
-                    </select>
-                );
-            }
+        } else {
+            return (
+                <select value={props.defaultAttr} onChange={handleSelectChange}>
+                    {props.attrList.map(item => {
+                        return <option key={item.n} value={item.n}>{item.label}</option>;
+                    })}
+                </select>
+            );
         }
-    });
+    };
 
     // ------------------- <TRQueryInputField /> -----------------------------
 
-    const TRQueryInputField = React.createClass({
+    class TRQueryInputField extends React.Component {
 
-        mixins : mixins,
-
-        _queryInputElement : null,
-
-        getInitialState : function () {
-            return {
+        constructor(props) {
+            super(props);
+            this._queryInputElement = null;
+            this._handleInputChange = this._handleInputChange.bind(this);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._inputKeyHandler = this._inputKeyHandler.bind(this);
+            this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
+            this.state = {
                 query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: false
             };
-        },
+        }
 
-        _handleInputChange : function (evt) {
+        _handleInputChange(evt) {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
@@ -514,31 +495,16 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                     query: evt.target.value
                 }
             });
-        },
+        }
 
-        _handleStoreChange : function (store, action) {
+        _handleStoreChange(store, action) {
             this.setState({
                 query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: false
             });
-        },
+        }
 
-        componentDidMount : function () {
-            queryStore.addChangeListener(this._handleStoreChange);
-        },
-
-        componentWillUnmount : function () {
-            queryStore.removeChangeListener(this._handleStoreChange);
-        },
-
-        componentDidUpdate : function (prevProps, prevState) {
-            if (this._queryInputElement
-                    && prevState.historyVisible && !this.state.historyVisible) {
-                this._queryInputElement.focus();
-            }
-        },
-
-        _inputKeyHandler : function (evt) {
+        _inputKeyHandler(evt) {
             if (this.props.widgets.indexOf('history') > -1 &&
                     evt.keyCode === 40 && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
@@ -549,9 +515,31 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 evt.stopPropagation();
                 evt.preventDefault();
             }
-        },
+        }
 
-        _renderInput : function () {
+        _toggleHistoryWidget() {
+            this.setState({
+                query: this.state.query,
+                historyVisible: !this.state.historyVisible
+            });
+        }
+
+        componentDidMount() {
+            queryStore.addChangeListener(this._handleStoreChange);
+        }
+
+        componentWillUnmount() {
+            queryStore.removeChangeListener(this._handleStoreChange);
+        }
+
+        componentDidUpdate(prevProps, prevState) {
+            if (this._queryInputElement
+                    && prevState.historyVisible && !this.state.historyVisible) {
+                this._queryInputElement.focus();
+            }
+        }
+
+        _renderInput() {
             switch (this.props.queryType) {
                 case 'iquery':
                 case 'lemma':
@@ -568,9 +556,9 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                                 onChange={this._handleInputChange} value={this.state.query}
                                 onKeyDown={this._inputKeyHandler} />;
             }
-        },
+        }
 
-        _renderInputOptions : function () {
+        _renderInputOptions() {
             switch (this.props.queryType) {
                 case 'iquery':
                 case 'char':
@@ -600,7 +588,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 case 'cql':
                     return (
                         <span className="default-attr-selection">
-                            {this.translate('query__default_attr') + ':\u00a0'}
+                            {he.translate('query__default_attr') + ':\u00a0'}
                             <DefaultAttrSelector defaultAttr={this.props.defaultAttr}
                                     forcedAttr={this.props.forcedAttr}
                                     attrList={this.props.attrList}
@@ -609,24 +597,17 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                             {this.props.tagsetDocUrl ?
                                 (<span className="tagset-summary">(
                                     <a className="external" target="_blank" href={this.props.tagsetDocUrl}>
-                                    {this.translate('query__tagset_summary')}</a>)</span>)
+                                    {he.translate('query__tagset_summary')}</a>)</span>)
                                 : null}
                         </span>
                     );
             }
-        },
+        }
 
-        _toggleHistoryWidget : function () {
-            this.setState({
-                query: this.state.query,
-                historyVisible: !this.state.historyVisible
-            });
-        },
-
-        render : function () {
+        render() {
             return (
                 <tr>
-                    <th>{this.translate('query__query_th')}:</th>
+                    <th>{he.translate('query__query_th')}:</th>
                     <td>
                         <div className="query-area">
                             <QueryToolbox widgets={this.props.widgets}
@@ -656,8 +637,7 @@ export function init(dispatcher, mixins, layoutViews, queryStore, queryHintStore
                 </tr>
             );
         }
-
-    });
+    }
 
 
     return {

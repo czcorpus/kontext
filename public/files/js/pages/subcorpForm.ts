@@ -105,7 +105,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         );
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.textTypesStore
         );
 
@@ -229,7 +229,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             (items:[TTInitData, React.ReactClass]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
                 this.viewComponents = subcorpViewsInit(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins(),
+                    this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     items[1],
                     this.subcorpFormStore,

@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
 import * as React from 'vendor/react';
 import {init as saveViewInit} from './save';
 
 
 
-export function init(dispatcher, mixins, layoutViews, viewDeps, queryReplayStore, mainMenuStore, querySaveAsStore) {
+export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, mainMenuStore, querySaveAsStore) {
 
-    const he = mixins[0];
-
-    const saveViews = saveViewInit(dispatcher, mixins[0], layoutViews, querySaveAsStore);
+    const saveViews = saveViewInit(dispatcher, he, layoutViews, querySaveAsStore);
 
     const formTypeToTitle = (opFormType) => {
         switch (opFormType) {

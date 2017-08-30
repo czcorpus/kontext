@@ -56,39 +56,39 @@ export class VirtualKeyboardStore extends SimplePageStore {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currLayout = 0;
-        const self = this;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
 
             switch (payload.actionType) {
                 case 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY':
-                    self.externalKeyHit = payload.props['keyCode'];
-                    self.notifyChangeListeners();
+                    this.externalKeyHit = payload.props['keyCode'];
+                    this.notifyChangeListeners();
                     let timeout;
                     const clickSim = () => {
-                        self.externalKeyHit = null;
-                        self.notifyChangeListeners();
+                        this.externalKeyHit = null;
+                        this.notifyChangeListeners();
                         window.clearTimeout(timeout);
                     };
                     timeout = window.setTimeout(clickSim, 200);
                 break;
                 case 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT':
-                    self.currLayout = payload.props['idx'];
-                    self.notifyChangeListeners();
+                    this.currLayout = payload.props['idx'];
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS':
-                    self.pageModel.ajax<VirtualKeyboardLayouts>(
+                    this.pageModel.ajax<VirtualKeyboardLayouts>(
                         'GET',
-                        self.pageModel.createStaticUrl('misc/kb-layouts.min.json'),
+                        this.pageModel.createStaticUrl('misc/kb-layouts.min.json'),
                         {}
                     ).then(
                         (data) => {
-                            self.layouts = data;
-                            self.currLayout = self.findMatchingKeyboard(payload.props['inputLanguage']);
-                            self.notifyChangeListeners();
-                        },
+                            this.layouts = data;
+                            this.currLayout = this.findMatchingKeyboard(payload.props['inputLanguage']);
+                            this.notifyChangeListeners();
+                        }
+                    ).catch(
                         (err) => {
-                            self.pageModel.showMessage('error', err);
+                            this.pageModel.showMessage('error', err);
                         }
                     );
                 break;

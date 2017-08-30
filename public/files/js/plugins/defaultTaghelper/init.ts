@@ -39,7 +39,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
     getWidgetView():React.ReactClass {
         return viewInit(
             this.pluginApi.dispatcher(),
-            this.pluginApi.exportMixins(),
+            this.pluginApi.getComponentHelpers(),
             this.store
         ).TagBuilder;
     }

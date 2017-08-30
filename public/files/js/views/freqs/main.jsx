@@ -24,10 +24,10 @@ import * as React from 'vendor/react';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
 
-export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
+export function init(dispatcher, he, freqDataRowsStore, layoutViews) {
 
-    const drViews = dataRowsInit(dispatcher, mixins, freqDataRowsStore);
-    const saveViews = initSaveViews(dispatcher, mixins, layoutViews, freqDataRowsStore.getSaveStore());
+    const drViews = dataRowsInit(dispatcher, he, freqDataRowsStore);
+    const saveViews = initSaveViews(dispatcher, he, layoutViews, freqDataRowsStore.getSaveStore());
 
     // ----------------------- <ResultSizeInfo /> -------------------------
 
@@ -35,12 +35,12 @@ export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
 
         return (
             <p>
-                <strong>{mixins.translate('freq__avail_label')}:</strong>
+                <strong>{he.translate('freq__avail_label')}:</strong>
                 {'\u00a0'}
-                {mixins.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})}
+                {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})}
                 {'\u00a0'}
                 {props.totalPages ?
-                    <span>({mixins.translate('freq__avail_pages_{num_pages}', {num_pages: props.totalPages})})</span>
+                    <span>({he.translate('freq__avail_pages_{num_pages}', {num_pages: props.totalPages})})</span>
                     : null}
             </p>
         );
@@ -70,14 +70,14 @@ export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
             if (props.isLoading) {
                 return (
                     <span className="input-like" style={{width: '3em'}}>
-                        <img src={mixins.createStaticUrl('img/ajax-loader-bar.gif')}
-                            alt={mixins.translate('global__loading')} />
+                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                            alt={he.translate('global__loading')} />
                     </span>
                 );
 
             } else {
                 return <input type="text" value={props.currentPage}
-                                    title={mixins.translate('global__curr_page_num')}
+                                    title={he.translate('global__curr_page_num')}
                                     onChange={handlePageChange}
                                     disabled={!props.hasPrevPage && !props.hasNextPage}
                                     style={{width: '3em'}} />;
@@ -91,7 +91,7 @@ export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
                         <div className="bonito-pagination-left">
                             {props.hasPrevPage ?
                                 (<a onClick={(e) => handlePageChangeByClick(props.currentPage, -1)}>
-                                    <img className="over-img" src={mixins.createStaticUrl('img/prev-page.svg')}
+                                    <img className="over-img" src={he.createStaticUrl('img/prev-page.svg')}
                                             alt="další" title="další" />
                                 </a>) : null}
                         </div>
@@ -100,7 +100,7 @@ export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
                             {props.current}
                             {props.hasNextPage ?
                                 (<a onClick={(e) => handlePageChangeByClick(props.currentPage, 1)}>
-                                    <img className="over-img" src={mixins.createStaticUrl('img/next-page.svg')}
+                                    <img className="over-img" src={he.createStaticUrl('img/next-page.svg')}
                                             alt="další" title="další" />
                                 </a>) : null}
                         </div>
@@ -143,7 +143,7 @@ export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
             return (
                 <form action="freqs">
                     <label>
-                        {mixins.translate('freq__limit_input_label')}:
+                        {he.translate('freq__limit_input_label')}:
                         {'\u00a0'}
                         <input type="text" name="flimit" value={this.props.minFreqVal}
                                 style={{width: '3em'}}
@@ -151,7 +151,7 @@ export function init(dispatcher, mixins, freqDataRowsStore, layoutViews) {
                     </label>
                     {'\u00a0'}
                     <button type="button" className="util-button" onClick={this._handleApplyClick}>
-                        {mixins.translate('global__apply_btn')}
+                        {he.translate('global__apply_btn')}
                     </button>
                 </form>
             );

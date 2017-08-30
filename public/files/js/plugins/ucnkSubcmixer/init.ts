@@ -404,8 +404,7 @@ class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
     getWidgetView():React.ReactClass {
         return viewInit(
             this.pluginApi.dispatcher(),
-            this.pluginApi.exportMixins(),
-            this.pluginApi.getViews(),
+            this.pluginApi.getComponentHelpers(),
             this.store
         ).Widget;
     }

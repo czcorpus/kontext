@@ -21,9 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liveAttrsStore) {
-
-    const he = mixins[0];
+export function init(dispatcher, he, SubcmixerComponent, textTypesStore, liveAttrsStore) {
 
     // ----------------------------- <StepLoader /> --------------------------
 

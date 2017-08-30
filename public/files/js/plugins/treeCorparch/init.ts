@@ -167,7 +167,7 @@ export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
         querySetupHandler,
         options.itemClickAction
     );
-    return viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(), treeStore).CorptreeWidget;
+    return viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), treeStore).CorptreeWidget;
 }
 
 
@@ -195,8 +195,11 @@ export class CorplistPage implements CorplistPage {
                 return null; // just to keep the type check cool
             }
         );
-        this.viewsLib = viewInit(pluginApi.dispatcher(), pluginApi.exportMixins(),
-                this.treeStore);
+        this.viewsLib = viewInit(
+            pluginApi.dispatcher(),
+            pluginApi.getComponentHelpers(),
+            this.treeStore
+        );
     }
 
     createForm(targetElm:HTMLElement, properties:any):void {}

@@ -18,12 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../vendor.d.ts/react.d.ts" />
+
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, textTypesStore) {
+export function init(dispatcher, he, textTypesStore) {
 
-    const he = mixins[0];
     const layoutViews = he.getLayoutViews();
 
     // ----------------------------- <RangeSelector /> --------------------------

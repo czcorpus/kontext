@@ -118,7 +118,7 @@ export class WordlistPage extends SimplePageStore  {
     private initCorpInfoToolbar():void {
         const views:WordlistFormViews = wordlistFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             null, // TODO corparch widget view !!!!
             this

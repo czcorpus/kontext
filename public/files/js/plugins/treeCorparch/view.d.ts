@@ -18,9 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/common.d.ts" />
+
 export class TreeCorparchViews {
     CorptreeWidget:any;
     CorptreePageComponent:any;
 }
 
-export function init(dispatcher:any, mixins:any, treeStore:any):TreeCorparchViews;
+export function init(
+    dispatcher:Kontext.FluxDispatcher,
+    he:Kontext.ComponentHelpers,
+    treeStore:Kontext.PageStore
+):TreeCorparchViews;

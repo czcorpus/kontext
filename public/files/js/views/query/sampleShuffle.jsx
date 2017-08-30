@@ -21,7 +21,6 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import * as React from 'vendor/react';
-import {init as inputInit} from './input';
 
 
 export function init(dispatcher, he, sampleStore, switchMcStore) {

@@ -18,7 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
+import * as React from 'vendor/react';
 
 export function init(dispatcher, utils, layoutViews, freqSaveStore) {
 
@@ -178,7 +180,9 @@ export function init(dispatcher, utils, layoutViews, freqSaveStore) {
         }
 
         _handleStoreChange() {
-            this.setState(this._fetchStoreState());
+            if (freqSaveStore.getFormIsActive()) {
+                this.setState(this._fetchStoreState());
+            }
         }
 
         componentDidMount() {

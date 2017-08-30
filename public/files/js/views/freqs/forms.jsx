@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFormStore, ctFreqStore) {
-
-    const util = mixins[0];
+export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormStore, ctFreqStore) {
 
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
@@ -132,7 +131,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                     <tbody>
                         <tr>
                             <th>
-                                {util.translate('freq__freq_limit_label')}:
+                                {he.translate('freq__freq_limit_label')}:
                             </th>
                             <td>
                                 <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_TT" />
@@ -140,7 +139,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                         </tr>
                         <tr>
                             <th>
-                                {util.translate('freq__incl_no_hits_cats_label')}:
+                                {he.translate('freq__incl_no_hits_cats_label')}:
                             </th>
                             <td>
                                 <IncludeEmptyCheckbox fttIncludeEmpty={this.state.fttIncludeEmpty} />
@@ -173,7 +172,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
 
         return (
             <label>
-                {util.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                {he.translate('freq__ct_min_freq_label')}:{'\u00a0'}
                 <input type="text" onChange={handleInputChange}
                         value={props.value} style={{width: '3em'}} />
             </label>
@@ -217,8 +216,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
 
         return (
             <select onChange={handleChange} value={props.value}>
-                <option>{mixins[0].translate('freq__align_type_left')}</option>
-                <option>{mixins[0].translate('freq__align_type_right')}</option>
+                <option>{he.translate('freq__align_type_left')}</option>
+                <option>{he.translate('freq__align_type_right')}</option>
             </select>
         );
     };
@@ -283,8 +282,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             if (this.state.setupError) {
                 return (
                     <p className="setup-warning">
-                        <img src={util.createStaticUrl('img/warning-icon.svg')}
-                                alt={util.translate('global__warning')} />
+                        <img src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning')} />
                         {this.state.setupError}
                     </p>
                 );
@@ -298,7 +297,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
             return [
                 <tr key="label">
                     <th>
-                        {util.translate('freq__ml_th_position')}:
+                        {he.translate('freq__ml_th_position')}:
                     </th>
                     <td>
                         <CTFreqPosSelect
@@ -309,7 +308,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 </tr>,
                 <tr key="input">
                     <th>
-                        {util.translate('freq__ml_th_node_start_at')}:
+                        {he.translate('freq__ml_th_node_start_at')}:
                     </th>
                     <td>
                         <CTFreqNodeStartSelect
@@ -334,19 +333,19 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                             <tr>
                                 <th className="main" rowSpan="3">
                                     <strong>1.</strong>
-                                    ({util.translate('freq__ct_dim1')})
+                                    ({he.translate('freq__ct_dim1')})
                                 </th>
                                 <th>
-                                    {util.translate('freq__ml_th_attribute')}:
+                                    {he.translate('freq__ml_th_attribute')}:
                                 </th>
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 1)}
                                             value={this.state.attr1}>
-                                        <optgroup label={util.translate('global__attrsel_group_pos_attrs')}>
+                                        <optgroup label={he.translate('global__attrsel_group_pos_attrs')}>
                                             {this.state.posAttrs.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
-                                        <optgroup label={util.translate('global__attrsel_group_struct_attrs')}>
+                                        <optgroup label={he.translate('global__attrsel_group_struct_attrs')}>
                                             {this.state.structAttrs.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
@@ -359,19 +358,19 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                             <tr>
                                 <th className="main" rowSpan="3">
                                     <strong>2.</strong>
-                                    ({util.translate('freq__ct_dim2')})
+                                    ({he.translate('freq__ct_dim2')})
                                 </th>
                                 <th>
-                                    {util.translate('freq__ml_th_attribute')}:
+                                    {he.translate('freq__ml_th_attribute')}:
                                 </th>
                                 <td>
                                     <select onChange={this._handleAttrSelChange.bind(this, 2)}
                                             value={this.state.attr2}>
-                                        <optgroup label={util.translate('global__attrsel_group_pos_attrs')}>
+                                        <optgroup label={he.translate('global__attrsel_group_pos_attrs')}>
                                             {this.state.posAttrs.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
-                                        <optgroup label={util.translate('global__attrsel_group_struct_attrs')}>
+                                        <optgroup label={he.translate('global__attrsel_group_struct_attrs')}>
                                             {this.state.structAttrs.map(item =>
                                                 <option key={item.n} disabled={item.n === null} value={item.n}>{item.label}</option>)}
                                         </optgroup>
@@ -468,8 +467,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
         return (
             <select className="kwic-alignment" value={props.alignType}
                     onChange={handleSelection}>
-                <option value="left">{util.translate('freq__align_type_left')}</option>
-                <option value="right">{util.translate('freq__align_type_right')}</option>
+                <option value="left">{he.translate('freq__align_type_left')}</option>
+                <option value="right">{he.translate('freq__align_type_right')}</option>
             </select>
         );
     };
@@ -492,14 +491,14 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
         return (
             <div>
                 {props.levelIdx < props.numLevels - 1 ?
-                    <img src={util.createStaticUrl('img/sort_desc.svg')} style={iconStyle}
+                    <img src={he.createStaticUrl('img/sort_desc.svg')} style={iconStyle}
                             onClick={handleClick.bind(null, 'down')}
-                            alt={util.translate('freq__move_level_up')} />
+                            alt={he.translate('freq__move_level_up')} />
                     : null}
                 {props.levelIdx > 0 ?
-                    <img src={util.createStaticUrl('img/sort_asc.svg')} style={iconStyle}
+                    <img src={he.createStaticUrl('img/sort_asc.svg')} style={iconStyle}
                             onClick={handleClick.bind(null, 'up')}
-                            alt={util.translate('freq__move_level_down')} />
+                            alt={he.translate('freq__move_level_down')} />
                     : null}
             </div>
         );
@@ -548,8 +547,8 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                 <td>
                     {props.isRemovable ?
                         (<a onClick={handleRemoveLevelClick}>
-                            <img src={util.createStaticUrl('img/close-icon.svg')}
-                                    alt={util.translate('freq__remove_level_btn')}
+                            <img src={he.createStaticUrl('img/close-icon.svg')}
+                                    alt={he.translate('freq__remove_level_btn')}
                                     style={{width: '1em'}} />
                         </a>)
                     : null}
@@ -610,7 +609,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                         <tr>
                             <td>
                                 <label style={{fontWeight: 'bold'}}>
-                                    {util.translate('freq__freq_limit_label')}:{'\u00a0'}
+                                    {he.translate('freq__freq_limit_label')}:{'\u00a0'}
                                     <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_ML" />
                                 </label>
                             </td>
@@ -622,19 +621,19 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                     <tbody>
                                         <tr>
                                             <th>
-                                                {util.translate('freq__ml_th_level')}
+                                                {he.translate('freq__ml_th_level')}
                                             </th>
                                             <th>
-                                                {util.translate('freq__ml_th_attribute')}
+                                                {he.translate('freq__ml_th_attribute')}
                                             </th>
                                             <th>
-                                                {util.translate('freq__ml_th_icase')}
+                                                {he.translate('freq__ml_th_icase')}
                                             </th>
                                             <th>
-                                                {util.translate('freq__ml_th_position')}
+                                                {he.translate('freq__ml_th_position')}
                                             </th>
                                             <th>
-                                                {util.translate('freq__ml_th_node_start_at')}
+                                                {he.translate('freq__ml_th_node_start_at')}
                                             </th>
                                             <th />
                                             <th />
@@ -655,7 +654,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                                         {this.state.levels.size < this.state.maxNumLevels ?
                                             (<tr>
                                                 <td>
-                                                    <a id="add-freq-level-button" title={util.translate('freq__add_level_btn')}
+                                                    <a id="add-freq-level-button" title={he.translate('freq__add_level_btn')}
                                                         onClick={this._handleAddLevelClick}>+</a>
                                                 </td>
                                                 <td colSpan="6" />
@@ -721,13 +720,13 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                         <legend>
                             <select onChange={this._handleFormSwitch} value={this.state.formType}>
                                 <option value="ml">
-                                    {util.translate('freq__sel_form_type_ml')}
+                                    {he.translate('freq__sel_form_type_ml')}
                                 </option>
                                 <option value="tt">
-                                    {util.translate('freq__sel_form_type_tt')}
+                                    {he.translate('freq__sel_form_type_tt')}
                                 </option>
                                 <option value="ct">
-                                    {util.translate('freq__sel_form_type_ct')}
+                                    {he.translate('freq__sel_form_type_ct')}
                                 </option>
                             </select>
                         </legend>
@@ -735,7 +734,7 @@ export function init(dispatcher, mixins, layoutViews, mlFreqFormStore, ttFreqFor
                     </fieldset>
                     <div className="buttons">
                         <button className="default-button" type="button" onClick={this._handleSubmitClick}>
-                            {util.translate('freq__make_freq_list_btn')}
+                            {he.translate('freq__make_freq_list_btn')}
                         </button>
                     </div>
                 </form>

@@ -27,8 +27,11 @@ declare interface CommonViews {
 
 
 declare module "views/document" {
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            storeProvider:any):Kontext.LayoutViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        storeProvider:any // TODO type
+    ):Kontext.LayoutViews;
 }
 
 declare module "views/common" {
@@ -37,7 +40,7 @@ declare module "views/common" {
         SaveFormatSelect:React.ReactClass;
     }
 
-    export function init(utils:any):CommonViews;
+    export function init(componentHelpers:Kontext.ComponentHelpers):CommonViews;
 }
 
 
@@ -48,8 +51,12 @@ declare module "views/concordance/lineSelection" {
         LockedLineGroupsMenu:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            lineSelectionStore:any, userInfoStore:any):LineSelectionViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        lineSelectionStore:Kontext.PageStore,
+        userInfoStore:Kontext.PageStore
+    ):LineSelectionViews;
 }
 
 declare module "views/concordance/lineExtras" {
@@ -61,7 +68,10 @@ declare module "views/concordance/lineExtras" {
         RefInfo:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, helpers:Kontext.ComponentHelpers);
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers
+    );
 }
 
 
@@ -71,8 +81,12 @@ declare module "views/concordance/lines" {
         ConcLines:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            lineStore:any, lineSelectionStore:any):ConcLinesViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        lineStore:Kontext.PageStore,
+        lineSelectionStore:Kontext.PageStore
+    ):ConcLinesViews;
 }
 
 
@@ -82,8 +96,11 @@ declare module "views/concordance/paginator" {
         Paginator:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            lineStore:any):PaginatorViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        lineStore:Kontext.PageStore
+    ):PaginatorViews;
 }
 
 declare module "views/concordance/main" {
@@ -94,9 +111,9 @@ declare module "views/concordance/main" {
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
-        mixins:any,
+        componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        stores:any
+        stores:any // TODO type
     ):ConcordanceView;
 }
 
@@ -106,8 +123,12 @@ declare module "views/concordance/detail" {
         RefDetail: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
-            concDetailStore:Kontext.PageStore):RefDetail;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        concDetailStore:Kontext.PageStore
+    ):RefDetail;
 }
 
 declare module "views/concordance/save" {
@@ -116,8 +137,12 @@ declare module "views/concordance/save" {
         ConcSaveForm: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:Kontext.LayoutViews,
-            concSaveStore:Kontext.PageStore):ConcSaveViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        concSaveStore:Kontext.PageStore
+    ):ConcSaveViews;
 }
 
 declare module "views/subcorp/forms" {
@@ -126,9 +151,14 @@ declare module "views/subcorp/forms" {
         SubcorpForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:Kontext.LayoutViews, corparchComponent:React.ReactClass,
-            subcorpFormStore:any, subcorpWithinFormStore:any):SubcorpFormViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        corparchComponent:React.ReactClass,
+        subcorpFormStore:Kontext.PageStore,
+        subcorpWithinFormStore:Kontext.PageStore
+    ):SubcorpFormViews;
 }
 
 
@@ -138,7 +168,11 @@ declare module "views/subcorp/list" {
         SubcorpList:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, subcorpListStore:any):SubcorpListViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        subcorpListStore:Kontext.PageStore
+    ):SubcorpListViews;
 }
 
 
@@ -148,8 +182,11 @@ declare module "views/textTypes" {
         TextTypesPanel:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            textTypesStore:any):TextTypesViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        textTypesStore:Kontext.PageStore
+    ):TextTypesViews;
 
 }
 
@@ -160,10 +197,14 @@ declare module "views/menu" {
         MainMenu:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            concArgHandler:Kontext.IConcArgsHandler, mainMenuStore:any,
-            asyncTaskStore:Kontext.IAsyncTaskStore,
-            layoutViews:Kontext.LayoutViews):MainMenuViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        concArgHandler:Kontext.IConcArgsHandler,
+        mainMenuStore:Kontext.PageStore,
+        asyncTaskStore:Kontext.IAsyncTaskStore,
+        layoutViews:Kontext.LayoutViews
+    ):MainMenuViews;
 }
 
 
@@ -175,15 +216,16 @@ declare module "views/query/main" {
     }
 
     export function init(
-            dispatcher:Kontext.FluxDispatcher,
-            componentHelpers:any,
-            CorparchWidget:React.Component,
-            queryStore:any,
-            textTypesStore:any,
-            queryHintStore:any,
-            withinBuilderStore:any,
-            virtualKeyboardStore:any,
-            queryContextStore:any):QueryFormViews;
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        CorparchWidget:React.Component,
+        queryStore:Kontext.PageStore,
+        textTypesStore:Kontext.PageStore,
+        queryHintStore:Kontext.PageStore,
+        withinBuilderStore:Kontext.PageStore,
+        virtualKeyboardStore:Kontext.PageStore,
+        queryContextStore:Kontext.PageStore
+    ):QueryFormViews;
 }
 
 
@@ -193,8 +235,14 @@ declare module "views/query/aligned" {
         AlignedCorpora:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            queryStore:any):AlignedQueryFormViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        queryStore:Kontext.PageStore,
+        queryHintStore:Kontext.PageStore,
+        withinBuilderStore:Kontext.PageStore,
+        virtualKeyboardStore:Kontext.PageStore
+    ):AlignedQueryFormViews;
 }
 
 
@@ -204,7 +252,10 @@ declare module "views/query/context" {
         SpecifyContextForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any):QueryContextViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers
+    ):QueryContextViews;
 }
 
 
@@ -214,8 +265,14 @@ declare module "views/query/filter" {
         FilterForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:Kontext.LayoutViews,
-            filterStore:any, queryHintStore:any, withinBuilderStore:any, virtualKeyboardStore:any):FilterFormViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        filterStore:Kontext.PageStore,
+        queryHintStore:Kontext.PageStore,
+        withinBuilderStore:Kontext.PageStore,
+        virtualKeyboardStore:Kontext.PageStore
+    ):FilterFormViews;
 
 }
 
@@ -225,7 +282,12 @@ declare module "views/query/sort" {
         SortFormView:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, helpers:any, sortStore:any, multiLevelSortStore:any):SortFormViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        sortStore:Kontext.PageStore,
+        multiLevelSortStore:Kontext.PageStore
+    ):SortFormViews;
 }
 
 
@@ -237,8 +299,12 @@ declare module "views/query/sampleShuffle" {
         SwitchMainCorpFormView:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            sampleStore:Kontext.PageStore, switchMcStore:Kontext.PageStore):SampleFormViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        sampleStore:Kontext.PageStore,
+        switchMcStore:Kontext.PageStore
+    ):SampleFormViews;
 }
 
 
@@ -259,13 +325,14 @@ declare module "views/query/overview" {
     }
 
     export function init(
-            dispatcher:Kontext.FluxDispatcher,
-            mixins:any,
-            layoutViews:Kontext.LayoutViews,
-            viewDeps:QueryToolbarViewDeps,
-            queryReplayStore:Kontext.PageStore,
-            mainMenuStore:Kontext.PageStore,
-            saveAsFormStore:Kontext.PageStore):QueryToolbarViews;
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        viewDeps:QueryToolbarViewDeps,
+        queryReplayStore:Kontext.PageStore,
+        mainMenuStore:Kontext.PageStore,
+        saveAsFormStore:Kontext.PageStore
+    ):QueryToolbarViews;
 }
 
 
@@ -275,8 +342,12 @@ declare module "views/query/history" {
         RecentQueriesPageList:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, utils:any,
-                    layoutViews:Kontext.LayoutViews, queryHistoryStore:any):RecentQueriesPageViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        queryHistoryStore:Kontext.PageStore
+    ):RecentQueriesPageViews;
 }
 
 
@@ -286,8 +357,12 @@ declare module "views/query/save" {
         QuerySaveAsForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, helpers:any,
-                    layoutViews:Kontext.LayoutViews, saveAsFormStore:Kontext.PageStore);
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        saveAsFormStore:Kontext.PageStore
+    ):QuerySaveViews;
 }
 
 
@@ -297,8 +372,13 @@ declare module "views/wordlist/save" {
         WordlistSaveForm:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher,
-            mixins:any, layoutViews:Kontext.LayoutViews, commonViews:any, wordlistSaveStore:any):WordlistSaveViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        commonViews:CommonViews,
+        wordlistSaveStore:Kontext.PageStore
+    ):WordlistSaveViews;
 }
 
 
@@ -309,9 +389,13 @@ declare module "views/wordlist/form" {
         CorpInfoToolbar:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher,
-            mixins:any, layoutViews:Kontext.LayoutViews, CorparchWidget:React.Component,
-            wordlistFormStore:any):WordlistFormViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        CorparchWidget:React.Component,
+        wordlistFormStore:Kontext.PageStore
+    ):WordlistFormViews;
 }
 
 declare module "views/wordlist/result" {
@@ -320,9 +404,13 @@ declare module "views/wordlist/result" {
         WordlistResult:React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:Kontext.LayoutViews, wordlistSaveViews:any, wordlistResultStore:any):WordlistResultViews;
-
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        wordlistSaveViews:any, // TODO type
+        wordlistResultStore:Kontext.PageStore
+    ):WordlistResultViews;
 }
 
 
@@ -333,10 +421,11 @@ declare module "views/options/structsAttrs" {
     }
 
     export function init(
-            dispatcher:Kontext.FluxDispatcher,
-            helpers:Kontext.ComponentHelpers,
-            corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
-            mainMenustore:Kontext.PageStore):StructsAndAttrsViews;
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
+        mainMenustore:Kontext.PageStore
+    ):StructsAndAttrsViews;
 }
 
 
@@ -348,7 +437,7 @@ declare module "views/options/general" {
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
-        helpers:Kontext.ComponentHelpers,
+        componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         generalOptionsStore:ViewOptions.IGeneralViewOptionsStore
     ):GeneralOptionsViews;
@@ -363,7 +452,7 @@ declare module "views/options/main" {
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
-        helpers:Kontext.ComponentHelpers,
+        componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         generalOptionsStore:ViewOptions.IGeneralViewOptionsStore,
         corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore,
@@ -379,8 +468,12 @@ declare module "views/overview" {
         CorpusInfoBox: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            corpusInfoStore:Kontext.PageStore, popupBoxComponent:React.ReactClass):OverviewViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        corpusInfoStore:Kontext.PageStore,
+        popupBoxComponent:React.ReactClass
+    ):OverviewViews;
 }
 
 
@@ -392,12 +485,12 @@ declare module "views/analysis" {
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
-        mixins:any,
+        componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        collFormViews:any,
-        freqFormViews:any,
-        mainMenuStore:any
-    );
+        collFormViews:any, // TODO type
+        freqFormViews:any, // TODO type
+        mainMenuStore:Kontext.PageStore
+    ):AnalysisFrameViews;
 }
 
 
@@ -407,8 +500,12 @@ declare module "views/coll/forms" {
         CollForm: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:any, collFormStore:any);
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        collFormStore:Kontext.PageStore
+    ):CollFormViews;
 }
 
 
@@ -418,8 +515,12 @@ declare module "views/coll/result" {
         CollResultView: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
-            collFormStore:any);
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        collFormStore:Kontext.PageStore
+    ):CollResultView;
 }
 
 
@@ -429,8 +530,15 @@ declare module "views/freqs/forms" {
         FrequencyForm: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any,
-            layoutViews:any, mlFreqStore:any, ttFreqStore:any, ctFreqStore:any, ctFlatFreqStore:any);
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        mlFreqStore:Kontext.PageStore,
+        ttFreqStore:Kontext.PageStore,
+        ctFreqStore:Kontext.PageStore,
+        ctFlatFreqStore:Kontext.PageStore
+    ):FreqFormViews;
 }
 
 
@@ -440,7 +548,11 @@ declare module "views/freqs/dataRows" {
         DataTable: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, freqDataRowsStore:any);
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        freqDataRowsStore:Kontext.PageStore
+    );
 }
 
 
@@ -450,8 +562,12 @@ declare module "views/freqs/main" {
         FreqResultView: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, freqDataRowsStore:any,
-            layoutViews:any):FreqsResultViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        freqDataRowsStore:Kontext.PageStore,
+        layoutViews:Kontext.LayoutViews
+    ):FreqsResultViews;
 }
 
 declare module "views/freqs/save" {
@@ -460,8 +576,12 @@ declare module "views/freqs/save" {
         SaveFreqForm: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, mixins:any, layoutViews:any,
-            collSaveStore:any):SaveFreqFormViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        layoutViews:Kontext.LayoutViews,
+        collSaveStore:Kontext.PageStore
+    ):SaveFreqFormViews;
 }
 
 
@@ -471,6 +591,10 @@ declare module "views/freqs/ctResult" {
         CTFreqResultView: React.ReactClass;
     }
 
-    export function init(dispatcher:Kontext.FluxDispatcher, componentHelpers:any,
-            ctFreqDataRowsStore:any, ctFlatFreqDataRowsStore:any):CTFreqsResultViews;
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+        ctFreqDataRowsStore:Kontext.PageStore,
+        ctFlatFreqDataRowsStore:Kontext.PageStore
+    ):CTFreqsResultViews;
 }

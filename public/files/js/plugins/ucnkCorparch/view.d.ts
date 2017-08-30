@@ -26,5 +26,5 @@ export interface UcnkCorparchViews {
     FilterForm:any;
 }
 
-export function init(dispatcher:any, mixins:any, layoutViews:any,
-        CorpusInfoBox:React.ReactClass, formStore:any, listStore:any);
+export function init(dispatcher:any, componentHelper:any, CorpusInfoBox:React.ReactClass,
+            formStore:Kontext.PageStore, listStore:Kontext.PageStore);

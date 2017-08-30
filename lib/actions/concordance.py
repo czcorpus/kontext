@@ -281,7 +281,6 @@ class Actions(Querying):
 
         corp_info = self.get_corpus_info(self.args.corpname)
         out['text_types_notes'] = corp_info.metadata.desc
-        self._attach_aligned_query_params(out)
 
         qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False), persist=False)
         cid = self.args.corpname
@@ -306,6 +305,7 @@ class Actions(Querying):
 
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
+        self._attach_aligned_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
         out['query_history_page_num_records'] = int(settings.get('plugins', 'query_storage')['page_num_records'])
         return out

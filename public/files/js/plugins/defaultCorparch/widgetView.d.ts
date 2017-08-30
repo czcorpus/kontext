@@ -19,6 +19,13 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 
-// TODO types
-export function init(dispatcher, mixins, layoutViews, widgetStore, queryStore):React.ReactClass;
+
+export function init(
+    dispatcher:Kontext.FluxDispatcher,
+    componentHelpers:Kontext.ComponentHelpers,
+    layoutViews:Kontext.LayoutViews,
+    widgetStore:Kontext.PageStore,
+    queryStore
+):React.ReactClass;

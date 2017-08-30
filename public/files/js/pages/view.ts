@@ -542,8 +542,7 @@ export class ViewPage {
 
         this.filterFormViews = filterFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
-            this.layoutModel.layoutViews,
+            this.layoutModel.getComponentHelpers(),
             this.queryStores.filterStore,
             this.queryStores.queryHintStore,
             this.queryStores.withinBuilderStore,
@@ -635,7 +634,7 @@ export class ViewPage {
         );
         this.sampleFormViews = sampleFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.queryStores.sampleStore,
             switchMcStore
         );
@@ -688,7 +687,7 @@ export class ViewPage {
         );
         this.queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             {
                 QueryFormView: this.queryFormViews.QueryFormLite,
@@ -817,7 +816,7 @@ export class ViewPage {
         );
         this.freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             this.mlFreqStore,
             this.ttFreqStore,
@@ -826,7 +825,7 @@ export class ViewPage {
         );
         this.analysisViews = analysisFrameInit(
             this.layoutModel.dispatcher,
-            this.layoutModel.exportMixins(),
+            this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             this.collFormViews,
             this.freqFormViews,
