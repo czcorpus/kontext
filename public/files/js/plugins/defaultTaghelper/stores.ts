@@ -68,7 +68,11 @@ export class TagHelperStore extends SimplePageStore {
 
     protected pluginApi:Kontext.PluginApi;
 
-    private data:Immutable.List<PositionOptions>;
+    /**
+     * Contains all the values (inner lists) along with selection
+     * status through whole user interaction (outer list).
+     */
+    private data:Immutable.List<Immutable.List<PositionOptions>>;
 
     private _isBusy:boolean;
 
@@ -76,12 +80,12 @@ export class TagHelperStore extends SimplePageStore {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this._isBusy = false;
-        this.data = Immutable.List<PositionOptions>();
+        this.data = Immutable.List<Immutable.List<PositionOptions>>().push(Immutable.List<PositionOptions>());
 
         TagHelperStore.DispatchToken = this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'TAGHELPER_GET_INITIAL_DATA':
-                        if (this.data.size === 0) {
+                        if (this.data.last().size === 0) {
                             this._isBusy = true;
                             this.notifyChangeListeners();
                             this.loadInitialData().then(
@@ -118,6 +122,15 @@ export class TagHelperStore extends SimplePageStore {
                             }
                         );
                     break;
+                    case 'TAGHELPER_UNDO':
+                        if (this.data.size > 2) {
+                            this.data = this.data.slice(0, -1).toList();
+                            this.notifyChangeListeners();
+
+                        } else {
+                            throw new Error('Cannot undo. Already at the first item');
+                        }
+                    break;
                     case 'TAGHELPER_RESET':
                         this.resetSelections();
                         this.notifyChangeListeners();
@@ -128,42 +141,32 @@ export class TagHelperStore extends SimplePageStore {
     }
 
     private resetSelections():void {
-        this.data = this.data.map((item:PositionOptions) => {
-            return {
-                label: item.label,
-                locked: false,
-                values: item.values.map((v:PositionValue) => {
-                    return {
-                        id: v.id,
-                        title: v.title,
-                        selected: false,
-                        available: true
-                    };
-                }).toList()
-            };
-        }).toList();
+        this.data = this.data.slice(0, 2).toList();
     }
 
     /**
      * Performs an initial import (i.e. any previous data is lost)
      */
     private importData(labels:Array<string>, data:RawTagValues):void {
-        this.data = Immutable.List<PositionOptions>(data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
-            let posOpts:PositionOptions = {
-                label: labels[i],
-                values: null,
-                locked: false
-            };
-            posOpts.values = Immutable.List<PositionValue>(position.map<PositionValue>((item: Array<string>) => {
-                return {
-                    id: item[0],
-                    title: item[1],
-                    selected: false,
-                    available: true
-                };
-            }));
-            return posOpts;
-        }));
+        this.data = this.data.push(Immutable.List<PositionOptions>(
+                data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
+                    let posOpts:PositionOptions = {
+                        label: labels[i],
+                        values: null,
+                        locked: false
+                    };
+                    posOpts.values = Immutable.List<PositionValue>(position.map<PositionValue>((item: Array<string>) => {
+                        return {
+                            id: item[0],
+                            title: item[1],
+                            selected: false,
+                            available: true
+                        };
+                    }));
+                    return posOpts;
+                })
+            )
+        );
     }
 
     private hasSelectedItemsAt(opt:PositionOptions):boolean {
@@ -171,7 +174,7 @@ export class TagHelperStore extends SimplePageStore {
     }
 
     private hasSelectedItems():boolean {
-        return this.data
+        return this.data.last()
             .flatMap(item => item.values
             .map(subitem => subitem.selected))
             .find(x => x === true) !== undefined;
@@ -185,7 +188,7 @@ export class TagHelperStore extends SimplePageStore {
      * 2) any position option value not found in server response is made unavalilable
      */
     private mergeData(data:UpdateTagValues, triggerRow:number):void {
-        this.data = this.data.map((item:PositionOptions, i:number) => {
+        const newItem = this.data.last().map((item:PositionOptions, i:number) => {
             let newItem:PositionOptions;
 
             if (!item.locked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
@@ -196,7 +199,7 @@ export class TagHelperStore extends SimplePageStore {
                 };
 
             } else if (i !== triggerRow && !item.locked) {
-                let tmp = Immutable.Map(data[i]);
+                const tmp = Immutable.Map(data[i]);
                 newItem = {
                     label: item.label,
                     values: item.values.map((v:PositionValue) => {
@@ -215,6 +218,7 @@ export class TagHelperStore extends SimplePageStore {
             }
             return newItem;
         }).toList();
+        this.data = this.data.pop().push(newItem);
     }
 
 
@@ -231,7 +235,7 @@ export class TagHelperStore extends SimplePageStore {
      * (.e.g. 2nd position (gender), F value (feminine))
      */
     private updateSelectedItem(position:number, value:string, checked:boolean):void {
-        const oldPos = this.data.get(position);
+        const oldPos = this.data.last().get(position);
         const newPos:PositionOptions = {
             label: oldPos.label,
             values: oldPos.values.map((item:PositionValue) => {
@@ -244,7 +248,7 @@ export class TagHelperStore extends SimplePageStore {
             }).toList(),
             locked: oldPos.locked
         };
-        this.data = this.data.set(position, newPos);
+        this.data = this.data.push(this.data.last().set(position, newPos));
     }
 
     /**
@@ -282,7 +286,7 @@ export class TagHelperStore extends SimplePageStore {
             }
         }
         if (this.hasSelectedItems()) {
-            return this.data.map<string>((item:PositionOptions) => {
+            return this.data.last().map<string>((item:PositionOptions) => {
                 return exportPosition(item.values
                             .filter((s:PositionValue) => s.selected)
                             .map<string>((s:PositionValue) => s.id)
@@ -302,18 +306,18 @@ export class TagHelperStore extends SimplePageStore {
      * Return options for a selected position (e.g. position 2: M, I, F, N, X)
      */
     getOptions(position:number):PositionOptions {
-        return this.data.get(position);
+        return this.data.last().get(position);
     }
 
     getPositions():Immutable.List<PositionOptions> {
-        return this.data;
+        return this.data.last();
     }
 
     /**
      * Return an unique state identifier
      */
     getStateId():string {
-        return this.data.map<string>((item:PositionOptions) => {
+        return this.data.last().map<string>((item:PositionOptions) => {
             let ans = item.values.filter((s:PositionValue) => s.selected)
                     .map<string>((s:PositionValue) => s.id);
             return ans.size > 0 ? '[' + ans.join('') + ']' : ''
@@ -322,5 +326,9 @@ export class TagHelperStore extends SimplePageStore {
 
     isBusy():boolean {
         return this._isBusy;
+    }
+
+    canUndo():boolean {
+        return this.data.size > 2;
     }
 }

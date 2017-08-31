@@ -3,12 +3,14 @@
       "taghelper__create_tag_heading": "Create a tag",
       "taghelper__insert_btn": "Insert",
       "taghelper__unfulfilled": "Unfulfilled",
-      "taghelper__reset": "Reset"
+      "taghelper__reset": "Reset",
+      "taghelper__undo": "Undo"
   },
   "cs-CZ": {
       "taghelper__create_tag_heading": "Vytvořit tag",
       "taghelper__insert_btn": "Vložit",
       "taghelper__unfulfilled": "Nevyplněno",
-      "taghelper__reset": "Obnovit"
+      "taghelper__reset": "Obnovit",
+      "taghelper__undo": "Krok zpět"
   }
 }
