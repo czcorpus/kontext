@@ -332,12 +332,9 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
             hsep = corp.get_conf(n + '.HIERARCHICAL')
             multisep = corp.get_conf(n + '.MULTISEP')
             is_multival = corp.get_conf(n + '.MULTIVAL') in ('y', 'yes')
-
-            if not hsep \
-                and (corp.get_conf(n + '.TEXTBOXLENGTH') or
-                             attr.id_range() > maxlistsize or n in shrink_list):
-                attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH')
-                                            or 24)
+            if (not hsep and (corp.get_conf(n + '.TEXTBOXLENGTH')
+                              or attr.id_range() > maxlistsize or n in shrink_list)):
+                attrval['textboxlength'] = (corp.get_conf(n + '.TEXTBOXLENGTH') or 24)
             else:  # list of values
                 if conf_bool(corp.get_conf(n + '.NUMERIC')):
                     vals = []

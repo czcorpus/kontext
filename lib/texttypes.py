@@ -255,6 +255,13 @@ class TextTypes(object):
         if plugins.runtime.LIVE_ATTRIBUTES.exists:
             ans['bib_attr'] = corpus_info['metadata']['label_attr']
             ans['id_attr'] = corpus_info['metadata']['id_attr']
+
+            # We have to ensure that the bibliography item (which uses different values
+            # for labels and different values for actual identifiers) is represented
+            # as an input box on client-side. Passing list_none with bib_attr element
+            # to get_values()'s shrink_list ensures this.
+            # Please see public/files/js/stores/textTypes/attrValues.ts for more information
+            # on how is bibliography attr. box handled on client.
             list_none = (ans['bib_attr'], )
             tmp = [s for s in subcorp_attr_list]  # making copy here
             if ans['bib_attr'] and ans['bib_attr'] not in tmp:  # if bib type is not in subcorpattrs
