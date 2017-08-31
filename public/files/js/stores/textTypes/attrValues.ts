@@ -32,16 +32,36 @@ import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelect
 
 
 /**
- * Server-side data a returned by respective AJAX calls.
+ * Server-side data representing a single text types box (= a single [struct].[attr])
+ * as returned by respective AJAX calls.
  */
 export interface BlockLine {
+
+
     Values?:Array<{v:string; xcnt?:number}>;
-    textboxlength?:number; // Values and textboxlength are mutually exclusive
+
+    /**
+     * Specifies a size (approx. in chars) of a text input
+     * box required for this specific BlockLine. This is
+     * Bonito-open approach but KonText still uses sthe
+     * value to distinguish between enumerated items
+     * and input-text ones.
+     *
+     * Please note that 'Values' and 'textboxlength' are
+     * mutually exclusive.
+     */
+    textboxlength?:number;
+
     attr_doc:string;
+
     attr_doc_label:string;
+
     is_interval:number;
+
     label:string;
+
     name:string;
+
     numeric:boolean;
 }
 
@@ -57,6 +77,17 @@ export interface Block {
  * Server-side data representing a group
  * of structures, structural attributes and
  * their values.
+ *
+ * Please note that for bib_attr, the initial
+ * data is not expected to contain items IDs
+ * which means that bibliography attribute box
+ * store must be always an instance of
+ * ./valueSelections.TextInputAttributeSelection
+ * (otherwise a user would click on a label but
+ * there would be no corresponding ID underneath)
+ * On server, this is ensured by passing the
+ * bib. attr. name to 'shrink_list' argument
+ * (see lib/texttypes.py method export_with_norms())
  */
 export interface InitialData {
     Blocks:Array<Block>;
