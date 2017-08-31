@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorpFormStore, subcorpWithinFormStore) {
-
-    const util = mixins[0];
+export function init(dispatcher, he, layoutViews, CorparchComponent, subcorpFormStore, subcorpWithinFormStore) {
 
     // ------------------------------------------- <WithinSwitch /> ----------------------------
 
@@ -51,17 +51,17 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
 
         constructor(props) {
             super(props);
-            this.state = {img: util.createStaticUrl('img/close-icon.svg')};
+            this.state = {img: he.createStaticUrl('img/close-icon.svg')};
             this._onMouseOver = this._onMouseOver.bind(this);
             this._onMouseOut = this._onMouseOut.bind(this);
         }
 
         _onMouseOver() {
-            this.setState({img: util.createStaticUrl('img/close-icon_s.svg')});
+            this.setState({img: he.createStaticUrl('img/close-icon_s.svg')});
         }
 
         _onMouseOut() {
-            this.setState({img: util.createStaticUrl('img/close-icon.svg')});
+            this.setState({img: he.createStaticUrl('img/close-icon.svg')});
         }
 
         render() {
@@ -70,7 +70,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
                         onMouseOver={this._onMouseOver}
                         onMouseOut={this._onMouseOut}
                         src={this.state.img}
-                        title={util.translate('global__remove_line')} />;
+                        title={he.translate('global__remove_line')} />;
         }
     }
 
@@ -80,10 +80,10 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
 
         const createPrevLinkRef = (i) => {
             if (props.viewIdx > 0) {
-                return util.translate('global__subc_all_the_matching_tokens_{prev}', {prev: i});
+                return he.translate('global__subc_all_the_matching_tokens_{prev}', {prev: i});
 
             } else {
-                return util.translate('global__subc_all_the_tokens');
+                return he.translate('global__subc_all_the_tokens');
             }
         };
 
@@ -215,7 +215,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
                             <td>
                                 <a className="add-within"
                                     onClick={this._addLineHandler}
-                                    title={util.translate('global__add_within')}>+</a>
+                                    title={he.translate('global__add_within')}>+</a>
                             </td>
                             <td></td>
                             <td></td>
@@ -253,10 +253,10 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
             <td>
                 <select value={props.inputMode} onChange={(e)=>props.onModeChange(e.target.value)}>
                     <option value="gui">
-                        {util.translate('subcform__mode_attr_list')}
+                        {he.translate('subcform__mode_attr_list')}
                     </option>
                     <option value="raw">
-                        {util.translate('subcform__mode_raw_within')}
+                        {he.translate('subcform__mode_raw_within')}
                     </option>
                 </select>
             </td>
@@ -288,7 +288,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
             <layoutViews.PopupBox onCloseClick={props.onCloseClick}
                         customStyle={css}>
                 <div>
-                    {util.translate('global__within_hint_text')}
+                    {he.translate('global__within_hint_text')}
                 </div>
                 <ul>
                     {renderAttrs()}
@@ -321,10 +321,10 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
             return (
                 <tr id="subc-within-row">
                     <th>
-                        {util.translate('subcform__mode_raw_within')}
+                        {he.translate('subcform__mode_raw_within')}
                         <a id="custom-within-hint" className="context-help"
                                 onClick={this._handleHelpClick}>
-                            <img className="over-img" src={util.createStaticUrl('img/question-mark.svg')} />
+                            <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
                         </a>:
                         {this.state.hintsVisible ?
                             <StructsHint structsAndAttrs={this.props.structsAndAttrs}
@@ -412,7 +412,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
                         <tbody>
                             <tr>
                                 <th>
-                                    {util.translate('global__corpus')}:
+                                    {he.translate('global__corpus')}:
                                 </th>
                                 <td>
                                     <CorparchComponent />
@@ -421,7 +421,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
                             </tr>
                             <tr className="required">
                                 <th style={{width: '20%'}}>
-                                    {util.translate('global__new_subcorpus_name_lab')}:
+                                    {he.translate('global__new_subcorpus_name_lab')}:
                                 </th>
                                 <td style={{width: '80%'}}>
                                     <SubcNameInput value={this.state.subcName} />
@@ -429,7 +429,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
                             </tr>
                             <tr>
                                 <th>
-                                    {util.translate('subcform__specify_subc_using')}:
+                                    {he.translate('subcform__specify_subc_using')}:
                                 </th>
                                 <TDInputModeSelection inputMode={this.state.inputMode}
                                         onModeChange={this._handleInputModeChange} />
@@ -444,7 +444,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchComponent, subcorp
 
                     <button className="default-button" type="button"
                             onClick={this._handleSubmitClick}>
-                        {util.translate('subcform__create_subcorpus')}
+                        {he.translate('subcform__create_subcorpus')}
                     </button>
                 </form>
             );

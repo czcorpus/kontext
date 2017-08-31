@@ -142,7 +142,7 @@ class Querying(Kontext):
         """
         if self.corp.get_conf('ALIGNED'):
             tpl_out['Aligned'] = []
-            if not tpl_out.get('input_languages', None):
+            if 'input_languages' not in tpl_out:
                 tpl_out['input_languages'] = {}
             for al in self.corp.get_conf('ALIGNED').split(','):
                 alcorp = corplib.open_corpus(al)

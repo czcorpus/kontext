@@ -30,10 +30,10 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
         withinBuilderStore, virtualKeyboardStore, queryContextStore) {
 
     const inputViews = inputInit(
-        dispatcher, [he], layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
-    const alignedViews = alignedInit(dispatcher, [he], layoutViews, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
-    const contextViews = contextInit(dispatcher, [he], queryContextStore);
-    const ttViews = ttViewsInit(dispatcher, [he], textTypesStore);
+        dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+    const alignedViews = alignedInit(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+    const contextViews = contextInit(dispatcher, he, queryContextStore);
+    const ttViews = ttViewsInit(dispatcher, he, textTypesStore);
     const layoutViews = he.getLayoutViews();
 
 
@@ -292,6 +292,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
             this._keyEventHandler = this._keyEventHandler.bind(this);
             this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
             this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._handleSubmit = this._handleSubmit.bind(this);
             this.state = this._fetchStoreState();
         }
 

@@ -322,7 +322,9 @@ export function init(dispatcher, he, layoutViews, stores) {
             const userConfirm = this.state.fastAdHocIpm ?
                     true : window.confirm(he.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
-                this.setState(React.addons.update(this.state, {isWaiting: {$set: true}}));
+                const newState = he.cloneState(this.state);
+                newState.isWaiting = true;
+                this.setState(newState);
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
                     props: {}
@@ -654,12 +656,15 @@ export function init(dispatcher, he, layoutViews, stores) {
         }
 
         _handleSyntaxBoxClick(tokenNumber, kwicLength) {
-            this.setState(React.addons.update(this.state,
-                {syntaxBoxData: {$set: {tokenNumber: tokenNumber, kwicLength: kwicLength}}}));
+            const newState = he.cloneState(this.state);
+            newState.syntaxBoxData = {tokenNumber: tokenNumber, kwicLength: kwicLength};
+            this.setState(newState);
         }
 
         _handleSyntaxBoxClose() {
-            this.setState(React.addons.update(this.state, {syntaxBoxData: {$set: null}}));
+            const newState = he.cloneState(this.state);
+            newState.syntaxBoxData = null;
+            this.setState(newState);
         }
 
         componentDidMount() {

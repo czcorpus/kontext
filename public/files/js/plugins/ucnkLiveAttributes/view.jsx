@@ -21,9 +21,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liveAttrsStore) {
-
-    const he = mixins[0];
+export function init(dispatcher, he, SubcmixerComponent, textTypesStore, liveAttrsStore) {
 
     // ----------------------------- <StepLoader /> --------------------------
 
@@ -184,7 +182,9 @@ export function init(dispatcher, mixins, SubcmixerComponent, textTypesStore, liv
                 undo: 'LIVE_ATTRIBUTES_UNDO_CLICKED'
             };
             return (evt) => {
-                this.setState(React.addons.update(this.state, {isLoading: {$set: true}}));
+                const newState = he.cloneState(this.state);
+                newState.isLoading = true;
+                this.setState(newState);
                 dispatcher.dispatch({
                     actionType: actionMap[action],
                     props: {}

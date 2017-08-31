@@ -22,4 +22,4 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 
-export function init(dispatcher, mixins, tagHelperStore):{TagBuilder:React.ReactClass};
+export function init(dispatcher, componentHelpers, tagHelperStore):{TagBuilder:React.ReactClass};

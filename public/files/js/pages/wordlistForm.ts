@@ -117,7 +117,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
                 const corparchWidget = this.initCorparchPlugin();
                 this.views = wordlistFormInit(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.exportMixins(),
+                    this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     corparchWidget,
                     this.wordlistFormStore

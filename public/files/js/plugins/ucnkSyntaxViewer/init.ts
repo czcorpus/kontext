@@ -52,7 +52,7 @@ class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISynt
         treexFrame.style.width = '90%';
         this.target.appendChild(treexFrame);
 
-        createGenerator(this.pluginApi.exportMixins()[0]).call(
+        createGenerator(this.pluginApi.getComponentHelpers()).call(
             null,
             this.data,
             'cs',

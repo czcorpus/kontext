@@ -106,7 +106,6 @@ declare module Kontext {
         formatDate(d:Date, timeFormat?:number):string;
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
-        exportMixins(...mixins:any[]):any[];
         getComponentHelpers():Kontext.ComponentHelpers;
         renderReactComponent(reactClass:React.ReactClass,
                              target:HTMLElement, props?:React.Props):void;

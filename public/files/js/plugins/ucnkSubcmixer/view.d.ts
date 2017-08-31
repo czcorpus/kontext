@@ -24,4 +24,4 @@ export interface ISubcMixerViews {
     Widget: React.ReactClass;
 }
 
-export function init(dispatcher:any, mixins:any, subcmixerStore:any, PopupBox:React.ReactClass):ISubcMixerViews;
+export function init(dispatcher:any, componentHelpers:any, subcmixerStore:any):ISubcMixerViews;

@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore) {
-
-    const util = mixins[0];
+export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
     // ---------------------------------------------------------------------
     // -------------------------- dataset components -----------------------
@@ -34,9 +34,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
 
         return (
             <tr>
-                <th>{util.translate('defaultCorparch__corpus_name')}</th>
-                <th>{util.translate('defaultCorparch__size_in_positions')}</th>
-                <th>{util.translate('defaultCorparch__corpus_labels')}</th>
+                <th>{he.translate('defaultCorparch__corpus_name')}</th>
+                <th>{he.translate('defaultCorparch__size_in_positions')}</th>
+                <th>{he.translate('defaultCorparch__corpus_labels')}</th>
                 <th></th>
                 <th></th>
             </tr>
@@ -59,8 +59,8 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
             });
         };
         const imgUrl = props.isFav ?
-            util.createStaticUrl('img/starred.svg') :
-            util.createStaticUrl('img/starred_grey.svg');
+            he.createStaticUrl('img/starred.svg') :
+            he.createStaticUrl('img/starred_grey.svg');
         return <img className="starred" src={imgUrl} onClick={handleClick} />;
     };
 
@@ -89,7 +89,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         const keywords = props.row.keywords.map((k, i) => {
             return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
         });
-        const link = util.createActionLink('first_form', [['corpname', props.row.id]]);
+        const link = he.createActionLink('first_form', [['corpname', props.row.id]]);
         const size = props.row.size_info ? props.row.size_info : '-';
 
         return (
@@ -111,7 +111,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 <td>
                     <p className="desc" style={{display: 'none'}}></p>
                     <a className="detail" onClick={handleDetailClick.bind(null, props.row.id)}>
-                        {util.translate('defaultCorparch__corpus_details')}
+                        {he.translate('defaultCorparch__corpus_details')}
                     </a>
                 </td>
             </tr>
@@ -137,7 +137,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         return (
             <tr className="load-more">
                 <td colSpan="5">
-                    <a onClick={linkClickHandler}>{util.translate('global__load_more')}</a>
+                    <a onClick={linkClickHandler}>{he.translate('global__load_more')}</a>
                 </td>
             </tr>
         );
@@ -145,9 +145,22 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
 
     // -------------------------------- <CorplistTable /> -----------------
 
-    const CorplistTable = React.createClass({
+    class CorplistTable extends React.Component {
 
-        changeHandler: function () {
+        constructor(props) {
+            super(props);
+            this._changeHandler = this._changeHandler.bind(this);
+            this._detailClickHandler = this._detailClickHandler.bind(this);
+            this._detailCloseHandler = this._detailCloseHandler.bind(this);
+            this.state = {
+                rows: this.props.rows,
+                nextOffset: this.props.nextOffset,
+                detailVisible: false,
+                detail: null
+            };
+        }
+
+        _storeChangeHandler() {
             const data = listStore.getData();
             const detail = listStore.getDetail();
             this.setState({
@@ -156,44 +169,39 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 detailVisible: !!detail,
                 detail: detail
             });
-        },
+        }
 
-        getInitialState: function () {
-            return {
-                rows: this.props.rows,
-                nextOffset: this.props.nextOffset,
-                detailVisible: false,
-                detail: null
-            };
-        },
-
-        componentDidMount: function () {
-            listStore.addChangeListener(this.changeHandler);
-        },
-
-        componentWillUnmount: function () {
-            listStore.removeChangeListener(this.changeHandler);
-        },
-
-        _detailClickHandler: function (corpusId) {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: true}}));
+        _detailClickHandler(corpusId) {
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = true;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
                 props: {
                     corpusId: corpusId
                 }
             });
-        },
+        }
 
-        _detailCloseHandler: function () {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: false}}));
+        _detailCloseHandler() {
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = false;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
                 props: {}
             });
-        },
+        }
 
-        _renderDetailBox: function () {
+        componentDidMount() {
+            listStore.addChangeListener(this._storeChangeHandler);
+        }
+
+        componentWillUnmount() {
+            listStore.removeChangeListener(this._storeChangeHandler);
+        }
+
+        _renderDetailBox() {
             if (this.state.detailVisible) {
                 return (
                     <layoutViews.PopupBox
@@ -206,9 +214,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
             } else {
                 return null;
             }
-        },
+        }
 
-        render: function () {
+        render() {
             let rows = this.state.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
                                     enableUserActions={!this.props.anonymousUser}
@@ -232,7 +240,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 </div>
             );
         }
-    });
+    }
 
     // -------------------------------- <CorpKeywordLink /> -----------------
 
@@ -269,27 +277,27 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
     /**
      * A keyword link from the filter form
      */
-    const KeywordLink = React.createClass({
+    class KeywordLink extends React.Component {
 
-        mixins: mixins,
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this.state = {active: Boolean(this.props.isActive)};
+        }
 
-        _changeHandler: function (store, action) {
+        _storeChangeHandler(store, action) {
             this.setState({active: formStore.getKeywordState(this.props.keyword)});
-        },
+        }
 
-        getInitialState: function () {
-            return {active: Boolean(this.props.isActive)};
-        },
+        componentDidMount() {
+            formStore.addChangeListener(this._storeChangeHandler);
+        }
 
-        componentDidMount: function () {
-            formStore.addChangeListener(this._changeHandler);
-        },
+        componentWillUnmount() {
+            formStore.removeChangeListener(this._storeChangeHandler);
+        }
 
-        componentWillUnmount: function () {
-            formStore.removeChangeListener(this._changeHandler);
-        },
-
-        _handleClick: function (active) {
+        _handleClickFn(active) {
             return (e) => {
                 e.preventDefault();
                 this.props.initWaitingFn();
@@ -302,19 +310,17 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                     }
                 });
             };
-        },
+        }
 
-        render: function () {
-            let link;
-            let style = this.props.overlayColor ? {backgroundColor: this.props.overlayColor} : null;
-
+        render() {
+            const style = this.props.overlayColor ? {backgroundColor: this.props.overlayColor} : null;
 
             if (!this.state.active) {
-                link = this.createActionLink("corplist?keyword="+this.props.keyword);
+                const link = he.createActionLink("corplist?keyword="+this.props.keyword);
                 return (
                     <a className="keyword" href={link}
                             data-keyword-id={this.props.keyword}
-                            onClick={this._handleClick(true)}>
+                            onClick={this._handleClickFn(true)}>
                         <span className="overlay" style={style} >{this.props.label}</span>
                     </a>
                 );
@@ -323,13 +329,13 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 return (
                     <span className="keyword current"
                                 data-keyword-id={this.props.keyword}
-                                onClick={this._handleClick(false)}>
+                                onClick={this._handleClickFn(false)}>
                         <span className="overlay" style={style}>{this.props.label}</span>
                     </span>
                 );
             }
         }
-    });
+    }
 
     // -------------------------------- <ResetLink /> -----------------
 
@@ -350,7 +356,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         return (
             <a className="keyword reset" onClick={handleClick}>
                 <span className="overlay">
-                    {util.translate('defaultCorparch__no_keyword')}
+                    {he.translate('defaultCorparch__no_keyword')}
                 </span>
             </a>
         );
@@ -375,7 +381,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 <ResetLink initWaitingFn={props.initWaitingFn} />
                 {links}
                 <div className="inline-label hint">
-                    ({util.translate('defaultCorparch__hold_ctrl_for_multiple')})
+                    ({he.translate('defaultCorparch__hold_ctrl_for_multiple')})
                 </div>
             </fieldset>
         );
@@ -455,18 +461,21 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
     /**
      * A fieldset containing non-keyword filter inputs.
      */
-    const FilterInputFieldset = React.createClass({
-        mixins: mixins,
+    class FilterInputFieldset extends React.Component {
 
-        getInitialState : function () {
-            return {expanded: this.props.filters.name[0] ? true : false};
-        },
+        constructor(props) {
+            super(props);
+            this._handleLegendClick = this._handleLegendClick.bind(this);
+            this.state = {expanded: this.props.filters.name[0] ? true : false};
+        }
 
-        _handleLegendClick : function () {
-            this.setState(React.addons.update(this.state, {expanded: {$set: !this.state.expanded}}));
-        },
+        _handleLegendClick() {
+            const newState = he.cloneState(this.state);
+            newState.expanded = !this.state.expanded;
+            this.setState(newState);
+        }
 
-        render: function () {
+        render() {
             let fields;
             let fieldsetClasses;
 
@@ -474,16 +483,16 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 fieldsetClasses = 'advanced-filter';
                 fields = (
                     <div>
-                        <span>{this.translate('defaultCorparch__size_from')}: </span>
+                        <span>{he.translate('defaultCorparch__size_from')}: </span>
                         <MinSizeInput minSize={this.props.filters.minSize[0]} initWaitingFn={this.props.initWaitingFn} />
-                        <span className="inline-label">{this.translate('defaultCorparch__size_to')}: </span>
+                        <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
                         <MaxSizeInput maxSize={this.props.filters.maxSize[0]} initWaitingFn={this.props.initWaitingFn} />
                         <div className="hint">
-                            {'(' + this.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
+                            {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
                         </div>
                         <p>
                             <span>
-                            {this.translate('defaultCorparch__corpus_name_input_label')}: </span>
+                            {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
                             <NameSearchInput initialValue={this.props.filters.name[0]} initWaitingFn={this.props.initWaitingFn} />
                         </p>
                     </div>
@@ -496,53 +505,54 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
 
             return (
                 <fieldset className={fieldsetClasses}>
-                    <legend onClick={this._handleLegendClick}>{this.translate('defaultCorparch__advanced_filters')}</legend>
+                    <legend onClick={this._handleLegendClick}>{he.translate('defaultCorparch__advanced_filters')}</legend>
                     {fields}
                 </fieldset>
             );
         }
-    });
+    }
 
     // -------------------------------- <FilterForm /> -----------------
 
     /**
      * Filter form root component
      */
-    const FilterForm = React.createClass({
+    class FilterForm extends React.Component {
 
-        mixins: mixins,
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._initWaiting = this._initWaiting.bind(this);
+            this.state = {isWaiting: false};
+        }
 
-        _storeChangeHandler : function () {
-            this.setState({isWaiting: false});
-        },
+        _storeChangeHandler() {
+            this.setState({isWaiting: false}); // TODO this is fake and wrong
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             listStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             listStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        getInitialState : function () {
-            return {isWaiting: false};
-        },
-
-        _initWaiting : function () {
+        _initWaiting() {
             this.setState({isWaiting: true});
-        },
+        }
 
-        _renderLoader : function () {
+        _renderLoader() {
             if (this.state.isWaiting) {
-                return <img className="ajax-loader" src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                alt={this.translate('global__loading')} title={this.translate('global__loading')} />;
+                return <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={he.translate('global__loading')} title={he.translate('global__loading')} />;
 
             } else {
                 return null;
             }
-        },
+        }
 
-        render: function () {
+        render() {
             return (
                 <section className="inner">
                     <div style={{height: '1em'}}>
@@ -550,7 +560,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                     </div>
                     <KeywordsField
                         keywords={this.props.keywords}
-                        label={this.translate('defaultCorparch__keywords_field_label')}
+                        label={he.translate('defaultCorparch__keywords_field_label')}
                         initWaitingFn={this._initWaiting} />
                     <FilterInputFieldset
                         filters={this.props.filters}
@@ -558,7 +568,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 </section>
             )
         }
-    });
+    }
 
     return {
         CorplistTable: CorplistTable,

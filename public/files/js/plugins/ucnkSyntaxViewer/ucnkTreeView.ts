@@ -195,7 +195,7 @@ class TreeGenerator {
 
     private detailedId:string = null;
 
-    private mixins:any;
+    private componentHelpers:any;
 
     private sent2NodeActionMap:{[ident:string]:HTMLElement} = {};
 
@@ -220,8 +220,8 @@ class TreeGenerator {
     private static DETAIL_DIV_MIN_HEIGHT = 100;
 
 
-    constructor(options:Options, mixins:any) {
-        this.mixins = mixins;
+    constructor(options:Options, componentHelpers:Kontext.ComponentHelpers) {
+        this.componentHelpers = componentHelpers;
         this.params = new DrawingParams();
         this.params.width = options.width;
         this.params.height = options.height;
@@ -437,7 +437,7 @@ class TreeGenerator {
         const div = body
             .append('xhtml:div')
             .classed('token-node', true)
-            .attr('title', d => `${d.value} (${this.mixins.translate('ucnkSyntaxViewer__click_to_see_details')})`)
+            .attr('title', d => `${d.value} (${this.componentHelpers.translate('ucnkSyntaxViewer__click_to_see_details')})`)
             .html(d => `${d.value}<br />${this.generateLabelSpan(nodeMap[d.id].labels[1])}`);
 
         div.each((d, i, items) => {
@@ -478,9 +478,9 @@ class TreeGenerator {
                     link
                         .append('img')
                         .classed('close-button', true)
-                        .attr('src', this.mixins.createStaticUrl('img/close-icon.svg'))
-                        .attr('alt', this.mixins.translate('global__close'))
-                        .attr('title', this.mixins.translate('global__close'));
+                        .attr('src', this.componentHelpers.createStaticUrl('img/close-icon.svg'))
+                        .attr('alt', this.componentHelpers.translate('global__close'))
+                        .attr('title', this.componentHelpers.translate('global__close'));
 
                     const data = nodeMap[datum.id].data;
                     Object.keys(data).filter(k => k !== 'id').forEach(k => {
@@ -577,15 +577,15 @@ export interface TreeGeneratorFn {
 
 /**
  * This function is intended for the use in
- * KonText environment where mixins is just
+ * KonText environment where componentHelpers is just
  * a bunch of functions used mainly by
  * React classes to translate messages,
  * format numbers and dates, generate links etc.
  */
-export function createGenerator(mixins:any):TreeGeneratorFn {
+export function createGenerator(componentHelpers:Kontext.ComponentHelpers):TreeGeneratorFn {
     return (data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement,
             options:Options) => {
-        const gen = new TreeGenerator(options, mixins);
+        const gen = new TreeGenerator(options, componentHelpers);
         gen.generate(data, zone, tree, target);
     }
 }
@@ -596,16 +596,19 @@ export function createGenerator(mixins:any):TreeGeneratorFn {
  */
 export function generate(data:Array<SourceData.Data>, zone:string, tree:string, target:HTMLElement,
         options:Options) {
-    const mixins = {
+    const helpers = {
         translate : (x, v) => x.replace(/[_-]/g, ' '),
         createStaticUrl : x => `../../../${x}`,
         createActionLink : x => x,
         getConf : k => null,
         formatNumber: v => v,
         formatDate: v => v,
-        getLayoutViews: () => null
-    }
-    const gen = new TreeGenerator(options, mixins);
+        getLayoutViews: () => null,
+        addGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
+        removeGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
+        cloneState:<T extends {[key:string]:any}>(obj:T):T => obj
+    };
+    const gen = new TreeGenerator(options, helpers);
     gen.generate(data, zone, tree, target);
 }
 

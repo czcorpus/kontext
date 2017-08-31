@@ -20,7 +20,7 @@
 
 import * as React from 'vendor/react';
 
-export function init(dispatcher, mixins, layoutViews, concSaveStore) {
+export function init(dispatcher, he, layoutViews, concSaveStore) {
 
     /**
      *
@@ -40,7 +40,7 @@ export function init(dispatcher, mixins, layoutViews, concSaveStore) {
         return (
             <tr>
                 <th>
-                    {mixins.translate('concview__save_conc_as_label')}:
+                    {he.translate('concview__save_conc_as_label')}:
                 </th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
@@ -71,7 +71,7 @@ export function init(dispatcher, mixins, layoutViews, concSaveStore) {
             <tr>
                 <th>
                     <label htmlFor="document-heading-checkbox">
-                        {mixins.translate('concview__save_form_incl_heading')}
+                        {he.translate('concview__save_form_incl_heading')}
                         :{'\u00a0'}
                     </label>
                 </th>
@@ -100,7 +100,7 @@ export function init(dispatcher, mixins, layoutViews, concSaveStore) {
             <tr>
                 <th>
                     <label htmlFor="line-numbering-checkbox">
-                    {mixins.translate('concview__save_form_incl_line_nums')}
+                    {he.translate('concview__save_form_incl_line_nums')}
                     :{'\u00a0'}
                     </label>
                 </th>
@@ -129,7 +129,7 @@ export function init(dispatcher, mixins, layoutViews, concSaveStore) {
             <tr>
                 <th>
                     <label htmlFor="align-kwic-checkbox">
-                        {mixins.translate('concview__save_form_align_kwic')}
+                        {he.translate('concview__save_form_align_kwic')}
                         :{'\u00a0'}
                     </label>
                 </th>
@@ -168,15 +168,15 @@ export function init(dispatcher, mixins, layoutViews, concSaveStore) {
         return (
             <tr>
                 <th>
-                    {mixins.translate('concview__save_form_lines_to_store')}
+                    {he.translate('concview__save_form_lines_to_store')}
                     {'\u00a0'}:
                 </th>
                 <td>
-                    {mixins.translate('concview__save_form_line_from')}:{'\u00a0'}
+                    {he.translate('concview__save_form_line_from')}:{'\u00a0'}
                     <input type="text" value={props.fromLine}
                         onChange={handleFromInput} style={{width: '4em'}} />
                     {'\u00a0'}
-                    {mixins.translate('concview__save_form_line_to')}:{'\u00a0'}
+                    {he.translate('concview__save_form_line_to')}:{'\u00a0'}
                     <input type="text" value={props.toLine}
                         onChange={handleToInput} style={{width: '4em'}} />
                 </td>
@@ -253,7 +253,7 @@ export function init(dispatcher, mixins, layoutViews, concSaveStore) {
             return (
                 <layoutViews.ModalOverlay onCloseKey={this._handleCloseClick}>
                     <layoutViews.CloseableFrame onCloseClick={this._handleCloseClick}
-                                label={mixins.translate('concview__save_conc_head')} scrollable={true}>
+                                label={he.translate('concview__save_conc_head')} scrollable={true}>
                         <form action="saveconc">
                             <table className="form">
                                 <tbody>
@@ -266,7 +266,7 @@ export function init(dispatcher, mixins, layoutViews, concSaveStore) {
                             <div className="buttons">
                                 <button type="button" className="default-button"
                                         onClick={this._handleSubmitClick}>
-                                    {mixins.translate('concview__save_btn')}
+                                    {he.translate('concview__save_btn')}
                                 </button>
                             </div>
                         </form>

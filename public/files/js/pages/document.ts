@@ -245,18 +245,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
-     * Exports a list of default + (optional custom) mixins
-     * for a React component.
-     *
-     * @param mixins Additional mixins
-     * @returns a list of mixins
-     * @deprecated
-     */
-    exportMixins(...mixins:any[]):any[] {
-        return mixins ? mixins.concat([this.componentTools]) : [this.componentTools];
-    }
-
-    /**
      * Renders provided React component with specified mount element.
      *
      * @param reactClass
@@ -1079,10 +1067,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     getComponentHelpers():Kontext.ComponentHelpers {
         return this.pageModel.getComponentHelpers();
-    }
-
-    exportMixins(...mixins:any[]):any[] {
-        return this.pageModel.exportMixins(...mixins);
     }
 
     renderReactComponent(reactClass:React.ReactClass,

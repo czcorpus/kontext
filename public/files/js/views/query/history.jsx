@@ -19,7 +19,6 @@
  */
 
 import * as React from 'vendor/react';
-import {init as inputInit} from './input';
 
 
 export function init(dispatcher, he, layoutViews, queryHistoryStore) {

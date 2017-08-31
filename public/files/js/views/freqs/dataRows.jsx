@@ -20,9 +20,9 @@
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 
-export function init(dispatcher, mixins, freqDataRowsStore) {
+export function init(dispatcher, he, freqDataRowsStore) {
 
     // ----------------------- <DataRowPNFilter /> --------------------------------
     const DataRowPNFilter = (props) => {
@@ -49,12 +49,12 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
             return (
                 <td>
                     {props.pfilter.size > 0 ? <a onClick={handlePosClick}
-                                title={mixins.translate('global__pnfilter_label_p')}>p</a> :
-                            <span title={mixins.translate('freq__neg_filter_disabled')}>p</span>}
+                                title={he.translate('global__pnfilter_label_p')}>p</a> :
+                            <span title={he.translate('freq__neg_filter_disabled')}>p</span>}
                     {'\u00a0/\u00a0'}
                     {props.nfilter.size > 0 ? <a onClick={handleNegClick}
-                                title={mixins.translate('global__pnfilter_label_n')}>n</a> :
-                            <span title={mixins.translate('freq__neg_filter_disabled')}>n</span>}
+                                title={he.translate('global__pnfilter_label_n')}>n</a> :
+                            <span title={he.translate('freq__neg_filter_disabled')}>n</span>}
                 </td>
             );
 
@@ -114,15 +114,15 @@ export function init(dispatcher, mixins, freqDataRowsStore) {
         const renderSortingIcon = () => {
             if (props.sortColumn === props.data.s) {
                 return (
-                    <span title={mixins.translate('global__sorted')}>
+                    <span title={he.translate('global__sorted')}>
                          {props.data.n}
-                        <img className="sort-flag" src={mixins.createStaticUrl('img/sort_desc.svg')} />
+                        <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} />
                     </span>
                 )
 
             } else {
                 return (
-                    <a onClick={handleClick} title={mixins.translate('global__click_to_sort')}>
+                    <a onClick={handleClick} title={he.translate('global__click_to_sort')}>
                          {props.data.n}
                     </a>
                 );

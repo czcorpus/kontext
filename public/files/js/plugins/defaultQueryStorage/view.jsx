@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, queryStorageStore) {
-
-    const he = mixins[0];
+export function init(dispatcher, he, queryStorageStore) {
 
     class QueryStorage extends React.Component {
 

@@ -16,70 +16,71 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, treeStore) {
+export function init(dispatcher, he, treeStore) {
 
     // --------------------------------- <TreeNode /> --------------------------
 
-    const TreeNode = React.createClass({
+    const TreeNode = (props) => {
 
-        mixins : mixins,
-
-        _clickHandler : function () {
+        const clickHandler = () => {
             dispatcher.dispatch({
                 actionType: 'TREE_CORPARCH_SET_NODE_STATUS',
                 props: {
-                    nodeId: this.props.ident
+                    nodeId: props.ident
                 }
             });
-        },
+        };
 
-        _getStateImagePath : function () {
-            let path = this.props.active ? 'img/collapse.svg' : 'img/expand.svg';
-            return this.createStaticUrl(path);
-        },
+        const getStateImagePath = () => {
+            return he.createStaticUrl(props.active ? 'img/collapse.svg' : 'img/expand.svg');
+        };
 
-        render : function () {
-            return (
-                <li className="node">
-                    <a onClick={this._clickHandler}>
-                        <img className="state-flag" src={this._getStateImagePath()} />
-                        {this.props.name}
-                    </a>
-                    { this.props.active ?
-                        <ItemList name={this.props.name} corplist={this.props.corplist} />
-                        : null }
-                </li>
-            );
-        }
-    });
+        return (
+            <li className="node">
+                <a onClick={clickHandler}>
+                    <img className="state-flag" src={getStateImagePath()} />
+                    {props.name}
+                </a>
+                {props.active ?
+                    <ItemList name={props.name} corplist={props.corplist} />
+                    : null }
+            </li>
+        );
+    };
 
     // -------------------------------- <TreeLeaf /> -------------------------------
 
-    const TreeLeaf = React.createClass({
+    const TreeLeaf = (props) => {
 
-        _clickHandler : function () {
+        const clickHandler = () => {
             dispatcher.dispatch({
                 actionType: 'TREE_CORPARCH_LEAF_NODE_CLICKED',
                 props: {
-                    ident: this.props.ident
+                    ident: props.ident
                 }
             });
-        },
+        };
 
-        render : function () {
-            return <li className="leaf"><a onClick={this._clickHandler}>{this.props.name}</a></li>;
-        }
-    });
+        return (
+            <li className="leaf">
+                <a onClick={clickHandler}>
+                    {props.name}
+                </a>
+            </li>
+        );
+    };
 
     // -------------------------------- <ItemList /> -------------------------------
 
-    const ItemList = React.createClass({
+    const ItemList = (props) => {
 
-        _renderChildren : function () {
-            return this.props.corplist.map((item, i) => {
+        const renderChildren = () => {
+            return props.corplist.map((item, i) => {
                 if (item['corplist'].size > 0) {
                     return <TreeNode key={i} name={item['name']} ident={item['ident']}
                                         corplist={item['corplist']} active={item['active']} />;
@@ -88,22 +89,31 @@ export function init(dispatcher, mixins, treeStore) {
                     return <TreeLeaf key={i} name={item['name']} ident={item['ident']} />;
                 }
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <ul className={this.props.htmlClass}>
-                    {this._renderChildren()}
-                </ul>
-            );
-        }
-    });
+        return (
+            <ul className={props.htmlClass}>
+                {renderChildren()}
+            </ul>
+        );
+    };
 
     // -------------------------------- <CorptreeWidget /> -------------------------------
 
-    const CorptreeWidget = React.createClass({
+    class CorptreeWidget extends React.Component {
 
-        _buttonClickHandler : function () {
+        constructor(props) {
+            super(props);
+            this._buttonClickHandler = this._buttonClickHandler.bind(this);
+            this._changeListener = this._changeListener.bind(this);
+            this.state = {
+                active: false,
+                data: treeStore.getData(),
+                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+            };
+        }
+
+        _buttonClickHandler() {
             if (!this.state.active) {
                 dispatcher.dispatch({
                     actionType: 'TREE_CORPARCH_GET_DATA',
@@ -117,33 +127,25 @@ export function init(dispatcher, mixins, treeStore) {
                     currentCorpusIdent: treeStore.getCurrentCorpusIdent()
                 });
             }
-        },
+        }
 
-        _changeListener : function (store, action) {
+        _changeListener(store, action) {
             this.setState({
                 active: true,
                 data: store.getData(),
                 currentCorpusIdent: treeStore.getCurrentCorpusIdent()
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                active: false,
-                data: treeStore.getData(),
-                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
-            };
-        },
-
-        componentDidMount : function () {
+        componentDidMount() {
             treeStore.addChangeListener(this._changeListener);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             treeStore.removeChangeListener(this._changeListener);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="corp-tree-widget">
                     <button className="switch util-button" type="button" onClick={this._buttonClickHandler}
@@ -155,39 +157,41 @@ export function init(dispatcher, mixins, treeStore) {
                 </div>
             );
         }
-    });
+    }
 
     // ----------------------- <CorptreePageComponent /> -----------------
 
-    const CorptreePageComponent = React.createClass({
+    class CorptreePageComponent extends React.Component {
 
-        _changeListener : function (store, action) {
+        constructor(props) {
+            super(props);
+            this._changeListener = this._changeListener.bind(this);
+            this.state = {
+                data: null,
+                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
+            };
+        }
+
+        _changeListener(store, action) {
             this.setState({
                 data: store.getData(),
                 currentCorpusIdent: treeStore.getCurrentCorpusIdent()
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                data: null,
-                currentCorpusIdent: treeStore.getCurrentCorpusIdent()
-            };
-        },
-
-        componentDidMount : function () {
+        componentDidMount() {
             treeStore.addChangeListener(this._changeListener);
             dispatcher.dispatch({
                 actionType: 'TREE_CORPARCH_GET_DATA',
                 props: {}
             });
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             treeStore.removeChangeListener(this._changeListener);
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="corp-tree-component">
                     <ItemList htmlClass="corp-tree"
@@ -195,7 +199,7 @@ export function init(dispatcher, mixins, treeStore) {
                 </div>
             );
         }
-    });
+    }
 
     return {
         CorptreeWidget: CorptreeWidget,

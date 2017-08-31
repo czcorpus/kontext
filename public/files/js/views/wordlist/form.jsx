@@ -18,20 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import * as React from 'vendor/react';
 
-/**
- *
- * @param {*} dispatcher
- * @param {*} mixins
- * @param {*} layoutViews
- * @param {*} CorparchWidget
- * @param {*} wordlistFormStore
- */
-export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFormStore) {
 
-    const util = mixins[0];
+export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormStore) {
 
 
     // ---------------- <TRCorpusField /> -----------------------
@@ -44,7 +36,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
 
         return (
             <tr>
-                <th>{util.translate('global__corpus')}:</th>
+                <th>{he.translate('global__corpus')}:</th>
                 <td>
                     <props.corparchWidget subcorpList={props.subcorpList} />
                 </td>
@@ -69,14 +61,14 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
         return (
             <tr>
                 <td>
-                    {util.translate('wordlist__attrsel_label')}
+                    {he.translate('wordlist__attrsel_label')}
                 </td>
                 <td>
                     <select value={props.wlattr} onChange={handleChange}>
-                        <optgroup label={util.translate('global__attrsel_group_pos_attrs')}>
+                        <optgroup label={he.translate('global__attrsel_group_pos_attrs')}>
                             {props.attrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
                         </optgroup>
-                        <optgroup label={util.translate('global__attrsel_group_struct_attrs')}>
+                        <optgroup label={he.translate('global__attrsel_group_struct_attrs')}>
                             {props.structAttrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
                         </optgroup>
                     </select>
@@ -113,8 +105,8 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
 
         return (
             <tr>
-                <td title={util.translate('wordlist__re_pattern_title')}>
-                    {util.translate('wordlist__re_pattern_label')}:
+                <td title={he.translate('wordlist__re_pattern_title')}>
+                    {he.translate('wordlist__re_pattern_label')}:
                 </td>
                 <td>
                     <input type="text" value={props.wlpat} onChange={handleChange}
@@ -141,7 +133,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
         return (
             <tr>
                 <td>
-                    {util.translate('wordlist__freq_figures_label')}:
+                    {he.translate('wordlist__freq_figures_label')}:
                 </td>
                 <td>
                     <ul className="wl-option-list">
@@ -149,21 +141,21 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                             <label>
                                 <input type="radio" value="frq" checked={props.wlnums === 'frq'}
                                         onChange={handleRadioChange} />
-                                {util.translate('wordlist__freq_fig_radio_frq')}
+                                {he.translate('wordlist__freq_fig_radio_frq')}
                             </label>
                         </li>
                         <li>
                             <label>
                                 <input type="radio" value="docf" checked={props.wlnums === 'docf'}
                                         onChange={handleRadioChange} />
-                                {util.translate('wordlist__freq_fig_radio_docf')}
+                                {he.translate('wordlist__freq_fig_radio_docf')}
                             </label>
                         </li>
                         <li>
                             <label>
                                 <input type="radio" value="arf" checked={props.wlnums === 'arf'}
                                         onChange={handleRadioChange} />
-                                {util.translate('wordlist__freq_fig_radio_arf')}
+                                {he.translate('wordlist__freq_fig_radio_arf')}
                             </label>
                         </li>
                     </ul>
@@ -210,7 +202,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
         return (
             <tr>
                 <td>
-                    {util.translate('wordlist__output_type_title')}:
+                    {he.translate('wordlist__output_type_title')}:
                 </td>
                 <td className="output-types">
                     <ul className="wl-option-list">
@@ -218,10 +210,10 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                             <label>
                                 <input type="radio" value="simple" checked={props.wltype === 'simple'}
                                         onChange={handleOutTypeChange} />
-                                {util.translate('wordlist__out_type_single_label')}
+                                {he.translate('wordlist__out_type_single_label')}
                             </label>
                             {'\u00a0'}
-                            ({util.translate('wordlist__curr_wlattr_hint')}:{'\u00a0'}
+                            ({he.translate('wordlist__curr_wlattr_hint')}:{'\u00a0'}
                             <strong className="current-wlattr">{props.wlattr}</strong>)
                         </li>
                         {props.allowsMultilevelWltype ?
@@ -229,7 +221,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                                 <label>
                                     <input type="radio" value="multilevel" checked={props.wltype === 'multilevel'}
                                             onChange={handleOutTypeChange} />
-                                    {util.translate('wordlist__out_type_multi_label')}
+                                    {he.translate('wordlist__out_type_multi_label')}
                                 </label>:
                                 {'\u00a0'}
                                 <OutTypeAttrSel attrList={props.attrList} value={props.wposattr1} position={1}
@@ -242,18 +234,18 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                                         disabled={props.wltype !== 'multilevel'} />
                                 {props.wltype === 'multilevel' ?
                                     (<p className="hint">
-                                        <img src={util.createStaticUrl('img/info-icon.svg')}
-                                                alt={util.translate('global__info_icon')}
+                                        <img src={he.createStaticUrl('img/info-icon.svg')}
+                                                alt={he.translate('global__info_icon')}
                                                 style={{width: '1em', verticalAlign: 'middle', paddingRight: '0.4em'}} />
-                                        {util.translate('wordlist__multiattr_warning')}</p>) : null}
+                                        {he.translate('wordlist__multiattr_warning')}</p>) : null}
                             </li>) :
                             (<li>
                                 <label>
                                     <input type="radio" disabled={true} />
-                                    {util.translate('wordlist__out_type_multi_label')}
+                                    {he.translate('wordlist__out_type_multi_label')}
                                 </label>:
                                 {'\u00a0'}
-                                <span className="hint">{util.translate('wordlist__ml_not_avail')}</span>
+                                <span className="hint">{he.translate('wordlist__ml_not_avail')}</span>
                             </li>)
                         }
                     </ul>
@@ -268,7 +260,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
         return (
             <fieldset className="FieldsetOutputOptions">
                 <legend>
-                    {util.translate('wordlist__out_opts_fieldset_legend')}
+                    {he.translate('wordlist__out_opts_fieldset_legend')}
                 </legend>
                 <table>
                     <tbody>
@@ -299,7 +291,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
         return (
             <tr>
                 <td>
-                    {util.translate('wordlist__min_freq_label')}:
+                    {he.translate('wordlist__min_freq_label')}:
                 </td>
                 <td>
                     <input type="text" value={props.wlminfreq}
@@ -359,11 +351,11 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                 <span className="active-file">{props.fileName}</span>
                 {'\u00a0'}
                 <a onClick={handleEditorEnableClick}>
-                    {util.translate('global__edit')}
+                    {he.translate('global__edit')}
                 </a>
                 {'\u00a0'}
                 <a onClick={handleRemoveClick}>
-                    {util.translate('global__remove')}
+                    {he.translate('global__remove')}
                 </a>
             </td>
         );
@@ -415,7 +407,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                         label={props.data.fileName}>
                     <textarea rows="30" cols="80" value={props.data.data} onChange={handleWriting} />
                     <button className="default-button" onClick={handleClose}>
-                        {util.translate('global__ok')}
+                        {he.translate('global__ok')}
                     </button>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
@@ -439,7 +431,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
             <tr className="TRIncludeNonWordsCheckbox">
                 <td>
                     <label htmlFor="wl-include-non-words-checkbox">
-                        {util.translate('wordlist__incl_non_word_label')}:
+                        {he.translate('wordlist__incl_non_word_label')}:
                     </label>
                 </td>
                 <td>
@@ -476,12 +468,12 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                     {this.state.hintVisible ?
                         (<layoutViews.PopupBox onCloseClick={this._handleCloseClick}
                                 customStyle={{width: '20em'}}>
-                            <p>{util.translate('wordlist__wl_white_lists')}</p>
+                            <p>{he.translate('wordlist__wl_white_lists')}</p>
                         </layoutViews.PopupBox>) : null}
                     </td>
                     <td>
                         <a className="hint" onClick={this._handleClick}>
-                            {util.translate('wordlist__req_file_format_link')}
+                            {he.translate('wordlist__req_file_format_link')}
                         </a>
                     </td>
                 </tr>
@@ -573,7 +565,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                     </table>
                     <fieldset>
                         <legend>
-                            {util.translate('wordlist__filter_wordlist_by_legend')}
+                            {he.translate('wordlist__filter_wordlist_by_legend')}
                         </legend>
                         <table className="form">
                             <tbody>
@@ -582,7 +574,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                                         wlattr={this.state.wlattr} />
                                 <TRWlpatternInput wlpat={this.state.wlpat} />
                                 <TRWlminfreqInput wlminfreq={this.state.wlminfreq} />
-                                <TRFilterFile label={util.translate('wordlist__whitelist_label')} target="wlwords"
+                                <TRFilterFile label={he.translate('wordlist__whitelist_label')} target="wlwords"
                                             hasValue={this.state.hasWlwords} fileName={this.state.wlFileName} />
                                 <TRFilterFile label="Blacklist" target="blacklist"
                                             hasValue={this.state.hasBlacklist} fileName={this.state.blFileName} />
@@ -598,7 +590,7 @@ export function init(dispatcher, mixins, layoutViews, CorparchWidget, wordlistFo
                     <div className="buttons">
                         <button className="default-button" type="button"
                                 onClick={this._handleSubmitClick}>
-                            {util.translate('wordlist__make_wl_btn')}
+                            {he.translate('wordlist__make_wl_btn')}
                         </button>
                     </div>
                 </form>

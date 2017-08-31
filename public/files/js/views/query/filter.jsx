@@ -18,23 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
-import React from 'vendor/react';
+import * as React from 'vendor/react';
 import {init as inputInit} from './input';
 
 
-export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStore, withinBuilderStore, virtualKeyboardStore) {
+export function init(dispatcher, he, filterStore, queryHintStore, withinBuilderStore, virtualKeyboardStore) {
 
-    const inputViews = inputInit(
-        dispatcher, mixins, layoutViews, filterStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+    const inputViews = inputInit(dispatcher, he, filterStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
 
     // -------- <FilterForm /> ---------------------------------------
 
-    const FilterForm = React.createClass({
+    class FilterForm extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._keyEventHandler = this._keyEventHandler.bind(this);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._handlePosNegSelect = this._handlePosNegSelect.bind(this);
+            this._handleSelTokenSelect = this._handleSelTokenSelect.bind(this);
+            this._handleToFromRangeValChange = this._handleToFromRangeValChange.bind(this);
+            this._handleSubmit = this._handleSubmit.bind(this);
+            this._handleInclKwicCheckbox = this._handleInclKwicCheckbox.bind(this);
+            this.state = this._fetchState();
+        }
 
-        _fetchState : function () {
+        _fetchState() {
             return {
                 queryTypes: filterStore.getQueryTypes(),
                 supportedWidgets: filterStore.getSupportedWidgets(),
@@ -58,9 +68,9 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                 isLocked: filterStore.getOpLocks().get(this.props.filterId),
                 withinArg: filterStore.getWithinArgs().get(this.props.filterId)
             };
-        },
+        }
 
-        _keyEventHandler : function (evt) {
+        _keyEventHandler(evt) {
             if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch({
@@ -79,27 +89,23 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                 evt.stopPropagation();
                 evt.preventDefault();
             }
-        },
+        }
 
-        getInitialState : function () {
-            return this._fetchState();
-        },
-
-        _storeChangeHandler : function () {
+        _storeChangeHandler() {
             const ans = this._fetchState();
             ans['contextFormVisible'] = this.state.contextFormVisible;
             this.setState(ans);
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             filterStore.addChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             filterStore.removeChangeListener(this._storeChangeHandler);
-        },
+        }
 
-        _handlePosNegSelect : function (evt) {
+        _handlePosNegSelect(evt) {
             dispatcher.dispatch({
                 actionType: 'FILTER_QUERY_SET_POS_NEG',
                 props: {
@@ -107,9 +113,9 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        _handleSelTokenSelect : function (evt) {
+        _handleSelTokenSelect(evt) {
             dispatcher.dispatch({
                 actionType: 'FILTER_QUERY_SET_FILFL',
                 props: {
@@ -117,9 +123,9 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        _handleToFromRangeValChange : function (pos, evt) {
+        _handleToFromRangeValChange(pos, evt) {
             dispatcher.dispatch({
                 actionType: 'FILTER_QUERY_SET_RANGE',
                 props: {
@@ -128,9 +134,9 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     value: evt.target.value
                 }
             });
-        },
+        }
 
-        _handleSubmit : function () {
+        _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
                 dispatcher.dispatch({
                     actionType: 'BRANCH_QUERY',
@@ -145,9 +151,9 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     }
                 });
             }
-        },
+        }
 
-        _handleInclKwicCheckbox : function (evt) {
+        _handleInclKwicCheckbox(evt) {
             dispatcher.dispatch({
                 actionType: 'FILTER_QUERY_SET_INCL_KWIC',
                 props: {
@@ -155,18 +161,18 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     value: !this.state.inclKwicValue
                 }
             });
-        },
+        }
 
-        _renderForm : function () {
+        _renderForm() {
             if (this.state.withinArg === 1) {
                 return this._renderSwitchMaincorpForm();
 
             } else {
                 return this._renderFullForm();
             }
-        },
+        }
 
-        _renderSwitchMaincorpForm : function () {
+        _renderSwitchMaincorpForm() {
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form">
@@ -191,63 +197,63 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
                             {this.props.operationIdx !== undefined ?
-                                this.translate('global__proceed')
-                                : this.translate('query__search_btn')}
+                                he.translate('global__proceed')
+                                : he.translate('query__search_btn')}
                         </button>
                     </div>
                 </form>
             );
-        },
+        }
 
-        _renderFullForm : function () {
+        _renderFullForm() {
             return (
                 <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form">
                         <tbody>
                             <tr>
-                                <th>{this.translate('query__filter_th')}:</th>
+                                <th>{he.translate('query__filter_th')}:</th>
                                 <td>
                                     <select value={this.state.pnFilterValue} onChange={this._handlePosNegSelect}>
-                                        <option value="p">{this.translate('query__qfilter_pos')}</option>
-                                        <option value="n">{this.translate('query__qfilter_neg')}</option>
+                                        <option value="p">{he.translate('query__qfilter_pos')}</option>
+                                        <option value="n">{he.translate('query__qfilter_neg')}</option>
                                     </select>
                                 </td>
                             </tr>
                             {this.state.pnFilterValue === 'p' ?
                                 (<tr>
-                                    <th>{this.translate('query__qlfilter_sel_token')}:</th>
+                                    <th>{he.translate('query__qlfilter_sel_token')}:</th>
                                     <td>
                                         <select onChange={this._handleSelTokenSelect}
                                                 value={this.state.filflValue}>
-                                            <option value="f">{this.translate('query__token_first')}</option>
-                                            <option value="l">{this.translate('query__token_last')}</option>
+                                            <option value="f">{he.translate('query__token_first')}</option>
+                                            <option value="l">{he.translate('query__token_last')}</option>
                                         </select>
                                         {'\u00a0'}
                                         <span className="hint">
-                                            ({this.translate('query__qlfilter_sel_token_hint')})
+                                            ({he.translate('query__qlfilter_sel_token_hint')})
                                         </span>
                                     </td>
                                 </tr>) : null
                             }
                             <tr>
-                                <th>{this.translate('query__qfilter_range_srch_th')}:</th>
+                                <th>{he.translate('query__qfilter_range_srch_th')}:</th>
                                 <td>
                                     <label>
-                                        {this.translate('query__qfilter_range_from')}:{'\u00a0'}
+                                        {he.translate('query__qfilter_range_from')}:{'\u00a0'}
                                         <input type="text" style={{width: '3em'}}
                                             value={this.state.filfposValue}
                                             onChange={this._handleToFromRangeValChange.bind(this, 'from')} />
                                     </label>
                                     {'\u00a0'}
                                     <label>
-                                        {this.translate('query__qfilter_range_to')}:{'\u00a0'}
+                                        {he.translate('query__qfilter_range_to')}:{'\u00a0'}
                                         <input type="text" style={{width: '3em'}}
                                         value={this.state.filtposValue}
                                             onChange={this._handleToFromRangeValChange.bind(this, 'to')} />
                                     </label>
                                     {'\u00a0,\u00a0'}
                                     <label>
-                                        {this.translate('query__qfilter_include_kwic')}
+                                        {he.translate('query__qfilter_include_kwic')}
                                         <input type="checkbox" checked={this.state.inclKwicValue}
                                             onChange={this._handleInclKwicCheckbox} />
                                     </label>
@@ -282,21 +288,21 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                     <div className="buttons">
                         <button type="button" className="default-button" onClick={this._handleSubmit}>
                             {this.props.operationIdx !== undefined ?
-                                this.translate('global__proceed')
-                                : this.translate('query__search_btn')}
+                                he.translate('global__proceed')
+                                : he.translate('query__search_btn')}
                         </button>
                     </div>
                 </form>
             );
-        },
+        }
 
-        render : function () {
+        render() {
             if (this.state.isLocked) {
                 return (
                     <div>
-                        <img src={this.createStaticUrl('img/info-icon.svg')} alt={this.translate('global__info_icon')}
+                        <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')}
                                 style={{verticalAlign: 'middle', marginLeft: '0.7em'}} />
-                        {this.translate('query__operation_is_automatic_and_cannot_be_changed')}
+                        {he.translate('query__operation_is_automatic_and_cannot_be_changed')}
                     </div>
                 );
 
@@ -304,7 +310,7 @@ export function init(dispatcher, mixins, layoutViews, filterStore, queryHintStor
                 return this._renderForm();
             }
         }
-    });
+    }
 
     return {
         FilterForm: FilterForm

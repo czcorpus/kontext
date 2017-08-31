@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+/// <reference path="../vendor.d.ts/react.d.ts" />
+
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, collViews, freqViews, mainMenuStore) {
-
-    const util = mixins[0];
+export function init(dispatcher, he, layoutViews, collViews, freqViews, mainMenuStore) {
 
     // ------------------------- <AnalysisFrame /> ---------------------------
 
@@ -48,9 +48,9 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
         _getTitle() {
             switch ((this.state.activeItem || {}).actionName) {
                 case 'MAIN_MENU_SHOW_COLL_FORM':
-                    return util.translate('Collocation candidates'); // TODO
+                    return he.translate('Collocation candidates'); // TODO
                 case 'MAIN_MENU_SHOW_FREQ_FORM':
-                    return util.translate('freq__h2_freq_distr');
+                    return he.translate('freq__h2_freq_distr');
                 default:
                     return '?';
             }

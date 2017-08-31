@@ -16,23 +16,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
 import React from 'vendor/react';
 import {init as defaultViewInit} from '../defaultCorparch/corplistView';
 
 
-export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, listStore) {
-    const defaultComponents = defaultViewInit(dispatcher, mixins, layoutViews, CorpusInfoBox,
-            formStore, listStore);
+export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
-    const util = mixins[0];
+    const defaultComponents = defaultViewInit(dispatcher, he, CorpusInfoBox, formStore, listStore);
+    const layoutViews = he.getLayoutViews();
 
-    /**
-     *
-     */
-    const RequestForm = React.createClass({
-        mixins: mixins,
+    // --------------- <RequestForm /> ---------------------------------
 
-        _submitHandler : function () {
+    class RequestForm extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._submitHandler = this._submitHandler.bind(this);
+            this._textareaChangeHandler = this._textareaChangeHandler.bind(this);
+            this.state = {customMessage: ''};
+        }
+
+        _submitHandler() {
             dispatcher.dispatch({
                 actionType: 'CORPUS_ACCESS_REQ_SUBMITTED',
                 props: {
@@ -42,17 +48,13 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 }
             });
             this.props.submitHandler();
-        },
+        }
 
-        _textareaChangeHandler : function (e) {
+        _textareaChangeHandler(e) {
             this.setState({customMessage: e.target.value});
-        },
+        }
 
-        getInitialState : function () {
-            return {customMessage: ''};
-        },
-
-        render : function () {
+        render() {
             return (
                 <form>
                     <img className="message-icon" src={this.createStaticUrl('img/message-icon.png')}
@@ -74,36 +76,56 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 </form>
             );
         }
+    }
 
-    });
+    // --------------- <LockIcon /> ---------------------------------
 
-    /**
-     *
-     */
-    const LockIcon = React.createClass({
-        mixins: mixins,
+    class LockIcon extends React.Component {
 
-        getInitialState : function () {
-            return {isUnlockable: this.props.isUnlockable, hasFocus: false, hasDialog: false};
-        },
+        constructor(props) {
+            super(props);
+            this._mouseOverHandler = this._mouseOverHandler.bind(this);
+            this._mouseOutHandler = this._mouseOutHandler.bind(this);
+            this._clickHandler = this._clickHandler.bind(this);
+            this._closeDialog = this._closeDialog.bind(this);
+            this.state = {
+                isUnlockable: this.props.isUnlockable,
+                hasFocus: false,
+                hasDialog: false
+            };
+        }
 
-        _mouseOverHandler : function () {
-            this.setState({isUnlockable: this.state.isUnlockable, hasFocus: true, hasDialog: this.state.hasDialog});
-        },
+        _mouseOverHandler() {
+            this.setState({
+                isUnlockable: this.state.isUnlockable,
+                hasFocus: true,
+                hasDialog: this.state.hasDialog
+            });
+        }
 
-        _mouseOutHandler : function () {
-            this.setState({isUnlockable: this.state.isUnlockable, hasFocus: false, hasDialog: this.state.hasDialog});
-        },
+        _mouseOutHandler() {
+            this.setState({
+                isUnlockable: this.state.isUnlockable,
+                hasFocus: false,
+                hasDialog: this.state.hasDialog
+            });
+        }
 
-        _clickHandler : function () {
-            this.setState({isUnlockable: this.state.isUnlockable, hasFocus: this.state.hasFocus, hasDialog: true});
-        },
+        _clickHandler() {
+            this.setState({
+                isUnlockable: this.state.isUnlockable,
+                hasFocus: this.state.hasFocus,
+                hasDialog: true
+            });
+        }
 
-        _closeDialog : function () {
-            this.setState(React.addons.update(this.state, {hasDialog: {$set: false}}));
-        },
+        _closeDialog() {
+            const newState = he.cloneState(this.state);
+            newState.hasDialog = false;
+            this.setState(newState);
+        }
 
-        _renderDialog : function () {
+        _renderDialog() {
             if (this.state.hasDialog) {
                 const onBoxReady = function (elm) {
                     let rect = elm.getBoundingClientRect();
@@ -128,9 +150,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
             } else {
                 return null;
             }
-        },
+        }
 
-        render : function () {
+        render() {
             if (this.state.isUnlockable) {
                 const img = this.state.hasFocus ? <img src={this.createStaticUrl('img/unlocked.svg')} /> :
                         <img src={this.createStaticUrl('img/locked.svg')} />;
@@ -152,7 +174,9 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 return false;
             }
         }
-    });
+    }
+
+    // --------------- <CorplistRow /> ---------------------------------
 
     /**
      * A single dataset row
@@ -165,7 +189,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         const keywords = props.row.keywords.map((k, i) => {
             return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
         });
-        const link = util.createActionLink('first_form', [['corpname', props.row.id]]);
+        const link = he.createActionLink('first_form', [['corpname', props.row.id]]);
         const size = props.row.size_info ? props.row.size_info : '-';
 
         let userAction = null;
@@ -201,19 +225,34 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                     <p className="desc" style={{display: 'none'}}></p>
                     <a className="detail"
                             onClick={handleDetailClick.bind(null, props.row.id)}>
-                        {util.translate('defaultCorparch__corpus_details')}
+                        {he.translate('defaultCorparch__corpus_details')}
                     </a>
                 </td>
             </tr>
         );
     };
 
+    // --------------- <CorplistTable /> ---------------------------------
+
     /**
      * dataset table
      */
-    const CorplistTable = React.createClass({
+    class CorplistTable extends React.Component {
 
-        changeHandler: function () {
+        constructor(props) {
+            super(props);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
+            this._detailClickHandler = this._detailClickHandler.bind(this);
+            this._detailCloseHandler = this._detailCloseHandler.bind(this);
+            this.state = {
+                rows: this.props.rows,
+                nextOffset: this.props.nextOffset,
+                detailVisible: false,
+                detail: null
+            };
+        }
+
+        _storeChangeHandler() {
             const data = listStore.getData();
             const detail = listStore.getDetail();
             this.setState({
@@ -222,44 +261,39 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                 detailVisible: !!detail,
                 detail: detail
             });
-        },
+        }
 
-        getInitialState: function () {
-            return {
-                rows: this.props.rows,
-                nextOffset: this.props.nextOffset,
-                detailVisible: false,
-                detail: null
-            };
-        },
-
-        componentDidMount: function () {
-            listStore.addChangeListener(this.changeHandler);
-        },
-
-        componentWillUnmount: function () {
-            listStore.removeChangeListener(this.changeHandler);
-        },
-
-        _detailClickHandler: function (corpusId) {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: true}}));
+        _detailClickHandler(corpusId) {
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = true;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
                 props: {
                     corpusId: corpusId
                 }
             });
-        },
+        }
 
-        _detailCloseHandler: function () {
-            this.setState(React.addons.update(this.state, {detailVisible: {$set: false}}));
+        _detailCloseHandler() {
+            const newState = he.cloneState(this.state);
+            newState.detailVisible = false;
+            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
                 props: {}
             });
-        },
+        }
 
-        _renderDetailBox: function () {
+        componentDidMount() {
+            listStore.addChangeListener(this._storeChangeHandler);
+        }
+
+        componentWillUnmount() {
+            listStore.removeChangeListener(this._storeChangeHandler);
+        }
+
+        _renderDetailBox() {
             if (this.state.detailVisible) {
                 return (
                     <layoutViews.PopupBox
@@ -272,18 +306,14 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
             } else {
                 return null;
             }
-        },
+        }
 
-        render: function () {
-            let rows = this.state.rows.map((row, i) => {
+        render() {
+            const rows = this.state.rows.map((row, i) => {
                 return <CorplistRow key={row.id} row={row}
                                     enableUserActions={!this.props.anonymousUser}
                                     detailClickHandler={this._detailClickHandler} />;
             });
-            let expansion = null;
-            if (this.state.nextOffset) {
-                expansion = <ListExpansion offset={this.state.nextOffset} />;
-            }
 
             return (
                 <div>
@@ -292,13 +322,16 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
                         <tbody>
                             <defaultComponents.CorplistHeader />
                             {rows}
-                            {expansion}
+                            {this.state.nextOffset ?
+                                <ListExpansion offset={this.state.nextOffset} /> :
+                                null
+                            }
                         </tbody>
                     </table>
                 </div>
             );
         }
-    });
+    }
 
     /**
      * Provides a link allowing to load more items with current
@@ -318,7 +351,7 @@ export function init(dispatcher, mixins, layoutViews, CorpusInfoBox, formStore, 
         return (
             <tr className="load-more">
                 <td colSpan="5">
-                    <a onClick={linkClickHandler}>{util.translate('ucnkCorparch__load_all')}</a>
+                    <a onClick={linkClickHandler}>{he.translate('ucnkCorparch__load_all')}</a>
                 </td>
             </tr>
         );

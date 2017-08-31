@@ -50,8 +50,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
     const initViews = (formStore:CorplistFormStore, listStore:CorplistTableStore) => {
         const ans:any = viewInit(
             pluginApi.dispatcher(),
-            pluginApi.exportMixins(),
-            pluginApi.getViews(),
+            pluginApi.getComponentHelpers(),
             overviewViews.CorpusInfoBox,
             formStore,
             listStore

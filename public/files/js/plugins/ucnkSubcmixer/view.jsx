@@ -16,35 +16,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import React from 'vendor/react';
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
+import * as React from 'vendor/react';
 
 
-export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
+export function init(dispatcher, he, subcMixerStore) {
+
+    const layoutViews = he.getLayoutViews();
 
     // ------------ <ValueShare /> -------------------------------------
 
-    const ValueShare = React.createClass({
+    const ValueShare = (props) => {
 
-        mixins,
-
-        _handleRatioValueChange : function (evt) {
+        const handleRatioValueChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_SET_RATIO',
                 props: {
-                    attrName: this.props.attrName,
-                    attrValue: this.props.attrValue,
+                    attrName: props.attrName,
+                    attrValue: props.attrValue,
                     ratio: evt.target.value
                 }
             });
-        },
+        };
 
-        _renderEvalResult : function () {
-            if (this.props.result) {
-                const actualVal = this.props.result[1].toFixed(2);
-                if (this.props.result[2] === true) {
+        const renderEvalResult = () => {
+            if (props.result) {
+                const actualVal = props.result[1].toFixed(2);
+                if (props.result[2] === true) {
                     return (
                         <span className="checked"
-                            title={this.translate('ucnk_subc__condition_fulfilled_{actual_val}',
+                            title={he.translate('ucnk_subc__condition_fulfilled_{actual_val}',
                                 {actual_val: actualVal})}>
                             {'\u2713'}
                         </span>
@@ -52,7 +54,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
 
                 } else {
                     return (
-                        <span className="crossed" title={this.translate(
+                        <span className="crossed" title={he.translate(
                             'ucnk_subc__condition_failed_{actual_val}',
                             {actual_val: actualVal})}>{'\u2717'}
                         </span>
@@ -62,159 +64,146 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
             } else {
                 return <span>-</span>;
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <tr>
-                    <td className="num">{this.props.rowId}.</td>
-                    <td className="expression">
-                        <strong>{this.props.attrName} = </strong>
-                        {'\u0022' + this.props.attrValue + '\u0022'}
-                    </td>
-                    <td className="num">
-                        <span>
-                            <input type="text" className={'num' + (this.props.hasResults ? ' disabled' : '')}
-                                    style={{width: '3em'}} value={this.props.ratio}
-                                    disabled={this.props.hasResults ? true : false}
-                                    onChange={this._handleRatioValueChange} />
-                            <strong>%</strong>
-                        </span>
-                    </td>
-                    <td className="num">
-                        {this.props.baseRatio}<strong>%</strong>
-                    </td>
-                    <td className="status">
-                        {this._renderEvalResult()}
-                    </td>
-                </tr>
-            );
-        }
-    });
+        return (
+            <tr>
+                <td className="num">{props.rowId}.</td>
+                <td className="expression">
+                    <strong>{props.attrName} = </strong>
+                    {'\u0022' + props.attrValue + '\u0022'}
+                </td>
+                <td className="num">
+                    <span>
+                        <input type="text" className={'num' + (props.hasResults ? ' disabled' : '')}
+                                style={{width: '3em'}} value={props.ratio}
+                                disabled={props.hasResults ? true : false}
+                                onChange={handleRatioValueChange} />
+                        <strong>%</strong>
+                    </span>
+                </td>
+                <td className="num">
+                    {props.baseRatio}<strong>%</strong>
+                </td>
+                <td className="status">
+                    {renderEvalResult()}
+                </td>
+            </tr>
+        );
+    };
 
     // ------------ <ValuesTable /> -------------------------------------
 
-    const ValuesTable = React.createClass({
+    const ValuesTable = (props) => {
 
-        mixins : mixins,
-
-        render : function () {
-            return (
-                <table className="data subcmixer-ratios">
-                    <tbody>
-                        <tr>
-                            <th />
-                            <th>{this.translate('ucnk_subc__ratios_th_expression')}</th>
-                            <th>{this.translate('ucnk_subc__ratios_th_required_ratio')}</th>
-                            <th>{this.translate('ucnk_subc__ratios_th_orig_ratio')}</th>
-                            <th>{this.translate('ucnk_subc__ratios_th_status')}</th>
-                        </tr>
-                        {this.props.items.map((item, i) => (
-                            <ValueShare key={i}
-                                    rowId={i + 1}
-                                    attrName={item.attrName}
-                                    hasResults={this.props.hasResults}
-                                    attrValue={item.attrValue}
-                                    baseRatio={item.baseRatio}
-                                    ratio={item.ratio}
-                                    result={this.props.currentResults ? this.props.currentResults['attrs'].get(i) : null} />
-                        ))}
-                    </tbody>
-                </table>
-            );
-        }
-    });
+        return (
+            <table className="data subcmixer-ratios">
+                <tbody>
+                    <tr>
+                        <th />
+                        <th>{he.translate('ucnk_subc__ratios_th_expression')}</th>
+                        <th>{he.translate('ucnk_subc__ratios_th_required_ratio')}</th>
+                        <th>{he.translate('ucnk_subc__ratios_th_orig_ratio')}</th>
+                        <th>{he.translate('ucnk_subc__ratios_th_status')}</th>
+                    </tr>
+                    {props.items.map((item, i) => (
+                        <ValueShare key={i}
+                                rowId={i + 1}
+                                attrName={item.attrName}
+                                hasResults={props.hasResults}
+                                attrValue={item.attrValue}
+                                baseRatio={item.baseRatio}
+                                ratio={item.ratio}
+                                result={props.currentResults ? props.currentResults['attrs'].get(i) : null} />
+                    ))}
+                </tbody>
+            </table>
+        );
+    };
 
     // ------------ <ReenterArgsButton /> -------------------------------------
 
-    const ReenterArgsButton = React.createClass({
+    const ReenterArgsButton = (props) => {
 
-        mixins : mixins,
-
-        _handleUpdateParamsButton : function () {
+        const handleUpdateParamsButton = () => {
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_CLEAR_RESULT',
                 props: {}
             });
-        },
+        };
 
-        render : function () {
-            return (
-                <button className="default-button" type="button"
-                        style={this.props.css}
-                        onClick={this._handleUpdateParamsButton}>
-                    {this.translate('ucnk_subc__modify_params_btn') + '\u2026'}
-                </button>
-            );
-        }
-
-    });
+        return (
+            <button className="default-button" type="button"
+                    style={props.css}
+                    onClick={handleUpdateParamsButton}>
+                {he.translate('ucnk_subc__modify_params_btn') + '\u2026'}
+            </button>
+        );
+    };
 
     // ------------ <ResultsControls /> -------------------------------------
 
-    const ResultsControls = React.createClass({
+    const ResultsControls = (props) => {
 
-        mixins : mixins,
-
-        _handleCreateSubcorpClick : function () {
+        const handleCreateSubcorpClick = () => {
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
                 props: {}
             });
-        },
+        };
 
-        _handleSubcnameInputChange : function (evt) {
+        const handleSubcnameInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_SET_SUBCNAME',
                 props: {
                     value: evt.target.value
                 }
             });
-        },
+        };
 
-        _renderDesc : function () {
-            if (this.props.numErrors === 0) {
+        const renderDesc = () => {
+            if (props.numErrors === 0) {
                 return (
                     <span>
                         <img className="icon"
-                                src={this.createStaticUrl('img/info-icon.svg')}
-                                alt={this.translate('global__info_icon')} />
-                        {this.translate('ucnk_subc__subc_found_{size}',
-                            {size: this.formatNumber(this.props.totalSize)})}
+                                src={he.createStaticUrl('img/info-icon.svg')}
+                                alt={he.translate('global__info_icon')} />
+                        {he.translate('ucnk_subc__subc_found_{size}',
+                            {size: he.formatNumber(props.totalSize)})}
                     </span>
                 );
 
-            } else if (this.props.numErrors === this.props.numConditions) {
+            } else if (props.numErrors === props.numConditions) {
                 return (
                     <span>
                         <img className="icon"
-                                src={this.createStaticUrl('img/error-icon.svg')}
-                                alt={this.translate('global__error_icon')} />
-                        {this.translate('ucnk_subc__subc_not_found')}
+                                src={he.createStaticUrl('img/error-icon.svg')}
+                                alt={he.translate('global__error_icon')} />
+                        {he.translate('ucnk_subc__subc_not_found')}
                     </span>
                 );
 
             } else {
-                return this.translate('ucnk_subc__subc_found_with_errors{size}{num_errors}',
-                        {size: this.formatNumber(this.props.totalSize),
-                        num_errors: this.props.numErrors});
+                return he.translate('ucnk_subc__subc_found_with_errors{size}{num_errors}',
+                        {size: he.formatNumber(props.totalSize),
+                        num_errors: props.numErrors});
             }
-        },
+        };
 
-        _renderControls : function () {
-            if (this.props.numErrors < this.props.numConditions) {
+        const renderControls = () => {
+            if (props.numErrors < props.numConditions) {
                 return (
                     <div>
                         <p>
                             <label>
-                                {this.translate('ucnk_subcm__new_subc_name')}:{'\u00a0'}
-                                <input type="text" value={this.props.currentSubcname}
-                                        onChange={this._handleSubcnameInputChange} />
+                                {he.translate('ucnk_subcm__new_subc_name')}:{'\u00a0'}
+                                <input type="text" value={props.currentSubcname}
+                                        onChange={handleSubcnameInputChange} />
                             </label>
                         </p>
                         <button className="default-button" type="button"
-                                onClick={this._handleCreateSubcorpClick}>
-                            {this.translate('ucnk_subcm__create_subc')}
+                                onClick={handleCreateSubcorpClick}>
+                            {he.translate('ucnk_subcm__create_subc')}
                         </button>
                         <ReenterArgsButton css={{display: 'inline-block', marginLeft: '0.7em'}} />
                     </div>
@@ -223,139 +212,134 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
             } else {
                 return <div><ReenterArgsButton /></div>;
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <div>
-                    <p className="desc">
-                        {this._renderDesc()}
-                    </p>
-                    {this._renderControls()}
-                </div>
-            );
-        }
-    });
+        return (
+            <div>
+                <p className="desc">
+                    {renderDesc()}
+                </p>
+                {renderControls()}
+            </div>
+        );
+    };
 
     // ------------ <Controls /> -------------------------------------
 
-    const Controls = React.createClass({
+    const Controls = (props) => {
 
-        mixins : mixins,
-
-        _handleCalculateCategoriesClick : function () {
-            this.props.setWaitingFn();
+        const handleCalculateCategoriesClick = () => {
+            props.setWaitingFn();
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_SUBMIT_TASK',
                 props: {}
             });
-        },
+        };
 
-        _renderButtons : function () {
-            if (this.props.isWaiting) {
-                return <img src={this.createStaticUrl('img/ajax-loader-bar.gif')}
-                                            alt={this.translate('global__calculating')} />;
+        const renderButtons = () => {
+            if (props.isWaiting) {
+                return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                            alt={he.translate('global__calculating')} />;
 
-            } else if (this.props.hasResults) {
+            } else if (props.hasResults) {
                 return <ResultsControls
-                            totalSize={this.props.totalSize}
-                            numErrors={this.props.numErrors}
-                            numConditions={this.props.numConditions}
-                            currentSubcname={this.props.currentSubcname} />;
+                            totalSize={props.totalSize}
+                            numErrors={props.numErrors}
+                            numConditions={props.numConditions}
+                            currentSubcname={props.currentSubcname} />;
 
             } else {
                 return (
                     <div>
-                        {this.props.usedAttributes.size > 1 ?
+                        {props.usedAttributes.size > 1 ?
                             (<p className="attr-warning">
-                                <img className="warning" src={this.createStaticUrl('img/warning-icon.svg')}
-                                        alt={this.translate('global__warning_icon')} />
-                                {this.translate('ucnk_subc__multiple_attrs_mixing_warning{attrs}',
-                                    {attrs: this.props.usedAttributes.toArray().join(', ')})}
+                                <img className="warning" src={he.createStaticUrl('img/warning-icon.svg')}
+                                        alt={he.translate('global__warning_icon')} />
+                                {he.translate('ucnk_subc__multiple_attrs_mixing_warning{attrs}',
+                                    {attrs: props.usedAttributes.toArray().join(', ')})}
                             </p>)
                             : null}
                         <button className="default-button" type="button"
-                                onClick={this._handleCalculateCategoriesClick}>
-                            {this.translate('ucnk_subcm__calculate')}
+                                onClick={handleCalculateCategoriesClick}>
+                            {he.translate('ucnk_subcm__calculate')}
                         </button>
                     </div>
                 );
             }
-        },
+        };
 
-        render : function () {
-            return (
-                <div className="controls">
-                    {this._renderButtons()}
-                </div>
-            );
-        }
-
-    });
+        return (
+            <div className="controls">
+                {renderButtons()}
+            </div>
+        );
+    };
 
     // ------------ <SubcMixer /> -------------------------------------
 
-    const SubcMixer = React.createClass({
+    class SubcMixer extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this._setWaiting = this._setWaiting.bind(this);
+            this._handleErrorToleranceChange = this._handleErrorToleranceChange.bind(this);
+            this.state = {isWaiting: false};
+        }
 
-        getInitialState : function () {
-            return {isWaiting: false};
-        },
-
-        _handleStoreChange : function () {
+        _handleStoreChange() {
             this.setState({isWaiting: false});
-        },
+        }
 
-        _setWaiting : function () {
+        _setWaiting() {
             this.setState({isWaiting: true});
-        },
+        }
 
-        componentDidMount : function () {
+        _handleErrorToleranceChange(evt) {
+            dispatcher.dispatch({
+                actionType: 'UCNK_SUBCMIXER_SET_ERROR_TOLERANCE',
+                props: {value: evt.target.value}
+            });
+        }
+
+        componentDidMount() {
             subcMixerStore.addChangeListener(this._handleStoreChange);
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_FETCH_CURRENT_SUBCNAME',
                 props: {}
             });
-        },
+        }
 
-        _handleErrorToleranceChange : function (evt) {
-            dispatcher.dispatch({
-                actionType: 'UCNK_SUBCMIXER_SET_ERROR_TOLERANCE',
-                props: {value: evt.target.value}
-            });
-        },
-
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             subcMixerStore.removeChangeListener(this._handleStoreChange);
-        },
+        }
 
-        _renderAlignedCorpInfo : function () {
+        _renderAlignedCorpInfo() {
             return (
                 <p>
-                    <img src={this.createStaticUrl('img/info-icon.svg')}
+                    <img src={he.createStaticUrl('img/info-icon.svg')}
                             style={{width: '1em', marginRight: '0.3em', verticalAlign: 'middle'}}
-                            alt={this.translate('global__info_icon')} />
-                    {this.translate('ucnk_subcm__there_are_aligned_corpora_msg')}:{'\u00a0'}
+                            alt={he.translate('global__info_icon')} />
+                    {he.translate('ucnk_subcm__there_are_aligned_corpora_msg')}:{'\u00a0'}
                     <strong>{this.props.alignedCorpora.map(v => v.label).join(', ')}</strong>
                 </p>
             );
-        },
+        }
 
-        render : function () {
+        render() {
             const hasResults = !!this.props.currentResults;
             return (
                 <layoutViews.ModalOverlay onCloseKey={this.props.closeClickHandler}>
                     <layoutViews.CloseableFrame onCloseClick={this.props.closeClickHandler}
                             customClass="subcmixer-widget"
-                            label={this.translate('ucnk_subcm__widget_header')}>
+                            label={he.translate('ucnk_subcm__widget_header')}>
                         <div>
                             {this.props.alignedCorpora.size > 0 ? this._renderAlignedCorpInfo() : null}
                             <ValuesTable items={this.props.selectedValues}
                                     currentResults={this.props.currentResults}
                                     hasResults={hasResults} />
                             <div className="error-tolerance-block">
-                                <label>{this.translate('ucnk_subc__error_tolerance')}
+                                <label>{he.translate('ucnk_subc__error_tolerance')}
                                 :{'\u00a0\u00B1'}
                                 <input type="text" value={this.props.errorTolerance}
                                         onChange={this._handleErrorToleranceChange} style={{width: '2em'}}
@@ -377,15 +361,30 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 </layoutViews.ModalOverlay>
             );
         }
-    });
+    }
 
     // ------------ <Widget /> -------------------------------------
 
-    const Widget = React.createClass({
+    class Widget extends React.Component {
 
-        mixins : mixins,
+        constructor(props) {
+            super(props);
+            this._handleTrigger = this._handleTrigger.bind(this);
+            this._handleCloseWidget = this._handleCloseWidget.bind(this);
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+            this.state = {
+                useWidget: false,
+                selectedValues: subcMixerStore.getShares(),
+                currentResults: subcMixerStore.getCurrentCalculationResults(),
+                numErrors: subcMixerStore.getNumOfErrors(),
+                currentSubcname: subcMixerStore.getCurrentSubcname(),
+                usedAttributes: subcMixerStore.getUsedAttributes(),
+                errorTolerance: subcMixerStore.getErrorTolerance(),
+                alignedCorpora: subcMixerStore.getAlignedCorpora()
+            };
+        }
 
-        _handleTrigger : function () {
+        _handleTrigger() {
             this.setState({
                 useWidget: true,
                 selectedValues: subcMixerStore.getShares(),
@@ -395,9 +394,9 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 errorTolerance: subcMixerStore.getErrorTolerance(),
                 alignedCorpora: subcMixerStore.getAlignedCorpora()
             });
-        },
+        }
 
-        _handleCloseWidget : function () {
+        _handleCloseWidget() {
             dispatcher.dispatch({
                 actionType: 'UCNK_SUBCMIXER_CLEAR_RESULT',
                 props: {}
@@ -412,22 +411,9 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 errorTolerance: null,
                 alignedCorpora: subcMixerStore.getAlignedCorpora()
             });
-        },
+        }
 
-        getInitialState : function () {
-            return {
-                useWidget: false,
-                selectedValues: subcMixerStore.getShares(),
-                currentResults: subcMixerStore.getCurrentCalculationResults(),
-                numErrors: subcMixerStore.getNumOfErrors(),
-                currentSubcname: subcMixerStore.getCurrentSubcname(),
-                usedAttributes: subcMixerStore.getUsedAttributes(),
-                errorTolerance: subcMixerStore.getErrorTolerance(),
-                alignedCorpora: subcMixerStore.getAlignedCorpora()
-            };
-        },
-
-        _handleStoreChange : function () {
+        _handleStoreChange() {
             this.setState({
                 useWidget: this.state.useWidget,
                 selectedValues: subcMixerStore.getShares(),
@@ -438,37 +424,37 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 errorTolerance: subcMixerStore.getErrorTolerance(),
                 alignedCorpora: subcMixerStore.getAlignedCorpora()
             });
-        },
+        }
 
-        componentDidMount : function () {
+        componentDidMount() {
             subcMixerStore.addChangeListener(this._handleStoreChange);
-        },
+        }
 
-        componentWillUnmount : function () {
+        componentWillUnmount() {
             subcMixerStore.removeChangeListener(this._handleStoreChange);
-        },
+        }
 
-        _renderButton : function () {
+        _renderButton() {
             if (this.props.isActive) {
                 return (
                     <a className="trigger util-button"
-                            title={this.translate('ucnk_subcm__set_shares')}
+                            title={he.translate('ucnk_subcm__set_shares')}
                             onClick={this._handleTrigger}>
-                        {this.translate('ucnk_subcm__define_proportions')}
+                        {he.translate('ucnk_subcm__define_proportions')}
                     </a>
                 );
 
             } else {
                 return (
                     <span className="util-button disabled"
-                            title={this.translate('ucnk_subcm__currently_disabled_refine_to_enable')}>
-                        {this.translate('ucnk_subcm__define_proportions')}
+                            title={he.translate('ucnk_subcm__currently_disabled_refine_to_enable')}>
+                        {he.translate('ucnk_subcm__define_proportions')}
                     </span>
                 );
             }
-        },
+        }
 
-        render : function () {
+        render() {
             return (
                 <div className="mixer-trigger">
                     {this._renderButton()}
@@ -485,7 +471,7 @@ export function init(dispatcher, mixins, layoutViews, subcMixerStore) {
                 </div>
             );
         }
-    });
+    }
 
     return {
         Widget: Widget
