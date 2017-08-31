@@ -157,6 +157,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             super(props);
             this._handleStoreChange = this._handleStoreChange.bind(this);
             this._handleInputChange = this._handleInputChange.bind(this);
+            this._handleKeyDown = this._handleKeyDown.bind(this);
             this._handleAttrChange = this._handleAttrChange.bind(this);
             this._handleInsert = this._handleInsert.bind(this);
             this.state = {
@@ -183,6 +184,14 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                     value: evt.target.value
                 }
             });
+        }
+
+        _handleKeyDown(evt) {
+            if (evt.keyCode === 27) {
+                evt.stopPropagation();
+                evt.preventDefault();
+                this.props.closeClickHandler();
+            }
         }
 
         _handleAttrChange(evt) {
@@ -225,23 +234,26 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                 <layoutViews.PopupBox
                         onCloseClick={this.props.closeClickHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                    <h3>{he.translate('query__create_within')}</h3>
-                    <div className="within-widget">
-                        <select onChange={this._handleAttrChange} value={this.state.attr}>
-                            {this.state.data.map((item, i) => {
-                                return <option key={item} value={i}>{`${item[0]}.${item[1]}`}</option>;
-                            })}
-                        </select>
-                        {'\u00a0'}={'\u00a0'}
-                        <input type="text" value={this.state.query} onChange={this._handleInputChange} />
-                        {'\u00a0'}
+                    <div onKeyDown={this._handleKeyDown}>
+                        <h3>{he.translate('query__create_within')}</h3>
+                        <div className="within-widget">
+                            <select onChange={this._handleAttrChange} value={this.state.attr}>
+                                {this.state.data.map((item, i) => {
+                                    return <option key={item} value={i}>{`${item[0]}.${item[1]}`}</option>;
+                                })}
+                            </select>
+                            {'\u00a0'}={'\u00a0'}
+                            <input type="text" value={this.state.query} onChange={this._handleInputChange}
+                                    ref={item => item ? item.focus() : null} />
+                            {'\u00a0'}
+                        </div>
+                        <p>
+                            <button type="button" className="util-button"
+                                    onClick={this._handleInsert}>
+                                {he.translate('query__insert_within')}
+                            </button>
+                        </p>
                     </div>
-                    <p>
-                        <button type="button" className="util-button"
-                                onClick={this._handleInsert}>
-                            {he.translate('query__insert_within')}
-                        </button>
-                    </p>
                 </layoutViews.PopupBox>
             );
         }
