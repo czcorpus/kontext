@@ -70,42 +70,58 @@ export class TagHelperStore extends SimplePageStore {
 
     private data:Immutable.List<PositionOptions>;
 
+    private _isBusy:boolean;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
-        const self = this;
         this.pluginApi = pluginApi;
+        this._isBusy = false;
         this.data = Immutable.List<PositionOptions>();
 
-        TagHelperStore.DispatchToken = this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
+        TagHelperStore.DispatchToken = this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'TAGHELPER_GET_INITIAL_DATA':
-                        self.loadInitialData();
-                        break;
-                    case 'TAGHELPER_CHECKBOX_CHANGED':
-                        self.updateSelectedItem(payload.props['position'], payload.props['value'],
-                                payload.props['checked']);
-                        self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
-                        self.notifyChangeListeners('TAGHELPER_WAITING_FOR_SERVER');
-                        self.updateData(payload.props['position']).then(
-                            (data) => {
-                                if (!data['containsErrors']) {
-                                    self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
-
-                                } else {
-                                    self.pluginApi.showMessage('error', data['messages'].join(', '));
+                        if (this.data.size === 0) {
+                            this._isBusy = true;
+                            this.notifyChangeListeners();
+                            this.loadInitialData().then(
+                                (data) => {
+                                    this.importData(data.labels, data.tags);
+                                    this._isBusy = false;
+                                    this.notifyChangeListeners();
+                                },
+                                (err) => {
+                                    this._isBusy = false;
+                                    this.notifyChangeListeners();
+                                    this.pluginApi.showMessage('error', err);
                                 }
+                            );
+
+                        } else {
+                            this.notifyChangeListeners();
+                        }
+                    break;
+                    case 'TAGHELPER_CHECKBOX_CHANGED':
+                        this.updateSelectedItem(payload.props['position'], payload.props['value'],
+                                payload.props['checked']);
+                        this._isBusy = true;
+                        this.notifyChangeListeners();
+                        this.updateData(payload.props['position']).then(
+                            (data) => {
+                                this._isBusy = false;
+                                this.notifyChangeListeners();
                             },
                             (err) => {
-                                self.pluginApi.showMessage('error', err);
+                                this._isBusy = false;
+                                this.notifyChangeListeners();
+                                this.pluginApi.showMessage('error', err);
                             }
                         );
-                        break;
+                    break;
                     case 'TAGHELPER_RESET':
-                        self.resetSelections();
-                        self.notifyChangeListeners('TAGHELPER_UPDATED_DATA_CHANGED');
-                        self.notifyChangeListeners('TAGHELPER_PATTERN_CHANGED');
-                        break;
+                        this.resetSelections();
+                        this.notifyChangeListeners();
+                    break;
                 }
             }
         );
@@ -202,26 +218,11 @@ export class TagHelperStore extends SimplePageStore {
     }
 
 
-    private loadInitialData():void {
-        let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
+    private loadInitialData():RSVP.Promise<TagDataResponse> {
+        return this.pluginApi.ajax<TagDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
-            { corpname: this.pluginApi.getConf('corpname') },
-            { contentType : 'application/x-www-form-urlencoded' }
-        );
-        prom.then(
-            (data) => {
-                if (!data.containsErrors) {
-                    this.importData(data.labels, data.tags);
-                    this.notifyChangeListeners('TAGHELPER_INITIAL_DATA_RECEIVED');
-
-                } else {
-                    this.pluginApi.showMessage('error', data.messages.join(', '));
-                }
-            },
-            (err) => {
-                this.pluginApi.showMessage('error', err);
-            }
+            { corpname: this.pluginApi.getConf('corpname') }
         );
     }
 
@@ -255,17 +256,11 @@ export class TagHelperStore extends SimplePageStore {
         let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
-            { corpname: this.pluginApi.getConf('corpname'), pattern: pattern },
-            { contentType : 'application/x-www-form-urlencoded' }
+            { corpname: this.pluginApi.getConf('corpname'), pattern: pattern }
         );
         return prom.then(
             (data) => {
-                if (!data.containsErrors) {
-                    this.mergeData(data.tags, triggerRow);
-
-                } else {
-                    this.pluginApi.showMessage('error', data.messages.join(', '));
-                }
+                this.mergeData(data.tags, triggerRow);
                 return data;
             },
             (err) => {
@@ -323,5 +318,9 @@ export class TagHelperStore extends SimplePageStore {
                     .map<string>((s:PositionValue) => s.id);
             return ans.size > 0 ? '[' + ans.join('') + ']' : ''
         }).join('');
+    }
+
+    isBusy():boolean {
+        return this._isBusy;
     }
 }

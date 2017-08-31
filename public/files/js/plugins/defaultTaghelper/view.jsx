@@ -34,10 +34,8 @@ export function init(dispatcher, he, tagHelperStore) {
             this.state = {pattern: this.props.tagValue};
         }
 
-        _changeListener(store, evt) {
-            if (evt === 'TAGHELPER_PATTERN_CHANGED') { // TODO - antipattern here
-                this.setState({pattern: tagHelperStore.exportCurrentPattern()});
-            }
+        _changeListener() {
+            this.setState({pattern: tagHelperStore.exportCurrentPattern()});
         }
 
         _keyEventHandler(evt) {
@@ -266,29 +264,21 @@ export function init(dispatcher, he, tagHelperStore) {
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
-            this.state = {
-                isWaiting: true,
-                positions: [],
-                stateId: '',
-                tagValue: tagHelperStore.exportCurrentPattern()
-            }; // state id is used to generate proper React item keys
+            this.state = this._fetchStoreState();
         }
 
-        _changeListener(store, action) {
-            if (action === 'TAGHELPER_WAITING_FOR_SERVER') {
-                const newState = he.cloneState(this.state);
-                newState.isWaiting = true;
-                this.setState(newState);
+        _fetchStoreState() {
+            return {
+                isWaiting: tagHelperStore.isBusy(),
+                positions: tagHelperStore.getPositions(),
+                stateId: tagHelperStore.getStateId(),
+                newState: tagHelperStore.exportCurrentPattern(),
+                tagValue: tagHelperStore.exportCurrentPattern()
+            };
+        }
 
-            } else if (action === 'TAGHELPER_UPDATED_DATA_CHANGED' ||
-                    action === 'TAGHELPER_INITIAL_DATA_RECEIVED') {
-                const newState = he.cloneState(this.state);
-                newState.isWaiting = false;
-                newState.positions = store.getPositions();
-                newState.stateId = store.getStateId();
-                newState.tagValue = store.exportCurrentPattern();
-                this.setState(newState);
-            }
+        _changeListener() {
+            this.setState(this._fetchStoreState());
         }
 
         componentDidMount() {
