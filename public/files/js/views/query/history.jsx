@@ -363,6 +363,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                 <div className="footer">
                     <a className="open-in-form util-button" onClick={handleFormClick}>
                         {he.translate('qhistory__open_in_form')}
+                        {'\u2026'}
                     </a>
                     {props.data.query_id ?
                     <SavedNameInfo name={props.data.name} queryId={props.data.query_id}
