@@ -34,10 +34,8 @@ export function init(dispatcher, he, tagHelperStore) {
             this.state = {pattern: this.props.tagValue};
         }
 
-        _changeListener(store, evt) {
-            if (evt === 'TAGHELPER_PATTERN_CHANGED') { // TODO - antipattern here
-                this.setState({pattern: tagHelperStore.exportCurrentPattern()});
-            }
+        _changeListener() {
+            this.setState({pattern: tagHelperStore.exportCurrentPattern()});
         }
 
         _keyEventHandler(evt) {
@@ -64,6 +62,58 @@ export function init(dispatcher, he, tagHelperStore) {
         }
     }
 
+    // ------------------------------ <InsertButton /> ----------------------------
+
+    const InsertButton = (props) => {
+        return (
+            <button className="util-button" type="button"
+                    value="insert" onClick={props.onClick}>
+                {he.translate('taghelper__insert_btn')}
+            </button>
+        );
+    }
+
+    // ------------------------------ <UndoButton /> ----------------------------
+
+    const UndoButton = (props) => {
+        if (props.enabled) {
+            return (
+                <button type="button" className="util-button" value="undo"
+                        onClick={props.onClick}>
+                    {he.translate('taghelper__undo')}
+                </button>
+            );
+
+        } else {
+            return (
+                <span className="util-button disabled">
+                    {he.translate('taghelper__undo')}
+                </span>
+            );
+        }
+    };
+
+    // ------------------------------ <ResetButton /> ----------------------------
+
+    const ResetButton = (props) => {
+        if (props.enabled) {
+            return (
+                <button type="button" className="util-button cancel"
+                        value="reset" onClick={props.onClick}>
+                    {he.translate('taghelper__reset')}
+                </button>
+            );
+
+        } else {
+            return (
+                <span className="util-button disabled">
+                    {he.translate('taghelper__reset')}
+                </span>
+            );
+        }
+    };
+
+
     // ------------------------------ <TagButtons /> ----------------------------
 
     const TagButtons = (props) => {
@@ -72,6 +122,12 @@ export function init(dispatcher, he, tagHelperStore) {
             if (evt.target.value === 'reset') {
                 dispatcher.dispatch({
                     actionType: 'TAGHELPER_RESET',
+                    props: {}
+                });
+
+            } else if (evt.target.value === 'undo') {
+                dispatcher.dispatch({
+                    actionType: 'TAGHELPER_UNDO',
                     props: {}
                 });
 
@@ -97,14 +153,9 @@ export function init(dispatcher, he, tagHelperStore) {
 
         return (
             <div className="buttons">
-                <button className="util-button" type="button"
-                        value="insert" onClick={buttonClick}>
-                {he.translate('taghelper__insert_btn')}
-                </button>
-                <button type="button" className="util-button cancel"
-                        value="reset" onClick={buttonClick}>
-                    {he.translate('taghelper__reset')}
-                </button>
+                <InsertButton onClick={buttonClick} />
+                <UndoButton onClick={buttonClick} enabled={props.canUndo} />
+                <ResetButton onClick={buttonClick} enabled={props.canUndo} />
             </div>
         );
     };
@@ -266,29 +317,22 @@ export function init(dispatcher, he, tagHelperStore) {
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
-            this.state = {
-                isWaiting: true,
-                positions: [],
-                stateId: '',
-                tagValue: tagHelperStore.exportCurrentPattern()
-            }; // state id is used to generate proper React item keys
+            this.state = this._fetchStoreState();
         }
 
-        _changeListener(store, action) {
-            if (action === 'TAGHELPER_WAITING_FOR_SERVER') {
-                const newState = he.cloneState(this.state);
-                newState.isWaiting = true;
-                this.setState(newState);
+        _fetchStoreState() {
+            return {
+                isWaiting: tagHelperStore.isBusy(),
+                positions: tagHelperStore.getPositions(),
+                stateId: tagHelperStore.getStateId(),
+                newState: tagHelperStore.exportCurrentPattern(),
+                tagValue: tagHelperStore.exportCurrentPattern(),
+                canUndo: tagHelperStore.canUndo()
+            };
+        }
 
-            } else if (action === 'TAGHELPER_UPDATED_DATA_CHANGED' ||
-                    action === 'TAGHELPER_INITIAL_DATA_RECEIVED') {
-                const newState = he.cloneState(this.state);
-                newState.isWaiting = false;
-                newState.positions = store.getPositions();
-                newState.stateId = store.getStateId();
-                newState.tagValue = store.exportCurrentPattern();
-                this.setState(newState);
-            }
+        _changeListener() {
+            this.setState(this._fetchStoreState());
         }
 
         componentDidMount() {
@@ -317,7 +361,8 @@ export function init(dispatcher, he, tagHelperStore) {
                     <TagDisplay tagValue={this.state.tagValue} onEscKey={this.props.onEscKey} />
                     <TagButtons sourceId={this.props.sourceId}
                                 onInsert={this.props.onInsert}
-                                actionPrefix={this.props.actionPrefix} />
+                                actionPrefix={this.props.actionPrefix}
+                                canUndo={this.state.canUndo} />
                 </div>
                 <PositionList positions={this.state.positions}
                                 stateId={this.state.stateId} />
