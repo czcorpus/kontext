@@ -333,14 +333,16 @@ class EventTriggeringItem(HideOnCustomCondItem):
     Please note that 'args' are converted into a dict which means
     that keys with multiple values are not supported.
     """
-    def __init__(self, ident, label, message):
+    def __init__(self, ident, label, message, key_code=None):
         super(EventTriggeringItem, self).__init__(ident, label, None)
         self._message = message
+        self._key_code = key_code
 
     def create(self, out_data):
         ans = super(EventTriggeringItem, self).create(out_data)
         ans['message'] = self._message
         ans['args'] = dict(ans['args'])
+        ans['keyCode'] = self._key_code
         ans.pop('action')
         return ans
 
@@ -435,7 +437,8 @@ class MenuGenerator(object):
         # ------------------------------------ menu-filter ------------------------------
 
         self.filter_pos = (
-            EventTriggeringItem(MainMenu.FILTER('positive'), _('Positive'), 'MAIN_MENU_SHOW_FILTER')
+            EventTriggeringItem(MainMenu.FILTER('positive'), _('Positive'), 'MAIN_MENU_SHOW_FILTER',
+                                key_code=73)  # key = 'i'
             .add_args(('pnfilter', 'p'))
             .mark_indirect()
         )
@@ -479,11 +482,19 @@ class MenuGenerator(object):
             .enable_if(lambda d: bool(d['ttcrit']))
         )
 
-        self.freq_custom = EventTriggeringItem(MainMenu.FREQUENCY('custom'), _('Custom'), 'MAIN_MENU_SHOW_FREQ_FORM').mark_indirect()
+        self.freq_custom = (
+            EventTriggeringItem(MainMenu.FREQUENCY('custom'), _('Custom'), 'MAIN_MENU_SHOW_FREQ_FORM',
+                                key_code=70)  # key = 'f'
+            .mark_indirect()
+        )
 
         # -------------------------------- menu-collocations ----------------------------
 
-        self.colloc_custom = EventTriggeringItem(MainMenu.COLLOCATIONS('custom'), _('Custom'), 'MAIN_MENU_SHOW_COLL_FORM').mark_indirect()
+        self.colloc_custom = (
+            EventTriggeringItem(MainMenu.COLLOCATIONS('custom'), _('Custom'),
+                                'MAIN_MENU_SHOW_COLL_FORM', key_code=67)  # key = 'c'
+            .mark_indirect()
+        )
 
         # -------------------------------- menu-view ------------------------------------
 
@@ -491,7 +502,7 @@ class MenuGenerator(object):
 
         self.view_structs_attrs = (
             EventTriggeringItem(MainMenu.VIEW('structs-attrs'), _('Corpus-specific settings'),
-                                'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS')
+                                'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS', key_code=79)  # key = 'o'
             .mark_corpus_dependent()
             .mark_indirect()
         )
@@ -509,6 +520,11 @@ class MenuGenerator(object):
             .add_args(('corpusId', self._args['corpname']))
             .enable_if(lambda d: d['uses_corp_instance'])
             .mark_corpus_dependent()
+        )
+
+        self.keyboard_shortcuts = (
+            EventTriggeringItem(MainMenu.HELP('keyboard-shortcuts'), 'global__keyboard_shortcuts',
+                                'OVERVIEW_SHOW_KEY_SHORTCUTS')
         )
 
         # -------------------------------------------------------------------------------
@@ -596,7 +612,7 @@ class MenuGenerator(object):
             )),
             (MainMenu.HELP.name, dict(
                 label=_('Help'),
-                items=custom_menu_items(MainMenu.HELP) + exp(self.how_to_cite_corpus),
+                items=custom_menu_items(MainMenu.HELP) + exp(self.how_to_cite_corpus, self.keyboard_shortcuts),
                 disabled=is_disabled(MainMenu.HELP)
             ))
         ]

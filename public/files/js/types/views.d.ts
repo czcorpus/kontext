@@ -471,8 +471,7 @@ declare module "views/overview" {
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        corpusInfoStore:Kontext.PageStore,
-        popupBoxComponent:React.ReactClass
+        corpusInfoStore:Kontext.PageStore
     ):OverviewViews;
 }
 

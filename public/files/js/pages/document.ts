@@ -267,7 +267,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     /**
      * Adds a window-registered key event handler.
      */
-    addGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
+    addGlobalKeyEventHandler(fn:(evt:KeyboardEvent)=>void):void {
         this.globalKeyHandlers = this.globalKeyHandlers.push(fn);
     }
 
@@ -861,8 +861,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         const overviewViews = overviewAreaViewsInit(
             this.dispatcher,
             this.getComponentHelpers(),
-            this.corpusInfoStore,
-            this.layoutViews.PopupBox
+            this.corpusInfoStore
         );
         const target = window.document.getElementById('general-overview-mount');
         if (target) { // few pages do not use this

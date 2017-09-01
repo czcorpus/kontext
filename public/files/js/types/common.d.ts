@@ -211,6 +211,12 @@ declare module Kontext {
         actionArgs:GeneralProps;
     }
 
+    export interface MainMenuAtom {
+        actionName:string;
+        actionArgs:GeneralProps;
+        keyCode:number;
+    }
+
     /**
      * This store is watched by components which are
      * able to render user content based on a selected
@@ -236,6 +242,8 @@ declare module Kontext {
          * are notified.
          */
         removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
+
+        exportKeyShortcutActions():Immutable.Map<number, MainMenuAtom>
     }
 
     /**

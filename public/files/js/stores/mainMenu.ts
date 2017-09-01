@@ -31,6 +31,7 @@ export interface SubmenuItem {
     ident:string;
     action:string;
     args:{[key:string]:any};
+    keyCode:number;
     currConc:boolean;
     message:string; // a dispatcher action type
     indirect:boolean;
@@ -138,6 +139,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
                         ident: item.ident,
                         action: item.action,
                         args: item.args,
+                        keyCode: item.keyCode,
                         message: item.message,
                         currConc: item.currConc,
                         indirect: item.indirect,
@@ -193,6 +195,19 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
 
     getData():Immutable.List<MenuEntry> {
         return this.data;
+    }
+
+    exportKeyShortcutActions():Immutable.Map<number, Kontext.MainMenuAtom> {
+        return Immutable.Map<number, Kontext.MainMenuAtom>(this.data
+            .flatMap(v => Immutable.List<SubmenuItem>(v[1].items))
+            .filter(v => !!v.keyCode && !!v.message)
+            .map(v => {
+                return [v.keyCode, {
+                    actionName: v.message,
+                    actionArgs: v.args,
+                    keyCode: v.keyCode
+                }];
+            }));
     }
 
 }

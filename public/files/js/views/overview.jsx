@@ -21,7 +21,9 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, corpusInfoStore, PopupBoxComponent) {
+export function init(dispatcher, he, corpusInfoStore) {
+
+    const layoutViews = he.getLayoutViews();
 
     // ---------------------------- <ItemAndNumRow /> -----------------------------
 
@@ -215,6 +217,40 @@ export function init(dispatcher, he, corpusInfoStore, PopupBoxComponent) {
         }
     };
 
+    // ----------------------------- <KeyboardShortcuts /> --------------------------
+
+    const KeyboardShortcuts = (props) => {
+        return (
+            <div className="KeyboardShortcuts">
+                <h2>{he.translate('global__keyboard_conc_view_section')}</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th><span className="key-button">f</span> - </th>
+                            <td>{he.translate('global__key_shortcut_freq')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">c</span> - </th>
+                            <td>{he.translate('global__key_shortcut_colls')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">s</span> - </th>
+                            <td>{he.translate('global__key_shortcut_save')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">o</span> - </th>
+                            <td>{he.translate('global__key_shortcut_options')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">i</span> - </th>
+                            <td>{he.translate('global__key_shortcut_filter')}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
     // ----------------------------- <OverviewArea /> --------------------------
 
     class OverviewArea extends React.Component {
@@ -261,6 +297,8 @@ export function init(dispatcher, he, corpusInfoStore, PopupBoxComponent) {
                     return <CorpusReference data={this.state.data} />;
                 case 'subcorpus-info':
                     return <SubcorpusInfo data={this.state.data} />;
+                case 'keyboard-shortcuts':
+                    return <KeyboardShortcuts />;
                 default:
                     return null;
             }
@@ -270,20 +308,20 @@ export function init(dispatcher, he, corpusInfoStore, PopupBoxComponent) {
             const ans = this._renderInfo();
             if (this.state.isLoading) {
                 return (
-                    <PopupBoxComponent customClass="centered"
+                    <layoutViews.PopupBox customClass="centered"
                             onCloseClick={this._handleCloseClick}
                             takeFocus={true}>
                         <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
                                 alt={he.translate('global__loading')} title={he.translate('global__loading')} />
-                    </PopupBoxComponent>
+                    </layoutViews.PopupBox>
                 );
 
             } else if (ans) {
                 return (
-                    <PopupBoxComponent customClass="centered"
-                            onCloseClick={this._handleCloseClick}>
+                    <layoutViews.PopupBox customClass="centered"
+                            onCloseClick={this._handleCloseClick} takeFocus={true}>
                         {ans}
-                    </PopupBoxComponent>
+                    </layoutViews.PopupBox>
                 );
 
             } else {

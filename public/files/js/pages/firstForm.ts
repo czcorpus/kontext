@@ -262,8 +262,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         const corpInfoViews = corpnameLinkInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.getStores().corpusInfoStore,
-            this.layoutModel.layoutViews.PopupBox
+            this.layoutModel.getStores().corpusInfoStore
         );
         this.layoutModel.renderReactComponent(
             this.layoutModel.layoutViews.EmptyQueryOverviewBar,
