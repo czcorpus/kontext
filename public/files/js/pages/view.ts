@@ -737,7 +737,6 @@ export class ViewPage {
         );
     }
 
-
     initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
@@ -857,6 +856,21 @@ export class ViewPage {
         };
         updateMenu(this.layoutModel.getConf<number>('NumLinesInGroups'));
         this.layoutModel.addConfChangeHandler<number>('NumLinesInGroups', updateMenu);
+    }
+
+    private initKeyShortcuts():void {
+        const actionMap = this.layoutModel.getStores().mainMenuStore.exportKeyShortcutActions();
+        this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
+            if (document.activeElement === document.body) {
+                const action = actionMap.get(evt.keyCode);
+                if (action) {
+                    this.layoutModel.dispatcher.dispatch({
+                        actionType: action.actionName,
+                        props: action.actionArgs
+                    });
+                }
+            }
+        });
     }
 
     private initUndoFunction():void {
@@ -1074,6 +1088,7 @@ export class ViewPage {
                 this.initQueryOverviewArea(tagh, qs);
                 this.initAnalysisViews();
                 this.updateMainMenu();
+                this.initKeyShortcuts();
                 this.updateHistory();
                 if (this.layoutModel.getConf<boolean>('Unfinished')) {
                     this.reloadHits();

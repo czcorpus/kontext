@@ -745,7 +745,9 @@ class Kontext(Controller):
     def _add_flux_save_menu_item(self, label, save_format=None):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
-            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name).mark_indirect())
+            self._save_menu.append(
+                EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83).mark_indirect())  # key = 's'
+
 
         else:
             event_name = 'MAIN_MENU_DIRECT_SAVE'

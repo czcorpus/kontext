@@ -126,64 +126,67 @@ export class CorpusInfoStore extends SimplePageStore {
 
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
-        const self = this;
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'OVERVIEW_CLOSE':
-                    self.currentInfoType = null;
-                    self.notifyChangeListeners();
+                    this.currentInfoType = null;
+                    this.notifyChangeListeners();
                 break;
                 case 'OVERVIEW_CORPUS_INFO_REQUIRED':
-                    self.isWaiting = true;
-                    self.notifyChangeListeners();
-                    self.loadCorpusInfo(payload.props['corpusId']).then(
+                    this.isWaiting = true;
+                    this.notifyChangeListeners();
+                    this.loadCorpusInfo(payload.props['corpusId']).then(
                         (data) => {
-                            self.currentCorpus = payload.props['corpusId'];
-                            self.currentInfoType = 'corpus-info';
-                            self.isWaiting = false;
-                            self.notifyChangeListeners();
+                            this.currentCorpus = payload.props['corpusId'];
+                            this.currentInfoType = 'corpus-info';
+                            this.isWaiting = false;
+                            this.notifyChangeListeners();
                         },
                         (err) => {
-                            self.isWaiting = false;
-                            self.pluginApi.showMessage('error', err);
+                            this.isWaiting = false;
+                            this.pluginApi.showMessage('error', err);
                         }
                     )
                     break;
                     case 'OVERVIEW_SHOW_CITATION_INFO':
-                        self.isWaiting = true;
-                        self.notifyChangeListeners();
-                        self.loadCorpusInfo(payload.props['corpusId']).then(
+                        this.isWaiting = true;
+                        this.notifyChangeListeners();
+                        this.loadCorpusInfo(payload.props['corpusId']).then(
                             (data) => {
-                                self.currentCorpus = payload.props['corpusId'];
-                                self.currentInfoType = 'citation-info';
-                                self.isWaiting = false;
-                                self.notifyChangeListeners();
+                                this.currentCorpus = payload.props['corpusId'];
+                                this.currentInfoType = 'citation-info';
+                                this.isWaiting = false;
+                                this.notifyChangeListeners();
                             },
                             (err) => {
-                                self.isWaiting = false;
-                                self.pluginApi.showMessage('error', err);
+                                this.isWaiting = false;
+                                this.pluginApi.showMessage('error', err);
                             }
                         );
                     break;
                     case 'OVERVIEW_SHOW_SUBCORPUS_INFO':
-                        self.isWaiting = true;
-                        self.notifyChangeListeners();
-                        self.loadSubcorpusInfo(payload.props['corpusId'], payload.props['subcorpusId']).then(
+                        this.isWaiting = true;
+                        this.notifyChangeListeners();
+                        this.loadSubcorpusInfo(payload.props['corpusId'], payload.props['subcorpusId']).then(
                             (data) => {
-                                self.currentCorpus = payload.props['corpusId'];
-                                self.currentSubcorpus = payload.props['subcorpusId'];
-                                self.currentInfoType = 'subcorpus-info';
-                                self.isWaiting = false;
-                                self.notifyChangeListeners();
+                                this.currentCorpus = payload.props['corpusId'];
+                                this.currentSubcorpus = payload.props['subcorpusId'];
+                                this.currentInfoType = 'subcorpus-info';
+                                this.isWaiting = false;
+                                this.notifyChangeListeners();
                             },
                             (err) => {
-                                self.isWaiting = false;
-                                self.pluginApi.showMessage('error', err);
+                                this.isWaiting = false;
+                                this.pluginApi.showMessage('error', err);
                             }
                         )
+                    break;
+                    case 'OVERVIEW_SHOW_KEY_SHORTCUTS':
+                        this.currentInfoType = 'keyboard-shortcuts';
+                        this.notifyChangeListeners();
                     break;
             }
         });
