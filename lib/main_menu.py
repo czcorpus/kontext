@@ -409,7 +409,8 @@ class MenuGenerator(object):
         )
 
         self.sorting = (
-            EventTriggeringItem(MainMenu.CONCORDANCE('sorting'), _('Sorting'), 'MAIN_MENU_SHOW_SORT').mark_indirect()
+            EventTriggeringItem(MainMenu.CONCORDANCE('sorting'), _('Sorting'),
+                                'MAIN_MENU_SHOW_SORT', key_code=82).mark_indirect()
         )
 
         self.shuffle = (
@@ -417,7 +418,7 @@ class MenuGenerator(object):
         )
 
         self.sample = EventTriggeringItem(MainMenu.CONCORDANCE('sample'),
-                                          _('Sample'), 'MAIN_MENU_SHOW_SAMPLE').mark_indirect()
+                                          _('Sample'), 'MAIN_MENU_SHOW_SAMPLE', key_code=77).mark_indirect()
 
         self.query_overview = (
             EventTriggeringItem(MainMenu.CONCORDANCE('query-overview'),

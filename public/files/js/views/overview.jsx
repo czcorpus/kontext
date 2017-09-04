@@ -226,24 +226,32 @@ export function init(dispatcher, he, corpusInfoStore) {
                 <table>
                     <tbody>
                         <tr>
-                            <th><span className="key-button">f</span> - </th>
-                            <td>{he.translate('global__key_shortcut_freq')}</td>
-                        </tr>
-                        <tr>
-                            <th><span className="key-button">c</span> - </th>
-                            <td>{he.translate('global__key_shortcut_colls')}</td>
-                        </tr>
-                        <tr>
                             <th><span className="key-button">s</span> - </th>
                             <td>{he.translate('global__key_shortcut_save')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">i</span> - </th>
+                            <td>{he.translate('global__key_shortcut_filter')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">r</span> - </th>
+                            <td>{he.translate('global__key_shortcut_sorting')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">m</span> - </th>
+                            <td>{he.translate('global__key_shortcut_sample')}</td>
                         </tr>
                         <tr>
                             <th><span className="key-button">o</span> - </th>
                             <td>{he.translate('global__key_shortcut_options')}</td>
                         </tr>
                         <tr>
-                            <th><span className="key-button">i</span> - </th>
-                            <td>{he.translate('global__key_shortcut_filter')}</td>
+                            <th><span className="key-button">f</span> - </th>
+                            <td>{he.translate('global__key_shortcut_freq')}</td>
+                        </tr>
+                        <tr>
+                            <th><span className="key-button">c</span> - </th>
+                            <td>{he.translate('global__key_shortcut_colls')}</td>
                         </tr>
                     </tbody>
                 </table>
