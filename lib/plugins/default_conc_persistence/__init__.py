@@ -31,7 +31,7 @@ import hashlib
 import re
 import uuid
 
-from abstract.conc_persistence import AbstractConcPersistence
+from plugins.abstract.conc_persistence import AbstractConcPersistence
 import plugins
 from plugins import inject
 
