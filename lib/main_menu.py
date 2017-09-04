@@ -300,33 +300,6 @@ class ConcMenuItem(HideOnCustomCondItem):
         return self
 
 
-class KwicSenModeSwitchItem(ConcMenuItem):
-    """
-    A specific menu item for switching between
-    concordance display modes (KWIC, sentence, alignment)
-    """
-
-    def __init__(self):
-        super(KwicSenModeSwitchItem, self).__init__(MainMenu.VIEW('kwic-sentence'), 'Kwic/Sentence', 'view')
-
-    def create(self, out_data):
-        if not out_data['align']:
-            if out_data['viewmode'] == 'sen':
-                self._label = _('KWIC/Sentence')
-                self._args = [('viewmode', 'kwic')]
-            else:
-                self._label = _('KWIC/Sentence')
-                self._args = [('viewmode', 'sen')]
-        else:
-            if out_data['viewmode'] == 'kwic':
-                self._label = _('KWIC/Alignment')
-                self._args = [('viewmode', 'align')]
-            elif out_data['viewmode'] == 'align':
-                self._label = _('KWIC/Alignment')
-                self._args = [('viewmode', 'kwic')]
-        return super(KwicSenModeSwitchItem, self).create(out_data)
-
-
 class EventTriggeringItem(HideOnCustomCondItem):
     """
     Represents a menu item which triggers a Flux event.
@@ -499,7 +472,10 @@ class MenuGenerator(object):
 
         # -------------------------------- menu-view ------------------------------------
 
-        self.view_mode_switch = KwicSenModeSwitchItem()
+        self.view_mode_switch = (
+            EventTriggeringItem(MainMenu.VIEW('kwic-sent-switch'), _('KWIC/Sentence'),
+                                              'CONCORDANCE_SWITCH_KWIC_SENT_MODE', key_code=75)  # key = 'k'
+        )
 
         self.view_structs_attrs = (
             EventTriggeringItem(MainMenu.VIEW('structs-attrs'), _('Corpus-specific settings'),

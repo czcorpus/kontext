@@ -299,7 +299,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                     this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible ||
                     this.props.data.lineGroup !== nextProps.data.lineGroup ||
                     this.props.catBgColor != nextProps.catBgColor ||
-                    this.props.cols !== nextProps.cols;
+                    this.props.cols !== nextProps.cols
+                    this.props.viewMode !== nextProps.viewMode;
         }
 
         componentDidMount() {
@@ -406,7 +407,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                 audioPlayerIsVisible: lineStore.audioPlayerIsVisible(),
                 useSafeFont: lineStore.getUseSafeFont(),
                 emptyRefValPlaceholder: lineStore.getEmptyRefValPlaceholder(),
-                corporaColumns: lineStore.getCorporaColumns()
+                corporaColumns: lineStore.getCorporaColumns(),
+                viewMode: lineStore.getViewMode()
             };
         }
 
@@ -444,7 +446,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                          lineIdx={i}
                          data={item}
                          cols={this.state.corporaColumns}
-                         viewMode={this.props.ViewMode}
+                         viewMode={this.state.viewMode}
                          baseCorpname={this.props.baseCorpname}
                          mainCorp={this.props.mainCorp}
                          corpsWithKwic={this.props.KWICCorps}
@@ -468,7 +470,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                     <tbody>
                         {this.state.corporaColumns.size > 1 ?
                             <ConcColsHeading cols={this.state.corporaColumns} corpsWithKwic={this.props.KWICCorps}
-                                    viewMode={this.props.ViewMode} hideable={numVisibleCols > 1} />
+                                    viewMode={this.state.viewMode} hideable={numVisibleCols > 1} />
                             : null
                         }
                         {this.state.lines.map(this._renderLine.bind(this))}
