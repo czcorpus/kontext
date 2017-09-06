@@ -149,7 +149,7 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
         constructor(props) {
             super(props);
-            this._changeHandler = this._changeHandler.bind(this);
+            this._storeChangeHandler = this._storeChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
             this.state = {
