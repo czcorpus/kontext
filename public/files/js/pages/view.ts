@@ -861,7 +861,8 @@ export class ViewPage {
     private initKeyShortcuts():void {
         const actionMap = this.layoutModel.getStores().mainMenuStore.exportKeyShortcutActions();
         this.layoutModel.addGlobalKeyEventHandler((evt:KeyboardEvent) => {
-            if (document.activeElement === document.body) {
+            if (document.activeElement === document.body &&
+                    !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
                 const action = actionMap.get(evt.keyCode);
                 if (action) {
                     this.layoutModel.dispatcher.dispatch({

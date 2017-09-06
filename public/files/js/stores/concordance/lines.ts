@@ -197,7 +197,7 @@ export interface ViewConfiguration {
 /**
  *
  */
-function importData(data:Array<ServerLineData>):Immutable.List<Line> {
+function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
     let ans:Array<Line> = [];
 
     function importTextChunk(item:ServerTextChunk):TextChunk {
@@ -334,7 +334,7 @@ export class ConcLineStore extends SimplePageStore {
         this.unfinishedCalculation = lineViewProps.Unfinished;
         this.fastAdHocIpm = lineViewProps.FastAdHocIpm;
         this.concSummary = lineViewProps.concSummary;
-        this.lines = importData(initialData);
+        this.lines = importLines(initialData);
         this.numItemsInLockedGroups = lineViewProps.NumItemsInLockedGroups;
         this.pagination = lineViewProps.pagination; // TODO possible mutable mess
         this.currentPage = lineViewProps.currentPage || 1;
@@ -406,6 +406,18 @@ export class ConcLineStore extends SimplePageStore {
                 case 'CONCORDANCE_CHANGE_LANG_VISIBILITY':
                     this.changeColVisibility(payload.props['corpusId'], payload.props['value']);
                     this.notifyChangeListeners();
+                break;
+                case 'CONCORDANCE_SWITCH_KWIC_SENT_MODE':
+                    this.changeViewMode().then(
+                        () => {
+                            this.notifyChangeListeners();
+                        },
+                        (err) => {
+                            console.error(err);
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                        }
+                    );
                 break;
             }
         });
@@ -494,34 +506,57 @@ export class ConcLineStore extends SimplePageStore {
         if (concId) {
             args.set('q', concId);
         }
-        let url = this.layoutModel.createActionUrl('view') + '?' +
-                this.layoutModel.encodeURLParameters(args);
-        let prom = this.layoutModel.ajax(
+
+        this.layoutModel.ajax<Kontext.AjaxResponse>(
             'GET',
-            url,
-            {},
-            {contentType : 'application/x-www-form-urlencoded'}
+            this.layoutModel.createActionUrl('view'),
+            args
 
         ).then(
-            (data:Kontext.AjaxResponse) => {
-                try {
-                    if (data.contains_errors) {
-                        throw new Error(data.messages[0][1]);
-                    }
-                    this.lines = importData(data['Lines']);
-                    this.numItemsInLockedGroups = data['num_lines_in_groups'];
-                    this.pagination = data['pagination'];
-                    this.currentPage = pageNum;
-                    this.unfinishedCalculation = data['running_calc'];
-                    return this.layoutModel.getConcArgs();
-
-                } catch (e) {
-                    console.error(e);
-                    throw e;
-                }
+            (data) => {
+                this.importData(data);
+                this.currentPage = pageNum;
+                return this.layoutModel.getConcArgs();
             }
         );
-        return prom;
+    }
+
+    private importData(data:Kontext.AjaxResponse):void {
+        try {
+            this.lines = importLines(data['Lines']);
+            this.numItemsInLockedGroups = data['num_lines_in_groups'];
+            this.pagination = data['pagination'];
+            this.unfinishedCalculation = data['running_calc'];
+
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+    private changeViewMode():RSVP.Promise<any> {
+        let mode:string;
+        if (this.corporaColumns.size > 1) {
+            mode = {'align': 'kwic', 'kwic': 'align'}[this.viewMode];
+
+        } else {
+            mode = {'sen': 'kwic', 'kwic': 'sen'}[this.viewMode];
+        }
+        const args = this.layoutModel.getConcArgs();
+        this.viewMode = mode;
+        args.set('viewmode', this.viewMode);
+        args.set('format', 'json');
+
+        return this.layoutModel.ajax<Kontext.AjaxResponse>(
+            'GET',
+            this.layoutModel.createActionUrl('view'),
+            args
+
+        ).then(
+            (data) => {
+                this.importData(data);
+            }
+        );
     }
 
     private createAudioLink(textChunk:TextChunk):string {
@@ -711,6 +746,10 @@ export class ConcLineStore extends SimplePageStore {
 
     getCorporaColumns():Immutable.List<CorpColumn> {
         return this.corporaColumns;
+    }
+
+    getViewMode():string {
+        return this.viewMode;
     }
 
 }
