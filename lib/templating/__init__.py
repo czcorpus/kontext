@@ -93,10 +93,6 @@ class StateGlobals(object):
             self._data[k] = [v]
 
 
-def update_params(params, key, value):
-    return [(k, v) for k, v in params if k != key] + [(key, value)]
-
-
 def join_params(*args):
     """
     This is a convenience function used by HTML templates.
