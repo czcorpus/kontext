@@ -20,7 +20,7 @@ used by the 'default_*' plug-ins. It offers key->value
 storage only but it is possible to search by a key prefix too.
 
 This specific version uses sqlite3 as a database backend but
-it should be fairly easy to rewritten it to work with real
+it should be fairly easy to rewrite it to work with real
 NoSQL engines like MongoDB, CouchDB, Redis etc.
 
 Please note that this concrete solution is not suitable for environments
