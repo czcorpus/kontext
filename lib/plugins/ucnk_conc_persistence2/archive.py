@@ -83,7 +83,7 @@ class Archiver(object):
         in constructor.
 
         Please note that dry-run is not 100% error-prone as it also pops the items
-        from the queue and them inserts them again.
+        from the queue and then inserts them again.
 
         arguments:
         num_proc -- how many items per run should be processed
