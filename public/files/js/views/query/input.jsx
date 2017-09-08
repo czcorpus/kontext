@@ -522,7 +522,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
 
-            } else if (evt.keyCode === 13) {
+            } else if (evt.keyCode === 13 && !evt.shiftKey) {
                 this.props.onEnterKey();
                 evt.stopPropagation();
                 evt.preventDefault();

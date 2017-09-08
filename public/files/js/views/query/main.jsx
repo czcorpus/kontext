@@ -152,11 +152,13 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
-                dispatcher.dispatch({
-                    actionType: 'QUERY_INPUT_SUBMIT',
-                    props: {}
-                });
+            if (evt.keyCode === 13 && !evt.shiftKey) {
+                if (!evt.ctrlKey && !evt.shiftKey) {
+                    dispatcher.dispatch({
+                        actionType: 'QUERY_INPUT_SUBMIT',
+                        props: {}
+                    });
+                }
                 evt.stopPropagation();
                 evt.preventDefault();
             }
@@ -175,7 +177,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
         render() {
             const primaryCorpname = this.state.corpora.get(0);
             return (
-                <form className="query-form">
+                <form className="query-form" onKeyDown={this._keyEventHandler}>
                     <table className="form primary-language">
                         <tbody>
                             {this.props.allowCorpusSelection ?
@@ -320,18 +322,20 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
         }
 
         _keyEventHandler(evt) {
-            if (evt.keyCode === 13 && !evt.ctrlKey && !evt.shiftKey) {
-                if (this.props.operationIdx !== undefined) {
-                    dispatcher.dispatch({
-                        actionType: 'BRANCH_QUERY',
-                        props: {operationIdx: this.props.operationIdx}
-                    });
+            if (evt.keyCode === 13 && !evt.shiftKey) {
+                if (!evt.ctrlKey) {
+                    if (this.props.operationIdx !== undefined) {
+                        dispatcher.dispatch({
+                            actionType: 'BRANCH_QUERY',
+                            props: {operationIdx: this.props.operationIdx}
+                        });
 
-                } else {
-                    dispatcher.dispatch({
-                        actionType: 'QUERY_INPUT_SUBMIT',
-                        props: {}
-                    });
+                    } else {
+                        dispatcher.dispatch({
+                            actionType: 'QUERY_INPUT_SUBMIT',
+                            props: {}
+                        });
+                    }
                 }
                 evt.stopPropagation();
                 evt.preventDefault();
