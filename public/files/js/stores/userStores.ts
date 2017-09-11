@@ -37,21 +37,19 @@ export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore 
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
         super(dispatcher);
-        const self = this;
         this.layoutModel = layoutModel;
         this.userData = null;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'USER_INFO_REQUESTED':
-                    let prom:RSVP.Promise<{user:Kontext.UserCredentials}> = self.loadUserInfo();
-                    prom.then(
-                        function (data:{user:Kontext.UserCredentials}) {
-                            self.userData = data.user;
-                            self.notifyChangeListeners('USER_INFO_REFRESHED');
+                    this.loadUserInfo().then(
+                        (_) => {
+                            this.notifyChangeListeners();
                         },
-                        function (err) {
-                            console.log('error: ', err); // TODO
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
                         }
                     );
                 break;
@@ -60,23 +58,27 @@ export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore 
     }
 
 
-    private loadUserInfo(forceReload:boolean=false):RSVP.Promise<{user:Kontext.UserCredentials}> {
-        let self = this;
+    loadUserInfo(forceReload:boolean=false):RSVP.Promise<boolean> {
+        return (() => {
+            if (!this.userData || forceReload) {
+                return this.layoutModel.ajax<{user:Kontext.UserCredentials}>(
+                    'GET',
+                    this.layoutModel.createActionUrl('user/ajax_user_info'),
+                    {}
+                );
 
-        if (!this.userData || forceReload) {
-            return this.layoutModel.ajax<{user:Kontext.UserCredentials}>(
-                'GET',
-                this.layoutModel.createActionUrl('user/ajax_user_info'),
-                {}
-            );
-
-        } else {
-            return new RSVP.Promise((resolve:(v:{user:Kontext.UserCredentials})=>void,
-                    reject:(e:any)=>void) => {
-                resolve({user: this.userData});
-            });
-        }
-
+            } else {
+                return new RSVP.Promise((resolve:(v:{user:Kontext.UserCredentials})=>void,
+                        reject:(e:any)=>void) => {
+                    resolve({user: this.userData});
+                });
+            }
+        })().then(
+            (data) => {
+                this.userData = data.user;
+                return true;
+            }
+        );
     }
 
     getCredentials():Kontext.UserCredentials {

@@ -507,7 +507,7 @@ export class ConcLineStore extends SimplePageStore {
             args.set('q', concId);
         }
 
-        this.layoutModel.ajax<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax<Kontext.AjaxResponse>(
             'GET',
             this.layoutModel.createActionUrl('view'),
             args

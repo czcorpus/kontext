@@ -64,14 +64,20 @@ export class LineSelectionStore extends SimplePageStore {
 
     private maxGroupId:number;
 
+    private _isBusy:boolean;
+
+    private userInfoStore:Kontext.IUserInfoStore;
+
     private onLeavePage:()=>void;
 
+    private emailDialogCredentials:Kontext.UserCredentials;
+
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
-            concLineStore:ConcLineStore, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
+            concLineStore:ConcLineStore, userInfoStore:Kontext.IUserInfoStore, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(dispatcher);
-        let self = this;
         this.layoutModel = layoutModel;
         this.concLineStore = concLineStore;
+        this.userInfoStore = userInfoStore;
         this.clStorage = clStorage;
         this.onLeavePage = onLeavePage;
         if (clStorage.size() > 0) {
@@ -86,109 +92,150 @@ export class LineSelectionStore extends SimplePageStore {
         this.actionFinishHandlers = [];
         this.currentGroupIds = this.layoutModel.getConf<Array<number>>('LinesGroupsNumbers');
         this.maxGroupId = this.layoutModel.getConf<number>('concLineMaxGroupNum');
+        this._isBusy = false;
+        this.emailDialogCredentials = null;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'LINE_SELECTION_SELECT_LINE':
                     let val = payload.props['value'];
-                    if (self.validateGroupId(val)) {
-                        self.selectLine(val, payload.props['tokenNumber'], payload.props['kwicLength']);
-                        self.notifyChangeListeners();
+                    if (this.validateGroupId(val)) {
+                        this.selectLine(val, payload.props['tokenNumber'], payload.props['kwicLength']);
+                        this.notifyChangeListeners();
 
                     } else {
-                        self.layoutModel.showMessage('error',
-                                self.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
-                                        {max_group: self.maxGroupId})
+                        this.layoutModel.showMessage('error',
+                                this.layoutModel.translate('linesel__error_group_name_please_use{max_group}',
+                                        {max_group: this.maxGroupId})
                         );
                     }
                     break;
                 case 'LINE_SELECTION_STATUS_REQUEST':
-                    self.notifyChangeListeners('$STATUS_UPDATED');
+                    this.notifyChangeListeners();
                     break;
                 case 'LINE_SELECTION_RESET':
-                    self.clearSelection();
-                    self.concLineStore.notifyChangeListeners();
-                    self.notifyChangeListeners('$STATUS_UPDATED');
+                    this.clearSelection();
+                    this.concLineStore.notifyChangeListeners();
+                    this.notifyChangeListeners();
                     break;
                 case 'LINE_SELECTION_RESET_ON_SERVER':
-                    self.resetServerLineGroups().then(
+                    this._isBusy = true;
+                    this.notifyChangeListeners();
+                    this.resetServerLineGroups().then(
                         (args:MultiDict) => {
-                            self.concLineStore.notifyChangeListeners();
-                            self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.history.replaceState('view', args);
+                            this._isBusy = false;
+                            this.concLineStore.notifyChangeListeners();
+                            this.notifyChangeListeners();
+                            this.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     )
                     break;
                 case 'LINE_SELECTION_REMOVE_LINES':
-                    self.removeLines(LineSelectionStore.FILTER_NEGATIVE);
-                    self.notifyChangeListeners('$STATUS_UPDATED');
+                    this.removeLines(LineSelectionStore.FILTER_NEGATIVE);
+                    this.notifyChangeListeners();
                     break;
                 case 'LINE_SELECTION_REMOVE_OTHER_LINES':
-                    self.removeLines(LineSelectionStore.FILTER_POSITIVE);
-                    self.notifyChangeListeners('$STATUS_UPDATED');
+                    this.removeLines(LineSelectionStore.FILTER_POSITIVE);
+                    this.notifyChangeListeners();
                     break;
                 case 'LINE_SELECTION_MARK_LINES':
-                    self.markLines().then(
+                    this._isBusy = true;
+                    this.notifyChangeListeners();
+                    this.markLines().then(
                         (args:MultiDict) => {
-                            self.concLineStore.notifyChangeListeners();
-                            self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.history.replaceState('view', args);
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
+                            this.concLineStore.notifyChangeListeners();
+                            this.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     );
                     break;
                 case 'LINE_SELECTION_REMOVE_NON_GROUP_LINES':
-                    self.removeNonGroupLines(); // this redirects ...
+                    this.removeNonGroupLines(); // this redirects ...
                     break;
                 case 'LINE_SELECTION_REENABLE_EDIT':
-                    self.reenableEdit().then(
+                    this._isBusy = true;
+                    this.notifyChangeListeners();
+                    this.reenableEdit().then(
                         (args:MultiDict) => {
-                            self.concLineStore.notifyChangeListeners();
-                            self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.history.replaceState('view', args);
+                            this._isBusy = false;
+                            this.concLineStore.notifyChangeListeners();
+                            this.notifyChangeListeners();
+                            this.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     )
                     break;
                 case 'LINE_SELECTION_GROUP_RENAME':
-                    self.renameLineGroup(payload.props['srcGroupNum'], payload.props['dstGroupNum']).then(
+                    this._isBusy = true;
+                    this.notifyChangeListeners();
+                    this.renameLineGroup(payload.props['srcGroupNum'], payload.props['dstGroupNum']).then(
                         (args:MultiDict) => {
-                            self.concLineStore.notifyChangeListeners();
-                            self.notifyChangeListeners('$STATUS_UPDATED');
-                            self.layoutModel.history.replaceState('view', args);
+                            this._isBusy = false;
+                            this.concLineStore.notifyChangeListeners();
+                            this.notifyChangeListeners();
+                            this.layoutModel.history.replaceState('view', args);
                         },
                         (err) => {
-                            self.layoutModel.showMessage('error', err);
-                            self.notifyChangeListeners('$LINE_SELECTION_USER_ERROR');
+                            this._isBusy = false;
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
                         }
                     )
                     break;
                 case 'LINE_SELECTION_SEND_URL_TO_EMAIL':
-                    let prom = self.sendSelectionUrlToEmail(payload.props['email']);
-                    prom.then(
-                        function (data) {
-                            self.notifyChangeListeners('LINE_SELECTION_URL_SENT_TO_EMAIL');
+                    this._isBusy = true;
+                    this.notifyChangeListeners();
+                    this.sendSelectionUrlToEmail(payload.props['email']).then(
+                        (data) => {
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
                         },
-                        function (err) {
-                            self.notifyChangeListeners('LINE_SELECTION_URL_SENT_TO_EMAIL');
+                        (err) => {
+                            this._isBusy = false;
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     )
                     break;
                 case 'LINE_SELECTION_SORT_LINES':
-                    self.sortLines(); // this redirects ...
+                    this.sortLines(); // this redirects ...
                     break;
                 case 'CONCORDANCE_SET_LINE_SELECTION_MODE':
-                    if (self.setMode(payload.props['mode'])) {
-                        self.notifyChangeListeners('$STATUS_UPDATED');
+                    if (this.setMode(payload.props['mode'])) {
+                        this.notifyChangeListeners();
                     }
                     break;
+                case 'LINE_SELECTION_LOAD_USER_CREDENTIALS':
+                    this.userInfoStore.loadUserInfo(false).then(
+                        () => {
+                            this.emailDialogCredentials = this.userInfoStore.getCredentials();
+                            this.notifyChangeListeners();
+                        },
+                        (err) => {
+                            this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    );
+                break;
+                case 'LINE_SELECTION_CLEAR_USER_CREDENTIALS':
+                    this.emailDialogCredentials = null;
+                    this.notifyChangeListeners();
+                break;
             }
         });
     }
@@ -368,13 +415,9 @@ export class LineSelectionStore extends SimplePageStore {
             ),
             {
                 rows : JSON.stringify(this.clStorage.getAll())
-            },
-            {
-                contentType : 'application/x-www-form-urlencoded'
             }
         ).then<MultiDict>(
             (data) => {
-
                 this.updateGlobalArgs(data);
                 this.currentGroupIds = data['lines_groups_numbers'];
                 return this.concLineStore.reloadPage();
@@ -562,6 +605,14 @@ export class LineSelectionStore extends SimplePageStore {
 
     serialize():void {
         this.clStorage.serialize();
+    }
+
+    isBusy():boolean {
+        return this._isBusy;
+    }
+
+    getEmailDialogCredentials():Kontext.UserCredentials {
+        return this.emailDialogCredentials;
     }
 
 }

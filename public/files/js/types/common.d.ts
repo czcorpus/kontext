@@ -179,6 +179,7 @@ declare module Kontext {
      */
     export interface IUserInfoStore extends PageStore {
         getCredentials():UserCredentials;
+        loadUserInfo(forceReload:boolean):RSVP.Promise<boolean>;
     }
 
     /**

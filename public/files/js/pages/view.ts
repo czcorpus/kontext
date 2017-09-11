@@ -929,7 +929,7 @@ export class ViewPage {
             concSummary: concSummaryProps,
             Unfinished: this.layoutModel.getConf<boolean>('Unfinished'),
             FastAdHocIpm: this.layoutModel.getConf<boolean>('FastAdHocIpm'),
-            canSendEmail: this.layoutModel.getConf<boolean>('can_send_mail'),
+            canSendEmail: this.layoutModel.getConf<boolean>('canSendMail'),
             ShowConcToolbar: this.layoutModel.getConf<boolean>('ShowConcToolbar'),
             SpeakerIdAttr: this.layoutModel.getConf<[string, string]>('SpeakerIdAttr'),
             SpeakerColors: this.lineGroupsChart.extendBaseColorPalette(1),
@@ -979,6 +979,7 @@ export class ViewPage {
                 this.layoutModel,
                 this.layoutModel.dispatcher,
                 this.viewStores.lineViewStore,
+                this.layoutModel.getStores().userInfoStore,
                 conclines.openStorage(()=>{}),
                 () => {
                     window.removeEventListener('beforeunload', this.handleBeforeUnload);
