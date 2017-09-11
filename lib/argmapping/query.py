@@ -305,15 +305,15 @@ class ContextFilterArgsConv(object):
     @staticmethod
     def _convert_query(attrname, items, fctxtype):
         if fctxtype == 'any':
-            return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
+            return u' | '.join(u'[{0}="{1}"]'.format(attrname, v) for v in items)
         elif fctxtype == 'all':
             # here we assume len(items) == 1
             # (it's ok - see function append_filter() in _set_first_query action
             # where the operation is split into multiple filters as there
             # is no way how to specify a conjunction in a single query
-            return '[{0}="{1}"]'.format(attrname, items[0])
+            return u'[{0}="{1}"]'.format(attrname, items[0])
         elif fctxtype == 'none':
-            return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
+            return u' | '.join(u'[{0}="{1}"]'.format(attrname, v) for v in items)
 
     def __call__(self, attrname, items, ctx, fctxtype):
         ff_args = FilterFormArgs(maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
