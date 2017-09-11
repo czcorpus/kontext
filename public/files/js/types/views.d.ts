@@ -47,15 +47,14 @@ declare module "views/common" {
 declare module "views/concordance/lineSelection" {
 
     export interface LineSelectionViews {
-        LineSelectionMenu:React.ReactClass;
+        LineBinarySelectionMenu:React.ReactClass;
         LockedLineGroupsMenu:React.ReactClass;
     }
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        lineSelectionStore:Kontext.PageStore,
-        userInfoStore:Kontext.PageStore
+        lineSelectionStore:Kontext.PageStore
     ):LineSelectionViews;
 }
 

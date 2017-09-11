@@ -297,9 +297,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                     this.props.data !== nextProps.data ||
                     this.props.lineSelMode !== nextProps.lineSelMode ||
                     this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible ||
-                    this.props.data.lineGroup !== nextProps.data.lineGroup ||
                     this.props.catBgColor != nextProps.catBgColor ||
-                    this.props.cols !== nextProps.cols
+                    this.props.cols !== nextProps.cols ||
                     this.props.viewMode !== nextProps.viewMode;
         }
 
@@ -412,7 +411,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
             };
         }
 
-        _storeChangeListener(store) {
+        _storeChangeListener() {
             this.setState(this._fetchStoreState());
         }
 

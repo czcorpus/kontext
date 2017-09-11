@@ -23,7 +23,7 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
+export function init(dispatcher, he, lineSelectionStore) {
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
@@ -54,26 +54,27 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
         );
     };
 
-    // ----------------------------- <LineSelectionMenu /> --------------------------
+    // ----------------------------- <LineBinarySelectionMenu /> --------------------------
 
-    class LineSelectionMenu extends React.Component {
+    class LineBinarySelectionMenu extends React.Component {
 
         constructor(props) {
             super(props);
             this._changeHandler = this._changeHandler.bind(this);
             this._actionChangeHandler = this._actionChangeHandler.bind(this);
-            this.state = {
-                mode: 'simple',
-                waiting: false
+            this.state = this._fetchStoreState();
+        }
+
+        _fetchStoreState() {
+            return {
+                mode: lineSelectionStore.getMode(),
+                waiting: lineSelectionStore.isBusy()
             };
         }
 
-        _changeHandler(store, status) {
-            if (status === '$STATUS_UPDATED') {
-                const newState = he.cloneState(this.state);
-                newState.mode = lineSelectionStore.getMode();
-                newState.waiting = false;
-                this.setState(newState);
+        _changeHandler() {
+            if (this.props.mode === 'simple') { // prevent unmounted component update
+                this.setState(this._fetchStoreState());
             }
         }
 
@@ -87,9 +88,6 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
             const eventId = actionMap[evt.target.value] || null;
 
             if (eventId) {
-                const newState = he.cloneState(this.state);
-                newState.waiting = true;
-                this.setState(newState);
                 dispatcher.dispatch({
                     actionType: eventId,
                     props: {}
@@ -153,8 +151,12 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
                 <input className="email" type="text" style={{width: '20em'}}
                         defaultValue={props.defaultEmail}
                         onChange={props.emailChangeHandler} />
-                <button className="ok" type="button" value="send" onClick={props.handleEmailDialogButton}>{he.translate('global__send')}</button>
-                <button type="button" value="cancel" onClick={props.handleEmailDialogButton}>{he.translate('global__cancel')}</button>
+                <button className="ok util-button" type="button" value="send" onClick={props.handleEmailDialogButton}>
+                    {he.translate('global__send')}
+                </button>
+                <button type="button" className="util-button cancel" value="cancel" onClick={props.handleEmailDialogButton}>
+                    {he.translate('global__cancel')}
+                </button>
             </div>
         );
     };
@@ -168,19 +170,16 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
         constructor(props) {
             super(props);
             this._handleConfirmClick = this._handleConfirmClick.bind(this);
-            this._handleStoreChange = this._handleStoreChange.bind(this);
             this._handleSrcInputChange = this._handleSrcInputChange.bind(this);
             this._handleDstInputChange = this._handleDstInputChange.bind(this);
             this.state = {
                 srcGroupNum: '',
-                dstGroupNum: '',
-                waiting: false
+                dstGroupNum: ''
             };
         }
 
         _handleConfirmClick() {
             const newState = he.cloneState(this.state);
-            newState.waiting = true;
             this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_GROUP_RENAME',
@@ -189,22 +188,6 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
                     dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
                 }
             });
-        }
-
-        _handleStoreChange(store, action) {
-            if (action === '$LINE_SELECTION_USER_ERROR') {
-                const newState = he.cloneState(this.state);
-                newState.waiting = false;
-                this.setState(newState);
-            }
-        }
-
-        componentDidMount() {
-            lineSelectionStore.addChangeListener(this._handleStoreChange);
-        }
-
-        componentWillUnmount() {
-            lineSelectionStore.removeChangeListener(this._handleStoreChange);
         }
 
         _handleSrcInputChange(evt) {
@@ -269,17 +252,10 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
 
     const SelectionLinkAndTools = (props) => {
 
-        const openEmailDialogButtonHandler = () => {
-            dispatcher.dispatch({
-                actionType: 'USER_INFO_REQUESTED',
-                props: {}
-            });
-        };
-
         const renderEmailButton = () => {
             if (props.canSendEmail) {
                 return (
-                    <button type="button" onClick={openEmailDialogButtonHandler}>
+                    <button type="button" className="util-button" onClick={props.handleDialogShowClick}>
                         {he.translate('linesel__send_the_link_to_mail')}
                     </button>
                 );
@@ -293,9 +269,9 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
                 <input className="conc-link" type="text" readOnly="true"
                         onClick={(e)=> e.target.select()}
                         value={props.lastCheckpointUrl} />
-                {props.emailDialog ?
+                {props.emailDialogCredentials ?
                     <EmailDialog
-                            defaultEmail={props.email}
+                            defaultEmail={props.emailDialogCredentials.email}
                             handleEmailDialogButton={props.handleEmailDialogButton}
                             emailChangeHandler={props.emailChangeHandler} /> :
                     renderEmailButton()
@@ -316,39 +292,23 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
             this._handleEmailDialogButton = this._handleEmailDialogButton.bind(this);
             this._emailChangeHandler = this._emailChangeHandler.bind(this);
             this._handleRenameCancel = this._handleRenameCancel.bind(this);
-            this.state = {
-                dataChanged: true,
-                emailDialog: false,
+            this._handleDialogShowClick = this._handleDialogShowClick.bind(this);
+            this.state = this._fetchStoreState();
+        }
+
+        _fetchStoreState() {
+            return {
+                emailDialogCredentials: lineSelectionStore.getEmailDialogCredentials(),
                 renameLabelDialog: false,
                 email: null,
-                waiting: false,
+                waiting: lineSelectionStore.isBusy(),
                 lastCheckpointUrl: lineSelectionStore.getLastCheckpointUrl()
             };
         }
 
-        _changeHandler(store, status) {
-            if (status === '$STATUS_UPDATED') {
-                const newState = he.cloneState(this.state);
-                newState.dataChanged = true;
-                newState.waiting = false;
-                newState.lastCheckpointUrl = lineSelectionStore.getLastCheckpointUrl();
-                this.setState(newState);
-
-            } else if (status === 'USER_INFO_REFRESHED') {
-                const newState = he.cloneState(this.state);
-                newState.email = userInfoStore.getCredentials()['email'];
-                newState.emailDialog = true;
-                newState.dataChanged = false;
-                newState.lastCheckpointUrl = lineSelectionStore.getLastCheckpointUrl();
-                this.setState(newState);
-
-            } else if (status === 'LINE_SELECTION_URL_SENT_TO_EMAIL') {
-                const newState = he.cloneState(this.state);
-                newState.email = null;
-                newState.emailDialog = false;
-                newState.dataChanged = false;
-                newState.lastCheckpointUrl = lineSelectionStore.getLastCheckpointUrl();
-                this.setState(newState);
+        _changeHandler() {
+            if (this.props.mode === 'groups') { // prevent unmounted component update
+                this.setState(this._fetchStoreState());
             }
         }
 
@@ -384,7 +344,6 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
                 case 'rename-group-label':
                     const newState2 = he.cloneState(this.state);
                     newState2.renameLabelDialog = true;
-                    newState2.dataChanged = false;
                     this.setState(newState2);
                     break;
             }
@@ -392,10 +351,10 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
 
         _handleEmailDialogButton(evt) {
             if (evt.target.value === 'cancel') {
-                const newState = he.cloneState(this.state);
-                newState.emailDialog = false;
-                newState.dataChanged = false;
-                this.setState(newState);
+                dispatcher.dispatch({
+                    actionType: 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
+                    props: {}
+                });
 
             } else if (evt.target.value === 'send') {
                 dispatcher.dispatch({
@@ -410,13 +369,18 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
         _emailChangeHandler(evt) {
             const newState = he.cloneState(this.state);
             newState.email = evt.target.value;
-            newState.dataChanged = false;
             this.setState(newState);
+        }
+
+        _handleDialogShowClick(evt) {
+            dispatcher.dispatch({
+                actionType: 'LINE_SELECTION_LOAD_USER_CREDENTIALS',
+                props: {}
+            });
         }
 
         componentDidMount() {
             lineSelectionStore.addChangeListener(this._changeHandler);
-            userInfoStore.addChangeListener(this._changeHandler);
             dispatcher.dispatch({
                 actionType: 'LINE_SELECTION_STATUS_REQUEST',
                 props: {
@@ -427,20 +391,18 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
 
         componentWillUnmount() {
             lineSelectionStore.removeChangeListener(this._changeHandler);
-            userInfoStore.removeChangeListener(this._changeHandler);
         }
 
         componentDidUpdate(prevProps, prevState) {
             // we must inform non-react chart building function to redraw d3 charts
             if (typeof this.props.chartCallback === 'function') {
-                this.props.chartCallback(!this.state.dataChanged);
+                this.props.chartCallback(prevState.lastCheckpointUrl !== this.state.lastCheckpointUrl); // = false => do not use prev data
             }
         }
 
         _handleRenameCancel() {
             const newState = he.cloneState(this.state);
             newState.renameLabelDialog = false;
-            newState.dataChanged = false;
             this.setState(newState);
         }
 
@@ -461,9 +423,10 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
                     <SelectionLinkAndTools
                             lastCheckpointUrl={this.state.lastCheckpointUrl}
                             email={this.state.email}
-                            emailDialog={this.state.emailDialog}
+                            emailDialogCredentials={this.state.emailDialogCredentials}
                             canSendEmail={this.props.canSendEmail}
                             handleEmailDialogButton={this._handleEmailDialogButton}
+                            handleDialogShowClick={this._handleDialogShowClick}
                             emailChangeHandler={this._emailChangeHandler} />
                 </div>
             )
@@ -471,7 +434,7 @@ export function init(dispatcher, he, lineSelectionStore, userInfoStore) {
     }
 
     return {
-        LineSelectionMenu: LineSelectionMenu,
+        LineBinarySelectionMenu: LineBinarySelectionMenu,
         LockedLineGroupsMenu: LockedLineGroupsMenu
     };
 }

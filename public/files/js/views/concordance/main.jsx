@@ -46,47 +46,27 @@ export function init(dispatcher, he, layoutViews, stores) {
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
 
-    class LineSelectionMenu extends React.Component {
+    const LineSelectionMenu = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._storeChangeHandler = this._storeChangeHandler.bind(this);
-        }
-
-        _renderContents() {
-            if (this.props.numItemsInLockedGroups > 0) {
+        const renderContents = () => {
+            if (props.numItemsInLockedGroups > 0) {
                 return <lineSelViews.LockedLineGroupsMenu
-                        chartCallback={this.props.onChartFrameReady}
-                        canSendEmail={this.props.canSendEmail} />;
+                        chartCallback={props.onChartFrameReady}
+                        canSendEmail={props.canSendEmail}
+                        mode={props.mode} />;
 
             } else {
-                return <lineSelViews.LineSelectionMenu />;
+                return <lineSelViews.LineBinarySelectionMenu mode={props.mode} />;
             }
-        }
+        };
 
-        _storeChangeHandler(store, action) {
-            if (action === '$STATUS_UPDATED') { // TODO this is kind of an antipattern
-                this.props.onCloseClick();
-            }
-        }
-
-        componentDidMount() {
-            lineSelectionStore.addChangeListener(this._storeChangeHandler);
-        }
-
-        componentWillUnmount() {
-            lineSelectionStore.removeChangeListener(this._storeChangeHandler);
-        }
-
-        render() {
-            return (
-                <layoutViews.PopupBox onCloseClick={this.props.onCloseClick}
-                        customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
-                        takeFocus={true}>
-                    {this._renderContents()}
-                </layoutViews.PopupBox>
-            );
-        }
+        return (
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick}
+                    customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
+                    takeFocus={true}>
+                {renderContents()}
+            </layoutViews.PopupBox>
+        );
     }
 
     // ------------------------- <LineSelectionOps /> ---------------------------
@@ -195,6 +175,7 @@ export function init(dispatcher, he, layoutViews, stores) {
                     {this._renderNumSelected()}
                     {this.state.menuVisible ?
                         <LineSelectionMenu
+                                mode={mode}
                                 onCloseClick={this._closeMenuHandler}
                                 numItemsInLockedGroups={this.props.numItemsInLockedGroups}
                                 onChartFrameReady={this.props.onChartFrameReady}
