@@ -12,8 +12,8 @@
 
 """
 unittests for the redis and sqlite3 database plugins
-where possible, the result of identical operations on the two plugins is checked against each other
-with list operations, the result is verified against a control list created alongside the database lists
+where possible, the results of identical operations on the two plugins are checked against each other
+with list operations, the results are verified against a control list created alongside the database lists
 setting test parameters allows turning on/of verbose mode and test of ttl methods
 
 The sqlite3 plugin stores data in a single table called "data" with the following columns and datatypes:
@@ -21,7 +21,7 @@ CREATE TABLE data (key text PRIMARY KEY, value text, updated integer, expires in
 
 TO-DO:
 Check whether the original "updated" column is really necessary.
-Perhaps it was only used in the "all_with_key_prefix" method, which is planned to be omitted.
+Perhaps it was only used in the "all_with_key_prefix" method, which is planned to be deleted.
 Or is the "data" table used by any classes outside of the plugin?
 """
 
