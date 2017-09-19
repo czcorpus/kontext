@@ -167,7 +167,8 @@ class DefaultDb(KeyValueStorage):
     def hash_del(self, key, field):
         sdata = self._load_raw_data(key)
         data = json.loads(sdata[0])
-        del data[field]
+        if field in data:
+            del data[field]
         if len(data):
             self._save_raw_data(key, json.dumps(data))
         else:
