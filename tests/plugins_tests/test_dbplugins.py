@@ -75,7 +75,7 @@ class DbTest(unittest.TestCase):
     def test_list_get_and_list_append(self):
         """
         test the list_append and list_get methods
-        in case of error: check whether the key column is declared as PRIMARY KEY
+        in case of error: verify that the "key" column is set as PRIMARY KEY
         """
         check_list = []
         key = 'list'
@@ -91,7 +91,7 @@ class DbTest(unittest.TestCase):
     def test_list_get_with_range(self):
         """
         test the list_append and list_get methods
-        in case of error: check whether the key column is declared as PRIMARY KEY
+        in case of error: verify that the "key" column is set as PRIMARY KEY
         note that redis returns the range including the value at the end index (unlike python),
         thus the sqlite3 plugin should behave in the same way
 
@@ -327,12 +327,7 @@ class DbTest(unittest.TestCase):
 
     def test_rename(self):
         """
-        test the rename method - a clear error here in sqlite rename logic, see:
-        cursor.execute('UPDATE data SET key = ? WHERE key = ?', (key, new_key))
-        should be the other way round:
-        cursor.execute('UPDATE data SET key = ? WHERE key = ?', (new_key, key))
-
-        furthermore, there is a difference in behavior in case the old key does not exist anymore:
+        there is a difference in behavior in case the old key does not exist anymore:
         redis throws an error, while sqlite does not
         (because the where condition in the sql UPDATE statement is just not met)
         should we throw an error here?
