@@ -22,10 +22,12 @@ import time
 
 import corplib
 import conclib
-import freq_calc
+from bgcalc import freq_calc
 from l10n import import_string
 import settings
 from structures import FixedDict
+from bgcalc import UnfinishedConcordanceError
+from translation import ugettext as _
 
 
 class CollCalcArgs(FixedDict):
@@ -107,6 +109,9 @@ def calculate_colls_bg(coll_args):
         corplib.frq_db(corp, coll_args.cattr)  # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         conc = conclib.get_conc(corp=corp, user_id=coll_args.user_id, minsize=coll_args.minsize, q=coll_args.q,
                                 fromp=0, pagesize=0, async=0, save=coll_args.save, samplesize=coll_args.samplesize)
+        if not conc.finished():
+            raise UnfinishedConcordanceError(
+                _('Cannot calculate yet - source concordance not finished. Please try again later.'))
         collocs = conc.collocs(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
                                cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
                                cminbgr=coll_args.cminbgr, max_lines=coll_args.num_fetch_items)

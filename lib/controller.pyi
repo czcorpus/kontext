@@ -30,9 +30,9 @@ def convert_types(args:Dict[str, Any], defaults:Dict[str, Any], del_nondef:Optio
 def get_traceback() -> List[str]: ...
 
 
-class KonTextCookie(Cookie.BaseCookie):
-    pass
+class KonTextCookie(Cookie.BaseCookie): ...
 
+class UserActionException(Exception): ...
 
 class CheetahResponseFile(object):
 

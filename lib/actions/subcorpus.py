@@ -120,7 +120,7 @@ class Subcorpus(Querying):
                                                        args=dict(subcname=subcname, corpname=basecorpname)))
                 result = {}
             elif backend == 'multiprocessing':
-                import subc_calc
+                from bgcalc import subc_calc
                 import functools
                 import multiprocessing
                 worker = subc_calc.CreateSubcorpusTask(user_id=self.session_get('user', 'id'),

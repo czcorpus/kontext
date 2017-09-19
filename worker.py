@@ -68,9 +68,9 @@ translation.activate('en_US')  # background jobs do not need localization
 
 import concworker
 import task
-import freq_calc
-import subc_calc
-import coll_calc
+from bgcalc import freq_calc
+from bgcalc import subc_calc
+from bgcalc import coll_calc
 
 
 _, conf = settings.get_full('global', 'calc_backend')

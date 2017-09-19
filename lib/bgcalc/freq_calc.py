@@ -31,6 +31,8 @@ import corplib
 import conclib
 import settings
 import plugins
+from bgcalc import UnfinishedConcordanceError
+from translation import ugettext as _
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
@@ -250,11 +252,13 @@ def calc_freqs_bg(args):
     conc = conclib.get_conc(corp=corp, user_id=args.user_id, minsize=args.minsize, q=args.q,
                             fromp=args.fromp, pagesize=args.pagesize, async=0, save=args.save,
                             samplesize=args.samplesize)
-    conc_size = conc.size()
+    if not conc.finished():
+        raise UnfinishedConcordanceError(
+            _('Cannot calculate yet - source concordance not finished. Please try again later.'))
     freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,
                              args.collator_locale)
              for cr in args.fcrit]
-    return dict(freqs=freqs, conc_size=conc_size)
+    return dict(freqs=freqs, conc_size=conc.size())
 
 
 def calculate_freqs(args):
