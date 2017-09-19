@@ -23,7 +23,16 @@ custom menu items into its menu.
 """
 
 
-class MenuItem(object):
+class DynamicMenuItem(object):
+
+    def __init__(self, ident):
+        self._ident = ident
+
+    def to_dict(self):
+        return dict(ident=self._ident, boundAction=None)
+
+
+class StaticMenuItem(object):
     """
     A general menu item. A list of MenuItem instances
     is expected to be returned by the plug-in.
@@ -58,6 +67,9 @@ class MenuItem(object):
     @property
     def open_in_blank(self):
         return self._data.get('openInBlank', False)
+
+    def to_dict(self):
+        return dict(label=self.label, url=self.url, openInBlank=self.open_in_blank)
 
 
 class AbstractMenuItems(object):

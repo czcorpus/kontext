@@ -1,5 +1,8 @@
 from lxml import etree
 import sys
+import json
+import os
+import codecs
 
 
 def process_document(xml_doc, single_upd=None):
@@ -57,8 +60,25 @@ def update_5(doc):
 
 def update_6(doc):
     srch = doc.find('corpora/calc_pid_dir')
-    if srch:
+    if srch is not None:
         srch.getparent().remove(srch)
+
+
+def update_7(doc):
+    srch = doc.find('plugins/menu_items/data_path')
+    if srch is not None:
+        with open(srch.text, 'rb') as fr:
+            data = json.load(fr)
+            data2 = {}
+            for k, item in data.items():
+                if 'type' not in item:
+                    data2[k] = dict(type='static', data=item)
+                else:
+                    data2[k] = item
+        os.rename(srch.text, srch.text + '.bak')
+        with open(srch.text, 'wb') as fw:
+            json.dump(data2, codecs.getwriter('utf-8')(fw), indent=2, ensure_ascii=False)
+        print('Upgraded {0} menu conf. file, original file backed up as {1}'.format(srch.text, srch.text + '.bak'))
 
 
 if __name__ == '__main__':

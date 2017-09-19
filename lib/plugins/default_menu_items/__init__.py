@@ -34,13 +34,16 @@ required menu data format (JSON):
 {
  "menu-help": [
     {
-        "en_US": {
-            "url": "http://wiki.korpus.cz/manual/en",
-            "label": "User manual"
-        } ,
-        "de_DE": {
-            "url": "http://wiki.korpus.cz/de/manual",
-            "label": "das Benutzerhandbuch"
+        "type": "static",
+        "data": {
+            "en_US": {
+                "url": "http://wiki.korpus.cz/manual/en",
+                "label": "User manual"
+            } ,
+            "de_DE": {
+                "url": "http://wiki.korpus.cz/de/manual",
+                "label": "das Benutzerhandbuch"
+            }
         }
     },
     ...
@@ -49,13 +52,14 @@ required menu data format (JSON):
    ...
 ]
 
-Note: currently only "menu-help" is supported.
+For the list of main menu section identifiers please refer 
+to the main_menu.MainMenu class.
 
 """
 
 import json
 
-from plugins.abstract.menu_items import AbstractMenuItems, MenuItem
+from plugins.abstract.menu_items import AbstractMenuItems, StaticMenuItem, DynamicMenuItem
 
 
 class MenuItems(AbstractMenuItems):
@@ -69,13 +73,17 @@ class MenuItems(AbstractMenuItems):
         """
         ans = []
         for item in self._data.get(menu_section, []):
-            if lang in item:
-                ans.append(MenuItem(item[lang], lang=lang))
-            else:
-                for lang_code, label in item.items():
-                    if lang[:2] == lang_code[:2]:
-                        ans.append(MenuItem(item[lang_code], lang=lang))
-                        break
+            if item['type'] == 'static':
+                entry = item['data']
+                if lang in item:
+                    ans.append(StaticMenuItem(entry[lang], lang=lang))
+                else:
+                    for lang_code, label in entry.items():
+                        if lang[:2] == lang_code[:2]:
+                            ans.append(StaticMenuItem(entry[lang_code], lang=lang))
+                            break
+            elif item['type'] == 'dynamic':
+                ans.append(DynamicMenuItem(item['ident']))
         return ans
 
 

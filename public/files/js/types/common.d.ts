@@ -245,6 +245,19 @@ declare module Kontext {
         removeItemActionPrerequisite(actionName:string, fn:(args:GeneralProps)=>RSVP.Promise<any>);
 
         exportKeyShortcutActions():Immutable.Map<number, MainMenuAtom>
+
+        /**
+         * Bind a custom event handler (typically a one dispatching a custom
+         * Flux action) to a server-defined main menu sub-item. Server config
+         * (see conf/main-menu.sample.json) is expected to provide a unique
+         * 'ident' for the item which is then used when calling this method.
+         * In case such an item is defined and no binding is called for the item,
+         * main menu React component will omit it when rendering the result.
+         *
+         * This is an ideal solution for miscellaneous plug-in features not
+         * included in KonText core.
+         */
+        bindDynamicItem(ident:string, label:string, handler:()=>void);
     }
 
     /**
