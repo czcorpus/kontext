@@ -1,5 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -48,7 +49,6 @@ from plugins.abstract.general_storage import KeyValueStorage
 
 
 class RedisDb(KeyValueStorage):
-
     def __init__(self, conf):
         """
         arguments:
@@ -159,15 +159,15 @@ class RedisDb(KeyValueStorage):
         """
         self.redis.hset(key, field, json.dumps(value))
 
-    def hash_del(self, key, *fields):
+    def hash_del(self, key, field):
         """
-        Removes one or more fields from a hash item
+        Removes a field from a hash item
 
         arguments:
         key -- hash item access key
-        *fields -- one or more fields to be deleted
+        field -- the field to be deleted
         """
-        self.redis.hdel(key, *fields)
+        self.redis.hdel(key, field)
 
     def hash_get_all(self, key):
         """
