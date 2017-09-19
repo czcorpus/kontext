@@ -270,7 +270,7 @@ class DbTest(unittest.TestCase):
 
     def test_hash_del(self):
         """
-        test the hash_del method
+        test the hash_del method, including the attempt to delete a non-existing field
         """
         key = 'foo'
         field1 = 'f1'
@@ -279,6 +279,7 @@ class DbTest(unittest.TestCase):
         value2 = 'val21'
         field3 = 'f3'
         value3 = 'val3'
+        absent = 'f4'
         # create hash records:
         self.r.hash_set(key, field1, value1)
         self.s.hash_set(key, field1, value1)
@@ -289,6 +290,9 @@ class DbTest(unittest.TestCase):
         # and delete them:
         self.r.hash_del(key, field1)
         self.s.hash_del(key, field1)
+        # try to delete a non-existing field, must not throw error (to simulate redis-like behaviour)
+        self.r.hash_del(key, absent)
+        self.s.hash_del(key, absent)
         out_r = self.r.hash_get_all(key)
         out_s = self.s.hash_get_all(key)
         if verbose:
