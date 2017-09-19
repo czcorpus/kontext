@@ -124,13 +124,13 @@ class KeyValueStorage(object):
         """
         raise NotImplementedError()
 
-    def hash_del(self, key, *fields):
+    def hash_del(self, key, field):
         """
-        Remove one or more fields from a hash item
+        Removes a field from a hash item
 
         arguments:
         key -- hash item access key
-        *fields -- one or more fields to be deleted
+        field -- the field to be deleted
         """
         raise NotImplementedError()
 
