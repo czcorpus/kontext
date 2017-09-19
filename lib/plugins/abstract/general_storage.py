@@ -1,6 +1,6 @@
-# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -197,7 +197,7 @@ class KeyValueStorage(object):
                (please note that update actions may reset the timer to zero
                which means you have to set_ttl again)
         """
-        pass
+        raise NotImplementedError()
 
     def clear_ttl(self, key):
         """
@@ -205,7 +205,7 @@ class KeyValueStorage(object):
 
         key -- data access key
         """
-        pass
+        raise NotImplementedError()
 
     def fork(self):
         """
