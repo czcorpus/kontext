@@ -635,3 +635,5 @@ msgstr "Pojmenovat dotaz"
 msgid "Archive query"
 msgstr "Archivovat dotaz"
 
+msgid "Cannot calculate yet - source concordance not finished. Please try again later."
+msgstr "Nelze zatím spočítat - zdrojová konkordance ještě není dopočtena. Zkuste akci opakovat později."

@@ -29,8 +29,8 @@ from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 import settings
 import conclib
 import corplib
-import freq_calc
-import coll_calc
+from bgcalc import freq_calc
+from bgcalc import coll_calc
 import plugins
 from kwiclib import Kwic, KwicPageArgs
 import l10n
