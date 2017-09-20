@@ -59,9 +59,15 @@ export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskSto
             return undefined;
         };
 
+        const clickHandler = () => {
+            if (typeof props.data.boundAction === 'function') {
+                props.data.boundAction();
+            }
+        };
+
         return (
             <li>
-                <a href={createLink()} onClick={props.onClick}
+                <a href={createLink()} onClick={clickHandler}
                         target={props.data.openInBlank ? '_blank' : null}>
                     {props.data.label}
                     {props.data.indirect ? '\u2026' : null}
@@ -120,13 +126,13 @@ export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskSto
             } else if (item.currConc) {
                 return <ConcDependentItem key={key} data={item} />;
 
-            } else {
+            } else if (typeof item.boundAction === 'function' || item.boundAction === undefined) {
                 return <Item key={key} data={item} />;
             }
         };
 
         const renderSubmenu = () => {
-            if (props.items.length > 0) {
+            if (props.items.size > 0) {
                 return (
                     <ul className="submenu">
                         {props.items.map((item, i) => createItem(item, i))}
@@ -143,7 +149,7 @@ export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskSto
         if (props.isOpened) {
             htmlClasses.push('active');
         }
-        if (props.items.length === 0 || props.isDisabled) {
+        if (props.items.size === 0 || props.isDisabled) {
             htmlClasses.push('disabled');
         }
 

@@ -323,8 +323,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 this.attachQueryForm(props, corparchWidget);
                 this.initCorpnameLink();
             }
-        ).then(
-            () => undefined,
+        ).catch(
             (err) => console.error(err)
         );
     }

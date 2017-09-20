@@ -26,30 +26,73 @@ import {PageModel} from '../pages/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
-
 export interface SubmenuItem {
     ident:string;
+    label:string;
+    disabled:boolean;
+}
+
+export interface DynamicSubmenuItem extends SubmenuItem {
+    boundAction:()=>void;
+}
+
+export interface StaticSubmenuItem extends SubmenuItem {
     action:string;
     args:{[key:string]:any};
     keyCode:number;
     currConc:boolean;
     message:string; // a dispatcher action type
     indirect:boolean;
-    label:string;
-    disabled:boolean;
 }
 
 export interface MenuItem {
+    disabled:boolean;
+    fallbackAction:string;
+    label:string;
+    items:Immutable.List<SubmenuItem>;
+}
+
+export type MenuEntry = [string, MenuItem];
+
+export interface InitialMenuItem {
     disabled:boolean;
     fallback_action:string;
     label:string;
     items:Array<SubmenuItem>;
 }
 
-export type MenuEntry = [string, MenuItem];
+export type InitialMenuEntry = [string, InitialMenuItem];
 
 export interface InitialMenuData {
-    submenuItems:Array<MenuEntry>;
+    submenuItems:Array<InitialMenuEntry>;
+}
+
+/**
+ * This defines a TS type guard for DynamicSubmenuItem
+ */
+function isDynamicItem(item:SubmenuItem): item is DynamicSubmenuItem {
+    return (<DynamicSubmenuItem>item).boundAction !== undefined;
+}
+
+/**
+ * This defines a TS type guard for StaticSubmenuItem
+ */
+function isStaticItem(item:SubmenuItem): item is StaticSubmenuItem {
+    return (<StaticSubmenuItem>item).action !== undefined;
+}
+
+function importMenuData(data:InitialMenuData):Immutable.List<MenuEntry> {
+    return Immutable.List<InitialMenuEntry>(data.submenuItems).map<MenuEntry>(v => {
+        return [
+            v[0],
+            {
+                label: v[1].label,
+                disabled: v[1].disabled,
+                fallbackAction: v[1].fallback_action,
+                items: Immutable.List<SubmenuItem>(v[1].items)
+            }
+        ];
+    }).toList();
 }
 
 
@@ -72,7 +115,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         this.pageModel = pageModel;
         this.activeItem = null;
         this.selectionListeners = Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>();
-        this.data = Immutable.List<MenuEntry>(initialData.submenuItems);
+        this.data = importMenuData(initialData);
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             if (payload.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
@@ -125,7 +168,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
             if (subItemId === undefined) {
                 const newItem:MenuItem = {
                     disabled: v,
-                    fallback_action: srch[1].fallback_action,
+                    fallbackAction: srch[1].fallbackAction,
                     items: srch[1].items, // TODO - mutability
                     label: srch[1].label
                 };
@@ -135,18 +178,28 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
             } else {
                 const newEntry:MenuEntry = [srch[0], srch[1]];
                 newEntry[1].items = newEntry[1].items.map(item => {
-                    return {
-                        ident: item.ident,
-                        action: item.action,
-                        args: item.args,
-                        keyCode: item.keyCode,
-                        message: item.message,
-                        currConc: item.currConc,
-                        indirect: item.indirect,
-                        label: item.label,
-                        disabled: item.ident === subItemId ? v : item.disabled
+                    if (isDynamicItem(item)) {
+                        return {
+                            ident: item.ident,
+                            label: item.label,
+                            boundAction: item.boundAction,
+                            disabled: item.ident === subItemId ? v : item.disabled
+                        }
+
+                    } else if (isStaticItem(item)) {
+                        return {
+                            ident: item.ident,
+                            action: item.action,
+                            args: item.args,
+                            keyCode: item.keyCode,
+                            message: item.message,
+                            currConc: item.currConc,
+                            indirect: item.indirect,
+                            label: item.label,
+                            disabled: item.ident === subItemId ? v : item.disabled
+                        }
                     }
-                });
+                }).toList();
             }
         }
     }
@@ -193,6 +246,30 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         }
     }
 
+    bindDynamicItem(ident:string, label:string, handler:()=>void) {
+        this.data.forEach((item, i) => {
+            item[1].items.forEach((subitem, j) => {
+                if (subitem.ident === ident && isDynamicItem(subitem)) {
+                    const newSubitem:DynamicSubmenuItem = {
+                        ident: ident,
+                        label: label,
+                        disabled: false,
+                        boundAction: handler
+                    };
+                    const newItem:MenuItem = {
+                        disabled: item[1].disabled,
+                        fallbackAction: item[1].fallbackAction,
+                        label: item[1].label,
+                        items: item[1].items.set(j, newSubitem)
+                    };
+                    this.data = this.data.set(i, [item[0], newItem]);
+                    this.notifyChangeListeners();
+                    return;
+                }
+            });
+        });
+    }
+
     getData():Immutable.List<MenuEntry> {
         return this.data;
     }
@@ -200,8 +277,8 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
     exportKeyShortcutActions():Immutable.Map<number, Kontext.MainMenuAtom> {
         return Immutable.Map<number, Kontext.MainMenuAtom>(this.data
             .flatMap(v => Immutable.List<SubmenuItem>(v[1].items))
-            .filter(v => !!v.keyCode && !!v.message)
-            .map(v => {
+            .filter(v => isStaticItem(v) && !!v.keyCode && !!v.message)
+            .map((v:StaticSubmenuItem) => {
                 return [v.keyCode, {
                     actionName: v.message,
                     actionArgs: v.args,

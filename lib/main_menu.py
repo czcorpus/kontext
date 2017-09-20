@@ -519,7 +519,7 @@ class MenuGenerator(object):
 
         def custom_menu_items(section):
             return map(
-                lambda item: dict(label=item.label, url=item.url, openInBlank=item.open_in_blank),
+                lambda item: item.to_dict(),
                 plugins.runtime.MENU_ITEMS.instance.get_items(section.name, lang=ui_lang)
             )
 
@@ -539,57 +539,58 @@ class MenuGenerator(object):
                     return True
             return False
 
-        def exp(*args):
-            return [item.filter_empty_args().set_disabled(is_disabled(item)).create(self._args) for item in args]
+        def exp(section, *args):
+            return ([item.filter_empty_args().set_disabled(is_disabled(item)).create(self._args) for item in args] +
+                        custom_menu_items(section))
 
         items = [
             (MainMenu.NEW_QUERY.name, dict(
                 label=_('Query'),
                 fallback_action='first_form',
-                items=exp(self.new_query, self.recent_queries, self.word_list),
+                items=exp(MainMenu.NEW_QUERY, self.new_query, self.recent_queries, self.word_list),
                 disabled=is_disabled(MainMenu.NEW_QUERY)
             )),
             (MainMenu.CORPORA.name, dict(
                 label=_('Corpora'),
                 fallback_action='corpora/corplist',
-                items=exp(self.avail_corpora, self.my_subcorpora, self.create_subcorpus),
+                items=exp(MainMenu.CORPORA, self.avail_corpora, self.my_subcorpora, self.create_subcorpus),
                 disabled=is_disabled(MainMenu.CORPORA)
             )),
             (MainMenu.SAVE.name, dict(
                 label=_('Save'),
-                items=exp(*save_items),
+                items=exp(MainMenu.SAVE, *save_items),
                 disabled=is_disabled(MainMenu.SAVE)
             )),
             (MainMenu.CONCORDANCE.name, dict(
                 label=_('Concordance'),
-                items=exp(self.curr_conc, self.sorting, self.shuffle, self.sample, self.query_overview,
-                          self.query_save_as, self.query_undo),
+                items=exp(MainMenu.CONCORDANCE, self.curr_conc, self.sorting, self.shuffle, self.sample,
+                          self.query_overview, self.query_save_as, self.query_undo),
                 disabled=is_disabled(MainMenu.CONCORDANCE)
             )),
             (MainMenu.FILTER.name, dict(
                 label=_('Filter'),
-                items=exp(self.filter_pos, self.filter_neg),
+                items=exp(MainMenu.FILTER, self.filter_pos, self.filter_neg),
                 disabled=is_disabled(MainMenu.FILTER)
             )),
             (MainMenu.FREQUENCY.name, dict(
                 label=_('Frequency'),
-                items=exp(self.freq_lemmas, self.freq_node_forms, self.freq_doc_ids, self.freq_text_types,
-                          self.freq_custom),
+                items=exp(MainMenu.FREQUENCY, self.freq_lemmas, self.freq_node_forms, self.freq_doc_ids,
+                          self.freq_text_types, self.freq_custom),
                 disabled=is_disabled(MainMenu.FREQUENCY)
             )),
             (MainMenu.COLLOCATIONS.name, dict(
                 label=_('Collocations'),
-                items=exp(self.colloc_custom),
+                items=exp(MainMenu.COLLOCATIONS, self.colloc_custom),
                 disabled=is_disabled(MainMenu.COLLOCATIONS)
             )),
             (MainMenu.VIEW.name, dict(
                 label=_('View'),
-                items=exp(self.view_mode_switch, self.view_structs_attrs, self.view_global),
+                items=exp(MainMenu.VIEW, self.view_mode_switch, self.view_structs_attrs, self.view_global),
                 disabled=is_disabled(MainMenu.VIEW)
             )),
             (MainMenu.HELP.name, dict(
                 label=_('Help'),
-                items=custom_menu_items(MainMenu.HELP) + exp(self.how_to_cite_corpus, self.keyboard_shortcuts),
+                items=exp(MainMenu.HELP, self.how_to_cite_corpus, self.keyboard_shortcuts),
                 disabled=is_disabled(MainMenu.HELP)
             ))
         ]
