@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
 #
@@ -41,7 +41,7 @@ class KeyValueStorage(object):
 
     def hash_set(self, key:str, field:str, value:Serializable): ...
 
-    def hash_del(self, key:str, *fields:str): ...
+    def hash_del(self, key:str, field:str): ...
 
     def hash_get_all(self, key:str) -> Dict[str, Serializable]: ...
 

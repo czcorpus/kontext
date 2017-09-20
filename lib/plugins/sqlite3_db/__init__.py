@@ -1,4 +1,7 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2017 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +28,9 @@ NoSQL engines like MongoDB, CouchDB, Redis etc.
 
 Please note that this concrete solution is not suitable for environments
 with high concurrency (hundreds or more simultaneous users).
+
+The sqlite3 plugin stores data in a single table called "data" with the following structure:
+CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)
 """
 
 import threading
@@ -39,7 +45,6 @@ thread_local = threading.local()
 
 
 class DefaultDb(KeyValueStorage):
-
     def __init__(self, conf):
         """
         arguments:
@@ -55,9 +60,19 @@ class DefaultDb(KeyValueStorage):
             thread_local.conn = sqlite3.connect(self.conf.get('default:db_path'))
         return thread_local.conn
 
-    def _load_raw_data(self, key):
+    def _delete_expired(self, key):
         cursor = self._conn().cursor()
-        cursor.execute('SELECT value, updated FROM data WHERE key = ?', (key,))
+        cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
+        ans = cursor.fetchone()
+        if ans and ans[0] != 0 and ans[0] < time.time():
+            cursor.execute('DELETE FROM data WHERE key = ?', (key,))
+            self._conn().commit()
+        return None
+
+    def _load_raw_data(self, key):
+        self._delete_expired(key)
+        cursor = self._conn().cursor()
+        cursor.execute('SELECT value, expires FROM data WHERE key = ?', (key,))
         ans = cursor.fetchone()
         if ans:
             return ans
@@ -65,13 +80,27 @@ class DefaultDb(KeyValueStorage):
 
     def _save_raw_data(self, path, data):
         cursor = self._conn().cursor()
-        cursor.execute('INSERT OR REPLACE INTO data (key, value, updated) VALUES (?, ?, ?)',
-                       (path, data, int(time.time())))
+        cursor.execute('INSERT OR REPLACE INTO data (key, value, expires) VALUES (?, ?, ?)',
+                       (path, data, 0))
         self._conn().commit()
 
+    def fork(self):
+        """
+        Return a new instance of the plug-in with the same connection
+        parameters.
+
+        This method is used only in case multiprocessing is configured
+        for asynchronous tasks (i.e. in case 'celery' is used, it is
+        never called).
+        """
+        return DefaultDb({
+            'default:db_path': self.conf.get('default:db_path')
+        })
+
     def rename(self, key, new_key):
+        self._delete_expired(key)
         cursor = self._conn().cursor()
-        cursor.execute('UPDATE data SET key = ? WHERE key = ?', (key, new_key))
+        cursor.execute('UPDATE data SET key = ? WHERE key = ?', (new_key, key))
         self._conn().commit()
 
     def list_get(self, key, from_idx=0, to_idx=-1):
@@ -81,7 +110,14 @@ class DefaultDb(KeyValueStorage):
             data = json.loads(raw_data[0])
             if type(data) is not list:
                 raise TypeError('There is no list with key %s' % key)
-            data = data[from_idx:(len(data) + 1 + to_idx)]
+            # simulate redis behavior - return values including the one at the end index:
+            if to_idx < 0:
+                to_idx = (len(data) + 1 + to_idx)
+                if to_idx < 0:
+                    to_idx = -len(data) - 1
+            else:
+                to_idx += 1
+            data = data[from_idx:to_idx]
         return data
 
     def list_append(self, key, value):
@@ -131,8 +167,12 @@ class DefaultDb(KeyValueStorage):
     def hash_del(self, key, field):
         sdata = self._load_raw_data(key)
         data = json.loads(sdata[0])
-        del data[field]
-        self._save_raw_data(key, json.dumps(data))
+        if field in data:
+            del data[field]
+        if len(data):
+            self._save_raw_data(key, json.dumps(data))
+        else:
+            self.remove(key)
 
     def hash_get_all(self, key):
         """
@@ -201,33 +241,34 @@ class DefaultDb(KeyValueStorage):
         returns:
         boolean answer
         """
+        self._delete_expired(key)
         cursor = self._conn().cursor()
         cursor.execute('SELECT COUNT(*) FROM data WHERE key = ?', (key,))
         return cursor.fetchone()[0] > 0
 
-    def all_with_key_prefix(self, prefix, oldest_first=False, limit=None):
+    def set_ttl(self, key, ttl):
         """
-        Finds all the values with keys starting with 'prefix'
-        """
-        ans = []
-        cursor = self._conn().cursor()
-        params = [prefix + '%']
+        Set auto expiration timeout in seconds.
 
-        sql = 'SELECT value, key, updated FROM data WHERE key LIKE ?'
-        if oldest_first:
-            sql += ' ORDER by updated'
-        else:
-            sql += ' ORDER by key'
-        if limit is not None:
-            sql += ' LIMIT ?'
-            params.append(limit)
-        cursor.execute(sql, tuple(params))
-        for item in cursor.fetchall():
-            data = json.loads(item[0])
-            data['__timestamp__'] = item[2]
-            data['__key__'] = item[1]
-            ans.append(data)
-        return ans
+        arguments:
+        key -- data access key
+        ttl -- number of seconds to wait before the value is removed
+        (please note that set/update actions reset the timer to zero)
+        """
+        self._delete_expired(key)
+        if self.exists(key):
+            cursor = self._conn().cursor()
+            cursor.execute('UPDATE data SET expires = ? WHERE key = ?', (time.time() + ttl, key))
+            self._conn().commit()
+        return None
+
+    def clear_ttl(self, key):
+        self._delete_expired(key)
+        if self.exists(key):
+            cursor = self._conn().cursor()
+            cursor.execute('UPDATE data SET expires = 0 WHERE key = ?', (key,))
+            self._conn().commit()
+        return None
 
 
 def create_instance(conf):
