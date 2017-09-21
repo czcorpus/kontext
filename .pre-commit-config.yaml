@@ -1,0 +1,22 @@
+-   repo: git://github.com/pre-commit/mirrors-autopep8
+    sha: v1.3.2
+    hooks:
+    -   id: autopep8
+        args:
+        - -i
+        - --max-line-length=100
+-   repo: git://github.com/awebdeveloper/pre-commit-tslint/
+    sha: 0.0.2
+    hooks:
+    -   id: tslint
+        additional_dependencies:
+        - tslint@5.0.0
+        - typescript@1.8.10
+        args:
+        - --fix
+-   repo: git://github.com/kosarko/pre-commit-lesshint/
+    sha: 2056fd7056d194aa7d21d0b189a6760c8053be9d
+    hooks:
+    -   id: lesshint
+        additional_dependencies:
+        - lesshint@4.1.1
