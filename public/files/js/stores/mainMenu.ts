@@ -78,7 +78,7 @@ function isDynamicItem(item:SubmenuItem): item is DynamicSubmenuItem {
  * This defines a TS type guard for StaticSubmenuItem
  */
 function isStaticItem(item:SubmenuItem): item is StaticSubmenuItem {
-    return (<StaticSubmenuItem>item).action !== undefined;
+    return (<StaticSubmenuItem>item).args !== undefined;
 }
 
 function importMenuData(data:InitialMenuData):Immutable.List<MenuEntry> {
@@ -165,7 +165,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         const srchIdx = this.data.findIndex(item => item[0] === itemId);
         if (srchIdx) {
             const srch = this.data.get(srchIdx);
-            if (subItemId === undefined) {
+            if (subItemId === undefined) { // no submenu specified => we disable whole menu section
                 const newItem:MenuItem = {
                     disabled: v,
                     fallbackAction: srch[1].fallbackAction,

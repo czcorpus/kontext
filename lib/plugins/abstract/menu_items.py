@@ -69,7 +69,10 @@ class StaticMenuItem(object):
         return self._data.get('openInBlank', False)
 
     def to_dict(self):
-        return dict(label=self.label, url=self.url, openInBlank=self.open_in_blank)
+        # we export also the 'args' argument even if it is not
+        # used here as it allows the client to recognized the
+        # item as a static one
+        return dict(label=self.label, action=self.url, openInBlank=self.open_in_blank, args={})
 
 
 class AbstractMenuItems(object):

@@ -47,14 +47,17 @@ export function init(dispatcher, he, concArgHandler, mainMenuStore, asyncTaskSto
     const Item = (props) => {
 
         const createLink = () => {
-            if (props.data.url) {
-                return props.data.url;
+            if (props.data.action) {
+                if (props.data.action.indexOf('http://') === 0 ||
+                            props.data.action.indexOf('https://') === 0) {
+                    return props.data.action;
 
-            } else if (props.data.action && typeof props.data.args === 'string') {
-                return he.createActionLink(props.data.action + '?' + props.data.args);
+                } else if (props.data.action && typeof props.data.args === 'string') {
+                    return he.createActionLink(props.data.action + '?' + props.data.args);
 
-            } else if (props.data.action) {
-                return he.createActionLink(props.data.action, props.data.args);
+                } else {
+                    return he.createActionLink(props.data.action, props.data.args);
+                }
             }
             return undefined;
         };
