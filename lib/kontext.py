@@ -173,6 +173,10 @@ class AsyncTaskStatus(object):
         return self.__dict__
 
 
+def val_to_js(obj):
+    return json.dumps(obj).replace('</script>', '<" + "/script>').replace('<script>', '<" + "script>')
+
+
 class Kontext(Controller):
     """
     A controller.Controller extension implementing
@@ -1115,7 +1119,7 @@ class Kontext(Controller):
         result['format_number'] = partial(format_number)
         result['join_params'] = templating.join_params
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
-        result['to_json'] = lambda obj: json.dumps(obj)
+        result['to_json'] = val_to_js
         result['camelize'] = l10n.camelize
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
 
