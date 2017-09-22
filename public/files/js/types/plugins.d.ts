@@ -126,6 +126,13 @@ declare module PluginInterfaces {
 
         createList(targetElm:HTMLElement, properties:any):void;
     }
+
+
+    export interface IIssueReporting {
+
+        getWidgetView():React.Component;
+
+    }
 }
 
 /*
@@ -204,4 +211,9 @@ declare module "plugins/subcmixer/init" {
             getCurrentSubcnameFn:()=>string,
             getAlignedCoroporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
             corpusIdAttr:string):RSVP.Promise<PluginInterfaces.ISubcMixer>;
+}
+
+
+declare module "plugins/issueReporting/init" {
+    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting>;
 }

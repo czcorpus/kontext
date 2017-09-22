@@ -54,6 +54,7 @@ import {AsyncTaskChecker} from '../stores/asyncTask';
 import {UserSettings} from '../userSettings';
 import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
 import authPlugin from 'plugins/auth/init';
+import issueReportingPlugin from 'plugins/issueReporting/init';
 
 /**
  *
@@ -829,7 +830,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     /**
      * Test whether a plug-in is currently active (= configured, loaded and
-     * active for the current corpus).
+     * active for the current corpus). The method considers only the client-side
+     * part of a plug-in which means it is perfectly correct to have a server-side
+     * plug-in enabled while this method returns false.
      *
      * Please note that plug-ins here are identified by their respective
      * server names and not by JS camel-case names - i.e. use
@@ -917,6 +920,29 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     /**
+     * @return true if the plug-in has been installed else false
+     */
+    private initIssueReporting():RSVP.Promise<boolean> {
+        if (this.pluginIsActive('issue_reporting')) {
+            return issueReportingPlugin(this.pluginApi()).then(
+                (plugin) => {
+                    this.renderReactComponent(
+                        plugin.getWidgetView(),
+                        document.getElementById('error-reporting-mount'),
+                        this.getConf<Kontext.GeneralProps>('issueReportingAction')
+                    );
+                    return true;
+                }
+            );
+
+        } else {
+            return new RSVP.Promise<boolean>((resolve:(d)=>void, reject:(err)=>void) => {
+                resolve(false);
+            });
+        }
+    }
+
+    /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.
      * To prevent syncing issues, the page initialization
@@ -1000,7 +1026,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 // with authPlugin but to keep things
                 // clear we set the attribute
                 this.authPlugin = authPlugin;
-                footerBar(this.pluginApi());
+                return footerBar(this.pluginApi());
+            }
+
+        ).then(
+            () => {
+                return this.initIssueReporting();
             }
         );
     }

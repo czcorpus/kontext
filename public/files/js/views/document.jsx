@@ -436,7 +436,26 @@ export function init(dispatcher, he, storeProvider) {
                         usesubcorp={props.usesubcorp} />
             </ul>
         );
+    };
 
+    // ------------------------ <IssueReportingLink /> --------------------------------
+
+    const IssueReportingLink = (props) => {
+        if (props.type === 'static') {
+            return (
+                <a href={props.url} target={props.blank_window ? '_blank' : '_self'}
+                        rel={props.blank_window ? 'noopener noreferrer' : null}>
+                    {props.label}
+                </a>
+            );
+
+        } else {
+            return (
+                <a onClick={props.onClick}>
+                    {props.label}
+                </a>
+            );
+        }
     };
 
 
@@ -450,6 +469,7 @@ export function init(dispatcher, he, storeProvider) {
         Messages: Messages,
         CorpnameInfoTrigger: CorpnameInfoTrigger,
         EmptyQueryOverviewBar: EmptyQueryOverviewBar,
-        ImgWithMouseover: ImgWithMouseover
+        ImgWithMouseover: ImgWithMouseover,
+        IssueReportingLink: IssueReportingLink
     };
 }

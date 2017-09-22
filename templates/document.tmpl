@@ -128,7 +128,7 @@ require(['vendor/rsvp'], function (RSVP) {
 define('conf', [], function () {
     var conf = {};
     conf.page = {};
-    conf.activePlugins = $to_json($active_plugins);
+    conf.activePlugins = $to_json($active_plugins);  ## here we mean 'active on client side'
     conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 5000);
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_url";
@@ -170,6 +170,7 @@ define('conf', [], function () {
     conf.multilevelFreqDistMaxLevels = $multilevel_freq_dist_max_levels;
     conf.multiSattrAllowedStructs = $to_json($multi_sattr_allowed_structs);
     conf.canSendMail = $to_json($can_send_mail);
+    conf.issueReportingAction = $to_json($issue_reporting_action);
 
     return conf;
 });
@@ -278,8 +279,8 @@ define('conf', [], function () {
                 $_('version') <strong>$_version[1]</strong>, $_('uses') manatee-<span>$_version[0]</span>
             </div>
 
-            #if $error_report_url:
-            <div id="error-reporting"><a href="$error_report_url" target="_blank">$_('Report an error')</a></div>
+            #if $issue_reporting_action:
+            <div id="error-reporting-mount"></div>
             #end if
         </div>
     #end if
