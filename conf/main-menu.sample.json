@@ -1,8 +1,7 @@
 {
-  "menu-help": {
-    "type": "static",
-    "data": [
-      {
+  "menu-help": [
+    {
+      "data": {
         "en_US": {
           "url": "https://wiki.korpus.cz/doku.php/manualy:kontext:index",
           "openInBlank": true,
@@ -14,7 +13,10 @@
           "label": "Uživatelská příručka"
         }
       },
-      {
+      "type": "static"
+    },
+    {
+      "data": {
         "en_US": {
           "url": "https://wiki.korpus.cz/doku.php/pojmy:prehled_pojmu",
           "openInBlank": true,
@@ -25,7 +27,8 @@
           "openInBlank": true,
           "label": "Lingvistické pojmy"
         }
-      }
-    ]
-  }
+      },
+      "type": "static"
+    }
+  ]
 }

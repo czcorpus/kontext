@@ -71,10 +71,12 @@ def update_7(doc):
             data = json.load(fr)
             data2 = {}
             for k, item in data.items():
-                if 'type' not in item:
-                    data2[k] = dict(type='static', data=item)
-                else:
-                    data2[k] = item
+                data2[k] = []
+                for subitem in item:
+                    if 'type' not in subitem:
+                        data2[k].append(dict(type='static', data=subitem))
+                    else:
+                        data2[k].append(item)
         os.rename(srch.text, srch.text + '.bak')
         with open(srch.text, 'wb') as fw:
             json.dump(data2, codecs.getwriter('utf-8')(fw), indent=2, ensure_ascii=False)
