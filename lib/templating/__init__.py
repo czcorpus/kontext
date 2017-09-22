@@ -54,14 +54,6 @@ class StateGlobals(object):
                 ans.append((k, item))
         return ans
 
-    def to_json(self):
-        """
-        Export data as a JSON string. The format is
-        [[k1, v1_1], [k1, v1_2],..., [kn, vn_m]]
-        (i.e. no dictionary to preserve multi-value items)
-        """
-        return json.dumps(self.export())
-
     def _copy_data(self):
         return [(k, v[:]) for k, v in self._data.items()]
 
