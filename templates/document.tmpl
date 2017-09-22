@@ -133,18 +133,18 @@ define('conf', [], function () {
     conf.rootURL = "$root_url";
     conf.rootPath = "$root_url";
     conf.staticPath = "$files_path";
-    conf.corpname = "$corpname";  ## deprecated
-    conf.subcorpname = #if $getVar('usesubcorp')#"$usesubcorp"#else# null#end if#;
-    conf.humanCorpname = "$human_corpname";  ## deprecated
+    conf.corpname = $to_json($corpname);  ## deprecated
+    conf.subcorpname = #if $getVar('usesubcorp')#$to_json($usesubcorp)#else# null#end if#;
+    conf.humanCorpname = $to_json($human_corpname);  ## deprecated
     conf.corpusIdent = $to_json($corpus_ident);
     conf.baseAttr = "${base_attr}";
     conf.currentAction = "$current_action";
     conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
-    conf.loginUrl = "$login_url";
-    conf.currentArgs = $Globals.to_json();
+    conf.loginUrl = $to_json($login_url);
+    conf.currentArgs = $to_json($Globals.export());
     conf.compiledQuery = $to_json($Q);
     conf.concPersistenceOpId = $to_json($conc_persistence_op_id);
-    conf.uiLang = "$uiLang";
+    conf.uiLang = $to_json($uiLang);
     conf.isDebug = #if $debug#true#else#false#end if#;
     conf.uiStateTTL = ${ui_state_ttl};
     #if $varExists('aligned_corpora')
