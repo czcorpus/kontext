@@ -15,11 +15,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 """
-Functions for handling cache file mapping between (query, subcorpus) key
-and filename containing respective saved concordances.
-
-This version uses simple string hashes as cache keys which makes it
-suitable for use with Celery configured to use a JSON message format.
+An implementation of KonText's concordance cache which stores all
+the meta-data to Redis (it is actually done via DB plug-in
+which means other DB implementations like SQLite3 one should
+work too but probably with lower performance). 
 
 configuration XML:
 

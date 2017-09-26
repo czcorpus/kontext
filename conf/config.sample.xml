@@ -80,7 +80,7 @@
             <logout_url>http://korpus.test/user/logout?continue=%s</logout_url>
         </auth>
         <conc_cache>
-            <module>default_conc_cache</module>
+            <module>redis_conc_cache</module>
             <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
         </conc_cache>
         <conc_persistence>
