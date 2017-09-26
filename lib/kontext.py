@@ -972,22 +972,6 @@ class Kontext(Controller):
                 ans.append((attr, v))
         return ans
 
-    def _get_error_reporting_url(self):
-        ans = None
-        if settings.get('global', 'error_report_url', None):
-            err_rep_params = []
-            params_def = settings.get_full('global', 'error_report_params')
-            if params_def[0]:  # 0: conf value, 1: conf metadata; always guaranteed
-                for param_val, param_meta in params_def:
-                    if param_val[0] == '@':
-                        attr = getattr(self, param_val[1:])
-                        real_val = attr() if callable(attr) else attr
-                    else:
-                        real_val = param_val
-                    err_rep_params.append('%s=%s' % (param_meta['name'], urllib.quote_plus(real_val)))
-                ans = '%s?%s' % (settings.get('global', 'error_report_url'), '&'.join(err_rep_params))
-        return ans
-
     def _apply_theme(self, data):
         theme_name = settings.get('theme', 'name')
         logo_img = settings.get('theme', 'logo')
@@ -1122,8 +1106,8 @@ class Kontext(Controller):
         result['to_json'] = val_to_js
         result['camelize'] = l10n.camelize
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
-
-        result['error_report_url'] = self._get_error_reporting_url()
+        with plugins.runtime.ISSUE_REPORTING as irp:
+            result['issue_reporting_action'] = irp.export_report_action(self._plugin_api).to_dict() if irp else None
         result['client_model_dir'] = 'pages'
         result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
 

@@ -303,6 +303,7 @@ declare module Kontext {
         Messages:React.ReactClass;
         EmptyQueryOverviewBar:React.ReactClass;
         ImgWithMouseover:React.ReactClass;
+        IssueReportingLink:React.ReactClass;
     }
 
     /**

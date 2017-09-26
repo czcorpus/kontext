@@ -637,3 +637,15 @@ msgstr "Archivovat dotaz"
 
 msgid "Cannot calculate yet - source concordance not finished. Please try again later."
 msgstr "Nelze zatím spočítat - zdrojová konkordance ještě není dopočtena. Zkuste akci opakovat později."
+
+msgid "KonText feedback from user {0}"
+msgstr "KonText - zpětná vazba od uživatele {0}"
+
+msgid "KonText feedback from user {0} for {1}"
+msgstr "KonText - zpětná vazba od uživatele {0} z {1}"
+
+msgid "browser info"
+msgstr "informace o browseru"
+
+msgid "date and time: {0}"
+msgstr "datum a čas: {0}"

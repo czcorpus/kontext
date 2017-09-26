@@ -6,7 +6,7 @@ import codecs
 
 
 def process_document(xml_doc, single_upd=None):
-    func_name = lambda j: 'update_%d' % j
+    def func_name(j): return 'update_%d' % j
 
     if single_upd is not None:
         fn = getattr(sys.modules[__name__], func_name(single_upd))
@@ -80,7 +80,30 @@ def update_7(doc):
         os.rename(srch.text, srch.text + '.bak')
         with open(srch.text, 'wb') as fw:
             json.dump(data2, codecs.getwriter('utf-8')(fw), indent=2, ensure_ascii=False)
-        print('Upgraded {0} menu conf. file, original file backed up as {1}'.format(srch.text, srch.text + '.bak'))
+        print('Upgraded {0} menu conf. file, original file backed up as {1}'.format(
+            srch.text, srch.text + '.bak'))
+
+
+def update_8(doc):
+    """
+    <global>
+        ...
+        <error_report_url>https://podpora.korpus.cz/projects/kontext/issues/new</error_report_url>
+        <error_report_params>
+        <param name="issue[custom_field_values][16]">@_get_current_url</param>
+        </error_report_params>
+        ...
+    </global>
+    """
+    for xpath in ('global/error_report_url', 'global/error_report_params'):
+        srch = doc.find(xpath)
+        if srch is not None:
+            srch.getparent().remove(srch)
+    plg_srch = doc.find('plugins')
+    tmp = doc.findall('plugins/*')
+    tmp[-1].tail = '\n        '
+    new_elm = etree.SubElement(plg_srch, 'issue_reporting')
+    new_elm.tail = '\n    '
 
 
 if __name__ == '__main__':
@@ -89,7 +112,8 @@ if __name__ == '__main__':
                                                     'to the version 0.11')
     argparser.add_argument('conf_file', metavar='CONF_FILE',
                            help='an XML configuration file')
-    argparser.add_argument('-u', '--update', type=int, help='Perform a single update (identified by a number)')
+    argparser.add_argument('-u', '--update', type=int,
+                           help='Perform a single update (identified by a number)')
     argparser.add_argument('-p', '--print', action='store_const', const=True,
                            help='Print result instead of writing it to a file')
     args = argparser.parse_args()

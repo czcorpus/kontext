@@ -1,0 +1,14 @@
+{
+    "en-US": {
+        "defaultIR__report_issue_heading": "Report an issue",
+        "defaultIR__report_issue_link": "Report an issue",
+        "defaultIR__submit_btn": "Submit",
+        "defaultIR__message_sent": "Your message has been sent."
+    },
+    "cs-CZ": {
+        "defaultIR__report_issue_heading": "Ohlásit chybu/problém",
+        "defaultIR__report_issue_link": "Ohlásit chybu/problém",
+        "defaultIR__submit_btn": "Odeslat",
+        "defaultIR__message_sent": "Vaše zpráva byla odeslána."
+    }
+}

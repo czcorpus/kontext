@@ -89,4 +89,4 @@ def setup_plugins():
     init_plugin('syntax_viewer', optional=True)
     init_plugin('subcmixer', optional=True)
     init_plugin('chart_export', optional=True)
-
+    init_plugin('issue_reporting', optional=True)

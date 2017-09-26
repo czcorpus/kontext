@@ -172,26 +172,6 @@
                             <value>true</value>
                         </choice>
                     </element>
-                    <optional>
-                        <element name="error_report_url">
-                            <a:documentation>A page footer link to make reporting errors easier for users.</a:documentation>
-                            <text />
-                        </element>
-                    </optional>
-                    <optional>
-                        <element name="error_report_params">
-                            <a:documentation>Optional parameters to be passed to the error_report_url (either static ones
-                                or @[controller_attr] ones).</a:documentation>
-                            <oneOrMore>
-                                <element name="param">
-                                    <attribute name="name">
-                                        <text />
-                                    </attribute>
-                                    <text />
-                                </element>
-                            </oneOrMore>
-                        </element>
-                    </optional>
                     <element name="max_attr_list_size">
                         <a:documentation>Defines a maximum number of items in the checkbox table
                         in the text types component</a:documentation>
@@ -600,6 +580,12 @@
                         </optional>
                     </element>
                     <element name="chart_export">
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
+                    </element>
+                    <element name="issue_reporting">
                         <optional>
                             <ref name="plugin_common" />
                             <ref name="customPluginConfiguration" />

@@ -20,7 +20,6 @@
             <language label="česky">cs_CZ</language>
             <language label="English">en_US</language>
         </translations>
-        <error_report_url />
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
@@ -153,6 +152,9 @@
         <chart_export>
             <module>default_chart_export</module>
         </chart_export>
+        <issue_reporting>
+            <module>default_issue_reporting</module>
+        </issue_reporting>
     </plugins>
 </kontext>
 
