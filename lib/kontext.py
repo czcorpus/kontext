@@ -50,6 +50,7 @@ class LinesGroups(object):
     It is expected that the controller has always an instance of
     this class available (i.e. no None value).
     """
+
     def __init__(self, data):
         if type(data) is not list:
             raise ValueError('LinesGroups data argument must be a list')
@@ -85,6 +86,7 @@ class RequestArgsProxy(object):
     A wrapper class allowing an access to both
     Werkzeug's request.form and request.args (MultiDict objects).
     """
+
     def __init__(self, form, args):
         self._form = form
         self._args = args
@@ -232,7 +234,8 @@ class Kontext(Controller):
         self._lines_groups = LinesGroups(data=[])
 
         self._plugin_api = PluginApi(self, self._cookies, self._request.session)
-        self.get_corpus_info = partial(plugins.runtime.CORPARCH.instance.get_corpus_info, self._plugin_api.user_lang)
+        self.get_corpus_info = partial(
+            plugins.runtime.CORPARCH.instance.get_corpus_info, self._plugin_api.user_lang)
 
         # conc_persistence plugin related attributes
         self._q_code = None  # a key to 'code->query' database
@@ -263,7 +266,8 @@ class Kontext(Controller):
 
         for val in logged_values:
             if val == 'date':
-                log_data['date'] = datetime.datetime.today().strftime('%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
+                log_data['date'] = datetime.datetime.today().strftime(
+                    '%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
             elif val == 'action':
                 log_data['action'] = action_name
             elif val == 'user_id':
@@ -371,7 +375,8 @@ class Kontext(Controller):
         if len(corpname) > 0:
             ans = {}
             for k, v in options.items():
-                tokens = k.rsplit(':', 1)  # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
+                # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
+                tokens = k.rsplit(':', 1)
                 if len(tokens) == 2:
                     if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
                         ans[tokens[1]] = v
@@ -513,12 +518,14 @@ class Kontext(Controller):
             with plugins.runtime.CONC_PERSISTENCE as cp:
                 prev_data = self._prev_q_data if self._prev_q_data is not None else {}
                 curr_data = self.get_saveable_conc_data()
-                q_id = cp.store(self.session_get('user', 'id'), curr_data=curr_data, prev_data=self._prev_q_data)
+                q_id = cp.store(self.session_get('user', 'id'),
+                                curr_data=curr_data, prev_data=self._prev_q_data)
                 self._save_query_to_history(q_id, curr_data)
                 lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
                 for q_idx, op in self._auto_generated_conc_ops:
                     prev = dict(id=q_id, lines_groups=lines_groups, q=self.args.q[:q_idx])
-                    curr = dict(lines_groups=lines_groups, q=self.args.q[:q_idx+1], lastop_form=op.to_dict())
+                    curr = dict(lines_groups=lines_groups,
+                                q=self.args.q[:q_idx + 1], lastop_form=op.to_dict())
                     q_id = cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev)
         else:
             q_id = None
@@ -626,7 +633,8 @@ class Kontext(Controller):
         self.args.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
-        allowed_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user', 'id'))
+        allowed_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
+            self.session_get('user', 'id'))
         if not action_metadata.get('skip_corpus_init', False):
             self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
             if fallback_url:
@@ -721,7 +729,8 @@ class Kontext(Controller):
                                                              for k, v in args.items()]))
         self._restore_prev_conc_params()
         if len(path) > 0:
-            access_level = action_metadata.get('access_level', 0)  # by default, each action is public
+            # by default, each action is public
+            access_level = action_metadata.get('access_level', 0)
             if access_level and self.user_is_anonymous():
                 raise ForbiddenException(_('Access forbidden'))
         # plugins setup
@@ -736,7 +745,8 @@ class Kontext(Controller):
         """
         if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
-            self.disabled_menu_items = tuple(disabled_set.union(set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
+            self.disabled_menu_items = tuple(disabled_set.union(
+                set(Kontext.ANON_FORBIDDEN_MENU_ITEMS)))
         super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result)
         # create and store concordance query key
         if type(result) is DictType:
@@ -752,11 +762,10 @@ class Kontext(Controller):
             self._save_menu.append(
                 EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83).mark_indirect())  # key = 's'
 
-
         else:
             event_name = 'MAIN_MENU_DIRECT_SAVE'
             self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name
-                                                      ).add_args(('saveformat', save_format)))
+                                                       ).add_args(('saveformat', save_format)))
 
     def _determine_curr_corpus(self, form, corp_list):
         """
@@ -824,7 +833,8 @@ class Kontext(Controller):
     def handle_dispatch_error(self, ex):
         if isinstance(self.corp, fallback_corpus.ErrorCorpus):
             self._status = 404
-            self.add_system_message('error', _('Failed to open corpus {0}').format(self.args.corpname))
+            self.add_system_message('error', _(
+                'Failed to open corpus {0}').format(self.args.corpname))
         else:
             self._status = 500
             super(Kontext, self).handle_dispatch_error(ex)
@@ -912,7 +922,8 @@ class Kontext(Controller):
             ttcrit_attrs = corpus_get_conf(maincorp, 'FREQTTATTRS')
         else:
             ttcrit_attrs = corpus_get_conf(maincorp, 'SUBCORPATTRS')
-        result['ttcrit'] = [('fcrit', '%s 0' % a) for a in ttcrit_attrs.replace('|', ',').split(',') if a]
+        result['ttcrit'] = [('fcrit', '%s 0' % a)
+                            for a in ttcrit_attrs.replace('|', ',').split(',') if a]
         result['corp_uses_tag'] = 'tag' in corpus_get_conf(maincorp, 'ATTRLIST').split(',')
         result['commonurl'] = self.urlencode([('corpname', self.args.corpname),
                                               ('lemma', self.args.lemma),
@@ -995,8 +1006,10 @@ class Kontext(Controller):
 
         data['theme'] = dict(
             name=settings.get('theme', 'name'),
-            logo_path=os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_img)),
-            logo_mouseover_path=os.path.normpath(os.path.join(self._files_path, 'themes', theme_name, logo_alt_img)),
+            logo_path=os.path.normpath(os.path.join(
+                self._files_path, 'themes', theme_name, logo_img)),
+            logo_mouseover_path=os.path.normpath(os.path.join(
+                self._files_path, 'themes', theme_name, logo_alt_img)),
             logo_href=logo_href,
             logo_title=logo_title,
             logo_inline_css=settings.get('theme', 'logo_inline_css', ''),
@@ -1006,7 +1019,8 @@ class Kontext(Controller):
         if settings.is_debug_mode() and os.path.isfile(os.path.join(os.path.dirname(__file__),
                                                                     '../public/files/css/custom.min.css')):
             # custom.min.css contains both theme and plug-in custom stylesheets
-            data['theme']['css'] = os.path.normpath(os.path.join(self._files_path, 'css/custom.min.css'))
+            data['theme']['css'] = os.path.normpath(
+                os.path.join(self._files_path, 'css/custom.min.css'))
         else:
             # in production mode, all the styles are packed into a single file
             data['theme']['css'] = None
@@ -1038,7 +1052,8 @@ class Kontext(Controller):
         result['Globals'] = templating.StateGlobals(global_var_val)
         result['Globals'].set('q', [q for q in result.get('Q')])
         result['human_corpname'] = None
-        result['multilevel_freq_dist_max_levels'] = settings.get('corpora', 'multilevel_freq_dist_max_levels', 3)
+        result['multilevel_freq_dist_max_levels'] = settings.get(
+            'corpora', 'multilevel_freq_dist_max_levels', 3)
         result['last_num_levels'] = self.session_get('last_freq_level')  # TODO enable this
 
         if self.args.maincorp:
@@ -1054,7 +1069,8 @@ class Kontext(Controller):
         result['supports_password_change'] = self._uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in self.args.q[:-1]])
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
-        result['shuffle_min_result_warning'] = settings.get_int('global', 'shuffle_min_result_warning', 100000)
+        result['shuffle_min_result_warning'] = settings.get_int(
+            'global', 'shuffle_min_result_warning', 100000)
 
         result['user_info'] = self._session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
@@ -1095,19 +1111,20 @@ class Kontext(Controller):
 
         if settings.contains('global', 'intl_polyfill_url'):
             result['intl_polyfill_url'] = settings.get('global', 'intl_polyfill_url').format(
-                    ','.join('Intl.~locale.%s' % x for x in get_avail_languages()))
+                ','.join('Intl.~locale.%s' % x for x in get_avail_languages()))
         else:
             result['intl_polyfill_url'] = None
 
         # util functions
         result['format_number'] = partial(format_number)
-        result['join_params'] = templating.join_params
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
+        # the output of 'to_json' is actually only json-like (see the function val_to_js)
         result['to_json'] = val_to_js
         result['camelize'] = l10n.camelize
         result['create_action'] = lambda a, p=None: self.create_url(a, p if p is not None else {})
         with plugins.runtime.ISSUE_REPORTING as irp:
-            result['issue_reporting_action'] = irp.export_report_action(self._plugin_api).to_dict() if irp else None
+            result['issue_reporting_action'] = irp.export_report_action(
+                self._plugin_api).to_dict() if irp else None
         result['client_model_dir'] = 'pages'
         result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
 
@@ -1124,7 +1141,8 @@ class Kontext(Controller):
 
         result['multi_sattr_allowed_structs'] = []
         with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(self.args.corpname)
+            result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
+                self.args.corpname)
 
         result['corpus_ident'] = dict(id=self.args.corpname, canonicalId=self._canonical_corpname(self.args.corpname),
                                       name=self._human_readable_corpname())
@@ -1406,5 +1424,6 @@ class PluginApi(object):
         tt = get_tt(self.current_corpus, self).export(subcorpattrs, maxlistsize)
         for item in tt:
             for tt2 in item['Line']:
-                ans[tt2['name']] = {'type': 'default', 'values': [x['v'] for x in tt2.get('Values', [])]}
+                ans[tt2['name']] = {'type': 'default', 'values': [x['v']
+                                                                  for x in tt2.get('Values', [])]}
         return ans
