@@ -20,16 +20,11 @@ import werkzeug.urls
 
 class StateGlobals(object):
     """
-    A simple wrapper for $Globals template variable. Unfortunately,
-    current KonText code (which comes from Bonito2) operates mostly
-    with a different value: $globals (see the difference: [g]lobals vs. [G]lobals)
-    which is just an escaped, hard to update string.
-
-    StateGlobals acts as a multi-value dictionary.
-
-    This object should replace $globals in the future because it
-    allows easier updates: $Globals.update('corpname', 'bar').to_s()
+    A simple wrapper for $Globals template variable.
+    StateGlobals is internally a multi-value dictionary
+    to support URL multi-value args correctly.
     """
+
     def __init__(self, data):
         self._data = defaultdict(lambda: [])
         if isinstance(data, defaultdict):
@@ -83,36 +78,3 @@ class StateGlobals(object):
             self._data[k] = v
         else:
             self._data[k] = [v]
-
-
-def join_params(*args):
-    """
-    This is a convenience function used by HTML templates.
-    It allows joining URL parameters in various formats
-    (strings, lists of (key,value) pairs, dicts).
-
-    returns:
-    a string of the form param1=value1&param2=value2&....
-    """
-    tmp = []
-
-    def quote(s):
-        return werkzeug.urls.url_quote(s, unsafe='+')
-
-    for a in args:
-        if a is None:
-            continue
-        if isinstance(a, StateGlobals):
-            a = [(k, v) for k, v in a.export()]
-        if type(a) in (tuple, list, dict):
-            if type(a) is dict:
-                a = a.items()
-            tmp.extend(['%s=%s' % (k, quote(v) if v is not None else '')
-                        for k, v in a])
-        elif type(a) in (str, unicode):
-            tmp.append(a)
-        else:
-            raise TypeError(
-                'Invalid element type: %s. Must be one of {str, unicode, list, tuple, dict}.' % (
-                    type(a)))
-    return '&'.join(filter(lambda x: x != '' and x is not None, tmp))

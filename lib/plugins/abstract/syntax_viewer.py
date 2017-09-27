@@ -41,6 +41,12 @@ class MaximumContextExceeded(Exception):
 
 
 class SearchBackend(object):
+    """
+    SearchBackend represents an object able to obtain 
+    data needed to construct syntax trees. It may be
+    fetched either from Manatee index or from some other
+    resource in case syntactic data are stored separately.
+    """
 
     def import_parent_values(self, v):
         """
@@ -64,6 +70,9 @@ class SearchBackend(object):
 
     def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
         """
+        Return syntax tree data for a specified token and a proper
+        JSON encoder to be able to serialize the data.
+
         Args:
             corpus (manatee.Corpus): a respective corpus instance
             canonical_corpus_id (str): canonical corpus identifier
