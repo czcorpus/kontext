@@ -37,7 +37,7 @@ declare module PluginInterfaces {
 
     export interface ISubcMixer {
         refreshData():void;
-        getWidgetView():React.ReactClass;
+        getWidgetView():React.Component;
     }
 
     export interface ISyntaxViewer extends Kontext.PageStore {
@@ -48,7 +48,7 @@ declare module PluginInterfaces {
     }
 
     export interface ITagHelper {
-        getWidgetView():React.ReactClass;
+        getWidgetView():React.Component;
     }
 
     export interface IQueryStorageStore extends Kontext.PageStore {
@@ -68,13 +68,13 @@ declare module PluginInterfaces {
          */
         importData(data:Array<Kontext.QueryHistoryItem>):void;
 
-        getWidgetView():React.ReactClass;
+        getWidgetView():React.Component;
 
         getStore():IQueryStorageStore;
     }
 
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
-        getViews(subcMixerView:React.ReactClass, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
+        getViews(subcMixerView:React.Component, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
         getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
         notifyChangeListeners():void;
     }

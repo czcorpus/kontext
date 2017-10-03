@@ -69,7 +69,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ReactClass { // TODO opts type
+        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.Component { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];

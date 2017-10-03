@@ -39,7 +39,7 @@ import * as React from 'vendor/react';
 
 
 export interface TTInitData {
-    component:React.ReactClass;
+    component:React.Component;
     props:{[p:string]:any};
     ttStore:TextTypesStore;
     attachedAlignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
@@ -84,7 +84,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return Immutable.List<{n:string; label:string}>();
     }
 
-    initSubcorpForm(ttComponent:React.ReactClass, ttProps:{[p:string]:any}):void {
+    initSubcorpForm(ttComponent:React.Component, ttProps:{[p:string]:any}):void {
         this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
@@ -143,7 +143,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return RSVP.all([p1, p2]).then(
             (args:[PluginInterfaces.ILiveAttributes, PluginInterfaces.ISubcMixer]) => {
                 const [liveAttrs, subcmixerPlugin] = args;
-                let subcMixerComponent:React.ReactClass;
+                let subcMixerComponent:React.Component;
 
                 if (subcmixerPlugin) {
                     liveAttrs.addUpdateListener(subcmixerPlugin.refreshData.bind(subcmixerPlugin));
@@ -226,7 +226,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         );
 
         RSVP.all([p1, p2]).then(
-            (items:[TTInitData, React.ReactClass]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
+            (items:[TTInitData, React.Component]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
                 this.viewComponents = subcorpViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),

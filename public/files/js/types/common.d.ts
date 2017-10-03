@@ -107,7 +107,7 @@ declare module Kontext {
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         getComponentHelpers():Kontext.ComponentHelpers;
-        renderReactComponent(reactClass:React.ReactClass,
+        renderReactComponent(reactClass:React.Component,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
@@ -296,14 +296,14 @@ declare module Kontext {
      *
      */
     export interface LayoutViews {
-        ModalOverlay:React.ReactClass;
-        PopupBox:React.ReactClass;
-        CloseableFrame:React.ReactClass;
-        InlineHelp:React.ReactClass;
-        Messages:React.ReactClass;
-        EmptyQueryOverviewBar:React.ReactClass;
-        ImgWithMouseover:React.ReactClass;
-        IssueReportingLink:React.ReactClass;
+        ModalOverlay:React.Component;
+        PopupBox:React.Component;
+        CloseableFrame:React.Component;
+        InlineHelp:React.Component;
+        Messages:React.Component;
+        EmptyQueryOverviewBar:React.Component;
+        ImgWithMouseover:React.Component;
+        IssueReportingLink:React.Component;
     }
 
     /**
