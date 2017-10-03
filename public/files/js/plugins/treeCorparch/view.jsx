@@ -201,8 +201,13 @@ export function init(dispatcher, he, treeStore) {
         }
     }
 
+    const FilterPageComponent = (props) => {
+        return <span />;
+    }
+
     return {
         CorptreeWidget: CorptreeWidget,
-        CorptreePageComponent: CorptreePageComponent
+        CorptreePageComponent: CorptreePageComponent,
+        FilterPageComponent: FilterPageComponent
     };
 }

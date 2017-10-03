@@ -122,9 +122,11 @@ declare module PluginInterfaces {
      */
     export interface ICorplistPage {
 
-        createForm(targetElm:HTMLElement, properties:any):void;
+        setData(data:any):void; // TODO type
 
-        createList(targetElm:HTMLElement, properties:any):void;
+        getForm():React.Component;
+
+        getList():React.Component;
     }
 
 

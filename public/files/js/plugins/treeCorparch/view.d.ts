@@ -19,10 +19,12 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 export class TreeCorparchViews {
-    CorptreeWidget:any;
-    CorptreePageComponent:any;
+    CorptreeWidget:React.Component;
+    CorptreePageComponent:React.Component;
+    FilterPageComponent:React.Component;
 }
 
 export function init(
