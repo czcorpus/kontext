@@ -17,6 +17,8 @@
  */
 
 /// <reference path="../../types/ajaxResponses.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
 import * as util from '../../util';
@@ -381,7 +383,7 @@ export class CorplistTableStore extends SimplePageStore {
 /**
  * Corplist page 'model'.
  */
-export class CorplistPage {
+export class CorplistPage implements PluginInterfaces.ICorplistPage  {
 
     components:any;
 
@@ -398,13 +400,15 @@ export class CorplistPage {
         this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
     }
 
-    createForm(targetElm:HTMLElement, properties:any):void {
-        this.pluginApi.renderReactComponent(this.components.FilterForm, targetElm, properties);
+    setData(data:any):void { // TODO type
+        this.corplistTableStore.setData(data);
     }
 
-    createList(targetElm:HTMLElement, properties:any):void {
-        properties['anonymousUser'] = this.pluginApi.getConf('anonymousUser');
-        this.corplistTableStore.setData(properties);
-        this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
+    getForm():React.Component {
+        return this.components.FilterForm;
+    }
+
+    getList():React.Component {
+        return this.components.CorplistTable;
     }
 }

@@ -20,15 +20,28 @@
 /// <reference path="../types/plugins.d.ts" />
 
 import {PageModel} from './document';
-import corparch = require('plugins/corparch/init');
+import * as corparch from 'plugins/corparch/init';
 
 /**
  * Initializes a corplist.tmpl page model.
  */
 export function init(conf:Kontext.Conf, corplistParams, corplistData):void {
-    let layoutModel = new PageModel(conf);
+    const layoutModel = new PageModel(conf);
     layoutModel.init();
-    let page = corparch.initCorplistPageComponents(layoutModel.pluginApi());
-    page.createForm(<HTMLElement>document.getElementById('content').querySelector('form.filter'), corplistParams);
-    page.createList(document.getElementById('corplist'), corplistData);
+    const pagePlugin = corparch.initCorplistPageComponents(layoutModel.pluginApi());
+
+    pagePlugin.setData(corplistData);
+
+    layoutModel.renderReactComponent(
+        pagePlugin.getForm(),
+        <HTMLElement>document.getElementById('content').querySelector('form.filter'),
+        corplistParams
+    );
+
+    corplistData['anonymousUser'] = layoutModel.getConf('anonymousUser'); // TODO not a very good solution
+    layoutModel.renderReactComponent(
+        pagePlugin.getList(),
+        document.getElementById('corplist'),
+        corplistData
+    );
 }

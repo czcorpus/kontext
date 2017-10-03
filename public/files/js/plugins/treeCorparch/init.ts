@@ -18,6 +18,7 @@
 
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/flux.d.ts" />
@@ -26,7 +27,7 @@
 
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
-import {init as viewInit} from './view';
+import {init as viewInit, TreeCorparchViews} from './view';
 import {QueryStore} from '../../stores/query/main';
 
 
@@ -171,13 +172,13 @@ export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
 }
 
 
-export class CorplistPage implements CorplistPage {
+export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     private pluginApi:Kontext.PluginApi;
 
     private treeStore:TreeWidgetStore;
 
-    private viewsLib:any;
+    private viewsLib:TreeCorparchViews;
 
     constructor(pluginApi:Kontext.PluginApi) {
         this.pluginApi = pluginApi;
@@ -202,19 +203,15 @@ export class CorplistPage implements CorplistPage {
         );
     }
 
-    createForm(targetElm:HTMLElement, properties:any):void {}
+    setData(data:any):void {
+    }
 
-    createList(targetElm:HTMLElement, properties:any):void {
-        const wrapper = window.document.createElement('div');
-        document.querySelector('section.corplist').appendChild(wrapper);
+    getForm():React.Component {
+        return this.viewsLib.FilterPageComponent;
+    }
 
-        this.pluginApi.renderReactComponent(
-            this.viewsLib.CorptreePageComponent,
-            wrapper,
-            {
-                currentCorpus: this.pluginApi.getConf<string>('humanCorpname')
-            }
-        );
+    getList():React.Component {
+        return this.viewsLib.CorptreePageComponent;
     }
 }
 

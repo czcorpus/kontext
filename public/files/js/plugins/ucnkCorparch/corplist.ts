@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
+
 import {SimplePageStore} from '../../stores/base';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';
@@ -192,7 +195,7 @@ export class CorpusAccessRequestStore extends SimplePageStore {
 /**
  * Corplist page 'model'.
  */
-export class CorplistPage implements CorplistPage {
+export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     components:any;
 
@@ -212,14 +215,15 @@ export class CorplistPage implements CorplistPage {
         this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
     }
 
-    createForm(targetElm:HTMLElement, properties:any):void {
-        this.pluginApi.renderReactComponent(this.components.FilterForm, targetElm, properties);
-        this.corplistFormStore.notifyChangeListeners('KEYWORD_UPDATED');
+    getForm():React.Component {
+        return this.components.FilterForm;
     }
 
-    createList(targetElm:HTMLElement, properties:any):void {
-        properties['anonymousUser'] = this.pluginApi.getConf('anonymousUser');
-        this.corplistTableStore.setData(properties);
-        this.pluginApi.renderReactComponent(this.components.CorplistTable, targetElm, properties);
+    getList():React.Component {
+        return this.components.CorplistTable;
+    }
+
+    setData(data:any):void { // TODO type
+        this.corplistTableStore.setData(data);
     }
 }
