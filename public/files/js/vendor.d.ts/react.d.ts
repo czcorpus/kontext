@@ -24,12 +24,9 @@ declare module React {
 
     export type Props = {[name:string]:any};
 
-    export function createClass(src:{[attr:string]:any}):ReactClass;
+    export function createClass(src:{[attr:string]:any}):React.Component;
 
     export interface ReactElement {
-    }
-
-    export interface ReactClass {
     }
 
     export interface Component {
@@ -59,7 +56,7 @@ declare module React {
 
     }
 
-    export function createElement(elmType:ReactClass, props:Props,
+    export function createElement(elmType:React.Component, props:Props,
                                   ...children:any[]):ReactElement;
 }
 

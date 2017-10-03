@@ -36,7 +36,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
         this.store = store;
     }
 
-    getWidgetView():React.ReactClass {
+    getWidgetView():React.Component {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),

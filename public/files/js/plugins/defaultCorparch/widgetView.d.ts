@@ -28,4 +28,4 @@ export function init(
     layoutViews:Kontext.LayoutViews,
     widgetStore:Kontext.PageStore,
     queryStore
-):React.ReactClass;
+):React.Component;

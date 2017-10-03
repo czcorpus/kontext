@@ -22,7 +22,7 @@
 
 
 declare interface CommonViews {
-    SaveFormatSelect:React.ReactClass;
+    SaveFormatSelect:React.Component;
 }
 
 
@@ -37,7 +37,7 @@ declare module "views/document" {
 declare module "views/common" {
 
     export interface CommonViews {
-        SaveFormatSelect:React.ReactClass;
+        SaveFormatSelect:React.Component;
     }
 
     export function init(componentHelpers:Kontext.ComponentHelpers):CommonViews;
@@ -47,8 +47,8 @@ declare module "views/common" {
 declare module "views/concordance/lineSelection" {
 
     export interface LineSelectionViews {
-        LineBinarySelectionMenu:React.ReactClass;
-        LockedLineGroupsMenu:React.ReactClass;
+        LineBinarySelectionMenu:React.Component;
+        LockedLineGroupsMenu:React.Component;
     }
 
     export function init(
@@ -61,10 +61,10 @@ declare module "views/concordance/lineSelection" {
 declare module "views/concordance/lineExtras" {
 
     export interface LineExtrasViews {
-        AudioLink:React.ReactClass;
-        TdLineSelection:React.ReactClass;
-        SyntaxTreeButton:React.ReactClass;
-        RefInfo:React.ReactClass;
+        AudioLink:React.Component;
+        TdLineSelection:React.Component;
+        SyntaxTreeButton:React.Component;
+        RefInfo:React.Component;
     }
 
     export function init(
@@ -77,7 +77,7 @@ declare module "views/concordance/lineExtras" {
 declare module "views/concordance/lines" {
 
     export interface ConcLinesViews {
-        ConcLines:React.ReactClass;
+        ConcLines:React.Component;
     }
 
     export function init(
@@ -92,7 +92,7 @@ declare module "views/concordance/lines" {
 declare module "views/concordance/paginator" {
 
     export interface PaginatorViews {
-        Paginator:React.ReactClass;
+        Paginator:React.Component;
     }
 
     export function init(
@@ -105,7 +105,7 @@ declare module "views/concordance/paginator" {
 declare module "views/concordance/main" {
 
     export interface ConcordanceView {
-        ConcordanceView:React.ReactClass;
+        ConcordanceView:React.Component;
     }
 
     export function init(
@@ -119,7 +119,7 @@ declare module "views/concordance/main" {
 declare module "views/concordance/detail" {
 
     export interface RefDetail {
-        RefDetail: React.ReactClass;
+        RefDetail: React.Component;
     }
 
     export function init(
@@ -133,7 +133,7 @@ declare module "views/concordance/detail" {
 declare module "views/concordance/save" {
 
     export interface ConcSaveViews {
-        ConcSaveForm: React.ReactClass;
+        ConcSaveForm: React.Component;
     }
 
     export function init(
@@ -147,14 +147,14 @@ declare module "views/concordance/save" {
 declare module "views/subcorp/forms" {
 
     export interface SubcorpFormViews {
-        SubcorpForm:React.ReactClass;
+        SubcorpForm:React.Component;
     }
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        corparchComponent:React.ReactClass,
+        corparchComponent:React.Component,
         subcorpFormStore:Kontext.PageStore,
         subcorpWithinFormStore:Kontext.PageStore
     ):SubcorpFormViews;
@@ -164,7 +164,7 @@ declare module "views/subcorp/forms" {
 declare module "views/subcorp/list" {
 
     export interface SubcorpListViews {
-        SubcorpList:React.ReactClass;
+        SubcorpList:React.Component;
     }
 
     export function init(
@@ -178,7 +178,7 @@ declare module "views/subcorp/list" {
 declare module "views/textTypes" {
 
     export interface TextTypesViews {
-        TextTypesPanel:React.ReactClass;
+        TextTypesPanel:React.Component;
     }
 
     export function init(
@@ -193,7 +193,7 @@ declare module "views/textTypes" {
 declare module "views/menu" {
 
     export interface MainMenuViews {
-        MainMenu:React.ReactClass;
+        MainMenu:React.Component;
     }
 
     export function init(
@@ -210,8 +210,8 @@ declare module "views/menu" {
 declare module "views/query/main" {
 
     export interface QueryFormViews {
-        QueryForm:React.ReactClass;
-        QueryFormLite:React.ReactClass;
+        QueryForm:React.Component;
+        QueryFormLite:React.Component;
     }
 
     export function init(
@@ -231,7 +231,7 @@ declare module "views/query/main" {
 declare module "views/query/aligned" {
 
     export interface AlignedQueryFormViews {
-        AlignedCorpora:React.ReactClass;
+        AlignedCorpora:React.Component;
     }
 
     export function init(
@@ -248,7 +248,7 @@ declare module "views/query/aligned" {
 declare module "views/query/context" {
 
     export interface QueryContextViews {
-        SpecifyContextForm:React.ReactClass;
+        SpecifyContextForm:React.Component;
     }
 
     export function init(
@@ -261,7 +261,7 @@ declare module "views/query/context" {
 declare module "views/query/filter" {
 
     export interface FilterFormViews {
-        FilterForm:React.ReactClass;
+        FilterForm:React.Component;
     }
 
     export function init(
@@ -278,7 +278,7 @@ declare module "views/query/filter" {
 declare module "views/query/sort" {
 
     export interface SortFormViews {
-        SortFormView:React.ReactClass;
+        SortFormView:React.Component;
     }
 
     export function init(
@@ -293,9 +293,9 @@ declare module "views/query/sort" {
 declare module "views/query/sampleShuffle" {
 
     export interface SampleFormViews {
-        SampleFormView:React.ReactClass;
-        ShuffleFormView:React.ReactClass;
-        SwitchMainCorpFormView:React.ReactClass;
+        SampleFormView:React.Component;
+        ShuffleFormView:React.Component;
+        SwitchMainCorpFormView:React.Component;
     }
 
     export function init(
@@ -310,17 +310,17 @@ declare module "views/query/sampleShuffle" {
 declare module "views/query/overview" {
 
     export interface QueryToolbarViewDeps {
-        QueryFormView:React.ReactClass;
-        FilterFormView:React.ReactClass;
-        SortFormView:React.ReactClass;
-        SampleFormView:React.ReactClass;
-        ShuffleFormView:React.ReactClass;
-        SwitchMainCorpFormView:React.ReactClass;
+        QueryFormView:React.Component;
+        FilterFormView:React.Component;
+        SortFormView:React.Component;
+        SampleFormView:React.Component;
+        ShuffleFormView:React.Component;
+        SwitchMainCorpFormView:React.Component;
     }
 
     export interface QueryToolbarViews {
-        QueryToolbar:React.ReactClass;
-        NonViewPageQueryToolbar:React.ReactClass;
+        QueryToolbar:React.Component;
+        NonViewPageQueryToolbar:React.Component;
     }
 
     export function init(
@@ -338,7 +338,7 @@ declare module "views/query/overview" {
 declare module "views/query/history" {
 
     export interface RecentQueriesPageViews {
-        RecentQueriesPageList:React.ReactClass;
+        RecentQueriesPageList:React.Component;
     }
 
     export function init(
@@ -353,7 +353,7 @@ declare module "views/query/history" {
 declare module "views/query/save" {
 
     export interface QuerySaveViews {
-        QuerySaveAsForm:React.ReactClass;
+        QuerySaveAsForm:React.Component;
     }
 
     export function init(
@@ -368,7 +368,7 @@ declare module "views/query/save" {
 declare module "views/wordlist/save" {
 
     export interface WordlistSaveViews {
-        WordlistSaveForm:React.ReactClass;
+        WordlistSaveForm:React.Component;
     }
 
     export function init(
@@ -384,8 +384,8 @@ declare module "views/wordlist/save" {
 declare module "views/wordlist/form" {
 
     export interface WordlistFormViews {
-        WordListForm:React.ReactClass;
-        CorpInfoToolbar:React.ReactClass;
+        WordListForm:React.Component;
+        CorpInfoToolbar:React.Component;
     }
 
     export function init(
@@ -400,7 +400,7 @@ declare module "views/wordlist/form" {
 declare module "views/wordlist/result" {
 
     export interface WordlistResultViews {
-        WordlistResult:React.ReactClass;
+        WordlistResult:React.Component;
     }
 
     export function init(
@@ -416,7 +416,7 @@ declare module "views/wordlist/result" {
 declare module "views/options/structsAttrs" {
 
     export interface StructsAndAttrsViews {
-        StructAttrsViewOptions: React.ReactClass;
+        StructAttrsViewOptions: React.Component;
     }
 
     export function init(
@@ -431,7 +431,7 @@ declare module "views/options/structsAttrs" {
 declare module "views/options/general" {
 
     export interface GeneralOptionsViews {
-        GeneralOptions:React.ReactClass;
+        GeneralOptions:React.Component;
     }
 
     export function init(
@@ -446,7 +446,7 @@ declare module "views/options/general" {
 declare module "views/options/main" {
 
     export interface OptionsContainerViews {
-        OptionsContainer:React.ReactClass;
+        OptionsContainer:React.Component;
     }
 
     export function init(
@@ -463,8 +463,8 @@ declare module "views/options/main" {
 declare module "views/overview" {
 
     export interface OverviewViews {
-        OverviewArea: React.ReactClass;
-        CorpusInfoBox: React.ReactClass;
+        OverviewArea: React.Component;
+        CorpusInfoBox: React.Component;
     }
 
     export function init(
@@ -478,7 +478,7 @@ declare module "views/overview" {
 declare module "views/analysis" {
 
     export interface AnalysisFrameViews {
-        AnalysisFrame:React.ReactClass;
+        AnalysisFrame:React.Component;
     }
 
     export function init(
@@ -495,7 +495,7 @@ declare module "views/analysis" {
 declare module "views/coll/forms" {
 
     export interface CollFormViews {
-        CollForm: React.ReactClass;
+        CollForm: React.Component;
     }
 
     export function init(
@@ -510,7 +510,7 @@ declare module "views/coll/forms" {
 declare module "views/coll/result" {
 
     export interface CollResultView {
-        CollResultView: React.ReactClass;
+        CollResultView: React.Component;
     }
 
     export function init(
@@ -525,7 +525,7 @@ declare module "views/coll/result" {
 declare module "views/freqs/forms" {
 
     export interface FreqFormViews {
-        FrequencyForm: React.ReactClass;
+        FrequencyForm: React.Component;
     }
 
     export function init(
@@ -543,7 +543,7 @@ declare module "views/freqs/forms" {
 declare module "views/freqs/dataRows" {
 
     export interface FreqsDataRowsViews {
-        DataTable: React.ReactClass;
+        DataTable: React.Component;
     }
 
     export function init(
@@ -557,7 +557,7 @@ declare module "views/freqs/dataRows" {
 declare module "views/freqs/main" {
 
     export interface FreqsResultViews {
-        FreqResultView: React.ReactClass;
+        FreqResultView: React.Component;
     }
 
     export function init(
@@ -571,7 +571,7 @@ declare module "views/freqs/main" {
 declare module "views/freqs/save" {
 
     export interface SaveFreqFormViews {
-        SaveFreqForm: React.ReactClass;
+        SaveFreqForm: React.Component;
     }
 
     export function init(
@@ -586,7 +586,7 @@ declare module "views/freqs/save" {
 declare module "views/freqs/ctResult" {
 
     export interface CTFreqsResultViews {
-        CTFreqResultView: React.ReactClass;
+        CTFreqResultView: React.Component;
     }
 
     export function init(
