@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
-import * as util from '../../util';
+import {MultiDict} from '../../util';
 import * as common from './common';
 
 
@@ -189,13 +189,14 @@ export class CorplistFormStore extends QueryProcessingStore {
 
 
 export interface CorplistData {
-    contains_errors:boolean;
     filters:{[name:string]:any};
     keywords:Array<string>;
-    messages:any;
     nextOffset:number;
     query:string;
     rows:Array<any>; // TODO
+}
+
+export interface CorplistDataResponse extends Kontext.AjaxResponse, CorplistData {
 }
 
 
@@ -212,6 +213,8 @@ export class CorplistTableStore extends SimplePageStore {
 
     static DispatchToken:string;
 
+    protected _isBusy:boolean;
+
     /**
      *
      * @param pluginApi
@@ -219,6 +222,7 @@ export class CorplistTableStore extends SimplePageStore {
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
+        this._isBusy = false;
         CorplistTableStore.DispatchToken = this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'LIST_STAR_CLICKED':
@@ -234,11 +238,19 @@ export class CorplistTableStore extends SimplePageStore {
                             );
                     break;
                     case 'CORPARCH_CORPUS_INFO_REQUIRED':
+                        this._isBusy = true;
+                        this.detailData = this.createEmptyDetail(); // to force view to show detail box
+                        this.notifyChangeListeners();
                         this.loadCorpusInfo(payload.props['corpusId']).then(
                             (data) => {
+                                this.detailData = data;
+                                this._isBusy = false;
                                 this.notifyChangeListeners();
                             },
                             (err) => {
+                                this.detailData = null;
+                                this._isBusy = false;
+                                this.notifyChangeListeners();
                                 this.pluginApi.showMessage('message', err);
                             }
                         )
@@ -250,6 +262,24 @@ export class CorplistTableStore extends SimplePageStore {
                 }
             }
         );
+    }
+
+    private createEmptyDetail():AjaxResponse.CorpusInfo {
+        return {
+            attrlist: [],
+            structlist: [],
+            citation_info: {
+                article_ref: [],
+                default_ref: null,
+                other_bibliography: null
+            },
+            corpname: null,
+            description: null,
+            size: null,
+            web_url: null,
+            contains_errors: false,
+            messages: []
+        };
     }
 
     private changeFavStatus(corpusId:string, corpusName:string, itemType:string,
@@ -294,33 +324,28 @@ export class CorplistTableStore extends SimplePageStore {
             this.pluginApi.createActionUrl('corpora/ajax_get_corp_details'),
             {
                 corpname: corpusId
-            },
-            {
-                contentType : 'application/x-www-form-urlencoded'
             }
         );
     }
 
     public loadData(query:string, filters:{[key:string]:string}, offset:number, limit?:number):RSVP.Promise<any> {
-        const args = {query: query};
+        const args = new MultiDict();
+        args.set('query', query);
         if (offset) {
-            args['offset'] = offset;
+            args.set('offset', offset);
         }
         if (limit) {
-            args['limit'] = limit;
+            args.set('limit', limit);
         }
         if (filters) {
             for (let p in filters) {
-                args[p] = filters[p];
+                args.set(p, filters[p]);
             }
         }
-        return this.pluginApi.ajax<any>(
+        return this.pluginApi.ajax<CorplistDataResponse>(
             'GET',
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
-            args,
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
+            args
         ).then(
             (data) => {
                 if (offset === 0) {
@@ -377,6 +402,10 @@ export class CorplistTableStore extends SimplePageStore {
 
     getDetail():AjaxResponse.CorpusInfo {
         return this.detailData;
+    }
+
+    isBusy():boolean {
+        return this._isBusy;
     }
 }
 
