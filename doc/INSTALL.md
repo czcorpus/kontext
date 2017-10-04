@@ -15,7 +15,7 @@
   * [Celery configuration](#install_celery_configuration)
   * [Systemd configuration](#install_celery_systemd_configuration)
 * [Celery Beat](#install_celery_beat)
-  * [Systemd configuration)(#install_celery_beat_systemd_configuration)
+  * [Systemd configuration](#install_celery_beat_systemd_configuration)
 
 <a name="install_install_dependencies"></a>
 ## Install dependencies
