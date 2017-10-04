@@ -1,5 +1,23 @@
 # Installation instructions
 
+## Contents
+
+* [Install dependencies](#install_install_dependencies)
+* [Configure KonText (config.xml)](#install_configure_kontext)
+  * [Plug-ins](#install_configure_kontext_plugins)
+* [Building the project](#install_building_the_project)
+* [Deployment](#install_deployment)
+* [Standalone server application](#install_standalone_server_application)
+* [WSGI application within a dedicated web-server](#install_wsgi_application)
+  * [Gunicorn + reverse proxy](#install_gunicorn_plus_proxy)
+  * [Apache mod_wsgi](#install_apache_mod_wsgi)
+* [Celery worker](#install_celery_worker)
+  * [Celery configuration](#install_celery_configuration)
+  * [Systemd configuration](#install_celery_systemd_configuration)
+* [Celery Beat](#install_celery_beat)
+  * [Systemd configuration)(#install_celery_beat_systemd_configuration)
+
+<a name="install_install_dependencies"></a>
 ## Install dependencies
 
 
@@ -21,7 +39,7 @@ On Ubuntu/Debian you can install them by entering the following command:
 sudo apt-get install libxml2-dev libxslt-dev python-dev
 ```
 
-
+<a name="install_configure_kontext"></a>
 ## Configure KonText (config.xml)
 
 Before you can build KonText, a proper configuration must be ready (especially the *plugins* section).
@@ -40,6 +58,7 @@ The configuration file has mostly two-level structure: *sections* and *key-value
 or list of items. Configuration values are documented in *conf/config.rng* (a RelaxNG schema which describes
 kontext configuration XML)
 
+<a name="install_configure_kontext_plugins"></a>
 ### Plug-ins
 
 Configuration section *plugins* is kind of specific as it contains a configuration for custom implementations of
@@ -52,9 +71,8 @@ For more information about plug-ins API and configuration please visit
 [our wiki](https://github.com/czcorpus/kontext/wiki/Plug-in-API).
 
 
-
-Building the project
---------------------
+<a name="install_building_the_project"></a>
+## Building the project
 
 To be able to build the project you must have:
 
@@ -67,8 +85,8 @@ In your KonText directory write:
 npm install; grunt production
 ```
 
-Deployment
-----------
+<a name="#install_deployment"></a>
+## Deployment
 
 Once you have your copy of KonText built it is possible to deploy it on a server.
 Currently KonText does not support any deployment automation but the process is simple.
@@ -77,8 +95,8 @@ Currently KonText does not support any deployment automation but the process is 
 cp -r {cmpltmpl,conf,lib,locale,package.json,public,scripts,worker.py} destination_directory
 ```
 
-Standalone server application
------------------------------
+<a name="install_standalone_server_application"></a>
+## Standalone server application
 
 KonText can serve itself without any external web server but such a setup is recommended only
 for testing and development purposes. The application can be activated by the following command::
@@ -90,11 +108,12 @@ for testing and development purposes. The application can be activated by the fo
 (*--address* and *--port* parameters are optional; default serving address is 127.0.0.1:5000)
 
 
-<a name="wsgi_application"></a>
+<a name="install_wsgi_application"></a>
 ## WSGI application within a dedicated web-server
 
 This is the recommended mode for production deployments. 
 
+<a name="install_gunicorn_plus_proxy"></a>
 ### Gunicorn + reverse proxy (Apache, Nginx)
 
 This configuration is best suited for production, is easy to configure and
@@ -212,7 +231,7 @@ or
 systemctl start gunicorn-kontext
 ```
 
-
+<a name="install_apache_mod_wsgi"></a>
 ### Apache mod_wsgi
 
 Running KonText within *Apache* webserver is possible with some [limitations](#limitation_note). 
@@ -250,6 +269,7 @@ Installation into an Apache [Location](http://httpd.apache.org/docs/current/mod/
 possible. Please refer to the [Apache documentation](http://httpd.apache.org/docs/2.2/) for more information.
 
 
+<a name="install_celery_worker"></a>
 ## Celery worker
 
 KonText uses [Celery](http://www.celeryproject.org/) worker queue for many 
@@ -266,6 +286,7 @@ sudo useradd -r -s /bin/false celery
 adduser celery www-data
 ```
 
+<a name="install_celery_configuration"></a>
 ### Celery configuration
 
 * in case of *systemd* use path */etc/conf.d/celery*
@@ -302,7 +323,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = 'Europe/Prague'
 ```
 
-
+<a name="install_celery_systemd_configuration"></a>
 ### Systemd configuration
 
 File */etc/systemd/system/celeryd.service*:
@@ -334,11 +355,13 @@ d /var/run/celery 0755 celery www-data -
 d /var/log/celery 0755 celery www-data -
 ```
 
+<a name="install_celery_beat"></a>
 ## Celery Beat
 
 Celery Beat allows cron-like task management within Celery. It is used by
 KonText especially to remove old cache files (concordance, frequency, collocations).
- 
+
+<a name="install_celery_beat_systemd_configuration"></a>
 ### Systemd configuration
 
 File */etc/systemd/system/celerybeat.service*:
