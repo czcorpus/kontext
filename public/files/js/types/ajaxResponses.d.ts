@@ -35,6 +35,8 @@ declare module AjaxResponse {
 
         attrlist:Array<{name:string; size:string}>;
 
+        structlist:Array<{name:string; size:string}>;
+
         citation_info:CitationInfo;
 
         corpname:string;

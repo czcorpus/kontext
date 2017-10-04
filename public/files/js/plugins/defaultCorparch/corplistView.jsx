@@ -23,6 +23,8 @@ import * as React from 'vendor/react';
 
 export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
 
+    const layoutViews = he.getLayoutViews();
+
     // ---------------------------------------------------------------------
     // -------------------------- dataset components -----------------------
     // ---------------------------------------------------------------------
@@ -152,29 +154,25 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
             this._storeChangeHandler = this._storeChangeHandler.bind(this);
             this._detailClickHandler = this._detailClickHandler.bind(this);
             this._detailCloseHandler = this._detailCloseHandler.bind(this);
-            this.state = {
-                rows: this.props.rows,
-                nextOffset: this.props.nextOffset,
-                detailVisible: false,
-                detail: null
+            this.state = this._fetchStoreState();
+        }
+
+        _fetchStoreState() {
+            const data = listStore.getData();
+            const detail = listStore.getDetail();
+            return {
+                rows: data.rows,
+                nextOffset: data.nextOffset,
+                detail: detail,
+                isWaiting: listStore.isBusy()
             };
         }
 
         _storeChangeHandler() {
-            const data = listStore.getData();
-            const detail = listStore.getDetail();
-            this.setState({
-                rows: data.rows,
-                nextOffset: data.nextOffset,
-                detailVisible: !!detail,
-                detail: detail
-            });
+            this.setState(this._fetchStoreState());
         }
 
         _detailClickHandler(corpusId) {
-            const newState = he.cloneState(this.state);
-            newState.detailVisible = true;
-            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_REQUIRED',
                 props: {
@@ -184,9 +182,6 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
         }
 
         _detailCloseHandler() {
-            const newState = he.cloneState(this.state);
-            newState.detailVisible = false;
-            this.setState(newState);
             dispatcher.dispatch({
                 actionType: 'CORPARCH_CORPUS_INFO_CLOSED',
                 props: {}
@@ -202,12 +197,12 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
         }
 
         _renderDetailBox() {
-            if (this.state.detailVisible) {
+            if (this.state.detail) {
                 return (
                     <layoutViews.PopupBox
                         onCloseClick={this._detailCloseHandler}
                         customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
-                        <CorpusInfoBox data={this.state.detail} />
+                        <CorpusInfoBox data={this.state.detail} isWaiting={this.state.isWaiting} />
                     </layoutViews.PopupBox>
                 );
 

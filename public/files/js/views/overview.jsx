@@ -105,7 +105,7 @@ export function init(dispatcher, he, corpusInfoStore) {
             }
         };
 
-        if (!props.data || !props.data.corpname) {
+        if (props.isWaiting) {
             return (
                 <div id="corpus-details-box">
                     <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader.gif')}
