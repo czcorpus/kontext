@@ -76,8 +76,8 @@
             <module>default_auth</module>
             <auth_cookie_name>kontext_session</auth_cookie_name>
             <anonymous_user_id>0</anonymous_user_id>
-            <login_url>http://korpus.test/user/login?continue=%s</login_url>
-            <logout_url>http://korpus.test/user/logout?continue=%s</logout_url>
+            <login_url>/user/login?continue=%s</login_url>
+            <logout_url>/user/logout?continue=%s</logout_url>
         </auth>
         <conc_cache>
             <module>redis_conc_cache</module>
@@ -92,9 +92,10 @@
             <module>default_corparch</module>
             <js_module>defaultCorparch</js_module>
             <file>/path/to/your/corpus/tree/xml/file</file>
-            <root_elm_path>//corpora/corplist</root_elm_path>
+            <root_elm_path>/corplist</root_elm_path>
             <tag_prefix extension-by="default">+</tag_prefix>
             <max_num_hints extension-by="default">10</max_num_hints>
+            <max_num_favorites extension-by="default">15</max_num_favorites>
             <default_page_list_size extension-by="default">30</default_page_list_size>
         </corparch>
         <db>
