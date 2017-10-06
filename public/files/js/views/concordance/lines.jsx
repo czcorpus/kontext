@@ -108,7 +108,6 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         );
     };
 
-
     // ------------------------- <NonKwicText /> ---------------------------
 
     const NonKwicText = (props) => {
@@ -119,6 +118,20 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
 
         const mkKey = () => {
             return `${props.position}:${props.idx}`;
+        };
+
+        const mkTokenId = (i) => {
+            return props.kwicTokenNum + props.chunkOffset + i;
+        };
+
+        const splitTokens = (text) => {
+            const ans = [];
+            props.data.text.forEach((s, i) => {
+                ans.push(' ');
+                ans.push(<mark key={`${props.position}:${props.idx}:${i}`} data-tokenId={mkTokenId(i)}>{s}</mark>);
+            });
+            ans.push(' ');
+            return ans;
         };
 
         if (props.data.className && props.data.text) {
@@ -140,7 +153,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         } else {
             return (
                 <span key={mkKey()} title={(props.data.mouseover || []).join(', ')}>
-                    {props.data.text}
+                    {splitTokens(props.data.text)}
                 </span>
             );
         }
@@ -162,7 +175,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
             };
         }
 
-        _renderLeftChunk(item, i, itemList) {
+        _renderLeftChunk(chunkOffsets, kwicTokenNum, item, i, itemList) {
             const ans = [];
             if (i > 0 && itemList.get(i - 1).closeLink) {
                 ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
@@ -172,7 +185,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                 ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            ans.push(<NonKwicText data={item} idx={i} position="l" />);
+            ans.push(<NonKwicText data={item} idx={i} position="l" chunkOffset={-1 * chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum} />);
             if (item.closeLink) {
                 ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
@@ -204,7 +217,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
             return ans;
         }
 
-        _renderRightChunk(prevBlockClosed, item, i, itemList) {
+        _renderRightChunk(chunkOffsets, kwicTokenNum, prevBlockClosed, item, i, itemList) {
             const ans = [];
             const mouseover = (item.mouseover || []).join(', ');
             const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
@@ -220,7 +233,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                 ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            ans.push(<NonKwicText data={item} idx={i} position="r" />);
+            ans.push(<NonKwicText data={item} idx={i} position="r" chunkOffset={chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum} />);
             if (item.closeLink) {
                 ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
@@ -238,30 +251,50 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
 
         _renderTextKwicMode(corpname, corpusOutput) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
+            const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
+                corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenId'))
+            );
             return [
-                <td key="lc" className={this._exportTextElmClass(corpname, 'lc')}>
-                    {corpusOutput.left.map(this._renderLeftChunk.bind(this))}
+                <td
+                        key="lc"
+                        className={this._exportTextElmClass(corpname, 'lc')}
+                        onClick={handleTokenClick}>
+                    {corpusOutput.left.map(this._renderLeftChunk.bind(this, corpusOutput.leftOffsets, corpusOutput.tokenNumber))}
                 </td>,
-                <td key="kw" className={this._exportTextElmClass(corpname, 'kw')}
+                <td
+                        key="kw"
+                        className={this._exportTextElmClass(corpname, 'kw')}
                         onClick={this._handleKwicClick.bind(this, corpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
                     {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
                 </td>,
-                <td key="rc" className={this._exportTextElmClass(corpname, 'rc')}>
-                    {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.kwic.get(-1)))}
+                <td
+                        key="rc"
+                        className={this._exportTextElmClass(corpname, 'rc')}
+                        onClick={handleTokenClick}>
+                    {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.rightOffsets, corpusOutput.tokenNumber,
+                        corpusOutput.kwic.get(-1)))}
                 </td>
             ];
         }
 
         _renderTextParMode(corpname, corpusOutput) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
+            const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
+                corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenId'))
+            );
             return [
-                <td key="par" className={this._exportTextElmClass(corpname, 'par')}
-                        onClick={this._handleKwicClick.bind(this, corpname,
+                <td key="par" className={this._exportTextElmClass(corpname, 'par')}>
+                    <span onClick={handleTokenClick}>
+                        {corpusOutput.left.map(this._renderLeftChunk.bind(this, corpusOutput.leftOffsets, corpusOutput.tokenNumber))}
+                    </span>
+                    <span onClick={this._handleKwicClick.bind(this, corpname,
                                  corpusOutput.tokenNumber, this.props.lineIdx)}>
-                    {corpusOutput.left.map(this._renderLeftChunk)}
-                    {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
-                    {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.kwic.get(-1)))}
+                        {corpusOutput.kwic.map(this._renderKwicChunk.bind(this, corpusOutput.left.get(-1), hasKwic))}
+                    </span>
+                    <span onClick={handleTokenClick}>
+                        {corpusOutput.right.map(this._renderRightChunk.bind(this, corpusOutput.rightOffsets, corpusOutput.tokenNumber, corpusOutput.kwic.get(-1)))}
+                    </span>
                 </td>
             ]
         }
@@ -285,7 +318,11 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         }
 
         _handleKwicClick(corpusId, tokenNumber, lineIdx) {
-            this.props.concDetailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+            this.props.tokenDetailClickHandler(corpusId, tokenNumber, this.props.data.kwicLength, lineIdx);
+        }
+
+        _handleNonKwicTokenClick(corpusId, lineIdx, tokenNumber) {
+            this.props.tokenDetailClickHandler(corpusId, tokenNumber, -1, lineIdx);
         }
 
         _handleStoreChange() {
@@ -453,7 +490,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                          lineSelMode={this.state.lineSelMode}
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                          audioPlayerIsVisible={this.state.audioPlayerIsVisible}
-                         concDetailClickHandler={this.props.concDetailClickHandler}
+                         tokenDetailClickHandler={this.props.tokenDetailClickHandler}
                          refsDetailClickHandler={this.props.refsDetailClickHandler}
                          emptyRefValPlaceholder={this.state.emptyRefValPlaceholder}
                          catBgColor={catColor[0]}

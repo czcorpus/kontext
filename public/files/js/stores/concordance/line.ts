@@ -25,7 +25,7 @@ import Immutable = require('vendor/immutable');
 
 export class TextChunk {
     className:string;
-    text:string;
+    text:Array<string>;
     openLink:{speechPath:string};
     closeLink:{speechPath:string};
     continued:boolean;
@@ -50,23 +50,47 @@ export abstract class LangSection {
 
 
 export class KWICSection extends LangSection {
+
     left:Immutable.List<TextChunk>;
+
+    /**
+     * This is used to obtain token number based on KWIC token number
+     * which is the only one we know from the server.
+     */
+    leftOffsets:Immutable.List<number>;
+
     kwic:Immutable.List<TextChunk>;
+
     right:Immutable.List<TextChunk>;
+
+    /**
+     * This is used to obtain token number based on KWIC token number
+     * which is the only one we know from the server.
+     */
+    rightOffsets:Immutable.List<number>;
+
 
     constructor(tokenNumber:number, lineNumber:number, ref:Array<string>,
             left:Immutable.List<TextChunk>, kwic:Immutable.List<TextChunk>,
             right:Immutable.List<TextChunk>) {
         super(tokenNumber, lineNumber, ref);
         this.left = left;
+        this.leftOffsets = Immutable.List<number>(
+            this.left
+                .reduceRight((r, v) => [(v.className ? 0 : v.text.length) + (r.length > 0 ? r[0] : 0)].concat(r), [])
+        );
         this.kwic = kwic;
         this.right = right;
+        this.rightOffsets = Immutable.List<number>(
+            this.right
+                .reduce((r, v) => r.concat((v.className ? 0 : v.text.length) + (r.length > 0 ? r[r.length - 1] : 0)), [1])
+                .slice(0, -1)
+        );
     }
 
     getAllChunks():Immutable.List<TextChunk> {
         return this.left.concat(this.kwic, this.right).toList();
     }
-
 }
 
 

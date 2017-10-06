@@ -105,13 +105,14 @@ class _Names(object):
     SUBCMIXER = _ID('subcmixer')
     CHART_EXPORT = _ID('chart_export')
     ISSUE_REPORTING = _ID('issue_reporting')
+    TOKEN_DETAIL = _ID('token_detail')
 
     def __iter__(self):
         return iter([self.DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH, self.CONC_PERSISTENCE,
                      self.CONC_CACHE, self.EXPORT, self.USER_ITEMS, self.MENU_ITEMS, self.GETLANG, self.CORPARCH,
                      self.QUERY_STORAGE, self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES,
                      self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT,
-                     self.ISSUE_REPORTING])
+                     self.ISSUE_REPORTING, self.TOKEN_DETAIL])
 
 
 runtime = _Names()
@@ -149,7 +150,8 @@ def load_plugin_module(name):
     try:
         module = getattr(_tmp, name)
     except AttributeError:
-        logging.getLogger(__name__).error('Plugin %s configured but not installed (missing Python module?)' % name)
+        logging.getLogger(__name__).error(
+            'Plugin %s configured but not installed (missing Python module?)' % name)
         module = None
     return module
 

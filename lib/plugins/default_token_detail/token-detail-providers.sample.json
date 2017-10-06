@@ -1,0 +1,12 @@
+[
+  {
+    "backend": "plugins.default_token_detail.backends.HTTPBackend",
+    "frontend": "raw-html",
+    "conf": {
+      "server": "en.wiktionary.org",
+      "path": "/w/index.php?title={0}&action=render",
+      "ssl": true,
+      "port": 443
+    }
+  }
+]

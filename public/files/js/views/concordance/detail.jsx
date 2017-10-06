@@ -221,32 +221,54 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
         }
 
         render() {
-            return (
-                <div>
-                    {this.state.hasExpandLeft ?
-                        <ExpandConcDetail position="left" isWaiting={this._isWaitingExpand('left')}
-                                clickHandler={this._expandClickHandler.bind(this, 'left')} />
-                        : null
-                    }
-                    {(this.state.data || []).map((item, i) => {
-                        return (
-                            <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>
-                        );
-                    })}
-                    {this.state.hasExpandRight ?
-                        <ExpandConcDetail position="right" isWaiting={this._isWaitingExpand('right')}
-                                clickHandler={this._expandClickHandler.bind(this, 'right')} />
-                        : null
-                    }
-                    {this.state.canDisplayWholeDocument ?
-                        <div className="footer">
-                            <a id="ctx-link"
-                                onClick={this._handleDisplayWholeDocumentClick}>display whole document</a>
+            if (this.props.concDetailStoreIsBusy) {
+                return (
+                    <div style={{textAlign: 'center'}}>
+                        <img src={he.createStaticUrl('img/ajax-loader.gif')}
+                            alt={he.translate('global__loading')} />
+                    </div>
+                );
+
+            } else {
+                return (
+                    <div className="concordance_DefaultView">
+                        {this.state.hasExpandLeft ?
+                            <ExpandConcDetail position="left" isWaiting={this._isWaitingExpand('left')}
+                                    clickHandler={this._expandClickHandler.bind(this, 'left')} />
+                            : null
+                        }
+                        {(this.state.data || []).map((item, i) => {
+                            return (
+                                <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>
+                            );
+                        })}
+                        {this.state.hasExpandRight ?
+                            <ExpandConcDetail position="right" isWaiting={this._isWaitingExpand('right')}
+                                    clickHandler={this._expandClickHandler.bind(this, 'right')} />
+                            : null
+                        }
+                        {this.state.canDisplayWholeDocument ?
+                            <div className="footer">
+                                <a id="ctx-link" onClick={this._handleDisplayWholeDocumentClick}>
+                                    {he.translate('concview__display_whole_document')}
+                                </a>
+                            </div>
+                            : null
+                        }
+                        <hr />
+                        <div className="token-detail">
+                            {this.props.tokenDetailData.map((v, i) => {
+                                return (
+                                    <div key={`resource:${i}`}>
+                                        {v.heading ? <h3>{v.heading}</h3> : null}
+                                        <v.renderer data={v.contents} />
+                                    </div>
+                                );
+                            })}
                         </div>
-                        : null
-                    }
-                </div>
-            );
+                    </div>
+                );
+            }
         }
     }
 
@@ -672,9 +694,9 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
         }
     };
 
-    // ------------------------- <ConcDetail /> ---------------------------
+    // ------------------------- <TokenDetail /> ---------------------------
 
-    class ConcDetail extends React.Component {
+    class TokenDetail extends React.Component {
 
         constructor(props) {
             super(props);
@@ -732,7 +754,9 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
                                 corpusId={this.props.corpusId}
                                 tokenNumber={this.props.tokenNumber}
                                 kwicLength={this.props.kwicLength}
-                                lineIdx={this.props.lineIdx} />;
+                                lineIdx={this.props.lineIdx}
+                                tokenDetailData={this.props.tokenDetailData}
+                                concDetailStoreIsBusy={this.props.concDetailStoreIsBusy} />;
                 case 'speech':
                     return <SpeechView
                                 corpusId={this.props.corpusId}
@@ -763,6 +787,6 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
 
     return {
         RefDetail: RefDetail,
-        ConcDetail: ConcDetail
+        TokenDetail: TokenDetail
     };
 }
