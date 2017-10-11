@@ -238,7 +238,7 @@ class Controller(object):
         self._proc_time = None
         self._validators = []  # a list of functions which must pass (= return None) before any action is performed
         self._exceptmethod = None
-        self._template_dir = u'../cmpltmpl/'
+        self._template_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'cmpltmpl'))
         self.args = Args()
         self._uses_valid_sid = True
         self._plugin_api = None  # must be implemented in a descendant
@@ -246,10 +246,6 @@ class Controller(object):
         # initialize all the Parameter attributes
         for k, value in inspect.getmembers(GlobalArgs, predicate=lambda m: isinstance(m, Parameter)):
             setattr(self.args, k, value.unwrap())
-
-        # correct _template_dir
-        if not os.path.isdir(self._template_dir):
-            self._template_dir = imp.find_module('cmpltmpl')[1]
 
     def _init_session(self):
         """
@@ -377,17 +373,18 @@ class Controller(object):
         """
         name = name.rsplit('/', 1)
         if len(name) == 2:
-            template_dir = '%s/%s' % (self._template_dir, name[0])
+            template_dir = os.path.join(self._template_dir, name[0])
             name = name[1]
         else:
             template_dir = self._template_dir
             name = name[0]
+
+        srch_dirs = [self._template_dir, template_dir]
         try:
-            tpl_file, pathname, description = imp.find_module(name, [template_dir])
-        except ImportError:
-            # if some non-root action (e.g. /user/login) calls a root one (e.g. /message)
-            # then we have to look for root actions' templates too
-            tpl_file, pathname, description = imp.find_module(name, ['%s/..' % template_dir])
+            tpl_file, pathname, description = imp.find_module(name, srch_dirs)
+        except ImportError as ex:
+            logging.getLogger(__name__).error('Failed to import template {0} in {1}'.format(name, ', '.join(srch_dirs)))
+            raise ex
         module = imp.load_module(name, tpl_file, pathname, description)
         return getattr(module, name)
 
