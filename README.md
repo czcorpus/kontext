@@ -55,12 +55,6 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 * improved code documentation
 
 
-## Notable installations
-
-* [Institute of the Czech National Corpus](https://kontext.korpus.cz/first_form)
-* [LINDAT](https://ufal.mff.cuni.cz/lindat-kontext)
-
-
 ## Requirements
 
 * a WSGI-compatible server
@@ -88,3 +82,8 @@ Please refer to the [doc/INSTALL.md](doc/INSTALL.md) file for details.
 ## Customization and contribution
 
 Please refer to our [Wiki](https://github.com/czcorpus/kontext/wiki/Development-and-customization).
+
+## Notable installations
+
+* [Institute of the Czech National Corpus](https://kontext.korpus.cz/first_form)
+* [LINDAT](https://ufal.mff.cuni.cz/lindat-kontext)
