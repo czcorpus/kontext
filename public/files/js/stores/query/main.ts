@@ -171,7 +171,10 @@ export abstract class GeneralQueryStore extends SimplePageStore {
     }
 
     getLposlist():Immutable.List<{v:string; n:string}> {
-        return this.lposlist;
+        // this is quite confusing (the next version of KonText solves it in a better way)
+        // as the form SELECT name is "lpos" but it uses corpus conf. value WPOSLIST and not
+        // LPOSLIST.
+        return this.wPoSList;
     }
 
     getForcedAttr():string {
