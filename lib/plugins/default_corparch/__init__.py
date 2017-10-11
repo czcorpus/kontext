@@ -727,7 +727,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         }
 
     def export_actions(self):
-        return {actions.user.User: [ask_corpus_access, get_favorite_corpora]}
+        return {actions.user.User: [get_favorite_corpora]}
 
 
 @inject('auth', 'user_items')
