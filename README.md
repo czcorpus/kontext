@@ -13,6 +13,8 @@ It is maintained by the
 Current version contains all the key features of the Bonito 2.98.3 (primarily a support for parallel
 corpora).
 
+![KonText screenshot](https://github.com/czcorpus/kontext/tree/master/doc/kontext-screenshot1.jpg)
+
 ## Features
 
 ### new features
@@ -53,6 +55,12 @@ adapters, authentication method, corpus listing widgets, HTTP session management
 [Celery task queue](http://www.celeryproject.org/)  (alternatively, Python's *multiprocessing* package can be used)
 * improved logging, error processing and debugging support
 * improved code documentation
+
+
+## Notable installations
+
+* [Institute of the Czech National Corpus](https://kontext.korpus.cz/first_form)
+* [LINDAT](https://ufal.mff.cuni.cz/lindat-kontext)
 
 
 ## Requirements
