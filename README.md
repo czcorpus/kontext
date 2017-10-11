@@ -1,4 +1,4 @@
-![KonText](https://kontext.korpus.cz/files/themes/default/kontext-logo.png)
+![KonText screenshot](https://github.com/czcorpus/kontext/blob/master/doc/images/kontext-screenshot1.jpg)
 
 [![Build status](https://travis-ci.org/czcorpus/kontext.svg?branch=master)](https://travis-ci.org/czcorpus/kontext)
 
@@ -12,8 +12,6 @@ It is maintained by the
 [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
 Current version contains all the key features of the Bonito 2.98.3 (primarily a support for parallel
 corpora).
-
-![KonText screenshot](https://github.com/czcorpus/kontext/tree/master/doc/kontext-screenshot1.jpg)
 
 ## Features
 
