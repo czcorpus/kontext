@@ -691,7 +691,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             form.setAttribute('target', '_blank');
         }
         body.appendChild(form);
-        (args || []).forEach(item => {
+        (args || []).filter(v => !!v[1]).forEach(item => {
             const input = window.document.createElement('input');
             input.setAttribute('type', 'hidden');
             input.setAttribute('name', item[0]);
