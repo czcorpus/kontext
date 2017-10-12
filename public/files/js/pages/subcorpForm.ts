@@ -146,16 +146,18 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                 let subcMixerComponent:React.Component;
 
                 if (subcmixerPlugin) {
-                    liveAttrs.addUpdateListener(subcmixerPlugin.refreshData.bind(subcmixerPlugin));
-                    subcMixerComponent = subcmixerPlugin.getWidgetView();
+                    if (liveAttrs) {
+                        liveAttrs.addUpdateListener(subcmixerPlugin.refreshData.bind(subcmixerPlugin));
+                        subcMixerComponent = subcmixerPlugin.getWidgetView();
+
+                    } else {
+                        throw new Error('Subcmixer plug-in requires live_attributes plug-in to be operational');
+                    }
 
                 } else {
                     subcMixerComponent = null;
                 }
-                const liveAttrsViews = liveAttrs.getViews(
-                    subcMixerComponent,
-                    this.textTypesStore
-                );
+                const liveAttrsViews = liveAttrs ? liveAttrs.getViews(subcMixerComponent,this.textTypesStore) : {};
 
                 const attachedAlignedCorporaProvider = this.layoutModel.pluginIsActive('live_attributes') ?
                     () => liveAttrs.getAlignedCorpora() : () => Immutable.List<TextTypes.AlignedLanguageItem>();
