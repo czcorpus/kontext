@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins/liveAttributes.d.ts" />
 /// <reference path="../../../ts/declarations/flux.d.ts" />
 /// <reference path="../../../ts/declarations/rsvp.d.ts" />
 /// <reference path="../../../ts/declarations/immutable.d.ts" />
@@ -104,9 +105,9 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
 
     private selectionSteps:Immutable.List<SelectionStep>;
 
-    private alignedCorpora:Immutable.List<LiveAttributesInit.AlignedLanguageItem>;
+    private alignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
 
-    private initialAlignedCorpora:Immutable.List<LiveAttributesInit.AlignedLanguageItem>;
+    private initialAlignedCorpora:Immutable.List<TextTypes.AlignedLanguageItem>;
 
     private bibliographyAttribute:string;
 
@@ -179,7 +180,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                     let item = self.alignedCorpora.get(payload.props['idx']);
                     if (item) {
                         let idx = self.alignedCorpora.indexOf(item);
-                        let newItem:LiveAttributesInit.AlignedLanguageItem = {
+                        let newItem:TextTypes.AlignedLanguageItem = {
                             value: item.value,
                             label: item.label,
                             locked: item.locked,
@@ -285,7 +286,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
                         this.textTypesStore.filter(k, (item) => item !== null);
                     }
                     this.alignedCorpora = this.alignedCorpora.map((value) => {
-                        let newVal:LiveAttributesInit.AlignedLanguageItem = {
+                        let newVal:TextTypes.AlignedLanguageItem = {
                             label: value.label,
                             value: value.value,
                             locked: value.selected ? true : false,
@@ -373,7 +374,7 @@ export class LiveAttrsStore extends SimplePageStore implements LiveAttributesIni
         }
     }
 
-    getAlignedCorpora():Immutable.List<LiveAttributesInit.AlignedLanguageItem> {
+    getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem> {
         return this.alignedCorpora;
     }
 
