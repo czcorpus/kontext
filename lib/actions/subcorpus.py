@@ -102,6 +102,7 @@ class Subcorpus(Querying):
                 tmp = ['<%s %s />' % item for item in tt_query]
                 full_cql = ' within '.join(tmp)
                 full_cql = 'aword,[] within %s' % full_cql
+                full_cql = import_string(full_cql, from_encoding=corp_encoding)
                 imp_cql = (full_cql,)
             else:
                 raise FunctionNotSupported('Corpus must have a bibliography item defined to support this function')
