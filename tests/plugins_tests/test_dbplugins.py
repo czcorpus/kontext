@@ -31,8 +31,14 @@ from plugins.redis_db import RedisDb
 from plugins.sqlite3_db import DefaultDb
 
 # set test parameters
-test_ttl_methods = True  # set to False to speed up by skipping ttl testing which involves time.sleep()
-verbose = False  # set to True to get some additional details, e.g. list contents etc.
+TEST_TTL_METHODS = True  # set to False to speed up by skipping ttl testing which involves time.sleep()
+VERBOSE = False  # set to True to get some additional details, e.g. list contents etc.
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
+SQLITE3_DB = ':memory:'
+DROP_DATA_TABLE_SQL = "DROP TABLE IF EXISTS data"
+CREATE_DATA_TABLE_SQL = "CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)"
 
 
 class DbTest(unittest.TestCase):
@@ -40,25 +46,28 @@ class DbTest(unittest.TestCase):
         super(DbTest, self).__init__(*args, **kwargs)
         # establish connections
         # redis direct connection:
-        self.rd = redis.StrictRedis('localhost', 6379, 0)
+        self.rd = redis.StrictRedis(REDIS_HOST, REDIS_PORT, REDIS_DB)
         # redis plugin connection:
-        conf = {'default:host': 'localhost', 'default:port': 6379, 'default:id': 0}
+        conf = {'default:host': REDIS_HOST, 'default:port': REDIS_PORT, 'default:id': REDIS_DB}
         self.r = RedisDb(conf)
         # sqlite3 direct connection:
-        self.sd = sqlite3.connect('test.db')
+        self.sd = sqlite3.connect(SQLITE3_DB)
         # sqlite3 plugin connection:
-        conf = {'default:db_path': 'test.db'}
+        conf = {'default:db_path': SQLITE3_DB}
         self.s = DefaultDb(conf)
-        # drop and re-create the sqlite3 table called "data" with the correct structure
-        self.sd.execute("DROP TABLE IF EXISTS data")
-        self.sd.execute("CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)")
-        self.sd.commit()
 
     def setUp(self):
         # delete data before each test
         self.rd.flushdb()
-        self.sd.execute('delete from data')
+        # drop and re-create the sqlite3 table called "data" with the correct structure
+
+        self.sd.execute(DROP_DATA_TABLE_SQL)
+        self.sd.execute(CREATE_DATA_TABLE_SQL)
         self.sd.commit()
+        s_db = getattr(self.s, '_conn')()  # we must force sqlite3 db to instantiate lazy _conn attr
+        s_db.execute(DROP_DATA_TABLE_SQL)
+        s_db.execute(CREATE_DATA_TABLE_SQL)
+        s_db.commit()
 
     def test_set_and_get(self):
         """
@@ -136,11 +145,11 @@ class DbTest(unittest.TestCase):
             out_sqlite.append(out_s)
             out_checklist.append(checklist_range)
 
-            if verbose:
-                print "\nTesting list_get with range specified: ", pair
-                print "redis:  ", out_r
-                print "sqlite: ", out_s
-                print "check:  ", checklist_range
+            if VERBOSE:
+                print('\nTesting list_get with range specified: {0}'.format(pair))
+                print('redis:  {0}'.format(out_r))
+                print('sqlite: {0}'.format(out_s))
+                print('check:  {0}'.format(checklist_range))
 
         self.assertTrue(out_redis == out_sqlite == out_checklist)
 
@@ -247,11 +256,11 @@ class DbTest(unittest.TestCase):
             out_sqlite.append(out_s)
             out_checklist.append(checklist_range)
 
-            if verbose:
-                print "\nTesting list_trim with range specified: ", pair
-                print "redis:  ", out_r
-                print "sqlite: ", out_s
-                print "check:  ", checklist_range
+            if VERBOSE:
+                print('\nTesting list_trim with range specified: {0}'.format(pair))
+                print('redis:  {0}'.format(out_r))
+                print('sqlite: {0}'.format(out_s))
+                print('check:  {0}'.format(checklist_range))
 
         self.assertTrue(out_redis == out_sqlite == out_checklist)
 
@@ -295,9 +304,9 @@ class DbTest(unittest.TestCase):
         self.s.hash_del(key, absent)
         out_r = self.r.hash_get_all(key)
         out_s = self.s.hash_get_all(key)
-        if verbose:
-            print "\nTesting hash_del:"
-            print "redis: ", out_r, " sqlite: ", out_s
+        if VERBOSE:
+            print('\nTesting hash_del:')
+            print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
         self.assertEqual(out_r, out_s)
 
     def test_hash_get_all(self):
@@ -320,9 +329,9 @@ class DbTest(unittest.TestCase):
         self.s.hash_set(key, field3, value3)
         out_r = self.r.hash_get_all(key)
         out_s = self.s.hash_get_all(key)
-        if verbose:
-            print "\nTesting hash_get_all:"
-            print "redis: ", out_r, " sqlite: ", out_s
+        if VERBOSE:
+            print('\nTesting hash_get_all:')
+            print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
         self.assertEqual(out_r, out_s)
 
     def test_rename(self):
@@ -374,7 +383,7 @@ class DbTest(unittest.TestCase):
         test the set_ttl method
         set ttl to 2 secs; after 1 sec the value should exist; after another second, it should not
         """
-        if test_ttl_methods:
+        if TEST_TTL_METHODS:
             key = 'foo'
             value = 'bar'
             self.r.set(key, value)
@@ -387,9 +396,9 @@ class DbTest(unittest.TestCase):
             time.sleep(1)
             out_r.append(self.r.exists(key))
             out_s.append(self.s.exists(key))
-            if verbose:
-                print "testing set_ttl:"
-                print "redis: ", out_r, " sqlite: ", out_s
+            if VERBOSE:
+                print('testing set_ttl:')
+                print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
             self.assertTrue(out_r == out_s == [True, False])
 
     def test_clear_ttl(self):
@@ -397,7 +406,7 @@ class DbTest(unittest.TestCase):
         test the clear_ttl method
         set ttl to 2 secs; after 1 sec, clear the ttl value; after another second, the value should still exist
         """
-        if test_ttl_methods:
+        if TEST_TTL_METHODS:
             key = 'foo'
             value = 'bar'
             self.r.set(key, value)
@@ -412,9 +421,9 @@ class DbTest(unittest.TestCase):
             time.sleep(1)
             out_r.append(self.r.exists(key))
             out_s.append(self.s.exists(key))
-            if verbose:
-                print "testing clear_ttl:"
-                print "redis: ", out_r, " sqlite: ", out_s
+            if VERBOSE:
+                print('testing clear_ttl:')
+                print('redis: {0}, sqlite: {1}'.format(out_r, out_s))
             self.assertTrue(out_r == out_s == [True, True])
 
     def test_fork(self):
