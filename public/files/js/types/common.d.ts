@@ -842,7 +842,7 @@ declare module TextTypes {
         setExtendedInfo(attrName:string, idx:number, data:Immutable.Map<string, any>):void;
 
 
-        setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>void):void;
+        setTextInputChangeCallback(fn:(attrName:string, inputValue:string)=>RSVP.Promise<any>):void;
 
         getTextInputPlaceholder():string;
 
@@ -866,6 +866,13 @@ declare module TextTypes {
     export interface AttrSummary {
         text:string;
         help?:string;
+    }
+
+    export interface AlignedLanguageItem {
+        value:string;
+        label:string;
+        selected:boolean;
+        locked:boolean;
     }
 }
 

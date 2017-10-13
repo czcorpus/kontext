@@ -43,13 +43,17 @@ export class SubcorpFormStore extends SimplePageStore {
 
     private textTypesStore:TextTypesStore;
 
+    private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel,
-            withinFormStore:SubcorpWithinFormStore, textTypesStore:TextTypesStore, corpname:string) {
+            withinFormStore:SubcorpWithinFormStore, textTypesStore:TextTypesStore, corpname:string,
+            alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.withinFormStore = withinFormStore;
         this.textTypesStore = textTypesStore;
         this.corpname = corpname;
+        this.alignedCorporaProvider = alignedCorporaProvider;
         this.inputMode = 'gui';
         this.subcname = '';
 
@@ -75,6 +79,12 @@ export class SubcorpFormStore extends SimplePageStore {
         const args = new MultiDict();
         args.set('corpname', this.corpname);
         args.set('subcname', this.subcname);
+
+        const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
+        if (alignedCorpora.length > 0) {
+            args.set('attrs', JSON.stringify(this.textTypesStore.exportSelections(false)));
+            args.replace('aligned_corpora', alignedCorpora);
+        }
         if (this.inputMode === 'raw') {
             args.set('within_json', this.withinFormStore.exportJson());
 
