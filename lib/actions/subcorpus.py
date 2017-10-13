@@ -231,7 +231,7 @@ class Subcorpus(Querying):
         filter_args = dict(show_deleted=bool(int(request.args.get('show_deleted', 0))),
                            corpname=request.args.get('corpname'))
         data = []
-        user_corpora = plugins.get('auth').permitted_corpora(self._session_get('user', 'id')).values()
+        user_corpora = plugins.get('auth').permitted_corpora(self._session_get('user')).values()
         related_corpora = set()
         for corp in user_corpora:
             try:

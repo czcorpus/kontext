@@ -64,12 +64,14 @@ class AbstractAuth(object):
         """
         return corpname
 
-    def permitted_corpora(self, user_id):
+    def permitted_corpora(self, user_dict):
         """
         Return a dictionary containing corpora IDs user can access.
 
         arguments:
-        user_id -- database user ID
+        user_dict -- a user credentials dict containing data returned
+                     by validate_user() (or written by revalidate() in
+                     case of AbstractRemoteAuth).
 
         returns:
         a dict canonical_corpus_id=>corpus_id

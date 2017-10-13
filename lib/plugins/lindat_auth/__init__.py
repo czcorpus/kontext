@@ -123,7 +123,7 @@ class LINDATAuth(AbstractSemiInternalAuth):
         self.sessions.delete(session)
         session.clear()
 
-    def permitted_corpora(self, user_id):
+    def permitted_corpora(self, user_dict):
         return self.corplist
 
     def is_administrator(self, user_id):
