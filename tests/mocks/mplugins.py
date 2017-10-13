@@ -63,7 +63,7 @@ class MockAuth(AbstractAuth):
     def canonical_corpname(self, corpname):
         return corpname
 
-    def permitted_corpora(self, user_id):
+    def permitted_corpora(self, user_dict):
         raise NotImplementedError()
 
     def get_user_info(self, user_id):

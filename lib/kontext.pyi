@@ -145,6 +145,9 @@ class PluginApi(object):
     def user_id(self) -> int: ...
 
     @property
+    def user_dict(self) -> Dict[str, Any]: ...
+
+    @property
     def user_is_anonymous(self) -> bool: ...
 
     @property

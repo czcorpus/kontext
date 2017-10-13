@@ -64,12 +64,14 @@ class AbstractAuth(object):
         """
         return corpname
 
-    def permitted_corpora(self, user_id):
+    def permitted_corpora(self, user_dict):
         """
         Return a dictionary containing corpora IDs user can access.
 
         arguments:
-        user_id -- database user ID
+        user_dict -- user credentials as returned by validate_user()
+                     (or as written to session by revalidate() in case
+                     of AbstractRemoteAuth implementations).
 
         returns:
         a dict canonical_corpus_id=>corpus_id
@@ -105,7 +107,7 @@ class AbstractSemiInternalAuth(AbstractAuth):
         username -- login username
         password -- login password
 
-        returns
+        returns:
         a dict {'id': ..., 'user': ..., 'fullname'} where 'user' means
         actually 'username'.
         """
@@ -177,6 +179,9 @@ class AbstractRemoteAuth(AbstractAuth):
 
         Please note that in case this method raises an exception, KonText
         automatically sets current user as 'anonymous' to prevent security issues.
+
+        The method is expected to write a proper user credentials dict to
+        the session. Please see AbstractSemiInternalAuth.validate_user for details.
 
         arguments:
         plugin_api -- a controller.PluginApi instance
