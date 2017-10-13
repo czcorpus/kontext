@@ -33,8 +33,7 @@ class CreateSubcorpusTask(object):
         """
         conc = conclib.get_conc(self._corp, self._user_id, q=cql)
         conc.sync()
-        struct = self._corp.get_struct(tt_query[0][0]) if len(tt_query) == 1 else None
-        ans = corplib.subcorpus_from_conc(path, conc, struct)
+        ans = corplib.subcorpus_from_conc(path, conc)
         if ans is False:
             raise EmptySubcorpusException('Empty subcorpus')
         return ans

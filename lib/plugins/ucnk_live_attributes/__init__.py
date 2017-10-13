@@ -45,13 +45,13 @@ from actions import concordance
 import query
 
 
-def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora, autocomplete_attr):
+def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora, autocomplete_attr, limit_lists):
     """
     Generates a cache key based on the relevant parameters.
     Returned value is hashed.
     """
-    return md5('%r %r %r %r %r' % (attr_map, max_attr_list_size, corpus, aligned_corpora,
-                                   autocomplete_attr)).hexdigest()
+    return md5('%r %r %r %r %r %r' % (attr_map, max_attr_list_size, corpus, aligned_corpora,
+                                      autocomplete_attr, limit_lists)).hexdigest()
 
 
 def canonical_corpname(corpname):
@@ -69,16 +69,18 @@ def cached(f):
     time.
     """
     @wraps(f)
-    def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
-        db = self.db(plugin_api.user_lang, canonical_corpname(corpus.corpname))
+    def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
+        db = self.db(plugin_api, canonical_corpname(corpus.corpname))
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora, autocomplete_attr)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora,
+                                   autocomplete_attr, limit_lists)
             ans = self.from_cache(db, key)
             if ans:
                 return ans
-        ans = f(self, plugin_api, corpus, attr_map, aligned_corpora, autocomplete_attr)
+        ans = f(self, plugin_api, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
         if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora, autocomplete_attr)
+            key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora,
+                                   autocomplete_attr, limit_lists)
             self.to_cache(db, key, ans)
         return self.export_num_strings(ans)
     return wrapper
@@ -288,7 +290,8 @@ class LiveAttributes(AbstractLiveAttributes):
         return cur.fetchone()[0]
 
     @cached
-    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
+    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
+                        limit_lists=True):
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -361,14 +364,15 @@ class LiveAttributes(AbstractLiveAttributes):
         tmp_ans.clear()
         return self._export_attr_values(data=ans, aligned_corpora=aligned_corpora,
                                         expand_attrs=expand_attrs,
-                                        collator_locale=corpus_info.collator_locale)
+                                        collator_locale=corpus_info.collator_locale,
+                                        max_attr_list_size=self.max_attr_list_size if limit_lists else None)
 
-    def _export_attr_values(self, data, aligned_corpora, expand_attrs, collator_locale):
+    def _export_attr_values(self, data, aligned_corpora, expand_attrs, collator_locale, max_attr_list_size):
         values = {}
         exported = dict(attr_values=values, aligned=aligned_corpora)
         for k in data.keys():
             if isinstance(data[k], Iterable):
-                if len(data[k]) <= self.max_attr_list_size or k in expand_attrs:
+                if len(data[k]) <= max_attr_list_size or max_attr_list_size is None or k in expand_attrs:
                     out_data = l10n.sort(data[k], collator_locale, key=lambda t: t[0])
                     values[self.export_key(k)] = out_data
                 else:

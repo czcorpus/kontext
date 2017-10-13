@@ -79,7 +79,11 @@ export class SubcorpFormStore extends SimplePageStore {
         const args = new MultiDict();
         args.set('corpname', this.corpname);
         args.set('subcname', this.subcname);
-        args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
+        const alignedCorpora = this.alignedCorporaProvider().map(v => v.value).toArray();
+        if (alignedCorpora.length > 0) {
+            args.replace('aligned_corpora', this.alignedCorporaProvider().map(v => v.value).toArray());
+            args.set('attrs', JSON.stringify(this.textTypesStore.exportSelections(false)));
+        }
         if (this.inputMode === 'raw') {
             args.set('within_json', this.withinFormStore.exportJson());
 
