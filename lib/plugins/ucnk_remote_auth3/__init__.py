@@ -212,17 +212,17 @@ class CentralAuth(AbstractRemoteAuth):
     def canonical_corpname(self, corpname):
         return corpname.rsplit('/', 1)[-1]
 
-    def permitted_corpora(self, user_id):
+    def permitted_corpora(self, user_dict):
         """
         Fetches list of corpora available to the current user
 
         arguments:
-        user_id -- a database user ID
+        user_dict -- a user credentials dictionary
 
         returns:
         a dict (canonical_corp_name, corp_name)
         """
-        corpora = self._db.get(self._mk_list_key(user_id), [])
+        corpora = self._db.get(self._mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return dict([(self.canonical_corpname(c), c) for c in corpora])

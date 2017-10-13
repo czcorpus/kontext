@@ -109,8 +109,8 @@ class DefaultAuthHandler(AbstractInternalAuth):
         """
         return corpname.rsplit('/', 1)[-1]
 
-    def permitted_corpora(self, user_id):
-        corpora = self.db.get(self._mk_list_key(user_id), [])
+    def permitted_corpora(self, user_dict):
+        corpora = self.db.get(self._mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return dict([(self.canonical_corpname(c), c) for c in corpora])
