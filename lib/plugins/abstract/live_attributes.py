@@ -29,7 +29,8 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
         raise NotImplementedError()
 
-    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None):
+    def get_attr_values(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
+                        limit_lists=True):
         """
         Find all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -40,6 +41,8 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         attr_map -- a dictionary of attributes and values as selected by a user
         aligned_corpora -- a list/tuple of corpora names aligned to base one (the 'corpus' argument)
         autocomplete_attr -- such attribute will be also part of selection even if it is a part 'WHERE ...' condition
+        limit_lists -- if False then configured max length of returned lists is ignored and full attr lists are
+                       provided
 
         returns:
         a dictionary containing matching attributes and values

@@ -17,7 +17,7 @@ import time
 
 import werkzeug.urls
 
-from controller import exposed
+from controller import exposed, FunctionNotSupported
 from kontext import MainMenu, UserActionException, AsyncTaskStatus
 from querying import Querying
 from translation import ugettext as _
@@ -27,6 +27,7 @@ from l10n import import_string, export_string, format_number
 import corplib
 from texttypes import TextTypeCollector, get_tt
 import settings
+import argmapping
 
 
 class SubcorpusError(Exception):
@@ -70,6 +71,9 @@ class Subcorpus(Querying):
         subcname = request.form['subcname']
         within_json = request.form.get('within_json')
         raw_cql = request.form.get('cql')
+        corp_encoding = self.corp.get_conf('ENCODING')
+        aligned_corpora = request.form.getlist('aligned_corpora')
+        corpus_info = self.get_corpus_info(self.args.corpname)
 
         if raw_cql:
             aligned_corpora = []
@@ -83,14 +87,30 @@ class Subcorpus(Querying):
             within_cql = self._deserialize_custom_within(json.loads(within_json))
             full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
+        elif len(aligned_corpora) > 0 and plugins.runtime.LIVE_ATTRIBUTES.exists:
+            if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
+                within_cql = None
+                attrs = json.loads(request.form.get('attrs', '{}'))
+                sel_match = plugins.runtime.LIVE_ATTRIBUTES.instance.get_attr_values(
+                    self._plugin_api, corpus=self.corp,
+                    attr_map=attrs,
+                    aligned_corpora=aligned_corpora,
+                    limit_lists=False)
+                values = sel_match['attr_values'][corpus_info.metadata.label_attr]
+                args = argmapping.Args()
+                setattr(args, 'sca_{0}'.format(corpus_info.metadata.id_attr), [v[1] for v in values])
+                tt_query = TextTypeCollector(self.corp, args).get_query()
+                tmp = ['<%s %s />' % item for item in tt_query]
+                full_cql = ' within '.join(tmp)
+                full_cql = 'aword,[] within %s' % full_cql
+                full_cql = import_string(full_cql, from_encoding=self.corp_encoding)
+                imp_cql = (full_cql,)
+            else:
+                raise FunctionNotSupported('Corpus must have a bibliography item defined to support this function')
         else:
             within_cql = None
             tt_query = TextTypeCollector(self.corp, request).get_query()
             tmp = ['<%s %s />' % item for item in tt_query]
-            aligned_corpora = request.form.getlist('aligned_corpora')
-            if len(aligned_corpora) > 0:
-                tmp.extend(map(lambda cn: '%s: []' % export_string(cn, to_encoding=self.corp_encoding),
-                               aligned_corpora))
             full_cql = ' within '.join(tmp)
             full_cql = 'aword,[] within %s' % full_cql
             full_cql = import_string(full_cql, from_encoding=self.corp_encoding)
