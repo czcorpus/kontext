@@ -31,8 +31,7 @@ class CreateSubcorpusTask(object):
         True in case of success
         In case of an empty subcorus, EmptySubcorpusException is thrown
         """
-        conc = conclib.get_conc(self._corp, self._user_id, q=cql)
-        conc.sync()
+        conc = conclib.get_conc(self._corp, self._user_id, q=cql, async=0)
         ans = corplib.subcorpus_from_conc(path, conc)
         if ans is False:
             raise EmptySubcorpusException('Empty subcorpus')
