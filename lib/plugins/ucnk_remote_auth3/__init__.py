@@ -246,6 +246,8 @@ class CentralAuth(AbstractRemoteAuth):
     def get_user_info(self, user_id):
         user_key = self._mk_user_key(user_id)
         info = self._db.get(user_key)
+        if info is None:
+            raise ValueError('Failed to obtain information about user {0}'.format(user_key))
         info.pop('pwd_hash', None)
         info.pop('recovery_hash', None)
         return info
