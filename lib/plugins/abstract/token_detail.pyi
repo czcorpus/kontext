@@ -32,7 +32,8 @@ class Response(object):
 
 class AbstractBackend(object):
 
-    def fetch_data(self, word:basestring, lemma:basestring, pos:basestring, lang:str) -> Tuple[Any, int]: ...
+    def fetch_data(self, providers:List[str], word:basestring, lemma:basestring, pos:basestring,
+                   lang:str) -> Tuple[Any, int]: ...
 
 
 class AbstractFrontend(object):
@@ -44,4 +45,5 @@ class AbstractFrontend(object):
 
 class AbstractTokenDetail(object):
 
-    def fetch_data(self, word:basestring, lemma:basestring, pos:basestring, lang:str) -> List[[Any, int]]: ...
+    def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, pos:basestring,
+                   lang:str) -> List[[Any, int]]: ...

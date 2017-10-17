@@ -136,7 +136,7 @@ from functools import partial
 try:
     from markdown import markdown
 except ImportError:
-    markdown = lambda s: s
+    def markdown(s): return s
 from lxml import etree
 
 import plugins
@@ -168,6 +168,7 @@ class ManateeCorpusInfo(object):
     Represents a subset of corpus information
     as provided by manatee.Corpus instance
     """
+
     def __init__(self, corpus, canonical_id):
         self.encoding = corpus.get_conf('ENCODING')
         import_string = partial(l10n.import_string, from_encoding=self.encoding)
@@ -182,6 +183,7 @@ class ManateeCorpora(object):
     """
     A caching source of ManateeCorpusInfo instances.
     """
+
     def __init__(self):
         self._cache = {}
 
@@ -226,6 +228,7 @@ class DeafultCorplistProvider(CorplistProvider):
     """
     Corpus listing and filtering service
     """
+
     def __init__(self, plugin_api, auth, corparch, tag_prefix):
         """
         arguments:
@@ -241,11 +244,11 @@ class DeafultCorplistProvider(CorplistProvider):
 
     @staticmethod
     def cut_result(res, offset, limit):
-            right_lim = offset + int(limit)
-            new_res = res[offset:right_lim]
-            if right_lim >= len(res):
-                right_lim = None
-            return new_res, right_lim
+        right_lim = offset + int(limit)
+        new_res = res[offset:right_lim]
+        if right_lim >= len(res):
+            right_lim = None
+        return new_res, right_lim
 
     @staticmethod
     def matches_all(d):
@@ -328,7 +331,8 @@ class DeafultCorplistProvider(CorplistProvider):
                     else:
                         tests.append(False)
                 tests.append(self.matches_size(corp, min_size, max_size))
-                tests.append(self._corparch.custom_filter(self._plugin_api, full_data, permitted_corpora))
+                tests.append(self._corparch.custom_filter(
+                    self._plugin_api, full_data, permitted_corpora))
 
                 if self.matches_all(tests):
                     corp['size'] = corp['size']
@@ -336,14 +340,16 @@ class DeafultCorplistProvider(CorplistProvider):
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                     corp['found_in'] = found_in
                     corp['user_item'] = is_fav(corp['id'])
-                    corp['corpus_id'] = corp['id']   # because of client-side fav/feat/search items compatibility
+                    # because of client-side fav/feat/search items compatibility
+                    corp['corpus_id'] = corp['id']
                     self._corparch.customize_search_result_item(self._plugin_api, corp, permitted_corpora,
                                                                 full_data)
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):
                         break
-        ans['rows'], ans['nextOffset'] = self.cut_result(self.sort(plugin_api, ans['rows']), offset, limit)
+        ans['rows'], ans['nextOffset'] = self.cut_result(
+            self.sort(plugin_api, ans['rows']), offset, limit)
         ans['keywords'] = l10n.sort(used_keywords, loc=plugin_api.user_lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
@@ -501,7 +507,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         transparency = self.LABEL_OVERLAY_TRANSPARENCY
         if code[0] == '#':
             code = code[1:]
-            r, g, b = [int('0x%s' % code[i:i+2], 0) for i in range(0, len(code), 2)]
+            r, g, b = [int('0x%s' % code[i:i + 2], 0) for i in range(0, len(code), 2)]
             return 'rgba(%d, %s, %d, %01.2f)' % (r, g, b, transparency)
         elif code.find('rgb') == 0:
             m = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', code, re.IGNORECASE)
@@ -565,7 +571,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if ref_elm is not None:
             ans.citation_info.default_ref = translate_markup(getattr(ref_elm.find('default'),
                                                                      'text', None))
-            articles = [translate_markup(getattr(x, 'text', None)) for x in ref_elm.findall('article')]
+            articles = [translate_markup(getattr(x, 'text', None))
+                        for x in ref_elm.findall('article')]
             ans.citation_info.article_ref = articles
             ans.citation_info.other_bibliography = translate_markup(
                 getattr(ref_elm.find('other_bibliography'), 'text', None))
@@ -575,14 +582,21 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.database = getattr(meta_elm.find('database'), 'text', None)
             ans.metadata.label_attr = getattr(meta_elm.find('label_attr'), 'text', None)
             ans.metadata.id_attr = getattr(meta_elm.find('id_attr'), 'text', None)
-            ans.metadata.sort_attrs = True if meta_elm.find(self.SORT_ATTRS_KEY) is not None else False
+            ans.metadata.sort_attrs = True if meta_elm.find(
+                self.SORT_ATTRS_KEY) is not None else False
             ans.metadata.desc = self._parse_meta_desc(meta_elm)
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
-            ans.group_duplicates = True if meta_elm.find(self.GROUP_DUPLICATES_KEY) is not None else False
-            ans.metadata.avg_label_attr_len = getattr(meta_elm.find('avg_label_attr_len'), 'text', None)
+            ans.group_duplicates = True if meta_elm.find(
+                self.GROUP_DUPLICATES_KEY) is not None else False
+            ans.metadata.avg_label_attr_len = getattr(
+                meta_elm.find('avg_label_attr_len'), 'text', None)
             if ans.metadata.avg_label_attr_len is not None:
                 ans.metadata.avg_label_attr_len = int(ans.metadata.avg_label_attr_len)
+
+        token_detail_elm = node.find('token_detail')
+        if token_detail_elm is not None:
+            ans.token_detail.providers = [p.text for p in token_detail_elm.findall('provider')]
         data.append(ans)
 
     def _parse_corplist_node(self, root, path, lang, data):
@@ -681,7 +695,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for x in self._raw_list(plugin_api.user_lang).values():
             if x['id'] in permitted_corpora and is_featured(x):
                 featured.append({
-                    'id': permitted_corpora[x['id']],  # on client-side, this may contain also subc. id, aligned ids
+                    # on client-side, this may contain also subc. id, aligned ids
+                    'id': permitted_corpora[x['id']],
                     'corpus_id': permitted_corpora[x['id']],
                     'canonical_id': self._auth.canonical_corpname(x['id']),
                     'name': self._manatee_corpora.get_info(x['id']).name,
@@ -717,7 +732,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def initial_search_params(self, plugin_api, query, filter_dict=None):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         all_keywords = self.all_keywords(plugin_api.user_lang)
-        exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k)) for k, lab in all_keywords]
+        exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
+                        for k, lab in all_keywords]
         return {
             'keywords': exp_keywords,
             'filters': {

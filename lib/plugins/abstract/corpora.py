@@ -74,6 +74,12 @@ class CitationInfo(DictLike):
         return dict((k, v) for k, v in self.__dict__.items())
 
 
+class TokenDetail(DictLike):
+
+    def __init__(self):
+        self.providers = []
+
+
 class CorpusInfo(DictLike):
     """
     Genereal corpus information and metadata.
@@ -81,6 +87,7 @@ class CorpusInfo(DictLike):
     be user-independent. I.e. all the information must
     apply for all the users.
     """
+
     def __init__(self):
         self.id = None
         self.name = None
@@ -98,6 +105,7 @@ class CorpusInfo(DictLike):
         self.use_safe_font = False
         self.citation_info = CitationInfo()
         self.metadata = CorpusMetadata()
+        self.token_detail = TokenDetail()
 
 
 class BrokenCorpusInfo(CorpusInfo):
@@ -107,6 +115,7 @@ class BrokenCorpusInfo(CorpusInfo):
     to be risen. Broken corpus information still does not mean that the corpus
     cannot be used.
     """
+
     def __init__(self, name=None):
         super(BrokenCorpusInfo, self).__init__()
         self.name = (name if name else 'undefined') + '(!)'

@@ -37,8 +37,10 @@ def fetch_token_detail(self, request):
     token_id = request.args['token_id']
     wa = self.corp.get_attr('word')
     token_data = wa.pos2str(int(token_id))
-    with plugins.runtime.TOKEN_DETAIL as td:
-        resp_data = td.fetch_data(token_data, None, None, self.ui_lang)
+    with plugins.runtime.TOKEN_DETAIL as td, plugins.runtime.CORPARCH as ca:
+        corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
+        resp_data = td.fetch_data(corpus_info.token_detail.providers,
+                                  token_data, None, None, self.ui_lang)
     return dict(items=[item for item in resp_data])
 
 
@@ -83,15 +85,18 @@ class DefaultTokenDetail(AbstractTokenDetail):
     def __init__(self, providers):
         self._providers = providers
 
-    def fetch_data(self, word, lemma, pos, lang):
+    def fetch_data(self, provider_ids, word, lemma, pos, lang):
         ans = []
-        for backend, frontend in self._providers:
+        for backend, frontend in self._map_providers(provider_ids):
             try:
                 data, status = backend.fetch_data(word, lemma, pos, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
         return ans
+
+    def _map_providers(self, provider_ids):
+        return [self._providers[ident] for ident in provider_ids]
 
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
@@ -101,4 +106,4 @@ def create_instance(settings):
     conf = settings.get('plugins', 'token_detail')
     with open(conf['backends'], 'rb') as fr:
         providers_conf = json.load(fr)
-    return DefaultTokenDetail([init_provider(b) for b in providers_conf])
+    return DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf))

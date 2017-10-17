@@ -84,5 +84,5 @@ class AbstractFrontend(object):
 
 class AbstractTokenDetail(object):
 
-    def fetch_data(self, word, lemma, pos, lang):
+    def fetch_data(self, providers, word, lemma, pos, lang):
         raise NotImplementedError()
