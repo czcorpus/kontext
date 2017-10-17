@@ -4,41 +4,40 @@ import sqlite3
 import json
 
 from archive import ARCHIVE_PREFIX
-from archive import DB_PATH
-from archive import DB_SOURCE_ARCH_PATH
-from archive import DB_SOURCE_ARCH_NAME
 from archive import ArchMan
+
+DB_SOURCE_ARCH_PATH = '/tmp/test_source/'
+DB_SOURCE_ARCH_NAME = 'source_arch.db'
 
 
 class ArchTools:
-    def __init__(self):
-        self.archMan = ArchMan()
+    def __init__(self, db_path):
+        self.archMan = ArchMan(db_path)
+        self.db_path = self.archMan.archive_dir_path
 
-    @staticmethod
-    def clear_directory():
+    def clear_directory(self):
         """
         in case the test directory does not exist, create it
         if it exists, clean it
         """
-        if not os.path.exists(DB_PATH):
-            os.makedirs(DB_PATH)
-            print "creating working directory:", DB_PATH
+        if not os.path.exists(self.db_path):
+            os.makedirs(self.db_path)
+            # print "creating working directory:", self.db_path
         else:
-            print "clearing working directory:", DB_PATH
-            for f in sorted(os.listdir(DB_PATH)):
-                print "deleting file: ", f
-                os.remove(DB_PATH + f)
+            # print "clearing working directory:", self.db_path
+            for f in sorted(os.listdir(self.db_path)):
+                # print "deleting file: ", f
+                os.remove(self.db_path + f)
 
-    @staticmethod
-    def copy_archive_file(ext_path=DB_SOURCE_ARCH_PATH, filename=DB_SOURCE_ARCH_NAME):
+    def copy_archive_file(self, ext_path=DB_SOURCE_ARCH_PATH, filename=DB_SOURCE_ARCH_NAME):
         """
         copy an external archive file to working archive directory
         """
         from shutil import copyfile
-        copyfile(ext_path + filename, DB_PATH + DB_SOURCE_ARCH_NAME)
+        copyfile(ext_path + filename, self.db_path + DB_SOURCE_ARCH_NAME)
 
     @staticmethod
-    def delete_souce_archive():
+    def delete_source_archive():
         if os.path.exists(DB_SOURCE_ARCH_PATH):
             print "deleting archive directory"
             import shutil
@@ -80,7 +79,7 @@ class ArchTools:
         """
         returns connection to specified archive
         """
-        full_db_path = DB_PATH + archive_name
+        full_db_path = self.db_path + archive_name
         conn = sqlite3.connect(full_db_path)
         return conn
 
@@ -146,7 +145,7 @@ class ArchTools:
 
     # splitting methods:
     def get_arch_numrows(self, filename):
-        full_path = DB_PATH + filename
+        full_path = self.db_path + filename
         conn = sqlite3.connect(full_path)
         c = conn.cursor()
         numrows = c.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
@@ -195,7 +194,7 @@ class ArchTools:
             self.move_rows_to_new_archive(DB_SOURCE_ARCH_NAME, new_archive, split_size)
         oldest_time = self.get_oldest_row_time(DB_SOURCE_ARCH_NAME)
         last_arch_name=self.archMan.make_arch_name(oldest_time)
-        os.rename(DB_PATH+DB_SOURCE_ARCH_NAME, DB_PATH+last_arch_name)
+        os.rename(self.db_path + DB_SOURCE_ARCH_NAME, self.db_path + last_arch_name)
 
     def print_all_archives(self):
         files = self.archMan.get_archives_list()

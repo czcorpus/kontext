@@ -31,37 +31,13 @@ import redis
 import sqlite3
 
 ARCHIVE_PREFIX = "conc_archive"  # the prefix required for a db file to be considered an archive file
-DB_PATH = '/tmp/test_dbs/'
-DB_SOURCE_ARCH_PATH = '/tmp/test_source/'
-DB_SOURCE_ARCH_NAME = 'source_arch.db'
 DB_FILE_ROWS_LIMIT = 100
-
 
 def redis_connection(host, port, db_id):
     """
     Creates a connection to a Redis instance
     """
     return redis.StrictRedis(host=host, port=port, db=db_id)
-
-
-# PD TO-DO: remove this class
-class SQLite3Ops(object):
-    def __init__(self, db_path):
-        self._db = sqlite3.connect(db_path)
-        self._db.row_factory = sqlite3.Row
-
-    def execute(self, sql, args):
-        cursor = self._db.cursor()
-        cursor.execute(sql, args)
-        return cursor
-
-    def executemany(self, sql, args_rows):
-        cursor = self._db.cursor()
-        cursor.executemany(sql, args_rows)
-        return cursor
-
-    def commit(self):
-        self._db.commit()
 
 
 class Archiver(object):
@@ -140,8 +116,6 @@ def run(conf, num_proc, dry_run):
     from_db = redis_connection(conf.get('plugins', 'db')['default:host'],
                                conf.get('plugins', 'db')['default:port'],
                                conf.get('plugins', 'db')['default:id'])
-    # old db:
-    # to_db = SQLite3Ops(conf.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
 
     archMan = ArchMan()
     to_db = archMan.get_current_archive_conn()
@@ -186,8 +160,8 @@ class ArchMan(object):
     Class to manage archives and connections to archives in the archive directories
     """
 
-    def __init__(self):
-        self.archive_dir_path = DB_PATH
+    def __init__(self, db_path):
+        self.archive_dir_path = db_path
         self.archive_dict = {}
         self.arch_connections = []
         self.update_archives()

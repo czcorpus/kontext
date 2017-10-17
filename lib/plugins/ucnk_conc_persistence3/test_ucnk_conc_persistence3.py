@@ -16,7 +16,7 @@ class ConcTest(unittest.TestCase):
         self.mockRedis = MockRedis()
         self.mockAuth = MockAuth()
         self.conc = ConcPersistence(None, self.mockRedis, self.mockAuth, '/tmp/test_dbs/')
-        self.tools = ArchTools()
+        self.tools = ArchTools('/tmp/test_dbs/')
 
     def setUp(self):
         self.mockRedis.clear()
@@ -69,7 +69,12 @@ class ConcTest(unittest.TestCase):
         run archivation
         check whether the operations got moved from the db to the archive
         """
-        pass
+        for i in range (0,10):
+            test_val = "testvalue"+str(i)
+            self.conc.store(1, dict(q=test_val))
+
+
+
 
     def test_creating_new_archive(self):
         """

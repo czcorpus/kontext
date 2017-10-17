@@ -13,7 +13,7 @@ from archive import DB_SOURCE_ARCH_NAME
 from plugins.ucnk_conc_persistence3 import ConcPersistence
 from plugins.ucnk_conc_persistence3 import mk_key
 
-ArchTools.delete_souce_archive()
+ArchTools.delete_source_archive()
 ArchTools.clear_directory()
 # ArchTools.create_source_archive(20)
 myTools = ArchTools()

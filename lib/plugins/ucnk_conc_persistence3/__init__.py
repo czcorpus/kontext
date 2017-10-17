@@ -24,14 +24,10 @@ script archives old/unused/whatever records from main to the secondary db.
 required config.xml entries:
 
 element conc_persistence {
-  element module { "ucnk_conc_persistence2" }
+  element module { "ucnk_conc_persistence3" }
   element archive_db_path {
     attribute extension-by { "ucnk" }
-    { text } # a path to a sqlite3 database (see SQL below)
-  }
-  element archive_queue_key {
-    attribute extension-by { "ucnk" }
-    { text } # a key used in Redis to access the archive processing queue
+    { text } # a path to the archive sqlite3 database files (see SQL below)
   }
 }
 
@@ -159,7 +155,7 @@ class ConcPersistence(AbstractConcPersistence):
         self._auth = auth
         self._settings = settings  # TO_DO: planned to remove
 
-        self.archMan = ArchMan()
+        self.archMan = ArchMan(db_path)
 
     def _get_ttl_for(self, user_id):
         if self._auth.is_anonymous(user_id):
