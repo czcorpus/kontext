@@ -31,7 +31,9 @@ import redis
 import sqlite3
 
 ARCHIVE_PREFIX = "conc_archive"  # the prefix required for a db file to be considered an archive file
-DB_FILE_ROWS_LIMIT = 100
+ARCHIVE_QUEUE_KEY = 'conc_arch_queue'
+DB_FILE_ROWS_LIMIT = 10
+
 
 def redis_connection(host, port, db_id):
     """
@@ -116,17 +118,31 @@ def run(conf, num_proc, dry_run):
     from_db = redis_connection(conf.get('plugins', 'db')['default:host'],
                                conf.get('plugins', 'db')['default:port'],
                                conf.get('plugins', 'db')['default:id'])
+    db_path = conf.get('plugins')['conc_persistence']['ucnk:archive_db_path']
+    arch_man = ArchMan(db_path)
+    to_db = arch_man.get_current_archive_conn()
 
-    archMan = ArchMan()
-    to_db = archMan.get_current_archive_conn()
-
-    archive_queue_key = conf.get('plugins')['conc_persistence']['ucnk:archive_queue_key']
-    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
+    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
 
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > DB_FILE_ROWS_LIMIT:
-        archMan.create_new_arch()
+        arch_man.create_new_arch(int(time.time()))
+    return response
+
+
+def _run(from_db, db_path, num_proc, dry_run):
+    arch_man = ArchMan(db_path)
+    to_db = arch_man.get_current_archive_conn()
+
+    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
+
+    response = archiver.run(num_proc, dry_run)
+    curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
+    if curr_size > DB_FILE_ROWS_LIMIT:
+        # print "attempting to create new db"
+        time.sleep(1)
+        arch_man.create_new_arch(int(time.time()))
     return response
 
 
@@ -183,7 +199,7 @@ class ArchMan(object):
         time_string = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(creation_time))
         return ARCHIVE_PREFIX + "." + time_string + ".db"
 
-    def create_new_arch(self, creation_time=int(time.time())):
+    def create_new_arch(self, creation_time):
         """
         Create a new archive db file containing the properly formatted "archive" table
         The creationTime optional parameter may be used to specify the epoch time that will
@@ -200,15 +216,12 @@ class ArchMan(object):
         Should be verbose?
         """
         db_name = self.make_arch_name(creation_time)
-        full_db_path = self.archive_dir_path + db_name
+        # print "creating db: ", db_name
+        full_db_path = os.path.join(self.archive_dir_path, db_name)
         if os.path.isfile(full_db_path):
-            error = "archive db file " + full_db_path + "already exists"
-            raise NameError(error)
-        # create the db file by trying to access it
-        print "creating db_file", full_db_path
+            raise NameError("archive db file {0} already exists".format(full_db_path))
         conn = sqlite3.connect(full_db_path)
         c = conn.cursor()
-        # create the sqlite3 table called "archive" with the correct structure
         c.execute("CREATE TABLE archive ("
                   "id text, "
                   "data text NOT NULL, "
@@ -228,7 +241,7 @@ class ArchMan(object):
         if the createNew param is True, new archive is created, otherwise error is thrown
 
         """
-        full_db_path = self.archive_dir_path + filename
+        full_db_path = os.path.join(self.archive_dir_path, filename)
         if not os.path.isfile(full_db_path) and not create_new:
             raise NameError("the specified archive file does not exist in the archive directory")
         else:
@@ -244,13 +257,13 @@ class ArchMan(object):
         # archive must contain single table
         sql = 'SELECT COUNT(*) FROM sqlite_master WHERE type="table";'
         count = c.execute(sql).fetchone()[0]
-        if count <> 1:
+        if count != 1:
             raise TypeError("the archive db file must contain a single table")
 
         # archive table must be named "archive"
         sql = 'SELECT name FROM sqlite_master WHERE type="table";'
         name = c.execute(sql).fetchone()[0]
-        if name <> "archive":
+        if name != "archive":
             raise NameError("the archive table must be named 'archive'")
 
         # archive table must have correct structure
@@ -258,7 +271,7 @@ class ArchMan(object):
         structure = c.execute(sql).fetchone()[0]
         required = "CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))"
         conn.close()
-        if structure <> required:
+        if structure != required:
             raise TypeError("the archive table does not have the required structure")
         return True
 
@@ -278,7 +291,7 @@ class ArchMan(object):
         arch_list = self.get_archives_list()
         connections = []
         for arch in arch_list:
-            full_path = DB_PATH + arch
+            full_path = os.path.join(self.archive_dir_path, arch)
             connections.append(sqlite3.connect(full_path))
         return connections
 
@@ -290,9 +303,11 @@ class ArchMan(object):
 
     def get_current_archive_conn(self):
         """
-        returns the connection to the currently active db_file
+        returns the connection to the currently active db_file. if no archive exists, creates one
         """
         arch_list = self.get_archives_list()
+        if len(arch_list) == 0:
+            arch_list.append(self.create_new_arch(int(time.time())))
         full_path = self.archive_dir_path + arch_list[0]
         return sqlite3.connect(full_path)
 
@@ -306,12 +321,12 @@ class ArchMan(object):
         for arch in arch_list:
             if arch in self.archive_dict:
                 conn = self.archive_dict.get(arch)
-                print ("ArchMan - getting existing connection: ", arch, conn)
+                # print ("ArchMan - getting existing connection: ", arch, conn)
             else:
                 full_path = self.archive_dir_path + arch
                 conn = sqlite3.connect(full_path)
                 self.archive_dict.update({arch: conn})
-                print ("ArchMan - adding new connection: ", arch, conn)
+                # print ("ArchMan - adding new connection: ", arch, conn)
             connections.append(conn)
         self.arch_connections = connections
         # close and pop obsolete connections (in case a previously used archive is removed from the dir)
@@ -320,7 +335,7 @@ class ArchMan(object):
             if arch not in arch_list:
                 adepts.append(arch)
                 conn.close()
-                print ("ArchMan - removing connection to a non-existing file: ", arch)
+                # print ("ArchMan - removing connection to a non-existing file: ", arch)
         for arch in adepts:
             self.archive_dict.pop(arch)
         return True

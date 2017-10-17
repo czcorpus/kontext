@@ -8,6 +8,18 @@ from mock_redis import MockRedis
 from mock_auth import MockAuth
 from archive_tools import ArchTools
 
+import archive
+
+
+def redis_connection(host, port, db_id):
+    """
+    Creates a connection to a Redis instance
+    """
+    return MockRedis()
+
+
+archive.redis_connection = redis_connection
+
 
 class ConcTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -15,7 +27,7 @@ class ConcTest(unittest.TestCase):
 
         self.mockRedis = MockRedis()
         self.mockAuth = MockAuth()
-        self.conc = ConcPersistence(None, self.mockRedis, self.mockAuth, '/tmp/test_dbs/')
+        self.conc = ConcPersistence(None, self.mockRedis, self.mockAuth, '/tmp/test_dbs/', 100, 7)
         self.tools = ArchTools('/tmp/test_dbs/')
 
     def setUp(self):
@@ -65,15 +77,21 @@ class ConcTest(unittest.TestCase):
 
     def test_archivation(self):
         """
-        store 10 operations as authenticated user and 10 operations as anonymous user
+        store 20 operations as authenticated user and 10 operations as anonymous user
         run archivation
         check whether the operations got moved from the db to the archive
         """
-        for i in range (0,10):
-            test_val = "testvalue"+str(i)
+
+        for i in range(0, 20):
+            test_val = "auth_user" + str(i)
             self.conc.store(1, dict(q=test_val))
-
-
+            test_val = "anonymous_user" + str(i)
+            self.conc.store(0, dict(q=test_val))
+        archive._run(self.mockRedis, '/tmp/test_dbs/', 11, False)
+        archive._run(self.mockRedis, '/tmp/test_dbs/', 5, False)
+        curr_arch_size = self.tools.get_arch_numrows(self.conc.archMan.get_current_archive_name())
+        arch_queue_size = len(self.mockRedis.arch_queue)
+        self.assertTrue(arch_queue_size == 4 and curr_arch_size == 5)
 
 
     def test_creating_new_archive(self):
@@ -81,6 +99,7 @@ class ConcTest(unittest.TestCase):
         exceed the limit for creating a new archive, check whether a new one is created after archivation
         """
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -47,10 +47,15 @@ class MockRedis:
 
     def lpop(self, arch_key):
         # param arch_key is only used to simulate a redis call
-        return self.arch_queue.pop(0)
+        popped = self.arch_queue.pop(0)
+        return json.dumps(popped)
 
     def list_append(self, archive_queue_key, dict):
         self.arch_queue.append(dict)
+
+    def llen(self, key):
+        if key=="conc_arch_queue":
+            return len(self.arch_queue)
 
     # ----------------
     # extra methods:

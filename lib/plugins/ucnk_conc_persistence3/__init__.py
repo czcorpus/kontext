@@ -27,8 +27,14 @@ element conc_persistence {
   element module { "ucnk_conc_persistence3" }
   element archive_db_path {
     attribute extension-by { "ucnk" }
-    { text } # a path to the archive sqlite3 database files (see SQL below)
+    { text } # a path to the archive sqlite3 database files directory (see SQL below)
   }
+  element archive_rows_limit {
+    attribute extension-by { "ucnk" }
+    { text } # the maximum number of rows an archive file can contain before a new archive is created.
+    the limit is only checked after each run of the archiver, so the actual number of rows may exceed this limit
+    by the num_proc argument passed to the archive.run method
+    }
 }
 
 archive db:
@@ -47,9 +53,7 @@ import hashlib
 import time
 import re
 import json
-import sqlite3
 import uuid
-import os
 import archive
 
 import plugins
@@ -141,15 +145,13 @@ class ConcPersistence(AbstractConcPersistence):
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
 
-    # TO-DO: verify this value against the current config file
-    ARCHIVE_QUEUE_KEY = "conc_arch_queue"
     DEFAULT_TTL_DAYS = 100
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
-    def __init__(self, settings, db, auth, db_path, ttl_days=100, anonymous_user_ttl_days=7):
+    def __init__(self, settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days):
         self.ttl = ttl_days * 24 * 3600
         self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
-        self._archive_queue_key = ConcPersistence.ARCHIVE_QUEUE_KEY  # removed: plugin_conf['ucnk:archive_queue_key']
+        self._archive_queue_key = archive.ARCHIVE_QUEUE_KEY
 
         self.db = db
         self._auth = auth
