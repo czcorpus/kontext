@@ -156,6 +156,7 @@
         <issue_reporting>
             <module>default_issue_reporting</module>
         </issue_reporting>
+        <token_detail />
     </plugins>
 </kontext>
 

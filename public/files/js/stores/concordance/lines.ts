@@ -203,7 +203,7 @@ function importLines(data:Array<ServerLineData>):Immutable.List<Line> {
     function importTextChunk(item:ServerTextChunk):TextChunk {
         return {
             className: item.class,
-            text: item.str,
+            text: item.str.trim().split(' '),
             openLink: item.open_link ? {speechPath: item.open_link.speech_path} : undefined,
             closeLink: item.close_link ? {speechPath: item.close_link.speech_path} : undefined,
             continued: item.continued,

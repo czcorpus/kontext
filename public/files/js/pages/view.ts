@@ -67,6 +67,8 @@ import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
+import tokenDetailInit from 'plugins/tokenDetail/init';
+
 
 export class ViewPageStores {
     lineSelectionStore:LineSelectionStore;
@@ -900,7 +902,24 @@ export class ViewPage {
         return this.queryStores.textTypesStore;
     }
 
-    private initStores(ttStore:TextTypes.ITextTypesStore, syntaxViewer:PluginInterfaces.ISyntaxViewer):ViewConfiguration {
+    private initTokenDetail():RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin> {
+        if (this.layoutModel.pluginIsActive('token_detail')) {
+            return tokenDetailInit(
+                this.layoutModel.pluginApi(),
+                this.layoutModel.getConf<Array<string>>('alignedCorpora')
+            );
+
+        } else {
+            return new RSVP.Promise<any>(
+                (resolve:(d)=>void, reject:(err)=>void) => {
+                    resolve(null); // TODO is 'null' enough?
+                }
+            );
+        }
+    }
+
+    private initStores(ttStore:TextTypes.ITextTypesStore, syntaxViewer:PluginInterfaces.ISyntaxViewer,
+                tokenDetail:PluginInterfaces.TokenDetail.IPlugin):ViewConfiguration {
 
         const concSummaryProps:ConcSummary = {
             concSize: this.layoutModel.getConf<number>('ConcSize'),
@@ -999,7 +1018,8 @@ export class ViewPage {
                 speechOverlapVal: lineViewProps.SpeechOverlapVal
             },
             lineViewProps.SpeakerColors,
-            lineViewProps.WideCtxGlobals
+            lineViewProps.WideCtxGlobals,
+            tokenDetail
         );
         this.viewStores.refsDetailStore = new RefsDetailStore(
             this.layoutModel,
@@ -1018,21 +1038,30 @@ export class ViewPage {
      *
      */
     init():RSVP.Promise<any> {
-        const p1 = this.layoutModel.init().then(
-            () => {
-                const sv = syntaxViewerInit(this.layoutModel.pluginApi());
-                if (sv) {
-                    return sv;
+        const p0 = RSVP.all([
+            this.layoutModel.init().then(
+                () => {
+                    const sv = syntaxViewerInit(this.layoutModel.pluginApi());
+                    if (sv) {
+                        return sv;
+                    }
+                    return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
+                        resolve(new DummySyntaxViewStore(this.layoutModel.dispatcher));
+                    });
                 }
-                return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-                    resolve(new DummySyntaxViewStore(this.layoutModel.dispatcher));
-                });
-            }
+            ),
+            this.initTokenDetail()
+        ]);
 
-        ).then(
-            (sv) => {
+        const p1 = p0.then(
+            (args) => {
                 const ttStore = this.initTextTypesStore();
-                const lineViewProps = this.initStores(ttStore, sv);
+                const [sv, tokenDetailPlg] = args;
+                const lineViewProps = this.initStores(
+                    ttStore,
+                    <PluginInterfaces.ISyntaxViewer>sv,
+                    <PluginInterfaces.TokenDetail.IPlugin>tokenDetailPlg
+                );
                 // we must handle non-React widgets:
                 lineViewProps.onChartFrameReady = (usePrevData:boolean) => {
                     this.showGroupsStats(
@@ -1045,7 +1074,6 @@ export class ViewPage {
             	this.concViews = concViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.layoutViews,
                     this.viewStores
                 );
                 return lineViewProps;

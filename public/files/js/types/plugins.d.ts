@@ -135,6 +135,35 @@ declare module PluginInterfaces {
         getWidgetView():React.Component;
 
     }
+
+
+    export namespace TokenDetail {
+
+
+        export interface Response {
+            items:Array<{
+                renderer:string;
+                contents:Array<[string, string]>;
+                status:number;
+                heading:string;
+            }>;
+        }
+
+        export interface DataAndRenderer {
+            renderer:React.Component;
+            contents:Array<[string, string]>;
+            status:number;
+            heading:string;
+        }
+
+
+        export interface IPlugin {
+
+            fetchTokenDetail(corpusId:string, tokenId:number):RSVP.Promise<Array<DataAndRenderer>>;
+
+            selectRenderer(typeId:string):React.Component;
+        }
+    }
 }
 
 /*
@@ -218,4 +247,12 @@ declare module "plugins/subcmixer/init" {
 
 declare module "plugins/issueReporting/init" {
     export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting>;
+}
+
+
+declare module "plugins/tokenDetail/init" {
+    export default function create(
+        pluginApi:Kontext.PluginApi,
+        alignedCorpora:Array<string>
+    ):RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin>;
 }

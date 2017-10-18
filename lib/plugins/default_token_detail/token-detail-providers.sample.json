@@ -1,0 +1,17 @@
+[
+  {
+    "ident": "wiktionary_for_ic_9_en",
+    "heading": {
+      "en_US": "Wiktionary",
+      "cs_CZ": "Wiktionary"
+    },
+    "backend": "plugins.default_token_detail.backends.HTTPBackend",
+    "frontend": "plugins.default_token_detail.frontends.RawHtmlFrontend",
+    "conf": {
+      "server": "en.wiktionary.org",
+      "path": "/w/index.php?title={0}&action=render",
+      "ssl": true,
+      "port": 443
+    }
+  }
+]

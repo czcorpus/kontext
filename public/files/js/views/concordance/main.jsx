@@ -26,7 +26,9 @@ import {init as concDetailViewsInit} from 'views/concordance/detail';
 import {init as concSaveViewsInit} from 'views/concordance/save';
 
 
-export function init(dispatcher, he, layoutViews, stores) {
+export function init(dispatcher, he, stores) {
+
+    const layoutViews = he.getLayoutViews();
 
     const lineSelectionStore = stores.lineSelectionStore;
     const lineStore = stores.lineViewStore;
@@ -39,8 +41,8 @@ export function init(dispatcher, he, layoutViews, stores) {
 
     const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, he, lineStore);
-    const linesViews = linesViewInit(dispatcher, he, lineStore, lineSelectionStore);
-    const concDetailViews = concDetailViewsInit(dispatcher, he, layoutViews, concDetailStore, refsDetailStore, lineStore);
+    const linesViews = linesViewInit(dispatcher, he, lineStore, lineSelectionStore, concDetailStore);
+    const concDetailViews = concDetailViewsInit(dispatcher, he, concDetailStore, refsDetailStore, lineStore);
     const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, concSaveStore);
 
 
@@ -558,7 +560,10 @@ export function init(dispatcher, he, layoutViews, stores) {
 
         _fetchStoreState() {
             return {
-                concDetailMetadata: concDetailStore.getConcDetailMetadata(),
+                hasConcDetailData: concDetailStore.hasConcDetailData(),
+                tokenDetailData: concDetailStore.getTokenDetailData(),
+                tokenDetailIsBusy: concDetailStore.getTokenDetailIsBusy(),
+                concDetailStoreIsBusy: concDetailStore.getIsBusy(),
                 refsDetailData: refsDetailStore.getData(),
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
@@ -589,15 +594,27 @@ export function init(dispatcher, he, layoutViews, stores) {
 
         _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
             if (concDetailStore.getDefaultViewMode() === 'default') {
-                dispatcher.dispatch({
-                    actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
-                    props: {
-                        corpusId: corpusId,
-                        tokenNumber: tokenNumber,
-                        kwicLength: kwicLength,
-                        lineIdx: lineIdx
-                    }
-                });
+                if (kwicLength > 0) {
+                    dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
+                        props: {
+                            corpusId: corpusId,
+                            tokenNumber: tokenNumber,
+                            kwicLength: kwicLength,
+                            lineIdx: lineIdx
+                        }
+                    });
+
+                } else if (kwicLength === -1) {
+                    dispatcher.dispatch({
+                        actionType: 'CONCORDANCE_SHOW_TOKEN_DETAIL',
+                        props: {
+                            corpusId: corpusId,
+                            tokenNumber: tokenNumber,
+                            lineIdx: lineIdx
+                        }
+                    });
+                }
 
             } else if (concDetailStore.getDefaultViewMode() === 'speech') {
                 dispatcher.dispatch({
@@ -662,6 +679,11 @@ export function init(dispatcher, he, layoutViews, stores) {
             refsDetailStore.removeChangeListener(this._handleStoreChange);
         }
 
+        _shouldDisplayConcDetailBox() {
+            return this.state.hasConcDetailData || this.state.tokenDetailData.length > 0 ||
+                    this.state.concDetailStoreIsBusy || this.state.tokenDetailIsBusy;
+        }
+
         render() {
             return (
                 <div>
@@ -671,18 +693,8 @@ export function init(dispatcher, he, layoutViews, stores) {
                                 kwicLength={this.state.syntaxBoxData.kwicLength}
                                 onReady={this.props.onSyntaxPaneReady}
                                 onClose={this.props.onSyntaxPaneClose} /> : null}
-                    {this.state.concDetailMetadata ?
-                        <concDetailViews.ConcDetail
-                            closeClickHandler={this._handleDetailCloseClick}
-                            corpusId={this.state.concDetailMetadata.corpusId}
-                            tokenNumber={this.state.concDetailMetadata.tokenNumber}
-                            kwicLength={this.state.concDetailMetadata.kwicLength}
-                            lineIdx={this.state.concDetailMetadata.lineIdx}
-                            speakerIdAttr={this.state.concDetailMetadata.speakerIdAttr}
-                            speechOverlapAttr={this.state.concDetailMetadata.speechOverlapAttr}
-                            speechOverlapVal={this.state.concDetailMetadata.speechOverlapVal}
-                            speechSegment={this.state.concDetailMetadata.speechSegment}
-                            speakerColors={this.props.SpeakerColors} />
+                    {this._shouldDisplayConcDetailBox() ?
+                        <concDetailViews.TokenDetail closeClickHandler={this._handleDetailCloseClick} />
                         : null
                     }
                     {this.state.refsDetailData ?
@@ -713,7 +725,7 @@ export function init(dispatcher, he, layoutViews, stores) {
                         <linesViews.ConcLines {...this.props}
                             supportsSyntaxView={this.state.supportsSyntaxView}
                             onSyntaxViewClick={this._handleSyntaxBoxClick}
-                            concDetailClickHandler={this._detailClickHandler}
+                            tokenDetailClickHandler={this._detailClickHandler}
                             refsDetailClickHandler={this._refsDetailClickHandler} />
                     </div>
                     <div id="conc-bottom-bar">
