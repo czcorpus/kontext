@@ -16,11 +16,36 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+Default token_detail plug-in allows attaching external services (dictionaries, encyclopediae)
+to concordance tokens. A special JSON file (see token-detail-providers.sample.json) defines
+a set of providers where a provider always contains a backend, frontend and identifier.
+
+* **backend** specifies an adapter used to access a data source (e.g. a REST service),
+* **frontend** specifies an object used to export fetched data (server part) and render them (client part),
+* **identifier** is referred in corplist.xml by individual corpora to attach one or more providers per corpus.
+
+
+The JSON config file defines a template of an abstract path identifying a resource. It can be a URL path, SQL
+or a filesystem path. Such a template can use the following values: word, lemma, tag, ui_lang, other_lang.
+
+Required XML configuration:
+
+element token_detail {
+  element module { "default_token_detail" }
+  element js_module { "defaultTokenDetail" }
+  element providers_conf {
+    attribute extension-by { "default" }
+    { text } # a path to a JSON configuration file containing all available backends and frontends
+  }
+}
+"""
 
 import json
 import importlib
 import logging
 
+import manatee
 import plugins
 from plugins.abstract.token_detail import AbstractTokenDetail
 from actions import concordance
@@ -35,12 +60,26 @@ def fetch_token_detail(self, request):
     (i.e. the one translated via attr.pos2str(...)).
     """
     token_id = request.args['token_id']
+
     wa = self.corp.get_attr('word')
-    token_data = wa.pos2str(int(token_id))
+    word = wa.pos2str(int(token_id))
+
+    try:
+        la = self.corp.get_attr('lemma')
+        lemma = la.pos2str(int(token_id))
+    except manatee.AttrNotFound:
+        lemma = ''
+
+    try:
+        ta = self.corp.get_attr('tag')
+        tag = ta.pos2str(int(token_id))
+    except manatee.AttrNotFound:
+        tag = ''
+
     with plugins.runtime.TOKEN_DETAIL as td, plugins.runtime.CORPARCH as ca:
         corpus_info = ca.get_corpus_info(self.ui_lang, self.corp.corpname)
         resp_data = td.fetch_data(corpus_info.token_detail.providers,
-                                  token_data, None, None, self.ui_lang)
+                                  word, lemma, tag, self.args.align, self.ui_lang)
     return dict(items=[item for item in resp_data])
 
 
@@ -86,11 +125,11 @@ class DefaultTokenDetail(AbstractTokenDetail):
         self._providers = providers
         self._corparch = corparch
 
-    def fetch_data(self, provider_ids, word, lemma, pos, lang):
+    def fetch_data(self, provider_ids, word, lemma, tag, aligned_corpora, lang):
         ans = []
         for backend, frontend in self._map_providers(provider_ids):
             try:
-                data, status = backend.fetch_data(word, lemma, pos, lang)
+                data, status = backend.fetch_data(word, lemma, tag, aligned_corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
@@ -110,6 +149,6 @@ class DefaultTokenDetail(AbstractTokenDetail):
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
     conf = settings.get('plugins', 'token_detail')
-    with open(conf['providers'], 'rb') as fr:
+    with open(conf['default:providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
     return DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)

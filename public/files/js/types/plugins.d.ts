@@ -251,5 +251,8 @@ declare module "plugins/issueReporting/init" {
 
 
 declare module "plugins/tokenDetail/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin>;
+    export default function create(
+        pluginApi:Kontext.PluginApi,
+        alignedCorpora:Array<string>
+    ):RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin>;
 }

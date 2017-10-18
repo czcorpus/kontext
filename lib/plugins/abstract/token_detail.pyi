@@ -18,6 +18,10 @@
 
 from typing import Dict, Any, List, Tuple
 
+from plugins.abstract import CorpusDependentPlugin
+import kontext
+
+
 class Response(object):
 
     contents:basestring
@@ -32,7 +36,7 @@ class Response(object):
 
 class AbstractBackend(object):
 
-    def fetch_data(self, providers:List[str], word:basestring, lemma:basestring, pos:basestring,
+    def fetch_data(self, word:basestring, lemma:basestring, tag:basestring, aligned_corpora:List[str],
                    lang:str) -> Tuple[Any, int]: ...
 
 
@@ -43,7 +47,11 @@ class AbstractFrontend(object):
     def export_data(self, data:Any, status:int, lang:str) -> Response: ...
 
 
-class AbstractTokenDetail(object):
+class AbstractTokenDetail(CorpusDependentPlugin):
 
-    def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, pos:basestring,
-                   lang:str) -> List[[Any, int]]: ...
+    def fetch_data(self, provider_ids:List[str], word:basestring, lemma:basestring, tag:basestring,
+                   aligned_corpora:List[str], lang:str) -> List[[Any, int]]: ...
+
+    def get_required_structattrs(self) -> List[str]: ...
+
+    def is_enabled_for(self, plugin_api:kontext.PluginApi, corpname:basestring) -> bool: ...

@@ -59,7 +59,7 @@ class Response(object):
 
 class AbstractBackend(object):
 
-    def fetch_data(self, word, lemma, pos, lang):
+    def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
         raise NotImplementedError()
 
 
@@ -86,8 +86,21 @@ class AbstractFrontend(object):
 
 class AbstractTokenDetail(CorpusDependentPlugin):
 
-    def fetch_data(self, providers, word, lemma, pos, lang):
+    def fetch_data(self, provider_ids, word, lemma, tag, aligned_corpora, lang):
+        """
+        Obtain (in a synchronous way) data from all the backends
+        identified by a list of provider ids.
+        """
         raise NotImplementedError()
+
+    def get_required_structattrs(self):
+        """
+        Return a list of structural attributes (encoded as [structure].[attribute]
+        e.g. "doc.id") required by the plug-in to be able to trigger request
+        for information about structure (instead of a common token which is simply
+        identified by its numeric token ID).
+        """
+        return []
 
     def is_enabled_for(self, plugin_api, corpname):
         raise NotImplementedError()

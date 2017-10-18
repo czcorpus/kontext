@@ -904,7 +904,10 @@ export class ViewPage {
 
     private initTokenDetail():RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin> {
         if (this.layoutModel.pluginIsActive('token_detail')) {
-            return tokenDetailInit(this.layoutModel.pluginApi());
+            return tokenDetailInit(
+                this.layoutModel.pluginApi(),
+                this.layoutModel.getConf<Array<string>>('alignedCorpora')
+            );
 
         } else {
             return new RSVP.Promise<any>(

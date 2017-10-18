@@ -16,6 +16,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+This module contains supported frontends for default_token_detail.
+Please note that each of the frontends is paired with a concrete React component
+on the client-side (see plugins/defaultTokenDetail/init.py method selectRenderer()).
+"""
+
 from plugins.abstract.token_detail import AbstractFrontend
 
 
