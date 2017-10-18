@@ -128,7 +128,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
             const ans = [];
             props.data.text.forEach((s, i) => {
                 ans.push(' ');
-                ans.push(<mark key={`${props.position}:${props.idx}:${i}`} data-tokenid={mkTokenId(i)}>{s}</mark>);
+                ans.push(<mark className={props.supportsTokenDetail ? 'active' : null}
+                               key={`${props.position}:${props.idx}:${i}`} data-tokenid={mkTokenId(i)}>{s}</mark>);
             });
             ans.push(' ');
             return ans;
@@ -138,21 +139,26 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
             if (hasClass('coll') && !hasClass('col0')) {
                 return(
                     <em key={mkKey()} className={props.data.className}>
-                        {props.data.text}
+                        {props.data.text.join(' ')}
                     </em>
                 );
 
             } else {
                 return (
                     <span key={mkKey()} className={props.data.className}>
-                        {props.data.text}
+                        {props.data.text.join(' ')}
                     </span>
                 );
             }
 
         } else {
+            const tokenDetailInfo1 = props.supportsTokenDetail ? he.translate('concview__click_to_see_external_token_info') : '';
+            const tokenDetailInfo2 = props.supportsTokenDetail ? '(' + he.translate('concview__click_to_see_external_token_info') + ')' : '';
+            const metadata = (props.data.mouseover || []);
+            const title = metadata.length > 0 ? `${metadata.join(', ')} ${tokenDetailInfo2}` : tokenDetailInfo1;
+
             return (
-                <span key={mkKey()} title={(props.data.mouseover || []).join(', ')}>
+                <span key={mkKey()} title={title}>
                     {splitTokens(props.data.text)}
                 </span>
             );
@@ -185,7 +191,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                 ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            ans.push(<NonKwicText data={item} idx={i} position="l" chunkOffset={-1 * chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum} />);
+            ans.push(<NonKwicText data={item} idx={i} position="l" chunkOffset={-1 * chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum}
+                            supportsTokenDetail={this.props.supportsTokenDetail} />);
             if (item.closeLink) {
                 ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
@@ -206,20 +213,19 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                         chunks={[itemList.get(i - 1), item]} />);
             }
             if (hasKwic) {
-                ans.push(<strong key={'k:' + String(i)} className={item.className} title={mouseover}>{item.text}</strong>);
+                ans.push(<strong key={`k:${i}`} className={item.className} title={mouseover}>{item.text.join(' ')}</strong>);
 
-            } else if (!item.text) {
+            } else if (!item.text) { // TODO test array length??
                 ans.push('<--not translated-->');
 
             } else {
-                ans.push(item.text);
+                ans.push(<span key={`k:${i}`}>{item.text.join(' ')} </span>);
             }
             return ans;
         }
 
         _renderRightChunk(chunkOffsets, kwicTokenNum, prevBlockClosed, item, i, itemList) {
             const ans = [];
-            const mouseover = (item.mouseover || []).join(', ');
             const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
             if (prevClosed && item.openLink) {
                 ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
@@ -233,7 +239,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                 ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            ans.push(<NonKwicText data={item} idx={i} position="r" chunkOffset={chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum} />);
+            ans.push(<NonKwicText data={item} idx={i} position="r" chunkOffset={chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum}
+                            supportsTokenDetail={this.props.supportsTokenDetail} />);
             if (item.closeLink) {
                 ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
@@ -316,7 +323,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
         }
 
         _renderTextSimple(corpusOutput, corpusIdx) {
-            const mp  = v => v.text;
+            const mp  = v => v.text.join(' ');
             return corpusOutput.left.map(mp)
                     .concat(corpusOutput.kwic.map(mp))
                     .concat(corpusOutput.right.map(mp))
