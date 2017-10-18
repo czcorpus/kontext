@@ -304,6 +304,8 @@ declare module Kontext {
         EmptyQueryOverviewBar:React.Component;
         ImgWithMouseover:React.Component;
         IssueReportingLink:React.Component;
+        AjaxLoaderImage:React.Component;
+        AjaxLoaderBarImage:React.Component;
     }
 
     /**

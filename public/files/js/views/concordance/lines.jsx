@@ -25,7 +25,7 @@ import {calcTextColorFromBg, color2str, importColor} from '../../util';
 import {init as lineExtrasViewsInit} from './lineExtras';
 
 
-export function init(dispatcher, he, lineStore, lineSelectionStore) {
+export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailStore) {
 
     const mediaViews = initMediaViews(dispatcher, he, lineStore);
     const extras = lineExtrasViewsInit(dispatcher, he);
@@ -128,7 +128,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
             const ans = [];
             props.data.text.forEach((s, i) => {
                 ans.push(' ');
-                ans.push(<mark key={`${props.position}:${props.idx}:${i}`} data-tokenId={mkTokenId(i)}>{s}</mark>);
+                ans.push(<mark key={`${props.position}:${props.idx}:${i}`} data-tokenid={mkTokenId(i)}>{s}</mark>);
             });
             ans.push(' ');
             return ans;
@@ -251,9 +251,15 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
 
         _renderTextKwicMode(corpname, corpusOutput) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
-            const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
-                corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenId'))
-            );
+            const handleTokenClick = (evt) => {
+                if (this.props.supportsTokenDetail) {
+                    const tokenId = evt.target.getAttribute('data-tokenid');
+                    if (tokenId !== null) {
+                        this._handleNonKwicTokenClick(
+                            corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid')));
+                    }
+                }
+            };
             return [
                 <td
                         key="lc"
@@ -281,7 +287,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         _renderTextParMode(corpname, corpusOutput) {
             const hasKwic = this.props.corpsWithKwic.indexOf(corpname) > -1;
             const handleTokenClick = (evt) => this._handleNonKwicTokenClick(
-                corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenId'))
+                corpname, this.props.lineIdx, Number(evt.target.getAttribute('data-tokenid'))
             );
             return [
                 <td key="par" className={this._exportTextElmClass(corpname, 'par')}>
@@ -444,7 +450,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                 useSafeFont: lineStore.getUseSafeFont(),
                 emptyRefValPlaceholder: lineStore.getEmptyRefValPlaceholder(),
                 corporaColumns: lineStore.getCorporaColumns(),
-                viewMode: lineStore.getViewMode()
+                viewMode: lineStore.getViewMode(),
+                supportsTokenDetail: concDetailStore.supportsTokenDetail()
             };
         }
 
@@ -455,6 +462,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         componentDidMount() {
             lineStore.addChangeListener(this._storeChangeListener);
             lineSelectionStore.addChangeListener(this._storeChangeListener);
+            concDetailStore.addChangeListener(this._storeChangeListener);
             if (typeof this.props.onReady === 'function') { // <-- a glue with legacy code
                 this.props.onReady();
             }
@@ -463,6 +471,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
         componentWillUnmount() {
             lineStore.removeChangeListener(this._storeChangeListener);
             lineSelectionStore.removeChangeListener(this._storeChangeListener);
+            concDetailStore.removeChangeListener(this._storeChangeListener);
         }
 
         _getCatColors(dataItem) {
@@ -496,7 +505,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore) {
                          catBgColor={catColor[0]}
                          catTextColor={catColor[1]}
                          supportsSyntaxView={this.props.supportsSyntaxView}
-                         onSyntaxViewClick={this.props.onSyntaxViewClick} />;
+                         onSyntaxViewClick={this.props.onSyntaxViewClick}
+                         supportsTokenDetail={this.state.supportsTokenDetail} />;
         }
 
         render() {

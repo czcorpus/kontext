@@ -26,7 +26,9 @@ import {init as concDetailViewsInit} from 'views/concordance/detail';
 import {init as concSaveViewsInit} from 'views/concordance/save';
 
 
-export function init(dispatcher, he, layoutViews, stores) {
+export function init(dispatcher, he, stores) {
+
+    const layoutViews = he.getLayoutViews();
 
     const lineSelectionStore = stores.lineSelectionStore;
     const lineStore = stores.lineViewStore;
@@ -39,8 +41,8 @@ export function init(dispatcher, he, layoutViews, stores) {
 
     const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, he, lineStore);
-    const linesViews = linesViewInit(dispatcher, he, lineStore, lineSelectionStore);
-    const concDetailViews = concDetailViewsInit(dispatcher, he, layoutViews, concDetailStore, refsDetailStore, lineStore);
+    const linesViews = linesViewInit(dispatcher, he, lineStore, lineSelectionStore, concDetailStore);
+    const concDetailViews = concDetailViewsInit(dispatcher, he, concDetailStore, refsDetailStore, lineStore);
     const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, concSaveStore);
 
 
@@ -558,8 +560,9 @@ export function init(dispatcher, he, layoutViews, stores) {
 
         _fetchStoreState() {
             return {
-                concDetailMetadata: concDetailStore.getConcDetailMetadata(),
+                hasConcDetailData: concDetailStore.hasConcDetailData(),
                 tokenDetailData: concDetailStore.getTokenDetailData(),
+                tokenDetailIsBusy: concDetailStore.getTokenDetailIsBusy(),
                 concDetailStoreIsBusy: concDetailStore.getIsBusy(),
                 refsDetailData: refsDetailStore.getData(),
                 usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
@@ -677,8 +680,8 @@ export function init(dispatcher, he, layoutViews, stores) {
         }
 
         _shouldDisplayConcDetailBox() {
-            return this.state.concDetailMetadata || this.state.tokenDetailData.length > 0 ||
-                    this.state.concDetailStoreIsBusy;
+            return this.state.hasConcDetailData || this.state.tokenDetailData.length > 0 ||
+                    this.state.concDetailStoreIsBusy || this.state.tokenDetailIsBusy;
         }
 
         render() {
@@ -691,11 +694,7 @@ export function init(dispatcher, he, layoutViews, stores) {
                                 onReady={this.props.onSyntaxPaneReady}
                                 onClose={this.props.onSyntaxPaneClose} /> : null}
                     {this._shouldDisplayConcDetailBox() ?
-                        <concDetailViews.TokenDetail
-                            concDetailStoreIsBusy={this.state.concDetailStoreIsBusy}
-                            closeClickHandler={this._handleDetailCloseClick}
-                            concDetailMetadata={this.state.concDetailMetadata}
-                            tokenDetailData={this.state.tokenDetailData} />
+                        <concDetailViews.TokenDetail closeClickHandler={this._handleDetailCloseClick} />
                         : null
                     }
                     {this.state.refsDetailData ?

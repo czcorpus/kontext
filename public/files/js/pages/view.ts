@@ -913,7 +913,6 @@ export class ViewPage {
                 }
             );
         }
-
     }
 
     private initStores(ttStore:TextTypes.ITextTypesStore, syntaxViewer:PluginInterfaces.ISyntaxViewer,
@@ -1072,7 +1071,6 @@ export class ViewPage {
             	this.concViews = concViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.layoutViews,
                     this.viewStores
                 );
                 return lineViewProps;

@@ -24,9 +24,10 @@ import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str} from '../../util';
 
 
-export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailStore, lineStore) {
+export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore) {
 
     const mediaViews = initMediaViews(dispatcher, he, lineStore);
+    const layoutViews = he.getLayoutViews();
 
 
     // ------------------------- <RefLine /> ---------------------------
@@ -166,6 +167,87 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
         }
     };
 
+    // ------------------------- <TokenExternalInfo /> ---------------------------
+
+    const TokenExternalInfo = (props) => {
+        if (props.tokenDetailIsBusy) {
+            return (
+                <div className="token-detail" style={{textAlign: 'center'}}>
+                    <layoutViews.AjaxLoaderImage />
+                </div>
+            );
+
+        } else {
+            return (
+                <div className="token-detail">
+                    {props.tokenDetailData.map((v, i) => {
+                        return (
+                            <div key={`resource:${i}`}>
+                                {v.heading ? <h3>{v.heading}</h3> : null}
+                                <v.renderer data={v.contents} />
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+    }
+
+    // ------------------------- <KwicDetailView /> ---------------------------
+
+    const KwicDetailView = (props) => {
+
+        const isWaitingExpand = (side) => {
+            return props.storeIsBusy && props.expandingSide === side;
+        };
+
+        const expandClickHandler = (position) => {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_EXPAND_KWIC_DETAIL',
+                props: {
+                    position: position
+                }
+            });
+        };
+
+        const handleDisplayWholeDocumentClick = () => {
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
+                props: {}
+            });
+        };
+
+        return (
+            <div>
+                {props.hasExpandLeft ?
+                    <ExpandConcDetail position="left" isWaiting={isWaitingExpand('left')}
+                        clickHandler={() => expandClickHandler('left')} />
+                : null
+                }
+
+                {(props.data || []).map((item, i) => {
+                    return (
+                        <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>
+                    );
+                })}
+
+                {props.hasExpandRight ?
+                    <ExpandConcDetail position="right" isWaiting={isWaitingExpand('right')}
+                            clickHandler={() => expandClickHandler('right')} />
+                    : null
+                }
+                {props.canDisplayWholeDocument ?
+                    <div className="footer">
+                        <a id="ctx-link" onClick={handleDisplayWholeDocumentClick}>
+                            {he.translate('concview__display_whole_document')}
+                        </a>
+                    </div>
+                    : null
+                }
+            </div>
+        );
+    };
+
     // ------------------------- <DefaultView /> ---------------------------
 
     class DefaultView extends React.Component {
@@ -174,38 +256,25 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
             super(props);
             this.state = this._fetchStoreState();
             this._storeChangeHandler = this._storeChangeHandler.bind(this);
-            this._handleDisplayWholeDocumentClick = this._handleDisplayWholeDocumentClick.bind(this);
         }
 
         _fetchStoreState() {
             return {
                 data: concDetailStore.getConcDetail(),
+                hasConcDetailData: concDetailStore.hasConcDetailData(),
                 hasExpandLeft: concDetailStore.hasExpandLeft(),
                 hasExpandRight: concDetailStore.hasExpandRight(),
                 canDisplayWholeDocument: concDetailStore.canDisplayWholeDocument(),
                 expandingSide: concDetailStore.getExpaningSide(),
-                storeIsBusy: concDetailStore.getIsBusy()
+                storeIsBusy: concDetailStore.getIsBusy(),
+                tokenDetailIsBusy: concDetailStore.getTokenDetailIsBusy(),
+                tokenDetailData: concDetailStore.getTokenDetailData(),
+                hasTokenDetailData: concDetailStore.hasTokenDetailData()
             };
-        }
-
-        _expandClickHandler(position) {
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_EXPAND_KWIC_DETAIL',
-                props: {
-                    position: position
-                }
-            });
         }
 
         _storeChangeHandler(store, action) {
             this.setState(this._fetchStoreState());
-        }
-
-        _handleDisplayWholeDocumentClick() {
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
-                props: {}
-            });
         }
 
         componentDidMount() {
@@ -221,54 +290,21 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
         }
 
         render() {
-            if (this.props.concDetailStoreIsBusy) {
-                return (
-                    <div style={{textAlign: 'center'}}>
-                        <img src={he.createStaticUrl('img/ajax-loader.gif')}
-                            alt={he.translate('global__loading')} />
-                    </div>
-                );
-
-            } else {
-                return (
-                    <div className="concordance_DefaultView">
-                        {this.state.hasExpandLeft ?
-                            <ExpandConcDetail position="left" isWaiting={this._isWaitingExpand('left')}
-                                    clickHandler={this._expandClickHandler.bind(this, 'left')} />
-                            : null
-                        }
-                        {(this.state.data || []).map((item, i) => {
-                            return (
-                                <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>
-                            );
-                        })}
-                        {this.state.hasExpandRight ?
-                            <ExpandConcDetail position="right" isWaiting={this._isWaitingExpand('right')}
-                                    clickHandler={this._expandClickHandler.bind(this, 'right')} />
-                            : null
-                        }
-                        {this.state.canDisplayWholeDocument ?
-                            <div className="footer">
-                                <a id="ctx-link" onClick={this._handleDisplayWholeDocumentClick}>
-                                    {he.translate('concview__display_whole_document')}
-                                </a>
-                            </div>
-                            : null
-                        }
-                        <hr />
-                        <div className="token-detail">
-                            {this.props.tokenDetailData.map((v, i) => {
-                                return (
-                                    <div key={`resource:${i}`}>
-                                        {v.heading ? <h3>{v.heading}</h3> : null}
-                                        <v.renderer data={v.contents} />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
-            }
+            return (
+                <div className="concordance_DefaultView">
+                    {this.state.hasConcDetailData ?
+                        <KwicDetailView storeIsBusy={this.state.storeIsBusy}
+                                        expandingSide={this.state.expandingSide}
+                                        hasExpandLeft={this.state.hasExpandLeft}
+                                        hasExpandRight={this.state.hasExpandRight}
+                                        data={this.state.data}
+                                        canDisplayWholeDocument={this.state.canDisplayWholeDocument} /> :
+                        null}
+                    {this.state.hasConcDetailData && this.state.hasConcDetailData ? <hr /> : null}
+                    <TokenExternalInfo tokenDetailData={this.state.tokenDetailData}
+                            tokenDetailIsBusy={this.state.tokenDetailIsBusy} />
+                </div>
+            );
         }
     }
 
@@ -712,33 +748,6 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
             });
         }
 
-        _reloadData(mode) {
-            switch (mode) {
-                case 'default':
-                    dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
-                        props: {
-                            corpusId: this.props.corpusId,
-                            tokenNumber: this.props.tokenNumber,
-                            kwicLength: this.props.kwicLength,
-                            lineIdx: this.props.lineIdx
-                        }
-                    });
-                break;
-                case 'speech':
-                    dispatcher.dispatch({
-                        actionType: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
-                        props: {
-                            corpusId: this.props.corpusId,
-                            tokenNumber: this.props.tokenNumber,
-                            kwicLength: this.props.kwicLength,
-                            lineIdx: this.props.lineIdx
-                        }
-                    });
-                break;
-            }
-        }
-
         componentDidMount() {
             concDetailStore.addChangeListener(this._storeChangeHandler);
         }
@@ -750,22 +759,11 @@ export function init(dispatcher, he, layoutViews, concDetailStore, refsDetailSto
         _renderContents() {
             switch (this.state.mode) {
                 case 'default':
-                    return <DefaultView
-                                corpusId={this.props.corpusId}
-                                tokenNumber={this.props.tokenNumber}
-                                kwicLength={this.props.kwicLength}
-                                lineIdx={this.props.lineIdx}
-                                tokenDetailData={this.props.tokenDetailData}
-                                concDetailStoreIsBusy={this.props.concDetailStoreIsBusy} />;
+                    return <DefaultView />;
                 case 'speech':
-                    return <SpeechView
-                                corpusId={this.props.corpusId}
-                                tokenNumber={this.props.tokenNumber}
-                                kwicLength={this.props.kwicLength}
-                                lineIdx={this.props.lineIdx}
-                                speechOverlapAttr={this.props.speechOverlapAttr}
-                                speechOverlapVal={this.props.speechOverlapVal}
-                                speechSegment={this.props.speechSegment} />;
+                    return <SpeechView speechOverlapAttr={this.props.speechOverlapAttr}
+                                       speechOverlapVal={this.props.speechOverlapVal}
+                                       speechSegment={this.props.speechSegment} />;
             }
         }
 

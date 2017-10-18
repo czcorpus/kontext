@@ -458,6 +458,18 @@ export function init(dispatcher, he, storeProvider) {
         }
     };
 
+    // ------------------------ <AjaxLoaderImage /> --------------------------------
+
+    const AjaxLoaderImage = (props) => {
+        return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
+    };
+
+    // ------------------------ <AjaxLoaderBarImage /> --------------------------------
+
+    const AjaxLoaderBarImage = (props) => {
+        return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
+    };
+
 
     // ------------------------------------------------------------------------------------
 
@@ -470,6 +482,8 @@ export function init(dispatcher, he, storeProvider) {
         CorpnameInfoTrigger: CorpnameInfoTrigger,
         EmptyQueryOverviewBar: EmptyQueryOverviewBar,
         ImgWithMouseover: ImgWithMouseover,
-        IssueReportingLink: IssueReportingLink
+        IssueReportingLink: IssueReportingLink,
+        AjaxLoaderImage: AjaxLoaderImage,
+        AjaxLoaderBarImage: AjaxLoaderBarImage
     };
 }

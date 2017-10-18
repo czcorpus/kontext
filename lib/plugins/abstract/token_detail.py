@@ -42,6 +42,8 @@ it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
 
+from plugins.abstract import CorpusDependentPlugin
+
 
 class Response(object):
 
@@ -82,7 +84,10 @@ class AbstractFrontend(object):
         return Response(contents='', renderer='', status=status, heading=heading)
 
 
-class AbstractTokenDetail(object):
+class AbstractTokenDetail(CorpusDependentPlugin):
 
     def fetch_data(self, providers, word, lemma, pos, lang):
+        raise NotImplementedError()
+
+    def is_enabled_for(self, plugin_api, corpname):
         raise NotImplementedError()

@@ -84,7 +84,8 @@ declare module "views/concordance/lines" {
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         lineStore:Kontext.PageStore,
-        lineSelectionStore:Kontext.PageStore
+        lineSelectionStore:Kontext.PageStore,
+        concDetailStore:Kontext.PageStore
     ):ConcLinesViews;
 }
 
@@ -111,7 +112,6 @@ declare module "views/concordance/main" {
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
         stores:any // TODO type
     ):ConcordanceView;
 }
@@ -125,8 +125,9 @@ declare module "views/concordance/detail" {
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        concDetailStore:Kontext.PageStore
+        concDetailStore:Kontext.PageStore,
+        refsDetailStore:Kontext.PageStore,
+        lineStore:Kontext.PageStore
     ):RefDetail;
 }
 

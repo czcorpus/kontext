@@ -136,6 +136,8 @@ export class ConcDetailStore extends SimplePageStore {
 
     private isBusy:boolean;
 
+    private tokenDetailIsBusy:boolean;
+
     /**
      * Currently expanded side. In case the store is not busy the
      * value represent last expanded side (it is not reset after expansion).
@@ -168,6 +170,7 @@ export class ConcDetailStore extends SimplePageStore {
         this.expandRightArgs = Immutable.List<ExpandArgs>();
         this.tokenDetailPlg = tokenDetailPlg;
         this.tokenDetailData = [];
+        this.concDetail = null;
         this.audioPlayer = new AudioPlayer(
             this.layoutModel.createStaticUrl('misc/soundmanager2/'),
             () => {
@@ -186,6 +189,7 @@ export class ConcDetailStore extends SimplePageStore {
             }
         );
         this.isBusy = false;
+        this.tokenDetailIsBusy = false;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -216,6 +220,7 @@ export class ConcDetailStore extends SimplePageStore {
                 break;
                 case 'CONCORDANCE_SHOW_KWIC_DETAIL':
                     this.isBusy = true;
+                    this.tokenDetailIsBusy = true;
                     this.mode = 'default';
                     this.expandLeftArgs = Immutable.List<ExpandArgs>();
                     this.expandRightArgs = Immutable.List<ExpandArgs>();
@@ -228,8 +233,11 @@ export class ConcDetailStore extends SimplePageStore {
                             this.expandLeftArgs.size > 1 && this.expandRightArgs.size > 1 ? 'reload' : null
                     ).then(
                         () => {
-                            this.isBusy = true;
+                            this.isBusy = false;
+                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
+                            this.linesStore.notifyChangeListeners();
                             this.notifyChangeListeners();
+
                             return this.loadTokenDetail(
                                 payload.props['corpusId'],
                                 payload.props['tokenNumber'],
@@ -239,14 +247,13 @@ export class ConcDetailStore extends SimplePageStore {
 
                     ).then(
                         () => {
-                            this.isBusy = false;
-                            this.linesStore.setLineFocus(payload.props['lineIdx'], true);
-                            this.linesStore.notifyChangeListeners();
+                            this.tokenDetailIsBusy = false;
                             this.notifyChangeListeners();
                         }
                     ).catch(
                         (err) => {
                             this.isBusy = false;
+                            this.tokenDetailIsBusy = false;
                             this.notifyChangeListeners();
                             this.layoutModel.showMessage('error', err);
                         }
@@ -254,7 +261,7 @@ export class ConcDetailStore extends SimplePageStore {
                 break;
                 case 'CONCORDANCE_SHOW_TOKEN_DETAIL':
                     this.resetKwicDetail();
-                    this.isBusy = true;
+                    this.tokenDetailIsBusy = true;
                     this.notifyChangeListeners();
                     this.loadTokenDetail(
                         payload.props['corpusId'],
@@ -263,13 +270,13 @@ export class ConcDetailStore extends SimplePageStore {
 
                     ).then(
                         () => {
-                            this.isBusy = false;
+                            this.tokenDetailIsBusy = false;
                             this.notifyChangeListeners();
                         }
 
                     ).catch(
                         (err) => {
-                            this.isBusy = false;
+                            this.tokenDetailIsBusy = false;
                             this.layoutModel.showMessage('error', err);
                             this.notifyChangeListeners();
                         }
@@ -395,6 +402,10 @@ export class ConcDetailStore extends SimplePageStore {
 
     getConcDetail():ConcDetailText {
         return this.concDetail;
+    }
+
+    hasConcDetailData():boolean {
+        return this.concDetail !== null;
     }
 
     getSpeechesDetail():SpeechLines {
@@ -703,35 +714,28 @@ export class ConcDetailStore extends SimplePageStore {
         return this.mode;
     }
 
-    getConcDetailMetadata() {
-        if (this.kwicTokenNum) {
-            const baseCn = this.linesStore.getBaseCorpname();
-            return {
-                corpusId: this.corpusId,
-                tokenNumber: this.kwicTokenNum,
-                kwicLength: this.kwicLength,
-                lineIdx: this.lineIdx,
-                speakerIdAttr: baseCn === this.corpusId ? this.speechOpts.speakerIdAttr : null,
-                speechOverlapAttr: baseCn === this.corpusId ? this.speechOpts.speechOverlapAttr : null,
-                speechOverlapVal: baseCn === this.corpusId ? this.speechOpts.speechOverlapVal : null,
-                speechSegment: baseCn === this.corpusId ? this.speechOpts.speechSegment : null
-            };
-
-        } else {
-            return null;
-        }
-    }
-
     getTokenDetailData():Array<PluginInterfaces.TokenDetail.DataAndRenderer> {
         return this.tokenDetailData;
+    }
+
+    hasTokenDetailData():boolean {
+        return this.tokenDetailData.length > 0;
     }
 
     getIsBusy():boolean {
         return this.isBusy;
     }
 
+    getTokenDetailIsBusy():boolean {
+        return this.tokenDetailIsBusy;
+    }
+
     getExpaningSide():string {
         return this.expaningSide;
+    }
+
+    supportsTokenDetail():boolean {
+        return !!this.tokenDetailPlg;
     }
 }
 

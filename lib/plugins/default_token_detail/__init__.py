@@ -82,8 +82,9 @@ def init_provider(conf):
 
 class DefaultTokenDetail(AbstractTokenDetail):
 
-    def __init__(self, providers):
+    def __init__(self, providers, corparch):
         self._providers = providers
+        self._corparch = corparch
 
     def fetch_data(self, provider_ids, word, lemma, pos, lang):
         ans = []
@@ -98,12 +99,17 @@ class DefaultTokenDetail(AbstractTokenDetail):
     def _map_providers(self, provider_ids):
         return [self._providers[ident] for ident in provider_ids]
 
+    def is_enabled_for(self, plugin_api, corpname):
+        corpus_info = self._corparch.get_corpus_info(plugin_api.user_lang, corpname)
+        return len(corpus_info.token_detail.providers) > 0
+
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
 
 
-def create_instance(settings):
+@plugins.inject(plugins.runtime.CORPARCH)
+def create_instance(settings, corparch):
     conf = settings.get('plugins', 'token_detail')
-    with open(conf['backends'], 'rb') as fr:
+    with open(conf['providers'], 'rb') as fr:
         providers_conf = json.load(fr)
-    return DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf))
+    return DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
