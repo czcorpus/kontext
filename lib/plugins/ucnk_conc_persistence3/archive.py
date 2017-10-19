@@ -177,20 +177,41 @@ class ArchMan(object):
     """
     Class to manage archives and connections to archives in the archive directories
     """
+    DEFAULT_SOURCE_ARCH_FILENAME = 'source_arch.db'  # used for temp copy of source arch in working dir
 
     def __init__(self, db_path, arch_rows_limit):
         self.archive_dir_path = db_path
         self.archive_dict = {}
         self.arch_connections = []
-        self.check_archive_dir_exists(db_path)
+        self.check_archive_dir_exists()
         self.update_archives()
         self.arch_rows_limit = arch_rows_limit
+        self.source_arch_name = ArchMan.DEFAULT_SOURCE_ARCH_FILENAME
 
-    @staticmethod
-    def check_archive_dir_exists(db_path):
-        if not os.path.exists(db_path):
-            os.makedirs(db_path)
+    # ------------------------------
+    # directory manipulation methods
+    # ------------------------------
+    def check_archive_dir_exists(self):
+        if not os.path.exists(self.archive_dir_path):
+            os.makedirs(self.archive_dir_path)
 
+    def clear_directory(self):
+        """
+        clear the archive db files directory
+        """
+        for f in sorted(os.listdir(self.archive_dir_path)):
+            os.remove(self.archive_dir_path + f)
+
+    def copy_archive_file(self, source_arch_full_path):
+        """
+        copy an external archive file to working archive directory
+        """
+        from shutil import copyfile
+        copyfile(source_arch_full_path, self.archive_dir_path + self.source_arch_name)
+
+    # -------------------------------------
+    # archive files and connections methods
+    # -------------------------------------
     @staticmethod
     def is_db_filename_valid(filename):
         """
@@ -348,3 +369,59 @@ class ArchMan(object):
         for arch in adepts:
             self.archive_dict.pop(arch)
         return True
+
+    # --------------------------------
+    # source archive splitting methods
+    # --------------------------------
+    def get_arch_numrows(self, filename):
+        full_path = self.archive_dir_path + filename
+        conn = sqlite3.connect(full_path)
+        c = conn.cursor()
+        numrows = c.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
+        conn.close()
+        return numrows
+
+    def get_oldest_row_time(self, filename):
+        """
+        returns the epoch time of the oldest row in the archive
+        """
+        conn = self.connect_to_archive(filename)
+        return conn.execute("SELECT created FROM archive ORDER BY created LIMIT 1;").fetchone()[0]
+
+    def move_rows_to_new_archive(self, old_file, new_file, rows):
+        old_conn = self.connect_to_archive(old_file)
+        new_conn = self.connect_to_archive(new_file)
+        print "moving", rows, "rows from ", old_file, "to", new_file
+        for old_row in old_conn.execute("SELECT * FROM archive ORDER BY created LIMIT " + str(rows)):
+            new_conn.execute("INSERT INTO archive VALUES (?,?,?,?,?);", old_row)
+        new_conn.commit()
+        old_conn.execute("DELETE FROM archive ORDER BY created LIMIT " + str(rows))
+        old_conn.commit()
+
+    def split_archive(self, source_arch_full_path, number_of_archives):
+        """
+        splits the source archive into specified number of archive files named using isodate naming convention
+        using the datetime of the oldest row in the respected created archive
+        finally, the last remaining rows are left in the source file and this file is renamed
+        the source archive file must be placed outside the working directory, the method takes its path and filename
+        as parameters and makes a copy of the source file in the working dir
+        """
+        path, filename = os.path.split(source_arch_full_path)
+        if not str.endswith(filename, ".db"):
+            print "the source file does not seem to be an archive db file"
+        print "copying the following source archive into working directory: ", source_arch_full_path
+        self.copy_archive_file(source_arch_full_path)
+        print "starting to split archive: ", source_arch_full_path
+
+        orig_size = self.get_arch_numrows(self.source_arch_name)
+        print "original archive size: ", orig_size
+        split_size = int(orig_size / number_of_archives)
+        print "split archives size: ", split_size
+        for i in range(0, number_of_archives - 1):
+            oldest_time = self.get_oldest_row_time(self.source_arch_name)
+            print "oldest_time", oldest_time
+            new_archive = self.create_new_arch(oldest_time)
+            self.move_rows_to_new_archive(self.source_arch_name, new_archive, split_size)
+        oldest_time = self.get_oldest_row_time(self.source_arch_name)
+        last_arch_name = self.make_arch_name(oldest_time)
+        os.rename(self.archive_dir_path + self.source_arch_name, self.archive_dir_path + last_arch_name)

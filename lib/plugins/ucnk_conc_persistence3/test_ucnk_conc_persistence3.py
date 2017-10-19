@@ -17,10 +17,13 @@
 Unittests for the ucnk_conc_persistence3 plugin
 """
 import json
+import sqlite3
 import unittest
+import time
+
+import os
 
 import archive
-from archive_tools import ArchTools
 from mock_auth import MockAuth
 from mock_redis import MockRedis
 from plugins.ucnk_conc_persistence3 import ConcPersistence
@@ -43,11 +46,11 @@ class ConcTest(unittest.TestCase):
         self.mockRedis = MockRedis()
         self.mockAuth = MockAuth()
         self.conc = ConcPersistence(None, self.mockRedis, self.mockAuth, '/tmp/test_dbs/', 100, 7, 10)
-        self.tools = ArchTools('/tmp/test_dbs/')
+        self.source_arch_path = '/tmp/test_source/'  # used just for the aux methods for testing
 
     def setUp(self):
         self.mockRedis.clear()
-        self.tools.clear_directory()
+        self.conc.archMan.clear_directory()
 
     # ----------------------------
     # test Archive Manager methods
@@ -104,22 +107,96 @@ class ConcTest(unittest.TestCase):
             self.conc.store(0, dict(q=test_val))
         archive._run(self.mockRedis, '/tmp/test_dbs/', 11, False)
         archive._run(self.mockRedis, '/tmp/test_dbs/', 5, False)
-        curr_arch_size = self.tools.get_arch_numrows(self.conc.archMan.get_current_archive_name())
+        curr_arch_size = self.conc.archMan.get_arch_numrows(self.conc.archMan.get_current_archive_name())
         arch_queue_size = len(self.mockRedis.arch_queue)
         self.assertTrue(arch_queue_size == 4 and curr_arch_size == 5)
 
-
-    def test_creating_new_archive(self):
+    def test_split_archive(self):
         """
-        exceed the limit for creating a new archive, check whether a new one is created after archivation
+        in an external directory, create a source archive containing 20 rows, split it into 3 archives
+        check whether 3 archives exist in the working directory and contain correct total number of 20 rows
+        and whether the "youngest" archive contains 8 rows
+        """
+        self.delete_source_archive()
+        self.create_source_archive(20)
+        full_source_path = self.source_arch_path + self.conc.archMan.DEFAULT_SOURCE_ARCH_FILENAME
+        self.conc.archMan.split_archive(full_source_path, 3)
+        arch_list = self.conc.archMan.get_archives_list(self)
+        total_files = 0
+        total_rows = 0
+        for arch in reversed(arch_list):
+            total_files += 1
+            current_rows = self.conc.archMan.get_arch_numrows(arch)
+            total_rows += current_rows
+        self.assertTrue(total_files == 3 and total_rows == 20 and current_rows == 8)
+
+    def test_num_access(self):
+        """
+        create a single old archive, store a value, try to access it, check whether num_access gets increased
         """
         pass
+
 
     def test_export_actions(self):
         """
         TO-DO: definitely test the concPers.export_actions method
         """
         pass
+
+# -------------
+# aux methods
+# -------------
+    def print_all_archives(self):
+        files = self.conc.archMan.get_archives_list()
+        for f in files:
+            self.print_archive(f)
+
+    def delete_source_archive(self):
+        if os.path.exists(self.source_arch_path):
+            print "deleting archive directory"
+            import shutil
+            shutil.rmtree(self.source_arch_path)
+
+    def create_source_archive(self, num_rows=20):
+        """
+        create a sample source file containing an "archive" table with the given number of rows
+        """
+        if not os.path.exists(self.source_arch_path):
+            os.makedirs(self.source_arch_path)
+            print "creating working directory:", self.source_arch_path
+
+        full_db_path = self.source_arch_path + self.conc.archMan.DEFAULT_SOURCE_ARCH_FILENAME
+        if os.path.exists(full_db_path):
+            print "source archive already exists: ", full_db_path
+        else:
+            print "creating database: ", full_db_path
+            conn = sqlite3.connect(full_db_path)
+            c = conn.cursor()
+            # create the sqlite3 table called "archive" with the correct structure
+            c.execute("CREATE TABLE archive ("
+                      "id text, "
+                      "data text NOT NULL, "
+                      "created integer NOT NULL, "
+                      "num_access integer NOT NULL DEFAULT 0, "
+                      "last_access integer, "
+                      "PRIMARY KEY (id))")
+            startTime = int(time.time())
+            for i in range(0, num_rows):
+                datajson = json.dumps('value' + str(i))
+                c.execute("INSERT INTO archive (id, data, created) VALUES (?, ?, ?)",
+                          ('key' + str(i), datajson, startTime + i))
+            conn.commit()
+            conn.close()
+
+    def print_archive(self, archive_name):
+        """
+        prints all the rows in the specified archive file
+        """
+        print "-----"
+        print "contents of archive: ", archive_name
+        curs = self.conc.archMan.connect_to_archive(archive_name).cursor()
+        for row in curs.execute("SELECT * FROM archive ORDER BY created DESC"):
+            print row
 
 
 if __name__ == '__main__':
