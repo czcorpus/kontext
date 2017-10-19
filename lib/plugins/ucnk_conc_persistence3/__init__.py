@@ -1,6 +1,7 @@
-# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,8 +19,8 @@
 
 """
 A modified implementation of default_conc_persistence plug-in which looks into
-a secondary archive in case a key is not found. It is expected that an external
-script archives old/unused/whatever records from main to the secondary db.
+multiple secondary archives in case a key is not found. It is expected that an external
+script archives old/unused/whatever records from the main db to the secondary db(s).
 
 required config.xml entries:
 
@@ -31,8 +32,8 @@ element conc_persistence {
   }
   element archive_rows_limit {
     attribute extension-by { "ucnk" }
-    { text } # the maximum number of rows an archive file can contain before a new archive is created.
-    the limit is only checked after each run of the archiver, so the actual number of rows may exceed this limit
+    { text } # the maximum number of rows an archive file can contain before a new archive is created,
+    the limit is checked after each run of the archiver, so the actual number of rows may exceed this limit
     by the num_proc argument passed to the archive.run method
     }
 }
@@ -147,8 +148,9 @@ class ConcPersistence(AbstractConcPersistence):
 
     DEFAULT_TTL_DAYS = 100
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
+    DEFAULT_ARCHIVE_ROWS_LIMIT = 1000000
 
-    def __init__(self, settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days):
+    def __init__(self, settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days, arch_rows_limit):
         self.ttl = ttl_days * 24 * 3600
         self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
         self._archive_queue_key = archive.ARCHIVE_QUEUE_KEY
@@ -157,7 +159,7 @@ class ConcPersistence(AbstractConcPersistence):
         self._auth = auth
         self._settings = settings  # TO_DO: planned to remove
 
-        self.archMan = ArchMan(db_path)
+        self.archMan = ArchMan(db_path, arch_rows_limit)
 
     def _get_ttl_for(self, user_id):
         if self._auth.is_anonymous(user_id):
@@ -260,7 +262,7 @@ class ConcPersistence(AbstractConcPersistence):
         return archive_concordance,
 
     def export_actions(self):
-        return {actions.concordance.Actions: [create_arch_conc_action(self.db, self._archives[0])]}
+        return {actions.concordance.Actions: [create_arch_conc_action(self.db, self.archMan.arch_connections[0])]}
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)
@@ -273,5 +275,5 @@ def create_instance(settings, db, auth):
     ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
     anonymous_user_ttl_days = int(
         plugin_conf.get('default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
-
-    return ConcPersistence(settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days)
+    arch_rows_limit = int(plugin_conf.get('ucnk:archive_rows_limit', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+    return ConcPersistence(settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days, arch_rows_limit)

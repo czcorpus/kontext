@@ -1,4 +1,7 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2017 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,7 +35,6 @@ import sqlite3
 
 ARCHIVE_PREFIX = "conc_archive"  # the prefix required for a db file to be considered an archive file
 ARCHIVE_QUEUE_KEY = 'conc_arch_queue'
-DB_FILE_ROWS_LIMIT = 10
 
 
 def redis_connection(host, port, db_id):
@@ -126,20 +128,20 @@ def run(conf, num_proc, dry_run):
 
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
-    if curr_size > DB_FILE_ROWS_LIMIT:
+    if curr_size > arch_man.arch_rows_limit:
         arch_man.create_new_arch(int(time.time()))
     return response
 
 
 def _run(from_db, db_path, num_proc, dry_run):
-    arch_man = ArchMan(db_path)
+    arch_man = ArchMan(db_path, 10)
     to_db = arch_man.get_current_archive_conn()
 
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
 
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
-    if curr_size > DB_FILE_ROWS_LIMIT:
+    if curr_size > arch_man.arch_rows_limit:
         # print "attempting to create new db"
         time.sleep(1)
         arch_man.create_new_arch(int(time.time()))
@@ -176,11 +178,18 @@ class ArchMan(object):
     Class to manage archives and connections to archives in the archive directories
     """
 
-    def __init__(self, db_path):
+    def __init__(self, db_path, arch_rows_limit):
         self.archive_dir_path = db_path
         self.archive_dict = {}
         self.arch_connections = []
+        self.check_archive_dir_exists(db_path)
         self.update_archives()
+        self.arch_rows_limit = arch_rows_limit
+
+    @staticmethod
+    def check_archive_dir_exists(db_path):
+        if not os.path.exists(db_path):
+            os.makedirs(db_path)
 
     @staticmethod
     def is_db_filename_valid(filename):

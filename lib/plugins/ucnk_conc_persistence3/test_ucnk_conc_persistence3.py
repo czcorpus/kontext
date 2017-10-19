@@ -1,14 +1,29 @@
+# Copyright (c) 2017 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+"""
+Unittests for the ucnk_conc_persistence3 plugin
+"""
 import json
 import unittest
 
-import time
-
-from plugins.ucnk_conc_persistence3 import ConcPersistence
-from mock_redis import MockRedis
-from mock_auth import MockAuth
-from archive_tools import ArchTools
-
 import archive
+from archive_tools import ArchTools
+from mock_auth import MockAuth
+from mock_redis import MockRedis
+from plugins.ucnk_conc_persistence3 import ConcPersistence
 
 
 def redis_connection(host, port, db_id):
@@ -27,7 +42,7 @@ class ConcTest(unittest.TestCase):
 
         self.mockRedis = MockRedis()
         self.mockAuth = MockAuth()
-        self.conc = ConcPersistence(None, self.mockRedis, self.mockAuth, '/tmp/test_dbs/', 100, 7)
+        self.conc = ConcPersistence(None, self.mockRedis, self.mockAuth, '/tmp/test_dbs/', 100, 7, 10)
         self.tools = ArchTools('/tmp/test_dbs/')
 
     def setUp(self):
@@ -77,7 +92,7 @@ class ConcTest(unittest.TestCase):
 
     def test_archivation(self):
         """
-        store 20 operations as authenticated user and 10 operations as anonymous user
+        store 20 operations as authenticated user and 20 operations as anonymous user
         run archivation
         check whether the operations got moved from the db to the archive
         """
@@ -97,6 +112,12 @@ class ConcTest(unittest.TestCase):
     def test_creating_new_archive(self):
         """
         exceed the limit for creating a new archive, check whether a new one is created after archivation
+        """
+        pass
+
+    def test_export_actions(self):
+        """
+        TO-DO: definitely test the concPers.export_actions method
         """
         pass
 
