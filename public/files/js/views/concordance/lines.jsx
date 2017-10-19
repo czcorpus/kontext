@@ -219,7 +219,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                 ans.push('<--not translated-->');
 
             } else {
-                ans.push(<span key={`k:${i}`}>{item.text.join(' ')} </span>);
+                ans.push(<span key={`k:${i}`} className={item.className === 'strc' ? 'strc' : null}>{item.text.join(' ')} </span>);
             }
             return ans;
         }
