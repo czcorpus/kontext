@@ -333,13 +333,13 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
                         chunks={[itemList.get(i - 1), item]} />);
             }
             if (hasKwic) {
-                ans.push(<strong key={'k:' + String(i)} className={item.className} title={mouseover}>{item.text}</strong>);
+                ans.push(<strong key={`k:${i}`} className={item.className} title={mouseover}>{item.text}</strong>);
 
             } else if (!item.text) {
                 ans.push('<--not translated-->');
 
             } else {
-                ans.push(item.text);
+                ans.push(<span key={`k:${i}`} className={item.className === 'strc' ? 'strc' : null}>{item.text} </span>);
             }
             return ans;
         },
