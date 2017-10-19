@@ -181,7 +181,8 @@ class ConcPersistence(AbstractConcPersistence):
         """
         return bool(re.match(r'~[0-9a-zA-Z]+', data_id))
 
-    def _execute_sql(self, conn, sql, args=()):
+    @staticmethod
+    def _execute_sql(conn, sql, args=()):
         cursor = conn.cursor()
         cursor.execute(sql, args)
         return cursor

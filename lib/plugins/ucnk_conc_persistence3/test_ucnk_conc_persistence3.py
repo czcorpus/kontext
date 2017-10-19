@@ -64,9 +64,6 @@ class ConcTest(unittest.TestCase):
         self.assertTrue(filename == 'conc_archive.2017-10-17T12:00:00.db'
                         and self.conc.archMan.is_db_filename_valid(filename))
 
-    def test_archive_creation(self):
-        pass
-
     # ----------------------------
     # test ConcPersistence methods
     # ----------------------------
@@ -143,7 +140,7 @@ class ConcTest(unittest.TestCase):
             test_val = "value" + str(i)
             key_val.append([self.conc.store(1, dict(q=test_val)), test_val])
 
-        arch_rows_limit = 30 # do not exceed archive rows limit
+        arch_rows_limit = 30  # do not exceed archive rows limit
         archive._run(self.mockRedis, '/tmp/test_dbs/', 10, False, arch_rows_limit)
         self.mockRedis.clear()
         correct = True
@@ -154,15 +151,35 @@ class ConcTest(unittest.TestCase):
 
     def test_num_access(self):
         """
-        create a single old archive, store a value, try to access it, check whether num_access gets increased
+        store 10 operations as auth user, archive them, delete them from "redis"
+        access the third row three times, access the fifth row five times
+        check the num_access and last_access values
+        (since the last_access can differ by 1s, check that 8 rows have NULL)
         """
-        pass
+        key_val = []
+        for i in range(0, 10):
+            test_val = "value" + str(i)
+            key_val.append([self.conc.store(1, dict(q=test_val)), test_val])
 
-    def test_export_actions(self):
-        """
-        TO-DO: definitely test the concPers.export_actions method
-        """
-        pass
+        arch_rows_limit = 30  # do not exceed archive rows limit
+        archive._run(self.mockRedis, '/tmp/test_dbs/', 10, False, arch_rows_limit)
+        self.mockRedis.clear()
+
+        for i in range(0, 3):
+            self.conc.open(key_val[2][0]).get('q')
+        for i in range(0, 5):
+            self.conc.open(key_val[4][0]).get('q')
+        conn = self.conc.archMan.get_current_archive_conn()
+        c = conn.cursor()
+        res1 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (key_val[2][0],)).fetchone()
+        res2 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (key_val[4][0],)).fetchone()
+        res3 = c.execute("SELECT COUNT(*) FROM archive WHERE last_access IS NULL").fetchone()
+        msg = ""
+        if res1[0] != 3 or res2[0] != 5:
+            msg += "incorrect num_access value "
+        if res3[0] != 8:
+            msg += "incorrect number of last_access values"
+        self.assertTrue(res1[0] == 3 and res2[0] == 5 and res3[0] == 8, msg)
 
     # -------------
     # aux methods
