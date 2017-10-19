@@ -5,24 +5,11 @@ class MockRedis:
     """
     mock the necessary methods of the redis db plugin
     """
-    prefix = "concordance:"
+    conc_prefix = "concordance:"
 
     def __init__(self):
         self.concordances = []
         self.arch_queue = []
-        # data in redis is stored as string(key), jsonString(value)
-        # concordances and archive_queue should be rather filled using the ConcPersistance.store method
-        # fill "concordances":
-        """
-        for i in range(0, size):
-            self.concordances.append((self.prefix + 'key' + str(i), json.dumps('value' + str(i))))
-            """
-        # fill "archive queue":
-        """
-        for i in range(0, size / 2):
-            item = dict(key=json.dumps('key' + str(i)))
-            self.arch_queue.append(item)
-            """
 
     def set(self, key, data):
         """
@@ -38,10 +25,10 @@ class MockRedis:
         pass
 
     def get(self, key, default=None):
-        res = None
+        res = default
         for t in self.concordances:
             if t[0] == key:
-                res = t[1]
+                res = json.loads(t[1])
                 break
         return res
 
@@ -50,11 +37,11 @@ class MockRedis:
         popped = self.arch_queue.pop(0)
         return json.dumps(popped)
 
-    def list_append(self, archive_queue_key, dict):
-        self.arch_queue.append(dict)
+    def list_append(self, archive_queue_key, value_dict):
+        self.arch_queue.append(value_dict)
 
     def llen(self, key):
-        if key=="conc_arch_queue":
+        if key == "conc_arch_queue":
             return len(self.arch_queue)
 
     # ----------------
@@ -81,22 +68,17 @@ class MockRedis:
         for i in self.concordances:
             print (i)
 
+    def get_keys(self):
+        keys = []
+        for i in self.concordances:
+            keys.append(i[0][len(self.conc_prefix):])
+        return keys
 
-"""
-mock = MockRedis(10)
-print("concordances:")
-mock.print_concordances()
-print("queue:")
-mock.print_arch_queue()
-print("pop one:")
-qitem = mock.lpop('key')
-print "quitem:", qitem
-key = json.loads(qitem['key'])
-# = qitem['key']
-# print "key:", key
-print key, json.loads(mock.get(key))
+    def fill_concordances(self, size):
+        for i in range(0, size):
+            self.concordances.append((self.conc_prefix + 'key' + str(i), json.dumps('value' + str(i))))
 
-print("after popping:")
-mock.print_arch_queue()
-
-"""
+    def fill_arch_queue(self, size):
+        for i in range(0, size):
+            item = dict(key=json.dumps('key' + str(i)))
+            self.arch_queue.append(item)

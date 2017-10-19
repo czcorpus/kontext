@@ -78,7 +78,7 @@ class ConcTest(unittest.TestCase):
         """
         test_val = "testvalue123"
         data_id = self.conc.store(1, dict(q=test_val))
-        stored_val = (json.loads(self.conc.open(data_id))).get('q')
+        stored_val = self.conc.open(data_id).get('q')
         self.assertEqual(test_val, stored_val)
 
     def test_db_store_auth_user(self):
@@ -97,16 +97,18 @@ class ConcTest(unittest.TestCase):
         """
         store 20 operations as authenticated user and 20 operations as anonymous user
         run archivation
-        check whether the operations got moved from the db to the archive
+        check whether the operations got copied from the db to the archive
         """
-
         for i in range(0, 20):
             test_val = "auth_user" + str(i)
             self.conc.store(1, dict(q=test_val))
             test_val = "anonymous_user" + str(i)
             self.conc.store(0, dict(q=test_val))
-        archive._run(self.mockRedis, '/tmp/test_dbs/', 11, False)
-        archive._run(self.mockRedis, '/tmp/test_dbs/', 5, False)
+        arch_rows_limit = 10
+        # exceed the limit by archiving 11 rows, new archive is created afterwards
+        archive._run(self.mockRedis, '/tmp/test_dbs/', 11, False, arch_rows_limit)
+        # archive another 5 rows to the newly created archive
+        archive._run(self.mockRedis, '/tmp/test_dbs/', 5, False, arch_rows_limit)
         curr_arch_size = self.conc.archMan.get_arch_numrows(self.conc.archMan.get_current_archive_name())
         arch_queue_size = len(self.mockRedis.arch_queue)
         self.assertTrue(arch_queue_size == 4 and curr_arch_size == 5)
@@ -124,11 +126,31 @@ class ConcTest(unittest.TestCase):
         arch_list = self.conc.archMan.get_archives_list(self)
         total_files = 0
         total_rows = 0
+        current_rows = 0
         for arch in reversed(arch_list):
             total_files += 1
             current_rows = self.conc.archMan.get_arch_numrows(arch)
             total_rows += current_rows
         self.assertTrue(total_files == 3 and total_rows == 20 and current_rows == 8)
+
+    def test_search_in_archive(self):
+        """
+        store 10 operations as auth user, archive them, delete them from "redis"
+        check whether they can be found in the archives
+        """
+        key_val = []
+        for i in range(0, 10):
+            test_val = "value" + str(i)
+            key_val.append([self.conc.store(1, dict(q=test_val)), test_val])
+
+        arch_rows_limit = 30 # do not exceed archive rows limit
+        archive._run(self.mockRedis, '/tmp/test_dbs/', 10, False, arch_rows_limit)
+        self.mockRedis.clear()
+        correct = True
+        for i in key_val:
+            if i[1] != self.conc.open(i[0]).get('q'):
+                correct = False
+        self.assertTrue(correct)
 
     def test_num_access(self):
         """
@@ -136,16 +158,15 @@ class ConcTest(unittest.TestCase):
         """
         pass
 
-
     def test_export_actions(self):
         """
         TO-DO: definitely test the concPers.export_actions method
         """
         pass
 
-# -------------
-# aux methods
-# -------------
+    # -------------
+    # aux methods
+    # -------------
     def print_all_archives(self):
         files = self.conc.archMan.get_archives_list()
         for f in files:
@@ -153,7 +174,7 @@ class ConcTest(unittest.TestCase):
 
     def delete_source_archive(self):
         if os.path.exists(self.source_arch_path):
-            print "deleting archive directory"
+            # print "deleting archive directory"
             import shutil
             shutil.rmtree(self.source_arch_path)
 
@@ -163,13 +184,11 @@ class ConcTest(unittest.TestCase):
         """
         if not os.path.exists(self.source_arch_path):
             os.makedirs(self.source_arch_path)
-            print "creating working directory:", self.source_arch_path
+            # print "creating working directory:", self.source_arch_path
 
         full_db_path = self.source_arch_path + self.conc.archMan.DEFAULT_SOURCE_ARCH_FILENAME
-        if os.path.exists(full_db_path):
-            print "source archive already exists: ", full_db_path
-        else:
-            print "creating database: ", full_db_path
+        if not os.path.exists(full_db_path):
+            # print "creating database: ", full_db_path
             conn = sqlite3.connect(full_db_path)
             c = conn.cursor()
             # create the sqlite3 table called "archive" with the correct structure
@@ -180,11 +199,11 @@ class ConcTest(unittest.TestCase):
                       "num_access integer NOT NULL DEFAULT 0, "
                       "last_access integer, "
                       "PRIMARY KEY (id))")
-            startTime = int(time.time())
+            start_time = int(time.time()) - 1000000
             for i in range(0, num_rows):
                 datajson = json.dumps('value' + str(i))
                 c.execute("INSERT INTO archive (id, data, created) VALUES (?, ?, ?)",
-                          ('key' + str(i), datajson, startTime + i))
+                          ('key' + str(i), datajson, start_time + i))
             conn.commit()
             conn.close()
 

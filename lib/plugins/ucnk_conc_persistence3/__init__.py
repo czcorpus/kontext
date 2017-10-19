@@ -200,6 +200,7 @@ class ConcPersistence(AbstractConcPersistence):
         data = self.db.get(mk_key(data_id))
         if data is None:
             # iterate through opened connections to search for data
+            self.archMan.update_archives()
             for arch_conn in self.archMan.arch_connections:
                 tmp = self._execute_sql(arch_conn, 'SELECT data, num_access FROM archive WHERE id = ?',
                                         (data_id,)).fetchone()
@@ -275,5 +276,5 @@ def create_instance(settings, db, auth):
     ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
     anonymous_user_ttl_days = int(
         plugin_conf.get('default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
-    arch_rows_limit = int(plugin_conf.get('ucnk:archive_rows_limit', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+    arch_rows_limit = int(plugin_conf.get('ucnk:archive_rows_limit', ConcPersistence.DEFAULT_ARCHIVE_ROWS_LIMIT))
     return ConcPersistence(settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days, arch_rows_limit)

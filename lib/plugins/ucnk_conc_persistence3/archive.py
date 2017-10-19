@@ -24,14 +24,14 @@ Note: this is UCNK specific functionality
 A script to archive outdated concordance queries from Redis to a SQLite3 database.
 """
 
-import os
-import sys
 import argparse
-import time
 import json
+import os
+import sqlite3
+import sys
+import time
 
 import redis
-import sqlite3
 
 ARCHIVE_PREFIX = "conc_archive"  # the prefix required for a db file to be considered an archive file
 ARCHIVE_QUEUE_KEY = 'conc_arch_queue'
@@ -121,20 +121,26 @@ def run(conf, num_proc, dry_run):
                                conf.get('plugins', 'db')['default:port'],
                                conf.get('plugins', 'db')['default:id'])
     db_path = conf.get('plugins')['conc_persistence']['ucnk:archive_db_path']
-    arch_man = ArchMan(db_path)
+    arch_rows_limit = conf.get('plugins')['conc_persistence3']['ucnk:archive_rows_limit']
+    arch_man = ArchMan(db_path, arch_rows_limit)
     to_db = arch_man.get_current_archive_conn()
-
-    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
-
-    response = archiver.run(num_proc, dry_run)
+    # if archive size exceeded?
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > arch_man.arch_rows_limit:
-        arch_man.create_new_arch(int(time.time()))
+        creation_time = int(time.time())
+        if not arch_man.archive_name_exists(arch_man.make_arch_name(creation_time)):
+            arch_man.create_new_arch(creation_time)
+
+    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
+    response = archiver.run(num_proc, dry_run)
     return response
 
 
-def _run(from_db, db_path, num_proc, dry_run):
-    arch_man = ArchMan(db_path, 10)
+def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit):
+    """
+    a copy of the above, used for unittests
+    """
+    arch_man = ArchMan(db_path, arch_rows_limit)
     to_db = arch_man.get_current_archive_conn()
 
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
@@ -142,9 +148,10 @@ def _run(from_db, db_path, num_proc, dry_run):
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > arch_man.arch_rows_limit:
-        # print "attempting to create new db"
-        time.sleep(1)
-        arch_man.create_new_arch(int(time.time()))
+        time.sleep(1) # stop here for testing purposes
+        creation_time = int(time.time())
+        if not arch_man.archive_name_exists(arch_man.make_arch_name(creation_time)):
+            arch_man.create_new_arch(creation_time)
     return response
 
 
@@ -164,7 +171,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
     parser.add_argument('num_proc', metavar='NUM_PROC', type=int)
     parser.add_argument('-d', '--dry-run', action='store_true',
-                        help='allows running without affecting storage data (not 100% error prone as it reads/writes to Redis)')
+                        help='allows running without affecting storage data (not 100% error prone as it reads/writes '
+                             'to Redis)')
     args = parser.parse_args()
     ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
     print(ans)
@@ -194,6 +202,9 @@ class ArchMan(object):
     def check_archive_dir_exists(self):
         if not os.path.exists(self.archive_dir_path):
             os.makedirs(self.archive_dir_path)
+
+    def archive_name_exists(self, filename):
+        return os.path.isfile(os.path.join(self.archive_dir_path,filename))
 
     def clear_directory(self):
         """
@@ -246,7 +257,6 @@ class ArchMan(object):
         Should be verbose?
         """
         db_name = self.make_arch_name(creation_time)
-        # print "creating db: ", db_name
         full_db_path = os.path.join(self.archive_dir_path, db_name)
         if os.path.isfile(full_db_path):
             raise NameError("archive db file {0} already exists".format(full_db_path))
@@ -299,7 +309,8 @@ class ArchMan(object):
         # archive table must have correct structure
         sql = 'SELECT sql FROM sqlite_master WHERE name="archive";'
         structure = c.execute(sql).fetchone()[0]
-        required = "CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))"
+        required = "CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer " \
+                   "NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))"
         conn.close()
         if structure != required:
             raise TypeError("the archive table does not have the required structure")
@@ -343,7 +354,6 @@ class ArchMan(object):
 
     def update_archives(self):
         """
-        TO-DO: is the method necessary??
         get open connections from the dict, add new connections, close unused connections
         """
         arch_list = self.get_archives_list()
@@ -351,12 +361,10 @@ class ArchMan(object):
         for arch in arch_list:
             if arch in self.archive_dict:
                 conn = self.archive_dict.get(arch)
-                # print ("ArchMan - getting existing connection: ", arch, conn)
             else:
                 full_path = self.archive_dir_path + arch
                 conn = sqlite3.connect(full_path)
                 self.archive_dict.update({arch: conn})
-                # print ("ArchMan - adding new connection: ", arch, conn)
             connections.append(conn)
         self.arch_connections = connections
         # close and pop obsolete connections (in case a previously used archive is removed from the dir)
@@ -365,7 +373,6 @@ class ArchMan(object):
             if arch not in arch_list:
                 adepts.append(arch)
                 conn.close()
-                # print ("ArchMan - removing connection to a non-existing file: ", arch)
         for arch in adepts:
             self.archive_dict.pop(arch)
         return True
@@ -391,7 +398,6 @@ class ArchMan(object):
     def move_rows_to_new_archive(self, old_file, new_file, rows):
         old_conn = self.connect_to_archive(old_file)
         new_conn = self.connect_to_archive(new_file)
-        print "moving", rows, "rows from ", old_file, "to", new_file
         for old_row in old_conn.execute("SELECT * FROM archive ORDER BY created LIMIT " + str(rows)):
             new_conn.execute("INSERT INTO archive VALUES (?,?,?,?,?);", old_row)
         new_conn.commit()
@@ -407,19 +413,12 @@ class ArchMan(object):
         as parameters and makes a copy of the source file in the working dir
         """
         path, filename = os.path.split(source_arch_full_path)
-        if not str.endswith(filename, ".db"):
-            print "the source file does not seem to be an archive db file"
-        print "copying the following source archive into working directory: ", source_arch_full_path
         self.copy_archive_file(source_arch_full_path)
-        print "starting to split archive: ", source_arch_full_path
-
+        self.is_archive_correct(filename)
         orig_size = self.get_arch_numrows(self.source_arch_name)
-        print "original archive size: ", orig_size
         split_size = int(orig_size / number_of_archives)
-        print "split archives size: ", split_size
         for i in range(0, number_of_archives - 1):
             oldest_time = self.get_oldest_row_time(self.source_arch_name)
-            print "oldest_time", oldest_time
             new_archive = self.create_new_arch(oldest_time)
             self.move_rows_to_new_archive(self.source_arch_name, new_archive, split_size)
         oldest_time = self.get_oldest_row_time(self.source_arch_name)
