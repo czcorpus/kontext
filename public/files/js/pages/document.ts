@@ -222,6 +222,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     }
                     return <T>ans;
                 }
+            },
+            delayHandler:(immediateFn:()=>void, actualFn:()=>void, delay:number) => {
+                immediateFn();
+                window.setTimeout(() => {
+                    actualFn();
+                }, delay);
             }
         };
     }

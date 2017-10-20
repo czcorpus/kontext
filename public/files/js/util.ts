@@ -326,3 +326,8 @@ export function createHistory(urlHandler:Kontext.IURLHandler):Kontext.IHistory {
         return new NullHistory();
     }
 }
+
+
+export function uid():string {
+    return `${new Date().getTime()}${Math.random()}`.substr(2);
+}

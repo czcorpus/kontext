@@ -606,7 +606,8 @@ export function generate(data:Array<SourceData.Data>, zone:string, tree:string, 
         getLayoutViews: () => null,
         addGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
         removeGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
-        cloneState:<T extends {[key:string]:any}>(obj:T):T => obj
+        cloneState:<T extends {[key:string]:any}>(obj:T):T => obj,
+        delayHandler:(immediateFn:()=>void, actualFn:()=>void, delay:number) => undefined
     };
     const gen = new TreeGenerator(options, helpers);
     gen.generate(data, zone, tree, target);

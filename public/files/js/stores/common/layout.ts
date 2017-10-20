@@ -20,24 +20,53 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import {SimplePageStore} from '../base';
-import {MultiDict} from '../../util';
+import {MultiDict, uid} from '../../util';
 import * as RSVP from 'vendor/rsvp';
+import * as Immutable from 'vendor/immutable';
+
+export class UserNotification {
+    messageId:string;
+    messageType:string;
+    messageText:string;
+    fadingOut:boolean;
+}
 
 /**
  *
  */
 export class MessageStore extends SimplePageStore implements Kontext.MessagePageStore {
 
-    messages:Array<{messageType:string; messageText:string, messageId:string}>;
+    messages:Immutable.List<UserNotification>;
 
     onClose:{[id:string]:()=>void};
 
     pluginApi:Kontext.PluginApi;
 
+    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+        super(dispatcher);
+        this.messages = Immutable.List<UserNotification>();
+        this.onClose = {};
+        this.pluginApi = pluginApi;
+
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'MESSAGE_FADE_OUT_ITEM':
+                    this.fadeOutMessage(payload.props['messageId']);
+                    this.notifyChangeListeners();
+                break;
+                case 'MESSAGE_CLOSED':
+                    this.removeMessage(payload.props['messageId']);
+                    this.notifyChangeListeners();
+                break;
+            }
+        });
+    }
+
     addMessage(messageType:string, messageText:string, onClose:()=>void) {
-        const msgId = String(Math.random());
+        const msgId = uid();
         const baseInterval = this.pluginApi.getConf<number>('messageAutoHideInterval');
 
         let viewTime;
@@ -54,10 +83,11 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
                 viewTime = baseInterval;
         }
 
-        this.messages.push({
+        this.messages = this.messages.push({
             messageType: messageType,
             messageText: messageText,
-            messageId: msgId
+            messageId: msgId,
+            fadingOut: false
         });
 
         if (onClose) {
@@ -65,42 +95,72 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
         }
 
         if (viewTime > 0) {
-            const timeout = window.setTimeout(() => {
-                this.removeMessage(msgId);
-                window.clearTimeout(timeout);
-                this.notifyChangeListeners();
+            window.setTimeout(() => {
+                if (this.messages.find(v => v.messageId === msgId)) {
+                    this.fadeOutAndRemoveMessage(msgId);
+                }
             }, this.pluginApi.getConf<number>('messageAutoHideInterval'));
         }
         this.notifyChangeListeners();
     }
 
-    getMessages():Array<{messageType:string; messageText:string, messageId:string}> {
+    getMessages():Immutable.List<UserNotification> {
         return this.messages;
     }
 
-    removeMessage(messageId:string) {
-        this.messages = this.messages.filter(x => x.messageId !== messageId);
-        if (typeof this.onClose[messageId] === 'function') {
-            const fn = this.onClose[messageId];
-            delete(this.onClose[messageId]);
-            fn();
+    getTransitionTime():number {
+        return 500;
+    }
+
+    fadeOutMessage(messageId:string):void {
+        const srchIdx = this.messages.findIndex(v => v.messageId === messageId);
+        if (srchIdx > -1 ) {
+            const curr = this.messages.get(srchIdx);
+            this.messages = this.messages.set(srchIdx, {
+                messageId: curr.messageId,
+                messageType: curr.messageType,
+                messageText: curr.messageText,
+                fadingOut: true
+            });
+        } else {
+            throw new Error(`Cannot fade out message, ID ${messageId} not found`);
         }
     }
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
-        super(dispatcher);
-        this.messages = [];
-        this.onClose = {};
-        this.pluginApi = pluginApi;
+    fadeOutAndRemoveMessage(messageId:string):void {
+        const srchIdx = this.messages.findIndex(v => v.messageId === messageId);
+        if (srchIdx > -1 ) {
+            const curr = this.messages.get(srchIdx);
+            this.messages = this.messages.set(srchIdx, {
+                messageId: curr.messageId,
+                messageType: curr.messageType,
+                messageText: curr.messageText,
+                fadingOut: true
+            });
+            this.notifyChangeListeners();
+            window.setTimeout(() => {
+                this.removeMessage(messageId);
+                this.notifyChangeListeners();
+            }, this.getTransitionTime());
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
-            switch (payload.actionType) {
-                case 'MESSAGE_CLOSED':
-                    this.removeMessage(payload.props['messageId']);
-                    this.notifyChangeListeners();
-                break;
+        } else {
+            throw new Error(`Cannot fade out message, ID ${messageId} not found`);
+        }
+    }
+
+    removeMessage(messageId:string):void {
+        const srchIdx = this.messages.findIndex(v => v.messageId === messageId);
+        if (srchIdx > -1 ) {
+            this.messages = this.messages.remove(srchIdx);
+            if (typeof this.onClose[messageId] === 'function') {
+                const fn = this.onClose[messageId];
+                delete(this.onClose[messageId]);
+                fn();
             }
-        });
+
+        } else {
+            throw new Error(`Cannot delete message, ID ${messageId} not found`);
+        }
     }
 }
 

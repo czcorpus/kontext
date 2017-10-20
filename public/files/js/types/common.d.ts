@@ -362,6 +362,8 @@ declare module Kontext {
          * primitive values or Immutable.js instances.
          */
         cloneState<T>(obj:T):T;
+
+        delayHandler(immediateFn:()=>void, actualFn:()=>void, delay:number):void;
     }
 
     export interface LayoutStores {

@@ -18,7 +18,6 @@
 
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
-import {CSSTransitionGroup} from 'vendor/react-transition-group';
 
 
 export function init(dispatcher, he, storeProvider) {
@@ -289,12 +288,25 @@ export function init(dispatcher, he, storeProvider) {
 
         const handleCloseClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch({
-                actionType: 'MESSAGE_CLOSED',
-                props: {
-                    messageId: props.messageId
-                }
-            });
+            he.delayHandler(
+                () => {
+                    dispatcher.dispatch({
+                        actionType: 'MESSAGE_FADE_OUT_ITEM',
+                        props: {
+                            messageId: props.messageId
+                        }
+                    });
+                },
+                () => {
+                    dispatcher.dispatch({
+                        actionType: 'MESSAGE_CLOSED',
+                        props: {
+                            messageId: props.messageId
+                        }
+                    });
+                },
+                500
+            );
         };
 
         const typeIconMap = {
@@ -305,23 +317,56 @@ export function init(dispatcher, he, storeProvider) {
         };
 
         return (
-            <div className={'message ' + props.messageType}>
-                <div className="button-box">
-                    <a className="close-icon">
-                        <img src={he.createStaticUrl('img/close-icon.svg')}
-                            onClick={handleCloseClick } />
-                    </a>
+            <FadeInFrame transitionName="msganim" mode={props.fadingOut ? 'fadeout' : 'fadein'}
+                    transitionTime={props.transitionTime}>
+                <div className={'message ' + props.messageType}>
+                    <div className="button-box">
+                        <a className="close-icon">
+                            <img src={he.createStaticUrl('img/close-icon.svg')}
+                                onClick={handleCloseClick} />
+                        </a>
+                    </div>
+                    <div className="icon-box">
+                        <img className="icon" alt="message"
+                                src={ typeIconMap[props.messageType] } />
+                    </div>
+                    <div className="message-text">
+                        <span>{props.messageText}</span>
+                    </div>
                 </div>
-                <div className="icon-box">
-                    <img className="icon" alt="message"
-                            src={ typeIconMap[props.messageType] } />
-                </div>
-                <div className="message-text">
-                    <span>{props.messageText}</span>
-                </div>
-            </div>
+            </FadeInFrame>
         );
     };
+
+    // ------------------------------ <FadeInFrame /> -----------------------------
+
+    class FadeInFrame extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._handleAnimationEnd = this._handleAnimationEnd.bind(this);
+            this.state = {opacity: this.props.mode === 'fadein' ? 0 : 1};
+        }
+
+        _handleAnimationEnd() {
+            this.setState({opacity: 1 - this.state.opacity});
+        }
+
+
+        render() {
+            const style = {
+                animationDuration: `${this.props.transitionTime}ms`,
+                animationName: this.props.mode,
+                animationIterationCount: 1,
+                opacity: this.state.opacity.toFixed(1)
+            };
+            return (
+                <div style={style} onAnimationEnd={this._handleAnimationEnd}>
+                    {this.props.children}
+                </div>
+            );
+        }
+    }
 
     // ------------------------------ <Messages /> -----------------------------
 
@@ -330,11 +375,17 @@ export function init(dispatcher, he, storeProvider) {
         constructor(props) {
             super(props);
             this._changeListener = this._changeListener.bind(this);
-            this.state = {messages: []};
+            this.state = {
+                messages: storeProvider.messageStore.getMessages(),
+                transitionTime: storeProvider.messageStore.getTransitionTime()
+            };
         }
 
         _changeListener() {
-            this.setState({messages: storeProvider.messageStore.getMessages()});
+            this.setState({
+                messages: storeProvider.messageStore.getMessages(),
+                transitionTime: storeProvider.messageStore.getTransitionTime()
+            });
         }
 
         componentDidMount() {
@@ -346,18 +397,12 @@ export function init(dispatcher, he, storeProvider) {
         }
 
         render() {
-            const messages = this.state.messages.map((item, i) => {
-                return <Message key={i} messageType={item.messageType}
-                                messageText={item.messageText}
-                                messageId={item.messageId} />;
-            });
-            if (messages) {
+            if (this.state.messages.size > 0) {
                 return (
                     <div className="messages">
-                        <CSSTransitionGroup transitionName="msganim"
-                                transitionEnterTimeout={500} transitionLeaveTimeout={300}>
-                        {messages}
-                        </CSSTransitionGroup>
+                        {this.state.messages.map((item, i) => (
+                            <Message key={`msg:${i}`} transitionTime={this.state.transitionTime} {...item} />
+                        ))}
                     </div>
                 );
 
