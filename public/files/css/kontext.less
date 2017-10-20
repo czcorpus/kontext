@@ -2308,23 +2308,28 @@ section#my-subcorpora {
     padding-left: 0.5em;
 }
 
-.msganim-enter {
-    opacity: 0.01;
-    transition: opacity .3s ease-in;
+@keyframes fadein {
+
+    // transition: opacity .3s ease-in;
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
-.msganim-enter.msganim-enter-active {
-    opacity: 1;
+@keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
-.msganim-leave {
-    opacity: 1;
-    transition: opacity .3s ease-in;
-}
-
-.msganim-leave.msganim-leave-active {
-    opacity: 0.01;
-}
 
 .hint {
     color: @color-light-text;
