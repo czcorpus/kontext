@@ -18,13 +18,18 @@ import imp
 
 import celery
 
+_celery_app = None
+
 
 def load_config_module(path):
     return imp.load_source('celeryconfig', path)
 
 
 def get_celery_app(conf_path):
-    return celery.Celery('tasks', config_source=load_config_module(conf_path))
+    global _celery_app
+    if _celery_app is None:
+        _celery_app = celery.Celery('tasks', config_source=load_config_module(conf_path))
+    return _celery_app
 
 
 class ExternalTaskError(Exception):
