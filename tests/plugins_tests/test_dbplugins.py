@@ -29,6 +29,7 @@ import sqlite3
 import time
 from plugins.redis_db import RedisDb
 from plugins.sqlite3_db import DefaultDb
+from plugins.abstract.general_storage import KeyValueStorage
 
 # set test parameters
 TEST_TTL_METHODS = True  # set to False to speed up by skipping ttl testing which involves time.sleep()
@@ -442,6 +443,35 @@ class DbTest(unittest.TestCase):
         out_s = s1.get(key)
         self.assertEqual(out_r, out_s)
 
+    def test_incr(self):
+        """
+        Test the incr method:
+        Set key1 to an integer value, do not set the other key
+        Increase both keys by an amount, check correct values (the not-yet-set key2 should amount to 0 + amount)
+        """
+        key1 = 'key1'
+        key2 = 'key2'
+        number1 = 100
+        amount = 10
+        self.r.set(key1, number1)
+        self.r.incr(key1, amount)
+        self.r.incr(key2, amount)
+        self.assertEqual(self.r.get(key1), number1+amount)
+        self.assertEqual(self.r.get(key2), amount)
+
+    def test_hash_set_map(self):
+        d = {'val1': 100, 'val2': 'times'}
+        self.r.hash_set_map('hash1', d)
+        out_r = str(self.r.hash_get('hash1', 'val1')) + self.r.hash_get('hash1', 'val2')
+        self.assertEqual(out_r, "100times")
+
+    def test_get_instance(self):
+        """
+        test the get_instance, which is defined in the KeyValueStorage abstract class
+
+        """
+        self.assertTrue(isinstance(self.r.get_instance(1), KeyValueStorage))
+        self.assertTrue(isinstance(self.s.get_instance(1), KeyValueStorage))
 
 if __name__ == '__main__':
     unittest.main()

@@ -217,3 +217,10 @@ class KeyValueStorage(object):
         never called).
         """
         raise NotImplementedError()
+
+    def get_instance(self, plugin_id):
+        """
+        Return the current instance of the plug-in
+        """
+        return self
+
