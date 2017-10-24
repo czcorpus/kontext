@@ -174,15 +174,17 @@ class DbTest(unittest.TestCase):
         key = 'list'
         length = 5
         for i in range(0, length):
-            self.r.list_append(key, i)
-            self.s.list_append(key, i)
-            checklist.append(i)
-        self.r.list_pop(key)
-        self.s.list_pop(key)
-        checklist.pop(0)
+            val = {'q': 'value'+str(i)}
+            self.r.list_append(key, val)
+            self.s.list_append(key, val)
+            checklist.append(val)
+        val_r = self.r.list_pop(key)
+        val_s = self.s.list_pop(key)
+        val_c = checklist.pop(0)
         out_r = self.r.list_get(key)
         out_s = self.s.list_get(key)
-        self.assertTrue(out_r == out_s == checklist)
+        self.assertTrue(out_r == out_s == checklist, "lists after pop do not match")
+        self.assertTrue(val_r == val_s == val_c, "popped values do not match")
 
     def test_list_set(self):
         """
