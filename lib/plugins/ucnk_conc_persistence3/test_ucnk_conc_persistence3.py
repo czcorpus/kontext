@@ -29,6 +29,7 @@ from mock_redis import MockRedisCommon
 from mock_redis import MockRedisDirect
 from mock_redis import MockRedisPlugin
 from plugins.ucnk_conc_persistence3 import ConcPersistence
+from archive import ARCHIVE_PREFIX
 
 
 class ConcTest(unittest.TestCase):
@@ -54,9 +55,10 @@ class ConcTest(unittest.TestCase):
         """
         test whether the filename creation and validation method
         """
-        filename = self.conc.archMan.make_arch_name(1508234400)
-        self.assertTrue(filename == 'conc_archive.2017-10-17T12:00:00.db'
-                        and self.conc.archMan.is_db_filename_valid(filename))
+        creation_time = 1508234400
+        filename = self.conc.archMan.make_arch_name(creation_time)
+        correct = ARCHIVE_PREFIX + "." + time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(creation_time)) + ".db"
+        self.assertTrue(filename == correct and self.conc.archMan.is_db_filename_valid(filename))
 
     # ----------------------------
     # test ConcPersistence methods
