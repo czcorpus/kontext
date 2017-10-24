@@ -1012,17 +1012,8 @@ class Kontext(Controller):
             logo_href=logo_href,
             logo_title=logo_title,
             logo_inline_css=settings.get('theme', 'logo_inline_css', ''),
-            online_fonts=settings.get_list('theme', 'fonts'),
-            online_css=filter(lambda x: is_remote_resource(x), settings.get_list('theme', 'css'))
+            online_fonts=settings.get_list('theme', 'fonts')
         )
-        if settings.is_debug_mode() and os.path.isfile(os.path.join(os.path.dirname(__file__),
-                                                                    '../public/files/css/custom.min.css')):
-            # custom.min.css contains both theme and plug-in custom stylesheets
-            data['theme']['css'] = os.path.normpath(
-                os.path.join(self._files_path, 'css/custom.min.css'))
-        else:
-            # in production mode, all the styles are packed into a single file
-            data['theme']['css'] = None
 
     def _configure_auth_urls(self, out):
         with plugins.runtime.AUTH as auth:
@@ -1085,7 +1076,7 @@ class Kontext(Controller):
         else:
             result['app_bar'] = None
             result['app_bar_css'] = []
-            result['app_bar_js'] = None
+            result['app_bar_js'] = []
 
         result['footer_bar'] = None
         result['footer_bar_css'] = None
@@ -1124,8 +1115,8 @@ class Kontext(Controller):
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
                 self._plugin_api).to_dict() if irp else None
-        result['client_model_dir'] = 'pages'
-        result['page_model'] = action_metadata.get('page_model', l10n.camelize(methodname))
+        page_model = action_metadata.get('page_model', l10n.camelize(methodname))
+        result['page_model'] = page_model
 
         if settings.contains('global', 'ui_state_ttl'):
             result['ui_state_ttl'] = settings.get('global', 'ui_state_ttl')

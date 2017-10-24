@@ -37,6 +37,10 @@ import * as corplistComponent from 'plugins/corparch/init'
 import * as Immutable from 'vendor/immutable';
 import * as React from 'vendor/react';
 
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/subcorpForm.less');
+
 
 export interface TTInitData {
     component:React.Component;
@@ -144,8 +148,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             (args:[PluginInterfaces.ILiveAttributes, PluginInterfaces.ISubcMixer]) => {
                 const [liveAttrs, subcmixerPlugin] = args;
                 let subcMixerComponent:React.Component;
-
-                if (subcmixerPlugin) {
+                if (this.layoutModel.pluginIsActive('subcmixer')) {
                     if (liveAttrs) {
                         liveAttrs.addUpdateListener(subcmixerPlugin.refreshData.bind(subcmixerPlugin));
                         subcMixerComponent = subcmixerPlugin.getWidgetView();

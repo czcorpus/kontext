@@ -29,15 +29,13 @@ KonText - $_('Recent queries')
 #end def
 
 #def bodyonload
-    require(['${client_model_dir}/${page_model}', 'conf'], function (pageSelf, conf) {
-        conf.Data = $to_json($data);
-        conf.FromDate = $to_json($from_date);
-        conf.ToDate = $to_json($to_date);
-        conf.Offset = $to_json($offset);
-        conf.Limit = $to_json($limit);
-        conf.PageSize = $to_json($page_num_records);
-        pageSelf.init(conf);
-    });
+__conf.Data = $to_json($data);
+__conf.FromDate = $to_json($from_date);
+__conf.ToDate = $to_json($to_date);
+__conf.Offset = $to_json($offset);
+__conf.Limit = $to_json($limit);
+__conf.PageSize = $to_json($page_num_records);
+queryHistoryPage.init(__conf);
 #end def
 
 #block main

@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/soundmanager.d.ts" />
 
-import * as SoundManager from 'SoundManager';
+import * as SoundManager from 'vendor/SoundManager';
 import * as Immutable from 'vendor/immutable';
 
 
@@ -52,7 +52,7 @@ export class AudioPlayer {
 
     constructor(sm2FilesURL:string, onPlay:()=>void, onStop:()=>void, onError:()=>void) {
         this.status = AudioPlayer.PLAYER_STATUS_STOPPED;
-        this.soundManager = SoundManager.getInstance();
+        this.soundManager = SoundManager.soundManager;
         this.soundManager.ontimeout = function (status) {
             console.error(status); // TODO
         }

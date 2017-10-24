@@ -27,24 +27,22 @@ KonText - $getVar('page_title', '') ($_("Frequency list").lower())#slurp
 #end def
 
 #def bodyonload
-require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
-    conf.AttrList = $to_json($getVar('AttrList', []));
-    conf.StructAttrList = $to_json($getVar('StructAttrList', []));
-    conf.FreqFormProps = $to_json($freq_form_args);
-    conf.CTFreqFormProps = $to_json($ctfreq_form_args);
-    conf.CollFormProps = $to_json($coll_form_args);
-    #if $freq_type in ('ml', 'tt'):
-    conf.FreqResultData = $to_json($Blocks);
-    conf.FreqItemsPerPage = $to_json($fmaxitems);
-    conf.FreqCrit = $to_json($fcrit);
-    #elif $freq_type == 'ct':
-    conf.CTFreqResultData = $to_json($data);
-    conf.Attr1 = $to_json($attr1);
-    conf.Attr2 = $to_json($attr2);
-    #end if
-    conf.FreqType = $to_json($freq_type);
-    pageSelf.init(conf);
-});
+__conf.AttrList = $to_json($getVar('AttrList', []));
+__conf.StructAttrList = $to_json($getVar('StructAttrList', []));
+__conf.FreqFormProps = $to_json($freq_form_args);
+__conf.CTFreqFormProps = $to_json($ctfreq_form_args);
+__conf.CollFormProps = $to_json($coll_form_args);
+#if $freq_type in ('ml', 'tt'):
+__conf.FreqResultData = $to_json($Blocks);
+__conf.FreqItemsPerPage = $to_json($fmaxitems);
+__conf.FreqCrit = $to_json($fcrit);
+#elif $freq_type == 'ct':
+__conf.CTFreqResultData = $to_json($data);
+__conf.Attr1 = $to_json($attr1);
+__conf.Attr2 = $to_json($attr2);
+#end if
+__conf.FreqType = $to_json($freq_type);
+freqPage.init(__conf);
 #end def
 
 

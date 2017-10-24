@@ -22,6 +22,9 @@
 
 import * as RSVP from 'vendor/rsvp';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 export class FooterPlugin {
 
     constructor() {

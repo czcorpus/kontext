@@ -35,6 +35,9 @@ import {QueryStore} from '../../stores/query/main';
 import * as common from './common';
 import {SearchEngine} from './search';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 /**
  *
  * @param pluginApi

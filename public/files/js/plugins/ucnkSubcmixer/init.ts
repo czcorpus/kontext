@@ -28,6 +28,9 @@ import {init as viewInit} from './view';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 
 export interface TextTypeAttrVal {
     attrName:string;

@@ -40,6 +40,10 @@ import {init as ctResultViewInit, CTFreqsResultViews} from 'views/freqs/ctResult
 import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
 import {FreqResultsSaveStore} from '../stores/freqs/save';
 
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/freq.less');
+
 /**
  *
  */

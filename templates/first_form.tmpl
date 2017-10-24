@@ -28,26 +28,23 @@ KonText - $_("query form")#slurp
 #end def
 
 #def bodyonload
-require(['${client_model_dir}/${page_model}', 'conf'], function (firstForm, conf) {
-    conf.textTypesData = $text_types_data;
-    conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
-    conf.Wposlist = $to_json($Wposlist);
-    conf.ConcFormsArgs = $to_json($conc_forms_args);
-    conf.SubcorpList = $to_json($SubcorpList);
-    conf.CurrentSubcorp = $to_json($usesubcorp);
-    conf.ShuffleConcByDefault = $to_json($shuffle);
-    conf.Lposlist = $to_json($Lposlist);
-    conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
-    conf.DefaultAttr = $to_json($default_attr);
-    conf.AttrList = $to_json($getVar('AttrList', []));
-    conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
-    conf.InputLanguages = $to_json($input_languages);
-    conf.TextTypesNotes = $to_json($text_types_notes);
-    conf.QueryHistoryPageNumRecords = $to_json($query_history_page_num_records);
-    firstForm.init(conf);
-});
+__conf.textTypesData = $text_types_data;
+__conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
+__conf.Wposlist = $to_json($Wposlist);
+__conf.ConcFormsArgs = $to_json($conc_forms_args);
+__conf.SubcorpList = $to_json($SubcorpList);
+__conf.CurrentSubcorp = $to_json($usesubcorp);
+__conf.ShuffleConcByDefault = $to_json($shuffle);
+__conf.Lposlist = $to_json($Lposlist);
+__conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
+__conf.DefaultAttr = $to_json($default_attr);
+__conf.AttrList = $to_json($getVar('AttrList', []));
+__conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
+__conf.InputLanguages = $to_json($input_languages);
+__conf.TextTypesNotes = $to_json($text_types_notes);
+__conf.QueryHistoryPageNumRecords = $to_json($query_history_page_num_records);
+firstFormPage.init(__conf);
 #end def
-
 
 #def main
 <section>

@@ -29,23 +29,21 @@ $_("Word list")#slurp
 #end def
 
 #def bodyonload
-require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
-    conf.attrname = "$wlattr";
-    conf.reloadUrl = "$reload_url";
-    conf.IsUnfinished = #if $processing is not None#true#else#false#end if#;
-    conf.WorkerTasks = $to_json($tasks);
-    conf.SubcorpList = $to_json($SubcorpList);
-    conf.AttrList = $to_json($AttrList);
-    conf.StructAttrList = $to_json($StructAttrList);
-    conf.Data = $to_json($Items);
-    conf.wlattrLabel = $to_json($wlattr_label);
-    conf.freqFigure = $to_json($freq_figure);
-    conf.PageNum = $to_json($wlpage);
-    conf.PageSize = $to_json($wlpagesize);
-    conf.IsLastPage = $to_json($lastpage);
-    conf.FormArgs = $to_json($form_args);
-    pageSelf.init(conf);
-});
+____conf.attrname = "$wlattr";
+__conf.reloadUrl = "$reload_url";
+__conf.IsUnfinished = #if $processing is not None#true#else#false#end if#;
+__conf.WorkerTasks = $to_json($tasks);
+__conf.SubcorpList = $to_json($SubcorpList);
+__conf.AttrList = $to_json($AttrList);
+__conf.StructAttrList = $to_json($StructAttrList);
+__conf.Data = $to_json($Items);
+__conf.wlattrLabel = $to_json($wlattr_label);
+__conf.freqFigure = $to_json($freq_figure);
+__conf.PageNum = $to_json($wlpage);
+__conf.PageSize = $to_json($wlpagesize);
+__conf.IsLastPage = $to_json($lastpage);
+__conf.FormArgs = $to_json($form_args);
+wordlistPage.init(__conf);
 #end def
 
 #def main

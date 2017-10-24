@@ -25,7 +25,7 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
-import * as SoundManager from 'SoundManager';
+import * as SoundManager from 'vendor/SoundManager';
 import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from './document';
@@ -68,6 +68,10 @@ import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
 import tokenDetailInit from 'plugins/tokenDetail/init';
+
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/view.less');
 
 
 export class ViewPageStores {

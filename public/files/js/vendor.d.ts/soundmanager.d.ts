@@ -20,7 +20,7 @@
 // project's original documentation
 // at http://www.schillmania.com/projects/soundmanager2
 
-declare module "SoundManager" {
+declare module "vendor/SoundManager" {
 
     export interface SoundManagerConfig {
 
@@ -174,5 +174,5 @@ declare module "SoundManager" {
         ():SoundManager;
     }
 
-    export var getInstance:GetInstance;
+    export var soundManager:SoundManager;
 }

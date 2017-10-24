@@ -27,13 +27,11 @@ KonText - $_("Word List Form")#slurp
 #end def
 
 #def bodyonload
-require(['${client_model_dir}/${page_model}', 'conf'], function (wordlistForm, conf) {
-    conf.wltype = "$wltype";
-    conf.SubcorpList = $to_json($SubcorpList);
-    conf.AttrList = $to_json($AttrList);
-    conf.StructAttrList = $to_json($StructAttrList);
-    wordlistForm.init(conf);
-});
+__conf.wltype = "$wltype";
+__conf.SubcorpList = $to_json($SubcorpList);
+__conf.AttrList = $to_json($AttrList);
+__conf.StructAttrList = $to_json($StructAttrList);
+wordlistFormPage.init(__conf);
 #end def
 
 #def main

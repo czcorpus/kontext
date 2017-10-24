@@ -255,7 +255,7 @@ export class RangeSelector {
                 prom = this.loadAndReplaceRawInput(attrName, fromVal, toVal);
 
             } else {
-                prom = new RSVP.Promise((resolve:()=>void, reject:()=>void) => { resolve(); });
+                prom = new RSVP.Promise((resolve:(d)=>void, reject:(err)=>void) => { resolve(null); });
             }
 
             return prom.then(

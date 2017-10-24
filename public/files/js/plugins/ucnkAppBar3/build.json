@@ -1,0 +1,5 @@
+{
+    "externalModules": {
+        "plugins/applicationBar/toolbar" : "var Toolbar"
+    }
+}

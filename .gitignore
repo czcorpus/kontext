@@ -20,12 +20,8 @@ conf/*
 !conf/config.sample.xml
 !conf/main-menu.sample.json
 public/files/.vscode/
-public/files/js/min
+public/files/dist
 public/files/js/.compiled
-public/files/js/.optimized
-public/files/css/kontext.min.css
-public/files/css/custom.min.css
-public/files/misc/kb-layouts.min.json
 cmpltmpl/*
 !cmpltmpl/__init__.py
 public/files/themes/*

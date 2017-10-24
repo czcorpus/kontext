@@ -56,6 +56,9 @@ import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 
+declare var require:any; // webpack's require
+require('styles/kontext.less');
+
 /**
  *
  */

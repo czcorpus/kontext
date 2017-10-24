@@ -24,6 +24,9 @@ import {TagHelperStore} from './stores';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 
 export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 

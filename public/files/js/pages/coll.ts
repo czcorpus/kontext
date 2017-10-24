@@ -35,6 +35,11 @@ import {init as collResultViewInit} from 'views/coll/result';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 
+
+declare var require:any;
+// weback - ensure an individual style (even empty one) is created for the page
+require('styles/coll.less');
+
 /**
  *
  */

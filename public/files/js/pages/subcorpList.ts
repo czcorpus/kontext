@@ -25,6 +25,10 @@ import * as corplist from 'plugins/corparch/init';
 import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';
 import {init as listViewInit} from 'views/subcorp/list';
 
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/subcorpList.less');
+
 /**
  * Server-defined data (subcorpus/ajax_subcorp_info)
  */

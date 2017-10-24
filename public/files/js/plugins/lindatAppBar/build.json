@@ -1,3 +1,5 @@
 {
-    "ignoreModules": ["aai"]
+    "externalModules": {
+        "aai": "var aai"
+    }
 }

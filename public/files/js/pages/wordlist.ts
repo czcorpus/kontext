@@ -30,6 +30,10 @@ import {WordlistResultStore, ResultData, ResultItem, HeadingItem} from '../store
 import {WordlistFormStore, WordlistFormProps} from '../stores/wordlist/form';
 import {WordlistSaveStore} from '../stores/wordlist/save';
 
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/wordlist.less');
+
 /**
  *
  */
