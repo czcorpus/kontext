@@ -102,7 +102,13 @@ class RedisDb(KeyValueStorage):
         self.redis.rpush(key, json.dumps(value))
 
     def list_pop(self, key):
-        return self.redis.lpop(key)
+        """
+        Removes and returns the first element of the list stored at key.
+
+        arguments:
+        key -- list access key
+        """
+        return json.loads(self.redis.lpop(key))
 
     def list_len(self, key):
         """
