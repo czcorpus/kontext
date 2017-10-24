@@ -174,6 +174,24 @@ class ConcTest(unittest.TestCase):
             msg += "incorrect number of last_access values"
         self.assertTrue(res1[0] == 3 and res2[0] == 5 and res3[0] == 8, msg)
 
+    def test_archiver_dry_run(self):
+        """
+        store 10 operations as auth user, try to archive them in dry run mode
+        check the archive_queue, must contain the archived items
+        """
+        keys = []
+        for i in range(0, 10):
+            test_dict = {"q": "value" + str(i)}
+            keys.append([self.conc.store(1, test_dict)])
+        q_before = list(self.mockRedisDirect.get_arch_queue())  # ref by value
+        c_before = list(self.mockRedisDirect.get_concordances())
+        arch_rows_limit = 30  # do not exceed archive rows limit
+        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 10, True, arch_rows_limit)
+        q_after = self.mockRedisDirect.get_arch_queue()
+        c_after = self.mockRedisDirect.get_concordances()
+        self.assertTrue(q_before == q_after, "archive queues before and after dry run do not match")
+        self.assertTrue(c_before == c_after, "concordances before and after dry run do not match")
+
     # -------------
     # aux methods
     # -------------
