@@ -124,15 +124,16 @@ def run(conf, num_proc, dry_run):
     arch_rows_limit = conf.get('plugins')['conc_persistence3']['ucnk:archive_rows_limit']
     arch_man = ArchMan(db_path, arch_rows_limit)
     to_db = arch_man.get_current_archive_conn()
-    # if archive size exceeded?
+
+    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
+
+    response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > arch_man.arch_rows_limit:
+        time.sleep(1)  # stop here for testing purposes
         creation_time = int(time.time())
         if not arch_man.archive_name_exists(arch_man.make_arch_name(creation_time)):
             arch_man.create_new_arch(creation_time)
-
-    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
-    response = archiver.run(num_proc, dry_run)
     return response
 
 
@@ -148,7 +149,7 @@ def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit):
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > arch_man.arch_rows_limit:
-        time.sleep(1) # stop here for testing purposes
+        time.sleep(1)  # stop here for testing purposes
         creation_time = int(time.time())
         if not arch_man.archive_name_exists(arch_man.make_arch_name(creation_time)):
             arch_man.create_new_arch(creation_time)
@@ -204,7 +205,7 @@ class ArchMan(object):
             os.makedirs(self.archive_dir_path)
 
     def archive_name_exists(self, filename):
-        return os.path.isfile(os.path.join(self.archive_dir_path,filename))
+        return os.path.isfile(os.path.join(self.archive_dir_path, filename))
 
     def clear_directory(self):
         """

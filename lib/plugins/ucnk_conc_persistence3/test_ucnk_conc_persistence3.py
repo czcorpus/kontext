@@ -25,31 +25,25 @@ import os
 
 import archive
 from mock_auth import MockAuth
-from mock_redis import MockRedis
+from mock_redis import MockRedisCommon
+from mock_redis import MockRedisDirect
+from mock_redis import MockRedisPlugin
 from plugins.ucnk_conc_persistence3 import ConcPersistence
-
-
-def redis_connection(host, port, db_id):
-    """
-    Creates a connection to a Redis instance
-    """
-    return MockRedis()
-
-
-archive.redis_connection = redis_connection
 
 
 class ConcTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ConcTest, self).__init__(*args, **kwargs)
 
-        self.mockRedis = MockRedis()
+        self.mckRdsCmn = MockRedisCommon()
+        self.mockRedisDirect = MockRedisDirect(self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
+        self.mockRedisPlugin = MockRedisPlugin(self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
         self.mockAuth = MockAuth()
-        self.conc = ConcPersistence(None, self.mockRedis, self.mockAuth, '/tmp/test_dbs/', 100, 7, 10)
+        self.conc = ConcPersistence(None, self.mockRedisPlugin, self.mockAuth, '/tmp/test_dbs/', 100, 7, 10)
         self.source_arch_path = '/tmp/test_source/'  # used just for the aux methods for testing
 
     def setUp(self):
-        self.mockRedis.clear()
+        self.mockRedisDirect.clear()
         self.conc.archMan.clear_directory()
 
     # ----------------------------
@@ -85,9 +79,9 @@ class ConcTest(unittest.TestCase):
         test_val = "testvalue123"
         self.conc.store(0, dict(q=test_val))  # anonymous
         data_id_authenticated = self.conc.store(1, dict(q=test_val))  # authenticated
-        arch_queue = self.mockRedis.get_arch_queue()
+        arch_queue = self.mockRedisDirect.get_arch_queue()
         # strip the 'concordance:' prefix that is hardcoded in the mk_key method:
-        archived_key = arch_queue[0].get('key')[12:]
+        archived_key = json.loads(arch_queue[0]).get('key')[12:]
         self.assertTrue(len(arch_queue) == 1 and archived_key == data_id_authenticated)
 
     def test_archivation(self):
@@ -103,11 +97,11 @@ class ConcTest(unittest.TestCase):
             self.conc.store(0, dict(q=test_val))
         arch_rows_limit = 10
         # exceed the limit by archiving 11 rows, new archive is created afterwards
-        archive._run(self.mockRedis, '/tmp/test_dbs/', 11, False, arch_rows_limit)
+        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 11, False, arch_rows_limit)
         # archive another 5 rows to the newly created archive
-        archive._run(self.mockRedis, '/tmp/test_dbs/', 5, False, arch_rows_limit)
+        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 5, False, arch_rows_limit)
         curr_arch_size = self.conc.archMan.get_arch_numrows(self.conc.archMan.get_current_archive_name())
-        arch_queue_size = len(self.mockRedis.arch_queue)
+        arch_queue_size = len(self.mockRedisDirect.arch_queue)
         self.assertTrue(arch_queue_size == 4 and curr_arch_size == 5)
 
     def test_split_archive(self):
@@ -141,38 +135,37 @@ class ConcTest(unittest.TestCase):
             key_val.append([self.conc.store(1, dict(q=test_val)), test_val])
 
         arch_rows_limit = 30  # do not exceed archive rows limit
-        archive._run(self.mockRedis, '/tmp/test_dbs/', 10, False, arch_rows_limit)
-        self.mockRedis.clear()
+        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 10, False, arch_rows_limit)
+        self.mockRedisDirect.clear()
         correct = True
         for i in key_val:
-            if i[1] != self.conc.open(i[0]).get('q'):
+            if i[1] != json.loads(self.conc.open(i[0])).get('q'):  # is json.loads correct here?
                 correct = False
         self.assertTrue(correct)
 
     def test_num_access(self):
         """
-        store 10 operations as auth user, archive them, delete them from "redis"
-        access the third row three times, access the fifth row five times
-        check the num_access and last_access values
-        (since the last_access can differ by 1s, check that 8 rows have NULL)
+        store 10 operations as auth user, archive them, delete them from "redis" access the third row three times,
+        access the fifth row five times check the num_access and last_access values (since the last_access can differ
+        by 1 sec, only check that 8 rows contain NULL, i.e. do not check specific time value)
         """
-        key_val = []
+        keys = []
         for i in range(0, 10):
-            test_val = "value" + str(i)
-            key_val.append([self.conc.store(1, dict(q=test_val)), test_val])
+            test_dict = {"q": "value" + str(i)}
+            keys.append([self.conc.store(1, test_dict)])
 
         arch_rows_limit = 30  # do not exceed archive rows limit
-        archive._run(self.mockRedis, '/tmp/test_dbs/', 10, False, arch_rows_limit)
-        self.mockRedis.clear()
+        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 10, False, arch_rows_limit)
+        self.mockRedisDirect.clear()
 
         for i in range(0, 3):
-            self.conc.open(key_val[2][0]).get('q')
+            self.conc.open(keys[2][0])
         for i in range(0, 5):
-            self.conc.open(key_val[4][0]).get('q')
+            self.conc.open(keys[4][0])
         conn = self.conc.archMan.get_current_archive_conn()
         c = conn.cursor()
-        res1 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (key_val[2][0],)).fetchone()
-        res2 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (key_val[4][0],)).fetchone()
+        res1 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (keys[2][0],)).fetchone()
+        res2 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (keys[4][0],)).fetchone()
         res3 = c.execute("SELECT COUNT(*) FROM archive WHERE last_access IS NULL").fetchone()
         msg = ""
         if res1[0] != 3 or res2[0] != 5:
@@ -191,7 +184,6 @@ class ConcTest(unittest.TestCase):
 
     def delete_source_archive(self):
         if os.path.exists(self.source_arch_path):
-            # print "deleting archive directory"
             import shutil
             shutil.rmtree(self.source_arch_path)
 
@@ -201,11 +193,9 @@ class ConcTest(unittest.TestCase):
         """
         if not os.path.exists(self.source_arch_path):
             os.makedirs(self.source_arch_path)
-            # print "creating working directory:", self.source_arch_path
 
         full_db_path = self.source_arch_path + self.conc.archMan.DEFAULT_SOURCE_ARCH_FILENAME
         if not os.path.exists(full_db_path):
-            # print "creating database: ", full_db_path
             conn = sqlite3.connect(full_db_path)
             c = conn.cursor()
             # create the sqlite3 table called "archive" with the correct structure
