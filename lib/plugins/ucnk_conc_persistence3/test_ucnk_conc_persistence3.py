@@ -37,15 +37,18 @@ class ConcTest(unittest.TestCase):
         super(ConcTest, self).__init__(*args, **kwargs)
 
         self.mckRdsCmn = MockRedisCommon()
-        self.mockRedisDirect = MockRedisDirect(self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
-        self.mockRedisPlugin = MockRedisPlugin(self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
+        self.mockRedisDirect = MockRedisDirect(
+            self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
+        self.mockRedisPlugin = MockRedisPlugin(
+            self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
         self.mockAuth = MockAuth()
-        self.conc = ConcPersistence(None, self.mockRedisPlugin, self.mockAuth, '/tmp/test_dbs/', 100, 7, 10)
+        self.conc = ConcPersistence(None, self.mockRedisPlugin,
+                                    self.mockAuth, '/tmp/test_dbs/', 100, 7, 10)
         self.source_arch_path = '/tmp/test_source/'  # used just for the aux methods for testing
 
     def setUp(self):
         self.mockRedisDirect.clear()
-        self.conc.archMan.clear_directory()
+        self.conc.arch_man.clear_directory()
 
     # ----------------------------
     # test Archive Manager methods
@@ -56,9 +59,10 @@ class ConcTest(unittest.TestCase):
         test whether the filename creation and validation method
         """
         creation_time = 1508234400
-        filename = self.conc.archMan.make_arch_name(creation_time)
-        correct = ARCHIVE_PREFIX + "." + time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(creation_time)) + ".db"
-        self.assertTrue(filename == correct and self.conc.archMan.is_db_filename_valid(filename))
+        filename = self.conc.arch_man.make_arch_name(creation_time)
+        correct = ARCHIVE_PREFIX + "." + \
+            time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(creation_time)) + ".db"
+        self.assertTrue(filename == correct and self.conc.arch_man.is_db_filename_valid(filename))
 
     # ----------------------------
     # test ConcPersistence methods
@@ -102,7 +106,8 @@ class ConcTest(unittest.TestCase):
         archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 11, False, arch_rows_limit)
         # archive another 5 rows to the newly created archive
         archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 5, False, arch_rows_limit)
-        curr_arch_size = self.conc.archMan.get_arch_numrows(self.conc.archMan.get_current_archive_name())
+        curr_arch_size = self.conc.arch_man.get_arch_numrows(
+            self.conc.arch_man.get_current_archive_name())
         arch_queue_size = len(self.mockRedisDirect.arch_queue)
         self.assertTrue(arch_queue_size == 4 and curr_arch_size == 5)
 
@@ -114,15 +119,15 @@ class ConcTest(unittest.TestCase):
         """
         self.delete_source_archive()
         self.create_source_archive(20)
-        full_source_path = self.source_arch_path + self.conc.archMan.DEFAULT_SOURCE_ARCH_FILENAME
-        self.conc.archMan.split_archive(full_source_path, 3)
-        arch_list = self.conc.archMan.get_archives_list(self)
+        full_source_path = self.source_arch_path + self.conc.arch_man.DEFAULT_SOURCE_ARCH_FILENAME
+        self.conc.arch_man.split_archive(full_source_path, 3)
+        arch_list = self.conc.arch_man.get_archives_list(self)
         total_files = 0
         total_rows = 0
         current_rows = 0
         for arch in reversed(arch_list):
             total_files += 1
-            current_rows = self.conc.archMan.get_arch_numrows(arch)
+            current_rows = self.conc.arch_man.get_arch_numrows(arch)
             total_rows += current_rows
         self.assertTrue(total_files == 3 and total_rows == 20 and current_rows == 8)
 
@@ -164,10 +169,12 @@ class ConcTest(unittest.TestCase):
             self.conc.open(keys[2][0])
         for i in range(0, 5):
             self.conc.open(keys[4][0])
-        conn = self.conc.archMan.get_current_archive_conn()
+        conn = self.conc.arch_man.get_current_archive_conn()
         c = conn.cursor()
-        res1 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (keys[2][0],)).fetchone()
-        res2 = c.execute("SELECT num_access, last_access FROM archive where id = ?", (keys[4][0],)).fetchone()
+        res1 = c.execute("SELECT num_access, last_access FROM archive where id = ?",
+                         (keys[2][0],)).fetchone()
+        res2 = c.execute("SELECT num_access, last_access FROM archive where id = ?",
+                         (keys[4][0],)).fetchone()
         res3 = c.execute("SELECT COUNT(*) FROM archive WHERE last_access IS NULL").fetchone()
         msg = ""
         if res1[0] != 3 or res2[0] != 5:
@@ -198,7 +205,7 @@ class ConcTest(unittest.TestCase):
     # aux methods
     # -------------
     def print_all_archives(self):
-        files = self.conc.archMan.get_archives_list()
+        files = self.conc.arch_man.get_archives_list()
         for f in files:
             self.print_archive(f)
 
@@ -214,7 +221,7 @@ class ConcTest(unittest.TestCase):
         if not os.path.exists(self.source_arch_path):
             os.makedirs(self.source_arch_path)
 
-        full_db_path = self.source_arch_path + self.conc.archMan.DEFAULT_SOURCE_ARCH_FILENAME
+        full_db_path = self.source_arch_path + self.conc.arch_man.DEFAULT_SOURCE_ARCH_FILENAME
         if not os.path.exists(full_db_path):
             conn = sqlite3.connect(full_db_path)
             c = conn.cursor()
@@ -240,7 +247,7 @@ class ConcTest(unittest.TestCase):
         """
         print "-----"
         print "contents of archive: ", archive_name
-        curs = self.conc.archMan.connect_to_archive(archive_name).cursor()
+        curs = self.conc.arch_man.connect_to_archive(archive_name).cursor()
         for row in curs.execute("SELECT * FROM archive ORDER BY created DESC"):
             print row
 

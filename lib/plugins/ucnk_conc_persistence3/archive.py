@@ -21,7 +21,9 @@
 """
 Note: this is UCNK specific functionality
 
-A script to archive outdated concordance queries from Redis to a SQLite3 database.
+A script and a library to archive outdated concordance queries from Redis 
+to a SQLite3 database with support for multiple databases (recent one, 
+second newest,..., oldest).
 """
 
 import argparse
@@ -100,10 +102,12 @@ class Archiver(object):
                 self._to_db.commit()
             else:
                 for ins in reversed(inserts):
-                    self._from_db.lpush(self._archive_queue_key, json.dumps(dict(key=conc_prefix + ins[0])))
+                    self._from_db.lpush(self._archive_queue_key,
+                                        json.dumps(dict(key=conc_prefix + ins[0])))
         except Exception as ex:
             for item in inserts:
-                self._from_db.rpush(self._archive_queue_key, json.dumps(dict(key=conc_prefix + item[0])))
+                self._from_db.rpush(self._archive_queue_key, json.dumps(
+                    dict(key=conc_prefix + item[0])))
             return dict(
                 num_processed=i,
                 error=ex,
@@ -156,32 +160,6 @@ def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit):
     return response
 
 
-if __name__ == '__main__':
-    sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
-    sys.path.insert(0, os.path.realpath('%s/../../../scripts/' % os.path.dirname(os.path.realpath(__file__))))
-    import autoconf
-    import initializer
-
-    settings = autoconf.settings
-    logger = autoconf.logger
-
-    initializer.init_plugin('db')
-    initializer.init_plugin('sessions')
-    initializer.init_plugin('auth')
-
-    parser = argparse.ArgumentParser(description='Archive old records from Synchronize data from mysql db to redis')
-    parser.add_argument('num_proc', metavar='NUM_PROC', type=int)
-    parser.add_argument('-d', '--dry-run', action='store_true',
-                        help='allows running without affecting storage data (not 100% error prone as it reads/writes '
-                             'to Redis)')
-    args = parser.parse_args()
-    ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
-    print(ans)
-
-
-# ------------------------
-# PD
-# ------------------------
 class ArchMan(object):
     """
     Class to manage archives and connections to archives in the archive directories
@@ -296,19 +274,19 @@ class ArchMan(object):
         conn = self.connect_to_archive(filename)
         c = conn.cursor()
         # archive must contain single table
-        sql = 'SELECT COUNT(*) FROM sqlite_master WHERE type="table";'
+        sql = 'SELECT COUNT(*) FROM sqlite_master WHERE type="table"'
         count = c.execute(sql).fetchone()[0]
         if count != 1:
             raise TypeError("the archive db file must contain a single table")
 
         # archive table must be named "archive"
-        sql = 'SELECT name FROM sqlite_master WHERE type="table";'
+        sql = 'SELECT name FROM sqlite_master WHERE type="table"'
         name = c.execute(sql).fetchone()[0]
         if name != "archive":
             raise NameError("the archive table must be named 'archive'")
 
         # archive table must have correct structure
-        sql = 'SELECT sql FROM sqlite_master WHERE name="archive";'
+        sql = 'SELECT sql FROM sqlite_master WHERE name="archive"'
         structure = c.execute(sql).fetchone()[0]
         required = "CREATE TABLE archive (id text, data text NOT NULL, created integer NOT NULL, num_access integer " \
                    "NOT NULL DEFAULT 0, last_access integer, PRIMARY KEY (id))"
@@ -350,7 +328,7 @@ class ArchMan(object):
         arch_list = self.get_archives_list()
         if len(arch_list) == 0:
             arch_list.append(self.create_new_arch(int(time.time())))
-        full_path = self.archive_dir_path + arch_list[0]
+        full_path = os.path.join(self.archive_dir_path, arch_list[0])
         return sqlite3.connect(full_path)
 
     def update_archives(self):
@@ -370,7 +348,7 @@ class ArchMan(object):
         self.arch_connections = connections
         # close and pop obsolete connections (in case a previously used archive is removed from the dir)
         adepts = []
-        for arch, conn in self.archive_dict.iteritems():
+        for arch, conn in self.archive_dict.items():
             if arch not in arch_list:
                 adepts.append(arch)
                 conn.close()
@@ -394,13 +372,13 @@ class ArchMan(object):
         returns the epoch time of the oldest row in the archive
         """
         conn = self.connect_to_archive(filename)
-        return conn.execute("SELECT created FROM archive ORDER BY created LIMIT 1;").fetchone()[0]
+        return conn.execute("SELECT created FROM archive ORDER BY created LIMIT 1").fetchone()[0]
 
     def move_rows_to_new_archive(self, old_file, new_file, rows):
         old_conn = self.connect_to_archive(old_file)
         new_conn = self.connect_to_archive(new_file)
         for old_row in old_conn.execute("SELECT * FROM archive ORDER BY created LIMIT " + str(rows)):
-            new_conn.execute("INSERT INTO archive VALUES (?,?,?,?,?);", old_row)
+            new_conn.execute("INSERT INTO archive VALUES (?, ?, ?, ?, ?)", old_row)
         new_conn.commit()
         old_conn.execute("DELETE FROM archive ORDER BY created LIMIT " + str(rows))
         old_conn.commit()
@@ -424,4 +402,30 @@ class ArchMan(object):
             self.move_rows_to_new_archive(self.source_arch_name, new_archive, split_size)
         oldest_time = self.get_oldest_row_time(self.source_arch_name)
         last_arch_name = self.make_arch_name(oldest_time)
-        os.rename(self.archive_dir_path + self.source_arch_name, self.archive_dir_path + last_arch_name)
+        os.rename(self.archive_dir_path + self.source_arch_name,
+                  self.archive_dir_path + last_arch_name)
+
+
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.realpath('%s/../..' % os.path.dirname(os.path.realpath(__file__))))
+    sys.path.insert(0, os.path.realpath('%s/../../../scripts/' %
+                                        os.path.dirname(os.path.realpath(__file__))))
+    import autoconf
+    import initializer
+
+    settings = autoconf.settings
+    logger = autoconf.logger
+
+    initializer.init_plugin('db')
+    initializer.init_plugin('sessions')
+    initializer.init_plugin('auth')
+
+    parser = argparse.ArgumentParser(
+        description='Archive old records from Synchronize data from mysql db to redis')
+    parser.add_argument('num_proc', metavar='NUM_PROC', type=int)
+    parser.add_argument('-d', '--dry-run', action='store_true',
+                        help='allows running without affecting storage data (not 100% error prone as it reads/writes '
+                             'to Redis)')
+    args = parser.parse_args()
+    ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
+    print(ans)
