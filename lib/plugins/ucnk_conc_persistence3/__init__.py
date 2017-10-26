@@ -159,7 +159,7 @@ class ConcPersistence(AbstractConcPersistence):
         self._auth = auth
         self._settings = settings  # TO_DO: planned to remove
 
-        self.archMan = ArchMan(db_path, arch_rows_limit)
+        self.arch_man = ArchMan(db_path, arch_rows_limit)
 
     def _get_ttl_for(self, user_id):
         if self._auth.is_anonymous(user_id):
@@ -201,8 +201,8 @@ class ConcPersistence(AbstractConcPersistence):
         data = self.db.get(mk_key(data_id))
         if data is None:
             # iterate through opened connections to search for data
-            self.archMan.update_archives()
-            for arch_conn in self.archMan.arch_connections:
+            self.arch_man.update_archives()
+            for arch_conn in self.arch_man.arch_connections:
                 tmp = self._execute_sql(arch_conn, 'SELECT data, num_access FROM archive WHERE id = ?',
                                         (data_id,)).fetchone()
                 if tmp:
@@ -264,7 +264,8 @@ class ConcPersistence(AbstractConcPersistence):
         return archive_concordance,
 
     def export_actions(self):
-        return {actions.concordance.Actions: [create_arch_conc_action(self.db, self.archMan.arch_connections[0])]}
+        return {actions.concordance.Actions: [create_arch_conc_action(self.db,
+                                                                      self.arch_man.get_current_archive_conn())]}
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)
@@ -277,5 +278,6 @@ def create_instance(settings, db, auth):
     ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
     anonymous_user_ttl_days = int(
         plugin_conf.get('default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
-    arch_rows_limit = int(plugin_conf.get('ucnk:archive_rows_limit', ConcPersistence.DEFAULT_ARCHIVE_ROWS_LIMIT))
+    arch_rows_limit = int(plugin_conf.get('ucnk:archive_rows_limit',
+                                          ConcPersistence.DEFAULT_ARCHIVE_ROWS_LIMIT))
     return ConcPersistence(settings, db, auth, db_path, ttl_days, anonymous_user_ttl_days, arch_rows_limit)
