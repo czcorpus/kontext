@@ -1,6 +1,7 @@
 # Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -42,9 +43,7 @@ element db {
 """
 
 import json
-
 import redis
-
 from plugins.abstract.general_storage import KeyValueStorage
 
 
@@ -262,6 +261,24 @@ class RedisDb(KeyValueStorage):
         previous key if any or None
         """
         return self.redis.getset(key, value)
+
+    def incr(self, key, amount=1):
+        """
+        Increments the value of 'key' by 'amount'.  If no key exists,
+        the value will be initialized as 'amount'
+        """
+        return self.redis.incr(key, amount)
+
+    def hash_set_map(self, key, mapping):
+        """
+        Set key to value within hash 'name' for each corresponding
+        key and value from the 'mapping' dict.
+        Before setting, the values are json-serialized
+        """
+        new_mapping = {}
+        for name in mapping:
+            new_mapping[name] = json.dumps(mapping[name])
+        return self.redis.hmset(key, new_mapping)
 
 
 def create_instance(conf):

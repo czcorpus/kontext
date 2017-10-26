@@ -270,6 +270,26 @@ class DefaultDb(KeyValueStorage):
             self._conn().commit()
         return None
 
+    def incr(self, key, amount=1):
+        """
+        Increments the value of 'key' by 'amount'.  If no key exists,
+        the value will be initialized as 'amount'
+        """
+        val = self.get(key)
+        if val is None:
+            val = 0
+        val += amount
+        self.set(key, val)
+        return val
+
+    def hash_set_map(self, key, mapping):
+        """
+        Set key to value within hash 'name' for each corresponding
+        key and value from the 'mapping' dict.
+        """
+        self.set(key, mapping)
+        return True
+
 
 def create_instance(conf):
     """
