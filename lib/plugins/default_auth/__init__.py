@@ -19,13 +19,56 @@ It relies on default_db module which requires no database backend.
 import hashlib
 import urllib
 
+import os
+from werkzeug.security import pbkdf2_hex
 from plugins.abstract.auth import AbstractInternalAuth, AuthException
 from translation import ugettext as _
 import plugins
 from plugins import inject
 
-
 IMPLICIT_CORPUS = 'susanne'
+
+
+def mk_pwd_hash_default(data):
+    """
+    Returns a pbkdf2_hex hash of the passed data with default parameters
+    """
+    iterations = 1000
+    keylen = 24
+    algo = 'sha512'
+    return mk_pwd_hash(data, iterations, keylen, algo)
+
+
+def mk_pwd_hash(data, iterations, keylen, algo):
+    """
+    Returns a pbkdf2_hex hash of the passed data with specified parameters
+    """
+    salt = os.urandom(keylen).encode('hex')
+    hashed = pbkdf2_hex(data, salt, iterations, keylen, algo)
+    return algo + "$" + salt + ":" + str(iterations) + "$" + hashed
+
+
+def split_pwd_hash(hashed):
+    """
+    Splits a string supposed to have a format "algorithm$salt:iterations$hashed_pwd" and returns a dictionary of
+    the values. For legacy pwd hashes, a dictionary with a single value (i.e. {'data': legacyHash}) is returned.
+    """
+    res = {}
+    first_split = hashed.split("$")
+    # no dollar-sign means legacy pwd format
+    if len(first_split) == 1:
+        res['data'] = hashed
+    else:
+        # supposed format: "algorithm$salt:iterations$hashed_pwd"
+        if len(first_split) == 3:
+            res['algo'] = first_split[0]
+            res['salt'] = first_split[1].split(":")[0]
+            res['iterations'] = int(first_split[1].split(":")[1])
+            res['data'] = first_split[2]
+            res['keylen'] = len(res['data']) / 2
+        else:
+            raise TypeError("wrong hash format")
+    return res
 
 
 class DefaultAuthHandler(AbstractInternalAuth):
@@ -183,4 +226,3 @@ def create_instance(conf, db, sessions):
     return DefaultAuthHandler(db=db, sessions=sessions, anonymous_user_id=int(plugin_conf['anonymous_user_id']),
                               login_url=plugin_conf.get('login_url', '/user/login'),
                               logout_url=plugin_conf.get('logout_url', '/user/logoutx'))
-
