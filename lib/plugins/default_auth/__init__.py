@@ -1,6 +1,7 @@
-# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +19,6 @@ It relies on default_db module which requires no database backend.
 """
 import hashlib
 import urllib
-
 import os
 from werkzeug.security import pbkdf2_hex
 from plugins.abstract.auth import AbstractInternalAuth, AuthException
@@ -36,14 +36,14 @@ def mk_pwd_hash_default(data):
     iterations = 1000
     keylen = 24
     algo = 'sha512'
-    return mk_pwd_hash(data, iterations, keylen, algo)
+    salt = os.urandom(keylen).encode('hex')
+    return mk_pwd_hash(data, salt, iterations, keylen, algo)
 
 
-def mk_pwd_hash(data, iterations, keylen, algo):
+def mk_pwd_hash(data, salt, iterations, keylen, algo):
     """
     Returns a pbkdf2_hex hash of the passed data with specified parameters
     """
-    salt = os.urandom(keylen).encode('hex')
     hashed = pbkdf2_hex(data, salt, iterations, keylen, algo)
     return algo + "$" + salt + ":" + str(iterations) + "$" + hashed
 
@@ -97,13 +97,19 @@ class DefaultAuthHandler(AbstractInternalAuth):
         user_data = self._find_user(username)
         valid_pwd = False
         if user_data:
-            if len(user_data['pwd_hash']) == 32:
-                pwd_hash = hashlib.md5(password).hexdigest()
-                if user_data['pwd_hash'] == pwd_hash:
-                    valid_pwd = True
+            split = split_pwd_hash(user_data['pwd_hash'])
+            if 'salt' not in split:
+                if len(user_data['pwd_hash']) == 32:
+                    pwd_hash = hashlib.md5(password).hexdigest()
+                    if user_data['pwd_hash'] == pwd_hash:
+                        valid_pwd = True
+                else:
+                    import crypt
+                    if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
+                        valid_pwd = True
             else:
-                import crypt
-                if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
+                if user_data['pwd_hash'] == mk_pwd_hash(password, split['salt'], split['iterations'],
+                                                split['keylen'], split['algo']):
                     valid_pwd = True
 
             if user_data['username'] == username and valid_pwd:
