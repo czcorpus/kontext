@@ -275,9 +275,10 @@ class RedisDb(KeyValueStorage):
         key and value from the 'mapping' dict.
         Before setting, the values are json-serialized
         """
+        new_mapping = {}
         for name in mapping:
-            mapping[name] = json.dumps(mapping[name])
-        return self.redis.hmset(key, mapping)
+            new_mapping[name] = json.dumps(mapping[name])
+        return self.redis.hmset(key, new_mapping)
 
 
 def create_instance(conf):

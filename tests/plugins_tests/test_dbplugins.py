@@ -22,14 +22,15 @@ Test parameters allow to turn on/off the verbose mode and the ttl methods testin
 The sqlite3 plugin stores data in a single table called "data" with the following structure:
 CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)
 """
-
-import unittest
-import redis
 import sqlite3
 import time
+import unittest
+
+import redis
+
+from plugins.abstract.general_storage import KeyValueStorage
 from plugins.redis_db import RedisDb
 from plugins.sqlite3_db import DefaultDb
-from plugins.abstract.general_storage import KeyValueStorage
 
 # set test parameters
 TEST_TTL_METHODS = True  # set to False to speed up by skipping ttl testing which involves time.sleep()
@@ -320,7 +321,7 @@ class DbTest(unittest.TestCase):
         field2 = 'f2'
         value2 = 'val21'
         field3 = 'f3'
-        value3 = 'val3'
+        value3 = 100
         # create hash records:
         self.r.hash_set(key, field1, value1)
         self.s.hash_set(key, field1, value1)
@@ -453,25 +454,40 @@ class DbTest(unittest.TestCase):
         key2 = 'key2'
         number1 = 100
         amount = 10
+
         self.r.set(key1, number1)
-        self.r.incr(key1, amount)
-        self.r.incr(key2, amount)
-        self.assertEqual(self.r.get(key1), number1+amount)
-        self.assertEqual(self.r.get(key2), amount)
+        r_out1 = self.r.incr(key1, amount)
+        r_out2 = self.r.incr(key2, amount)
+
+        self.s.set(key1, number1)
+        s_out1 = self.s.incr(key1, amount)
+        s_out2 = self.s.incr(key2, amount)
+
+        self.assertEqual(r_out1, number1 + amount, "redis_db incr error")
+        self.assertEqual(r_out2, amount, "redis_db incr error for unset value")
+        self.assertEqual(s_out1, number1 + amount, "sqlite3 incr error")
+        self.assertEqual(s_out2, amount, "sqlite3 incr error for unset value")
 
     def test_hash_set_map(self):
+        """
+        Test the hash_set_map method:
+        create a dict, set it as a hash value, the sum of both values in both dbs should match
+        """
         d = {'val1': 100, 'val2': 'times'}
         self.r.hash_set_map('hash1', d)
+        self.s.hash_set_map('hash1', d)
         out_r = str(self.r.hash_get('hash1', 'val1')) + self.r.hash_get('hash1', 'val2')
+        out_s = str(self.s.hash_get('hash1', 'val1')) + self.s.hash_get('hash1', 'val2')
         self.assertEqual(out_r, "100times")
+        self.assertEqual(out_s, "100times")
 
     def test_get_instance(self):
         """
-        test the get_instance, which is defined in the KeyValueStorage abstract class
-
+        test the get_instance method (defined in the KeyValueStorage abstract class)
         """
         self.assertTrue(isinstance(self.r.get_instance(1), KeyValueStorage))
         self.assertTrue(isinstance(self.s.get_instance(1), KeyValueStorage))
+
 
 if __name__ == '__main__':
     unittest.main()
