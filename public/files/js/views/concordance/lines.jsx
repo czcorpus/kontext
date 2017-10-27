@@ -184,17 +184,17 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
         _renderLeftChunk(chunkOffsets, kwicTokenNum, item, i, itemList) {
             const ans = [];
             if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`lc:${ans.length}`} t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[itemList.get(i - 1), item]} />);
             }
             if (item.openLink) {
-                ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`lc:${ans.length}`} t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            ans.push(<NonKwicText data={item} idx={i} position="l" chunkOffset={-1 * chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum}
-                            supportsTokenDetail={this.props.supportsTokenDetail} />);
+            ans.push(<NonKwicText key={`lc:${ans.length}`} data={item} idx={i} position="l" chunkOffset={-1 * chunkOffsets.get(i)}
+                            kwicTokenNum={kwicTokenNum} supportsTokenDetail={this.props.supportsTokenDetail} />);
             if (item.closeLink) {
-                ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`lc:${ans.length}`} t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
             return ans;
@@ -205,21 +205,21 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
             const mouseover = (item.mouseover || []).join(', ');
             const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
             if (prevClosed && item.openLink) {
-                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`kc:${ans.length}`} t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                         chunks={[prevClosed, item]} />);
 
             } else if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`kc:${ans.length}`} t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                         chunks={[itemList.get(i - 1), item]} />);
             }
             if (hasKwic) {
-                ans.push(<strong key={`k:${i}`} className={item.className} title={mouseover}>{item.text.join(' ')}</strong>);
+                ans.push(<strong key={`lc:${ans.length}`} className={item.className} title={mouseover}>{item.text.join(' ')}</strong>);
 
             } else if (!item.text) { // TODO test array length??
                 ans.push('<--not translated-->');
 
             } else {
-                ans.push(<span key={`k:${i}`} className={item.className === 'strc' ? 'strc' : null}>{item.text.join(' ')} </span>);
+                ans.push(<span key={`lc:${ans.length}`} className={item.className === 'strc' ? 'strc' : null}>{item.text.join(' ')} </span>);
             }
             return ans;
         }
@@ -228,21 +228,21 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
             const ans = [];
             const prevClosed = i > 0 ? itemList.get(i - 1) : prevBlockClosed;
             if (prevClosed && item.openLink) {
-                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`rc:${ans.length}`} t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[prevClosed, item]} />);
 
             } else if (i > 0 && itemList.get(i - 1).closeLink) {
-                ans.push(<extras.AudioLink t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`rc:${ans.length}`} t="+" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[itemList.get(i - 1), item]} />);
             }
             if (item.openLink) {
-                ans.push(<extras.AudioLink t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`rc:${ans.length}`} t="L" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
-            ans.push(<NonKwicText data={item} idx={i} position="r" chunkOffset={chunkOffsets.get(i)} kwicTokenNum={kwicTokenNum}
-                            supportsTokenDetail={this.props.supportsTokenDetail} />);
+            ans.push(<NonKwicText key={`rc:${ans.length}`} data={item} idx={i} position="r" chunkOffset={chunkOffsets.get(i)}
+                            kwicTokenNum={kwicTokenNum} supportsTokenDetail={this.props.supportsTokenDetail} />);
             if (item.closeLink) {
-                ans.push(<extras.AudioLink t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
+                ans.push(<extras.AudioLink key={`lc:${ans.length}`} t="R" lineIdx={this.props.lineIdx} corpname={this.props.baseCorpname}
                             chunks={[item]} />);
             }
             return ans;
@@ -406,7 +406,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                     {alignedCorpora.map((alCorp, i) => {
                         if (this.props.cols.get(i + 1).visible) {
                             return [
-                                (<td className="ref">
+                                (<td key={`alref:${i}`} className="ref">
                                     <extras.RefInfo corpusId={this.props.cols.get(i + 1).n}
                                         tokenNumber={alCorp.tokenNumber}
                                         lineIdx={this.props.lineIdx}
