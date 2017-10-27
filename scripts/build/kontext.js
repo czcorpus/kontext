@@ -19,8 +19,9 @@
  */
 
 /**
- * A bunch of util functions used by Grunt.js to inject installation-specific (e.g. custom JS plug-ins)
- * and dynamic (e.g. list of current template JS models) information.
+ * A bunch of util functions used by KonText build scripts (= Webpack) to inject 
+ * installation-specific (e.g. custom JS plug-ins) and dynamic (e.g. list of current 
+ * template JS models) information.
  */
 (function (module) {
     'use strict';
