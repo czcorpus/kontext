@@ -19,8 +19,8 @@
  */
 
 /**
- * A bunch of util functions used by KonText build scripts (= Webpack) to inject 
- * installation-specific (e.g. custom JS plug-ins) and dynamic (e.g. list of current 
+ * A bunch of util functions used by KonText build scripts (= Webpack) to inject
+ * installation-specific (e.g. custom JS plug-ins) and dynamic (e.g. list of current
  * template JS models) information.
  */
 (function (module) {
@@ -213,11 +213,12 @@
             grammar,
             {
                 allowedStartRules: ['Query', 'RegExpRaw' , 'PhraseQuery'],
+                output: 'source',
                 format: 'commonjs'
             }
         );
         const filePath = path.resolve(targetDir, 'parser.js');
-        fs.writeFileSync(filePath);
+        fs.writeFileSync(filePath, parser);
         return filePath;
     }
 
