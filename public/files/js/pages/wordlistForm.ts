@@ -28,6 +28,10 @@ import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {SimplePageStore} from '../stores/base';
 import {WordlistFormStore} from '../stores/wordlist/form';
 
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/wordlistForm.less');
+
 /**
  *
  */

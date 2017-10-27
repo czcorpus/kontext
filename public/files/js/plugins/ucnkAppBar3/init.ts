@@ -27,7 +27,6 @@ import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../pages/document';
 import {SimplePageStore} from '../../stores/base';
 
-
 export class AppBarStore extends SimplePageStore {
 
     private layoutModel:PageModel;

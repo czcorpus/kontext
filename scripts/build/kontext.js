@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2015 Institute of the Czech National Corpus
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -10,7 +12,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -23,8 +25,11 @@
 (function (module) {
     'use strict';
 
-    let fs = require('fs');
-    let merge = require('merge');
+    const fs = require('fs');
+    const merge = require('merge');
+    const path = require('path');
+    const peg = require('pegjs');
+    const DOMParser = require('xmldom').DOMParser;
 
     function camelizeName(s) {
         return s.split('_')
@@ -32,6 +37,13 @@
                 .join('');
     }
 
+    /**
+     * Find all the children XML tags within <plugin> section.
+     * These represent all the plug-ins KonText can use (including
+     * the ones not in use in the current configuration).
+     *
+     * @param {*} doc A DOM document representing parsed config.xml
+     */
     function findPluginTags(doc) {
         let plugins = doc.getElementsByTagName('plugins');
         let ans = [];
@@ -55,25 +67,14 @@
         return ans;
     }
 
-    function findAllPluginCss(pluginDir, doc) {
-        function endsWith(s, subs) {
-            return s.indexOf(subs) === s.length - subs.length;
-        }
-        let ans = [];
-        findPluginTags(doc).forEach((item) => {
-            let dirPath;
-            if (item['jsModule']) {
-                dirPath = pluginDir + '/' + item['jsModule'];
-                fs.readdirSync(dirPath).forEach(function (filename) {
-                    if (endsWith(filename, '.css') || endsWith(filename, '.less')) {
-                        ans.push(dirPath + '/' + filename);
-                    }
-                });
-            }
-        });
-        return ans;
-    }
-
+    /**
+     * Find all the build customization (file build.json) setup
+     * of individual plug-ins. Such a customization is only needed
+     * in specific situations (legacy JS modules etc.).
+     *
+     * @param {*} pluginDir A directory path where JS plugins are located
+     * @param {*} doc A DOM document representing parsed config.xml
+     */
     function findAllPluginBuildConf(pluginDir, doc) {
         let ans = {};
         findPluginTags(doc).forEach((item) => {
@@ -90,51 +91,55 @@
         return ans;
     }
 
-    function resourceIsLocal(path) {
-        return !(path.indexOf('//') === 0 || path.indexOf('http') === 0);
-    }
+    module.exports.loadKontextConf = function (confPath) {
+        const data = fs.readFileSync(confPath, {encoding: 'utf8'});
+        return new DOMParser().parseFromString(data);
+    };
 
-    function findAllThemeCss(doc) {
-        let kontextNode = doc.getElementsByTagName('kontext')[0];
+    /**
+     *
+     */
+    module.exports.findThemeCss = function (doc, cssPath, themesPath) {
+        const kontextNode = doc.getElementsByTagName('kontext')[0];
         let themeNode = null;
-        let cssNode = null;
-        let styles = [];
-
-        let themeName = null;
-        let srch = kontextNode.getElementsByTagName('name')[0];
-        if (srch) {
-            themeName = srch.textContent.trim();
-        }
-
         for (let i = 0; i < kontextNode.childNodes.length; i += 1) {
             if (kontextNode.childNodes[i].nodeName === 'theme') {
                 themeNode = kontextNode.childNodes[i];
                  break;
             }
         }
-        if (themeNode) {
-            cssNode = themeNode.getElementsByTagName('css')[0];
+        let themeName = null;
+        let srch = themeNode.getElementsByTagName('name')[0];
+        if (srch) {
+            themeName = srch.textContent.trim();
+        }
+
+        if (themeNode && themeName) {
+            const cssNode = themeNode.getElementsByTagName('css')[0];
             if (cssNode) {
-                for (let i = 0; i < cssNode.childNodes.length; i += 1) {
-                    if (cssNode.childNodes[i].nodeType === 1 || cssNode.childNodes[i].nodeType === 3) {
-                        let cssPath = cssNode.childNodes[i].textContent.trim();
-                        if (cssPath && resourceIsLocal(cssPath)) {
-                            styles.push('public/files/themes/' + themeName + '/'
-                                + cssNode.childNodes[i].textContent.trim());
-                        }
-                    }
+                const css = cssNode.textContent.trim();
+                if (css) {
+                    return path.resolve(themesPath, themeName, css);
                 }
             }
         }
-        return styles;
+        return path.resolve(cssPath, 'empty.less');
     }
 
     /**
-     * Finds CSS paths defined in a custom KonText theme. This is merged during the
-     * build process with the rest of CSS.
+     *
      */
-    module.exports.getCustomStyles = function (confDoc, pluginsPath) {
-        return findAllThemeCss(confDoc).concat(findAllPluginCss(pluginsPath, confDoc));
+    module.exports.findPluginExternalModules = function (confDoc, jsPath) {
+        const pluginsPath = path.resolve(jsPath, 'plugins');
+        const pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
+        const ans = [];
+        for (let p in pluginBuildConf) {
+            const externals = pluginBuildConf[p]['externalModules'] || {};
+            for (let p2 in externals) {
+                ans.push([p2, externals[p2]]);
+            }
+        }
+        return ans
     };
 
 
@@ -143,39 +148,77 @@
      * E.g. 'plugins/queryStorage' maps to 'plugins/myCoolQueryStorage'.
      *
      * @param {string} confDoc - parsed KonText XML config
-     * @param {string} pluginsPath - a path to JS/TS plug-ins implementations
+     * @param {string} jsPath - a path to JS/TS plug-ins implementations
+     * @param {string} cssPath - a path to core CSS/LESS files
+     * @param {string} themesPath - a path to theme customization dir
      * @param {boolean} isProduction - set whether a production setup should be exported
      * @return {[fakePath:string]:string}
      */
-    module.exports.loadModulePathMap = function (confDoc, pluginsPath, isProduction) {
-        let reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev';
-        let reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev';
-        let pluginMap = {
-            'conf' : 'empty:',
-            'plugins/applicationBar/toolbar': 'empty:',
-            'vendor/rsvp' : 'vendor/rsvp.min',
-            'vendor/react': reactModule,
-            'vendor/react-dom': reactDomModule,
-            'vendor/immutable': 'vendor/immutable.min',
-            'vendor/d3': 'vendor/d3.min',
-            'vendor/d3-color': 'vendor/d3-color.min',
-            'SoundManager' : 'vendor/soundmanager2.min',
+    module.exports.loadModulePathMap = function (confDoc, jsPath, cssPath, themesPath, isProduction) {
+        const pluginsPath = path.resolve(jsPath, 'plugins');
+        const reactModule = isProduction ? 'vendor/react.min' : 'vendor/react.dev';
+        const reactDomModule = isProduction ? 'vendor/react-dom.min' : 'vendor/react-dom.dev';
+        mergeTranslations(jsPath, path.resolve(jsPath, '.compiled/translations.js'));
+        const cqlParserPath = parseCqlGrammar(jsPath);
+        const moduleMap = {
+            'translations': path.resolve(jsPath, '.compiled/translations'),
+            'views': path.resolve(jsPath, 'views'),
+            'stores': path.resolve(jsPath, 'stores'),
+            'vendor/rsvp' : path.resolve(jsPath, 'vendor/rsvp.min'),
+            'vendor/rsvp-ajax' : path.resolve(jsPath, 'vendor/rsvp-ajax'),
+            'vendor/react': path.resolve(jsPath, reactModule),
+            'vendor/react-dom': path.resolve(jsPath, reactDomModule),
+            'vendor/invariant' : path.resolve(jsPath, 'vendor/invariant'),
+            'vendor/immutable': path.resolve(jsPath, 'vendor/immutable.min'),
+            'vendor/d3': path.resolve(jsPath, 'vendor/d3.min'),
+            'vendor/d3-color': path.resolve(jsPath, 'vendor/d3-color.min'),
+            'vendor/Dispatcher': path.resolve(jsPath, 'vendor/Dispatcher'),
+            'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat'),
+            'vendor/SoundManager' : path.resolve(jsPath, 'vendor/soundmanager2.min'),
+            'cqlParser/parser': cqlParserPath,
+            'misc/keyboardLayouts': path.resolve(jsPath, 'kb-layouts.json'),
+            'styles': cssPath,
+            'custom-styles/theme.less': module.exports.findThemeCss(confDoc, cssPath, themesPath)
         };
-        let pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
+        const pluginBuildConf = findAllPluginBuildConf(pluginsPath, confDoc);
         for (let p in pluginBuildConf) {
-            (pluginBuildConf[p]['ignoreModules'] || []).forEach((item) => {
-                pluginMap[item] = 'empty:'
-            });
             const remapModules = pluginBuildConf[p]['remapModules'] || {};
             for (let p in remapModules) {
-                pluginMap[p] = remapModules[p];
+                moduleMap[p] = remapModules[p];
             }
         };
         findPluginTags(confDoc).forEach((item) => {
-            pluginMap['plugins/' + item.canonicalName] = item.jsModule ? 'plugins/' + item.jsModule : 'empty:';
+            if (item.jsModule) {
+                moduleMap['plugins/' + item.canonicalName] = path.resolve(pluginsPath, item.jsModule);
+
+            } else {
+                moduleMap['plugins/' + item.canonicalName] = path.resolve(pluginsPath, 'empty');
+            }
         });
-        return pluginMap;
+        return moduleMap;
     };
+
+    function parseCqlGrammar(jsPath) {
+        const targetDir = path.resolve(jsPath, '.compiled');
+        const grammar = fs.readFileSync(
+            path.resolve(__dirname, 'cql.pegjs'),
+            {encoding: 'utf-8'}
+        );
+        // cmd: 'mkdir -p public/files/js/.compiled/cqlParser;
+        // ./node_modules/pegjs/bin/pegjs --format amd
+        // --allowed-start-rules Query,RegExpRaw,PhraseQuery
+        // -o public/files/js/.compiled/cqlParser/parser.js scripts/build/cql.pegjs'
+        const parser = peg.generate(
+            grammar,
+            {
+                allowedStartRules: ['Query', 'RegExpRaw' , 'PhraseQuery'],
+                format: 'commonjs'
+            }
+        );
+        const filePath = path.resolve(targetDir, 'parser.js');
+        fs.writeFileSync(filePath);
+        return filePath;
+    }
 
     /**
      * Configures a special module "vendor/common" which contains all the 3rd
@@ -214,31 +257,6 @@
         ];
     };
 
-    /**
-     * Generates a list of modules representing models of individual pages.
-     *
-     * @param {string} path to a directory where models reside
-     * @return Array<string>
-     */
-    module.exports.listAppModules = function (pageDir) {
-        let ans = [];
-
-        function isExcluded(p) {
-            return ['document.js'].indexOf(p) > -1;
-        }
-
-        fs.readdirSync(pageDir).forEach(function (item) {
-            let srch = /^(.+)\.[jt]s$/.exec(item);
-            if (srch && !isExcluded(item)) {
-                ans.push({
-                    name: 'pages/' + srch[1],
-                    exclude: ['vendor/common'] // we do not want to include vendor stuff in page code
-                });
-            }
-        });
-        return ans;
-    };
-
     function findAllMessageFiles(startDir) {
         let ans = [];
         fs.readdirSync(startDir).forEach((item) => {
@@ -253,7 +271,7 @@
         return ans;
     }
 
-    module.exports.mergeTranslations = function (startDir, destFile) {
+    function mergeTranslations(startDir, destFile) {
         let files = findAllMessageFiles(startDir);
         let translations = {};
         files.forEach((item) => {

@@ -25,7 +25,6 @@
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
-
 import * as corplistComponent from 'plugins/corparch/init';
 import {PageModel} from './document';
 import liveAttributes from 'plugins/liveAttributes/init';
@@ -41,6 +40,10 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import * as RSVP from 'vendor/rsvp';
 import {init as queryFormInit} from 'views/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
+
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/firstForm.less');
 
 /**
  *

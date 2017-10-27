@@ -591,6 +591,15 @@ declare module Kontext {
     }
 
     export type AttrItem = {n:string; label:string};
+
+    export type VirtualKeys = Array<Array<[string, string]>>;
+
+    export interface VirtualKeyboardLayout {
+        codes:Array<string>;
+        label:string;
+        name:string;
+        keys:VirtualKeys;
+    }
 }
 
 
@@ -1062,6 +1071,7 @@ declare module Legacy {
     }
 }
 
-
-
-
+declare module "misc/keyboardLayouts" {
+    var kb:Array<Kontext.VirtualKeyboardLayout>;
+    export = kb;
+}

@@ -30,6 +30,9 @@ import * as Immutable from 'vendor/immutable';
 import {init as viewInit, TreeCorparchViews} from './view';
 import {QueryStore} from '../../stores/query/main';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 
 export interface Node {
     active: boolean;

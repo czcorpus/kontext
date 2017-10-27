@@ -24,9 +24,7 @@ KonText - error
 #end def
 
 #def bodyonload
-require(['${client_model_dir}/message', 'conf'], function (page, conf) {
-    page.init(conf);
-});
+messagePage.init(__conf);
 #end def
 
 #def main

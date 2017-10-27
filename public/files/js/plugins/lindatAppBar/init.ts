@@ -23,6 +23,9 @@
 import * as RSVP from 'vendor/rsvp';
 import * as aai from './aai-config';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 export class LindatAppBar implements PluginInterfaces.IToolbar {
 }
 

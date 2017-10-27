@@ -29,6 +29,9 @@ declare var $:any;
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../../stores/base';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 /**
  *
  */

@@ -22,6 +22,10 @@
 
 import {PageModel} from './document';
 
+declare var require:any;
+// weback - ensure a style (even empty one) is created for the page
+require('styles/message.less');
+
 class MessagePage {
 
     private layoutModel:PageModel;

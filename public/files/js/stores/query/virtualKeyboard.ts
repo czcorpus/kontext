@@ -18,20 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/common.d.ts" />
+
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../pages/document';
+import * as kbLayouts from 'misc/keyboardLayouts';
 
-
-export type VirtualKeys = Array<Array<[string, string]>>;
-
-export interface VirtualKeyboardLayout {
-    codes:Array<string>;
-    label:string;
-    name:string;
-    keys:VirtualKeys;
-}
-
-export type VirtualKeyboardLayouts = Array<VirtualKeyboardLayout>;
+export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
 
 
 export class VirtualKeyboardStore extends SimplePageStore {
@@ -75,22 +68,9 @@ export class VirtualKeyboardStore extends SimplePageStore {
                     this.currLayout = payload.props['idx'];
                     this.notifyChangeListeners();
                 break;
-                case 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS':
-                    this.pageModel.ajax<VirtualKeyboardLayouts>(
-                        'GET',
-                        this.pageModel.createStaticUrl('misc/kb-layouts.min.json'),
-                        {}
-                    ).then(
-                        (data) => {
-                            this.layouts = data;
-                            this.currLayout = this.findMatchingKeyboard(payload.props['inputLanguage']);
-                            this.notifyChangeListeners();
-                        }
-                    ).catch(
-                        (err) => {
-                            this.pageModel.showMessage('error', err);
-                        }
-                    );
+                case 'QUERY_INPUT_LOAD_VIRTUAL_KEYBOARD_LAYOUTS': // TODO this a legacy action (now we have kb bundled)
+                    this.layouts = kbLayouts;
+                    this.notifyChangeListeners();
                 break;
             }
         });
@@ -122,7 +102,7 @@ export class VirtualKeyboardStore extends SimplePageStore {
         return this.layouts.map<[string, string]>(item => [item.name, item.label]);
     }
 
-    getCurrentLayout():VirtualKeyboardLayout {
+    getCurrentLayout():Kontext.VirtualKeyboardLayout {
         return this.layouts[this.currLayout];
     }
 

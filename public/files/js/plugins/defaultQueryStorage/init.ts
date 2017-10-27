@@ -25,6 +25,9 @@ import * as RSVP from 'vendor/rsvp';
 import {QueryStorageStore} from './stores';
 import {init as viewsInit} from './view';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
 
     private pluginApi:Kontext.PluginApi;

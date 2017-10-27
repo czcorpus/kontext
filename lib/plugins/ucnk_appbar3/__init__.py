@@ -54,17 +54,11 @@ class ApplicationBar3(AbstractApplicationBar):
 
     @staticmethod
     def _process_scripts(conf):
-        deps = []
-        for item in conf['depends'].values():
-            deps.append(dict(
-                url=item['url'].rstrip('.js'),
-                module=item['package'] + '/' + item['module']))
-            if item['module'] == 'jquery':
-                deps.append(dict(
-                    url=item['url'].rstrip('.js'),
-                    module='jquery'))
-        return dict(main=conf['main'].rstrip('.js'),
-                    deps=deps)
+        scripts = []
+        for k, item in sorted(conf['depends'].items(), key=lambda v: int(v[0])):
+            scripts.append(item['url'])
+        scripts.append(conf['main'])
+        return scripts
 
     def get_styles(self, plugin_api):
         toolbar_obj = plugin_api.get_shared('toolbar')

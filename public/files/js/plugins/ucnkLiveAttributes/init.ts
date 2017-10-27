@@ -31,6 +31,9 @@ import common = require('./common');
 import {init as viewInit} from './view';
 import createSubcMixer from 'plugins/subcmixer/init';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 
 export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
 

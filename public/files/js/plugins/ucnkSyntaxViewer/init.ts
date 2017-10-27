@@ -26,6 +26,9 @@ import * as RSVP from 'vendor/rsvp';
 import {createGenerator} from './ucnkTreeView';
 import {SimplePageStore} from '../../stores/base';
 
+declare var require:any;
+require('./style.less'); // webpack
+
 /**
  *
  */

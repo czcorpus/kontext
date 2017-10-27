@@ -24,21 +24,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #extends document
 
 #def bodyonload
-require(['${client_model_dir}/${page_model}', 'conf'], function(pageSelf, conf) {
-    conf.attrname = "$attrname";
-    conf.AttrList = $to_json($getVar('AttrList', []));
-    conf.StructAttrList = $to_json($getVar('StructAttrList', []));
-    conf.CollFormProps = $to_json($coll_form_args);
-    conf.FreqFormProps = $to_json($freq_form_args);
-    conf.CTFreqFormProps = $to_json($ctfreq_form_args);
-    conf.workerTasks = $to_json($getVar('tasks', []));
-    conf.CollResultData = $to_json($Items);
-    conf.CollResultHeading = $to_json($Head);
-    conf.CollPageSize = $to_json($citemsperpage);
-    conf.CollSaveLinesLimit = $to_json($save_line_limit);
-    conf.CollUnfinished = $to_json($processing);
-    pageSelf.init(conf, $to_json($processing));
-});
+__conf.attrname = "$attrname";
+__conf.AttrList = $to_json($getVar('AttrList', []));
+__conf.StructAttrList = $to_json($getVar('StructAttrList', []));
+__conf.CollFormProps = $to_json($coll_form_args);
+__conf.FreqFormProps = $to_json($freq_form_args);
+__conf.CTFreqFormProps = $to_json($ctfreq_form_args);
+__conf.workerTasks = $to_json($getVar('tasks', []));
+__conf.CollResultData = $to_json($Items);
+__conf.CollResultHeading = $to_json($Head);
+__conf.CollPageSize = $to_json($citemsperpage);
+__conf.CollSaveLinesLimit = $to_json($save_line_limit);
+__conf.CollUnfinished = $to_json($processing);
+collPage.init(__conf, $to_json($processing));
 #end def
 
 #def title

@@ -41,139 +41,75 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #if $footer_bar_css
 <link rel="stylesheet" type="text/css" href="$footer_bar_css" />
 #end if
-#for $online_css_item in $theme.online_css
-<link rel="stylesheet" type="text/css" href="$online_css_item" />
-#end for
 
-#if $debug
-<link rel="stylesheet/less" type="text/css" href="$files_path/css/kontext.less" />
-<link rel="stylesheet/less" type="text/css" href="$files_path/css/view.less" />
-<link rel="stylesheet/less" type="text/css" href="$files_path/css/widgets.less" />
-#if $theme.css
-<link rel="stylesheet" type="text/css" href="$theme.css" />
-#end if
-#else
-<link rel="stylesheet" type="text/css" href="$files_path/css/kontext.min.css#if $deployment_id#?v=$deployment_id#end if#" />
-#end if
+<link rel="stylesheet" type="text/css" href="$files_path/dist/common.css#if $deployment_id#?v=$deployment_id#end if#" />
+<link rel="stylesheet" type="text/css" href="$files_path/dist/${page_model}.css#if $deployment_id#?v=$deployment_id#end if#" />
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
 
-#if $debug
-<script type="text/javascript" src="$files_path/js/vendor/less.min.js"></script>
-#end if
-<script type="text/javascript" src="$files_path/js/min/vendor/requirejs.min.js"></script>
 #if $intl_polyfill_url
 <script type="text/javascript">
 if(!window.Intl)try{var hd=document.getElementsByTagName("head")[0],sc=window.document.createElement("script");sc.type="text/javascript",sc.src="${intl_polyfill_url}",hd.appendChild(sc)}catch(a){console.error(a)}
 </script>
 #end if
-<script type="text/javascript" src="$files_path/js/min/vendor/intl.min.js"></script>
-<script type="text/javascript" src="$files_path/js/min/vendor/common.js#if $deployment_id#?v=$deployment_id#end if#"></script>
+<!-- plug-ins dependencies -->
+<script type="text/javascript" src="$files_path/dist/intl.min.js"></script>
+#for $abjs in $app_bar_js
+<script type="text/javascript" src="${abjs}"></script>
+#end for
+<!-- --------------------- -->
+<script type="text/javascript" src="$files_path/dist/common.js#if $deployment_id#?v=$deployment_id#end if#"></script>
+<script type="text/javascript" src="$files_path/dist/${page_model}.js"></script>
 #block headers
 #end block
 
 <script type="text/javascript">
-var missingPlugins = [],
-    paths = {};
-
-#for $plugin_id, $plugin_path in $plugin_js.items()
-#if $plugin_path
-paths['plugins/$camelize($plugin_id)'] = './plugins/$plugin_path';
-#else
-missingPlugins.push('plugins/$camelize(plugin_id)/init');
+var __conf = {};
+__conf.page = {};
+__conf.activePlugins = $to_json($active_plugins);  ## here we mean 'active on client side'
+__conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 5000);
+__conf.rootURL = "$root_url";
+__conf.rootPath = "$root_url";
+__conf.staticPath = "$files_path";
+__conf.corpname = $to_json($corpname);  ## deprecated
+__conf.subcorpname = #if $getVar('usesubcorp')#$to_json($usesubcorp)#else# null#end if#;
+__conf.humanCorpname = $to_json($human_corpname);  ## deprecated
+__conf.corpusIdent = $to_json($corpus_ident);
+__conf.baseAttr = "${base_attr}";
+__conf.currentAction = "$current_action";
+__conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
+__conf.loginUrl = $to_json($login_url);
+__conf.currentArgs = $to_json($Globals.export());
+__conf.compiledQuery = $to_json($Q);
+__conf.concPersistenceOpId = $to_json($conc_persistence_op_id);
+__conf.uiLang = $to_json($uiLang);
+__conf.isDebug = #if $debug#true#else#false#end if#;
+__conf.uiStateTTL = ${ui_state_ttl};
+#if $varExists('aligned_corpora')
+__conf.alignedCorpora = $to_json($aligned_corpora);
 #end if
-#end for
-
-#if $app_bar_js
-#if $app_bar_js.main
-paths['plugins/applicationBar/toolbar'] = '$app_bar_js.main';
-#end if
-#for $item in $app_bar_js.deps
-paths['$item.module'] = '$item.url';
-#end for
-#end if
-
-requirejs.config({
-    baseUrl : '${files_path}/js/min',
-    paths: paths,
-    #if $deployment_id#urlArgs: 'v=$deployment_id',#end if#
-    shim : {
-        #if $app_bar_js
-        #for $item in $app_bar_js.deps
-        #if 'shim' in $item
-        '$item.module' : { deps: $to_json($item.shim.deps) },
-        #end if
-        #end for
-        #end if
-    }
-});
-
-require(['vendor/rsvp'], function (RSVP) {
-    missingPlugins.forEach(function (pluginPath) {
-        define(pluginPath, [], function () {
-            var plg = {
-                create : function () {
-                    return new RSVP.Promise(function (fulfill, reject) {
-                        fulfill(null);
-                    });
-                }
-            };
-            plg.default = plg.create;
-            return plg;
-        });
-    });
-});
-
-define('conf', [], function () {
-    var conf = {};
-    conf.page = {};
-    conf.activePlugins = $to_json($active_plugins);  ## here we mean 'active on client side'
-    conf.messageAutoHideInterval = $getVar('message_auto_hide_interval', 5000);
-    conf.rootURL = "$root_url";
-    conf.rootPath = "$root_url";
-    conf.staticPath = "$files_path";
-    conf.corpname = $to_json($corpname);  ## deprecated
-    conf.subcorpname = #if $getVar('usesubcorp')#$to_json($usesubcorp)#else# null#end if#;
-    conf.humanCorpname = $to_json($human_corpname);  ## deprecated
-    conf.corpusIdent = $to_json($corpus_ident);
-    conf.baseAttr = "${base_attr}";
-    conf.currentAction = "$current_action";
-    conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
-    conf.loginUrl = $to_json($login_url);
-    conf.currentArgs = $to_json($Globals.export());
-    conf.compiledQuery = $to_json($Q);
-    conf.concPersistenceOpId = $to_json($conc_persistence_op_id);
-    conf.uiLang = $to_json($uiLang);
-    conf.isDebug = #if $debug#true#else#false#end if#;
-    conf.uiStateTTL = ${ui_state_ttl};
-    #if $varExists('aligned_corpora')
-    conf.alignedCorpora = $to_json($aligned_corpora);
-    #end if
-    conf.availableAlignedCorpora = $to_json($getVar('Aligned', []));
-    conf.pluginData = $to_json($plugin_data);
-    conf.notifications = $to_json($messages);
-    conf.queryHints = [
-        "$_('You can use the \\u0022down arrow\\u0022 key to view recent queries')",
-        "$_('In CQL mode you can use Shift+ENTER to enter a new line')"
-    ];
-    conf.queryTypesHints = {
-        iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
-    };
-    conf.ttIntervalChars = $to_json($getVar('interval_chars', []));
-    conf.menuData = $to_json($menu_data);
-    conf.asyncTasks = $to_json($async_tasks);
-    conf.ShowConcToolbar = $to_json($use_conc_toolbar);
-    conf.queryOverview = $to_json($getVar('query_overview', []));
-    conf.numQueryOps = $to_json($len($getVar('query_overview', [])));
-    conf.ShuffleMinResultWarning = $to_json($shuffle_min_result_warning);
-    conf.multilevelFreqDistMaxLevels = $multilevel_freq_dist_max_levels;
-    conf.multiSattrAllowedStructs = $to_json($multi_sattr_allowed_structs);
-    conf.canSendMail = $to_json($can_send_mail);
-    conf.issueReportingAction = $to_json($issue_reporting_action);
-
-    return conf;
-});
+__conf.availableAlignedCorpora = $to_json($getVar('Aligned', []));
+__conf.pluginData = $to_json($plugin_data);
+__conf.notifications = $to_json($messages);
+__conf.queryHints = [
+    "$_('You can use the \\u0022down arrow\\u0022 key to view recent queries')",
+    "$_('In CQL mode you can use Shift+ENTER to enter a new line')"
+];
+__conf.queryTypesHints = {
+    iqueryrow : "$_('Query type <em>basic</em> is suitable for getting to know the corpus. It searches for the input expression as a word form case-insensitively; if it is also a canonical dictionary form (lemma), all its word forms are searched as well.')"
+};
+__conf.ttIntervalChars = $to_json($getVar('interval_chars', []));
+__conf.menuData = $to_json($menu_data);
+__conf.asyncTasks = $to_json($async_tasks);
+__conf.ShowConcToolbar = $to_json($use_conc_toolbar);
+__conf.queryOverview = $to_json($getVar('query_overview', []));
+__conf.numQueryOps = $to_json($len($getVar('query_overview', [])));
+__conf.ShuffleMinResultWarning = $to_json($shuffle_min_result_warning);
+__conf.multilevelFreqDistMaxLevels = $multilevel_freq_dist_max_levels;
+__conf.multiSattrAllowedStructs = $to_json($multi_sattr_allowed_structs);
+__conf.canSendMail = $to_json($can_send_mail);
+__conf.issueReportingAction = $to_json($issue_reporting_action);
 </script>
 </head>
 <body>
@@ -290,9 +226,6 @@ define('conf', [], function () {
 
 <script type="text/javascript">
 #block bodyonload
-require(['${client_model_dir}/document', 'conf'], function (layoutModel, conf) {
-    new layoutModel.PageModel(conf).init();
-});
 #end block
 </script>
 
