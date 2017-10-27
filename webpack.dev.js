@@ -54,5 +54,6 @@ module.exports = merge(common, {
         public: 'kontext.korpus.test',
         publicPath: '/files/dist/',
         inline: false
-    }
+    },
+    devtool: "source-map"
 });
