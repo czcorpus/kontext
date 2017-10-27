@@ -3,7 +3,6 @@
 **/*.sublime-project
 **/*.sublime-workspace
 *.*~
-**/tsconfig.json
 public/files/.settings
 
 # local development 
