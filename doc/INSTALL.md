@@ -1,4 +1,4 @@
-# Installation instructions
+# Installation instructions (v 0.11+)
 
 ## Contents
 
@@ -82,7 +82,7 @@ To be able to build the project you must have:
 In your KonText directory write:
 
 ```
-npm install; grunt production
+npm install; make production
 ```
 
 <a name="#install_deployment"></a>
