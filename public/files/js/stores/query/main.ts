@@ -511,7 +511,14 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                      this.queries.get(corpname));
 
             if (this.lposValues.get(corpname)) {
-                args.add(createArgname('lpos', corpname), this.lposValues.get(corpname));
+                switch (this.queryTypes.get(corpname)) {
+                    case 'lemma':
+                        args.add(createArgname('lpos', corpname), this.lposValues.get(corpname));
+                    break;
+                    case 'word':
+                        args.add(createArgname('wpos', corpname), this.lposValues.get(corpname));
+                    break;
+                }
             }
             if (this.matchCaseValues.get(corpname)) {
                 args.add(createArgname('qmcase', corpname), this.matchCaseValues.get(corpname) ? '1' : '0');
