@@ -36,18 +36,18 @@ class ConcTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ConcTest, self).__init__(*args, **kwargs)
 
-        self.mckRdsCmn = MockRedisCommon()
-        self.mockRedisDirect = MockRedisDirect(
-            self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
-        self.mockRedisPlugin = MockRedisPlugin(
-            self.mckRdsCmn.concordances, self.mckRdsCmn.arch_queue)
-        self.mockAuth = MockAuth()
-        self.conc = ConcPersistence(None, self.mockRedisPlugin,
-                                    self.mockAuth, '/tmp/test_dbs/', 100, 7, 10)
+        self.mck_rds_cmn = MockRedisCommon()
+        self.mock_redis_direct = MockRedisDirect(
+            self.mck_rds_cmn.concordances, self.mck_rds_cmn.arch_queue)
+        self.mock_redis_plugin = MockRedisPlugin(
+            self.mck_rds_cmn.concordances, self.mck_rds_cmn.arch_queue)
+        self.mock_auth = MockAuth()
+        self.conc = ConcPersistence(None, self.mock_redis_plugin,
+                                    self.mock_auth, '/tmp/test_dbs/', 100, 7, 10)
         self.source_arch_path = '/tmp/test_source/'  # used just for the aux methods for testing
 
     def setUp(self):
-        self.mockRedisDirect.clear()
+        self.mock_redis_direct.clear()
         self.conc.arch_man.clear_directory()
 
     # ----------------------------
@@ -85,7 +85,7 @@ class ConcTest(unittest.TestCase):
         test_val = "testvalue123"
         self.conc.store(0, dict(q=test_val))  # anonymous
         data_id_authenticated = self.conc.store(1, dict(q=test_val))  # authenticated
-        arch_queue = self.mockRedisDirect.get_arch_queue()
+        arch_queue = self.mock_redis_direct.get_arch_queue()
         # strip the 'concordance:' prefix that is hardcoded in the mk_key method:
         archived_key = json.loads(arch_queue[0]).get('key')[12:]
         self.assertTrue(len(arch_queue) == 1 and archived_key == data_id_authenticated)
@@ -103,12 +103,12 @@ class ConcTest(unittest.TestCase):
             self.conc.store(0, dict(q=test_val))
         arch_rows_limit = 10
         # exceed the limit by archiving 11 rows, new archive is created afterwards
-        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 11, False, arch_rows_limit)
+        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 11, False, arch_rows_limit)
         # archive another 5 rows to the newly created archive
-        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 5, False, arch_rows_limit)
+        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 5, False, arch_rows_limit)
         curr_arch_size = self.conc.arch_man.get_arch_numrows(
             self.conc.arch_man.get_current_archive_name())
-        arch_queue_size = len(self.mockRedisDirect.arch_queue)
+        arch_queue_size = len(self.mock_redis_direct.arch_queue)
         self.assertTrue(arch_queue_size == 4 and curr_arch_size == 5)
 
     def test_split_archive(self):
@@ -142,11 +142,11 @@ class ConcTest(unittest.TestCase):
             key_val.append([self.conc.store(1, dict(q=test_val)), test_val])
 
         arch_rows_limit = 30  # do not exceed archive rows limit
-        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 10, False, arch_rows_limit)
-        self.mockRedisDirect.clear()
+        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 10, False, arch_rows_limit)
+        self.mock_redis_direct.clear()
         correct = True
         for i in key_val:
-            if i[1] != json.loads(self.conc.open(i[0])).get('q'):  # is json.loads correct here?
+            if i[1] != self.conc.open(i[0]).get('q'):
                 correct = False
         self.assertTrue(correct)
 
@@ -162,8 +162,8 @@ class ConcTest(unittest.TestCase):
             keys.append([self.conc.store(1, test_dict)])
 
         arch_rows_limit = 30  # do not exceed archive rows limit
-        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 10, False, arch_rows_limit)
-        self.mockRedisDirect.clear()
+        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 10, False, arch_rows_limit)
+        self.mock_redis_direct.clear()
 
         for i in range(0, 3):
             self.conc.open(keys[2][0])
@@ -192,12 +192,12 @@ class ConcTest(unittest.TestCase):
         for i in range(0, 10):
             test_dict = {"q": "value" + str(i)}
             keys.append([self.conc.store(1, test_dict)])
-        q_before = list(self.mockRedisDirect.get_arch_queue())  # ref by value
-        c_before = list(self.mockRedisDirect.get_concordances())
+        q_before = list(self.mock_redis_direct.get_arch_queue())  # ref by value
+        c_before = list(self.mock_redis_direct.get_concordances())
         arch_rows_limit = 30  # do not exceed archive rows limit
-        archive._run(self.mockRedisDirect, '/tmp/test_dbs/', 10, True, arch_rows_limit)
-        q_after = self.mockRedisDirect.get_arch_queue()
-        c_after = self.mockRedisDirect.get_concordances()
+        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 10, True, arch_rows_limit)
+        q_after = self.mock_redis_direct.get_arch_queue()
+        c_after = self.mock_redis_direct.get_concordances()
         self.assertTrue(q_before == q_after, "archive queues before and after dry run do not match")
         self.assertTrue(c_before == c_after, "concordances before and after dry run do not match")
 

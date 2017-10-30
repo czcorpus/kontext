@@ -92,8 +92,9 @@ class Archiver(object):
                 if qitem is None:
                     break
                 qitem = json.loads(qitem)
-                data = self._from_db.get(qitem['key'])
-                inserts.append((qitem['key'][len(conc_prefix):], json.dumps(data), curr_time, 0))
+                # !! self._from_db != kontext db plug-in
+                serialized_data = self._from_db.get(qitem['key'])
+                inserts.append((qitem['key'][len(conc_prefix):], serialized_data, curr_time, 0))
                 i += 1
 
             if not dry_run:
@@ -125,12 +126,11 @@ def run(conf, num_proc, dry_run):
                                conf.get('plugins', 'db')['default:port'],
                                conf.get('plugins', 'db')['default:id'])
     db_path = conf.get('plugins')['conc_persistence']['ucnk:archive_db_path']
-    arch_rows_limit = conf.get('plugins')['conc_persistence3']['ucnk:archive_rows_limit']
+    arch_rows_limit = conf.get('plugins')['conc_persistence']['ucnk:archive_rows_limit']
     arch_man = ArchMan(db_path, arch_rows_limit)
     to_db = arch_man.get_current_archive_conn()
 
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
-
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > arch_man.arch_rows_limit:
@@ -172,7 +172,7 @@ class ArchMan(object):
         self.arch_connections = []
         self.check_archive_dir_exists()
         self.update_archives()
-        self.arch_rows_limit = arch_rows_limit
+        self.arch_rows_limit = int(arch_rows_limit)
         self.source_arch_name = ArchMan.DEFAULT_SOURCE_ARCH_FILENAME
 
     # ------------------------------
@@ -341,7 +341,7 @@ class ArchMan(object):
             if arch in self.archive_dict:
                 conn = self.archive_dict.get(arch)
             else:
-                full_path = self.archive_dir_path + arch
+                full_path = os.path.join(self.archive_dir_path, arch)
                 conn = sqlite3.connect(full_path)
                 self.archive_dict.update({arch: conn})
             connections.append(conn)
