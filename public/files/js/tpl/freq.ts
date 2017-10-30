@@ -183,7 +183,7 @@ class FreqPage {
             {
                 corpname: this.layoutModel.getConf<string>('corpname'),
                 humanCorpname: this.layoutModel.getConf<string>('humanCorpname'),
-                usesubcorp: this.layoutModel.getConf<string>('usesubcorp'),
+                usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
                 queryFormProps: {},
                 filterFormProps: {},
                 sortFormProps: {},
@@ -257,3 +257,4 @@ export function init(conf:Kontext.Conf):void {
     let page = new FreqPage(new PageModel(conf));
     page.init();
 }
+
