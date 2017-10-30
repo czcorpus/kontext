@@ -135,28 +135,30 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
             return ans;
         };
 
+        const tokenDetailInfo1 = props.supportsTokenDetail ?
+                he.translate('concview__click_to_see_external_token_info') : '';
+        const tokenDetailInfo2 = props.supportsTokenDetail ?
+                `(${he.translate('concview__click_to_see_external_token_info')})` : '';
+        const metadata = (props.data.mouseover || []);
+        const title = metadata.length > 0 ? `${metadata.join(', ')} ${tokenDetailInfo2}` : tokenDetailInfo1;
+
         if (props.data.className && props.data.text) {
             if (hasClass('coll') && !hasClass('col0')) {
                 return(
-                    <em key={mkKey()} className={props.data.className}>
+                    <em key={mkKey()} className={props.data.className} title={title}>
                         {props.data.text.join(' ')}
                     </em>
                 );
 
             } else {
                 return (
-                    <span key={mkKey()} className={props.data.className}>
+                    <span key={mkKey()} className={props.data.className} title={title}>
                         {props.data.text.join(' ')}
                     </span>
                 );
             }
 
         } else {
-            const tokenDetailInfo1 = props.supportsTokenDetail ? he.translate('concview__click_to_see_external_token_info') : '';
-            const tokenDetailInfo2 = props.supportsTokenDetail ? '(' + he.translate('concview__click_to_see_external_token_info') + ')' : '';
-            const metadata = (props.data.mouseover || []);
-            const title = metadata.length > 0 ? `${metadata.join(', ')} ${tokenDetailInfo2}` : tokenDetailInfo1;
-
             return (
                 <span key={mkKey()} title={title}>
                     {splitTokens(props.data.text)}
