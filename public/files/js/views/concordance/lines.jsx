@@ -270,17 +270,18 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
         },
 
         render : function () {
+            const mouseoverTitle = (this.props.data.mouseover || []).join(', ');
             if (this.props.data.className && this.props.data.text) {
                 if (this._hasClass('coll') && !this._hasClass('col0')) {
                     return(
-                        <em key={this._mkKey()} className={this.props.data.className}>
+                        <em key={this._mkKey()} className={this.props.data.className} title={mouseoverTitle}>
                             {this.props.data.text}
                         </em>
                     );
 
                 } else {
                     return(
-                        <span key={this._mkKey()} className={this.props.data.className}>
+                        <span key={this._mkKey()} className={this.props.data.className} title={mouseoverTitle}>
                             {this.props.data.text}
                         </span>
                     );
@@ -288,7 +289,7 @@ export function init(dispatcher, mixins, lineStore, lineSelectionStore) {
 
             } else {
                 return(
-                    <span key={this._mkKey()} title={(this.props.data.mouseover || []).join(', ')}>
+                    <span key={this._mkKey()} title={mouseoverTitle}>
                         {this.props.data.text}
                     </span>
                 );
