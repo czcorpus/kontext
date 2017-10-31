@@ -38,8 +38,7 @@ module.exports = merge(common, {
             cssPath: CSS_PATH,
             themesPath: THEMES_PATH,
             isProduction: false
-        }),
-        new kplugins.FinalizePlugin(JS_PATH, DIST_PATH)
+        })
     ],
     devServer: {
         /* for NFS etc. use:

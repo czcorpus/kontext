@@ -44,7 +44,6 @@ module.exports = merge(common, {
             cssPath: CSS_PATH,
             themesPath: THEMES_PATH,
             isProduction: true
-        }),
-		new kplugins.FinalizePlugin(JS_PATH, DIST_PATH)
+        })
 	]
 });
