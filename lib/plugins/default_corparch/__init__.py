@@ -712,7 +712,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api):
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_api, self._manatee_corpora.get_info(item.main_corpus_canonical_id).description)
+                plugin_api, self._manatee_corpora.get_info(item.main_corpus_canonical_id()).description)
             ans.append(tmp)
         return ans
 
