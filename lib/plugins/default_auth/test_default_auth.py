@@ -43,7 +43,7 @@ class AuthTest(unittest.TestCase):
         """
         loads users from the users.sample.json file
         """
-        with open('./scripts/users.sample.json') as data_file:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'scripts/users.sample.json')) as data_file:
             data = json.load(data_file)
         for user in data:
             self.mock_redis_plugin.add_user_dict(user)
