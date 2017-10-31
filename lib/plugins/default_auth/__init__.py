@@ -140,7 +140,6 @@ class DefaultAuthHandler(AbstractInternalAuth):
         user_key = self._mk_user_key(user_id)
         user_data = self.db.get(user_key)
         if user_data:
-            # user_data['pwd_hash'] = hashlib.md5(password).hexdigest()
             user_data['pwd_hash'] = mk_pwd_hash_default(password)
             self.db.set(user_key, user_data)
         else:
