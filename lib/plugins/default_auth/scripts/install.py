@@ -18,10 +18,11 @@ import redis
 import hashlib
 import argparse
 import json
+from plugins.default_auth import mk_pwd_hash_default
 
 
 def import_user(data, db):
-    data['pwd_hash'] = hashlib.md5(data['pwd']).hexdigest() if data['pwd'] else None
+    data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
     del data['pwd']
     db.set('corplist:user:{0}'.format(data['id']), json.dumps(data.get('permitted_corpora', [])))
     del data['permitted_corpora']
