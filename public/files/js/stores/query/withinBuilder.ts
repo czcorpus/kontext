@@ -85,8 +85,9 @@ export class WithinBuilderStore extends SimplePageStore {
                 if (data.contains_errors) {
                     throw new Error(data.messages[0]);
 
-                } else {
-                    for (let attr in data.structattrs) {
+	        } else {
+                    let attr;
+                    for (attr in data.structattrs) {
                         if (data.structattrs.hasOwnProperty(attr)) {
                             data.structattrs[attr].forEach(item => {
                                 this.data = this.data.push([attr, item]);

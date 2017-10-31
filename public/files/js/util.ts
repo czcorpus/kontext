@@ -26,7 +26,8 @@
  */
 export function dictToPairs<T>(d:{[key:string]:T|Array<T>}):Array<[string, T]> {
     const ans = [];
-    for (let k in d) {
+    let k;
+    for (k in d) {
         if (d.hasOwnProperty(k)) {
             if (Object.prototype.toString.call(d[k]) === '[object Array]') {
                 (<Array<T>>d[k]).forEach((item) => {
