@@ -131,7 +131,7 @@ def run(conf, num_proc, dry_run):
     return _run(from_db, db_path, num_proc, dry_run, arch_rows_limit)
 
 
-def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit):
+def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit, sleep=0):
     arch_man = ArchMan(db_path, arch_rows_limit)
     to_db = arch_man.get_current_archive_conn()
 
@@ -140,8 +140,7 @@ def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit):
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > arch_man.arch_rows_limit:
-        if not isinstance(from_db, StrictRedis):
-            time.sleep(1)  # wait here when testing to prevent filename collision
+        time.sleep(sleep)  # wait here when testing to prevent filename collision
         creation_time = int(time.time())
         if not arch_man.archive_name_exists(arch_man.make_arch_name(creation_time)):
             arch_man.create_new_arch(creation_time)

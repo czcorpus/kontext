@@ -103,9 +103,9 @@ class ConcTest(unittest.TestCase):
             self.conc.store(0, dict(q=test_val))
         arch_rows_limit = 10
         # exceed the limit by archiving 11 rows, new archive is created afterwards
-        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 11, False, arch_rows_limit)
+        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 11, False, arch_rows_limit, 1)
         # archive another 5 rows to the newly created archive
-        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 5, False, arch_rows_limit)
+        archive._run(self.mock_redis_direct, '/tmp/test_dbs/', 5, False, arch_rows_limit, 1)
         curr_arch_size = self.conc.arch_man.get_arch_numrows(
             self.conc.arch_man.get_current_archive_name())
         arch_queue_size = len(self.mock_redis_direct.arch_queue)
