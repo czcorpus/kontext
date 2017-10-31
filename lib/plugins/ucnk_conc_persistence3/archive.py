@@ -34,6 +34,7 @@ import sys
 import time
 
 import redis
+from redis import StrictRedis
 
 ARCHIVE_PREFIX = "conc_archive"  # the prefix required for a db file to be considered an archive file
 ARCHIVE_QUEUE_KEY = 'conc_arch_queue'
@@ -127,24 +128,10 @@ def run(conf, num_proc, dry_run):
                                conf.get('plugins', 'db')['default:id'])
     db_path = conf.get('plugins')['conc_persistence']['ucnk:archive_db_path']
     arch_rows_limit = conf.get('plugins')['conc_persistence']['ucnk:archive_rows_limit']
-    arch_man = ArchMan(db_path, arch_rows_limit)
-    to_db = arch_man.get_current_archive_conn()
-
-    archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=ARCHIVE_QUEUE_KEY)
-    response = archiver.run(num_proc, dry_run)
-    curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
-    if curr_size > arch_man.arch_rows_limit:
-        time.sleep(1)  # stop here for testing purposes
-        creation_time = int(time.time())
-        if not arch_man.archive_name_exists(arch_man.make_arch_name(creation_time)):
-            arch_man.create_new_arch(creation_time)
-    return response
+    return _run(from_db, db_path, num_proc, dry_run, arch_rows_limit)
 
 
-def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit):
-    """
-    a copy of the above, used for unittests
-    """
+def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit, sleep=0):
     arch_man = ArchMan(db_path, arch_rows_limit)
     to_db = arch_man.get_current_archive_conn()
 
@@ -153,7 +140,7 @@ def _run(from_db, db_path, num_proc, dry_run, arch_rows_limit):
     response = archiver.run(num_proc, dry_run)
     curr_size = to_db.execute("SELECT COUNT(*) FROM archive").fetchone()[0]
     if curr_size > arch_man.arch_rows_limit:
-        time.sleep(1)  # stop here for testing purposes
+        time.sleep(sleep)  # wait here when testing to prevent filename collision
         creation_time = int(time.time())
         if not arch_man.archive_name_exists(arch_man.make_arch_name(creation_time)):
             arch_man.create_new_arch(creation_time)
