@@ -1,6 +1,7 @@
-# Copyright (c) 2014 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,14 +19,56 @@ It relies on default_db module which requires no database backend.
 """
 import hashlib
 import urllib
-
+import os
+from werkzeug.security import pbkdf2_hex
 from plugins.abstract.auth import AbstractInternalAuth, AuthException
 from translation import ugettext as _
 import plugins
 from plugins import inject
 
-
 IMPLICIT_CORPUS = 'susanne'
+
+
+def mk_pwd_hash_default(data):
+    """
+    Returns a pbkdf2_hex hash of the passed data with default parameters
+    """
+    iterations = 1000
+    keylen = 24
+    algo = 'sha512'
+    salt = os.urandom(keylen).encode('hex')
+    return mk_pwd_hash(data, salt, iterations, keylen, algo)
+
+
+def mk_pwd_hash(data, salt, iterations, keylen, algo):
+    """
+    Returns a pbkdf2_hex hash of the passed data with specified parameters
+    """
+    hashed = pbkdf2_hex(data, salt, iterations, keylen, algo)
+    return algo + "$" + salt + ":" + str(iterations) + "$" + hashed
+
+
+def split_pwd_hash(hashed):
+    """
+    Splits a string expected to have an "algorithm$salt:iterations$hashed_pwd" format and returns a dictionary of
+    the values. For legacy pwd hashes, a dictionary with a single value (i.e. {'data': legacyHash}) is returned.
+    """
+    res = {}
+    first_split = hashed.split("$")
+    # no dollar-sign means legacy pwd format
+    if len(first_split) == 1:
+        res['data'] = hashed
+    else:
+        # expected format: "algorithm$salt:iterations$hashed_pwd"
+        if len(first_split) == 3:
+            res['algo'] = first_split[0]
+            res['salt'] = first_split[1].split(":")[0]
+            res['iterations'] = int(first_split[1].split(":")[1])
+            res['data'] = first_split[2]
+            res['keylen'] = len(res['data']) / 2
+        else:
+            raise TypeError("wrong hash format")
+    return res
 
 
 class DefaultAuthHandler(AbstractInternalAuth):
@@ -54,13 +97,19 @@ class DefaultAuthHandler(AbstractInternalAuth):
         user_data = self._find_user(username)
         valid_pwd = False
         if user_data:
-            if len(user_data['pwd_hash']) == 32:
-                pwd_hash = hashlib.md5(password).hexdigest()
-                if user_data['pwd_hash'] == pwd_hash:
-                    valid_pwd = True
+            split = split_pwd_hash(user_data['pwd_hash'])
+            if 'salt' not in split:
+                if len(user_data['pwd_hash']) == 32:
+                    pwd_hash = hashlib.md5(password).hexdigest()
+                    if user_data['pwd_hash'] == pwd_hash:
+                        valid_pwd = True
+                else:
+                    import crypt
+                    if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
+                        valid_pwd = True
             else:
-                import crypt
-                if crypt.crypt(password, user_data['pwd_hash']) == user_data['pwd_hash']:
+                if user_data['pwd_hash'] == mk_pwd_hash(password, split['salt'], split['iterations'],
+                                                        split['keylen'], split['algo']):
                     valid_pwd = True
 
             if user_data['username'] == username and valid_pwd:
@@ -91,7 +140,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         user_key = self._mk_user_key(user_id)
         user_data = self.db.get(user_key)
         if user_data:
-            user_data['pwd_hash'] = hashlib.md5(password).hexdigest()
+            user_data['pwd_hash'] = mk_pwd_hash_default(password)
             self.db.set(user_key, user_data)
         else:
             raise AuthException(_('User %s not found.') % user_id)
@@ -183,4 +232,3 @@ def create_instance(conf, db, sessions):
     return DefaultAuthHandler(db=db, sessions=sessions, anonymous_user_id=int(plugin_conf['anonymous_user_id']),
                               login_url=plugin_conf.get('login_url', '/user/login'),
                               logout_url=plugin_conf.get('logout_url', '/user/logoutx'))
-
