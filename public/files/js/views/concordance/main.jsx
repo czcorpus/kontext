@@ -253,7 +253,7 @@ export function init(dispatcher, he, stores) {
                             alt={he.translate('global__calculating')}
                             title={he.translate('global__calculating')} />;
 
-            } else if (this.props.ipm && !this.state.canCalculateAdHocIpm) {
+            } else if (typeof this.props.ipm === 'number' && !this.state.canCalculateAdHocIpm) {
                 return <span className="ipm">{he.formatNumber(this.props.ipm)}</span>;
 
             } else if (this.state.adHocIpm) {

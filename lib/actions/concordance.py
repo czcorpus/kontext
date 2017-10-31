@@ -59,6 +59,7 @@ class Actions(Querying):
     """
     This class specifies all the actions KonText offers to a user via HTTP
     """
+
     def __init__(self, request, ui_lang):
         """
         arguments:
@@ -136,7 +137,7 @@ class Actions(Querying):
             return _('related to the subset defined by the selected text types')
         elif hasattr(self.corp, 'subcname'):
             return (_(u'related to the whole %s') % (corpus_name,)) + \
-                    ':%s' % self.corp.subcname
+                ':%s' % self.corp.subcname
         else:
             return _(u'related to the whole %s') % corpus_name
 
@@ -149,6 +150,16 @@ class Actions(Querying):
         if '~' in ctx and '.' in attr:
             ctx = ctx.split('~')[0]
         return attrpart + ctx
+
+    @staticmethod
+    def _create_empty_conc_result_dict():
+        """
+        Create a minimal concordance result data required by the client-side app to operate properly.
+        """
+        pagination = dict(lastPage=0, prevPage=None, nextPage=None, firstPage=0)
+        return dict(Lines=[], CorporaColumns=[], KWICCorps=[], pagination=pagination, Sort_idx=[],
+                    concsize=0, fullsize=0, sampled_size=0, result_relative_freq=0, result_arf=0,
+                    result_shuffled=False, finished=True)
 
     @exposed(vars=('orig_query', ), legacy=True)
     def view(self):
@@ -178,25 +189,28 @@ class Actions(Querying):
             if self.args.q[i].startswith('s*') or self.args.q[i][0] == 'e':
                 del self.args.q[i]
             i += 1
+        out = self._create_empty_conc_result_dict()
+        try:
+            conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
+                                      samplesize=corpus_info.sample_size)
+            self._apply_linegroups(conc)
+            conc.switch_aligned(os.path.basename(self.args.corpname))
 
-        conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
-                                  samplesize=corpus_info.sample_size)
-        self._apply_linegroups(conc)
-        conc.switch_aligned(os.path.basename(self.args.corpname))
+            kwic = Kwic(self.corp, self.args.corpname, conc)
+            kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
+            kwic_args.speech_attr = self._get_speech_segment()
+            kwic_args.labelmap = {}
+            kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
+            kwic_args.structs = self._get_struct_opts()
+            out.update(kwic.kwicpage(kwic_args))
+            out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
+                                                 enc=self.corp_encoding)
+            out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
+            out.update(self.get_conc_sizes(conc))
+        except Exception as ex:
+            self.add_system_message('error', ex.message)
+            logging.getLogger(__name__).error(ex)
 
-        kwic = Kwic(self.corp, self.args.corpname, conc)
-        kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
-        kwic_args.speech_attr = self._get_speech_segment()
-        kwic_args.labelmap = {}
-        kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
-        kwic_args.structs = self._get_struct_opts()
-        out = kwic.kwicpage(kwic_args)
-
-        out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
-                                             enc=self.corp_encoding)
-        out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-
-        out.update(self.get_conc_sizes(conc))
         if self.args.viewmode == 'sen':
             corplib.add_block_items(out['Lines'], block_size=1)
         if self.corp.get_conf('ALIGNED'):
@@ -218,31 +232,38 @@ class Actions(Querying):
 
         # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
         # to be able to display extended context with all set structural attributes
-        out['widectx_globals'] = self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts()))
+        out['widectx_globals'] = self._get_attrs(
+            WidectxArgsMapping, dict(structs=self._get_struct_opts()))
         out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
         out['aligned_corpora'] = self.args.align
         out['line_numbers'] = bool(int(self.args.line_numbers if self.args.line_numbers else 0))
         out['speech_segment'] = self.get_speech_segment()
-        out['speaker_id_attr'] = corpus_info.speaker_id_attr.split('.') if corpus_info.speaker_id_attr else None
-        out['speech_overlap_attr'] = corpus_info.speech_overlap_attr.split('.') if corpus_info.speech_overlap_attr else None
+        out['speaker_id_attr'] = corpus_info.speaker_id_attr.split(
+            '.') if corpus_info.speaker_id_attr else None
+        out['speech_overlap_attr'] = corpus_info.speech_overlap_attr.split(
+            '.') if corpus_info.speech_overlap_attr else None
         out['speech_overlap_val'] = corpus_info.speech_overlap_val
         out['conc_use_safe_font'] = corpus_info.use_safe_font
-        speaker_struct = corpus_info.speaker_id_attr.split('.')[0] if corpus_info.speaker_id_attr else None
+        speaker_struct = corpus_info.speaker_id_attr.split(
+            '.')[0] if corpus_info.speaker_id_attr else None
         out['speech_attrs'] = map(lambda x: x[1],
                                   filter(lambda x: x[0] == speaker_struct,
-                                          map(lambda x: x.split('.'), self.corp.get_conf('STRUCTATTRLIST').split(','))))
+                                         map(lambda x: x.split('.'), self.corp.get_conf('STRUCTATTRLIST').split(','))))
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # query form data
-        out['text_types_data'] = json.dumps(get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
+        out['text_types_data'] = json.dumps(
+            get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
         self._attach_query_params(out)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         out['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         self._export_subcorpora_list(self.args.corpname, out)
 
-        out['query_history_page_num_records'] = int(settings.get('plugins', 'query_storage')['page_num_records'])
-        out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname)
+        out['query_history_page_num_records'] = int(
+            settings.get('plugins', 'query_storage')['page_num_records'])
+        out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
+            self._plugin_api, self.args.corpname)
         # TODO - this condition is ridiculous - can we make it somewhat simpler/less-redundant???
         out['running_calc'] = not out['finished'] and self.args.async and self.args.save and not out['sampled_size']
         out['chart_export_formats'] = []
@@ -273,7 +294,8 @@ class Actions(Querying):
         if len(self.get_available_aligned_corpora()) == 1:
             self.args.align = []
         else:
-            self.args.align = [ac for ac in self.args.align if ac in self.get_available_aligned_corpora()]
+            self.args.align = [
+                ac for ac in self.args.align if ac in self.get_available_aligned_corpora()]
         out['aligned_corpora'] = self.args.align
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
@@ -282,7 +304,8 @@ class Actions(Querying):
         corp_info = self.get_corpus_info(self.args.corpname)
         out['text_types_notes'] = corp_info.metadata.desc
 
-        qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(active_only=False), persist=False)
+        qf_args = QueryFormArgs(corpora=self._select_current_aligned_corpora(
+            active_only=False), persist=False)
         cid = self.args.corpname
         if self.args.queryselector:
             q_type = self.args.queryselector[:-3]
@@ -299,15 +322,18 @@ class Actions(Querying):
             qf_args.curr_query_types[item] = q_type
             qf_args.curr_queries[item] = request.args.get('{0}_{1}'.format(q_type, item))
             qf_args.curr_lpos_values[item] = request.args.get('lpos_{0}'.format(item))
-            qf_args.curr_qmcase_values[item] = bool(int(request.args.get('qmcase_{0}'.format(item), '0')))
+            qf_args.curr_qmcase_values[item] = bool(
+                int(request.args.get('qmcase_{0}'.format(item), '0')))
             qf_args.curr_pcq_pos_neg_values[item] = request.args.get('pcq_pos_neg_{0}'.format(item))
-            qf_args.curr_default_attr_values[item] = request.args.get('default_attr_{0}'.format(item))
+            qf_args.curr_default_attr_values[item] = request.args.get(
+                'default_attr_{0}'.format(item))
 
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)
         self._export_subcorpora_list(self.args.corpname, out)
-        out['query_history_page_num_records'] = int(settings.get('plugins', 'query_storage')['page_num_records'])
+        out['query_history_page_num_records'] = int(
+            settings.get('plugins', 'query_storage')['page_num_records'])
         return out
 
     @exposed(return_type='json', legacy=True)
@@ -668,12 +694,15 @@ class Actions(Querying):
             suffix = '_{0}'.format(corp) if i > 0 else ''
             qtype = self.import_qs(getattr(self.args, 'queryselector' + suffix, None))
             qinfo.curr_query_types[corp] = qtype
-            qinfo.curr_queries[corp] = getattr(self.args, qtype + suffix, None) if qtype is not None else None
+            qinfo.curr_queries[corp] = getattr(
+                self.args, qtype + suffix, None) if qtype is not None else None
             qinfo.curr_pcq_pos_neg_values[corp] = getattr(self.args, 'pcq_pos_neg' + suffix, None)
             qinfo.curr_lpos_values[corp] = getattr(self.args, 'lpos' + suffix, None)
             qinfo.curr_qmcase_values[corp] = bool(getattr(self.args, 'qmcase' + suffix, False))
-            qinfo.curr_default_attr_values[corp] = getattr(self.args, 'default_attr' + suffix, 'word')
-            qinfo.selected_text_types, qinfo.bib_mapping = self._get_checked_text_types(self._request)
+            qinfo.curr_default_attr_values[corp] = getattr(
+                self.args, 'default_attr' + suffix, 'word')
+            qinfo.selected_text_types, qinfo.bib_mapping = self._get_checked_text_types(
+                self._request)
         self.add_conc_form_args(qinfo)
         # 2) process the query
         try:
@@ -688,12 +717,14 @@ class Actions(Querying):
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.shuffle = 0
                 self.args.q.append('f')
-                self.acknowledge_auto_generated_conc_op(len(self.args.q) - 1, ShuffleFormArgs(persist=True))
+                self.acknowledge_auto_generated_conc_op(
+                    len(self.args.q) - 1, ShuffleFormArgs(persist=True))
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
-            ans['TextTypeSel'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)
+            ans['TextTypeSel'] = get_tt(
+                self.corp, self._plugin_api).export_with_norms(ret_nums=False)
             ans.update(self.view())
         except ConcError as e:
-            raise UserActionException(e.message)
+            self.add_system_message('message', e.message)
         return ans
 
     @exposed(template='view.tmpl', page_model='view')
@@ -796,7 +827,8 @@ class Actions(Querying):
         """
         if len(self._lines_groups) > 0:
             self._exceptmethod = 'view'
-            raise UserActionException('Cannot apply a random sample once a group of lines has been saved')
+            raise UserActionException(
+                'Cannot apply a random sample once a group of lines has been saved')
         qinfo = SampleFormArgs(persist=True)
         qinfo.rlines = self.args.rlines
         self.add_conc_form_args(qinfo)
@@ -1006,7 +1038,7 @@ class Actions(Querying):
             output = result
             output['Desc'] = self.concdesc_json()['Desc']
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            mkfilename = lambda suffix: '%s-freq-distrib.%s' % (
+            def mkfilename(suffix): return '%s-freq-distrib.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='freq')
 
@@ -1044,7 +1076,8 @@ class Actions(Querying):
         multilevel frequency list
         """
         fcrit = ' '.join([self.onelevelcrit('', kwargs.get('ml%dattr' % i, 'word'), kwargs.get('ml%dctx' % i, '0'),
-                                            kwargs.get('ml%dpos' % i, 1), kwargs.get('ml%dfcode' % i, 'rc'),
+                                            kwargs.get('ml%dpos' % i, 1), kwargs.get(
+                                                'ml%dfcode' % i, 'rc'),
                                             kwargs.get('ml%dicase' % i, ''), 'e')
                           for i in range(1, freqlevel + 1)])
         result = self.freqs([fcrit], flimit, '', 1)
@@ -1164,7 +1197,7 @@ class Actions(Querying):
             out_data = result
             out_data['Desc'] = self.concdesc_json()['Desc']
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            mkfilename = lambda suffix: '%s-collocations.%s' % (
+            def mkfilename(suffix): return '%s-collocations.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
             writer.set_col_types(int, unicode, *(8 * (float,)))
@@ -1204,7 +1237,8 @@ class Actions(Querying):
         display a hit in a wider context
         """
         p_attrs = self.args.attrs.split(',')
-        attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]  # prefer 'word' but allow other attr if word is off
+        # prefer 'word' but allow other attr if word is off
+        attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
         data = self.call_function(conclib.get_detail_context, (self.corp, pos), attrs=attrs)
         if int(getattr(self.args, 'detail_left_ctx', 0)) >= int(data['maxdetail']):
             data['expand_left_args'] = None
@@ -1289,7 +1323,7 @@ class Actions(Querying):
                                              'rel_ref': round(relref, 1)}
                                             for s, rel, relref, f, fr, w in out],
                                'ref_corp_full_name': ref_name
-                })
+                               })
                 result_list = result['Keywords']
             else:  # ordinary list
                 if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
@@ -1323,10 +1357,10 @@ class Actions(Querying):
             result['processing'] = None
 
             result['form_args'] = dict(
-                    wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
-                    subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
-                    wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
-                    wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
+                wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
+                subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
+                wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
+                wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
 
             self._add_flux_save_menu_item('CSV', save_format='csv')
             self._add_flux_save_menu_item('XLSX', save_format='xlsx')
@@ -1357,7 +1391,7 @@ class Actions(Querying):
             qparts.append(u'%s="%s"' % (self.args.wlattr, self.args.wlpat))
         if not self.args.include_nonwords:
             qparts.append(u'%s!="%s"' % (self.args.wlattr,
-                                        self.corp.get_conf('NONWORDRE')))
+                                         self.corp.get_conf('NONWORDRE')))
 
         whitelist = [w for w in re.split('\s+', self.args.wlwords.strip()) if w]
         blacklist = [w for w in re.split('\s+', self.args.blacklist.strip()) if w]
@@ -1421,7 +1455,7 @@ class Actions(Querying):
             out_data = ans
             out_data['pattern'] = self.args.wlpat
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            mkfilename = lambda suffix: '%s-word-list.%s' % (
+            def mkfilename(suffix): return '%s-word-list.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='wordlist')
             writer.set_col_types(int, unicode, float)
@@ -1521,7 +1555,8 @@ class Actions(Querying):
             kwic_args.structs = self._get_struct_opts()
 
             data = kwic.kwicpage(kwic_args)
-            mkfilename = lambda suffix: '%s-concordance.%s' % (
+
+            def mkfilename(suffix): return '%s-concordance.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
             if saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
@@ -1532,10 +1567,12 @@ class Actions(Querying):
                     item['ref'] = ', '.join(item['ref'])
                 # we must set contains_within = False as it is impossible (in the current user interface)
                 # to offer a custom i.p.m. calculation before the download starts
-                output['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(contains_within=False)
+                output['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(
+                    contains_within=False)
                 output['Desc'] = self.concdesc_json()['Desc']
             elif saveformat in ('csv', 'xlsx', 'xml'):
-                writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='concordance')
+                writer = plugins.runtime.EXPORT.instance.load_plugin(
+                    saveformat, subtype='concordance')
 
                 self._headers['Content-Type'] = writer.content_type()
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
@@ -1721,9 +1758,11 @@ class Actions(Querying):
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
             self._headers['Content-Type'] = ce.get_content_type(format)
             self._headers['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
-            data = sorted(json.loads(request.args.get('data', '{}')).items(), key=lambda x: int(x[0]))
+            data = sorted(json.loads(request.args.get('data', '{}')
+                                     ).items(), key=lambda x: int(x[0]))
             total = sum(x[1] for x in data)
-            data = [('#{0} ({1}%)'.format(x[0], round(x[1] / float(total) * 100, 1)), x[1]) for x in data]
+            data = [('#{0} ({1}%)'.format(x[0], round(x[1] / float(total) * 100, 1)), x[1])
+                    for x in data]
             return ce.export_pie_chart(data=data, title=request.args.get('title', '??'), format=format)
 
     @exposed(return_type='json')
@@ -1736,10 +1775,12 @@ class Actions(Querying):
                 return dict(total=size)
         else:
             tt_query = TextTypeCollector(self.corp, request).get_query()
-            query = 'aword,[] within %s' % (' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
+            query = 'aword,[] within %s' % (
+                ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query),)
             query = import_string(query, from_encoding=self.corp.get_conf('ENCODING'))
             self.args.q = [query]
-            conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')), async=0)
+            conc = self.call_function(
+                conclib.get_conc, (self.corp, self.session_get('user', 'id')), async=0)
             conc.sync()
             return dict(total=conc.fullsize() if conc else None)
 
@@ -1762,7 +1803,8 @@ class Actions(Querying):
         )
 
         attrlist = corpus_get_conf(self.corp, 'ATTRLIST').split(',')
-        tmp_out['AttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n} for n in attrlist if n]
+        tmp_out['AttrList'] = [{'label': corpus_get_conf(
+            self.corp, n + '.LABEL') or n, 'n': n} for n in attrlist if n]
         sref = corpus_get_conf(self.corp, 'SHORTREF')
         tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 
@@ -1770,7 +1812,8 @@ class Actions(Querying):
             ttcrit_attrs = corpus_get_conf(self.corp, 'FREQTTATTRS')
         else:
             ttcrit_attrs = corpus_get_conf(self.corp, 'SUBCORPATTRS')
-        tmp_out['ttcrit'] = [('fcrit', '%s 0' % a) for a in ttcrit_attrs.replace('|', ',').split(',') if a]
+        tmp_out['ttcrit'] = [('fcrit', '%s 0' % a)
+                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 
         poslist = self.cm.corpconf_pairs(self.corp, 'WPOSLIST')
         lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
