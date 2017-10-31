@@ -28,24 +28,26 @@ const extractLess = new ExtractTextPlugin({
     filename: '[name].css'
 });
 
+const mkpath = (p) => path.resolve(__dirname, '../../public/files', p);
+
 module.exports = {
     entry: {
-        coll: './public/files/js/pages/coll.ts',
-        corplist: './public/files/js/pages/corplist.ts',
-        firstForm: './public/files/js/pages/firstForm.ts',
-        freq: './public/files/js/pages/freq.ts',
-        message: './public/files/js/pages/message.ts',
-        queryHistory: './public/files/js/pages/queryHistory.ts',
-        subcorpForm: './public/files/js/pages/subcorpForm.ts',
-        subcorpList: './public/files/js/pages/subcorpList.ts',
-        view: './public/files/js/pages/view.ts',
-        wordlist: './public/files/js/pages/wordlist.ts',
-        wordlistForm: './public/files/js/pages/wordlistForm.ts',
-        login: './public/files/js/pages/login.ts'
+        coll: mkpath('js/pages/coll.ts'),
+        corplist: mkpath('js/pages/corplist.ts'),
+        firstForm: mkpath('js/pages/firstForm.ts'),
+        freq: mkpath('js/pages/freq.ts'),
+        message: mkpath('js/pages/message.ts'),
+        queryHistory: mkpath('js/pages/queryHistory.ts'),
+        subcorpForm: mkpath('js/pages/subcorpForm.ts'),
+        subcorpList: mkpath('js/pages/subcorpList.ts'),
+        view: mkpath('js/pages/view.ts'),
+        wordlist: mkpath('js/pages/wordlist.ts'),
+        wordlistForm: mkpath('js/pages/wordlistForm.ts'),
+        login: mkpath('js/pages/login.ts')
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(__dirname, '../../public/files/dist'),
+        path: mkpath('dist'),
         libraryTarget: 'var',
         library: '[name]Page'
 
@@ -53,10 +55,10 @@ module.exports = {
     resolve: {
         alias: {}, // filled in dynamically
         modules: [
-            path.resolve(__dirname, "../../public/files/js/.compiled"),
-            "node_modules"
+            mkpath('js/.compiled'),
+            'node_modules'
         ],
-        extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".jsx", ".js", ".json", ".css", ".less"]
+        extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.jsx', '.js', '.json', '.css', '.less']
     },
     module: {
         rules: [
@@ -82,7 +84,7 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
-                loader: "ts-loader"
+                loader: 'ts-loader'
             },
             {
                 test: /\.jsx$/,

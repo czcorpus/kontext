@@ -68,29 +68,4 @@
     };
     module.exports.PreparePlugin = PreparePlugin;
 
-    /**
-     * FinalizePlugins does jobs required by KonText
-     * and not included in the bundle (e.g. copying polyfills
-     * to the 'dist' directory).
-     */
-    function FinalizePlugin(jsPath, distPath) {
-        this._jsPath = jsPath;
-        this._distPath = distPath;
-    }
-    FinalizePlugin.prototype.apply = function (compiler) {
-        compiler.plugin('after-emit', (compilation, callback) => {
-            const tmp = fs.readFileSync(
-                path.resolve(this._jsPath, 'vendor/intl.min.js'),
-                { encoding: 'utf-8' }
-            );
-            fs.writeFileSync(
-                path.resolve(this._distPath, 'intl.min.js'),
-                tmp,
-                { encoding: 'utf-8' }
-            );
-            callback();
-        });
-    };
-    module.exports.FinalizePlugin = FinalizePlugin;
-
 })(module);
