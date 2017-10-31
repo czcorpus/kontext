@@ -14,26 +14,72 @@
 # GNU General Public License for more details.
 
 """
-Unittests for the ucnk_conc_persistence3 plugin
+Unittests for the default_auth_plugin plugin
 """
 
-import unittest
+import json
 import os
-from plugins.default_auth import mk_pwd_hash_default, mk_pwd_hash, split_pwd_hash
+import unittest
+
+from plugins.default_auth import mk_pwd_hash_default, mk_pwd_hash, split_pwd_hash, DefaultAuthHandler
 from plugins.default_auth.mock_redis import MockRedisPlugin, MockRedisCommon
+from translation import load_translations, activate
 
 
 class AuthTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(AuthTest, self).__init__(*args, **kwargs)
-        self.mckRdsCmn = MockRedisCommon()
-        self.mockRedisPlugin = MockRedisPlugin(self.mckRdsCmn.users)
+        self.mck_rds_cmn = MockRedisCommon()
+        self.mock_redis_plugin = MockRedisPlugin(self.mck_rds_cmn.users)
+        self.auth_handler = DefaultAuthHandler(self.mock_redis_plugin, None, 0, None, None)
+
+    def setUp(self):
+        self.mock_redis_plugin.clear()
+        # these are needed to return anonymous user w/o errors:
+        load_translations('en_US')
+        activate('en_US')
+
+    def load_users(self):
+        """
+        loads users from the users.sample.json file
+        """
+        with open('./scripts/users.sample.json') as data_file:
+            data = json.load(data_file)
+        for user in data:
+            self.mock_redis_plugin.add_user_dict(user)
+
+    # -----------------
+    # test aux methods:
+    # -----------------
+
+    def test_add_user(self):
+        """
+        test the auxiliary method to add a user to the mocked redis db, both using the old and the new hashing
+        """
+        self.mock_redis_plugin.add_user(2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
+        self.mock_redis_plugin.add_user_old_hashing(3, 'ann', 'annspassword', 'Ann', 'Rose', 'ann.rose@localhost')
+        self.assertEquals('user:2', self.mock_redis_plugin.hash_get('user_index', 'mary'))
+        self.assertEquals('mary', self.mock_redis_plugin.get('user:2').get('username'))
+        self.assertEquals('user:3', self.mock_redis_plugin.hash_get('user_index', 'ann'))
+        self.assertEquals('ann', self.mock_redis_plugin.get('user:3').get('username'))
+
+    def test_load_users(self):
+        """
+        test loading users from the sample file to the mocked redis db, jodoe's id in the sample file is 1
+        """
+        self.load_users()
+        self.assertEquals('user:1', self.mock_redis_plugin.hash_get('user_index', 'jodoe'))
+        self.assertEquals('jodoe', self.mock_redis_plugin.get('user:1').get('username'))
 
     # ---------------------
     # test package methods:
     # ---------------------
 
     def test_make_and_split_default_hash(self):
+        """
+        hash a password using the default values, then split the returned hash string and check whether correct
+        information is present
+        """
         hashed_def = mk_pwd_hash_default('password')
         split_def = split_pwd_hash(hashed_def)
         keys = ['algo', 'salt', 'iterations', 'data', 'keylen']
@@ -41,6 +87,10 @@ class AuthTest(unittest.TestCase):
             self.assertTrue(key in split_def)
 
     def test_make_and_split_hash(self):
+        """
+        hash a password using the specified values, then split the returned hash string and check whether correct
+        information is present
+        """
         orig_keys = {'algo': 'sha512', 'iterations': 1000, 'keylen': 64}
         salt = os.urandom(orig_keys['keylen']).encode('hex')
         hashed = mk_pwd_hash('password', salt, orig_keys['iterations'], orig_keys['keylen'], orig_keys['algo'])
@@ -51,20 +101,58 @@ class AuthTest(unittest.TestCase):
                                                                                          "not match the keylen value")
 
     def test_split_legacy_hash(self):
+        """
+        try to split the legacy hash, it must contain the 'data' value only
+        """
         pwd = "legacyHash"
         split_legacy = split_pwd_hash(pwd)
         self.assertEquals(split_legacy['data'], pwd, "returned wrong value as legacy hash")
         self.assertFalse('salt' in split_legacy, "split legacy hash must not contain salt value")
 
-    def test_add_user(self):
-        self.mockRedisPlugin.add_user(1, 'Joe', 'pwd')
-        print self.mockRedisPlugin.hash_get('user_index','Joe')
-        print self.mockRedisPlugin.get(1)
         # -------------------
         # test class methods:
         # -------------------
 
+    def test_find_user(self):
+        """
+        load users from the sample file, try to find user 'jodoe'
+        """
+        self.load_users()
+        self.assertEquals('jodoe', self.auth_handler._find_user('jodoe').get('username'))
 
+    def test_validate_user(self):
+        """
+        load users from sample file, try to authenticate user 'jodoe' using his sample password, then try to
+        authenticate as a non-existing user, which should return anonymous user
+        """
+        self.load_users()
+        msg = "failed to authenticate as sample user jodoe"
+        self.assertEquals('jodoe', self.auth_handler.validate_user(None, 'jodoe', 'mypassword').get('user'), msg)
+
+        msg = "validation failed to return anonymous user for a non-existing user"
+        self.assertEquals(0, self.auth_handler.validate_user(None, 'jimmy', 'doesNotExist').get('id'), msg)
+
+    def test_validate_user_old_hashing_and_update_password(self):
+        """
+        save user 'mary' with her password hashed using the legacy algorithm (hashlib.md5), try to authenticate her,
+        update her password using the new default method, check whether the new hash has proper format, try to
+        authenticate using the new password
+        """
+        self.mock_redis_plugin.add_user_old_hashing(2, 'mary', 'maryspassword', 'Mary', 'White', 'mary.white@localhost')
+
+        msg = "wrong length of pwd_hash created using the legacy method"
+        self.assertEquals(len(self.auth_handler._find_user('mary').get('pwd_hash')), 32, msg)
+
+        msg = "failed to authenticate using the old hashing method"
+        self.assertEquals('mary', self.auth_handler.validate_user(None, 'mary', 'maryspassword').get('user'), msg)
+
+        self.auth_handler.update_user_password(2, 'marysnewpassword')
+        split_new = split_pwd_hash(self.auth_handler._find_user('mary').get('pwd_hash'))
+        msg = "the password update method failed"
+        self.assertTrue(len(split_new['salt']) == len(split_new['data']) == 2 * split_new['keylen'], msg)
+
+        msg = "failed to authenticate using the new hashing method"
+        self.assertEquals('mary', self.auth_handler.validate_user(None, 'mary', 'marysnewpassword').get('user'), msg)
 
 
 if __name__ == '__main__':

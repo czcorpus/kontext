@@ -50,7 +50,7 @@ def mk_pwd_hash(data, salt, iterations, keylen, algo):
 
 def split_pwd_hash(hashed):
     """
-    Splits a string supposed to have a format "algorithm$salt:iterations$hashed_pwd" and returns a dictionary of
+    Splits a string expected to have an "algorithm$salt:iterations$hashed_pwd" format and returns a dictionary of
     the values. For legacy pwd hashes, a dictionary with a single value (i.e. {'data': legacyHash}) is returned.
     """
     res = {}
@@ -59,7 +59,7 @@ def split_pwd_hash(hashed):
     if len(first_split) == 1:
         res['data'] = hashed
     else:
-        # supposed format: "algorithm$salt:iterations$hashed_pwd"
+        # expected format: "algorithm$salt:iterations$hashed_pwd"
         if len(first_split) == 3:
             res['algo'] = first_split[0]
             res['salt'] = first_split[1].split(":")[0]
@@ -109,7 +109,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
                         valid_pwd = True
             else:
                 if user_data['pwd_hash'] == mk_pwd_hash(password, split['salt'], split['iterations'],
-                                                split['keylen'], split['algo']):
+                                                        split['keylen'], split['algo']):
                     valid_pwd = True
 
             if user_data['username'] == username and valid_pwd:
@@ -140,7 +140,8 @@ class DefaultAuthHandler(AbstractInternalAuth):
         user_key = self._mk_user_key(user_id)
         user_data = self.db.get(user_key)
         if user_data:
-            user_data['pwd_hash'] = hashlib.md5(password).hexdigest()
+            # user_data['pwd_hash'] = hashlib.md5(password).hexdigest()
+            user_data['pwd_hash'] = mk_pwd_hash_default(password)
             self.db.set(user_key, user_data)
         else:
             raise AuthException(_('User %s not found.') % user_id)

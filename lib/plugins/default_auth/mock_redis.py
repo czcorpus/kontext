@@ -21,40 +21,36 @@
 """
 The methods necessary to mock the connection to the redis_db plugin for the needs of default_auth plug-in testing
 """
-
+import hashlib
 import json
+
+from plugins.default_auth import mk_pwd_hash_default
 
 
 class MockRedisCommon:
     def __init__(self):
-        #self.concordances = []
-        #self.arch_queue = []
+        # self.concordances = []
+        # self.arch_queue = []
         self.users = []
+
 
 class MockRedisDirect(object):
     """
-    mock the necessary methods of direct connection to redis, that are used
-    in the Archiver class
+    mock the methods of direct connection to redis necessary to test the DefaultAuthHandler class
     """
-    conc_prefix = "concordance:"
 
     def __init__(self, users):
-        # self.concordances = concordances
-        # self.arch_queue = arch_queue
         self.users = users
 
     def set(self, key, data):
-        """
-        Saves 'data' with 'key'.
-
-        arguments:
-        key -- an access key
-        data -- a dictionary containing data to be saved
-        """
-        self.users.append([key, data])
-
-    def set_ttl(self, key, ttl):
-        pass
+        found = False
+        for t in self.users:
+            if t[0] == key:
+                t[1] = data
+                found = True
+                break
+        if not found:
+            self.users.append([key, data])
 
     def get(self, key, default=None):
         res = default
@@ -64,70 +60,16 @@ class MockRedisDirect(object):
                 break
         return res
 
-    def lpop(self, arch_key):
-        # param arch_key is only used to simulate a redis call
-        return self.arch_queue.pop(0)
-
-    def llen(self, key):
-        if key == "conc_arch_queue":
-            return len(self.arch_queue)
-
-    def rpush(self, archive_queue_key, value_dict):
-        self.arch_queue.append(value_dict)
-
-    def lpush(self, archive_queue_key, value_dict):
-        self.arch_queue = [value_dict] + self.arch_queue
-
-    # ----------------
-    # extra methods:
-    # ----------------
-    def clear(self):
-        del self.arch_queue[:]
-        del self.concordances[:]
-
-    def get_first_key(self):
-        return self.concordances[0][0]
-
-    def get_arch_queue(self):
-        return self.arch_queue
-
-    def get_concordances(self):
-        return self.concordances
-
-    def print_arch_queue(self):
-        for i in self.arch_queue:
-            print (i)
-
-    def print_concordances(self):
-        for i in self.concordances:
-            print (i)
-
-    def get_keys(self):
-        keys = []
-        for i in self.concordances:
-            keys.append(i[0][len(self.conc_prefix):])
-        return keys
-
-    def fill_concordances(self, size):
-        for i in range(0, size):
-            self.concordances.append((self.conc_prefix + 'key' + str(i), json.dumps('value' + str(i))))
-
-    def fill_arch_queue(self, size):
-        for i in range(0, size):
-            item = dict(key=json.dumps('key' + str(i)))
-            self.arch_queue.append(item)
-
 
 class MockRedisPlugin(MockRedisDirect):
     """
-    mock the necessary methods of connection to the redis plugin, that are used
-    in the ConcPersistence class
+    mock the methods of the redis plugin connection necessary to test the DefaultAuthHandler class
     """
 
     def __init__(self, *args, **kwargs):
         super(MockRedisPlugin, self).__init__(*args, **kwargs)
         self.user_index = {}
-        self.mckRdsCmn = MockRedisCommon()
+        self.mck_rds_cmn = MockRedisCommon()
 
     def get(self, key, default=None):
         data = super(MockRedisPlugin, self).get(key)
@@ -143,10 +85,44 @@ class MockRedisPlugin(MockRedisDirect):
             return self.user_index.get(value, None)
         return None
 
-    def add_user(self, idx, name, pwd):
-        self.user_index[name] = idx
-        self.set(idx, dict(
+    def add_user(self, idx, username, pwd, firstname, lastname, email=None):
+        self.user_index[username] = "user:" + str(idx)
+        self.set("user:" + str(idx), dict(
             id=idx,
-            user=name,
-            fullname=name,
-            email=None))
+            username=username,
+            firstname=firstname,
+            lastname=lastname,
+            email=email,
+            pwd_hash=mk_pwd_hash_default(pwd)))
+
+    def add_user_old_hashing(self, idx, username, pwd, firstname, lastname, email=None):
+        self.user_index[username] = "user:" + str(idx)
+        self.set("user:" + str(idx), dict(
+            id=idx,
+            username=username,
+            firstname=firstname,
+            lastname=lastname,
+            email=email,
+            pwd_hash=hashlib.md5(pwd).hexdigest()))
+
+    def add_user_dict(self, user):
+        self.user_index[user.get('username')] = "user:" + str(user.get('id'))
+        if user.get('pwd') is not None:
+            password = mk_pwd_hash_default(user.get('pwd'))
+        else:
+            password = None
+        self.set("user:" + str(user.get('id')), dict(
+            id="user:" + str(user.get('id')),
+            username=user.get('username'),
+            firstname=user.get('firstname'),
+            lastname=user.get('lastname'),
+            email=user.get('email'),
+            pwd_hash=password))
+
+    def print_users(self):
+        for user in self.users:
+            print (user)
+
+    def clear(self):
+        del self.users[:]
+        self.user_index = {}
