@@ -238,8 +238,9 @@ export class SubcMixerStore extends SimplePageStore implements Subcmixer.ISubcMi
             }
             sums[item.attrName] += parseFloat(item.ratio || '0');
         });
-        const errors = [];
-        for (let k in sums) {
+	const errors = [];
+	let k;
+        for (k in sums) {
             if (sums[k] !== 100) {
                 return new RSVP.Promise<any>((resolve:(v)=>void, reject:(e:any)=>void) => {
                     reject(new Error(this.pluginApi.translate(

@@ -400,7 +400,7 @@ export function init(dispatcher, mixins, storeProvider) {
             return (
                 <li id="active-corpus">
                     <strong>{this.translate('global__corpus')}:{'\u00a0'}</strong>
-                    <a className="corpus-desc" title="$_('click for details')"
+                    <a className="corpus-desc" title={this.translate('global__click_for_details')}
                                 onClick={this._handleCorpnameClick}>
                         {this.props.humanCorpname}
                     </a>

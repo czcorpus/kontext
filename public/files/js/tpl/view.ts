@@ -181,7 +181,8 @@ export class ViewPage {
     private extendBaseColorPalette(offset:number=0):Array<string> {
         const ans:Array<string> = ['RGB(0, 0, 0)']; // we don't use the first color
         const coeff = [0, 0.7, 1.2, 1.8, 2.1, 2.2, 2.3, 2.3, 2.3, 2.3];
-        for (let i = 0; i < 10; i += 1) {
+        let i;
+        for (i = 0; i < 10; i += 1) {
             ViewPage.BASE_COLOR_SCHEME.forEach((color, j) => {
                 const c = d3Color.color(color);
                 ans.push(c.brighter(coeff[i]).toString());

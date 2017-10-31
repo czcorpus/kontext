@@ -410,7 +410,7 @@ export class TooltipBox implements Legacy.IPopupBox {
             });
 
         } else {
-            $(this.contentElm).append(contents);
+            $(this.contentElm).append(<any>contents);
             if (this.jqCloseIcon) {
                 $(this.headerElm).append(this.jqCloseIcon);
             }
