@@ -104,7 +104,7 @@ class StructNormsCalc(object):
 
     def compute_norm(self, attrname, value):
         attr = self._struct.get_attr(attrname)
-        valid = attr.str2id(self._export_string(unicode(value)))
+        valid = attr.str2id(self._export_string(value))
         r = self._corp.filter_query(self._struct.attr_val(attrname, valid))
         cnt = 0
         while not r.end():
