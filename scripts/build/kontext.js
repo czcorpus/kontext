@@ -291,9 +291,22 @@
         });
     }
 
-    module.exports.minifyJSONFile = function (srcPath, dstPath) {
-        let data = fs.readFileSync(srcPath);
-        fs.writeFileSync(dstPath, JSON.stringify(JSON.parse(data), null, ''));
-    }
+    module.exports.findActionPathPrefix = function (confDoc) {
+        let globalNode;
+        const rootElm = confDoc.documentElement;
+        for (let i = 0; i < rootElm.childNodes.length; i += 1) {
+            if (rootElm.childNodes[i].nodeName === 'global') {
+                globalNode = rootElm.childNodes[i];
+                break;
+            }
+        }
+        if (globalNode) {
+            const elms = globalNode.getElementsByTagName('action_path_prefix');
+            if (elms.length > 0 && elms[0].textContent) {
+                return elms[0].textContent.replace(/\/$/, '');
+            }
+        }
+        return '';
+    };
 
 }(module));
