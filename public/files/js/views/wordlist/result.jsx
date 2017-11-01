@@ -132,9 +132,9 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
         );
     };
 
-    // ---------------------- <Paginator /> -------------------
+    // ---------------------- <PaginatorLeftArrows /> -------------------
 
-    const Paginator = (props) => {
+    const PaginatorLeftArrows = (props) => {
 
         const handlePrevPageClick = () => {
             dispatcher.dispatch({
@@ -143,12 +143,59 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
             });
         };
 
+        const handleFirstPageClick = () => {
+            dispatcher.dispatch({
+                actionType: 'WORDLIST_GO_TO_FIRST_PAGE',
+                props: {}
+            });
+        };
+
+        return (
+            <div className="bonito-pagination-left">
+                <a onClick={handleFirstPageClick}>
+                    <img src={utils.createStaticUrl('img/first-page.svg')} />
+                </a>
+                <a onClick={handlePrevPageClick}>
+                    <img src={utils.createStaticUrl('img/prev-page.svg')} />
+                </a>
+            </div>
+        );
+    };
+
+    // ---------------------- <PaginatorRightArrows /> -------------------
+
+    const PaginatorRightArrows = (props) => {
+
         const handleNextPageClick = () => {
             dispatcher.dispatch({
                 actionType: 'WORDLIST_RESULT_NEXT_PAGE',
                 props: {}
             });
         };
+
+        const handleLastPageClick = () => {
+            dispatcher.dispatch({
+                actionType: 'WORDLIST_GO_TO_LAST_PAGE',
+                props: {}
+            });
+        };
+
+        return (
+            <div className="bonito-pagination-right">
+                <a onClick={handleNextPageClick}>
+                    <img src={utils.createStaticUrl('img/next-page.svg')} />
+                </a>
+                <a onClick={handleLastPageClick}>
+                    <img src={utils.createStaticUrl('img/last-page.svg')} />
+                </a>
+            </div>
+        );
+    };
+
+
+    // ---------------------- <Paginator /> -------------------
+
+    const Paginator = (props) => {
 
         const handleKeyPress = (evt) => {
             if (evt.keyCode === 13) {
@@ -164,23 +211,11 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
         return (
             <div className="bonito-pagination">
                 <form onKeyDown={handleKeyPress}>
-                    <div className="bonito-pagination-left">
-                        {props.currPage > 1 ?
-                            (<a onClick={handlePrevPageClick}>
-                                <img src={utils.createStaticUrl('img/prev-page.svg')} />
-                            </a>) : null
-                        }
-                    </div>
+                    {props.currPage > 1 ? <PaginatorLeftArrows /> : null}
                     <div className="bonito-pagination-core">
                         <PaginatorTextInput value={props.currPage} storeIsBusy={props.storeIsBusy} />
                     </div>
-                    <div className="bonito-pagination-right">
-                        {!props.isLastPage ?
-                            (<a onClick={handleNextPageClick}>
-                                <img src={utils.createStaticUrl('img/next-page.svg')} />
-                            </a>) : null
-                        }
-                    </div>
+                    {!props.isLastPage ? <PaginatorRightArrows /> : null}
                 </form>
             </div>
         );

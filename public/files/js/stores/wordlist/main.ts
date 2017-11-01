@@ -21,9 +21,11 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 
 import * as Immutable from 'vendor/immutable';
+import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../pages/document';
 import {WordlistFormStore} from './form';
@@ -60,6 +62,14 @@ export interface DataAjaxResponse extends Kontext.AjaxResponse {
 }
 
 
+export interface WlSizeAjaxResponse extends Kontext.AjaxResponse {
+    size:number;
+}
+
+
+/**
+ *
+ */
 export class WordlistResultStore extends SimplePageStore {
 
     layoutModel:PageModel;
@@ -80,6 +90,14 @@ export class WordlistResultStore extends SimplePageStore {
 
     isLastPage:boolean;
 
+     /*
+      * this is not obtained automatically as a
+      * respective Manatee result object does not
+      * provide this. We fetch this by user's
+      * explicit request (when going to the last page)
+      */
+    private numItems:number;
+
     isBusy:boolean;
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
@@ -95,6 +113,8 @@ export class WordlistResultStore extends SimplePageStore {
         this.data = this.importData(data.data);
         this.headings = Immutable.List<HeadingItem>(headings);
         this.isBusy = false;
+        this.numItems = null;
+
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -156,8 +176,55 @@ export class WordlistResultStore extends SimplePageStore {
                     dispatcher.waitFor([this.saveStore.getDispatcherToken()]);
                     this.notifyChangeListeners();
                 break;
+                case 'WORDLIST_GO_TO_LAST_PAGE':
+                    this.fetchLastPage().then(
+                        (ans) => {
+                            this.processPageLoad();
+                        }
+                    ).catch(
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                        }
+                    )
+                break;
+                case 'WORDLIST_GO_TO_FIRST_PAGE':
+                    this.currPageInput = '1';
+                    this.currPage = 1;
+                    this.processPageLoad();
+                break;
             }
         });
+    }
+
+    private fetchLastPage():RSVP.Promise<boolean> {
+        const args = this.formStore.createSubmitArgs();
+        return (() => {
+            if (this.numItems === null) {
+                return this.layoutModel.ajax<WlSizeAjaxResponse>(
+                    'GET',
+                    this.layoutModel.createActionUrl('ajax_get_wordlist_size'),
+                    args
+
+                );
+
+            } else {
+                return new RSVP.Promise<WlSizeAjaxResponse>((resolve:(d)=>void, reject:(err)=>void) => {
+                    resolve({
+                        messages: [],
+                        contains_errors: false,
+                        size: this.numItems
+                    });
+                });
+            }
+        })().then(
+            (data) => {
+                this.numItems = data.size;
+                this.currPage = ~~Math.ceil(this.numItems / this.pageSize);
+                this.currPageInput = String(this.currPage);
+                return true;
+            }
+        );
     }
 
     private createPQuery(s:string):string {

@@ -39,6 +39,9 @@ def conf_bool(v:str) -> bool: ...
 def add_block_items(items:Dict[str, Any], attr:Optional[str], val:Optional[str],
                     block_size:Optional[int]) -> Dict[str, Any]: ...
 
+def get_wordlist_length(corp:Corpus, wlattr:str, wlpat:str, wlnums:str, wlminfreq:str, words:str,
+                        blacklist:str, include_nonwords:bool): ...
+
 
 def wordlist(corp:Corpus, words:Optional[List[str]], wlattr:Optional[str], wlpat:str, wlminfreq:int, wlmaxitems:int,
              wlsort:str, blacklist:Optional[List[str]], wlnums:Optional[str],
