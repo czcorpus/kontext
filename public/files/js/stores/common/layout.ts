@@ -142,9 +142,6 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
                 this.removeMessage(messageId);
                 this.notifyChangeListeners();
             }, this.getTransitionTime());
-
-        } else {
-            throw new Error(`Cannot fade out message, ID ${messageId} not found`);
         }
     }
 
@@ -157,9 +154,6 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
                 delete(this.onClose[messageId]);
                 fn();
             }
-
-        } else {
-            throw new Error(`Cannot delete message, ID ${messageId} not found`);
         }
     }
 }
