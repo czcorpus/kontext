@@ -1275,6 +1275,13 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, out)
         return out
 
+    @exposed(access_level=1, return_type='json')
+    def ajax_get_wordlist_size(self, request):
+        return dict(size=corplib.get_wordlist_length(corp=self.corp, wlattr=self.args.wlattr, wlpat=self.args.wlpat,
+                                                     wlnums=self.args.wlnums, wlminfreq=self.args.wlminfreq,
+                                                     words=self.args.wlwords, blacklist=self.args.blacklist,
+                                                     include_nonwords=self.args.include_nonwords))
+
     @exposed(access_level=1, legacy=True)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
                  ref_usesubcorp='', paginate=True):

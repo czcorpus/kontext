@@ -199,17 +199,86 @@ def add_block_items(items, attr='class', val='even', block_size=3):
     return items
 
 
-def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
-             wlsort='', blacklist=None, wlnums='frq', include_nonwords=0):
-    """
-    Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
-    """
-    dec_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
+def get_wordlist_length(corp, wlattr, wlpat, wlnums, wlminfreq, words, blacklist, include_nonwords):
     enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
-
-    blacklist = set(enc_string(w) for w in blacklist) if blacklist else set()
-    words = set(enc_string(w) for w in words) if words else set()
+    enc_pattern = enc_string(wlpat.strip())
     attr = corp.get_attr(wlattr)
+    attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
+    if not include_nonwords:
+        nwre = corp.get_conf('NONWORDRE')
+    else:
+        nwre = ''
+    try:
+        gen = attr.regexp2ids(enc_pattern, 0, nwre)
+    except TypeError:
+        gen = attr.regexp2ids(enc_pattern, 0)
+    i = 0
+    while not gen.end():
+        wid = gen.next()
+        frq = attrfreq[wid]
+        if not frq:
+            continue
+        id_value = attr.id2str(wid)
+        if (frq >= wlminfreq and (not words or id_value in words)
+                and (not blacklist or id_value not in blacklist)):
+            i += 1
+    return i
+
+
+def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, words, blacklist, wlnums, wlsort,
+                         wlmaxitems):
+    try:
+        gen = attr.regexp2ids(enc_pattern, 0, excl_pattern)
+    except TypeError:
+        gen = attr.regexp2ids(enc_pattern, 0)
+    items = []
+    while not gen.end():
+        if wlsort == 'f':
+            if len(items) > 5 * wlmaxitems:
+                items.sort()
+                del items[:-wlmaxitems]
+        else:
+            if len(items) >= wlmaxitems:
+                break
+        wid = gen.next()
+        frq = attrfreq[wid]
+        if not frq:
+            continue
+
+        id_value = attr.id2str(wid)
+        if frq >= wlminfreq and (not words or id_value in words) \
+                and (not blacklist or id_value not in blacklist):
+            if wlnums == 'arf':
+                items.append((round(frq, 1), wid))
+            else:
+                items.append((frq, wid))
+    return items
+
+
+def _wordlist_from_list(attr, attrfreq, words, blacklist, wlsort, wlminfreq, wlmaxitems, wlnums, str_dec_fn):
+    items = []
+    for word in words:
+        if wlsort == 'f':
+            if len(items) > 5 * wlmaxitems:
+                items.sort()
+                del items[:-wlmaxitems]
+        else:
+            if len(items) >= wlmaxitems:
+                break
+        id = attr.str2id(word)
+        if id == -1:
+            frq = 0
+        else:
+            frq = attrfreq[id]
+        if word and frq >= wlminfreq and (not blacklist or word not in blacklist):
+            if wlnums == 'arf':
+                items.append((round(frq, 1), str_dec_fn(word)))
+            else:
+                items.append((frq, str_dec_fn(word)))
+    return items
+
+
+def _get_attrfreq(corp, attr, wlattr, wlnums):
     if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
         if wlnums == 'doc sizes':
@@ -221,56 +290,33 @@ def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
                          for i in range(attr.id_range())])
     else:  # positional attribute
         attrfreq = frq_db(corp, wlattr, wlnums)
-    items = []
+    return attrfreq
+
+
+def wordlist(corp, words=None, wlattr='', wlpat='', wlminfreq=5, wlmaxitems=100,
+             wlsort='', blacklist=None, wlnums='frq', include_nonwords=0):
+    """
+    Note: 'words' and 'blacklist' are expected to contain utf-8-encoded strings.
+    """
+    dec_string = partial(import_string, from_encoding=corp.get_conf('ENCODING'))
+    enc_string = partial(export_string, to_encoding=corp.get_conf('ENCODING'))
+
+    blacklist = set(enc_string(w) for w in blacklist) if blacklist else set()
+    words = set(enc_string(w) for w in words) if words else set()
+    attr = corp.get_attr(wlattr)
+    attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=wlattr, wlnums=wlnums)
     if words and wlpat == '.*':  # word list just for given words
-        for word in words:
-            if wlsort == 'f':
-                if len(items) > 5 * wlmaxitems:
-                    items.sort()
-                    del items[:-wlmaxitems]
-            else:
-                if len(items) >= wlmaxitems:
-                    break
-            id = attr.str2id(word)
-            if id == -1:
-                frq = 0
-            else:
-                frq = attrfreq[id]
-            if word and frq >= wlminfreq and (not blacklist or word not in blacklist):
-                if wlnums == 'arf':
-                    items.append((round(frq, 1), dec_string(word)))
-                else:
-                    items.append((frq, dec_string(word)))
+        items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, words=words, blacklist=blacklist, wlsort=wlsort,
+                                    wlminfreq=wlminfreq, wlmaxitems=wlmaxitems, wlnums=wlnums, str_dec_fn=dec_string)
     else:  # word list according to pattern
         if not include_nonwords:
             nwre = corp.get_conf('NONWORDRE')
         else:
             nwre = ''
-        try:
-            gen = attr.regexp2ids(enc_string(wlpat.strip()), 0, nwre)
-        except TypeError:
-            gen = attr.regexp2ids(enc_string(wlpat.strip()), 0)
+        items = _wordlist_by_pattern(attr=attr, enc_pattern=enc_string(wlpat.strip()), excl_pattern=nwre,
+                                     wlminfreq=wlminfreq, words=words, blacklist=blacklist, wlnums=wlnums,
+                                     wlsort=wlsort, wlmaxitems=wlmaxitems, attrfreq=attrfreq)
 
-        while not gen.end():
-            if wlsort == 'f':
-                if len(items) > 5 * wlmaxitems:
-                    items.sort()
-                    del items[:-wlmaxitems]
-            else:
-                if len(items) >= wlmaxitems:
-                    break
-            id = gen.next()
-            frq = attrfreq[id]
-            if not frq:
-                continue
-
-            id_value = attr.id2str(id)
-            if frq >= wlminfreq and (not words or id_value in words) \
-                    and (not blacklist or id_value not in blacklist):
-                if wlnums == 'arf':
-                    items.append((round(frq, 1), id))
-                else:
-                    items.append((frq, id))
     if not words or wlpat != '.*':
         items = [(f, dec_string(attr.id2str(i))) for (f, i) in items]
     if wlsort == 'f':
