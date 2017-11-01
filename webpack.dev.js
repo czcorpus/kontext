@@ -51,7 +51,7 @@ module.exports = merge(common, {
         port: 9000,
         host: 'localhost',
         public: 'kontext.korpus.test',
-        publicPath: '/kontext/files/dist/',
+        publicPath: kontext.findActionPathPrefix(CONF_DOC) + '/files/dist/',
         inline: false
     },
     devtool: "source-map"
