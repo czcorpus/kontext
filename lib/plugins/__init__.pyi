@@ -7,6 +7,7 @@ from .abstract.auth import AbstractAuth
 from .abstract.conc_persistence import AbstractConcPersistence
 from .abstract.conc_cache import AbstractCacheMappingFactory
 from .export import Loader
+from .export_freq2d import Loader as LoaderFreq2d
 from .abstract.user_items import AbstractUserItems
 from .abstract.menu_items import AbstractMenuItems
 from .abstract.getlang import AbstractGetLang
@@ -53,6 +54,7 @@ class _Names(object):
     CONC_PERSISTENCE:_ID[AbstractConcPersistence]
     CONC_CACHE:_ID[AbstractCacheMappingFactory]
     EXPORT:_ID[Loader]
+    EXPORT_FREQ2D:_ID[LoaderFreq2d]
     USER_ITEMS:_ID[AbstractUserItems]
     MENU_ITEMS:_ID[AbstractMenuItems]
 

@@ -90,6 +90,7 @@ class _Names(object):
     CONC_PERSISTENCE = _ID('conc_persistence')
     CONC_CACHE = _ID('conc_cache')
     EXPORT = _ID('export')
+    EXPORT_FREQ2D = _ID('export_freq2d')
     USER_ITEMS = _ID('user_items')
     MENU_ITEMS = _ID('menu_items')
 

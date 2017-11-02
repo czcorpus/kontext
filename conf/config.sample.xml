@@ -108,6 +108,9 @@
             <csv>default_csv</csv>
             <xlsx>default_xlsx</xlsx>
         </export>
+        <export_freq2d>
+            <xlsx>default_xlsx</xlsx>
+        </export_freq2d>
         <footer_bar />
         <getlang>
             <module>default_getlang</module>
