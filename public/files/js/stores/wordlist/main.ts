@@ -177,14 +177,17 @@ export class WordlistResultStore extends SimplePageStore {
                     this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_GO_TO_LAST_PAGE':
+                    this.isBusy = true;
+                    this.notifyChangeListeners();
                     this.fetchLastPage().then(
                         (ans) => {
                             this.processPageLoad();
                         }
                     ).catch(
                         (err) => {
-                            this.layoutModel.showMessage('error', err);
+                            this.isBusy = false;
                             this.notifyChangeListeners();
+                            this.layoutModel.showMessage('error', err);
                         }
                     )
                 break;
@@ -238,7 +241,8 @@ export class WordlistResultStore extends SimplePageStore {
             () => {
                 this.isBusy = false;
                 this.notifyChangeListeners();
-            },
+            }
+        ).catch(
             (err) => {
                 this.isBusy = false;
                 this.layoutModel.showMessage('error', err);
