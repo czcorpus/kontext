@@ -254,26 +254,18 @@ export class ContingencyTableStore extends GeneralCTStore {
                 return this.getColSum.bind(this);
             }
         })();
-        const fetchValFn:(v:string)=>any = (() => {
+        const cmpValFn:(v1:string, v2:string)=>number = (() => {
             switch (quantity) {
             case 'ipm':
-                return v => sumFn(v).ipm;
+                return (v1, v2) => sumFn(v1).ipm - sumFn(v2).ipm;
             case 'abs':
-                return v => sumFn(v).abs;
+                return (v1, v2) => sumFn(v1).abs - sumFn(v2).abs;
             case 'attr':
-                return v => v;
+                return (v1, v2) => v1.localeCompare(v2)
             }
         })();
         const v = quantity === 'attr' ? 1 : -1;
-        return items.sort((x1, x2) => {
-            if (fetchValFn(x1[0]) > fetchValFn(x2[0])) {
-                return v;
-            }
-            if (fetchValFn(x1[0]) < fetchValFn(x2[0])) {
-                return -1 * v;
-            }
-            return 0;
-        }).toList();
+        return items.sort((x1, x2) => cmpValFn(x1[0], x2[0])).toList();
     }
 
     private updateLocalData():void {
