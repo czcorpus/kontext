@@ -391,6 +391,7 @@ class ArchMan(object):
         the source archive file must be placed outside the working directory, the method takes its path and filename
         as parameters and makes a copy of the source file in the working dir
         """
+        arch_list = []
         path, filename = os.path.split(source_arch_full_path)
         self.copy_archive_file(source_arch_full_path)
         self.is_archive_correct(filename)
@@ -399,11 +400,14 @@ class ArchMan(object):
         for i in range(0, number_of_archives - 1):
             oldest_time = self.get_oldest_row_time(self.source_arch_name)
             new_archive = self.create_new_arch(oldest_time)
+            arch_list.append(new_archive)
             self.move_rows_to_new_archive(self.source_arch_name, new_archive, split_size)
         oldest_time = self.get_oldest_row_time(self.source_arch_name)
         last_arch_name = self.make_arch_name(oldest_time)
         os.rename(self.archive_dir_path + self.source_arch_name,
                   self.archive_dir_path + last_arch_name)
+        arch_list.append(last_arch_name)
+        return arch_list
 
 
 if __name__ == '__main__':

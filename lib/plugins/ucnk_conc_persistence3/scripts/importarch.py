@@ -79,9 +79,9 @@ if args.splitinto:
 else:
     splitinto = int(numrows / rows_limit)
 
-archMan.split_archive(source_path, int(splitinto))
+arch_list = archMan.split_archive(source_path, int(splitinto))
 
 if verbose:
     print("split into archives:")
-    for f in reversed(sorted(os.listdir(db_path))):
+    for f in arch_list: # reversed(sorted(os.listdir(db_path))):
         print(f + ", size: " + str(archMan.get_arch_numrows(f)))
