@@ -83,5 +83,5 @@ arch_list = archMan.split_archive(source_path, int(splitinto))
 
 if verbose:
     print("split into archives:")
-    for f in arch_list: # reversed(sorted(os.listdir(db_path))):
+    for f in arch_list:
         print(f + ", size: " + str(archMan.get_arch_numrows(f)))
