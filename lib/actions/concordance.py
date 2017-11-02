@@ -1010,7 +1010,7 @@ class Actions(Querying):
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         return result
 
-    @exposed(access_level=1, legacy=True, template='txtexport/savefreq.tmpl')
+    @exposed(access_level=1, legacy=True, template='txtexport/savefreq.tmpl', return_type='plain')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
@@ -1118,6 +1118,8 @@ class Actions(Querying):
                                               self.args.ctattr2, self.args.ctfcrit2)
         ans = freq_calc.calculate_freqs_ct(args)
 
+        self._add_flux_save_menu_item('XLSX', save_format='xlsx')
+
         return dict(
             freq_type='ct',
             attr1=self.args.ctattr1,
@@ -1127,6 +1129,15 @@ class Actions(Querying):
             coll_form_args=CollFormArgs().update(self.args).to_dict(),
             ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
         )
+
+    @exposed(access_level=1, return_type='plain')
+    def export_freqct(self, request):
+        data = json.loads(request.form['data'])
+        # TODO use new export_freq2d plug-in once it's available
+        self._headers['Content-Type'] = 'text/plain'  # TODO
+        self._headers['Content-Disposition'] = 'attachment; filename="{0}-2dfreq-distrib.txt"'.format(
+            self.args.corpname)  # TODO
+        return request.form['data']
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
     def collx(self, line_offset=0, num_lines=0):
@@ -1172,7 +1183,7 @@ class Actions(Querying):
         ans['save_line_limit'] = 100000
         return ans
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl')
+    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl', return_type='plain')
     def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):
         """
         save collocations
@@ -1446,7 +1457,7 @@ class Actions(Querying):
                            ml1attr=self.args.wlposattr1, ml2attr=self.args.wlposattr2,
                            ml3attr=self.args.wlposattr3)
 
-    @exposed(access_level=1, legacy=True, template='txtexport/savewl.tmpl')
+    @exposed(access_level=1, legacy=True, template='txtexport/savewl.tmpl', return_type='plain')
     def savewl(self, from_line=1, to_line='', wltype='simple', usesubcorp='',
                ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
@@ -1509,7 +1520,7 @@ class Actions(Querying):
                     raise task.ExternalTaskError('Task %s failed' % (t,))
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/saveconc.tmpl')
+    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/saveconc.tmpl', return_type='plain')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0,
                  leftctx='-40', rightctx='40'):
 

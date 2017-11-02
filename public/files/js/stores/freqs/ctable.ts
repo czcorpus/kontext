@@ -30,10 +30,24 @@ import {MultiDict} from '../../util';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
 import {confInterval, getAvailConfLevels} from './statTables';
 
-
+/**
+ *
+ */
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
 
+/**
+ *
+ */
+export interface FormatConversionExportData {
+    attr1:string;
+    attr2:string;
+    minAbsFreq:number;
+    data:Array<Array<[number, number, number]>>;
+}
 
+/**
+ *
+ */
 const filterDataTable = (t:Data2DTable, cond:(cell:CTFreqCell)=>boolean):Data2DTable => {
     const ans:Data2DTable = {};
     for (let k1 in t) {
@@ -52,6 +66,9 @@ const filterDataTable = (t:Data2DTable, cond:(cell:CTFreqCell)=>boolean):Data2DT
     return ans;
 };
 
+/**
+ *
+ */
 const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTable => {
     const ans:Data2DTable = {};
     for (let k1 in t) {
@@ -63,7 +80,14 @@ const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTab
         }
     }
     return ans;
-}
+};
+
+/**
+ *
+ * @param v
+ */
+const roundFloat = (v:number):number => Math.round(v * 100) / 100;
+
 
 /**
  *
@@ -204,8 +228,23 @@ export class ContingencyTableStore extends GeneralCTStore {
                     this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
+                case 'MAIN_MENU_DIRECT_SAVE':
+                    this.submitDataConversion(payload.props['saveformat']);
+                    // no need to notify here
+                break;
             }
         });
+    }
+
+    private submitDataConversion(format:string):void {
+        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
+        const form = <HTMLFormElement>document.getElementById('iframe-submit-form');
+        const args = new MultiDict();
+        args.set('saveformat', format);
+        form.setAttribute('action', this.pageModel.createActionUrl('export_freqct', args));
+        const dataElm = document.getElementById('iframe-submit-data');
+        dataElm.setAttribute('value', JSON.stringify(this.exportData()));
+        form.submit();
     }
 
     private sortByDimension(dim:number, sortAttr:string):void {
@@ -437,7 +476,7 @@ export class ContingencyTableStore extends GeneralCTStore {
             const confInt = confInterval(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
                 ipm: ipm,
-                ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
+                ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
                 abs: item[2],
                 absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
                 domainSize: item[3],
@@ -470,8 +509,33 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.updateLocalData();
     }
 
-    getData():any {
+    getData():Data2DTable {
         return this.data;
+    }
+
+    exportData():FormatConversionExportData {
+        const d1Labels = this.d1Labels.filter(v => v[1]).map(v => v[0]);
+        const d2Labels = this.d2Labels.filter(v => v[1]).map(v => v[0]);
+        const rows = [];
+        d1Labels.forEach(v1 => {
+            const row = [];
+            d2Labels.forEach(v2 => {
+                const cell = this.data[v1][v2];
+                if (cell !== undefined) {
+                    row.push([cell.ipmConfInterval[0], cell.ipm, cell.ipmConfInterval[1]]);
+
+                } else {
+                    row.push(null);
+                }
+            });
+            rows.push(row);
+        });
+        return {
+            attr1: this.attr1,
+            attr2: this.attr2,
+            minAbsFreq: parseInt(this.minAbsFreq, 10),
+            data: rows
+        };
     }
 
     getD1Labels():Immutable.List<[string, boolean]> {
