@@ -47,7 +47,8 @@ def manatee_min_version(ver):
     ver -- a version signature string 'X.Y.Z' (e.g. '2.130.7')
     """
     ver = int(''.join(map(lambda x: '%03d' % int(x), ver.split('.'))))
-    actual = int(''.join(map(lambda x: '%03d' % int(x), manatee.version().split('-')[-1].split('.'))))
+    actual = int(''.join(map(lambda x: '%03d' %
+                             int(x), manatee.version().split('-')[-1].split('.'))))
     return ver <= actual
 
 
@@ -171,7 +172,7 @@ class CorpusManager(object):
             val = val[1:].split(val[0])
         else:
             val = ''
-        return [(val[i], val[i+1]) for i in range(0, len(val), 2)]
+        return [(val[i], val[i + 1]) for i in range(0, len(val), 2)]
 
     def subc_files(self, corpname):
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
@@ -183,7 +184,8 @@ class CorpusManager(object):
                 try:
                     items.append(x.decode('utf-8'))
                 except UnicodeDecodeError as e:
-                    logging.getLogger(__name__).warning('Subcorpus filename encoding problem. File: %s' % x)
+                    logging.getLogger(__name__).warning(
+                        'Subcorpus filename encoding problem. File: %s' % x)
             subc.extend(items)
         subc.extend(glob.glob(os.path.join(self.default_subcpath(corpname).encode('utf-8'), '*.subc')))
         return sorted(subc)
@@ -219,8 +221,7 @@ def get_wordlist_length(corp, wlattr, wlpat, wlnums, wlminfreq, words, blacklist
         if not frq:
             continue
         id_value = attr.id2str(wid)
-        if (frq >= wlminfreq and (not words or id_value in words)
-                and (not blacklist or id_value not in blacklist)):
+        if frq >= wlminfreq and (not words or id_value in words) and (not blacklist or id_value not in blacklist):
             i += 1
     return i
 
@@ -246,8 +247,7 @@ def _wordlist_by_pattern(attr, attrfreq, enc_pattern, excl_pattern, wlminfreq, w
             continue
 
         id_value = attr.id2str(wid)
-        if frq >= wlminfreq and (not words or id_value in words) \
-                and (not blacklist or id_value not in blacklist):
+        if frq >= wlminfreq and (not words or id_value in words) and (not blacklist or id_value not in blacklist):
             if wlnums == 'arf':
                 items.append((round(frq, 1), wid))
             else:
@@ -397,7 +397,8 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
                     if is_multival:
                         raw_vals = [import_string(attr.id2str(i), from_encoding=corp.get_conf('ENCODING'))
                                     .split(multisep) for i in range(attr.id_range())]
-                        vals = [{'v': x} for x in sorted(set([s for subl in raw_vals for s in subl]))]
+                        vals = [{'v': x}
+                                for x in sorted(set([s for subl in raw_vals for s in subl]))]
                     else:
 
                         vals = [{'v': import_string(attr.id2str(i), from_encoding=corp.get_conf('ENCODING'))}
@@ -411,7 +412,8 @@ def texttype_values(corp, subcorpattrs, maxlistsize, shrink_list=False, collator
                 elif collator_locale:
                     attrval['Values'] = l10n.sort(vals, collator_locale, key=lambda item: item['v'])
                 else:
-                    attrval['Values'] = sorted(vals, cmp=lambda x1, x2: cmp(x1['v'].lower(), x2['v'].lower()))
+                    attrval['Values'] = sorted(vals, cmp=lambda x1, x2: cmp(
+                        x1['v'].lower(), x2['v'].lower()))
             attrvals.append(attrval)
         attrlines.append({'Line': attrvals})
     return attrlines
@@ -456,7 +458,7 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
                        'startdiv': startdiv,
                        'enddiv': 0,
                        'display_plus': display_plus,
-        })
+                       })
         startdiv = False
         result.extend(sub)
     if level > 0:
@@ -475,7 +477,7 @@ def subc_keywords1(subcorp, attr, minfreq=50, maxfreq=10000):
     freqs = [(float(f) / (attr.freq(i) - f + 1) * p, f, i)
              for (i, f) in subc_freqs(subcorp, attr, minfreq, maxfreq,
                                       attr.id_range() / 1000)]
-    #freqs.sort()
+    # freqs.sort()
     #del freqs[:-maxitems]
     return freqs
 
@@ -492,7 +494,7 @@ def subc_keywords(subcorp, attr, minfreq=50, maxfreq=10000, last_id=10000,
             continue
         arf = subcorp.count_ARF(attr.id2poss(i), freq)
         score = arf / (attr.freq(i) - arf + 1) * p
-        #if score < 2.0:
+        # if score < 2.0:
         #    continue
         candidates.append((score, arf, freq, i))
     candidates.sort()
@@ -578,7 +580,7 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
         i = gen.next()
         w = attr.id2str(i)
         if f[i] < wlminfreq or (wlwords and w not in wlwords) \
-            or (blacklist and w in blacklist):
+                or (blacklist and w in blacklist):
             continue
         iref = attrref.str2id(w)
         fref_iref = (iref != -1 and fref[iref]) or 0
@@ -589,5 +591,3 @@ def subc_keywords_onstr(sc, scref, attrname='word', wlminfreq=5, wlpat='.*',
             items.append((score, rel, relref, i, iref, f[i], fref_iref, w))
     items.sort(reverse=True)
     return items[:wlmaxitems]
-
-

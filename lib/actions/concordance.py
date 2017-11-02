@@ -1277,10 +1277,24 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='json')
     def ajax_get_wordlist_size(self, request):
+        if '.' in self.args.wlattr:
+            wlnums = self._wlnums2structattr(self.args.wlnums)
+        else:
+            wlnums = self.args.wlnums
         return dict(size=corplib.get_wordlist_length(corp=self.corp, wlattr=self.args.wlattr, wlpat=self.args.wlpat,
-                                                     wlnums=self.args.wlnums, wlminfreq=self.args.wlminfreq,
+                                                     wlnums=wlnums, wlminfreq=self.args.wlminfreq,
                                                      words=self.args.wlwords, blacklist=self.args.blacklist,
                                                      include_nonwords=self.args.include_nonwords))
+
+    def _wlnums2structattr(self, wlnums):
+        if wlnums == 'arf':
+            raise ConcError(_('ARF cannot be used with text types'))
+        elif wlnums == 'frq':
+            return 'doc sizes'
+        elif wlnums == 'docf':
+            return 'docf'
+        else:
+            return wlnums
 
     @exposed(access_level=1, legacy=True)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
@@ -1295,12 +1309,8 @@ class Actions(Querying):
             self.args.wlpat = '.*'
         if '.' in self.args.wlattr:
             orig_wlnums = self.args.wlnums
-            if self.args.wlnums == 'arf':
-                raise ConcError(_('ARF cannot be used with text types'))
-            elif self.args.wlnums == 'frq':
-                self.args.wlnums = 'doc sizes'
-            elif self.args.wlnums == 'docf':
-                self.args.wlnums = 'docf'
+            # TODO get rid of this retarded hidden deps rewriting (see the self.call_function piece of shit)
+            self.args.wlnums = self._wlnums2structattr(self.args.wlnums)
 
         if paginate:
             wlmaxitems = self.args.wlpagesize * self.args.wlpage + 1
