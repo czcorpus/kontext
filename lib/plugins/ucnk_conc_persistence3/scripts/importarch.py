@@ -43,7 +43,7 @@ settings.load(conf_path)
 plugin_conf = settings.get('plugins', 'conc_persistence3')
 db_path = plugin_conf.get('ucnk:archive_db_path')
 rows_limit = int(plugin_conf.get('ucnk:archive_rows_limit'))
-archMan = ArchMan(db_path, rows_limit)
+arch_man = ArchMan(db_path, rows_limit)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("source_archive", help="full path to the source archive db file")
@@ -56,7 +56,7 @@ source_path = args.source_archive
 
 if not os.path.exists(source_path):
     raise NameError("the specified file does not exist")
-if not archMan.is_archive_correct(source_path):
+if not arch_man.is_archive_correct(source_path):
     raise TypeError("invalid file contents")
 
 verbose = True if args.verbose else False
@@ -65,9 +65,9 @@ if args.clear:
     for f in sorted(os.listdir(db_path)):
         os.remove(db_path + f)
 
-archMan.copy_archive_file(source_path)
+arch_man.copy_archive_file(source_path)
 filename = os.path.basename(source_path)
-numrows = archMan.get_arch_numrows(filename)
+numrows = arch_man.get_arch_numrows(filename)
 
 if verbose:
     print("archives directory config value: " + db_path)
@@ -79,9 +79,9 @@ if args.splitinto:
 else:
     splitinto = int(numrows / rows_limit)
 
-arch_list = archMan.split_archive(source_path, int(splitinto))
+arch_list = arch_man.split_archive(source_path, int(splitinto))
 
 if verbose:
     print("split into archives:")
     for f in arch_list:
-        print(f + ", size: " + str(archMan.get_arch_numrows(f)))
+        print(f + ", size: " + str(arch_man.get_arch_numrows(f)))
