@@ -40,6 +40,7 @@ const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
 
 export interface CTFormInputs {
     ctminfreq:string;
+    ctminfreq_type:string;
     ctattr1:string;
     ctattr2:string;
     ctfcrit1:string;
@@ -87,7 +88,12 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     protected setupError:string;
 
-    protected minAbsFreq:string;
+    /**
+     * Note: either absolute freq. or ipm - depends on minFreqType
+     */
+    protected minFreq:string;
+
+    protected minFreqType:string;
 
     protected alignType1:string;
 
@@ -111,7 +117,8 @@ export abstract class GeneralCTStore extends SimplePageStore {
         this.multiSattrAllowedStructs = Immutable.List<string>(props.multiSattrAllowedStructs);
         this.attr1 = props.ctattr1;
         this.attr2 = props.ctattr2;
-        this.minAbsFreq = props.ctminfreq;
+        this.minFreq = props.ctminfreq;
+        this.minFreqType = props.ctminfreq_type;
         this.alphaLevel = '0.05';
         this.availAlphaLevels = this.importAvailAlphaLevels();
         [this.ctxIndex1, this.alignType1] = this.importCtxValue(props.ctfcrit1);
@@ -120,6 +127,17 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     protected calcIpm(v:FreqResultResponse.CTFreqResultItem) {
         return Math.round(v[2] / v[3] * 1e6 * 100) / 100;
+    }
+
+    protected createMinFreqFilterFn():(item:CTFreqCell)=>boolean {
+        switch (this.minFreqType) {
+            case 'abs':
+                return (v:CTFreqCell) => v && v.abs >= parseInt(this.minFreq || '0', 10);
+            case 'ipm':
+                return (v:CTFreqCell) => v && v.ipm >= parseInt(this.minFreq || '0', 10);
+            default:
+                throw new Error('Unknown freq type: ' + this.minFreqType);
+        }
     }
 
     private importAvailAlphaLevels():Immutable.List<[string, string]> {
@@ -305,8 +323,12 @@ export abstract class GeneralCTStore extends SimplePageStore {
         return this.setupError;
     }
 
-    getMinAbsFreq():string {
-        return this.minAbsFreq;
+    getMinFreq():string {
+        return this.minFreq;
+    }
+
+    getMinFreqType():string {
+        return this.minFreqType;
     }
 
     getAlignType(dim:number):string {

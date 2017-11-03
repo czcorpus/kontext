@@ -55,14 +55,27 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_ABS_FREQ',
+                actionType: 'FREQ_CT_SET_MIN_FREQ',
+                props: {value: evt.target.value}
+            });
+        };
+
+        const handleTypeChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_MIN_FREQ_TYPE',
                 props: {value: evt.target.value}
             });
         };
 
         return (
             <label>
-                {he.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                {he.translate('freq__ct_min_freq_label')}
+                {'\u00a0'}
+                <select onChange={handleTypeChange} value={props.freqType}>
+                    <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
+                    <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option>
+                </select>
+                {'\u00a0'}:{'\u00a0'}
                 <input type="text" style={{width: '3em'}} value={props.currVal}
                         onChange={handleInputChange} />
             </label>
@@ -261,7 +274,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                             <QuantitySelect currVal={props.viewQuantity} changeQuantity={props.changeQuantity} />
                         </li>
                         <li>
-                            <MinFreqInput currVal={props.minAbsFreq} />
+                            <MinFreqInput currVal={props.minFreq} freqType={props.minFreqType} />
                         </li>
                         <li>
                             <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
@@ -597,7 +610,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 attr2: ctFreqDataRowsStore.getAttr2(),
                 sortDim1: ctFreqDataRowsStore.getSortDim1(),
                 sortDim2: ctFreqDataRowsStore.getSortDim2(),
-                minAbsFreq: ctFreqDataRowsStore.getMinAbsFreq(),
+                minFreq: ctFreqDataRowsStore.getMinFreq(),
+                minFreqType: ctFreqDataRowsStore.getMinFreqType(),
                 viewQuantity: 'ipm',
                 highlightedCoord: null,
                 transposeIsChecked: ctFreqDataRowsStore.getIsTransposed(),
@@ -663,7 +677,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                     {this._renderWarning()}
                     <div className="toolbar">
                         <CTTableModForm
-                                minAbsFreq={this.state.minAbsFreq}
+                                minFreq={this.state.minFreq}
+                                minFreqType={this.state.minFreqType}
                                 viewQuantity={this.state.viewQuantity}
                                 changeQuantity={this._changeQuantity}
                                 hideEmptyVectors={this.state.hideEmptyVectors}
@@ -794,7 +809,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 data: ctFlatFreqDataRowsStore.getData(),
                 attr1: ctFlatFreqDataRowsStore.getAttr1(),
                 attr2: ctFlatFreqDataRowsStore.getAttr2(),
-                minAbsFreq: ctFlatFreqDataRowsStore.getMinAbsFreq(),
+                minFreq: ctFlatFreqDataRowsStore.getMinFreq(),
+                minFreqType: ctFlatFreqDataRowsStore.getMinFreqType(),
                 sortCol: ctFlatFreqDataRowsStore.getSortCol(),
                 sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
                 confIntervalWarnRatio: ctFlatFreqDataRowsStore.getConfIntervalWarnRatio(),
@@ -824,7 +840,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
                                 <ul className="items">
                                     <li>
-                                        <MinFreqInput currVal={this.state.minAbsFreq} />
+                                        <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType} />
                                     </li>
                                     <li>
                                         <AlphaLevelSelect alphaLevel={this.state.alphaLevel}

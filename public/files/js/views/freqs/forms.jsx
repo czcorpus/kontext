@@ -163,16 +163,29 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_ABS_FREQ',
+                actionType: 'FREQ_CT_SET_MIN_FREQ',
                 props: {
                     value: evt.target.value
                 }
             });
         };
 
+        const handleTypeChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_MIN_FREQ_TYPE',
+                props: {value: evt.target.value}
+            });
+        };
+
         return (
             <label>
-                {he.translate('freq__ct_min_freq_label')}:{'\u00a0'}
+                {he.translate('freq__ct_min_freq_label')}
+                {'\u00a0'}
+                <select onChange={handleTypeChange} value={props.freqType}>
+                    <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
+                    <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option>
+                </select>
+                {'\u00a0'}:{'\u00a0'}
                 <input type="text" onChange={handleInputChange}
                         value={props.value} style={{width: '3em'}} />
             </label>
@@ -242,7 +255,8 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
                 attr1IsStruct: ctFreqStore.getAttr1IsStruct(),
                 attr2: ctFreqStore.getAttr2(),
                 attr2IsStruct: ctFreqStore.getAttr2IsStruct(),
-                minAbsFreq: ctFreqStore.getMinAbsFreq(),
+                minFreq: ctFreqStore.getMinFreq(),
+                minFreqType: ctFreqStore.getMinFreqType(),
                 setupError: ctFreqStore.getSetupError(),
                 positionRangeLabels: ctFreqStore.getPositionRangeLabels(),
                 alignType1: ctFreqStore.getAlignType(1),
@@ -326,7 +340,7 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
                         {this._rendersetupError()}
                     </div>
                     <div className="toolbar">
-                            <CTFreqFormMinFreqInput value={this.state.minAbsFreq} />
+                            <CTFreqFormMinFreqInput value={this.state.minFreq} freqType={this.state.minFreqType} />
                     </div>
                     <table className="form">
                         <tbody className="dim1">

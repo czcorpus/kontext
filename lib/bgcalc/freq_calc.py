@@ -368,6 +368,7 @@ class CTFreqCalcArgs(FixedDict):
     subcpath = None
     minsize = None
     ctminfreq = None
+    ctminfreq_type = None
     fcrit = None
     cache_path = None
 
@@ -397,16 +398,16 @@ class CTCalculation(object):
         else:
             return [1e6] * len(words)
 
-    def ct_dist(self, crit, limit=1):
+    def ct_dist(self, crit, limit_type, limit=1):
         """
         Calculate join distribution (contingency table).
         """
         words = manatee.StrVector()
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
-        import logging
-        logging.getLogger(__name__).warning('LIMIT: %s' % (limit,))
-        self._corp.freq_dist(self._conc.RS(), crit, limit, words, freqs, norms)
+
+        abs_limit = limit if limit_type == 'abs' else 1
+        self._corp.freq_dist(self._conc.RS(), crit, abs_limit, words, freqs, norms)
 
         crit_lx = re.split(r'\s+', crit)
         attrs = []
@@ -426,7 +427,11 @@ class CTCalculation(object):
             norms = self._calc_1sattr_norms(words, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
         else:
             norms = [self._corp.size()] * len(words)
-        return zip(words, freqs, norms)
+        ans = zip(words, freqs, norms)
+        if limit_type == 'abs':
+            return ans
+        else:
+            return [v for v in ans if v[1] / float(v[2]) * 1e6 >= limit]
 
     def run(self):
         """
@@ -436,7 +441,8 @@ class CTCalculation(object):
         self._corp = cm.get_Corpus(self._args.corpname, self._args.subcname)
         self._conc = conclib.get_conc(corp=self._corp, user_id=self._args.user_id, minsize=self._args.minsize,
                                       q=self._args.q, fromp=0, pagesize=0, async=0, save=0, samplesize=0)
-        return [x[0] + x[1:] for x in self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq)]
+        return [x[0] + x[1:] for x in self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
+                                                   limit_type=self._args.ctminfreq_type)]
 
 
 def calculate_freqs_ct(args):

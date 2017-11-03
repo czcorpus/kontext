@@ -61,6 +61,7 @@ class CTFreqFormArgs(object):
 
     def __init__(self, default_attr='word'):
         self.ctminfreq = 1
+        self.ctminfreq_type = 'abs'
         self.ctattr1 = default_attr
         self.ctfcrit1 = '0<0'
         self.ctattr2 = default_attr
@@ -68,6 +69,7 @@ class CTFreqFormArgs(object):
 
     def update(self, args):
         self.ctminfreq = args.ctminfreq
+        self.ctminfreq_type = args.ctminfreq_type
         self.ctattr1 = args.ctattr1
         self.ctfcrit1 = args.ctfcrit1
         self.ctattr2 = args.ctattr2
