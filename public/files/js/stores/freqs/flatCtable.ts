@@ -58,9 +58,9 @@ export class CTFlatStore extends GeneralCTStore {
                     this.validateAttrs();
                     this.notifyChangeListeners();
                 break;
-                case 'FREQ_CT_SET_MIN_ABS_FREQ':
+                case 'FREQ_CT_SET_MIN_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
-                        this.minAbsFreq = payload.props['value'];
+                        this.minFreq = payload.props['value'];
                         if (this.data) {
                             this.updateData();
                         }
@@ -68,6 +68,10 @@ export class CTFlatStore extends GeneralCTStore {
                     } else {
                         // we do not show error because other active store for 2d table handles this
                     }
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_MIN_FREQ_TYPE':
+                    this.minFreqType = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
@@ -106,22 +110,13 @@ export class CTFlatStore extends GeneralCTStore {
     private updateData():void {
         const a1 = this.sortReversed ? -1 : 1;
         const a2 = this.sortReversed ? 1 : -1;
-        this.data = this.origData.filter(item => item && item.abs >= parseInt(this.minAbsFreq || '0', 10)).toList();
+        this.data = this.origData.filter(this.createMinFreqFilterFn()).toList();
         switch (this.sortBy) {
             case this.attr1:
             this.data = this.data.sort((v1, v2) => {
                 const s1 = v1.val1 + v1.val2;
                 const s2 = v2.val1 + v2.val2;
-
-                if (s1 > s2) {
-                    return a1;
-                }
-                if (s1 === s2) {
-                    return 0;
-                }
-                if (s1 < s2) {
-                    return a2;
-                }
+                return s1.localeCompare(s2);
             }).toList();
             break;
             case 'abs':

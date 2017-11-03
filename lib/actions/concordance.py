@@ -1114,6 +1114,7 @@ class Actions(Querying):
         args.minsize = None
         args.q = self.args.q
         args.ctminfreq = int(request.args.get('ctminfreq', '1'))
+        args.ctminfreq_type = request.args.get('ctminfreq_type')
         args.fcrit = '{0} {1} {2} {3}'.format(self.args.ctattr1, self.args.ctfcrit1,
                                               self.args.ctattr2, self.args.ctfcrit2)
         ans = freq_calc.calculate_freqs_ct(args)

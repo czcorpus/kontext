@@ -41,7 +41,8 @@ type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
 export interface FormatConversionExportData {
     attr1:string;
     attr2:string;
-    minAbsFreq:number;
+    minFreq:number;
+    minFreqType:string;
     data:Array<Array<[number, number, number]>>;
 }
 
@@ -116,7 +117,7 @@ export class ContingencyTableStore extends GeneralCTStore {
      * in case user requires a lower limit (which is currently
      * not on the client-side).
      */
-    private serverMinAbsFreq:number;
+    private serverMinFreq:number;
 
     private isWaiting:boolean;
 
@@ -136,7 +137,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.isTransposed = false;
         this.sortDim1 = 'attr';
         this.sortDim2 = 'attr';
-        this.serverMinAbsFreq = parseInt(props.ctminfreq, 10);
+        this.serverMinFreq = parseInt(props.ctminfreq, 10);
         this.isWaiting = false;
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
 
@@ -181,31 +182,21 @@ export class ContingencyTableStore extends GeneralCTStore {
                         this.notifyChangeListeners();
                     }
                 break;
-                case 'FREQ_CT_SET_MIN_ABS_FREQ':
+                case 'FREQ_CT_SET_MIN_FREQ_TYPE':
+                    this.minFreqType = payload.props['value'];
+                    this.notifyChangeListeners();
+                    this.waitAndReload(true);
+                break;
+                case 'FREQ_CT_SET_MIN_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
-                        this.minAbsFreq = payload.props['value'];
-
-                        if (this.throttleTimeout) {
-                            window.clearTimeout(this.throttleTimeout);
-                        }
-                        this.isWaiting = true;
-                        this.throttleTimeout = window.setTimeout(() => {
-                            if (this.data) {
-                                this.updateData().then(
-                                    () => {
-                                        this.notifyChangeListeners();
-                                    },
-                                    (err) => {
-                                        this.pageModel.showMessage('error', err);
-                                    }
-                                );
-                            }
-                        }, 400);
+                        this.minFreq = payload.props['value'];
+                        this.notifyChangeListeners();
+                        this.waitAndReload(false);
 
                     } else {
                         this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
+                        this.notifyChangeListeners();
                     }
-                    this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY':
                     this.filterZeroVectors = payload.props['value'];
@@ -234,6 +225,32 @@ export class ContingencyTableStore extends GeneralCTStore {
                 break;
             }
         });
+    }
+
+    private waitAndReload(resetServerMinFreq:boolean):void {
+        if (this.throttleTimeout) {
+            window.clearTimeout(this.throttleTimeout);
+        }
+        this.throttleTimeout = window.setTimeout(() => {
+            if (this.data) {
+                if (resetServerMinFreq) {
+                    this.serverMinFreq = null; // we must force data reload
+                }
+                this.isWaiting = true;
+                this.notifyChangeListeners();
+                this.updateData().then(
+                    () => {
+                        this.isWaiting = false;
+                        this.notifyChangeListeners();
+                    },
+                    (err) => {
+                        this.isWaiting = false;
+                        this.pageModel.showMessage('error', err);
+                        this.notifyChangeListeners();
+                    }
+                );
+            }
+        }, 400);
     }
 
     private submitDataConversion(format:string):void {
@@ -308,9 +325,7 @@ export class ContingencyTableStore extends GeneralCTStore {
     }
 
     private updateLocalData():void {
-        this.data = filterDataTable(this.origData, (item) => {
-            return item && item.abs >= parseInt(this.minAbsFreq || '0', 10);
-        });
+        this.data = filterDataTable(this.origData, this.createMinFreqFilterFn());
         if (this.filterZeroVectors) {
             this.removeZeroVectors();
 
@@ -322,9 +337,13 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.d2Labels = this.sortLabels(this.d2Labels, this.sortDim2, 'col');
     }
 
+    private mustLoadDueToLimit():boolean {
+        return parseInt(this.minFreq, 10) < this.serverMinFreq || this.serverMinFreq === null;
+    }
+
     private updateData():RSVP.Promise<boolean> { // TODO type
         return (() => {
-            if (parseInt(this.minAbsFreq, 10) < this.serverMinAbsFreq) {
+            if (this.mustLoadDueToLimit()) {
                 return this.fetchData();
 
             } else {
@@ -334,9 +353,8 @@ export class ContingencyTableStore extends GeneralCTStore {
             }
         })().then(
             (data:any) => { // TODO type
-                this.isWaiting = false;
                 if (data !== null) {
-                    this.serverMinAbsFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
+                    this.serverMinFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
                     this.importData(data.data);
 
                 } else {
@@ -409,7 +427,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         args.set('ctfcrit2', this.generateCrit(2));
         args.set('ctattr1', this.attr1);
         args.set('ctattr2', this.attr2);
-        args.set('ctminfreq', this.minAbsFreq);
+        args.set('ctminfreq', this.minFreq);
+        args.set('ctminfreq_type', this.minFreqType);
         return args;
     }
 
@@ -462,8 +481,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
         const tableData:Data2DTable = {};
-        let fMin = this.calcIpm(data[0]);
-        let fMax = this.calcIpm(data[0]);
+        let fMin = data.length > 0 ? this.calcIpm(data[0]) : null;
+        let fMax = data.length > 0 ? this.calcIpm(data[0]) : null;
 
         data.forEach(item => {
             d1Labels[item[0]] = true;
@@ -533,7 +552,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         return {
             attr1: this.attr1,
             attr2: this.attr2,
-            minAbsFreq: parseInt(this.minAbsFreq, 10),
+            minFreq: parseInt(this.minFreq, 10),
+            minFreqType: this.minFreqType,
             data: rows
         };
     }
