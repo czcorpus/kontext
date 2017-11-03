@@ -262,11 +262,11 @@ class GlobalArgs(object):
     qunit = Parameter('')  # this parameter is used to activate and set-up a QUnit unit tests
 
     cattr = Parameter('word')
-    csortfn = Parameter('t')
-    cbgrfns = Parameter(['m', 't'])
+    csortfn = Parameter('d')
+    cbgrfns = Parameter(['m', 't', 'd'])
     cfromw = Parameter(-5)
     ctow = Parameter(5)
-    cminfreq = Parameter(5)
+    cminfreq = Parameter(3)
     cminbgr = Parameter(3)
 
     wlminfreq = Parameter(5)
