@@ -19,10 +19,10 @@ class CollFormArgs(object):
         self.cattr = None
         self.cfromw = '-1'
         self.ctow = '0'
-        self.cminfreq = '5'
+        self.cminfreq = '3'
         self.cminbgr = '3'
-        self.cbgrfns = ['t', 'm']
-        self.csortfn = 't'
+        self.cbgrfns = ['t', 'm', 'd']
+        self.csortfn = 'd'
 
     def update(self, args):
         self.cattr = args.cattr
