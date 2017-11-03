@@ -510,42 +510,44 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         };
 
         return (
-            <table className="ct-data">
-                <tbody>
-                    <tr>
-                        <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
-                        {labels2().map((label2, i) =>
-                            <th key={`lab-${i}`}
-                                    className={isHighlightedCol(i) ? 'highlighted' : null}>
-                                {label2}
-                            </th>
-                        )}
-                    </tr>
-                    {labels1().map((label1, i) => {
-                        const htmlClass = ['vert'];
-                        if (isHighlightedRow(i)) {
-                            htmlClass.push('highlighted');
-                        }
-                        return (
-                            <tr key={`row-${i}`}>
-                                <th className={htmlClass.join(' ')}><span>{label1}</span></th>
-                                {labels2().map((label2, j) => {
-                                    return <CTCell data={props.data[label1][label2]} key={`c-${i}:${j}`}
-                                                    quantity={props.viewQuantity}
-                                                    onClick={()=>props.onHighlight(i, j)}
-                                                    onClose={props.onResetHighlight}
-                                                    attr1={props.attr1}
-                                                    label1={label1}
-                                                    attr2={props.attr2}
-                                                    label2={label2}
-                                                    isHighlighted={isHighlighted(i, j)}
-                                                    confIntervalWarnRatio={props.confIntervalWarnRatio} />;
-                                })}
-                            </tr>
-                        )
-                    })}
-                </tbody>
-            </table>
+            <div>
+                <table className="ct-data">
+                    <tbody>
+                        <tr>
+                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
+                            {labels2().map((label2, i) =>
+                                <th key={`lab-${i}`}
+                                        className={isHighlightedCol(i) ? 'highlighted' : null}>
+                                    {label2}
+                                </th>
+                            )}
+                        </tr>
+                        {labels1().map((label1, i) => {
+                            const htmlClass = ['vert'];
+                            if (isHighlightedRow(i)) {
+                                htmlClass.push('highlighted');
+                            }
+                            return (
+                                <tr key={`row-${i}`}>
+                                    <th className={htmlClass.join(' ')}><span>{label1}</span></th>
+                                    {labels2().map((label2, j) => {
+                                        return <CTCell data={props.data[label1][label2]} key={`c-${i}:${j}`}
+                                                        quantity={props.viewQuantity}
+                                                        onClick={()=>props.onHighlight(i, j)}
+                                                        onClose={props.onResetHighlight}
+                                                        attr1={props.attr1}
+                                                        label1={label1}
+                                                        attr2={props.attr2}
+                                                        label2={label2}
+                                                        isHighlighted={isHighlighted(i, j)}
+                                                        confIntervalWarnRatio={props.confIntervalWarnRatio} />;
+                                    })}
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
         );
     };
 
