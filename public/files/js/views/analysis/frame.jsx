@@ -47,7 +47,7 @@ export function init(dispatcher, mixins, layoutViews, collViews, freqViews, main
         _getTitle : function () {
             switch ((this.state.activeItem || {}).actionName) {
                 case 'MAIN_MENU_SHOW_COLL_FORM':
-                    return this.translate('Collocation candidates'); // TODO
+                    return this.translate('coll__form_heading');
                 case 'MAIN_MENU_SHOW_FREQ_FORM':
                     return this.translate('freq__h2_freq_distr');
                 default:
