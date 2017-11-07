@@ -33,19 +33,21 @@ class XLSXExport(AbstractExportFreq2d):
         self._labels1 = None
         self._labels2 = None
         self._alpha_level = None
-        self._min_abs_freq = None
+        self._min_freq = None
+        self._min_freq_type = None
         self._data = None
 
     def content_type(self):
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
-    def set_content(self, attr1, attr2, labels1, labels2, alpha_level, min_abs_freq, data):
+    def set_content(self, attr1, attr2, labels1, labels2, alpha_level, min_freq, min_freq_type, data):
         self._attr1 = attr1
         self._attr2 = attr2
         self._labels1 = labels1
         self._labels2 = labels2
         self._alpha_level = alpha_level
-        self._min_abs_freq = min_abs_freq
+        self._min_freq = min_freq
+        self._min_freq_type = min_freq_type
         self._data = data
 
         # define styles
@@ -69,8 +71,8 @@ class XLSXExport(AbstractExportFreq2d):
         self._sheet["B4"] = self._attr2
         self._sheet["A5"] = "Alpha level:"
         self._sheet["B5"] = float(self._alpha_level)
-        self._sheet["A6"] = "Min. abs. freq.:"
-        self._sheet["B6"] = self._min_abs_freq
+        self._sheet["A6"] = 'Min. freq. ({0}):'.format(self._min_freq_type)
+        self._sheet["B6"] = self._min_freq
 
         # -----------------
         # render data table

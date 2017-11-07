@@ -1133,12 +1133,17 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='plain')
     def export_freqct(self, request):
-        data = json.loads(request.form['data'])
-        # TODO use new export_freq2d plug-in once it's available
-        self._headers['Content-Type'] = 'text/plain'  # TODO
-        self._headers['Content-Disposition'] = 'attachment; filename="{0}-2dfreq-distrib.txt"'.format(
-            self.args.corpname)  # TODO
-        return request.form['data']
+        with plugins.runtime.EXPORT_FREQ2D as plg:
+            data = json.loads(request.form['data'])
+            exporter = plg.load_plugin(request.args['saveformat'])
+            exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
+                                 labels1=data['labels1'], labels2=data['labels2'], alpha_level=data['alphaLevel'],
+                                 min_freq=data['minFreq'], min_freq_type=data['minFreqType'],
+                                 data=data['data'])
+            self._headers['Content-Type'] = exporter.content_type()
+            self._headers['Content-Disposition'] = 'attachment; filename="{0}-2dfreq-distrib.xlsx"'.format(
+                self.args.corpname)
+        return exporter.raw_content()
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, page_model='coll')
     def collx(self, line_offset=0, num_lines=0):

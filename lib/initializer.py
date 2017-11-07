@@ -19,7 +19,9 @@ import logging
 
 import settings
 import plugins
-from plugins import PluginException
+import plugins.export_freq2d
+import plugins.export
+from plugins.abstract import PluginException
 
 
 def has_configured_plugin(name):
