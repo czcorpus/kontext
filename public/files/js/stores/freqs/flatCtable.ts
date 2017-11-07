@@ -91,9 +91,10 @@ export class CTFlatStore extends GeneralCTStore {
     }
 
     private recalculateConfIntervals():void {
-        this.origData = this.origData.map(cell => {
+        this.origData = this.origData.map((cell, i) => {
             const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
             return {
+                order: i,
                 val1: cell.val1,
                 val2: cell.val2,
                 ipm: cell.ipm,

@@ -34,15 +34,22 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
     const QuantitySelect = (props) => {
 
         const handleSelectChange = (evt) => {
-            props.changeQuantity(evt.target.value);
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_DISPLAY_QUANTITY',
+                props: {value: evt.target.value}
+            });
         };
 
         return (
             <label>
                 {he.translate('freq__ct_quantity_label')}:{'\u00a0'}
-                <select value={props.currValue} onChange={handleSelectChange}>
-                    <option value="ipm">i.p.m.</option>
-                    <option value="abs">absolute freq.</option>
+                <select value={props.value} onChange={handleSelectChange}>
+                    <option value="ipm">
+                        {he.translate('freq__ct_quantity_ipm')}
+                    </option>
+                    <option value="abs">
+                        {he.translate('freq__ct_quantity_abs')}
+                    </option>
                 </select>
             </label>
         );
@@ -119,6 +126,34 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 {he.translate('freq__ct_transpose_table')}:{'\u00a0'}
                 <input type="checkbox" checked={props.isChecked} onChange={handleClickTranspose}
                         style={{verticalAlign: 'middle'}} />
+            </label>
+        );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    const ColorMappingSelector = (props) => {
+
+        const handleChange = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_COLOR_MAPPING',
+                props: {value: evt.target.value}
+            });
+        };
+
+        return (
+            <label>
+                {he.translate('freq__ct_color_mapping_label')}:{'\u00a0'}
+                <select value={props.colorMapping} onChange={handleChange}>
+                    <option value="linear">
+                        {he.translate('freq__ct_color_mapping_linear')}
+                    </option>
+                    <option value="percentile">
+                        {he.translate('freq__ct_color_mapping_percentile')}
+                    </option>
+                </select>
             </label>
         );
     };
@@ -271,7 +306,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                     <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
                     <ul className="items">
                         <li>
-                            <QuantitySelect currVal={props.viewQuantity} changeQuantity={props.changeQuantity} />
+                            <QuantitySelect value={props.displayQuantity} />
                         </li>
                         <li>
                             <MinFreqInput currVal={props.minFreq} freqType={props.minFreqType} />
@@ -296,6 +331,9 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         </li>
                         <li>
                             <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
+                        </li>
+                        <li>
+                            <ColorMappingSelector value={props.colorMapping} />
                         </li>
                     </ul>
                 </fieldset>
@@ -499,7 +537,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      * @param {*} props
      */
     const CTDataTable = (props) => {
-
         const labels1 = () => {
             return props.d1Labels.filter(x => x[1]).map(x => x[0]);
         };
@@ -545,7 +582,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                     <th className={htmlClass.join(' ')}><span>{label1}</span></th>
                                     {labels2().map((label2, j) => {
                                         return <CTCell data={props.data[label1][label2]} key={`c-${i}:${j}`}
-                                                        quantity={props.viewQuantity}
+                                                        quantity={props.displayQuantity}
                                                         onClick={()=>props.onHighlight(i, j)}
                                                         onClose={props.onResetHighlight}
                                                         attr1={props.attr1}
@@ -595,7 +632,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         constructor(props) {
             super(props);
             this.state = this._fetchState();
-            this._changeQuantity = this._changeQuantity.bind(this);
             this._handleStoreChange = this._handleStoreChange.bind(this);
             this._highlightItem = this._highlightItem.bind(this);
             this._resetHighlight = this._resetHighlight.bind(this);
@@ -612,26 +648,20 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 sortDim2: ctFreqDataRowsStore.getSortDim2(),
                 minFreq: ctFreqDataRowsStore.getMinFreq(),
                 minFreqType: ctFreqDataRowsStore.getMinFreqType(),
-                viewQuantity: 'ipm',
+                displayQuantity: ctFreqDataRowsStore.getDisplayQuantity(),
                 highlightedCoord: null,
                 transposeIsChecked: ctFreqDataRowsStore.getIsTransposed(),
                 hideEmptyVectors: ctFreqDataRowsStore.getFilterZeroVectors(),
                 isWaiting: ctFreqDataRowsStore.getIsWaiting(),
                 alphaLevel: ctFreqDataRowsStore.getAlphaLevel(),
                 availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels(),
-                confIntervalWarnRatio: ctFreqDataRowsStore.getConfIntervalWarnRatio()
+                confIntervalWarnRatio: ctFreqDataRowsStore.getConfIntervalWarnRatio(),
+                colorMapping: ctFreqDataRowsStore.getColorMapping()
             };
-        }
-
-        _changeQuantity(q) {
-            const state = this._fetchState();
-            state.viewQuantity = q;
-            this.setState(state);
         }
 
         _handleStoreChange() {
             const newState = this._fetchState();
-            newState.viewQuantity = this.state.viewQuantity;
             newState.highlightedCoord = this.state.highlightedCoord;
             this.setState(newState);
         }
@@ -658,7 +688,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
         _resetHighlight() {
             const newState = this._fetchState();
-            newState.viewQuantity = this.state.viewQuantity;
             newState.highlightedCoord = null;
             this.setState(newState);
         }
@@ -666,7 +695,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         _highlightItem(i, j) {
             this._resetHighlight();
             const newState = this._fetchState();
-            newState.viewQuantity = this.state.viewQuantity;
             newState.highlightedCoord = [i, j];
             this.setState(newState);
         }
@@ -679,15 +707,15 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         <CTTableModForm
                                 minFreq={this.state.minFreq}
                                 minFreqType={this.state.minFreqType}
-                                viewQuantity={this.state.viewQuantity}
-                                changeQuantity={this._changeQuantity}
+                                displayQuantity={this.state.displayQuantity}
                                 hideEmptyVectors={this.state.hideEmptyVectors}
                                 transposeIsChecked={this.state.transposeIsChecked}
                                 sortDim1={this.state.sortDim1}
                                 sortDim2={this.state.sortDim2}
                                 alphaLevel={this.state.alphaLevel}
                                 availAlphaLevels={this.state.availAlphaLevels}
-                                confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
+                                confIntervalWarnRatio={this.state.confIntervalWarnRatio}
+                                colorMapping={this.state.colorMapping} />
                     </div>
                     {this.state.isWaiting ?
                         <WaitingAnim attr1={this.state.attr1}
@@ -698,7 +726,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 d1Labels={this.state.d1Labels}
                                 d2Labels={this.state.d2Labels}
                                 data={this.state.data}
-                                viewQuantity={this.state.viewQuantity}
+                                displayQuantity={this.state.displayQuantity}
                                 onHighlight={this._highlightItem}
                                 onResetHighlight={this._resetHighlight}
                                 highlightedCoord={this.state.highlightedCoord}
