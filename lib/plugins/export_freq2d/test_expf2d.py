@@ -17,27 +17,14 @@
 Unittests for the export_freq2d plugin
 """
 import unittest
-import sys
-import os
-
 from openpyxl import load_workbook
-
+from io import BytesIO
 from plugins.export_freq2d.default_xlsx import XLSXExport
-
-sys.path.insert(0, os.path.realpath('%s/../../../scripts/' % os.path.dirname(os.path.realpath(__file__))))
-
-import autoconf
-import initializer
-import plugins
 
 
 class ExpFreq2dTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ExpFreq2dTest, self).__init__(*args, **kwargs)
-
-        tmp = '/tmp/xls_test/'
-        if not os.path.exists(tmp):
-            os.makedirs(tmp)
 
         self.sample = {"attr1": "lemma_lc", "attr2": "div.group",
                        "labels1": ["friday", "monday", "saturday", "sunday", "thursday", "tuesday", "wednesday"],
@@ -64,47 +51,40 @@ class ExpFreq2dTest(unittest.TestCase):
                 [[5.03, 5.58, 6.23], [12.85, 14.26, 15.86], [21.98, 24.4, 27.14], [21.22, 23.54, 26.49],
                  [12.79, 14.19, 15.76],
                  [0.52, 0.95, 2.62]]]}
-
-        settings = autoconf.settings
-        logger = autoconf.logger
-
-        initializer.init_plugin('export_freq2d', module=plugins.export_freq2d)
-        loader = plugins.runtime.EXPORT_FREQ2D.instance
-        self.expf2d = loader.load_plugin("xlsx")
+        self.expf2d = XLSXExport()
 
     def test_content_type(self):
         self.assertTrue(self.expf2d.content_type(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     def test_set_content(self):
         """
-        save content using the old_save() method
+        set the excel content, read it using the raw_content method, and check it against the sample data
         """
         self.expf2d.set_content(self.sample.get("attr1"), self.sample.get("attr2"), self.sample.get("labels1"),
                                 self.sample.get("labels2"), self.sample.get("alphaLevel"),
                                 self.sample.get("minAbsFreq"),
                                 self.sample.get("data"))
-        file_path = self.expf2d.old_save()
-        # check whether file created
-        self.assertTrue(os.path.isfile(file_path))
 
         # ----------
         # check data
         # ----------
-        wb = load_workbook(file_path)
+        raw_content = self.expf2d.raw_content()
+        wb = load_workbook(filename=BytesIO(raw_content))
         sheet = wb.active
-        labels1 = self.sample.get("labels1")
-        labels2 = self.sample.get("labels2")
+        labels1 = iter(self.sample.get("labels1"))
+        labels2 = iter(self.sample.get("labels2"))
+        start_row = 1
 
-        # find first row of data table by looking for the first row label in the first column
+        # find the first row of data table by looking for the first row label in the first column
         for r in range(1, sheet.max_row):
-            if sheet.cell(row=r, column=1).internal_value == labels1[0]:
+            if sheet.cell(row=r, column=1).internal_value == self.sample.get("labels1")[0]:
                 start_row = r
                 break
 
         # check whether labels1 match
         row_ind = 0
         for label in labels1:
-            self.assertEqual(sheet.cell(row=start_row+row_ind, column=1).internal_value, label)
+            self.assertEqual(sheet.cell(row=start_row + row_ind, column=1).internal_value, label)
             row_ind += 1
 
         # check whether labels2 match
@@ -116,13 +96,13 @@ class ExpFreq2dTest(unittest.TestCase):
         # check whether data cells match
         sample_data = self.sample.get("data")
         row_ind = 0
-        for doc_row in sample_data:
+        for doc_row in iter(sample_data):
             col_ind = 2
             for triad in doc_row:
                 for val in triad:
-                    self.assertEqual(val, sheet.cell(row=start_row+row_ind, column=col_ind).internal_value)
+                    self.assertEqual(val, sheet.cell(row=start_row + row_ind, column=col_ind).internal_value)
                     col_ind += 1
-            row_ind += 1        
+            row_ind += 1
 
 
 if __name__ == '__main__':

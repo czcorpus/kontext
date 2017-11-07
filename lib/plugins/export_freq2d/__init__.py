@@ -54,7 +54,6 @@ class Loader(object):
         returns:
         required module or nothing if module is not found
         """
-
         srch_dirs = [os.path.dirname(os.path.realpath(__file__))]
         try:
             tpl_file, pathname, description = imp.find_module(self._module_map[name], srch_dirs)

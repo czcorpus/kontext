@@ -18,16 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-import os
 from StringIO import StringIO
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Side, Color, PatternFill, Font, Border, colors
-
 from plugins.export_freq2d import AbstractExportFreq2d
 
 
 class XLSXExport(AbstractExportFreq2d):
-
     def __init__(self):
         self._wb = Workbook()
         self._sheet = self._wb.active
@@ -130,11 +127,6 @@ class XLSXExport(AbstractExportFreq2d):
         output = StringIO()
         self._wb.save(filename=output)
         return output.getvalue()
-
-    def old_save(self):
-        file_path = "/tmp/xls_test/export_freq2d.xlsx"
-        self._wb.save(file_path)
-        return file_path
 
 
 def create_instance():
