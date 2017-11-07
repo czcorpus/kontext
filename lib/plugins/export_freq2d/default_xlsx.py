@@ -1,3 +1,23 @@
+# Copyright (c) 2017 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
 import os
 from StringIO import StringIO
 from openpyxl import Workbook
@@ -112,8 +132,10 @@ class XLSXExport(AbstractExportFreq2d):
         return output.getvalue()
 
     def old_save(self):
-        temp_dir = "/tmp/xls_test/"
-        self._wb.save(os.path.join(temp_dir, "sample.xlsx"))
+        file_path = "/tmp/xls_test/export_freq2d.xlsx"
+        self._wb.save(file_path)
+        return file_path
+
 
 def create_instance():
     return XLSXExport()
