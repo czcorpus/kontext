@@ -20,6 +20,8 @@ import unittest
 import sys
 import os
 
+from openpyxl import load_workbook
+
 from plugins.export_freq2d.default_xlsx import XLSXExport
 
 sys.path.insert(0, os.path.realpath('%s/../../../scripts/' % os.path.dirname(os.path.realpath(__file__))))
@@ -70,16 +72,57 @@ class ExpFreq2dTest(unittest.TestCase):
         loader = plugins.runtime.EXPORT_FREQ2D.instance
         self.expf2d = loader.load_plugin("xlsx")
 
+    def test_content_type(self):
+        self.assertTrue(self.expf2d.content_type(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
     def test_set_content(self):
+        """
+        save content using the old_save() method
+        """
         self.expf2d.set_content(self.sample.get("attr1"), self.sample.get("attr2"), self.sample.get("labels1"),
                                 self.sample.get("labels2"), self.sample.get("alphaLevel"),
                                 self.sample.get("minAbsFreq"),
                                 self.sample.get("data"))
         file_path = self.expf2d.old_save()
+        # check whether file created
         self.assertTrue(os.path.isfile(file_path))
 
-    def test_content_type(self):
-        self.assertTrue(self.expf2d.content_type(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # ----------
+        # check data
+        # ----------
+        wb = load_workbook(file_path)
+        sheet = wb.active
+        labels1 = self.sample.get("labels1")
+        labels2 = self.sample.get("labels2")
+
+        # find first row of data table by looking for the first row label in the first column
+        for r in range(1, sheet.max_row):
+            if sheet.cell(row=r, column=1).internal_value == labels1[0]:
+                start_row = r
+                break
+
+        # check whether labels1 match
+        row_ind = 0
+        for label in labels1:
+            self.assertEqual(sheet.cell(row=start_row+row_ind, column=1).internal_value, label)
+            row_ind += 1
+
+        # check whether labels2 match
+        col_ind = 2
+        for label in labels2:
+            self.assertEqual(sheet.cell(row=start_row - 1, column=col_ind).internal_value, label)
+            col_ind += 3
+
+        # check whether data cells match
+        sample_data = self.sample.get("data")
+        row_ind = 0
+        for doc_row in sample_data:
+            col_ind = 2
+            for triad in doc_row:
+                for val in triad:
+                    self.assertEqual(val, sheet.cell(row=start_row+row_ind, column=col_ind).internal_value)
+                    col_ind += 1
+            row_ind += 1        
 
 
 if __name__ == '__main__':
