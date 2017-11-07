@@ -31,7 +31,7 @@ class AbstractExportFreq2d(object):
     def content_type(self):
         raise NotImplementedError()
 
-    def set_content(self, attr1, attr2, labels1, labels2, alpha_level, min_abs_freq, data):
+    def set_content(self, attr1, attr2, labels1, labels2, alpha_level, min_freq, min_freq_type, data):
         raise NotImplementedError()
 
     def raw_content(self):
@@ -58,7 +58,8 @@ class Loader(object):
         try:
             tpl_file, pathname, description = imp.find_module(self._module_map[name], srch_dirs)
         except ImportError as ex:
-            logging.getLogger(__name__).error('Failed to import template {0} in {1}'.format(name, ', '.join(srch_dirs)))
+            logging.getLogger(__name__).error(
+                'Failed to import template {0} in {1}'.format(name, ', '.join(srch_dirs)))
             raise ex
         module = imp.load_module(name, tpl_file, pathname, description)
         return module.create_instance()

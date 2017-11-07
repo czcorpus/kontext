@@ -35,6 +35,8 @@ import {confInterval, getAvailConfLevels} from './statTables';
  */
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
 
+type NumberTriple = [number, number, number];
+
 /**
  *
  */
@@ -43,6 +45,9 @@ export interface FormatConversionExportData {
     attr2:string;
     minFreq:number;
     minFreqType:string;
+    alphaLevel:number;
+    labels1:Array<string>;
+    labels2:Array<string>;
     data:Array<Array<[number, number, number]>>;
 }
 
@@ -611,13 +616,25 @@ export class ContingencyTableStore extends GeneralCTStore {
     exportData():FormatConversionExportData {
         const d1Labels = this.d1Labels.filter(v => v[1]).map(v => v[0]);
         const d2Labels = this.d2Labels.filter(v => v[1]).map(v => v[0]);
+
+        const fetchVals:(c:CTFreqCell)=>NumberTriple = (() => {
+            switch (this.displayQuantity) {
+                case DisplayQuantities.ABS:
+                return (c:CTFreqCell) => <NumberTriple>[c.absConfInterval[0], c.abs, c.absConfInterval[1]];
+                case DisplayQuantities.IPM:
+                return (c:CTFreqCell) => <NumberTriple>[c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1]];
+                default:
+                throw new Error('Unknown display quantity');
+            }
+        })();
+
         const rows = [];
         d1Labels.forEach(v1 => {
             const row = [];
             d2Labels.forEach(v2 => {
                 const cell = this.data[v1][v2];
                 if (cell !== undefined) {
-                    row.push([cell.ipmConfInterval[0], cell.ipm, cell.ipmConfInterval[1]]);
+                    row.push(fetchVals(cell));
 
                 } else {
                     row.push(null);
@@ -628,8 +645,11 @@ export class ContingencyTableStore extends GeneralCTStore {
         return {
             attr1: this.attr1,
             attr2: this.attr2,
+            labels1: d1Labels.toArray(),
+            labels2: d2Labels.toArray(),
             minFreq: parseInt(this.minFreq, 10),
             minFreqType: this.minFreqType,
+            alphaLevel: parseFloat(this.alphaLevel),
             data: rows
         };
     }
