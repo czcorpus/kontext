@@ -75,6 +75,7 @@ def setup_plugins():
     init_plugin('conc_persistence')
     init_plugin('conc_cache')
     init_plugin('export', module=plugins.export)
+    init_plugin('export_freq2d', module=plugins.export_freq2d)
     init_plugin('user_items')
     init_plugin('menu_items')
 
