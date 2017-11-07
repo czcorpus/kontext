@@ -56,6 +56,7 @@ export interface CTFormProperties extends CTFormInputs {
 
 
 export interface CTFreqCell {
+    order:number;
     abs:number;
     absConfInterval:[number, number];
     ipm:number;

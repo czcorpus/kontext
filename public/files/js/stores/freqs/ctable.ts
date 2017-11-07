@@ -83,11 +83,33 @@ const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTab
     return ans;
 };
 
+const mapDataTableAsList = <T>(t:Data2DTable, fn:(cell:CTFreqCell)=>T):Immutable.List<T> => {
+    const ans:Array<T> = [];
+    for (let k1 in t) {
+        for (let k2 in t[k1]) {
+            ans.push(fn(t[k1][k2]));
+        }
+    }
+    return Immutable.List(ans);
+};
+
 /**
  *
  * @param v
  */
 const roundFloat = (v:number):number => Math.round(v * 100) / 100;
+
+
+export const enum ColorMappings {
+    LINEAR = "linear",
+    PERCENTILE = "percentile"
+}
+
+
+export const enum DisplayQuantities {
+    ABS = "abs",
+    IPM = "ipm"
+}
 
 
 /**
@@ -110,6 +132,10 @@ export class ContingencyTableStore extends GeneralCTStore {
     private sortDim2:string;
 
     private isTransposed:boolean;
+
+    private colorMapping:ColorMappings;
+
+    private displayQuantity:DisplayQuantities;
 
     /**
      * A lower freq. limit used by server when fetching data.
@@ -135,10 +161,12 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.d2Labels = Immutable.List<[string, boolean]>();
         this.filterZeroVectors = true;
         this.isTransposed = false;
+        this.colorMapping = ColorMappings.LINEAR;
         this.sortDim1 = 'attr';
         this.sortDim2 = 'attr';
         this.serverMinFreq = parseInt(props.ctminfreq, 10);
         this.isWaiting = false;
+        this.displayQuantity = DisplayQuantities.ABS;
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -222,6 +250,16 @@ export class ContingencyTableStore extends GeneralCTStore {
                 case 'MAIN_MENU_DIRECT_SAVE':
                     this.submitDataConversion(payload.props['saveformat']);
                     // no need to notify here
+                break;
+                case 'FREQ_CT_SET_DISPLAY_QUANTITY':
+                    this.displayQuantity = payload.props['value'];
+                    this.recalcHeatmap();
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_COLOR_MAPPING':
+                    this.colorMapping = payload.props['value'];
+                    this.recalcHeatmap();
+                    this.notifyChangeListeners();
                 break;
             }
         });
@@ -335,6 +373,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         }
         this.d1Labels = this.sortLabels(this.d1Labels, this.sortDim1, 'row');
         this.d2Labels = this.sortLabels(this.d2Labels, this.sortDim2, 'col');
+        this.recalcHeatmap();
     }
 
     private mustLoadDueToLimit():boolean {
@@ -455,6 +494,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                     this.onNewDataHandlers.forEach(fn => fn(data.data));
                     return data;
 
+
                 } else {
                     throw new Error(data.messages[0]);
                 }
@@ -466,6 +506,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.origData = mapDataTable(this.origData, cell => {
             const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
             return {
+                order: cell.order,
                 ipm: cell.ipm,
                 ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
                 abs: cell.abs,
@@ -481,10 +522,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         const d1Labels:{[name:string]:boolean} = {};
         const d2Labels:{[name:string]:boolean} = {};
         const tableData:Data2DTable = {};
-        let fMin = data.length > 0 ? this.calcIpm(data[0]) : null;
-        let fMax = data.length > 0 ? this.calcIpm(data[0]) : null;
 
-        data.forEach(item => {
+        data.forEach((item, i) => {
             d1Labels[item[0]] = true;
             d2Labels[item[1]] = true;
 
@@ -494,38 +533,75 @@ export class ContingencyTableStore extends GeneralCTStore {
             const ipm = this.calcIpm(item);
             const confInt = confInterval(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
+                order: i,
                 ipm: ipm,
                 ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
                 abs: item[2],
                 absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
                 domainSize: item[3],
-                bgColor: undefined,
+                bgColor: '#FFFFFF',
                 pfilter: this.generatePFilter(item[0], item[1])
             };
-
-            if (ipm > fMax) {
-                fMax = ipm;
-            }
-            if (ipm < fMin) {
-                fMin = ipm;
-            }
         });
 
         this.d1Labels = Immutable.List<[string, boolean]>(Object.keys(d1Labels).sort().map(x => [x, true]));
         this.d2Labels = Immutable.List<[string, boolean]>(Object.keys(d2Labels).sort().map(x => [x, true]));
-
-        this.origData = mapDataTable(tableData, (cell) => {
-            return {
-                ipm: cell.ipm,
-                abs: cell.abs,
-                absConfInterval: cell.absConfInterval,
-                ipmConfInterval: cell.ipmConfInterval,
-                domainSize: cell.domainSize,
-                bgColor: ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((cell.ipm - fMin) * 8 / (fMax - fMin))],
-                pfilter: cell.pfilter
-            };
-        });
+        this.origData = tableData;
         this.updateLocalData();
+    }
+
+    private getFreqFetchFn():(c:CTFreqCell)=>number {
+        switch (this.displayQuantity) {
+            case DisplayQuantities.ABS:
+                return (c:CTFreqCell) => c.abs;
+            case DisplayQuantities.IPM:
+                return (c:CTFreqCell) => c.ipm;
+            default:
+                throw new Error('Unknown quantity: ' + this.displayQuantity);
+        }
+    }
+
+    private recalcHeatmap():void {
+        const fetchFreq = this.getFreqFetchFn();
+        const data = mapDataTableAsList(this.data, x => [x.order, fetchFreq(x)]);
+        let fMin = data.size > 0 ? data.get(0)[1] : null;
+        let fMax = data.size > 0 ? data.get(0)[1] : null;
+        data.forEach(item => {
+            if (item[1] > fMax) {
+                fMax = item[1];
+            }
+            if (item[1] < fMin) {
+                fMin = item[1];
+            }
+        });
+
+        const mappingFunc:(c:CTFreqCell)=>string = (() => {
+            if (this.colorMapping === ColorMappings.LINEAR) {
+                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((fetchFreq(c) - fMin) * 8 / (fMax - fMin))];
+
+
+            } else if (this.colorMapping === ColorMappings.PERCENTILE) {
+                const ordered = Immutable.Map<number, number>(data
+                    .sort((x1, x2) => x1[1] - x2[1])
+                    .map((x, i) => [x[0], i]));
+
+                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor(ordered.get(c.order) * 9 / ordered.size)]
+
+            } else {
+                throw new Error('Falied to define mapping func');
+            }
+        })();
+
+        this.data = mapDataTable(this.data, item => ({
+            abs: item.abs,
+            absConfInterval: item.absConfInterval,
+            bgColor: mappingFunc(item),
+            domainSize: item.domainSize,
+            ipm: item.ipm,
+            ipmConfInterval: item.ipmConfInterval,
+            order: item.order,
+            pfilter: item.pfilter
+        }));
     }
 
     getData():Data2DTable {
@@ -590,4 +666,11 @@ export class ContingencyTableStore extends GeneralCTStore {
         return this.isWaiting;
     }
 
+    getColorMapping():ColorMappings {
+        return this.colorMapping;
+    }
+
+    getDisplayQuantity():DisplayQuantities {
+        return this.displayQuantity;
+    }
 }
