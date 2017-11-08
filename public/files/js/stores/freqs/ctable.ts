@@ -217,12 +217,14 @@ export class ContingencyTableStore extends GeneralCTStore {
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ_TYPE':
                     this.minFreqType = payload.props['value'];
+                    this.isWaiting = true;
                     this.notifyChangeListeners();
                     this.waitAndReload(true);
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
                         this.minFreq = payload.props['value'];
+                        this.isWaiting = true;
                         this.notifyChangeListeners();
                         this.waitAndReload(false);
 
