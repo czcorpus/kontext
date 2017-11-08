@@ -63,7 +63,7 @@ export interface CTFreqCell {
     ipmConfInterval:[number, number];
     domainSize:number;
     bgColor:string;
-    pfilter:[string, string];
+    pfilter:string;
 }
 
 
@@ -172,34 +172,6 @@ export abstract class GeneralCTStore extends SimplePageStore {
         return  [6, 'left'];
     }
 
-    protected applyQuickFilter(arg1:string, arg2:string):void {
-        const args = this.pageModel.getConcArgs();
-        args.set('q2', arg1);
-        args.set('format', 'json');
-        this.pageModel.ajax<Kontext.AjaxResponse>(
-            'GET',
-            this.pageModel.createActionUrl('quick_filter'),
-            args
-
-        ).then(
-            (data) => {
-                if (!data.contains_errors) {
-                    this.pageModel.replaceConcArg('q', data['Q']);
-                    const args = this.pageModel.getConcArgs();
-                    args.set('q2', arg2);
-                    window.location.href = this.pageModel.createActionUrl('quick_filter', args.items());
-
-                } else {
-                    this.pageModel.showMessage('error', data.messages[0]);
-                }
-
-            },
-            (err) => {
-                this.pageModel.showMessage('error', err);
-            }
-        );
-    }
-
     getPosAttrs():Immutable.List<Kontext.AttrItem> {
         return this.availAttrList;
     }
@@ -269,23 +241,38 @@ export abstract class GeneralCTStore extends SimplePageStore {
      * @param v1
      * @param v2
      */
-    protected generatePFilter(v1:string, v2:string):[string, string] {
+    protected generatePFilter(v1:string, v2:string):string {
+        const args = this.pageModel.getConcArgs();
 
-        const pfilter = (dim:number, v:string):string => {
-            const attr = this.getAttrOfDim(dim);
-            if (this.isStructAttr(attr)) {
-                const [s, a] = attr.split('.');
-                return `p0 0 1 [] within <${s} ${a}="${v}" />`;
+        if (this.isStructAttr(this.attr1) && this.isStructAttr(this.attr2)) {
+            const [s1, a1] = this.attr1.split('.');
+            const [s2, a2] = this.attr2.split('.');
+            args.set('q2', `p0 0 1 [] within <${s1} ${a1}="${v1}" /> within <${s2} ${a2}="${v2}" />`);
 
-            } else {
-                const icase = ''; // TODO - optionally (?i)
-                const begin = this.getAttrCtx(dim);
-                const end = this.getAttrCtx(dim);
-                return `p${begin} ${end} 0 [${attr}="${icase}${v}"]`;
-            }
-        };
+        } else if (!this.isStructAttr(this.attr1) && !this.isStructAttr(this.attr2)) {
+            const icase1 = ''; // TODO - optionally (?i)
+            const begin1 = this.getAttrCtx(1);
+            const end1 = this.getAttrCtx(1);
+            const icase2 = ''; // TODO - optionally (?i)
+            const begin2 = this.getAttrCtx(2);
+            const end2 = this.getAttrCtx(2);
+            args.set('q2', `p${begin1} ${end1} 0 [${this.attr1}="${icase1}${v1}" & ${this.attr2}="${icase2}${v2}"]`);
 
-        return [pfilter(1, v1), pfilter(2, v2)];
+        } else if (this.isStructAttr(this.attr1) && !this.isStructAttr(this.attr2)) {
+            const [s1, a1] = this.attr1.split('.');
+            const icase2 = ''; // TODO - optionally (?i)
+            const begin2 = this.getAttrCtx(2);
+            const end2 = this.getAttrCtx(2);
+            args.set('q2', `p${begin2} ${end2} 0 [${this.attr2}="${icase2}${v2}"] within <${s1} ${a1}="${v1}" />`);
+
+        } else {
+            const icase1 = ''; // TODO - optionally (?i)
+            const begin1 = this.getAttrCtx(1);
+            const end1 = this.getAttrCtx(1);
+            const [s2, a2] = this.attr2.split('.');
+            args.set('q2', `p${begin1} ${end1} 0 [${this.attr1}="${icase1}${v1}"] within <${s2} ${a2}="${v2}" />`);
+        }
+        return this.pageModel.createActionUrl('quick_filter', args);
     }
 
     /**

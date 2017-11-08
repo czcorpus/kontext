@@ -342,18 +342,64 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
     };
 
     /**
+     * ------------------------ <CellAttrVals /> -------------------------------------
+     */
+    class TbodyCellAttrVals extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._handleMouseOver = this._handleMouseOver.bind(this);
+            this._handleMouseOut = this._handleMouseOut.bind(this);
+            this.state = {highlighted: false};
+        }
+
+        _handleMouseOver() {
+            this.setState({highlighted: true});
+        }
+
+        _handleMouseOut() {
+            this.setState({highlighted: false});
+        }
+
+        render() {
+            return (
+                <tbody>
+                    <tr>
+                        <th>
+                            {this.props.attr1}
+                        </th>
+                        <td colSpan="2">
+                            <input className={this.state.highlighted ? 'highlighted' : null}
+                                    type="text" readOnly value={this.props.label1} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            {this.props.attr2}
+                        </th>
+                        <td colSpan="2">
+                            <input className={this.state.highlighted ? 'highlighted' : null}
+                                    type="text" readOnly value={this.props.label2} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th />
+                        <td colSpan="2">
+                            <a className="conc" href={this.props.pfilter} target="_blank"
+                                    onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
+                                {he.translate('freq__ct_pfilter_btn_label')}
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            );
+        }
+    }
+
+    /**
      *
      */
     const CTCellMenu = (props) => {
-
-        const handlePosClick = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_QUICK_FILTER_CONCORDANCE',
-                props: {
-                    args: props.data.pfilter
-                }
-            });
-        };
 
         const handleCloseClick = () => {
             props.onClose();
@@ -361,61 +407,39 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
         return (
             <layoutViews.PopupBox onCloseClick={handleCloseClick} customClass="menu">
-                <fieldset className="detail">
-                    <legend>{he.translate('freq__ct_detail_legend')}</legend>
-                    {he.translate('freq__ct_ipm_freq_label')}:
-                    {'\u00a0'}
-                    {formatIpm(props.data.ipm)}
-                    {'\u00a0'}
-                    ({he.formatNumber(props.data.ipmConfInterval[0], 1)}
-                    {'\u00a0'}
-                    -
-                    {'\u00a0'}
-                    {he.formatNumber(props.data.ipmConfInterval[1], 1)})
-                    <br />
-                    {he.translate('freq__ct_abs_freq_label')}:
-                    {'\u00a0'}
-                    {he.formatNumber(props.data.abs, 0)}
-                    {'\u00a0'}
-                    ({he.formatNumber(props.data.absConfInterval[0], 0)}
-                    {'\u00a0'}
-                    -
-                    {'\u00a0'}
-                    {he.formatNumber(props.data.absConfInterval[1], 0)})
-
-
-                </fieldset>
-                <form>
-                    <fieldset>
-                        <legend>{he.translate('freq__ct_pfilter_legend')}</legend>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>
-                                        {props.attr1} =
-                                    </th>
-                                    <td>
-                                        <input type="text" readOnly value={props.label1} />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>
-                                        {props.attr2} =
-                                    </th>
-                                    <td>
-                                        <input type="text" readOnly value={props.label2} />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p>
-                            <button type="button" className="default-button"
-                                    onClick={handlePosClick}>
-                                {he.translate('freq__ct_pfilter_btn_label')}
-                            </button>
-                        </p>
-                    </fieldset>
-                </form>
+                <h2>{he.translate('freq__ct_detail_legend')}</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>
+                                {he.translate('freq__ct_ipm_freq_label')}
+                            </th>
+                            <td>
+                                {formatIpm(props.data.ipm)}
+                            </td>
+                            <td>
+                                ({he.formatNumber(props.data.ipmConfInterval[0], 1)}
+                                {'\u2013'}
+                                {he.formatNumber(props.data.ipmConfInterval[1], 1)})
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>
+                                {he.translate('freq__ct_abs_freq_label')}
+                            </th>
+                            <td>
+                                {he.formatNumber(props.data.abs, 0)}
+                            </td>
+                            <td>
+                                ({he.formatNumber(props.data.absConfInterval[0], 0)}
+                                {'\u2013'}
+                                {he.formatNumber(props.data.absConfInterval[1], 0)})
+                            </td>
+                        </tr>
+                    </tbody>
+                    <TbodyCellAttrVals attr1={props.attr1} attr2={props.attr2} label1={props.label1} label2={props.label2}
+                            pfilter={props.data.pfilter} />
+                </table>
             </layoutViews.PopupBox>
         );
     };
@@ -423,15 +447,20 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
     /**
      *
      */
-    const CTCell = (props) => {
+    class CTCell extends React.Component {
 
-        const getValue = () => {
-            if (isNonEmpty()) {
-                switch (props.quantity) {
+        constructor(props) {
+            super(props);
+            this.handleItemClick = this.handleItemClick.bind(this);
+        }
+
+        getValue() {
+            if (this.isNonEmpty()) {
+                switch (this.props.quantity) {
                     case 'ipm':
-                        return formatIpm(props.data.ipm);
+                        return formatIpm(this.props.data.ipm);
                     case 'abs':
-                        return he.formatNumber(props.data.abs, 0);
+                        return he.formatNumber(this.props.data.abs, 0);
                     default:
                         return NaN;
                 }
@@ -439,73 +468,83 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             } else {
                 return '';
             }
-        };
+        }
 
-        const isNonEmpty = () => {
+        isNonEmpty() {
             const v = (() => {
-                switch (props.quantity) {
+                switch (this.props.quantity) {
                     case 'ipm':
-                        return props.data ? props.data.ipm : 0;
+                        return this.props.data ? this.props.data.ipm : 0;
                     case 'abs':
-                        return props.data ? props.data.abs : 0;
+                        return this.props.data ? this.props.data.abs : 0;
                     default:
                         return NaN;
                 }
             })();
             return v > 0;
-        };
+        }
 
-        const handleItemClick = () => {
-            props.onClick();
-        };
+        handleItemClick() {
+            this.props.onClick();
+        }
 
-        const shouldWarn = (props) => {
-            return (props.data.absConfInterval[1] - props.data.absConfInterval[0]) / props.data.abs  >
-                props.confIntervalWarnRatio;
-        };
+        shouldWarn() {
+            return (this.props.data.absConfInterval[1] - this.props.data.absConfInterval[0]) / this.props.data.abs  >
+                this.props.confIntervalWarnRatio;
+        }
 
-        const renderWarning = (props) => {
-            if (shouldWarn(props)) {
-                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
+        renderWarning() {
+            if (this.shouldWarn()) {
+                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
                 return <strong className="warn" style={linkStyle}
                             title={he.translate('freq__ct_conf_interval_too_wide_{threshold}',
-                                {threshold: props.confIntervalWarnRatio * 100})}>
+                                {threshold: this.props.confIntervalWarnRatio * 100})}>
                             {'\u26A0'}{'\u00a0'}
                         </strong>;
 
             } else {
                 return '';
             }
-        };
+        }
 
-        if (isNonEmpty()) {
-            const bgStyle = {};
-            const linkStyle = {color: color2str(calcTextColorFromBg(importColor(props.data.bgColor, 1)))}
-            const tdClasses = ['data-cell'];
-            if (props.isHighlighted) {
-                tdClasses.push('highlighted');
+        shouldComponentUpdate(nextProps, nextState) {
+            return this.props.data !== nextProps.data || this.props.attr1 !== nextProps.attr1 ||
+                    this.props.attr2 !== nextProps.attr2 || this.props.absConfInterval !== nextProps.absConfInterval ||
+                    this.props.ipmConfInterval !== nextProps.ipmConfInterval ||
+                    this.props.confIntervalWarnRatio !== nextProps.confIntervalWarnRatio ||
+                    this.props.quantity !== nextProps.quantity || this.props.isHighlighted !== nextProps.isHighlighted;
+        }
+
+        render() {
+            if (this.isNonEmpty()) {
+                const bgStyle = {};
+                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
+                const tdClasses = ['data-cell'];
+                if (this.props.isHighlighted) {
+                    tdClasses.push('highlighted');
+
+                } else {
+                    bgStyle['backgroundColor'] = this.props.data.bgColor;
+                }
+                return (
+                    <td className={tdClasses.join(' ')} style={bgStyle}>
+                        {this.renderWarning()}
+                        <a onClick={this.handleItemClick} style={linkStyle}
+                                title={he.translate('freq__ct_click_for_details')}>
+                            {this.getValue()}
+                        </a>
+                        {this.props.isHighlighted ? <CTCellMenu onClose={this.props.onClose}
+                                                            data={this.props.data}
+                                                            attr1={this.props.attr1}
+                                                            label1={this.props.label1}
+                                                            attr2={this.props.attr2}
+                                                            label2={this.props.label2} /> : null}
+                    </td>
+                );
 
             } else {
-                bgStyle['backgroundColor'] = props.data.bgColor;
+                return <td className="empty-cell" />;
             }
-            return (
-                <td className={tdClasses.join(' ')} style={bgStyle}>
-                    {renderWarning(props)}
-                    <a onClick={handleItemClick} style={linkStyle}
-                            title={he.translate('freq__ct_click_for_details')}>
-                        {getValue()}
-                    </a>
-                    {props.isHighlighted ? <CTCellMenu onClose={props.onClose}
-                                                        data={props.data}
-                                                        attr1={props.attr1}
-                                                        label1={props.label1}
-                                                        attr2={props.attr2}
-                                                        label2={props.label2} /> : null}
-                </td>
-            );
-
-        } else {
-            return <td className="empty-cell" />;
         }
     };
 

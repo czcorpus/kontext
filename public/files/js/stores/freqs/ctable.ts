@@ -48,7 +48,7 @@ export interface FormatConversionExportData {
     alphaLevel:number;
     labels1:Array<string>;
     labels2:Array<string>;
-    data:Array<Array<[number, number, number]>>;
+    data:Array<Array<[number, number, number, string]>>;
 }
 
 /**
@@ -82,7 +82,7 @@ const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTab
             if (ans[k1] === undefined) {
                 ans[k1] = {};
             }
-            ans[k1][k2] = fn(t[k1][k2]);
+            ans[k1][k2] = t[k1][k2] !== undefined ? fn(t[k1][k2]) : undefined;
         }
     }
     return ans;
@@ -92,7 +92,7 @@ const mapDataTableAsList = <T>(t:Data2DTable, fn:(cell:CTFreqCell)=>T):Immutable
     const ans:Array<T> = [];
     for (let k1 in t) {
         for (let k2 in t[k1]) {
-            ans.push(fn(t[k1][k2]));
+            ans.push(t[k1][k2] !== undefined ? fn(t[k1][k2]) : undefined);
         }
     }
     return Immutable.List(ans);
@@ -217,12 +217,14 @@ export class ContingencyTableStore extends GeneralCTStore {
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ_TYPE':
                     this.minFreqType = payload.props['value'];
+                    this.isWaiting = true;
                     this.notifyChangeListeners();
                     this.waitAndReload(true);
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
                         this.minFreq = payload.props['value'];
+                        this.isWaiting = true;
                         this.notifyChangeListeners();
                         this.waitAndReload(false);
 
@@ -239,10 +241,6 @@ export class ContingencyTableStore extends GeneralCTStore {
                 case 'FREQ_CT_TRANSPOSE_TABLE':
                     this.transposeTable();
                     this.notifyChangeListeners();
-                break;
-                case 'FREQ_CT_QUICK_FILTER_CONCORDANCE':
-                    this.applyQuickFilter(payload.props['args'][0], payload.props['args'][1]);
-                    // leaves the page here
                 break;
                 case 'FREQ_CT_SORT_BY_DIMENSION':
                     this.sortByDimension(
@@ -569,9 +567,9 @@ export class ContingencyTableStore extends GeneralCTStore {
     private recalcHeatmap():void {
         const fetchFreq = this.getFreqFetchFn();
         const data = mapDataTableAsList(this.data, x => [x.order, fetchFreq(x)]);
-        let fMin = data.size > 0 ? data.get(0)[1] : null;
-        let fMax = data.size > 0 ? data.get(0)[1] : null;
-        data.forEach(item => {
+        let fMin = data.size > 0 ? data.find(x => x !== undefined)[1] : null;
+        let fMax = data.size > 0 ? data.find(x => x !== undefined)[1] : null;
+        data.filter(x => x !== undefined).forEach(item => {
             if (item[1] > fMax) {
                 fMax = item[1];
             }
@@ -587,6 +585,7 @@ export class ContingencyTableStore extends GeneralCTStore {
 
             } else if (this.colorMapping === ColorMappings.PERCENTILE) {
                 const ordered = Immutable.Map<number, number>(data
+                    .filter(x => x !== undefined)
                     .sort((x1, x2) => x1[1] - x2[1])
                     .map((x, i) => [x[0], i]));
 
