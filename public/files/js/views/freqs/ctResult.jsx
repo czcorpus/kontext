@@ -808,6 +808,9 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         return (
             <tr>
                 <td className="num">{props.idx}.</td>
+                <td>
+                    <a href={props.data.pfilter} target="_blank">p</a>
+                </td>
                 <td>{props.data.val1}</td>
                 <td>{props.data.val2}</td>
                 <td className="num" title={formatRange(props.data.absConfInterval)}>
@@ -922,6 +925,9 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         <tbody>
                             <tr>
                                 <th />
+                                <th>
+                                    {he.translate('freq__ct_filter_th')}
+                                </th>
                                 <THSortableCol label={this.state.attr1} value={this.state.attr1}
                                         isActive={this.state.sortCol === this.state.attr1}
                                         isReversed={this.state.sortCol === this.state.attr1 && this.state.sortColIsReversed}
