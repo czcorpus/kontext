@@ -3370,6 +3370,11 @@ declare namespace d3 {
             clip(subject: Array<[number, number]>): Array<[number, number]>;
         }
     }
+
+
+    export function axisBottom(scale:any):any;
+
+    export function axisLeft():any;
 }
 
 // we need this to exist
