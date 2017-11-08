@@ -112,12 +112,13 @@ export class CTFlatStore extends GeneralCTStore {
         const a1 = this.sortReversed ? -1 : 1;
         const a2 = this.sortReversed ? 1 : -1;
         this.data = this.origData.filter(this.createMinFreqFilterFn()).toList();
+
         switch (this.sortBy) {
             case this.attr1:
             this.data = this.data.sort((v1, v2) => {
                 const s1 = v1.val1 + v1.val2;
                 const s2 = v2.val1 + v2.val2;
-                return s1.localeCompare(s2);
+                return s1.localeCompare(s2) * a1;
             }).toList();
             break;
             case 'abs':
