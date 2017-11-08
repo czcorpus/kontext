@@ -430,6 +430,10 @@ div.CT2dFreqResultView {
                 text-decoration: none;
             }
 
+            a.conc {
+                text-decoration: underline;
+            }
+
             a:hover {
                 text-decoration: underline;
             }
@@ -444,14 +448,6 @@ div.CT2dFreqResultView {
             .menu {
                 font-weight: normal;
 
-                fieldset legend {
-                    font-weight: bold;
-                }
-
-                fieldset.detail {
-                    margin-bottom: 1em;
-                }
-
                 table {
                     td, th {
                         background-color: transparent;
@@ -462,6 +458,11 @@ div.CT2dFreqResultView {
                         background-color: @color-bg-light-blue;
                         border: @input-border-style;
                         border-radius: @input-border-radius;
+                    }
+
+                    td input.highlighted {
+                        color: @color-logo-pink;
+                        font-weight: normal;
                     }
                 }
             }

@@ -342,18 +342,64 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
     };
 
     /**
+     * ------------------------ <CellAttrVals /> -------------------------------------
+     */
+    class TbodyCellAttrVals extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this._handleMouseOver = this._handleMouseOver.bind(this);
+            this._handleMouseOut = this._handleMouseOut.bind(this);
+            this.state = {highlighted: false};
+        }
+
+        _handleMouseOver() {
+            this.setState({highlighted: true});
+        }
+
+        _handleMouseOut() {
+            this.setState({highlighted: false});
+        }
+
+        render() {
+            return (
+                <tbody>
+                    <tr>
+                        <th>
+                            {this.props.attr1}
+                        </th>
+                        <td colSpan="2">
+                            <input className={this.state.highlighted ? 'highlighted' : null}
+                                    type="text" readOnly value={this.props.label1} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            {this.props.attr2}
+                        </th>
+                        <td colSpan="2">
+                            <input className={this.state.highlighted ? 'highlighted' : null}
+                                    type="text" readOnly value={this.props.label2} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th />
+                        <td colSpan="2">
+                            <a className="conc" href={this.props.pfilter} target="_blank"
+                                    onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
+                                {he.translate('freq__ct_pfilter_btn_label')}
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            );
+        }
+    }
+
+    /**
      *
      */
     const CTCellMenu = (props) => {
-
-        const handlePosClick = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_QUICK_FILTER_CONCORDANCE',
-                props: {
-                    args: props.data.pfilter
-                }
-            });
-        };
 
         const handleCloseClick = () => {
             props.onClose();
@@ -361,61 +407,39 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
         return (
             <layoutViews.PopupBox onCloseClick={handleCloseClick} customClass="menu">
-                <fieldset className="detail">
-                    <legend>{he.translate('freq__ct_detail_legend')}</legend>
-                    {he.translate('freq__ct_ipm_freq_label')}:
-                    {'\u00a0'}
-                    {formatIpm(props.data.ipm)}
-                    {'\u00a0'}
-                    ({he.formatNumber(props.data.ipmConfInterval[0], 1)}
-                    {'\u00a0'}
-                    -
-                    {'\u00a0'}
-                    {he.formatNumber(props.data.ipmConfInterval[1], 1)})
-                    <br />
-                    {he.translate('freq__ct_abs_freq_label')}:
-                    {'\u00a0'}
-                    {he.formatNumber(props.data.abs, 0)}
-                    {'\u00a0'}
-                    ({he.formatNumber(props.data.absConfInterval[0], 0)}
-                    {'\u00a0'}
-                    -
-                    {'\u00a0'}
-                    {he.formatNumber(props.data.absConfInterval[1], 0)})
-
-
-                </fieldset>
-                <form>
-                    <fieldset>
-                        <legend>{he.translate('freq__ct_pfilter_legend')}</legend>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>
-                                        {props.attr1} =
-                                    </th>
-                                    <td>
-                                        <input type="text" readOnly value={props.label1} />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>
-                                        {props.attr2} =
-                                    </th>
-                                    <td>
-                                        <input type="text" readOnly value={props.label2} />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p>
-                            <button type="button" className="default-button"
-                                    onClick={handlePosClick}>
-                                {he.translate('freq__ct_pfilter_btn_label')}
-                            </button>
-                        </p>
-                    </fieldset>
-                </form>
+                <h2>{he.translate('freq__ct_detail_legend')}</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>
+                                {he.translate('freq__ct_ipm_freq_label')}
+                            </th>
+                            <td>
+                                {formatIpm(props.data.ipm)}
+                            </td>
+                            <td>
+                                ({he.formatNumber(props.data.ipmConfInterval[0], 1)}
+                                {'\u2013'}
+                                {he.formatNumber(props.data.ipmConfInterval[1], 1)})
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>
+                                {he.translate('freq__ct_abs_freq_label')}
+                            </th>
+                            <td>
+                                {he.formatNumber(props.data.abs, 0)}
+                            </td>
+                            <td>
+                                ({he.formatNumber(props.data.absConfInterval[0], 0)}
+                                {'\u2013'}
+                                {he.formatNumber(props.data.absConfInterval[1], 0)})
+                            </td>
+                        </tr>
+                    </tbody>
+                    <TbodyCellAttrVals attr1={props.attr1} attr2={props.attr2} label1={props.label1} label2={props.label2}
+                            pfilter={props.data.pfilter} />
+                </table>
             </layoutViews.PopupBox>
         );
     };
@@ -488,7 +512,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                     this.props.attr2 !== nextProps.attr2 || this.props.absConfInterval !== nextProps.absConfInterval ||
                     this.props.ipmConfInterval !== nextProps.ipmConfInterval ||
                     this.props.confIntervalWarnRatio !== nextProps.confIntervalWarnRatio ||
-                    this.props.quantity !== nextProps.quantity;
+                    this.props.quantity !== nextProps.quantity || this.props.isHighlighted !== nextProps.isHighlighted;
         }
 
         render() {

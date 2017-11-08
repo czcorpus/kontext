@@ -48,7 +48,7 @@ export interface FormatConversionExportData {
     alphaLevel:number;
     labels1:Array<string>;
     labels2:Array<string>;
-    data:Array<Array<[number, number, number]>>;
+    data:Array<Array<[number, number, number, string]>>;
 }
 
 /**
@@ -241,10 +241,6 @@ export class ContingencyTableStore extends GeneralCTStore {
                 case 'FREQ_CT_TRANSPOSE_TABLE':
                     this.transposeTable();
                     this.notifyChangeListeners();
-                break;
-                case 'FREQ_CT_QUICK_FILTER_CONCORDANCE':
-                    this.applyQuickFilter(payload.props['args'][0], payload.props['args'][1]);
-                    // leaves the page here
                 break;
                 case 'FREQ_CT_SORT_BY_DIMENSION':
                     this.sortByDimension(
