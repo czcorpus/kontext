@@ -132,7 +132,8 @@ class DefaultTokenDetail(AbstractTokenDetail):
                 data, status = backend.fetch_data(word, lemma, tag, aligned_corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
-                logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
+                print ex
+                # logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
         return ans
 
     def _map_providers(self, provider_ids):
