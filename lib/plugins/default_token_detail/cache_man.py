@@ -21,31 +21,29 @@ import os
 import sqlite3
 import time
 
-import zlib
-
-import settings
-
 
 class CacheMan(object):
-    def __init__(self):
-        conf_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../conf/config.xml'))
-        settings.load(conf_path)
-        conf = settings.get('plugins', 'token_detail')
-        self.cache_path = conf.get('default:cache_db_path')
-        self.cache_ttl = int(conf.get('default:cache_ttl_days')) * 24 * 60 * 60
-        self.cache_rows_limit = int(conf.get('default:cache_rows_limit'))
+    def __init__(self, cache_path, cache_rows_limit, cache_ttl_days):
+        self.cache_path = cache_path
+        self.cache_rows_limit = cache_rows_limit
+        self.cache_ttl = cache_ttl_days * 24 * 60 * 60
 
     def prepare_cache(self):
+        """
+        create cache path directory if it does not exist yet
+        delete the existing cache file (if any) and create an empty one with the required table structure
+        """
         db_dir = os.path.dirname(self.cache_path)
         if not os.path.exists(db_dir):
             os.mkdir(db_dir)
-        os.remove(self.cache_path )
-        conn = sqlite3.connect(self.cache_path )
+        if os.path.isfile(self.cache_path):
+            os.remove(self.cache_path)
+        conn = sqlite3.connect(self.cache_path)
         c = conn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS cache ("
                   "key text, "
                   "data text, "
-                  "created integer NOT NULL, "
+                  "last_access integer NOT NULL, "
                   "PRIMARY KEY (key))")
         conn.commit()
         conn.close()
@@ -54,11 +52,9 @@ class CacheMan(object):
         """
         delete all items older then ttl
         """
-        expired_time = int(time.time()) - self.cache_ttl
-        print "ttl: ", self.cache_ttl, "expired: ",expired_time
         conn = sqlite3.connect(self.cache_path)
         c = conn.cursor()
-        c.execute("DELETE FROM cache WHERE created <= ?", (str(time.time() - self.cache_ttl),))
+        c.execute("DELETE FROM cache WHERE last_access <= ?", (str(time.time() - self.cache_ttl),))
         conn.commit()
         conn.close()
 
@@ -66,43 +62,22 @@ class CacheMan(object):
         """
         delete the oldest rows so that the cache table contains no more than <cache_rows_limit> rows
         """
-        print "rows limit: ", self.cache_rows_limit
         conn = sqlite3.connect(self.cache_path)
         c = conn.cursor()
-        c.execute("DELETE FROM cache WHERE key NOT IN (SELECT key FROM cache ORDER BY created DESC LIMIT ?)", (self.cache_rows_limit,))
+        c.execute("DELETE FROM cache WHERE key NOT IN (SELECT key FROM cache ORDER BY last_access DESC LIMIT ?)",
+                  (self.cache_rows_limit,))
         conn.commit()
         conn.close()
 
     def get_numrows(self):
         conn = sqlite3.connect(self.cache_path)
         c = conn.cursor()
-        res = c.execute("SELECT COUNT(*) AS POCET FROM cache").fetchone()
+        res = c.execute("SELECT COUNT(*) FROM cache").fetchone()
         conn.close()
-        return res
+        return res[0]
 
-    # -----------
-    # aux methods
-    # -----------
-    def list_cached(self):
-        print "--- cache contents: ---"
-        conn = sqlite3.connect(self.cache_path)
-        c = conn.cursor()
-        for row in c.execute("SELECT * FROM cache"):
-            print row
-        conn.close()
-        print "------"
+    def get_rows_limit(self):
+        return self.cache_rows_limit
 
-    def fill_cache(self):
-        conn = sqlite3.connect(self.cache_path )
-        c = conn.cursor()
-        for i in range(0,10):
-            c.execute("INSERT INTO cache VALUES (?, ?, ?)", (i, i, i))
-        conn.commit()
-        conn.close()
-
-    def get_specific_row(self, key):
-        conn = sqlite3.connect(self.cache_path)
-        c = conn.cursor()
-        res = c.execute("SELECT data FROM cache WHERE key = ?", (key,)).fetchone()
-        conn.close()
-        return res
+    def get_cache_path(self):
+        return self.cache_path

@@ -23,8 +23,6 @@ from hashlib import md5
 from functools import wraps
 import time
 
-import zlib
-
 from plugins.abstract.token_detail import AbstractBackend
 
 
@@ -32,7 +30,7 @@ def mk_token_detail_cache_key(pth, cls, word, lemma, pos, aligned_corpora, lang)
     """
     Returns a hashed cache key based on the passed parameters.
     """
-    return md5('%r %r %r %r %r %r %r' % (pth, cls, word, lemma, pos, aligned_corpora, lang)).hexdigest()
+    return md5('%r%r%r%r%r%r%r' % (pth, cls, word, lemma, pos, aligned_corpora, lang)).hexdigest()
 
 
 def cached(f):
@@ -62,13 +60,13 @@ def cached(f):
                 res = f(self, word, lemma, pos, aligned_corpora, lang)
                 # if result is found in the backend, cache it
                 if res:
-                    curs.execute("INSERT INTO cache (key, data, created) VALUES (?,?,?)",
+                    curs.execute("INSERT INTO cache (key, data, last_access) VALUES (?,?,?)",
                                  (key, res[0], int(round(time.time()))))
             conn.commit()
             conn.close()
         else:
             res = f(self, word, lemma, pos, aligned_corpora, lang)
-        if res:
+        if res[1]:
             return res[0], True
         else:
             return '', False

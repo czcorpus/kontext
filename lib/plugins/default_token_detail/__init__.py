@@ -46,10 +46,13 @@ import importlib
 import logging
 
 import manatee
+import os
+
 import plugins
 from plugins.abstract.token_detail import AbstractTokenDetail
 from actions import concordance
 from controller import exposed
+from plugins.default_token_detail.cache_man import CacheMan
 
 
 @exposed(return_type='json')
@@ -152,4 +155,11 @@ def create_instance(settings, corparch):
     conf = settings.get('plugins', 'token_detail')
     with open(conf['default:providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
+    cache_path = conf.get('default:cache_db_path')
+    if not os.path.isfile(cache_path):
+        cache_path = conf.get('default:cache_db_path')
+        cache_rows_limit = conf.get('default:cache_rows_limit')
+        cache_ttl_days = conf.get('default:cache_ttl_days')
+        cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+        cacheMan.prepare_cache()
     return DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)

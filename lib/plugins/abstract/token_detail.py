@@ -48,7 +48,6 @@ from plugins.abstract import CorpusDependentPlugin
 
 
 class Response(object):
-
     def __init__(self, contents, renderer, status, heading):
         self.contents = contents
         self.renderer = renderer
@@ -60,12 +59,12 @@ class Response(object):
 
 
 class AbstractBackend(object):
-
     def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
         raise NotImplementedError()
 
     @staticmethod
     def get_cache_path():
+        cache_path = None
         conf_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../conf/config.xml'))
         settings.load(conf_path)
         conf = settings.get('plugins', 'token_detail')
@@ -75,7 +74,6 @@ class AbstractBackend(object):
 
 
 class AbstractFrontend(object):
-
     def __init__(self, conf):
         self._headings = conf.get('heading', {})
 
@@ -96,7 +94,6 @@ class AbstractFrontend(object):
 
 
 class AbstractTokenDetail(CorpusDependentPlugin):
-
     def fetch_data(self, provider_ids, word, lemma, tag, aligned_corpora, lang):
         """
         Obtain (in a synchronous way) data from all the backends
