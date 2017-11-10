@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
+/// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
@@ -59,13 +60,11 @@ export interface WordlistFormProps {
 /**
  *
  */
-export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpusSwitchAware<WordlistFormProps> {
+export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpusSwitchAware<WordlistFormProps>, PluginInterfaces.ICorparchStore {
 
     private layoutModel:PageModel;
 
     private corpusIdent:Kontext.FullCorpusIdent;
-
-    private subcorpusId:string;
 
     private currentSubcorpus:string;
 
@@ -114,7 +113,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
         super(dispatcher);
         this.corpusIdent = corpusIdent;
-        this.subcorpusId = '';
+        this.currentSubcorpus = '';
         this.layoutModel = layoutModel;
         this.subcorpList = Immutable.List<string>(subcorpList);
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
@@ -139,7 +138,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         this.dispatcherToken = dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
-                this.subcorpusId = payload.props['subcorp'];
+                this.currentSubcorpus = payload.props['subcorp'];
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SELECT_ATTR':
@@ -152,13 +151,6 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
             break;
             case 'WORDLIST_FORM_SET_WLNUMS':
                 this.wlnums = payload.props['value'];
-                this.notifyChangeListeners();
-            break;
-            case 'WORDLIST_FORM_SELECT_SUBCORP':
-                const subcname:string = payload.props['subcorp'];
-                const input = <HTMLInputElement>window.document.getElementById('hidden-subcorp-sel');
-                input.value = subcname;
-                this.currentSubcorpus = subcname;
                 this.notifyChangeListeners();
             break;
             case 'WORDLIST_FORM_SELECT_WLPOSATTR':
@@ -292,14 +284,14 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
                     fileName: file.name
                 };
             }
-        )
+        );
     }
 
     createSubmitArgs():MultiDict {
         const ans = new MultiDict();
         ans.set('corpname', this.corpusIdent.id);
-        if (this.subcorpusId) {
-            ans.set('usesubcorp', this.subcorpusId);
+        if (this.currentSubcorpus) {
+            ans.set('usesubcorp', this.currentSubcorpus);
         }
         ans.set('wlattr', this.wlattr);
         ans.set('wlpat', this.wlpat);
@@ -373,12 +365,16 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         return 'wordlist-form';
     }
 
-    getCurrentSubcorpus():string {
-        return this.currentSubcorpus;
-    }
-
     getSubcorpList():Immutable.List<string> {
         return this.subcorpList;
+    }
+
+    getAvailableSubcorpora():Immutable.List<string> {
+        return this.subcorpList;
+    }
+
+    getCurrentSubcorpus():string {
+        return this.currentSubcorpus;
     }
 
     getAttrList():Immutable.List<Kontext.AttrItem> {

@@ -73,6 +73,13 @@ declare module PluginInterfaces {
         getStore():IQueryStorageStore;
     }
 
+    export interface ICorparchStore {
+        getCurrentSubcorpus():string;
+        getAvailableSubcorpora():Immutable.List<string>;
+        addChangeListener(fn:Kontext.StoreListener):void;
+        removeChangeListener(fn:Kontext.StoreListener):void;
+    }
+
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
         getViews(subcMixerView:React.Component, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
         getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
@@ -202,7 +209,7 @@ declare module 'plugins/footerBar/init' {
 declare module "plugins/corparch/init" {
 
     export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-        queryStore:any, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.Component;
+        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.Component;
 
     export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):PluginInterfaces.ICorplistPage;
 }

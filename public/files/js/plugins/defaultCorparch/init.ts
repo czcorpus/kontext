@@ -31,7 +31,6 @@ import {init as viewInit} from './corplistView';
 import {init as widgetInit} from './widgetView';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
-import {QueryStore} from '../../stores/query/main';
 import * as common from './common';
 import {SearchEngine} from './search';
 
@@ -72,7 +71,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.Component { // TODO opts type
+        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.Component { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
