@@ -255,7 +255,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
         };
 
         return (
-            <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={handleCloseClick}>
+            <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={handleCloseClick} takeFocus={true}>
                 <div>
                     <h3>{he.translate('global__query_overview')}</h3>
                     <table>
