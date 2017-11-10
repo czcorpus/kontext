@@ -217,7 +217,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                     {
                         getCurrentSubcorpus: () => null,
                         getAvailableSubcorpora: () => Immutable.List<string>(),
-                        addChangeListener: (fn:Kontext.StoreListener) => undefined
+                        addChangeListener: (fn:Kontext.StoreListener) => undefined,
+                        removeChangeListener:(fn:Kontext.StoreListener) => undefined
                     },
                     this,
                     {

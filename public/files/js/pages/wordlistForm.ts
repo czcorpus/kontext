@@ -79,12 +79,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
         return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),
-            {
-                getCurrentSubcorpus: () => '',
-                getAvailableSubcorpora: () => Immutable.List<string>(this.layoutModel.getConf<Array<string>>('SubcorpList')),
-                addChangeListener: (fn:Kontext.StoreListener) => undefined,
-                removeChangeListener: (fn:Kontext.StoreListener) => undefined
-            },
+            this.wordlistFormStore,
             this,
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {

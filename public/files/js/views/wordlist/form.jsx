@@ -33,12 +33,11 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormSt
      * @param {*} props
      */
     const TRCorpusField = (props) => {
-
         return (
             <tr>
                 <th>{he.translate('global__corpus')}:</th>
                 <td>
-                    <props.corparchWidget subcorpList={props.subcorpList} />
+                    <props.corparchWidget subcorpList={props.subcorpList} currSubcorpus={props.currentSubcorp} />
                 </td>
                 <td />
             </tr>
