@@ -39,6 +39,7 @@ import {init as resultViewInit, FreqsResultViews} from 'views/freqs/main';
 import {init as ctResultViewInit, CTFreqsResultViews} from 'views/freqs/ctResult';
 import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
 import {FreqResultsSaveStore} from '../stores/freqs/save';
+import {ConfIntervals, DataPoint} from '../charts/confIntervals';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -266,10 +267,25 @@ class FreqPage {
                     this.ctFreqStore,
                     this.ctFlatFreqStore
                 );
+                const width = 600;
+                const height = 14 * (this.ctFreqStore.getD1Labels().filter(x => x[1]).size +
+                    this.ctFreqStore.getD2Labels().filter(x => x[1]).size) / 2;
                 this.layoutModel.renderReactComponent(
                     ctFreqResultView.CTFreqResultView,
                     window.document.getElementById('result-mount'),
-                    {}
+                    {
+                        onConfIntervalFrameReady: (data:Array<DataPoint>, heading:string) => {
+                            const charts = new ConfIntervals(
+                                this.layoutModel,
+                                width,
+                                height,
+                                document.getElementById('confidence-intervals-frame')
+                            );
+                            charts.renderChart(data, heading);
+                        },
+                        d3PaneWidth: width,
+                        d3PaneHeight: height
+                    }
                 );
             break;
         }

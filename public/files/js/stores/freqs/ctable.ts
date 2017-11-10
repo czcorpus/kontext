@@ -29,6 +29,7 @@ import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
 import {confInterval, getAvailConfLevels} from './statTables';
+import {DataPoint} from '../../charts/confIntervals';
 
 /**
  *
@@ -156,6 +157,8 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private onNewDataHandlers:Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>;
 
+    private highlightedGroup:[number, number];
+
     private static COLOR_HEATMAP = [
         '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
@@ -173,6 +176,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.isWaiting = false;
         this.displayQuantity = DisplayQuantities.ABS;
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
+        this.highlightedGroup = [null, null];
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -262,6 +266,10 @@ export class ContingencyTableStore extends GeneralCTStore {
                 case 'FREQ_CT_SET_COLOR_MAPPING':
                     this.colorMapping = payload.props['value'];
                     this.recalcHeatmap();
+                    this.notifyChangeListeners();
+                break;
+                case 'FREQ_CT_SET_HIGHLIGHTED_GROUP':
+                    this.highlightedGroup = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
             }
@@ -612,6 +620,52 @@ export class ContingencyTableStore extends GeneralCTStore {
         return this.data;
     }
 
+
+    exportGroupLabel(row, col):string {
+        if (row !== null) {
+            return `${this.attr1} = "${this.d1Labels.filter(v => v[1]).get(row)[0]}" vs. ${this.attr2}`;
+
+        } else if (col !== null) {
+            return `${this.attr2} = "${this.d2Labels.filter(v => v[1]).get(col)[0]}" vs. ${this.attr1}`;
+        }
+        return '';
+    }
+
+    exportGroup(row, col):Array<DataPoint> {
+        const d1Labels = this.d1Labels.filter(v => v[1]).map(v => v[0]);
+        const d2Labels = this.d2Labels.filter(v => v[1]).map(v => v[0]);
+        const ans:Array<DataPoint> = [];
+        const mkAns = (d1Key:string, d2Key:string, label:string) => {
+            const cell = this.data[d1Key][d2Key];
+            if (cell) {
+                ans.push({
+                    data: [cell.ipmConfInterval[0], cell.ipm, cell.ipmConfInterval[1]],
+                    label: label
+                });
+
+            } else {
+                ans.push({
+                    data: [0, 0, 0],
+                    label: label
+                });
+            }
+        };
+
+        if (col === null) {
+            const d1Key = d1Labels.get(row);
+            d2Labels.forEach(d2Key => {
+                mkAns(d1Key, d2Key, d2Key);
+            });
+
+        } else if (row === null) {
+            const d2Key = d2Labels.get(col);
+            d1Labels.forEach(d1Key => {
+                mkAns(d1Key, d2Key, d1Key);
+            });
+        }
+        return ans;
+    }
+
     exportData():FormatConversionExportData {
         const d1Labels = this.d1Labels.filter(v => v[1]).map(v => v[0]);
         const d2Labels = this.d2Labels.filter(v => v[1]).map(v => v[0]);
@@ -691,5 +745,9 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getDisplayQuantity():DisplayQuantities {
         return this.displayQuantity;
+    }
+
+    getHighlightedGroup():[number, number] {
+        return this.highlightedGroup;
     }
 }

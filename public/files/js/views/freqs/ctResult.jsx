@@ -406,7 +406,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         };
 
         return (
-            <layoutViews.PopupBox onCloseClick={handleCloseClick} customClass="menu">
+            <layoutViews.PopupBox onCloseClick={handleCloseClick} customClass="menu" takeFocus={true}>
                 <h2>{he.translate('freq__ct_detail_legend')}</h2>
                 <table>
                     <tbody>
@@ -575,6 +575,37 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      *
      * @param {*} props
      */
+    class IntervalGroupVisualisation extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {
+                data: ctFreqDataRowsStore.exportGroup(this.props.highlightedGroup[0], this.props.highlightedGroup[1]),
+                label: ctFreqDataRowsStore.exportGroupLabel(this.props.highlightedGroup[0], this.props.highlightedGroup[1])
+            }
+        }
+
+        componentDidMount() {
+            this.props.onConfIntervalFrameReady(this.state.data, this.state.label);
+        }
+
+        render() {
+            return (
+                <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} takeFocus={true}>
+                    <div id="confidence-intervals-frame" className="IntervalGroupVisualisation">
+                        <h2 className="top" />
+                        <svg width={this.props.d3PaneWidth} height={this.props.d3PaneHeight} />
+                        <div className="tooltip" style={{display: 'none'}} />
+                    </div>
+                </layoutViews.PopupBox>
+            );
+        }
+    }
+
+    /**
+     *
+     * @param {*} props
+     */
     const CTDataTable = (props) => {
         const labels1 = () => {
             return props.d1Labels.filter(x => x[1]).map(x => x[0]);
@@ -598,6 +629,22 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                     props.highlightedCoord[1] === j;
         };
 
+        const isHighlightedGroup = (i, j) => {
+            return props.highlightedGroup[0] !== null && props.highlightedGroup[0] === i ||
+                props.highlightedGroup[1] !== null && props.highlightedGroup[1] === j;
+        };
+
+        const handleClickHighlightedGroupFn = (val) => {
+            return () => {
+                dispatcher.dispatch({
+                    actionType: 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
+                    props: {
+                        value: val
+                    }
+                });
+            };
+        };
+
         return (
             <div>
                 <table className="ct-data">
@@ -606,19 +653,27 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                             <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
                             {labels2().map((label2, i) =>
                                 <th key={`lab-${i}`}
-                                        className={isHighlightedCol(i) ? 'highlighted' : null}>
-                                    {label2}
+                                        className={isHighlightedCol(i) || isHighlightedGroup(null, i) ? 'highlighted' : null}>
+                                    <a onClick={handleClickHighlightedGroupFn([null, i])}
+                                            title={he.translate('freq__ct_click_to_compare_col')}>
+                                        {label2}
+                                    </a>
                                 </th>
                             )}
                         </tr>
                         {labels1().map((label1, i) => {
                             const htmlClass = ['vert'];
-                            if (isHighlightedRow(i)) {
+                            if (isHighlightedRow(i) || isHighlightedGroup(i, null)) {
                                 htmlClass.push('highlighted');
                             }
                             return (
                                 <tr key={`row-${i}`}>
-                                    <th className={htmlClass.join(' ')}><span>{label1}</span></th>
+                                    <th className={htmlClass.join(' ')}>
+                                        <a onClick={handleClickHighlightedGroupFn([i, null])}
+                                                title={he.translate('freq__ct_click_to_compare_row')}>
+                                            {label1}
+                                        </a>
+                                    </th>
                                     {labels2().map((label2, j) => {
                                         return <CTCell data={props.data[label1][label2]} key={`c-${i}:${j}`}
                                                         quantity={props.displayQuantity}
@@ -674,6 +729,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             this._handleStoreChange = this._handleStoreChange.bind(this);
             this._highlightItem = this._highlightItem.bind(this);
             this._resetHighlight = this._resetHighlight.bind(this);
+            this._handleHighlightedGroupClose = this._handleHighlightedGroupClose.bind(this);
         }
 
         _fetchState() {
@@ -695,7 +751,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 alphaLevel: ctFreqDataRowsStore.getAlphaLevel(),
                 availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels(),
                 confIntervalWarnRatio: ctFreqDataRowsStore.getConfIntervalWarnRatio(),
-                colorMapping: ctFreqDataRowsStore.getColorMapping()
+                colorMapping: ctFreqDataRowsStore.getColorMapping(),
+                highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup()
             };
         }
 
@@ -703,6 +760,15 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             const newState = this._fetchState();
             newState.highlightedCoord = this.state.highlightedCoord;
             this.setState(newState);
+        }
+
+        _handleHighlightedGroupClose() {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
+                props: {
+                    value: [null, null]
+                }
+            });
         }
 
         componentDidMount() {
@@ -756,6 +822,12 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 confIntervalWarnRatio={this.state.confIntervalWarnRatio}
                                 colorMapping={this.state.colorMapping} />
                     </div>
+                    {this.state.highlightedGroup[0] !== null || this.state.highlightedGroup[1] !== null ?
+                        <IntervalGroupVisualisation highlightedGroup={this.state.highlightedGroup}
+                                onCloseClick={this._handleHighlightedGroupClose}
+                                onConfIntervalFrameReady={this.props.onConfIntervalFrameReady}
+                                d3PaneWidth={this.props.d3PaneWidth}
+                                d3PaneHeight={this.props.d3PaneHeight} /> : null}
                     {this.state.isWaiting ?
                         <WaitingAnim attr1={this.state.attr1}
                                 attr2={this.state.attr2} /> :
@@ -769,7 +841,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 onHighlight={this._highlightItem}
                                 onResetHighlight={this._resetHighlight}
                                 highlightedCoord={this.state.highlightedCoord}
-                                confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
+                                confIntervalWarnRatio={this.state.confIntervalWarnRatio}
+                                highlightedGroup={this.state.highlightedGroup} />
                     }
                 </div>
             );
