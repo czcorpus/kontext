@@ -12,10 +12,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import json
-from collections import defaultdict
 
-import werkzeug.urls
+from collections import defaultdict
+import codecs
+codecs.register_error('replacedot', lambda err: (u'.', err.end))
 
 
 class StateGlobals(object):
@@ -78,3 +78,15 @@ class StateGlobals(object):
             self._data[k] = v
         else:
             self._data[k] = [v]
+
+
+class CheetahResponseFile(object):
+    """
+    Provides utf-8 compatible output for Cheetah renderer
+    """
+
+    def __init__(self, outfile):
+        self._outfile = codecs.getwriter('utf-8')(outfile)
+
+    def response(self):
+        return self._outfile

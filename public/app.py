@@ -45,7 +45,8 @@ import l10n
 from controller import KonTextCookie
 from initializer import setup_plugins
 
-locale.setlocale(locale.LC_ALL, 'en_US.utf-8')  # we ensure that the application's locale is always the same
+# we ensure that the application's locale is always the same
+locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
 logger = logging.getLogger('')  # root logger
 
 
@@ -69,9 +70,11 @@ class WsgiApp(object):
         number of backed-up files (optional, default is 10): /kontext/global/log_num_files
         """
         handler = handlers.RotatingFileHandler(conf.get('logging', 'path'),
-                                               maxBytes=conf.get_int('logging', 'file_size', 8000000),
+                                               maxBytes=conf.get_int(
+                                                   'logging', 'file_size', 8000000),
                                                backupCount=conf.get_int('logging', 'num_files', 10))
-        handler.setFormatter(logging.Formatter(fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+        handler.setFormatter(logging.Formatter(
+            fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
         logger.addHandler(handler)
         logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
@@ -150,13 +153,14 @@ class MaintenanceWsgiApp(WsgiApp):
     This WSGI application shows only a single page informing about
     current maintenance. It is activated via config.xml.
     """
+
     def __init__(self):
         super(MaintenanceWsgiApp, self).__init__()
         translation.load_translations(settings.get('global', 'translations'))
         l10n.configure(settings.get('global', 'translations'))
 
     def __call__(self, environ, start_response):
-        from maintenance import MaintenanceController
+        from controller.maintenance import MaintenanceController
         ui_lang = self.get_lang(environ)
         translation.activate(ui_lang)
         l10n.activate(ui_lang)
@@ -208,7 +212,8 @@ class KonTextWsgiApp(WsgiApp):
             status = '303 See Other'
             headers = [('Location', '%sfirst_form' % url)]
             body = ''
-        elif '/run.cgi/' in environ['REQUEST_URI']:  # old-style (CGI version) URLs are redirected to new ones
+        # old-style (CGI version) URLs are redirected to new ones
+        elif '/run.cgi/' in environ['REQUEST_URI']:
             status = '301 Moved Permanently'
             headers = [('Location', environ['REQUEST_URI'].replace('/run.cgi/', '/'))]
             body = ''
@@ -278,4 +283,5 @@ if __name__ == '__main__':
     application = SharedDataMiddleware(application, {
         '/files':  os.path.join(os.path.dirname(__file__), 'files')
     })
-    run_simple(args.address, int(args.port_num), application, use_debugger=True, use_reloader=args.use_reloader)
+    run_simple(args.address, int(args.port_num), application,
+               use_debugger=True, use_reloader=args.use_reloader)

@@ -62,7 +62,8 @@ from archive import ArchMan
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
 import actions.concordance
-from controller import exposed, UserActionException
+from controller import exposed
+from controller.errors import UserActionException
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
                ['%d' % i for i in range(10)]

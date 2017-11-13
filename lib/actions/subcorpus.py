@@ -17,13 +17,15 @@ import time
 
 import werkzeug.urls
 
-from controller import exposed, FunctionNotSupported
-from kontext import MainMenu, UserActionException, AsyncTaskStatus
-from querying import Querying
+from controller import exposed
+from controller.errors import FunctionNotSupported, UserActionException
+from controller.kontext import AsyncTaskStatus
+from controller.querying import Querying
+from main_menu import MainMenu
 from translation import ugettext as _
 import plugins
 import l10n
-from l10n import import_string, export_string, format_number
+from l10n import import_string, format_number
 import corplib
 from texttypes import TextTypeCollector, get_tt
 import settings
@@ -58,7 +60,7 @@ class Subcorpus(Querying):
         }
         """
         return ' '.join(map(lambda item: ('!within' if item['negated'] else 'within') + ' <%s %s />' % (
-                item['structure_name'], item['attribute_cql']),
+            item['structure_name'], item['attribute_cql']),
             filter(lambda item: bool(item), data)))
 
     def _create_subcorpus(self, request):
@@ -98,7 +100,8 @@ class Subcorpus(Querying):
                     limit_lists=False)
                 values = sel_match['attr_values'][corpus_info.metadata.label_attr]
                 args = argmapping.Args()
-                setattr(args, 'sca_{0}'.format(corpus_info.metadata.id_attr), [v[1] for v in values])
+                setattr(args, 'sca_{0}'.format(
+                    corpus_info.metadata.id_attr), [v[1] for v in values])
                 tt_query = TextTypeCollector(self.corp, args).get_query()
                 tmp = ['<%s %s />' % item for item in tt_query]
                 full_cql = ' within '.join(tmp)
@@ -106,7 +109,8 @@ class Subcorpus(Querying):
                 full_cql = import_string(full_cql, from_encoding=self.corp_encoding)
                 imp_cql = (full_cql,)
             else:
-                raise FunctionNotSupported('Corpus must have a bibliography item defined to support this function')
+                raise FunctionNotSupported(
+                    'Corpus must have a bibliography item defined to support this function')
         else:
             within_cql = None
             tt_query = TextTypeCollector(self.corp, request).get_query()
@@ -145,7 +149,8 @@ class Subcorpus(Querying):
                 import multiprocessing
                 worker = subc_calc.CreateSubcorpusTask(user_id=self.session_get('user', 'id'),
                                                        corpus_id=self.args.corpname)
-                multiprocessing.Process(target=functools.partial(worker.run, tt_query, imp_cql, path)).start()
+                multiprocessing.Process(target=functools.partial(
+                    worker.run, tt_query, imp_cql, path)).start()
                 result = {}
         else:
             raise UserActionException(_('Nothing specified!'))
@@ -251,7 +256,8 @@ class Subcorpus(Querying):
         filter_args = dict(show_deleted=bool(int(request.args.get('show_deleted', 0))),
                            corpname=request.args.get('corpname'))
         data = []
-        user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user')).values()
+        user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
+            self.session_get('user')).values()
         related_corpora = set()
         for corp in user_corpora:
             try:
@@ -284,7 +290,8 @@ class Subcorpus(Querying):
                 full_list = plugins.runtime.SUBC_RESTORE.instance.extend_subc_list(self._plugin_api, data,
                                                                                    filter_args, 0)
             except Exception as e:
-                logging.getLogger(__name__).error('subc_restore plug-in failed to list queries: %s' % e)
+                logging.getLogger(__name__).error(
+                    'subc_restore plug-in failed to list queries: %s' % e)
                 full_list = data
         else:
             full_list = data
@@ -293,7 +300,8 @@ class Subcorpus(Querying):
         if sort_key in ('size', 'created'):
             full_list = sorted(full_list, key=lambda x: x[sort_key], reverse=rev)
         else:
-            full_list = l10n.sort(full_list, loc=self.ui_lang, key=lambda x: x[sort_key], reverse=rev)
+            full_list = l10n.sort(full_list, loc=self.ui_lang,
+                                  key=lambda x: x[sort_key], reverse=rev)
         unfinished_corpora = filter(lambda at: not at.is_finished(),
                                     self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS))
         ans = dict(
@@ -336,4 +344,3 @@ class Subcorpus(Querying):
         else:
             self.add_system_message('error', _('Unsupported operation (plug-in not present)'))
         return {}
-

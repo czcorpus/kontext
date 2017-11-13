@@ -1,7 +1,7 @@
 # Copyright (c) 2003-2011  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Vit Baisa
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 # Copyright (c) 2014 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,11 +22,9 @@ KonText controller and related auxiliary objects
 """
 
 import os
-import sys
 from types import MethodType, DictType, ListType, TupleType
 from inspect import isclass
 import Cookie
-import codecs
 import imp
 from urllib import unquote, quote
 import json
@@ -46,9 +44,8 @@ import plugins
 import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
-
-
-codecs.register_error('replacedot', lambda err: (u'.', err.end))
+from controller.errors import UserActionException, NotFoundException, get_traceback, fetch_exception_msg
+from templating import CheetahResponseFile
 
 
 def exposed(**kwargs):
@@ -127,89 +124,18 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     return args
 
 
-def get_traceback():
-    """
-    Returns python-generated traceback information
-    """
-    import traceback
-
-    err_type, err_value, err_trace = sys.exc_info()
-    return traceback.format_exception(err_type, err_value, err_trace)
-
-
-def _fetch_exception_msg(ex):
-    msg = getattr(ex, 'message', None)
-    if not msg:
-        try:
-            msg = unicode(ex)
-        except:
-            msg = '%r' % ex
-    return msg
-
-
 class KonTextCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
     as URI components.
     """
+
     def value_decode(self, val):
         return unquote(val), val
 
     def value_encode(self, val):
         strval = str(val)
         return strval, quote(strval)
-
-
-class CheetahResponseFile(object):
-    """
-    Provides utf-8 compatible output for Cheetah renderer
-    """
-    def __init__(self, outfile):
-        self._outfile = codecs.getwriter('utf-8')(outfile)
-
-    def response(self):
-        return self._outfile
-
-
-class FunctionNotSupported(Exception):
-    """
-    This marks a functionality which is present in bonito-open but not in KonText
-    (either temporarily or for good).
-    """
-    pass
-
-
-class UserActionException(Exception):
-    """
-    This exception should cover general errors occurring in Controller's action methods'
-    """
-    def __init__(self, message, code=400, error_code=None, error_args=None):
-        super(UserActionException, self).__init__(message)
-        self.code = code
-        self.error_code = error_code
-        self.error_args = error_args
-
-    def __repr__(self):
-        return self.message
-
-    def __str__(self):
-        return self.message
-
-
-class NotFoundException(UserActionException):
-    """
-    Raised in case user requests non-exposed/non-existing action
-    """
-    def __init__(self, message):
-        super(NotFoundException, self).__init__(message, 404)
-
-
-class ForbiddenException(UserActionException):
-    """
-    Raised in case user access is forbidden
-    """
-    def __init__(self, message):
-        super(ForbiddenException, self).__init__(message, 403)
 
 
 class Controller(object):
@@ -242,9 +168,11 @@ class Controller(object):
         self._status = 200
         self._system_messages = []
         self._proc_time = None
-        self._validators = []  # a list of functions which must pass (= return None) before any action is performed
+        # a list of functions which must pass (= return None) before any action is performed
+        self._validators = []
         self._exceptmethod = None
-        self._template_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'cmpltmpl'))
+        self._template_dir = os.path.realpath(os.path.join(
+            os.path.dirname(__file__), '..', '..', 'cmpltmpl'))
         self.args = Args()
         self._uses_valid_sid = True
         self._plugin_api = None  # must be implemented in a descendant
@@ -362,7 +290,8 @@ class Controller(object):
         """
         result['methodname'] = methodname
         deployment_id = settings.get('global', 'deployment_id', None)
-        result['deployment_id'] = hashlib.md5(deployment_id).hexdigest()[:6] if deployment_id else None
+        result['deployment_id'] = hashlib.md5(deployment_id).hexdigest()[
+            :6] if deployment_id else None
         result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
 
     def _get_template_class(self, name):
@@ -390,7 +319,8 @@ class Controller(object):
         try:
             tpl_file, pathname, description = imp.find_module(name, srch_dirs)
         except ImportError as ex:
-            logging.getLogger(__name__).error('Failed to import template {0} in {1}'.format(name, ', '.join(srch_dirs)))
+            logging.getLogger(__name__).error(
+                'Failed to import template {0} in {1}'.format(name, ', '.join(srch_dirs)))
             raise ex
         module = imp.load_module(name, tpl_file, pathname, description)
         return getattr(module, name)
@@ -599,7 +529,8 @@ class Controller(object):
         /stats/
         /tools/admin/
         """
-        raise NotImplementedError('Each action controller must implement method get_mapping_url_prefix()')
+        raise NotImplementedError(
+            'Each action controller must implement method get_mapping_url_prefix()')
 
     def _import_req_path(self):
         """
@@ -612,7 +543,8 @@ class Controller(object):
         path = self.environ.get('PATH_INFO', '').strip()
 
         if not path.startswith(ac_prefix):  # this should not happen unless you hack the code here and there
-            raise Exception('URL-action mapping error: cannot match prefix [%s] with path [%s]' % (path, ac_prefix))
+            raise Exception(
+                'URL-action mapping error: cannot match prefix [%s] with path [%s]' % (path, ac_prefix))
         else:
             path = path[len(ac_prefix):]
 
@@ -711,7 +643,8 @@ class Controller(object):
         """
         if type(result) is dict:
             result['messages'] = result.get('messages', []) + self._system_messages
-            result['contains_errors'] = result.get('contains_errors', False) or self.contains_errors()
+            result['contains_errors'] = result.get(
+                'contains_errors', False) or self.contains_errors()
         if self._request.args.get('format') == 'json' or self._request.form.get('format') == 'json':
             action_metadata['return_type'] = 'json'
 
@@ -755,7 +688,7 @@ class Controller(object):
             else:
                 text = _('Query failed: Syntax error.')
             new_err = UserActionException(
-                    _('%s Please make sure the query and selected query type are correct.') % text)
+                _('%s Please make sure the query and selected query type are correct.') % text)
         elif 'AttrNotFound' in text:
             srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
             if srch:
@@ -765,7 +698,7 @@ class Controller(object):
             new_err = UserActionException(text)
         elif 'EvalQueryException' in text:
             new_err = UserActionException(
-                        _('Failed to evaluate the query. Please check the syntax and used attributes.'))
+                _('Failed to evaluate the query. Please check the syntax and used attributes.'))
         else:
             new_err = err
         return new_err
@@ -803,13 +736,16 @@ class Controller(object):
                 methodname, tmpl, result = self.process_action(path[0], path, named_args)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
+        except UserActionException as ex:
+            self.add_system_message('error', fetch_exception_msg(ex))
+            methodname, tmpl, result = self.process_action('message', path, named_args)
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
             logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
             if settings.is_debug_mode():
                 self._status = 500
-                self.add_system_message('error', _fetch_exception_msg(ex))
+                self.add_system_message('error', fetch_exception_msg(ex))
             else:
                 self.handle_dispatch_error(ex)
             methodname, tmpl, result = self.process_action('message', path, named_args)
@@ -867,7 +803,8 @@ class Controller(object):
             else:
                 self.add_system_message('error', user_msg)
 
-            self.pre_dispatch(self._exceptmethod, named_args, self._get_method_metadata(self._exceptmethod))
+            self.pre_dispatch(self._exceptmethod, named_args,
+                              self._get_method_metadata(self._exceptmethod))
             em, self._exceptmethod = self._exceptmethod, None
             return self.process_action(em, pos_args, named_args)
 

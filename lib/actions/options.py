@@ -13,7 +13,7 @@
 
 import settings
 from controller import exposed
-from kontext import Kontext, MainMenu
+from controller.kontext import Kontext, MainMenu
 from translation import ugettext as _
 import corplib
 from argmapping import WidectxArgsMapping
@@ -73,7 +73,8 @@ class Options(Kontext):
         out['attr_allpos'] = self.args.attr_allpos
         out['attr_vmode'] = self.args.attr_vmode
         availstruct = corp.get_conf('STRUCTLIST').split(',')
-        structlist = set(self.args.structs.split(',')).union(set([x.split('.')[0] for x in self.args.structattrs]))
+        structlist = set(self.args.structs.split(',')).union(
+            set([x.split('.')[0] for x in self.args.structattrs]))
         out['Availstructs'] = [{'n': n,
                                 'sel': 'selected' if n in structlist else '',
                                 'label': corp.get_conf(n + '.LABEL')}
@@ -91,7 +92,8 @@ class Options(Kontext):
             if ref_is_allowed(item):
                 k, v = item.split('.', 1)
                 structattrs[k].append(v)
-        out['Availrefs'] = [dict(n='#', label=_('Token number'), sel='selected' if '#' in reflist else '')]
+        out['Availrefs'] = [dict(n='#', label=_('Token number'),
+                                 sel='selected' if '#' in reflist else '')]
         for n in availref:
             if ref_is_allowed(n):
                 out['Availrefs'].append(dict(n='=' + n, sel='selected' if ('=' + n) in reflist else '',
@@ -116,7 +118,8 @@ class Options(Kontext):
                                 setstructs=setstructs,
                                 setrefs=setrefs,
                                 structattrs=structattrs)
-        self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs', 'refs', 'structattrs'], self.args.corpname)
+        self._save_options(['attrs', 'attr_vmode', 'ctxattrs', 'structs',
+                            'refs', 'structattrs'], self.args.corpname)
         if self.args.format == 'json':
             return dict(widectx_globals=self._get_attrs(WidectxArgsMapping, dict(structs=self._get_struct_opts())))
         elif self.args.q:

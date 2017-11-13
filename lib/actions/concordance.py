@@ -20,8 +20,9 @@ import re
 import json
 from collections import defaultdict
 
-from kontext import LinesGroups, Kontext
-from controller import UserActionException, exposed
+from controller.kontext import LinesGroups, Kontext
+from controller import exposed
+from controller.errors import UserActionException
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
                               KwicSwitchArgs)
@@ -39,7 +40,7 @@ from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 from main_menu import MenuGenerator, MainMenu
-from querying import Querying
+from controller.querying import Querying
 
 
 class ConcError(UserActionException):
@@ -560,7 +561,7 @@ class Actions(Querying):
 
     def _compile_query(self, qtype=None, cname=''):
         if self._is_err_corpus():
-            from controller import FunctionNotSupported
+            from controller.errors import FunctionNotSupported
             raise FunctionNotSupported()
         return self._compile_basic_query(qtype, cname=cname)
 
@@ -1335,12 +1336,12 @@ class Actions(Querying):
             wlmaxitems = sys.maxint
         wlstart = (self.args.wlpage - 1) * self.args.wlpagesize
         result = {
-                'reload_url': self.create_url('wordlist', {
-                    'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
-                    'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
-                    'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
-                    'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums
-                })}
+            'reload_url': self.create_url('wordlist', {
+                'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
+                'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
+                'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
+                'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums
+            })}
         try:
             if wltype == 'keywords':
                 args = (self.cm.get_Corpus(self.args.corpname, usesubcorp),

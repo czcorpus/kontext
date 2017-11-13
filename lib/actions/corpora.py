@@ -15,7 +15,7 @@ from functools import partial
 from collections import defaultdict
 
 from controller import exposed
-from kontext import Kontext
+from controller.kontext import Kontext
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 import l10n

@@ -1,4 +1,4 @@
-# Copyright(c) 2016 Charles University in Prague, Faculty of Arts,
+# Copyright(c) 2016 Charles University, Faculty of Arts,
 #                   Institute of the Czech National Corpus
 # Copyright(c) 2016 Tomas Machalek <tomas.machalek @ gmail.com>
 #
@@ -22,7 +22,7 @@ extended, re-editable query processing.
 """
 import logging
 
-from kontext import Kontext
+from controller.kontext import Kontext
 import corplib
 import plugins
 import l10n
@@ -167,7 +167,8 @@ class Querying(Kontext):
         out -- a dictionary used by templating system
         """
         basecorpname = corpname.split(':')[0]
-        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname), loc=self.ui_lang, key=lambda x: x['n'])
+        subcorp_list = l10n.sort(self.cm.subcorp_names(basecorpname),
+                                 loc=self.ui_lang, key=lambda x: x['n'])
         if len(subcorp_list) > 0:
             subcorp_list = [{'n': '--%s--' % _('whole corpus'), 'v': ''}] + subcorp_list
         if out.get('SubcorpList', None) is None:
@@ -223,4 +224,3 @@ class Querying(Kontext):
                         logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
                             last_id))
         return ans
-
