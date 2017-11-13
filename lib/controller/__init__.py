@@ -22,11 +22,9 @@ KonText controller and related auxiliary objects
 """
 
 import os
-import sys
 from types import MethodType, DictType, ListType, TupleType
 from inspect import isclass
 import Cookie
-import codecs
 import imp
 from urllib import unquote, quote
 import json
@@ -46,10 +44,8 @@ import plugins
 import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
-from controller.errors import UserActionException, NotFoundException
-
-
-codecs.register_error('replacedot', lambda err: (u'.', err.end))
+from controller.errors import UserActionException, NotFoundException, get_traceback, fetch_exception_msg
+from templating import CheetahResponseFile
 
 
 def exposed(**kwargs):
@@ -128,26 +124,6 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
     return args
 
 
-def get_traceback():
-    """
-    Returns python-generated traceback information
-    """
-    import traceback
-
-    err_type, err_value, err_trace = sys.exc_info()
-    return traceback.format_exception(err_type, err_value, err_trace)
-
-
-def _fetch_exception_msg(ex):
-    msg = getattr(ex, 'message', None)
-    if not msg:
-        try:
-            msg = unicode(ex)
-        except:
-            msg = '%r' % ex
-    return msg
-
-
 class KonTextCookie(Cookie.BaseCookie):
     """
     Cookie handler which encodes and decodes strings
@@ -160,18 +136,6 @@ class KonTextCookie(Cookie.BaseCookie):
     def value_encode(self, val):
         strval = str(val)
         return strval, quote(strval)
-
-
-class CheetahResponseFile(object):
-    """
-    Provides utf-8 compatible output for Cheetah renderer
-    """
-
-    def __init__(self, outfile):
-        self._outfile = codecs.getwriter('utf-8')(outfile)
-
-    def response(self):
-        return self._outfile
 
 
 class Controller(object):
@@ -772,13 +736,16 @@ class Controller(object):
                 methodname, tmpl, result = self.process_action(path[0], path, named_args)
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
+        except UserActionException as ex:
+            self.add_system_message('error', fetch_exception_msg(ex))
+            methodname, tmpl, result = self.process_action('message', path, named_args)
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)
             logging.getLogger(__name__).error(u'%s\n%s' % (ex, ''.join(get_traceback())))
             if settings.is_debug_mode():
                 self._status = 500
-                self.add_system_message('error', _fetch_exception_msg(ex))
+                self.add_system_message('error', fetch_exception_msg(ex))
             else:
                 self.handle_dispatch_error(ex)
             methodname, tmpl, result = self.process_action('message', path, named_args)

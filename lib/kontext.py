@@ -18,7 +18,6 @@ import json
 from functools import partial
 import logging
 import inspect
-import urllib
 import os.path
 import time
 from types import DictType

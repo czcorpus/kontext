@@ -14,6 +14,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import sys
+
+
+def get_traceback():
+    """
+    Returns python-generated traceback information
+    """
+    import traceback
+
+    err_type, err_value, err_trace = sys.exc_info()
+    return traceback.format_exception(err_type, err_value, err_trace)
+
+
+def fetch_exception_msg(ex):
+    msg = getattr(ex, 'message', None)
+    if not msg:
+        try:
+            msg = unicode(ex)
+        except:
+            msg = '%r' % ex
+    return msg
+
 
 class FunctionNotSupported(Exception):
     """
