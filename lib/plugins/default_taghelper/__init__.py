@@ -48,7 +48,7 @@ from lxml import etree
 
 from translation import ugettext as _
 from controller import exposed
-from controller import UserActionException
+from controller.errors import UserActionException
 import plugins
 from plugins.abstract.taghelper import AbstractTaghelper
 from actions import corpora
@@ -64,7 +64,8 @@ def ajax_get_tag_variants(ctrl, pattern=''):
             ctrl.get_corpus_info(ctrl.args.corpname)['tagset'],
             ctrl.ui_lang)
     except IOError:
-        raise UserActionException(_('Corpus %s is not supported by this widget.') % ctrl.args.corpname)
+        raise UserActionException(
+            _('Corpus %s is not supported by this widget.') % ctrl.args.corpname)
 
     if len(pattern) > 0:
         ans = tag_loader.get_variant(pattern)
@@ -235,7 +236,8 @@ class TagVariantLoader(object):
         path = '%s/initial-values.%s.json' % (self.cache_dir, self.lang)
         char_replac_tab = dict(self.SPEC_CHAR_REPLACEMENTS)
         tagset = self._taghelper.load_tag_descriptions(self.tagset_name, self.lang)
-        item_sequences = tuple([tuple([item[0] for item in position]) for position in tagset['values']])
+        item_sequences = tuple([tuple([item[0] for item in position])
+                                for position in tagset['values']])
 
         translation_table = [dict(tagset['values'][i]) for i in range(tagset['num_pos'])]
 
@@ -263,11 +265,12 @@ class TagVariantLoader(object):
                         ans[i].add(('-', ''))
                     elif i < len(tagset['values']):
                         if line[i] in translation_table[i]:
-                            ans[i].add((value, '%s - %s' % (line[i], translation_table[i][line[i]])))
+                            ans[i].add((value, '%s - %s' %
+                                        (line[i], translation_table[i][line[i]])))
 
             ans_sorted = []
             for i in range(len(ans)):
-                cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
+                def cmp_by_seq(x, y): return cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
                     if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
                 ans_sorted.append(sorted(ans[i], cmp=cmp_by_seq))
 
@@ -296,7 +299,8 @@ class TagVariantLoader(object):
         tuples (ID, description)
         """
         tagset = self._taghelper.load_tag_descriptions(self.tagset_name, self.lang)
-        item_sequences = tuple([tuple(['-'] + [item[0] for item in position]) for position in tagset['values']])
+        item_sequences = tuple([tuple(['-'] + [item[0] for item in position])
+                                for position in tagset['values']])
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.SPEC_CHAR_REPLACEMENTS)
         patt = re.compile(required_pattern)
@@ -312,7 +316,8 @@ class TagVariantLoader(object):
 
         for item in matching_tags:
             for i in range(len(tag_elms)):
-                value = ''.join(map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, item[i]))
+                value = ''.join(
+                    map(lambda x: char_replac_tab[x] if x in char_replac_tab else x, item[i]))
                 if item[i] == '-':
                     ans[i].add(('-', ''))
                 elif item[i] in translation_tables[i]:
@@ -327,7 +332,8 @@ class TagVariantLoader(object):
                 # in only '-' is available it actaually means there is no need to choose anything
                 if len(used_keys) == 1:
                     ans[key] = ()
-            cmp_by_seq = lambda x, y: cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
+
+            def cmp_by_seq(x, y): return cmp(item_sequences[i].index(x[0]), item_sequences[i].index(y[0])) \
                 if x[0] in item_sequences[i] and y[0] in item_sequences[i] else 0
             ans[key] = sorted(ans[key], cmp=cmp_by_seq) if ans[key] is not None else None
         return {'tags': ans, 'labels': []}

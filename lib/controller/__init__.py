@@ -46,6 +46,7 @@ import plugins
 import settings
 from translation import ugettext as _
 from argmapping import Parameter, GlobalArgs, Args
+from controller.errors import UserActionException, NotFoundException
 
 
 codecs.register_error('replacedot', lambda err: (u'.', err.end))
@@ -171,50 +172,6 @@ class CheetahResponseFile(object):
 
     def response(self):
         return self._outfile
-
-
-class FunctionNotSupported(Exception):
-    """
-    This marks a functionality which is present in bonito-open but not in KonText
-    (either temporarily or for good).
-    """
-    pass
-
-
-class UserActionException(Exception):
-    """
-    This exception should cover general errors occurring in Controller's action methods'
-    """
-
-    def __init__(self, message, code=400, error_code=None, error_args=None):
-        super(UserActionException, self).__init__(message)
-        self.code = code
-        self.error_code = error_code
-        self.error_args = error_args
-
-    def __repr__(self):
-        return self.message
-
-    def __str__(self):
-        return self.message
-
-
-class NotFoundException(UserActionException):
-    """
-    Raised in case user requests non-exposed/non-existing action
-    """
-
-    def __init__(self, message):
-        super(NotFoundException, self).__init__(message, 404)
-
-
-class ForbiddenException(UserActionException):
-    """
-    Raised in case user access is forbidden
-    """
-
-    def __init__(self, message):
-        super(ForbiddenException, self).__init__(message, 403)
 
 
 class Controller(object):

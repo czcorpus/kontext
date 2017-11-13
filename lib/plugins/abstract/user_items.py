@@ -24,9 +24,9 @@ user corpus list.
 Expected factory method signature: create_instance(config, db)
 """
 
-from controller import UserActionException
-
 import hashlib
+
+from controller.errors import UserActionException
 
 
 class UserItemException(UserActionException):
@@ -41,6 +41,7 @@ class FavoriteItem(object):
     """
     A reference to a corpus in user's list
     """
+
     def __init__(self, data=None):
         if data is None:
             data = {}
@@ -139,4 +140,3 @@ class AbstractUserItems(object):
         item_id -- an ID of GeneralItem instance
         """
         raise NotImplementedError()
-

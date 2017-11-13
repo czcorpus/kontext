@@ -1,0 +1,59 @@
+# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+class FunctionNotSupported(Exception):
+    """
+    This marks a functionality which is present in bonito-open but not in KonText
+    (either temporarily or for good).
+    """
+    pass
+
+
+class UserActionException(Exception):
+    """
+    This exception should cover general errors occurring in Controller's action methods'
+    """
+
+    def __init__(self, message, code=400, error_code=None, error_args=None):
+        super(UserActionException, self).__init__(message)
+        self.code = code
+        self.error_code = error_code
+        self.error_args = error_args
+
+    def __repr__(self):
+        return self.message
+
+    def __str__(self):
+        return self.message
+
+
+class NotFoundException(UserActionException):
+    """
+    Raised in case user requests non-exposed/non-existing action
+    """
+
+    def __init__(self, message):
+        super(NotFoundException, self).__init__(message, 404)
+
+
+class ForbiddenException(UserActionException):
+    """
+    Raised in case user access is forbidden
+    """
+
+    def __init__(self, message):
+        super(ForbiddenException, self).__init__(message, 403)

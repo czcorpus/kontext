@@ -58,7 +58,8 @@ import plugins
 from plugins.abstract.conc_persistence import AbstractConcPersistence
 from plugins import inject
 import actions.concordance
-from controller import exposed, UserActionException
+from controller import exposed
+from controller.errors import UserActionException
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
@@ -152,13 +153,15 @@ class ConcPersistence(AbstractConcPersistence):
         plugin_conf = settings.get('plugins', 'conc_persistence')
         ttl_days = int(plugin_conf.get('default:ttl_days', ConcPersistence.DEFAULT_TTL_DAYS))
         self.ttl = ttl_days * 24 * 3600
-        anonymous_user_ttl_days = int(plugin_conf.get('default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+        anonymous_user_ttl_days = int(plugin_conf.get(
+            'default:anonymous_user_ttl_days', ConcPersistence.DEFAULT_ANONYMOUS_USER_TTL_DAYS))
         self.anonymous_user_ttl = anonymous_user_ttl_days * 24 * 3600
         self._archive_queue_key = plugin_conf['ucnk:archive_queue_key']
 
         self.db = db
         self._auth = auth
-        self._archive = sqlite3.connect(settings.get('plugins')['conc_persistence']['ucnk:archive_db_path'])
+        self._archive = sqlite3.connect(settings.get(
+            'plugins')['conc_persistence']['ucnk:archive_db_path'])
         self._settings = settings
 
     def _get_ttl_for(self, user_id):
@@ -199,7 +202,8 @@ class ConcPersistence(AbstractConcPersistence):
         """
         data = self.db.get(mk_key(data_id))
         if data is None:
-            tmp = self._execute_sql('SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
+            tmp = self._execute_sql(
+                'SELECT data, num_access FROM archive WHERE id = ?', (data_id,)).fetchone()
             if tmp:
                 data = json.loads(tmp[0])
                 self._execute_sql('UPDATE archive SET last_access = ?, num_access = num_access + 1 WHERE id = ?',

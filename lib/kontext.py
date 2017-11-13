@@ -28,7 +28,8 @@ from werkzeug.datastructures import MultiDict
 
 import corplib
 import conclib
-from controller import Controller, UserActionException, ForbiddenException, convert_types, exposed
+from controller import Controller, convert_types, exposed
+from controller.errors import UserActionException, ForbiddenException
 import plugins
 import plugins.abstract
 from plugins.abstract.auth import AbstractInternalAuth, AbstractRemoteAuth
