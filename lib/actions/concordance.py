@@ -20,7 +20,7 @@ import re
 import json
 from collections import defaultdict
 
-from kontext import LinesGroups, Kontext
+from controller.kontext import LinesGroups, Kontext
 from controller import exposed
 from controller.errors import UserActionException
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
@@ -40,7 +40,7 @@ from translation import ugettext as _
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector, get_tt
 from main_menu import MenuGenerator, MainMenu
-from querying import Querying
+from controller.querying import Querying
 
 
 class ConcError(UserActionException):

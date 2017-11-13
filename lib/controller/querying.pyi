@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Dict, Any, Optional, Callable, List
-from kontext import Kontext
+from controller.kontext import Kontext
 from argmapping.query import ConcFormArgs
 import werkzeug.wrappers
 

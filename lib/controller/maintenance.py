@@ -1,4 +1,6 @@
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2014 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -59,7 +61,7 @@ class MaintenanceController(object):
                           for p in theme_css],
             'theme_logo_path': os.path.normpath('../files/themes/%s/%s' % (theme_name, logo_img)),
             'theme_logo_mouseover_path': os.path.normpath('../files/themes/%s/%s' % (theme_name,
-                                                                               logo_alt_img)),
+                                                                                     logo_alt_img)),
             'theme_logo_href': logo_href,
             'theme_logo_title': logo_title,
             'theme_logo_inline_css': settings.get('theme', 'logo_inline_css', ''),
@@ -96,4 +98,3 @@ class MaintenanceController(object):
             body = body % variables
             f.close()
         return status, headers, True, body.encode('utf-8')
-

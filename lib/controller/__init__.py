@@ -1,7 +1,7 @@
 # Copyright (c) 2003-2011  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Vit Baisa
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 # Copyright (c) 2014 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

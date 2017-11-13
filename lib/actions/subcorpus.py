@@ -19,12 +19,13 @@ import werkzeug.urls
 
 from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
-from kontext import MainMenu, AsyncTaskStatus
-from querying import Querying
+from controller.kontext import AsyncTaskStatus
+from controller.querying import Querying
+from main_menu import MainMenu
 from translation import ugettext as _
 import plugins
 import l10n
-from l10n import import_string, export_string, format_number
+from l10n import import_string, format_number
 import corplib
 from texttypes import TextTypeCollector, get_tt
 import settings

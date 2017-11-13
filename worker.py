@@ -44,7 +44,7 @@ import settings
 import initializer
 import plugins
 import translation
-from stderr2f import stderr_redirector
+from bgcalc.stderr2f import stderr_redirector
 
 settings.load('%s/conf/config.xml' % CURR_PATH)
 if settings.get('global', 'manatee_path', None):
@@ -158,6 +158,7 @@ class CustomTasks(object):
     a single function 'vacuum()' then the class adds a new
     task 'db.vacuum'.
     """
+
     def __init__(self):
         for p in plugins.runtime:
             if callable(getattr(p.instance, 'export_tasks', None)):
@@ -188,7 +189,8 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     subc_path = '%s/%s' % (settings.get('corpora', 'users_subcpath'), user_id)
     initial_args = reg_fn(corpus_id, subc_name, subchash, subc_path, query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
-        conc_calculate.delay(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize)
+        conc_calculate.delay(initial_args, user_id, corpus_id,
+                             subc_name, subchash, query, samplesize)
     return initial_args
 
 

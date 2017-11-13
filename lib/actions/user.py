@@ -14,8 +14,8 @@ import time
 
 from controller import exposed
 from controller.errors import UserActionException
-from kontext import Kontext
-from kontext import MainMenu
+from controller.kontext import Kontext
+from main_menu import MainMenu
 from translation import ugettext as _
 import plugins
 import settings
