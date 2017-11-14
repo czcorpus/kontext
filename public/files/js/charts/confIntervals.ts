@@ -92,7 +92,12 @@ export class ConfIntervals {
         const p = this.tooltipElm.append('p');
         this.tooltipElm.style('top', `${yScale(i)}px`);
         this.tooltipElm.style('left', `${xScale(d.data[1]) - 20}px`);
-        p.text(`${d.data[1]} (${d.data[0]}\u2013${d.data[2]})`);
+        if (d.data[1] !== 0) {
+            p.text(`${d.data[1]} (${d.data[0]}\u2013${d.data[2]})`);
+
+        } else {
+            p.text(this.pageModel.translate('freq__ct_no_observed_data'));
+        }
     }
 
     private renderCircles(root:d3.Selection<any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
@@ -108,7 +113,7 @@ export class ConfIntervals {
             .attr('cx', d => xScale(d.data[1]))
             .attr('cy', (_, i) => yScale(i))
             .attr('r', 5)
-            .style('fill', '#E2007A')
+            .style('fill', d => d.data[1] !== 0 ? '#E2007A' : '#575154')
             .style('opacity', this.dataPointOpactity);
 
         dataPoints
