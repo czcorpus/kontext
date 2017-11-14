@@ -338,6 +338,49 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
     /**
      *
+     * @param {*} props
+     */
+    const ComboActionsSelector = (props) => {
+
+        const handleClick = (evt) => {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
+                props: {
+                    dim: 1,
+                    attr: evt.target.value
+                }
+            });
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SORT_BY_DIMENSION',
+                props: {
+                    dim: 2,
+                    attr: evt.target.value
+                }
+            });
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_DISPLAY_QUANTITY',
+                props: {value: evt.target.value}
+            });
+        };
+
+        return (
+            <ul className="ComboActionsSelector">
+                <li>
+                    <button type="button" className="util-button" value="ipm" onClick={handleClick}>
+                        {he.translate('freq__ct_combo_action_ipm_button')}
+                    </button>
+                </li>
+                <li>
+                    <button type="button" className="util-button" value="abs" onClick={handleClick}>
+                        {he.translate('freq__ct_combo_action_abs_button')}
+                    </button>
+                </li>
+            </ul>
+        );
+    };
+
+    /**
+     *
      */
     const CTTableModForm = (props) => {
 
@@ -377,6 +420,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                             <ColorMappingSelector value={props.colorMapping} />
                         </li>
                     </ul>
+                </fieldset>
+                <fieldset>
+                    <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
+                    <ComboActionsSelector />
                 </fieldset>
             </form>
         );
