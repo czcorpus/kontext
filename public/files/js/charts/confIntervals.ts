@@ -64,7 +64,7 @@ export class ConfIntervals {
         this.paddingTop = 40;
         this.paddingBottom = 30;
         this.tooltipElm = d3.select('div.tooltip');
-        this.tooltipOpacity = 0.8;
+        this.tooltipOpacity = 0.9;
         this.dataPointOpactity = 0.6;
         this.dataPointTextSize = 11;
     }
@@ -109,9 +109,18 @@ export class ConfIntervals {
             .attr('cy', (_, i) => yScale(i))
             .attr('r', 5)
             .style('fill', '#E2007A')
-            .style('opacity', this.dataPointOpactity)
+            .style('opacity', this.dataPointOpactity);
+
+        dataPoints
+            .append('text')
+            .attr('x', d => xScale(d.data[1]) - 15)
+            .attr('y', (_, i) => yScale(i) - 15)
+            .attr('font-size', this.dataPointTextSize)
+            .text(d => d.label);
+
+        dataPoints
             .on('mouseover', (d, i, nodes) => {
-                d3.select(nodes[i]).transition().duration(100).attr('r', 7);
+                d3.select(nodes[i]).select('circle').transition().duration(100).attr('r', 7);
                 this.createTooltip(d, i, d3.select(nodes[i]), xScale, yScale);
                 this.tooltipElm
                     .style('display', 'block')
@@ -121,17 +130,10 @@ export class ConfIntervals {
                     .style('opacity', this.tooltipOpacity);
             })
             .on('mouseout', (d, i, nodes) => {
-                d3.select(nodes[i]).transition().duration(100).attr('r', 5);
+                d3.select(nodes[i]).select('circle').transition().duration(100).attr('r', 5);
                 this.tooltipElm.select('p').remove();
                 this.tooltipElm.style('display', 'none');
             });
-
-        dataPoints
-            .append('text')
-            .attr('x', d => xScale(d.data[1]) - 15)
-            .attr('y', (_, i) => yScale(i) - 15)
-            .attr('font-size', this.dataPointTextSize)
-            .text(d => d.label);
     }
 
     private getValuesRange(data:Array<DataPoint>):[number, number] {
