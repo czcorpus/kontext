@@ -26,7 +26,7 @@
 import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
-import {confInterval} from './statTables';
+import {confIntervalClopperPearson} from './statTables';
 
 export interface FreqDataItem extends CTFreqCell {
     val1:string;
@@ -92,7 +92,7 @@ export class CTFlatStore extends GeneralCTStore {
 
     private recalculateConfIntervals():void {
         this.origData = this.origData.map((cell, i) => {
-            const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
+            const confInt = confIntervalClopperPearson(cell.abs, cell.domainSize, this.alphaLevel);
             return {
                 order: i,
                 val1: cell.val1,
@@ -152,7 +152,7 @@ export class CTFlatStore extends GeneralCTStore {
 
     importData(data:FreqResultResponse.CTFreqResultData):void {
         this.origData = Immutable.List<FreqDataItem>(data.map(item => {
-            const confInt = confInterval(item[2], item[3], this.alphaLevel);
+            const confInt = confIntervalClopperPearson(item[2], item[3], this.alphaLevel);
             return {
                 val1: item[0],
                 val2: item[1],

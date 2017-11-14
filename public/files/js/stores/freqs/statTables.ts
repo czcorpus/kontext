@@ -108,7 +108,7 @@ export function getAvailConfLevels():Array<string> {
     return Object.keys(BINOM);
 }
 
-export function confInterval(v:number, base:number, alphaId:string):[number, number] {
+export function confIntervalClopperPearson(v:number, base:number, alphaId:string):[number, number] {
     const v11 = 2 * (base - v + 1);
     const v12 = 2 * v;
     const f1 = findCritVal(v11, v12, alphaId);

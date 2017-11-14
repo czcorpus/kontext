@@ -24,7 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../pages/document';
-import {confInterval, getAvailConfLevels} from './statTables';
+import {getAvailConfLevels} from './statTables';
 
 
 const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
