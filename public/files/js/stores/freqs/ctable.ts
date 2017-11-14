@@ -160,7 +160,7 @@ export class ContingencyTableStore extends GeneralCTStore {
     private highlightedGroup:[number, number];
 
     private static COLOR_HEATMAP = [
-        '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
+        '#ffffff', '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
@@ -587,8 +587,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         });
 
         const mappingFunc:(c:CTFreqCell)=>string = (() => {
+            const a = ContingencyTableStore.COLOR_HEATMAP.length - 1;
             if (this.colorMapping === ColorMappings.LINEAR) {
-                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((fetchFreq(c) - fMin) * 8 / (fMax - fMin))];
+                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor((fetchFreq(c) - fMin) * a / (fMax - fMin))];
 
 
             } else if (this.colorMapping === ColorMappings.PERCENTILE) {
@@ -597,7 +598,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                     .sort((x1, x2) => x1[1] - x2[1])
                     .map((x, i) => [x[0], i]));
 
-                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor(ordered.get(c.order) * 9 / ordered.size)]
+                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor(ordered.get(c.order) * (a + 1) / ordered.size)]
 
             } else {
                 throw new Error('Falied to define mapping func');
