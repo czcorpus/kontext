@@ -136,7 +136,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      */
     const ColorMappingHint = (props) => {
         return (
-            <layoutViews.PopupBox onCloseClick={props.onCloseClick}>
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true}>
                 <p>{he.translate('freq__ct_color_mapping_hint')}</p>
             </layoutViews.PopupBox>
         );
@@ -259,7 +259,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
     const ConfidenceIntervalHint = (props) => {
         return (
-            <layoutViews.PopupBox onCloseClick={props.onCloseClick}>
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true}>
                 <p>
                     {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}',
                         {threshold: props.confIntervalWarnRatio * 100, maxWidth: 50 * props.confIntervalWarnRatio})}
