@@ -134,29 +134,70 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      *
      * @param {*} props
      */
-    const ColorMappingSelector = (props) => {
+    const ColorMappingHint = (props) => {
+        return (
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick}>
+                <p>{he.translate('freq__ct_color_mapping_hint')}</p>
+            </layoutViews.PopupBox>
+        );
+    };
 
-        const handleChange = (evt) => {
+    /**
+     *
+     * @param {*} props
+     */
+    class ColorMappingSelector extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {hintVisible: false};
+            this._handleChange = this._handleChange.bind(this);
+            this._handleHintClick = this._handleHintClick.bind(this);
+            this._handleHintClose = this._handleHintClose.bind(this);
+        }
+
+        _handleChange(evt) {
             dispatcher.dispatch({
                 actionType: 'FREQ_CT_SET_COLOR_MAPPING',
                 props: {value: evt.target.value}
             });
-        };
+        }
 
-        return (
-            <label>
-                {he.translate('freq__ct_color_mapping_label')}:{'\u00a0'}
-                <select value={props.colorMapping} onChange={handleChange}>
-                    <option value="linear">
-                        {he.translate('freq__ct_color_mapping_linear')}
-                    </option>
-                    <option value="percentile">
-                        {he.translate('freq__ct_color_mapping_percentile')}
-                    </option>
-                </select>
-            </label>
-        );
-    };
+        _handleHintClick() {
+            this.setState({hintVisible: true});
+        }
+
+        _handleHintClose() {
+            this.setState({hintVisible: false});
+        }
+
+        render() {
+            return (
+                <span>
+                    <label htmlFor="color-mapping-selector">
+                        {he.translate('freq__ct_color_mapping_label')}
+                    </label>
+                    <span>
+                        <sup className="hint" onClick={this._handleHintClick}>
+                            <img src={he.createStaticUrl('img/info-icon.svg')}
+                                    alt={he.translate('global__info_icon')} />
+                        </sup>
+                        {this.state.hintVisible ?
+                            <ColorMappingHint onCloseClick={this._handleHintClose} /> : null}
+                    </span>
+                    {':\u00a0'}
+                    <select value={this.props.colorMapping} onChange={this._handleChange}>
+                        <option value="linear">
+                            {he.translate('freq__ct_color_mapping_linear')}
+                        </option>
+                        <option value="percentile">
+                            {he.translate('freq__ct_color_mapping_percentile')}
+                        </option>
+                    </select>
+                </span>
+            );
+        }
+    }
 
     /**
      *
