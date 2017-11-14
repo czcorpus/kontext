@@ -66,7 +66,7 @@ def cached(f):
             conn.close()
         else:
             res = f(self, word, lemma, pos, aligned_corpora, lang)
-        if res[1]:
+        if res:
             return res[0], True
         else:
             return '', False

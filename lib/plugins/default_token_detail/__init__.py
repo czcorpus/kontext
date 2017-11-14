@@ -1,6 +1,7 @@
 # Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -135,8 +136,7 @@ class DefaultTokenDetail(AbstractTokenDetail):
                 data, status = backend.fetch_data(word, lemma, tag, aligned_corpora, lang)
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
-                print ex
-                # logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
+                logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
         return ans
 
     def _map_providers(self, provider_ids):
@@ -149,6 +149,9 @@ class DefaultTokenDetail(AbstractTokenDetail):
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
 
+    def set_cache_path(self, path):
+        for backend, frontend in self._map_providers(self._providers):
+            backend.set_cache_path(path)
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
@@ -162,4 +165,6 @@ def create_instance(settings, corparch):
         cache_ttl_days = conf.get('default:cache_ttl_days')
         cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
         cacheMan.prepare_cache()
-    return DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
+    tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
+    tok_det.set_cache_path(cache_path)
+    return tok_det

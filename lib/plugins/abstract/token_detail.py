@@ -42,8 +42,6 @@ frontends and backends. It means that in case you need a special functionality,
 it will be probably enough to extend this plug-in by an empty class and 
 add your frontend or backend (depending on what needs to be customized).
 """
-import os
-import settings
 from plugins.abstract import CorpusDependentPlugin
 
 
@@ -59,18 +57,16 @@ class Response(object):
 
 
 class AbstractBackend(object):
+    _cache_path = None
+
     def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
         raise NotImplementedError()
 
-    @staticmethod
-    def get_cache_path():
-        cache_path = None
-        conf_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../conf/config.xml'))
-        settings.load(conf_path)
-        conf = settings.get('plugins', 'token_detail')
-        if conf:
-            cache_path = conf.get('default:cache_db_path')
-        return cache_path
+    def set_cache_path(self, path):
+        self._cache_path = path
+
+    def get_cache_path(self):
+        return self._cache_path
 
 
 class AbstractFrontend(object):

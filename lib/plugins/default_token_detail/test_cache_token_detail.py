@@ -38,18 +38,20 @@ class CacheTest(unittest.TestCase):
         providers_conf = mocked_json
 
         self.tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
-
-        cache_path = '/tmp/token_cache/token_detail_cache.db'
+        self.cache_path = '/tmp/token_cache/token_detail_cache.db'
         cache_rows_limit = 10
         cache_ttl_days = 7
-
-        self.cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+        self.cacheMan = CacheMan(self.cache_path, cache_rows_limit, cache_ttl_days)
+        self.tok_det.set_cache_path(self.cache_path)
 
     def setUp(self):
         """
         create an empty cache db file with properly structured table
         """
         self.cacheMan.prepare_cache()
+
+    def test_get_path(self):
+        self.assertEqual(self.cacheMan.get_cache_path(), self.cache_path)
 
     def test_cache_an_item(self):
         """
