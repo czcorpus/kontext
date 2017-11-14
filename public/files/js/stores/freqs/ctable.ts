@@ -28,7 +28,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
-import {confInterval, getAvailConfLevels} from './statTables';
+import {confIntervalClopperPearson, getAvailConfLevels} from './statTables';
 import {DataPoint} from '../../charts/confIntervals';
 
 /**
@@ -515,7 +515,7 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private recalculateConfIntervals():void {
         this.origData = mapDataTable(this.origData, cell => {
-            const confInt = confInterval(cell.abs, cell.domainSize, this.alphaLevel);
+            const confInt = confIntervalClopperPearson(cell.abs, cell.domainSize, this.alphaLevel);
             return {
                 order: cell.order,
                 ipm: cell.ipm,
@@ -542,7 +542,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 tableData[item[0]] = {};
             }
             const ipm = this.calcIpm(item);
-            const confInt = confInterval(item[2], item[3], this.alphaLevel);
+            const confInt = confIntervalClopperPearson(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
                 order: i,
                 ipm: ipm,

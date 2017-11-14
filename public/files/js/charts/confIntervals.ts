@@ -64,7 +64,7 @@ export class ConfIntervals {
         this.paddingTop = 40;
         this.paddingBottom = 30;
         this.tooltipElm = d3.select('div.tooltip');
-        this.tooltipOpacity = 0.8;
+        this.tooltipOpacity = 0.9;
         this.dataPointOpactity = 0.6;
         this.dataPointTextSize = 11;
     }
@@ -92,7 +92,12 @@ export class ConfIntervals {
         const p = this.tooltipElm.append('p');
         this.tooltipElm.style('top', `${yScale(i)}px`);
         this.tooltipElm.style('left', `${xScale(d.data[1]) - 20}px`);
-        p.text(`${d.data[1]} (${d.data[0]}\u2013${d.data[2]})`);
+        if (d.data[1] !== 0) {
+            p.text(`${d.data[1]} (${d.data[0]}\u2013${d.data[2]})`);
+
+        } else {
+            p.text(this.pageModel.translate('freq__ct_no_observed_data'));
+        }
     }
 
     private renderCircles(root:d3.Selection<any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
@@ -108,10 +113,19 @@ export class ConfIntervals {
             .attr('cx', d => xScale(d.data[1]))
             .attr('cy', (_, i) => yScale(i))
             .attr('r', 5)
-            .style('fill', '#E2007A')
-            .style('opacity', this.dataPointOpactity)
+            .style('fill', d => d.data[1] !== 0 ? '#E2007A' : '#575154')
+            .style('opacity', this.dataPointOpactity);
+
+        dataPoints
+            .append('text')
+            .attr('x', d => xScale(d.data[1]) - 15)
+            .attr('y', (_, i) => yScale(i) - 15)
+            .attr('font-size', this.dataPointTextSize)
+            .text(d => d.label);
+
+        dataPoints
             .on('mouseover', (d, i, nodes) => {
-                d3.select(nodes[i]).transition().duration(100).attr('r', 7);
+                d3.select(nodes[i]).select('circle').transition().duration(100).attr('r', 7);
                 this.createTooltip(d, i, d3.select(nodes[i]), xScale, yScale);
                 this.tooltipElm
                     .style('display', 'block')
@@ -121,17 +135,10 @@ export class ConfIntervals {
                     .style('opacity', this.tooltipOpacity);
             })
             .on('mouseout', (d, i, nodes) => {
-                d3.select(nodes[i]).transition().duration(100).attr('r', 5);
+                d3.select(nodes[i]).select('circle').transition().duration(100).attr('r', 5);
                 this.tooltipElm.select('p').remove();
                 this.tooltipElm.style('display', 'none');
             });
-
-        dataPoints
-            .append('text')
-            .attr('x', d => xScale(d.data[1]) - 15)
-            .attr('y', (_, i) => yScale(i) - 15)
-            .attr('font-size', this.dataPointTextSize)
-            .text(d => d.label);
     }
 
     private getValuesRange(data:Array<DataPoint>):[number, number] {

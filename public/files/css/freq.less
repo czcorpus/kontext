@@ -25,221 +25,162 @@
 }
 
 
-
 div.CT2dFreqResultView {
 
-        table.ct-data {
+    table.ct-data {
 
-            border-spacing: 0;
+        border-spacing: 0;
 
-            th {
+        th {
+            padding: 0.3em 0.7em;
+            background-color: @color-default-green;
+            font-weight: normal;
+        }
+
+        th.highlighted {
+            color: @color-default-text;
+            background-color: @color-green-bg-highlighted;
+        }
+
+        th.vert.highlighted {
+            span {
+
                 padding: 0.3em 0.7em;
-                background-color: @color-default-green;
-                font-weight: normal;
+                display: inline-block;
             }
+        }
 
-            th.highlighted {
-                color: @color-default-text;
-                background-color: @color-green-bg-highlighted;
-            }
+        th a {
+            color: @color-default-text;
+            text-decoration: underline;
+        }
 
-            th.vert.highlighted {
-                span {
+        th a:hover {
+            text-decoration: none;
+        }
 
-                    padding: 0.3em 0.7em;
-                    display: inline-block;
-                }
-            }
+        th.vert {
+            text-align: right;
+        }
 
-            th a {
-                color: @color-default-text;
-                text-decoration: underline;
-            }
+        td {
+            border: 1px solid @color-light-frame;
+            padding: 0.3em 0.7em;
+        }
 
-            th a:hover {
+        td.data-cell {
+            text-align: right;
+
+            a {
+                display: inline-block;
                 text-decoration: none;
             }
 
-            th.vert {
-                text-align: right;
-            }
-
-            td {
-                border: 1px solid @color-light-frame;
-                padding: 0.3em 0.7em;
-            }
-
-            td.data-cell {
-                text-align: right;
-
-                a {
-                    display: inline-block;
-                    text-decoration: none;
-                }
-
-                a.conc {
-                    text-decoration: underline;
-                }
-
-                a:hover {
-                    text-decoration: underline;
-                }
-
-                .warn {
-                    padding-right: 0.4em;
-                    font-size: 1.4em;
-                    font-weight: normal;
-                    vertical-align: middle;
-                }
-
-                .menu {
-                    font-weight: normal;
-
-                    table {
-                        td, th {
-                            background-color: transparent;
-                            border: none;
-                        }
-
-                        td input {
-                            background-color: @color-bg-light-blue;
-                            border: @input-border-style;
-                            border-radius: @input-border-radius;
-                        }
-
-                        td input.highlighted {
-                            color: @color-logo-pink;
-                            font-weight: normal;
-                        }
-                    }
-                }
-            }
-
-            td.highlighted {
-                background-color: @color-green-bg-highlighted;
-                color: #ffffff;
-                font-weight: normal;
-            }
-
-            td.empty-cell {
-                background-color: transparent;
-            }
-
-            th.attr-label {
-                background-color: transparent;
-                text-align: center;
-                font-weight: bold;
-                font-size: 110%;
-
-                a {
-                    color: @color-default-text;
-                    text-decoration: none;
-                }
-
-                a:hover {
-                    text-decoration: underline;
-                }
-            }
-        }
-
-        .warning {
-
-            max-width: 40em;
-
-            img {
-                display: inline-block;
-                width: 1em;
-                vertical-align: middle;
-                margin-right: 0.3em;
-            }
-        }
-    }
-
-    div.CTFlatFreqResultView {
-
-        th.sort-col {
-
-            a {
+            a.conc {
                 text-decoration: underline;
-
-                img {
-                    margin-left: 0.7em;
-                }
             }
 
             a:hover {
+                text-decoration: underline;
+            }
+
+            .warn {
+                padding-right: 0.4em;
+                font-size: 1.4em;
+                font-weight: normal;
+                vertical-align: middle;
+            }
+
+            .menu {
+                font-weight: normal;
+
+                table {
+                    td, th {
+                        background-color: transparent;
+                        border: none;
+                    }
+
+                    td input {
+                        background-color: @color-bg-light-blue;
+                        border: @input-border-style;
+                        border-radius: @input-border-radius;
+                    }
+
+                    td input.highlighted {
+                        color: @color-logo-pink;
+                        font-weight: normal;
+                    }
+                }
+            }
+        }
+
+        td.highlighted {
+            background-color: @color-green-bg-highlighted;
+            color: #ffffff;
+            font-weight: normal;
+        }
+
+        td.empty-cell {
+            background-color: transparent;
+        }
+
+        th.attr-label {
+            background-color: transparent;
+            text-align: center;
+            font-weight: bold;
+            font-size: 110%;
+
+            a {
+                color: @color-default-text;
                 text-decoration: none;
             }
 
+            a:hover {
+                text-decoration: underline;
+            }
         }
     }
 
-    .CTTableModForm {
-        fieldset {
-            margin-bottom: 1em;
-            line-height: 2.5em;
-        }
-    }
+    .warning {
 
-
-    .CTFreqForm {
-
-    .setup-warning {
+        max-width: 40em;
 
         img {
             display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.7em;
             width: 1em;
+            vertical-align: middle;
+            margin-right: 0.3em;
         }
     }
+}
 
-    table.form {
+div.CTFlatFreqResultView {
 
-        border: 1px solid @color-default-green;
+    th.sort-col {
 
-        td, th {
-            padding: 0.7em 1em;
-        }
+        a {
+            text-decoration: underline;
 
-        td.data {
-            padding: 0;
-
-            div {
-                margin: 0.5em;
-                height: 1em;
-                background-color: @color-data-table-footer;
+            img {
+                margin-left: 0.7em;
             }
         }
 
-        tbody.dim1, tbody.dim2 {
-            th.main {
-                text-align: center;
-
-                strong {
-                    display: block;
-                    font-size: 2em;
-                }
-
-                border-color: @color-default-green;
-                border-width: 0 1px 0 0;
-                border-style: solid;
-            }
+        a:hover {
+            text-decoration: none;
         }
 
-        tbody.dim1 {
-            background-color: @color-light-green;
-        }
+    }
+}
 
-        tbody.dim2 {
-            background-color: #FFFFFF;
-        }
+.CTTableModForm {
+    fieldset {
+        margin-bottom: 1em;
+        line-height: 2.5em;
+    }
 
-        tbody.dim1, tbody.dim2 {
-            select option:disabled {
-                color: @color-light-text;
-            }
-        }
+    p, ul {
+        line-height: normal;
     }
 }
 
@@ -356,53 +297,14 @@ div.CTFreqResultView {
     }
 }
 
-div.CTFreqResultView {
-    margin: 1em;
+ul.ComboActionsSelector {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 
-    .mode-switch {
-
-        text-align: center;
-        font-size: 110%;
-
-        a {
-            color: @color-logo-blue;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        a.current {
-            text-decoration: underline;
-        }
-    }
-
-    div.toolbar {
-        margin-bottom: 1em;
-
-        > form > fieldset > ul.items {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-
-            > li {
-                padding: 0;
-                margin: 0 1em 0 0;
-                display: inline-block;
-
-                ul.references {
-                    list-style-type: circle;
-                }
-            }
-        }
-    }
-
-    sup.hint {
-        img {
-            width: 0.9em;
-        }
-        cursor: pointer;
+    li {
+        display: inline-block;
+        margin-right: 1em;
     }
 }
 
