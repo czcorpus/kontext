@@ -29,7 +29,8 @@ settings.load(conf_path)
 
 conf = settings.get('plugins', 'token_detail')
 cache_path = conf.get('default:cache_db_path')
-cache_rows_limit = conf.get('default:cache_rows_limit')
-cache_ttl_days = conf.get('default:cache_ttl_days')
-cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
-cacheMan.clear_extra_rows()
+if cache_path:
+    cache_rows_limit = conf.get('default:cache_rows_limit')
+    cache_ttl_days = conf.get('default:cache_ttl_days')
+    cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+    cacheMan.clear_extra_rows()

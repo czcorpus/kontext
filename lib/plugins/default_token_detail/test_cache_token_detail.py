@@ -51,6 +51,9 @@ class CacheTest(unittest.TestCase):
         self.cacheMan.prepare_cache()
 
     def test_get_path(self):
+        """
+        check whether the cache path set above using set_cache_path is returned using get_cache_path
+        """
         self.assertEqual(self.cacheMan.get_cache_path(), self.cache_path)
 
     def test_cache_an_item(self):

@@ -159,12 +159,13 @@ def create_instance(settings, corparch):
     with open(conf['default:providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
     cache_path = conf.get('default:cache_db_path')
-    if not os.path.isfile(cache_path):
-        cache_path = conf.get('default:cache_db_path')
-        cache_rows_limit = conf.get('default:cache_rows_limit')
-        cache_ttl_days = conf.get('default:cache_ttl_days')
-        cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
-        cacheMan.prepare_cache()
+    if cache_path and not os.path.isfile(cache_path):
+            cache_path = conf.get('default:cache_db_path')
+            cache_rows_limit = conf.get('default:cache_rows_limit')
+            cache_ttl_days = conf.get('default:cache_ttl_days')
+            cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+            cacheMan.prepare_cache()
     tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
-    tok_det.set_cache_path(cache_path)
+    if cache_path:
+        tok_det.set_cache_path(cache_path)
     return tok_det
