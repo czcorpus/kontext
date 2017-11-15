@@ -29,6 +29,7 @@ div.CT2dFreqResultView {
 
     table.ct-data {
 
+        margin-top: 3em;
         border-spacing: 0;
 
         th {
@@ -209,20 +210,40 @@ div.CTFreqResultView {
     div.toolbar {
         margin-bottom: 1em;
 
-        > form > fieldset > ul.items {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
+        > form > fieldset {
 
-            > li {
-                padding: 0;
-                margin: 0 1em 0 0;
-                display: inline-block;
+            h3:first-child {
+                padding-top: 0;
+                margin-top: 0;
+            }
 
-                ul.references {
-                    list-style-type: circle;
+            > legend {
+
+                font-weight: bold;
+
+                > a.form-extension-switch {
+                    text-decoration: none;
+                    color: @color-default-text;
+                    background-position-y: 11pt;
                 }
             }
+
+            > div > ul.items {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+
+                > li {
+                    padding: 0;
+                    margin: 0 1em 0 0;
+                    display: inline-block;
+
+                    ul.references {
+                        list-style-type: circle;
+                    }
+                }
+            }
+
         }
     }
 

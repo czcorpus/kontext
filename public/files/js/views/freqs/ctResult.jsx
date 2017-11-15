@@ -340,7 +340,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      *
      * @param {*} props
      */
-    const ComboActionsSelector = (props) => {
+    const FieldsetBasicOptions = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
@@ -363,70 +363,104 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             });
         };
 
+        const genClassName = () => {
+
+        }
+
         return (
-            <ul className="ComboActionsSelector">
-                <li>
-                    <button type="button" className="util-button" value="ipm" onClick={handleClick}>
-                        {he.translate('freq__ct_combo_action_ipm_button')}
-                    </button>
-                </li>
-                <li>
-                    <button type="button" className="util-button" value="abs" onClick={handleClick}>
-                        {he.translate('freq__ct_combo_action_abs_button')}
-                    </button>
-                </li>
-            </ul>
+            <fieldset>
+                <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
+                <ul className="ComboActionsSelector">
+                    <li>
+                        <button type="button" className="util-button" value="ipm" onClick={handleClick}>
+                            {he.translate('freq__ct_combo_action_ipm_button')}
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" className="util-button" value="abs" onClick={handleClick}>
+                            {he.translate('freq__ct_combo_action_abs_button')}
+                        </button>
+                    </li>
+                    <li>
+                        <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
+                    </li>
+                </ul>
+            </fieldset>
         );
     };
 
     /**
      *
+     * @param {*} props
      */
-    const CTTableModForm = (props) => {
+    const ExpandActionLegend = (props) => {
 
         return (
-            <form className="CTTableModForm">
-                <fieldset>
-                    <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
-                    <ul className="items">
-                        <li>
-                            <QuantitySelect value={props.displayQuantity} />
-                        </li>
-                        <li>
-                            <MinFreqInput currVal={props.minFreq} freqType={props.minFreqType} />
-                        </li>
-                        <li>
-                            <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
-                        </li>
-                        <li>
-                            <AlphaLevelSelect alphaLevel={props.alphaLevel} availAlphaLevels={props.availAlphaLevels}
-                                    confIntervalWarnRatio={props.confIntervalWarnRatio} />
-                        </li>
-                    </ul>
-                </fieldset>
-                <fieldset>
-                    <legend>{he.translate('freq__ct_view_parameters_legend')}</legend>
-                    <ul className="items">
-                        <li>
-                            <TableSortRowsSelect sortAttr={props.sortDim1} />
-                        </li>
-                        <li>
-                            <TableSortColsSelect sortAttr={props.sortDim2} />
-                        </li>
-                        <li>
-                            <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
-                        </li>
-                        <li>
-                            <ColorMappingSelector value={props.colorMapping} />
-                        </li>
-                    </ul>
-                </fieldset>
-                <fieldset>
-                    <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
-                    <ComboActionsSelector />
-                </fieldset>
-            </form>
+            <legend>
+                <a onClick={props.onClick} className={props.isExpanded ?
+                        'form-extension-switch collapse' : 'form-extension-switch expand'} >
+                    {he.translate('freq__ct_advanced_fieldset_legend')}
+                </a>
+            </legend>
         );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    class FieldsetAdvancedOptions extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {visible: false};
+            this._handleFieldsetClick = this._handleFieldsetClick.bind(this);
+        }
+
+        _handleFieldsetClick() {
+            this.setState({visible: !this.state.visible});
+        }
+
+        render() {
+            return (
+                <fieldset>
+                    <ExpandActionLegend onClick={this._handleFieldsetClick} isExpanded={this.state.visible} />
+                    {this.state.visible ?
+                        (<div>
+                            <h3>{he.translate('freq__ct_data_parameters_legend')}</h3>
+                            <ul className="items">
+                                <li>
+                                    <QuantitySelect value={this.props.displayQuantity} />
+                                </li>
+                                <li>
+                                    <MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} />
+                                </li>
+                                <li>
+                                    <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
+                                </li>
+                                <li>
+                                    <AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
+                                            confIntervalWarnRatio={this.props.confIntervalWarnRatio} />
+                                </li>
+                            </ul>
+                            <h3>{he.translate('freq__ct_view_parameters_legend')}</h3>
+                            <ul className="items">
+                                <li>
+                                    <TableSortRowsSelect sortAttr={this.props.sortDim1} />
+                                </li>
+                                <li>
+                                    <TableSortColsSelect sortAttr={this.props.sortDim2} />
+                                </li>
+                                <li>
+                                    <ColorMappingSelector value={this.props.colorMapping} />
+                                </li>
+                            </ul>
+                        </div>) :
+                        null
+                    }
+                </fieldset>
+            );
+        }
     };
 
     /**
@@ -897,18 +931,21 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <div className="CT2dFreqResultView">
                     {this._renderWarning()}
                     <div className="toolbar">
-                        <CTTableModForm
-                                minFreq={this.state.minFreq}
-                                minFreqType={this.state.minFreqType}
-                                displayQuantity={this.state.displayQuantity}
-                                hideEmptyVectors={this.state.hideEmptyVectors}
-                                transposeIsChecked={this.state.transposeIsChecked}
-                                sortDim1={this.state.sortDim1}
-                                sortDim2={this.state.sortDim2}
-                                alphaLevel={this.state.alphaLevel}
-                                availAlphaLevels={this.state.availAlphaLevels}
-                                confIntervalWarnRatio={this.state.confIntervalWarnRatio}
-                                colorMapping={this.state.colorMapping} />
+                        <form className="CTTableModForm">
+                            <FieldsetBasicOptions
+                                    transposeIsChecked={this.state.transposeIsChecked} />
+                            <FieldsetAdvancedOptions
+                                    minFreq={this.state.minFreq}
+                                    minFreqType={this.state.minFreqType}
+                                    displayQuantity={this.state.displayQuantity}
+                                    hideEmptyVectors={this.state.hideEmptyVectors}
+                                    sortDim1={this.state.sortDim1}
+                                    sortDim2={this.state.sortDim2}
+                                    alphaLevel={this.state.alphaLevel}
+                                    availAlphaLevels={this.state.availAlphaLevels}
+                                    confIntervalWarnRatio={this.state.confIntervalWarnRatio}
+                                    colorMapping={this.state.colorMapping}  />
+                        </form>
                     </div>
                     {this.state.highlightedGroup[0] !== null || this.state.highlightedGroup[1] !== null ?
                         <IntervalGroupVisualisation highlightedGroup={this.state.highlightedGroup}
@@ -1069,16 +1106,18 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         <form>
                             <fieldset>
                                 <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
-                                <ul className="items">
-                                    <li>
-                                        <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType} />
-                                    </li>
-                                    <li>
-                                        <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
-                                                availAlphaLevels={this.state.availAlphaLevels}
-                                                confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
-                                    </li>
-                                </ul>
+                                <div>
+                                    <ul className="items">
+                                        <li>
+                                            <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType} />
+                                        </li>
+                                        <li>
+                                            <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
+                                                    availAlphaLevels={this.state.availAlphaLevels}
+                                                    confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
+                                        </li>
+                                    </ul>
+                                </div>
                             </fieldset>
                         </form>
                     </div>

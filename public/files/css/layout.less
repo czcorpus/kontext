@@ -34,18 +34,6 @@ footer {
     line-height: 1.3em;
 }
 
-fieldset h3 {
-    text-align: center;
-    font-size: 11pt;
-    margin: 10px 0 0 2px;
-}
-
-fieldset h4 {
-    text-align: center;
-    font-size: 9pt;
-    margin: 20px 0 0;
-}
-
 section > * {
     margin: 1em;
 }
@@ -55,17 +43,30 @@ section > .no-margin {
 }
 
 fieldset {
-    margin: 0px;
-    padding: 10px;
+    margin: 0;
+    padding: 1em;
     border-style: solid;
     border-color: @color-frame-fieldset;
     border-width: 1px;
     border-radius: @border-radius-default;
+
+    h3 {
+        text-align: center;
+        font-size: 11pt;
+        margin: 0.4em 0 0 0.1em;
+    }
+
+    h4 {
+        text-align: center;
+        font-size: 9pt;
+        margin: 20px 0 0;
+    }
+
+    fieldset {
+        margin: 0.4em;
+    }
 }
 
-fieldset fieldset {
-    margin: 6px 10px 6px 6px;
-}
 
 h1 {
     font-size: 170%;
@@ -1009,9 +1010,11 @@ form.query-form legend {
 }
 
 a.form-extension-switch {
-    background-position: 0 4pt;
+    display: inline-block;
+    background-position: 0 6pt;
     background-repeat: no-repeat;
-    padding-left: 15px;
+    padding-left: 1em;
+    margin-left: 0.2em;
 }
 
 a.form-extension-switch:hover {
