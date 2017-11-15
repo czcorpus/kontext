@@ -688,7 +688,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         };
 
         return (
-            <th className="attr-label">
+            <th className="attr-label" rowSpan={props.rowSpan}>
                 <a onClick={handleClick} title={he.translate('freq__ct_change_attrs')}>
                     {props.attr1}
                     {'\u005C'}
@@ -777,15 +777,23 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <table className="ct-data">
                     <tbody>
                         <tr>
-                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
+                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} rowSpan="2" />
                             {labels2().map((label2, i) =>
                                 <th key={`lab-${i}`}
                                         className={isHighlightedCol(i) || isHighlightedGroup(null, i) ? 'highlighted' : null}>
-                                    <a onClick={handleClickHighlightedGroupFn([null, i])}
-                                            title={he.translate('freq__ct_click_to_compare_col')}>
-                                        {label2}
-                                    </a>
+                                    {label2}
                                 </th>
+                            )}
+                        </tr>
+                        <tr>
+                            {labels2().map((label2, i) =>
+                                <td key={`icon-${i}`} className="icon">
+                                    <a onClick={handleClickHighlightedGroupFn([null, i])}
+                                                className="visualisation"
+                                                title={he.translate('freq__ct_click_to_compare_col')}>
+                                            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
+                                        </a>
+                                </td>
                             )}
                         </tr>
                         {labels1().map((label1, i) => {
@@ -796,9 +804,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                             return (
                                 <tr key={`row-${i}`}>
                                     <th className={htmlClass.join(' ')}>
-                                        <a onClick={handleClickHighlightedGroupFn([i, null])}
+                                        {label1}
+                                        <a className="visualisation-r" onClick={handleClickHighlightedGroupFn([i, null])}
                                                 title={he.translate('freq__ct_click_to_compare_row')}>
-                                            {label1}
+                                            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
                                         </a>
                                     </th>
                                     {labels2().map((label2, j) => {

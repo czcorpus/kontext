@@ -62,9 +62,27 @@ div.CT2dFreqResultView {
             }
         }
 
-        th a {
-            color: @color-default-text;
-            text-decoration: underline;
+        td a.visualisation {
+            text-align: center;
+
+            img {
+                width: 1em;
+            }
+        }
+
+        th a.visualisation-r {
+            display: inline-block;
+            margin-left: 0.7em;
+            vertical-align: middle;
+
+            img {
+                width: 1em;
+            }
+        }
+
+        td.icon {
+            background-color: @color-default-green;
+            text-align: center;
         }
 
         th a:hover {
