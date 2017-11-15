@@ -25,9 +25,12 @@
 
 import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
-import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
+import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat} from './generalCtable';
 import {confIntervalClopperPearson} from './statTables';
 
+/**
+ *
+ */
 export interface FreqDataItem extends CTFreqCell {
     val1:string;
     val2:string;
@@ -157,9 +160,9 @@ export class CTFlatStore extends GeneralCTStore {
                 val1: item[0],
                 val2: item[1],
                 abs: item[2],
-                absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
+                absConfInterval: [Math.round(confInt[0] * item[3]), Math.round(confInt[1] * item[3])],
                 ipm: this.calcIpm(item),
-                ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
+                ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
                 domainSize: item[3],
                 pfilter: this.generatePFilter(item[0], item[1])
             };

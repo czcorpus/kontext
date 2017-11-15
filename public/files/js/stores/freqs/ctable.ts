@@ -27,7 +27,7 @@ import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
-import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
+import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat} from './generalCtable';
 import {confIntervalClopperPearson, getAvailConfLevels} from './statTables';
 import {DataPoint} from '../../charts/confIntervals';
 
@@ -98,12 +98,6 @@ const mapDataTableAsList = <T>(t:Data2DTable, fn:(cell:CTFreqCell)=>T):Immutable
     }
     return Immutable.List(ans);
 };
-
-/**
- *
- * @param v
- */
-const roundFloat = (v:number):number => Math.round(v * 100) / 100;
 
 
 export const enum ColorMappings {
@@ -548,7 +542,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 ipm: ipm,
                 ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
                 abs: item[2],
-                absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
+                absConfInterval: [Math.round(confInt[0] * item[3]), Math.round(confInt[1] * item[3])],
                 domainSize: item[3],
                 bgColor: '#FFFFFF',
                 pfilter: this.generatePFilter(item[0], item[1])

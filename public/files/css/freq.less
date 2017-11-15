@@ -25,6 +25,17 @@
 }
 
 
+
+.warn() {
+    float: left;
+    font-weight: bold;
+    background-image: url(../img/warning-icon.svg);
+    background-repeat: no-repeat;
+    background-size: 1.1em 1.1em;
+    width: 1.1em;
+}
+
+
 div.CT2dFreqResultView {
 
     table.ct-data {
@@ -86,10 +97,7 @@ div.CT2dFreqResultView {
             }
 
             .warn {
-                padding-right: 0.4em;
-                font-size: 1.4em;
-                font-weight: normal;
-                vertical-align: middle;
+                .warn();
             }
 
             .menu {
@@ -172,6 +180,12 @@ div.CTFlatFreqResultView {
         }
 
     }
+
+    td strong.warn {
+        .warn();
+    }
+
+
 }
 
 .CTTableModForm {

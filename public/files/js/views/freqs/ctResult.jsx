@@ -261,8 +261,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         return (
             <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true} customClass="hint">
                 <p>
-                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}',
-                        {threshold: props.confIntervalWarnRatio * 100, maxWidth: 50 * props.confIntervalWarnRatio})}
+                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}',
+                        {threshold: props.confIntervalLeftMinWarn})}
                 </p>
                 <p>{he.translate('freq__ct_references')}:</p>
                 <ul className="references">
@@ -310,6 +310,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         }
 
         render() {
+
             return (
                 <span>
                     <label htmlFor="confidence-level-selection">
@@ -322,7 +323,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         </sup>
                         {this.state.hintVisible ?
                             <ConfidenceIntervalHint onCloseClick={this._onHintCloseClick}
-                                confIntervalWarnRatio={this.props.confIntervalWarnRatio} /> :
+                                confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} /> :
                             null
                         }
                     </span>
@@ -440,7 +441,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 </li>
                                 <li>
                                     <AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
-                                            confIntervalWarnRatio={this.props.confIntervalWarnRatio} />
+                                            confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
                                 </li>
                             </ul>
                             <h3>{he.translate('freq__ct_view_parameters_legend')}</h3>
@@ -611,17 +612,21 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         }
 
         shouldWarn() {
-            return (this.props.data.absConfInterval[1] - this.props.data.absConfInterval[0]) / this.props.data.abs  >
-                this.props.confIntervalWarnRatio;
+            if (this.props.quantity === 'ipm') {
+                return this.props.data.ipmConfInterval[0] <= this.props.confIntervalLeftMinWarn;
+
+            } else if (this.props.quantity === 'abs') {
+                return this.props.data.absConfInterval[0] <= this.props.confIntervalLeftMinWarn;
+            }
+            return false;
         }
 
         renderWarning() {
             if (this.shouldWarn()) {
                 const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
                 return <strong className="warn" style={linkStyle}
-                            title={he.translate('freq__ct_conf_interval_too_wide_{threshold}',
-                                {threshold: this.props.confIntervalWarnRatio * 100})}>
-                            {'\u26A0'}{'\u00a0'}
+                                title={he.translate('freq__ct_conf_interval_too_uncertain')}>
+                            {'\u00a0'}
                         </strong>;
 
             } else {
@@ -633,7 +638,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             return this.props.data !== nextProps.data || this.props.attr1 !== nextProps.attr1 ||
                     this.props.attr2 !== nextProps.attr2 || this.props.absConfInterval !== nextProps.absConfInterval ||
                     this.props.ipmConfInterval !== nextProps.ipmConfInterval ||
-                    this.props.confIntervalWarnRatio !== nextProps.confIntervalWarnRatio ||
+                    this.props.confIntervalLeftMinWarn !== nextProps.confIntervalLeftMinWarn ||
                     this.props.quantity !== nextProps.quantity || this.props.isHighlighted !== nextProps.isHighlighted;
         }
 
@@ -806,7 +811,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                                         attr2={props.attr2}
                                                         label2={label2}
                                                         isHighlighted={isHighlighted(i, j)}
-                                                        confIntervalWarnRatio={props.confIntervalWarnRatio} />;
+                                                        confIntervalLeftMinWarn={props.confIntervalLeftMinWarn} />;
                                     })}
                                 </tr>
                             )
@@ -872,7 +877,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 isWaiting: ctFreqDataRowsStore.getIsWaiting(),
                 alphaLevel: ctFreqDataRowsStore.getAlphaLevel(),
                 availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels(),
-                confIntervalWarnRatio: ctFreqDataRowsStore.getConfIntervalWarnRatio(),
+                confIntervalLeftMinWarn: ctFreqDataRowsStore.getConfIntervalLeftMinWarn(),
                 colorMapping: ctFreqDataRowsStore.getColorMapping(),
                 highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup()
             };
@@ -943,7 +948,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                     sortDim2={this.state.sortDim2}
                                     alphaLevel={this.state.alphaLevel}
                                     availAlphaLevels={this.state.availAlphaLevels}
-                                    confIntervalWarnRatio={this.state.confIntervalWarnRatio}
+                                    confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
                                     colorMapping={this.state.colorMapping}  />
                         </form>
                     </div>
@@ -966,7 +971,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 onHighlight={this._highlightItem}
                                 onResetHighlight={this._resetHighlight}
                                 highlightedCoord={this.state.highlightedCoord}
-                                confIntervalWarnRatio={this.state.confIntervalWarnRatio}
+                                confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
                                 highlightedGroup={this.state.highlightedGroup} />
                     }
                 </div>
@@ -981,8 +986,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
     const TRFlatListRow = (props) => {
 
         const shouldWarn = (props) => {
-            return (props.data.absConfInterval[1] - props.data.absConfInterval[0]) / props.data.abs  >
-                props.confIntervalWarnRatio;
+                return props.data.ipmConfInterval[0] <= props.confIntervalLeftMinWarn ||
+                        props.data.absConfInterval[0] <= props.confIntervalLeftMinWarn;
         };
 
         const formatRange = (interval) => {
@@ -992,9 +997,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         const renderWarning = () => {
             if (shouldWarn(props)) {
                 return (
-                <strong className="warn" title={he.translate('freq__ct_conf_interval_too_wide_{threshold}',
-                            {threshold: props.confIntervalWarnRatio * 100})}>
-                        {'\u26A0'}{'\u00a0'}
+                <strong className="warn" title={he.translate('freq__ct_conf_interval_too_uncertain')}>
+                    {'\u00a0'}
                 </strong>
                 );
 
@@ -1081,7 +1085,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 minFreqType: ctFlatFreqDataRowsStore.getMinFreqType(),
                 sortCol: ctFlatFreqDataRowsStore.getSortCol(),
                 sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
-                confIntervalWarnRatio: ctFlatFreqDataRowsStore.getConfIntervalWarnRatio(),
+                confIntervalLeftMinWarn: ctFlatFreqDataRowsStore.getConfIntervalLeftMinWarn(),
                 alphaLevel: ctFlatFreqDataRowsStore.getAlphaLevel(),
                 availAlphaLevels: ctFlatFreqDataRowsStore.getAvailAlphaLevels()
             };
@@ -1114,7 +1118,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                         <li>
                                             <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
                                                     availAlphaLevels={this.state.availAlphaLevels}
-                                                    confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
+                                                    confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />
                                         </li>
                                     </ul>
                                 </div>
@@ -1142,7 +1146,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                         isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} />
                             </tr>
                             {this.state.data.map((item, i) =>
-                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item} confIntervalWarnRatio={this.state.confIntervalWarnRatio} />)}
+                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item}
+                                        confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />)}
                         </tbody>
                     </table>
                 </div>
