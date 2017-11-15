@@ -742,4 +742,11 @@ export class ContingencyTableStore extends GeneralCTStore {
     getHighlightedGroup():[number, number] {
         return this.highlightedGroup;
     }
+
+    getQuickFreqMode():string {
+        if (this.sortDim1 === this.sortDim2 && this.sortDim2 === this.displayQuantity) {
+            return this.displayQuantity;
+        }
+        return null;
+    }
 }

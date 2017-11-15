@@ -364,8 +364,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             });
         };
 
-        const genClassName = () => {
-
+        const genClassName = (modeType) => {
+            return props.quickFreqMode === modeType ? 'util-button active' : 'util-button';
         }
 
         return (
@@ -373,12 +373,12 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
                 <ul className="ComboActionsSelector">
                     <li>
-                        <button type="button" className="util-button" value="ipm" onClick={handleClick}>
+                        <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
                             {he.translate('freq__ct_combo_action_ipm_button')}
                         </button>
                     </li>
                     <li>
-                        <button type="button" className="util-button" value="abs" onClick={handleClick}>
+                        <button type="button" className={genClassName('abs')} value="abs" onClick={handleClick}>
                             {he.translate('freq__ct_combo_action_abs_button')}
                         </button>
                     </li>
@@ -891,7 +891,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels(),
                 confIntervalLeftMinWarn: ctFreqDataRowsStore.getConfIntervalLeftMinWarn(),
                 colorMapping: ctFreqDataRowsStore.getColorMapping(),
-                highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup()
+                highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup(),
+                quickFreqMode: ctFreqDataRowsStore.getQuickFreqMode(),
             };
         }
 
@@ -950,7 +951,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                     <div className="toolbar">
                         <form className="CTTableModForm">
                             <FieldsetBasicOptions
-                                    transposeIsChecked={this.state.transposeIsChecked} />
+                                    transposeIsChecked={this.state.transposeIsChecked}
+                                    quickFreqMode={this.state.quickFreqMode} />
                             <FieldsetAdvancedOptions
                                     minFreq={this.state.minFreq}
                                     minFreqType={this.state.minFreqType}
