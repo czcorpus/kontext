@@ -516,7 +516,7 @@
         "freq__ct_color_mapping_linear": "Linear",
         "freq__ct_color_mapping_percentile": "Percentile",
         "freq__ct_quantity_abs": "Absolute freq.",
-        "freq__ct_quantity_ipm": "I.P.M.",
+        "freq__ct_quantity_ipm": "i.p.m.",
         "freq__ct_filter_th": "Filter",
         "freq__ct_ipm_x_axis_label": "Instances per million (i.p.m.)",
         "freq__ct_click_to_compare_col": "Click to compare confidence intervals in the column",

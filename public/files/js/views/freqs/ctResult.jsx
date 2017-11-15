@@ -424,7 +424,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
         render() {
             return (
-                <fieldset>
+                <fieldset className={this.state.visible ? null : 'collapsed'}>
                     <ExpandActionLegend onClick={this._handleFieldsetClick} isExpanded={this.state.visible} />
                     {this.state.visible ?
                         (<div>
@@ -777,7 +777,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <table className="ct-data">
                     <tbody>
                         <tr>
-                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} rowSpan="2" />
+                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} rowSpan={props.displayQuantity === 'ipm' ? 2 : 1} />
                             {labels2().map((label2, i) =>
                                 <th key={`lab-${i}`}
                                         className={isHighlightedCol(i) || isHighlightedGroup(null, i) ? 'highlighted' : null}>
@@ -785,17 +785,19 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 </th>
                             )}
                         </tr>
-                        <tr>
-                            {labels2().map((label2, i) =>
-                                <td key={`icon-${i}`} className="icon">
-                                    <a onClick={handleClickHighlightedGroupFn([null, i])}
-                                                className="visualisation"
-                                                title={he.translate('freq__ct_click_to_compare_col')}>
-                                            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
-                                        </a>
-                                </td>
-                            )}
-                        </tr>
+                        {props.displayQuantity === 'ipm' ?
+                            <tr>
+                                {labels2().map((label2, i) =>
+                                    <td key={`icon-${i}`} className="icon">
+                                        <a onClick={handleClickHighlightedGroupFn([null, i])}
+                                                    className="visualisation"
+                                                    title={he.translate('freq__ct_click_to_compare_col')}>
+                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
+                                            </a>
+                                    </td>
+                                )}
+                            </tr> : null
+                        }
                         {labels1().map((label1, i) => {
                             const htmlClass = ['vert'];
                             if (isHighlightedRow(i) || isHighlightedGroup(i, null)) {
@@ -805,10 +807,11 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 <tr key={`row-${i}`}>
                                     <th className={htmlClass.join(' ')}>
                                         {label1}
-                                        <a className="visualisation-r" onClick={handleClickHighlightedGroupFn([i, null])}
-                                                title={he.translate('freq__ct_click_to_compare_row')}>
-                                            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
-                                        </a>
+                                        {props.displayQuantity === 'ipm' ?
+                                            <a className="visualisation-r" onClick={handleClickHighlightedGroupFn([i, null])}
+                                                    title={he.translate('freq__ct_click_to_compare_row')}>
+                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
+                                            </a> : null}
                                     </th>
                                     {labels2().map((label2, j) => {
                                         return <CTCell data={props.data[label1][label2]} key={`c-${i}:${j}`}

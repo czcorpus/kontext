@@ -639,10 +639,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 });
 
             } else {
-                ans.push({
-                    data: [0, 0, 0],
-                    label: label
-                });
+                ans.push(null);
             }
         };
 
@@ -658,7 +655,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 mkAns(d1Key, d2Key, d1Key);
             });
         }
-        return ans;
+        return ans.filter(x => x !== null).sort((x1, x2) => x2.data[1] - x1.data[1]);
     }
 
     exportData():FormatConversionExportData {
