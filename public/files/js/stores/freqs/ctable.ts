@@ -27,7 +27,7 @@ import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
-import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell} from './generalCtable';
+import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat} from './generalCtable';
 import {confIntervalClopperPearson, getAvailConfLevels} from './statTables';
 import {DataPoint} from '../../charts/confIntervals';
 
@@ -98,12 +98,6 @@ const mapDataTableAsList = <T>(t:Data2DTable, fn:(cell:CTFreqCell)=>T):Immutable
     }
     return Immutable.List(ans);
 };
-
-/**
- *
- * @param v
- */
-const roundFloat = (v:number):number => Math.round(v * 100) / 100;
 
 
 export const enum ColorMappings {
@@ -362,9 +356,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         const cmpValFn:(v1:string, v2:string)=>number = (() => {
             switch (quantity) {
             case 'ipm':
-                return (v1, v2) => sumFn(v1).ipm - sumFn(v2).ipm;
+                return (v1, v2) => sumFn(v2).ipm - sumFn(v1).ipm;
             case 'abs':
-                return (v1, v2) => sumFn(v1).abs - sumFn(v2).abs;
+                return (v1, v2) => sumFn(v2).abs - sumFn(v1).abs;
             case 'attr':
                 return (v1, v2) => v1.localeCompare(v2)
             }
@@ -548,7 +542,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 ipm: ipm,
                 ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
                 abs: item[2],
-                absConfInterval: [confInt[0] * item[3], confInt[1] * item[3]],
+                absConfInterval: [Math.round(confInt[0] * item[3]), Math.round(confInt[1] * item[3])],
                 domainSize: item[3],
                 bgColor: '#FFFFFF',
                 pfilter: this.generatePFilter(item[0], item[1])
@@ -645,10 +639,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 });
 
             } else {
-                ans.push({
-                    data: [0, 0, 0],
-                    label: label
-                });
+                ans.push(null);
             }
         };
 
@@ -664,7 +655,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 mkAns(d1Key, d2Key, d1Key);
             });
         }
-        return ans;
+        return ans.filter(x => x !== null).sort((x1, x2) => x2.data[1] - x1.data[1]);
     }
 
     exportData():FormatConversionExportData {
@@ -750,5 +741,12 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getHighlightedGroup():[number, number] {
         return this.highlightedGroup;
+    }
+
+    getQuickFreqMode():string {
+        if (this.sortDim1 === this.sortDim2 && this.sortDim2 === this.displayQuantity) {
+            return this.displayQuantity;
+        }
+        return null;
     }
 }

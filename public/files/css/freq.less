@@ -25,10 +25,22 @@
 }
 
 
+
+.warn() {
+    float: left;
+    font-weight: bold;
+    background-image: url(../img/warning-icon.svg);
+    background-repeat: no-repeat;
+    background-size: 1.1em 1.1em;
+    width: 1.1em;
+}
+
+
 div.CT2dFreqResultView {
 
     table.ct-data {
 
+        margin-top: 3em;
         border-spacing: 0;
 
         th {
@@ -50,9 +62,27 @@ div.CT2dFreqResultView {
             }
         }
 
-        th a {
-            color: @color-default-text;
-            text-decoration: underline;
+        td a.visualisation {
+            text-align: center;
+
+            img {
+                width: 1em;
+            }
+        }
+
+        th a.visualisation-r {
+            display: inline-block;
+            margin-left: 0.7em;
+            vertical-align: middle;
+
+            img {
+                width: 1em;
+            }
+        }
+
+        td.icon {
+            background-color: @color-default-green;
+            text-align: center;
         }
 
         th a:hover {
@@ -85,10 +115,7 @@ div.CT2dFreqResultView {
             }
 
             .warn {
-                padding-right: 0.4em;
-                font-size: 1.4em;
-                font-weight: normal;
-                vertical-align: middle;
+                .warn();
             }
 
             .menu {
@@ -171,6 +198,12 @@ div.CTFlatFreqResultView {
         }
 
     }
+
+    td strong.warn {
+        .warn();
+    }
+
+
 }
 
 .CTTableModForm {
@@ -209,20 +242,44 @@ div.CTFreqResultView {
     div.toolbar {
         margin-bottom: 1em;
 
-        > form > fieldset > ul.items {
-            list-style-type: none;
-            margin: 0;
+        > form > fieldset.collapsed {
             padding: 0;
+        }
 
-            > li {
-                padding: 0;
-                margin: 0 1em 0 0;
-                display: inline-block;
+        > form > fieldset {
 
-                ul.references {
-                    list-style-type: circle;
+            h3:first-child {
+                padding-top: 0;
+                margin-top: 0;
+            }
+
+            > legend {
+
+                font-weight: bold;
+
+                > a.form-extension-switch {
+                    text-decoration: none;
+                    color: @color-default-text;
+                    background-position-y: 11pt;
                 }
             }
+
+            > div > ul.items {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+
+                > li {
+                    padding: 0;
+                    margin: 0 1em 0 0;
+                    display: inline-block;
+
+                    ul.references {
+                        list-style-type: circle;
+                    }
+                }
+            }
+
         }
     }
 

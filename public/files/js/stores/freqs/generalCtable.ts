@@ -67,6 +67,9 @@ export interface CTFreqCell {
 }
 
 
+export const roundFloat = (v:number):number => Math.round(v * 100) / 100;
+
+
 export abstract class GeneralCTStore extends SimplePageStore {
 
     public static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
@@ -108,7 +111,7 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     private availAlphaLevels:Immutable.List<[string, string]>;
 
-    private static CONF_INTERVAL_RATIO_WARN = 0.25;
+    private static CONF_INTERVAL_LEFT_MIN_WARN = 0.0;
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
         super(dispatcher);
@@ -347,8 +350,8 @@ export abstract class GeneralCTStore extends SimplePageStore {
         return this.alphaLevel;
     }
 
-    getConfIntervalWarnRatio():number {
-        return GeneralCTStore.CONF_INTERVAL_RATIO_WARN;
+    getConfIntervalLeftMinWarn():number {
+        return GeneralCTStore.CONF_INTERVAL_LEFT_MIN_WARN;
     }
 
 }

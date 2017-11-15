@@ -261,8 +261,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         return (
             <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true} customClass="hint">
                 <p>
-                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}{maxWidth}',
-                        {threshold: props.confIntervalWarnRatio * 100, maxWidth: 50 * props.confIntervalWarnRatio})}
+                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}',
+                        {threshold: props.confIntervalLeftMinWarn})}
                 </p>
                 <p>{he.translate('freq__ct_references')}:</p>
                 <ul className="references">
@@ -310,6 +310,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         }
 
         render() {
+
             return (
                 <span>
                     <label htmlFor="confidence-level-selection">
@@ -322,7 +323,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         </sup>
                         {this.state.hintVisible ?
                             <ConfidenceIntervalHint onCloseClick={this._onHintCloseClick}
-                                confIntervalWarnRatio={this.props.confIntervalWarnRatio} /> :
+                                confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} /> :
                             null
                         }
                     </span>
@@ -340,7 +341,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      *
      * @param {*} props
      */
-    const ComboActionsSelector = (props) => {
+    const FieldsetBasicOptions = (props) => {
 
         const handleClick = (evt) => {
             dispatcher.dispatch({
@@ -363,70 +364,104 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             });
         };
 
+        const genClassName = (modeType) => {
+            return props.quickFreqMode === modeType ? 'util-button active' : 'util-button';
+        }
+
         return (
-            <ul className="ComboActionsSelector">
-                <li>
-                    <button type="button" className="util-button" value="ipm" onClick={handleClick}>
-                        {he.translate('freq__ct_combo_action_ipm_button')}
-                    </button>
-                </li>
-                <li>
-                    <button type="button" className="util-button" value="abs" onClick={handleClick}>
-                        {he.translate('freq__ct_combo_action_abs_button')}
-                    </button>
-                </li>
-            </ul>
+            <fieldset>
+                <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
+                <ul className="ComboActionsSelector">
+                    <li>
+                        <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
+                            {he.translate('freq__ct_combo_action_ipm_button')}
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" className={genClassName('abs')} value="abs" onClick={handleClick}>
+                            {he.translate('freq__ct_combo_action_abs_button')}
+                        </button>
+                    </li>
+                    <li>
+                        <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
+                    </li>
+                </ul>
+            </fieldset>
         );
     };
 
     /**
      *
+     * @param {*} props
      */
-    const CTTableModForm = (props) => {
+    const ExpandActionLegend = (props) => {
 
         return (
-            <form className="CTTableModForm">
-                <fieldset>
-                    <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
-                    <ul className="items">
-                        <li>
-                            <QuantitySelect value={props.displayQuantity} />
-                        </li>
-                        <li>
-                            <MinFreqInput currVal={props.minFreq} freqType={props.minFreqType} />
-                        </li>
-                        <li>
-                            <EmptyVectorVisibilitySwitch hideEmptyVectors={props.hideEmptyVectors} />
-                        </li>
-                        <li>
-                            <AlphaLevelSelect alphaLevel={props.alphaLevel} availAlphaLevels={props.availAlphaLevels}
-                                    confIntervalWarnRatio={props.confIntervalWarnRatio} />
-                        </li>
-                    </ul>
-                </fieldset>
-                <fieldset>
-                    <legend>{he.translate('freq__ct_view_parameters_legend')}</legend>
-                    <ul className="items">
-                        <li>
-                            <TableSortRowsSelect sortAttr={props.sortDim1} />
-                        </li>
-                        <li>
-                            <TableSortColsSelect sortAttr={props.sortDim2} />
-                        </li>
-                        <li>
-                            <TransposeTableCheckbox isChecked={props.transposeIsChecked} />
-                        </li>
-                        <li>
-                            <ColorMappingSelector value={props.colorMapping} />
-                        </li>
-                    </ul>
-                </fieldset>
-                <fieldset>
-                    <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
-                    <ComboActionsSelector />
-                </fieldset>
-            </form>
+            <legend>
+                <a onClick={props.onClick} className={props.isExpanded ?
+                        'form-extension-switch collapse' : 'form-extension-switch expand'} >
+                    {he.translate('freq__ct_advanced_fieldset_legend')}
+                </a>
+            </legend>
         );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    class FieldsetAdvancedOptions extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {visible: false};
+            this._handleFieldsetClick = this._handleFieldsetClick.bind(this);
+        }
+
+        _handleFieldsetClick() {
+            this.setState({visible: !this.state.visible});
+        }
+
+        render() {
+            return (
+                <fieldset className={this.state.visible ? null : 'collapsed'}>
+                    <ExpandActionLegend onClick={this._handleFieldsetClick} isExpanded={this.state.visible} />
+                    {this.state.visible ?
+                        (<div>
+                            <h3>{he.translate('freq__ct_data_parameters_legend')}</h3>
+                            <ul className="items">
+                                <li>
+                                    <QuantitySelect value={this.props.displayQuantity} />
+                                </li>
+                                <li>
+                                    <MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} />
+                                </li>
+                                <li>
+                                    <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
+                                </li>
+                                <li>
+                                    <AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
+                                            confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
+                                </li>
+                            </ul>
+                            <h3>{he.translate('freq__ct_view_parameters_legend')}</h3>
+                            <ul className="items">
+                                <li>
+                                    <TableSortRowsSelect sortAttr={this.props.sortDim1} />
+                                </li>
+                                <li>
+                                    <TableSortColsSelect sortAttr={this.props.sortDim2} />
+                                </li>
+                                <li>
+                                    <ColorMappingSelector value={this.props.colorMapping} />
+                                </li>
+                            </ul>
+                        </div>) :
+                        null
+                    }
+                </fieldset>
+            );
+        }
     };
 
     /**
@@ -577,17 +612,21 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         }
 
         shouldWarn() {
-            return (this.props.data.absConfInterval[1] - this.props.data.absConfInterval[0]) / this.props.data.abs  >
-                this.props.confIntervalWarnRatio;
+            if (this.props.quantity === 'ipm') {
+                return this.props.data.ipmConfInterval[0] <= this.props.confIntervalLeftMinWarn;
+
+            } else if (this.props.quantity === 'abs') {
+                return this.props.data.absConfInterval[0] <= this.props.confIntervalLeftMinWarn;
+            }
+            return false;
         }
 
         renderWarning() {
             if (this.shouldWarn()) {
                 const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
                 return <strong className="warn" style={linkStyle}
-                            title={he.translate('freq__ct_conf_interval_too_wide_{threshold}',
-                                {threshold: this.props.confIntervalWarnRatio * 100})}>
-                            {'\u26A0'}{'\u00a0'}
+                                title={he.translate('freq__ct_conf_interval_too_uncertain')}>
+                            {'\u00a0'}
                         </strong>;
 
             } else {
@@ -599,7 +638,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             return this.props.data !== nextProps.data || this.props.attr1 !== nextProps.attr1 ||
                     this.props.attr2 !== nextProps.attr2 || this.props.absConfInterval !== nextProps.absConfInterval ||
                     this.props.ipmConfInterval !== nextProps.ipmConfInterval ||
-                    this.props.confIntervalWarnRatio !== nextProps.confIntervalWarnRatio ||
+                    this.props.confIntervalLeftMinWarn !== nextProps.confIntervalLeftMinWarn ||
                     this.props.quantity !== nextProps.quantity || this.props.isHighlighted !== nextProps.isHighlighted;
         }
 
@@ -649,7 +688,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         };
 
         return (
-            <th className="attr-label">
+            <th className="attr-label" rowSpan={props.rowSpan}>
                 <a onClick={handleClick} title={he.translate('freq__ct_change_attrs')}>
                     {props.attr1}
                     {'\u005C'}
@@ -738,17 +777,27 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <table className="ct-data">
                     <tbody>
                         <tr>
-                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
+                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} rowSpan={props.displayQuantity === 'ipm' ? 2 : 1} />
                             {labels2().map((label2, i) =>
                                 <th key={`lab-${i}`}
                                         className={isHighlightedCol(i) || isHighlightedGroup(null, i) ? 'highlighted' : null}>
-                                    <a onClick={handleClickHighlightedGroupFn([null, i])}
-                                            title={he.translate('freq__ct_click_to_compare_col')}>
-                                        {label2}
-                                    </a>
+                                    {label2}
                                 </th>
                             )}
                         </tr>
+                        {props.displayQuantity === 'ipm' ?
+                            <tr>
+                                {labels2().map((label2, i) =>
+                                    <td key={`icon-${i}`} className="icon">
+                                        <a onClick={handleClickHighlightedGroupFn([null, i])}
+                                                    className="visualisation"
+                                                    title={he.translate('freq__ct_click_to_compare_col')}>
+                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
+                                            </a>
+                                    </td>
+                                )}
+                            </tr> : null
+                        }
                         {labels1().map((label1, i) => {
                             const htmlClass = ['vert'];
                             if (isHighlightedRow(i) || isHighlightedGroup(i, null)) {
@@ -757,10 +806,12 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                             return (
                                 <tr key={`row-${i}`}>
                                     <th className={htmlClass.join(' ')}>
-                                        <a onClick={handleClickHighlightedGroupFn([i, null])}
-                                                title={he.translate('freq__ct_click_to_compare_row')}>
-                                            {label1}
-                                        </a>
+                                        {label1}
+                                        {props.displayQuantity === 'ipm' ?
+                                            <a className="visualisation-r" onClick={handleClickHighlightedGroupFn([i, null])}
+                                                    title={he.translate('freq__ct_click_to_compare_row')}>
+                                                <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/chart-icon.svg')} />
+                                            </a> : null}
                                     </th>
                                     {labels2().map((label2, j) => {
                                         return <CTCell data={props.data[label1][label2]} key={`c-${i}:${j}`}
@@ -772,7 +823,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                                         attr2={props.attr2}
                                                         label2={label2}
                                                         isHighlighted={isHighlighted(i, j)}
-                                                        confIntervalWarnRatio={props.confIntervalWarnRatio} />;
+                                                        confIntervalLeftMinWarn={props.confIntervalLeftMinWarn} />;
                                     })}
                                 </tr>
                             )
@@ -838,9 +889,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 isWaiting: ctFreqDataRowsStore.getIsWaiting(),
                 alphaLevel: ctFreqDataRowsStore.getAlphaLevel(),
                 availAlphaLevels: ctFreqDataRowsStore.getAvailAlphaLevels(),
-                confIntervalWarnRatio: ctFreqDataRowsStore.getConfIntervalWarnRatio(),
+                confIntervalLeftMinWarn: ctFreqDataRowsStore.getConfIntervalLeftMinWarn(),
                 colorMapping: ctFreqDataRowsStore.getColorMapping(),
-                highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup()
+                highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup(),
+                quickFreqMode: ctFreqDataRowsStore.getQuickFreqMode(),
             };
         }
 
@@ -897,18 +949,22 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <div className="CT2dFreqResultView">
                     {this._renderWarning()}
                     <div className="toolbar">
-                        <CTTableModForm
-                                minFreq={this.state.minFreq}
-                                minFreqType={this.state.minFreqType}
-                                displayQuantity={this.state.displayQuantity}
-                                hideEmptyVectors={this.state.hideEmptyVectors}
-                                transposeIsChecked={this.state.transposeIsChecked}
-                                sortDim1={this.state.sortDim1}
-                                sortDim2={this.state.sortDim2}
-                                alphaLevel={this.state.alphaLevel}
-                                availAlphaLevels={this.state.availAlphaLevels}
-                                confIntervalWarnRatio={this.state.confIntervalWarnRatio}
-                                colorMapping={this.state.colorMapping} />
+                        <form className="CTTableModForm">
+                            <FieldsetBasicOptions
+                                    transposeIsChecked={this.state.transposeIsChecked}
+                                    quickFreqMode={this.state.quickFreqMode} />
+                            <FieldsetAdvancedOptions
+                                    minFreq={this.state.minFreq}
+                                    minFreqType={this.state.minFreqType}
+                                    displayQuantity={this.state.displayQuantity}
+                                    hideEmptyVectors={this.state.hideEmptyVectors}
+                                    sortDim1={this.state.sortDim1}
+                                    sortDim2={this.state.sortDim2}
+                                    alphaLevel={this.state.alphaLevel}
+                                    availAlphaLevels={this.state.availAlphaLevels}
+                                    confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
+                                    colorMapping={this.state.colorMapping}  />
+                        </form>
                     </div>
                     {this.state.highlightedGroup[0] !== null || this.state.highlightedGroup[1] !== null ?
                         <IntervalGroupVisualisation highlightedGroup={this.state.highlightedGroup}
@@ -929,7 +985,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 onHighlight={this._highlightItem}
                                 onResetHighlight={this._resetHighlight}
                                 highlightedCoord={this.state.highlightedCoord}
-                                confIntervalWarnRatio={this.state.confIntervalWarnRatio}
+                                confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
                                 highlightedGroup={this.state.highlightedGroup} />
                     }
                 </div>
@@ -944,8 +1000,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
     const TRFlatListRow = (props) => {
 
         const shouldWarn = (props) => {
-            return (props.data.absConfInterval[1] - props.data.absConfInterval[0]) / props.data.abs  >
-                props.confIntervalWarnRatio;
+                return props.data.ipmConfInterval[0] <= props.confIntervalLeftMinWarn ||
+                        props.data.absConfInterval[0] <= props.confIntervalLeftMinWarn;
         };
 
         const formatRange = (interval) => {
@@ -955,9 +1011,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         const renderWarning = () => {
             if (shouldWarn(props)) {
                 return (
-                <strong className="warn" title={he.translate('freq__ct_conf_interval_too_wide_{threshold}',
-                            {threshold: props.confIntervalWarnRatio * 100})}>
-                        {'\u26A0'}{'\u00a0'}
+                <strong className="warn" title={he.translate('freq__ct_conf_interval_too_uncertain')}>
+                    {'\u00a0'}
                 </strong>
                 );
 
@@ -1044,7 +1099,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 minFreqType: ctFlatFreqDataRowsStore.getMinFreqType(),
                 sortCol: ctFlatFreqDataRowsStore.getSortCol(),
                 sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
-                confIntervalWarnRatio: ctFlatFreqDataRowsStore.getConfIntervalWarnRatio(),
+                confIntervalLeftMinWarn: ctFlatFreqDataRowsStore.getConfIntervalLeftMinWarn(),
                 alphaLevel: ctFlatFreqDataRowsStore.getAlphaLevel(),
                 availAlphaLevels: ctFlatFreqDataRowsStore.getAvailAlphaLevels()
             };
@@ -1069,16 +1124,18 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         <form>
                             <fieldset>
                                 <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
-                                <ul className="items">
-                                    <li>
-                                        <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType} />
-                                    </li>
-                                    <li>
-                                        <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
-                                                availAlphaLevels={this.state.availAlphaLevels}
-                                                confIntervalWarnRatio={this.state.confIntervalWarnRatio} />
-                                    </li>
-                                </ul>
+                                <div>
+                                    <ul className="items">
+                                        <li>
+                                            <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType} />
+                                        </li>
+                                        <li>
+                                            <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
+                                                    availAlphaLevels={this.state.availAlphaLevels}
+                                                    confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />
+                                        </li>
+                                    </ul>
+                                </div>
                             </fieldset>
                         </form>
                     </div>
@@ -1103,7 +1160,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                         isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} />
                             </tr>
                             {this.state.data.map((item, i) =>
-                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item} confIntervalWarnRatio={this.state.confIntervalWarnRatio} />)}
+                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item}
+                                        confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />)}
                         </tbody>
                     </table>
                 </div>
