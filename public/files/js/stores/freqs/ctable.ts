@@ -362,9 +362,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         const cmpValFn:(v1:string, v2:string)=>number = (() => {
             switch (quantity) {
             case 'ipm':
-                return (v1, v2) => sumFn(v1).ipm - sumFn(v2).ipm;
+                return (v1, v2) => sumFn(v2).ipm - sumFn(v1).ipm;
             case 'abs':
-                return (v1, v2) => sumFn(v1).abs - sumFn(v2).abs;
+                return (v1, v2) => sumFn(v2).abs - sumFn(v1).abs;
             case 'attr':
                 return (v1, v2) => v1.localeCompare(v2)
             }
