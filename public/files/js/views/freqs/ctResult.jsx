@@ -44,9 +44,12 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             <label>
                 {he.translate('freq__ct_quantity_label')}:{'\u00a0'}
                 <select value={props.value} onChange={handleSelectChange}>
-                    <option value="ipm">
-                        {he.translate('freq__ct_quantity_ipm')}
-                    </option>
+                    {props.canProvideIpm ?
+                        <option value="ipm">
+                            {he.translate('freq__ct_quantity_ipm')}
+                        </option> :
+                        null
+                    }
                     <option value="abs">
                         {he.translate('freq__ct_quantity_abs')}
                     </option>
@@ -80,7 +83,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 {'\u00a0'}
                 <select onChange={handleTypeChange} value={props.freqType}>
                     <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
-                    <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option>
+                    {props.canProvideIpm ?
+                        <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option> :
+                        null
+                    }
                 </select>
                 {'\u00a0'}:{'\u00a0'}
                 <input type="text" style={{width: '3em'}} value={props.currVal}
@@ -219,7 +225,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             <label>
                 {he.translate('freq__ct_sort_row_label')}:{'\u00a0'}
                 <select onChange={handleChange} value={props.sortAttr}>
-                    <option value="ipm">{he.translate('freq__ct_sort_row_opt_ipm')}</option>
+                    {props.canProvideIpm  ?
+                        <option value="ipm">{he.translate('freq__ct_sort_row_opt_ipm')}</option> :
+                        null
+                    }
                     <option value="abs">{he.translate('freq__ct_sort_row_opt_abs')}</option>
                     <option value="attr">{he.translate('freq__ct_sort_col_opt_attr')}</option>
                 </select>
@@ -247,7 +256,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             <label>
                 {he.translate('freq__ct_sort_col_label')}:{'\u00a0'}
                 <select onChange={handleChange} value={props.sortAttr}>
-                    <option value="ipm">{he.translate('freq__ct_sort_col_opt_ipm')}</option>
+                    {props.canProvideIpm  ?
+                        <option value="ipm">{he.translate('freq__ct_sort_col_opt_ipm')}</option> :
+                        null
+                    }
                     <option value="abs">{he.translate('freq__ct_sort_col_opt_abs')}</option>
                     <option value="attr">{he.translate('freq__ct_sort_col_opt_attr')}</option>
                 </select>
@@ -372,11 +384,13 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             <fieldset>
                 <legend>{he.translate('freq__ct_combo_actions_legend')}</legend>
                 <ul className="ComboActionsSelector">
-                    <li>
-                        <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
-                            {he.translate('freq__ct_combo_action_ipm_button')}
-                        </button>
-                    </li>
+                    {props.canProvideIpm ?
+                        <li>
+                            <button type="button" className={genClassName('ipm')} value="ipm" onClick={handleClick}>
+                                {he.translate('freq__ct_combo_action_ipm_button')}
+                            </button>
+                        </li> : null
+                    }
                     <li>
                         <button type="button" className={genClassName('abs')} value="abs" onClick={handleClick}>
                             {he.translate('freq__ct_combo_action_abs_button')}
@@ -431,10 +445,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                             <h3>{he.translate('freq__ct_data_parameters_legend')}</h3>
                             <ul className="items">
                                 <li>
-                                    <QuantitySelect value={this.props.displayQuantity} />
+                                    <QuantitySelect value={this.props.displayQuantity} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
-                                    <MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} />
+                                    <MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
                                     <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
@@ -447,10 +461,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                             <h3>{he.translate('freq__ct_view_parameters_legend')}</h3>
                             <ul className="items">
                                 <li>
-                                    <TableSortRowsSelect sortAttr={this.props.sortDim1} />
+                                    <TableSortRowsSelect sortAttr={this.props.sortDim1} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
-                                    <TableSortColsSelect sortAttr={this.props.sortDim2} />
+                                    <TableSortColsSelect sortAttr={this.props.sortDim2} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
                                     <ColorMappingSelector value={this.props.colorMapping} />
@@ -533,19 +547,22 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <h2>{he.translate('freq__ct_detail_legend')}</h2>
                 <table>
                     <tbody>
-                        <tr>
-                            <th>
-                                {he.translate('freq__ct_ipm_freq_label')}
-                            </th>
-                            <td>
-                                {formatIpm(props.data.ipm)}
-                            </td>
-                            <td>
-                                ({he.formatNumber(props.data.ipmConfInterval[0], 1)}
-                                {'\u2013'}
-                                {he.formatNumber(props.data.ipmConfInterval[1], 1)})
-                            </td>
-                        </tr>
+                        {props.canProvideIpm ?
+                            <tr>
+                                <th>
+                                    {he.translate('freq__ct_ipm_freq_label')}
+                                </th>
+                                <td>
+                                    {formatIpm(props.data.ipm)}
+                                </td>
+                                <td>
+                                    ({he.formatNumber(props.data.ipmConfInterval[0], 1)}
+                                    {'\u2013'}
+                                    {he.formatNumber(props.data.ipmConfInterval[1], 1)})
+                                </td>
+                            </tr> :
+                            null
+                        }
                         <tr>
                             <th>
                                 {he.translate('freq__ct_abs_freq_label')}
@@ -645,13 +662,14 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         render() {
             if (this.isNonEmpty()) {
                 const bgStyle = {};
-                const linkStyle = {color: color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)))}
+                const linkStyle = {};
                 const tdClasses = ['data-cell'];
                 if (this.props.isHighlighted) {
                     tdClasses.push('highlighted');
 
                 } else {
                     bgStyle['backgroundColor'] = this.props.data.bgColor;
+                    linkStyle.color = color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)));
                 }
                 return (
                     <td className={tdClasses.join(' ')} style={bgStyle}>
@@ -665,7 +683,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                                             attr1={this.props.attr1}
                                                             label1={this.props.label1}
                                                             attr2={this.props.attr2}
-                                                            label2={this.props.label2} /> : null}
+                                                            label2={this.props.label2}
+                                                            canProvideIpm={this.props.canProvideIpm} /> : null}
                     </td>
                 );
 
@@ -823,7 +842,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                                         attr2={props.attr2}
                                                         label2={label2}
                                                         isHighlighted={isHighlighted(i, j)}
-                                                        confIntervalLeftMinWarn={props.confIntervalLeftMinWarn} />;
+                                                        confIntervalLeftMinWarn={props.confIntervalLeftMinWarn}
+                                                        canProvideIpm={props.canProvideIpm} />;
                                     })}
                                 </tr>
                             )
@@ -893,6 +913,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 colorMapping: ctFreqDataRowsStore.getColorMapping(),
                 highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup(),
                 quickFreqMode: ctFreqDataRowsStore.getQuickFreqMode(),
+                canProvideIpm: ctFreqDataRowsStore.canProvideIpm()
             };
         }
 
@@ -952,7 +973,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         <form className="CTTableModForm">
                             <FieldsetBasicOptions
                                     transposeIsChecked={this.state.transposeIsChecked}
-                                    quickFreqMode={this.state.quickFreqMode} />
+                                    quickFreqMode={this.state.quickFreqMode}
+                                    canProvideIpm={this.state.canProvideIpm} />
                             <FieldsetAdvancedOptions
                                     minFreq={this.state.minFreq}
                                     minFreqType={this.state.minFreqType}
@@ -963,7 +985,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                     alphaLevel={this.state.alphaLevel}
                                     availAlphaLevels={this.state.availAlphaLevels}
                                     confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
-                                    colorMapping={this.state.colorMapping}  />
+                                    colorMapping={this.state.colorMapping}
+                                    canProvideIpm={this.state.canProvideIpm}  />
                         </form>
                     </div>
                     {this.state.highlightedGroup[0] !== null || this.state.highlightedGroup[1] !== null ?
@@ -986,7 +1009,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 onResetHighlight={this._resetHighlight}
                                 highlightedCoord={this.state.highlightedCoord}
                                 confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
-                                highlightedGroup={this.state.highlightedGroup} />
+                                highlightedGroup={this.state.highlightedGroup}
+                                canProvideIpm={this.state.canProvideIpm} />
                     }
                 </div>
             );
@@ -1033,10 +1057,13 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                     {renderWarning()}
                     {props.data.abs}
                 </td>
-                <td className="num" title={formatRange(props.data.ipmConfInterval)}>
-                    {renderWarning()}
-                    {props.data.ipm}
-                </td>
+                {props.canProvideIpm ?
+                    <td className="num" title={formatRange(props.data.ipmConfInterval)}>
+                        {renderWarning()}
+                        {props.data.ipm}
+                    </td> :
+                    null
+                }
             </tr>
         );
     }
@@ -1101,7 +1128,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
                 confIntervalLeftMinWarn: ctFlatFreqDataRowsStore.getConfIntervalLeftMinWarn(),
                 alphaLevel: ctFlatFreqDataRowsStore.getAlphaLevel(),
-                availAlphaLevels: ctFlatFreqDataRowsStore.getAvailAlphaLevels()
+                availAlphaLevels: ctFlatFreqDataRowsStore.getAvailAlphaLevels(),
+                canProvideIpm: ctFreqDataRowsStore.canProvideIpm()
             };
         }
 
@@ -1127,7 +1155,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 <div>
                                     <ul className="items">
                                         <li>
-                                            <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType} />
+                                            <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType}
+                                                    canProvideIpm={this.state.canProvideIpm} />
                                         </li>
                                         <li>
                                             <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
@@ -1155,13 +1184,17 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                         value="abs" isActive={this.state.sortCol === 'abs'}
                                         isReversed={this.state.sortCol === 'abs' && this.state.sortColIsReversed}
                                         />
-                                <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
-                                        value="ipm" isActive={this.state.sortCol === 'ipm'}
-                                        isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} />
+                                {this.state.canProvideIpm ?
+                                    <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
+                                            value="ipm" isActive={this.state.sortCol === 'ipm'}
+                                            isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} /> :
+                                    null
+                                }
                             </tr>
                             {this.state.data.map((item, i) =>
                                 <TRFlatListRow key={`r_${i}`} idx={i+1} data={item}
-                                        confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />)}
+                                        confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
+                                        canProvideIpm={this.state.canProvideIpm} />)}
                         </tbody>
                     </table>
                 </div>
