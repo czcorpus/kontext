@@ -159,7 +159,13 @@
         <issue_reporting>
             <module>default_issue_reporting</module>
         </issue_reporting>
-        <token_detail />
+        <token_detail>
+            <module>default_token_detail</module>
+            <providers_conf extension-by="default">path/to/providers/conf.json</providers_conf>
+            <cache_db_path extension-by="default">path/to/cache/sqlite3/db/file</cache_db_path>
+            <cache_ttl_days extension-by="default">7</cache_ttl_days>
+            <cache_rows_limit extension-by="default">100000</cache_rows_limit>
+        </token_detail>
     </plugins>
 </kontext>
 

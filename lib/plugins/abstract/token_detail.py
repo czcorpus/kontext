@@ -1,6 +1,7 @@
 # Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -41,12 +42,10 @@ frontends and backends. It means that in case you need a special functionality,
 it will be probably enough to extend this plug-in by an empty class and 
 add your frontend or backend (depending on what needs to be customized).
 """
-
 from plugins.abstract import CorpusDependentPlugin
 
 
 class Response(object):
-
     def __init__(self, contents, renderer, status, heading):
         self.contents = contents
         self.renderer = renderer
@@ -58,13 +57,19 @@ class Response(object):
 
 
 class AbstractBackend(object):
+    _cache_path = None
 
     def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
         raise NotImplementedError()
 
+    def set_cache_path(self, path):
+        self._cache_path = path
+
+    def get_cache_path(self):
+        return self._cache_path
+
 
 class AbstractFrontend(object):
-
     def __init__(self, conf):
         self._headings = conf.get('heading', {})
 
@@ -85,7 +90,6 @@ class AbstractFrontend(object):
 
 
 class AbstractTokenDetail(CorpusDependentPlugin):
-
     def fetch_data(self, provider_ids, word, lemma, tag, aligned_corpora, lang):
         """
         Obtain (in a synchronous way) data from all the backends

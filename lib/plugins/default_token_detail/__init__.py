@@ -1,6 +1,7 @@
 # Copyright (c) 2017 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -46,10 +47,13 @@ import importlib
 import logging
 
 import manatee
+import os
+
 import plugins
 from plugins.abstract.token_detail import AbstractTokenDetail
 from actions import concordance
 from controller import exposed
+from plugins.default_token_detail.cache_man import CacheMan
 
 
 @exposed(return_type='json')
@@ -145,10 +149,23 @@ class DefaultTokenDetail(AbstractTokenDetail):
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
 
+    def set_cache_path(self, path):
+        for backend, frontend in self._map_providers(self._providers):
+            backend.set_cache_path(path)
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
     conf = settings.get('plugins', 'token_detail')
     with open(conf['default:providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
-    return DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
+    cache_path = conf.get('default:cache_db_path')
+    if cache_path and not os.path.isfile(cache_path):
+            cache_path = conf.get('default:cache_db_path')
+            cache_rows_limit = conf.get('default:cache_rows_limit')
+            cache_ttl_days = conf.get('default:cache_ttl_days')
+            cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+            cacheMan.prepare_cache()
+    tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
+    if cache_path:
+        tok_det.set_cache_path(cache_path)
+    return tok_det
