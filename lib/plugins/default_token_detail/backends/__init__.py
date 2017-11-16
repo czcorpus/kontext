@@ -31,6 +31,8 @@ def mk_token_detail_cache_key(pth, cls, word, lemma, pos, aligned_corpora, lang)
     """
     Returns a hashed cache key based on the passed parameters.
     """
+    if pth.endswith(".pyc"):
+        pth = pth[:-1]
     return md5('%r%r%r%r%r%r%r' % (pth, cls, word, lemma, pos, aligned_corpora, lang)).hexdigest()
 
 

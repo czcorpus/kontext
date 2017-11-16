@@ -149,7 +149,10 @@ class CacheTest(unittest.TestCase):
         c = conn.cursor()
         last_access = c.execute("SELECT last_access FROM cache WHERE key = ?", (key,)).fetchone()
         conn.close()
-        return last_access[0]
+        if last_access:
+            return last_access[0]
+        else:
+            return 0
 
 
 if __name__ == '__main__':

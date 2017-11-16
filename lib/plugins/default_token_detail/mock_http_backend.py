@@ -14,4 +14,4 @@ class HTTPBackend(AbstractBackend):
 
     @staticmethod
     def get_path():
-        return os.path.join(os.getcwd(), 'backends/__init__.pyc')
+        return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'backends/__init__.py')
