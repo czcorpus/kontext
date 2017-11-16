@@ -103,7 +103,17 @@ def update_8(doc):
     tmp = doc.findall('plugins/*')
     tmp[-1].tail = '\n        '
     new_elm = etree.SubElement(plg_srch, 'issue_reporting')
+    new_elm.tail = '\n        '
+
+
+def update_9(doc):
+    srch = doc.find('/plugins')
+    new_elm = etree.SubElement(srch, 'export_freq2d')
     new_elm.tail = '\n    '
+    new_elm.text = '\n            '
+    mod_elm = etree.SubElement(new_elm, 'xlsx')
+    mod_elm.text = 'default_xlsx'
+    mod_elm.tail = '\n        '
 
 
 if __name__ == '__main__':
