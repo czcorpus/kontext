@@ -310,6 +310,10 @@ export abstract class GeneralCTStore extends SimplePageStore {
         return this.isStructAttr(this.attr2);
     }
 
+    canProvideIpm():boolean {
+        return !this.getAttr1IsStruct() || !this.getAttr2IsStruct();
+    }
+
     getSetupError():string {
         return this.setupError;
     }

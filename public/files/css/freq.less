@@ -141,6 +141,10 @@ div.CT2dFreqResultView {
             }
         }
 
+        td.data-cell.highlighted a {
+            color: @color-default-text;
+        }
+
         td.highlighted {
             background-color: @color-green-bg-highlighted;
             color: #ffffff;
@@ -184,6 +188,8 @@ div.CT2dFreqResultView {
 div.CTFlatFreqResultView {
 
     th.sort-col {
+
+        white-space: nowrap;
 
         a {
             text-decoration: underline;
@@ -291,68 +297,6 @@ div.CTFreqResultView {
     }
 }
 
-
-
-.CTFreqForm {
-
-    .setup-warning {
-
-        img {
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.7em;
-            width: 1em;
-        }
-    }
-
-    table.form {
-
-        border: 1px solid @color-default-green;
-
-        td, th {
-            padding: 0.7em 1em;
-        }
-
-        td.data {
-            padding: 0;
-
-            div {
-                margin: 0.5em;
-                height: 1em;
-                background-color: @color-data-table-footer;
-            }
-        }
-
-        tbody.dim1, tbody.dim2 {
-            th.main {
-                text-align: center;
-
-                strong {
-                    display: block;
-                    font-size: 2em;
-                }
-
-                border-color: @color-default-green;
-                border-width: 0 1px 0 0;
-                border-style: solid;
-            }
-        }
-
-        tbody.dim1 {
-            background-color: @color-light-green;
-        }
-
-        tbody.dim2 {
-            background-color: #FFFFFF;
-        }
-
-        tbody.dim1, tbody.dim2 {
-            select option:disabled {
-                color: @color-light-text;
-            }
-        }
-    }
-}
 
 ul.ComboActionsSelector {
     list-style: none;
