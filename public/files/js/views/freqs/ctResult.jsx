@@ -20,11 +20,15 @@
 
 import * as React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
+import {init as flatResultViewInit} from './ctFlatResult';
+import {init as viewOptsInit} from './ctViewOpts';
 
-/* TODO remove layoutViews */
+
 export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStore) {
 
     const layoutViews = he.getLayoutViews();
+    const flatResultViews = flatResultViewInit(dispatcher, he, ctFlatFreqDataRowsStore);
+    const optsViews = viewOptsInit(dispatcher, he);
 
     const formatIpm = (v) => v >= 0.1 ? he.formatNumber(v, 1) : '\u2248 0';
 
@@ -54,43 +58,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         {he.translate('freq__ct_quantity_abs')}
                     </option>
                 </select>
-            </label>
-        );
-    };
-
-    /**
-     *
-     */
-    const MinFreqInput = (props) => {
-
-        const handleInputChange = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_FREQ',
-                props: {value: evt.target.value}
-            });
-        };
-
-        const handleTypeChange = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_FREQ_TYPE',
-                props: {value: evt.target.value}
-            });
-        };
-
-        return (
-            <label>
-                {he.translate('freq__ct_min_freq_label')}
-                {'\u00a0'}
-                <select onChange={handleTypeChange} value={props.freqType}>
-                    <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
-                    {props.canProvideIpm ?
-                        <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option> :
-                        null
-                    }
-                </select>
-                {'\u00a0'}:{'\u00a0'}
-                <input type="text" style={{width: '3em'}} value={props.currVal}
-                        onChange={handleInputChange} />
             </label>
         );
     };
@@ -294,65 +261,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      *
      * @param {*} props
      */
-    class AlphaLevelSelect extends React.Component {
-
-        constructor(props) {
-            super(props);
-            this._onChange = this._onChange.bind(this);
-            this._onHintClick = this._onHintClick.bind(this);
-            this._onHintCloseClick = this._onHintCloseClick.bind(this);
-            this.state = {hintVisible: false};
-        }
-
-        _onChange(evt) {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_ALPHA_LEVEL',
-                props: {
-                    value: evt.target.value
-                }
-            });
-        }
-
-        _onHintClick() {
-            this.setState({hintVisible: true});
-        }
-
-        _onHintCloseClick() {
-            this.setState({hintVisible: false});
-        }
-
-        render() {
-
-            return (
-                <span>
-                    <label htmlFor="confidence-level-selection">
-                        {he.translate('freq__ct_conf_level_label')}
-                    </label>
-                    <span>
-                        <sup className="hint" onClick={this._onHintClick}>
-                            <img src={he.createStaticUrl('img/info-icon.svg')}
-                                    alt={he.translate('global__info_icon')} />
-                        </sup>
-                        {this.state.hintVisible ?
-                            <ConfidenceIntervalHint onCloseClick={this._onHintCloseClick}
-                                confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} /> :
-                            null
-                        }
-                    </span>
-                    :{'\u00a0'}
-                    <select id="confidence-level-selection" value={this.props.alphaLevel} onChange={this._onChange}>
-                        {this.props.availAlphaLevels.map(item =>
-                            <option key={item[0]} value={item[0]}>{item[1]}</option>)}
-                    </select>
-                </span>
-            );
-        }
-    };
-
-    /**
-     *
-     * @param {*} props
-     */
     const FieldsetBasicOptions = (props) => {
 
         const handleClick = (evt) => {
@@ -448,13 +356,13 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                     <QuantitySelect value={this.props.displayQuantity} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
-                                    <MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} canProvideIpm={this.props.canProvideIpm} />
+                                    <optsViews.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
                                     <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
                                 </li>
                                 <li>
-                                    <AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
+                                    <optsViews.AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
                                             confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
                                 </li>
                             </ul>
@@ -1019,191 +927,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
     /**
      *
-     * @param {*} props
-     */
-    const TRFlatListRow = (props) => {
-
-        const shouldWarn = (props) => {
-                return props.data.ipmConfInterval[0] <= props.confIntervalLeftMinWarn ||
-                        props.data.absConfInterval[0] <= props.confIntervalLeftMinWarn;
-        };
-
-        const formatRange = (interval) => {
-            return interval.map(x => he.formatNumber(x, 1)).join('-');
-        };
-
-        const renderWarning = () => {
-            if (shouldWarn(props)) {
-                return (
-                <strong className="warn" title={he.translate('freq__ct_conf_interval_too_uncertain')}>
-                    {'\u00a0'}
-                </strong>
-                );
-
-            } else {
-                return '';
-            }
-        };
-
-        return (
-            <tr>
-                <td className="num">{props.idx}.</td>
-                <td>
-                    <a href={props.data.pfilter} target="_blank">p</a>
-                </td>
-                <td>{props.data.val1}</td>
-                <td>{props.data.val2}</td>
-                <td className="num" title={formatRange(props.data.absConfInterval)}>
-                    {renderWarning()}
-                    {props.data.abs}
-                </td>
-                {props.canProvideIpm ?
-                    <td className="num" title={formatRange(props.data.ipmConfInterval)}>
-                        {renderWarning()}
-                        {props.data.ipm}
-                    </td> :
-                    null
-                }
-            </tr>
-        );
-    }
-
-    /**
-     *
-     * @param {*} props
-     */
-    const THSortableCol = (props) => {
-
-        const handleClick = () => {
-            dispatcher.dispatch({
-                actionType: 'FREQ_CT_SORT_FLAT_LIST',
-                props: {
-                    value: props.value,
-                    reversed: props.isActive ? !props.isReversed : false
-                }
-            });
-        };
-
-        const renderFlag = () => {
-            if (props.isActive) {
-                if (props.isReversed) {
-                    return <img src={he.createStaticUrl('img/sort_desc.svg')} />;
-
-                } else {
-                    return <img src={he.createStaticUrl('img/sort_asc.svg')} />;
-                }
-            }
-            return null;
-        };
-
-        return (
-            <th className="sort-col">
-                <a onClick={handleClick} title={he.translate('global__sort_by_this_col')}>
-                    {props.label}
-                    {renderFlag()}
-                </a>
-            </th>
-        );
-    }
-
-    /**
-     *
-     */
-    class CTFlatFreqResultView extends React.Component {
-
-        constructor(props) {
-            super(props);
-            this.state = this._fetchStoreState();
-            this._handleStoreChange = this._handleStoreChange.bind(this);
-        }
-
-        _fetchStoreState() {
-            return {
-                data: ctFlatFreqDataRowsStore.getData(),
-                attr1: ctFlatFreqDataRowsStore.getAttr1(),
-                attr2: ctFlatFreqDataRowsStore.getAttr2(),
-                minFreq: ctFlatFreqDataRowsStore.getMinFreq(),
-                minFreqType: ctFlatFreqDataRowsStore.getMinFreqType(),
-                sortCol: ctFlatFreqDataRowsStore.getSortCol(),
-                sortColIsReversed: ctFlatFreqDataRowsStore.getSortColIsReversed(),
-                confIntervalLeftMinWarn: ctFlatFreqDataRowsStore.getConfIntervalLeftMinWarn(),
-                alphaLevel: ctFlatFreqDataRowsStore.getAlphaLevel(),
-                availAlphaLevels: ctFlatFreqDataRowsStore.getAvailAlphaLevels(),
-                canProvideIpm: ctFreqDataRowsStore.canProvideIpm()
-            };
-        }
-
-        _handleStoreChange() {
-            this.setState(this._fetchStoreState());
-        }
-
-        componentDidMount() {
-            ctFlatFreqDataRowsStore.addChangeListener(this._handleStoreChange);
-        }
-
-        componentWillUnmount() {
-            ctFlatFreqDataRowsStore.removeChangeListener(this._handleStoreChange);
-        }
-
-        render() {
-            return (
-                <div className="CTFlatFreqResultView">
-                    <div className="toolbar">
-                        <form>
-                            <fieldset>
-                                <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
-                                <div>
-                                    <ul className="items">
-                                        <li>
-                                            <MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType}
-                                                    canProvideIpm={this.state.canProvideIpm} />
-                                        </li>
-                                        <li>
-                                            <AlphaLevelSelect alphaLevel={this.state.alphaLevel}
-                                                    availAlphaLevels={this.state.availAlphaLevels}
-                                                    confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />
-                                        </li>
-                                    </ul>
-                                </div>
-                            </fieldset>
-                        </form>
-                    </div>
-                    <table className="data">
-                        <tbody>
-                            <tr>
-                                <th />
-                                <th>
-                                    {he.translate('freq__ct_filter_th')}
-                                </th>
-                                <THSortableCol label={this.state.attr1} value={this.state.attr1}
-                                        isActive={this.state.sortCol === this.state.attr1}
-                                        isReversed={this.state.sortCol === this.state.attr1 && this.state.sortColIsReversed}
-                                         />
-                                <th>{this.state.attr2}</th>
-                                <THSortableCol label={he.translate('freq__ct_abs_freq_label')}
-                                        value="abs" isActive={this.state.sortCol === 'abs'}
-                                        isReversed={this.state.sortCol === 'abs' && this.state.sortColIsReversed}
-                                        />
-                                {this.state.canProvideIpm ?
-                                    <THSortableCol label={he.translate('freq__ct_ipm_freq_label')}
-                                            value="ipm" isActive={this.state.sortCol === 'ipm'}
-                                            isReversed={this.state.sortCol === 'ipm' && this.state.sortColIsReversed} /> :
-                                    null
-                                }
-                            </tr>
-                            {this.state.data.map((item, i) =>
-                                <TRFlatListRow key={`r_${i}`} idx={i+1} data={item}
-                                        confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
-                                        canProvideIpm={this.state.canProvideIpm} />)}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        }
-    }
-
-    /**
-     *
      */
     class CTFreqResultView extends React.Component {
 
@@ -1222,7 +945,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 case 'table':
                     return <CT2dFreqResultView {...this.props} />
                 case 'list':
-                    return <CTFlatFreqResultView {...this.props} />
+                    return <flatResultViews.CTFlatFreqResultView {...this.props} />
                 default:
                     return null;
             }
