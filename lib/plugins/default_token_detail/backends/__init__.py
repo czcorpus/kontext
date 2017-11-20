@@ -22,6 +22,7 @@ import sqlite3
 from hashlib import md5
 from functools import wraps
 import time
+import zlib
 
 from plugins.abstract.token_detail import AbstractBackend
 
@@ -30,6 +31,8 @@ def mk_token_detail_cache_key(pth, cls, word, lemma, pos, aligned_corpora, lang)
     """
     Returns a hashed cache key based on the passed parameters.
     """
+    if pth.endswith(".pyc"):
+        pth = pth[:-1]
     return md5('%r%r%r%r%r%r%r' % (pth, cls, word, lemma, pos, aligned_corpora, lang)).hexdigest()
 
 
@@ -55,13 +58,19 @@ def cached(f):
             conn = sqlite3.connect(cache_path)
             curs = conn.cursor()
             res = curs.execute("SELECT data FROM cache WHERE key = ?", (key,)).fetchone()
-            # if result not found in cache, search for it in the backend
+            # if no result is found in the cache, call the backend function
             if res is None:
                 res = f(self, word, lemma, pos, aligned_corpora, lang)
-                # if result is found in the backend, cache it
+                # if a result is returned by the backend function, zip its data part and store it in the cache
                 if res:
+                    zipped = buffer(zlib.compress(res[0]))
                     curs.execute("INSERT INTO cache (key, data, last_access) VALUES (?,?,?)",
-                                 (key, res[0], int(round(time.time()))))
+                                 (key, zipped, int(round(time.time()))))
+            else:
+                # unzip the cached result
+                res = [zlib.decompress(res[0])]
+                # update last access
+                curs.execute("UPDATE cache SET last_access = ? WHERE key = ?", (int(round(time.time())), key))
             conn.commit()
             conn.close()
         else:
