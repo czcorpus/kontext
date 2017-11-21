@@ -31,8 +31,9 @@ import corplib
 import conclib
 import settings
 import plugins
-from bgcalc import UnfinishedConcordanceError
+from bgcalc import UnfinishedConcordanceError, is_celery_user_error
 from translation import ugettext as _
+from controller.errors import UserActionException
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
@@ -176,7 +177,8 @@ def build_arf_db(corp, attrname):
         for m in ('frq', 'arf', 'docf'):
             logfilename_m = create_log_path(base_path, m)
             write_log_header(corp, logfilename_m)
-            res = app.send_task('worker.compile_%s' % m, (corp.corpname, subc_path, attrname, logfilename_m))
+            res = app.send_task('worker.compile_%s' %
+                                m, (corp.corpname, subc_path, attrname, logfilename_m))
             task_ids.append(res.id)
         return task_ids
 
@@ -227,7 +229,8 @@ class FreqCalcCache(object):
         return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
 
     def get(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
-        cache_path = self._cache_file_path(fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale)
+        cache_path = self._cache_file_path(
+            fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale)
         if os.path.isfile(cache_path):
             with open(cache_path, 'rb') as f:
                 data = pickle.load(f)
@@ -415,7 +418,8 @@ class CTCalculation(object):
             attrs.append(crit_lx[i])
 
         if len(attrs) > 2:
-            raise CTCalculationError('Exactly two attributes (either positional or structural) can be used')
+            raise CTCalculationError(
+                'Exactly two attributes (either positional or structural) can be used')
 
         words = [tuple(self._conc.import_string(w).split('\t')) for w in words]
 
@@ -428,10 +432,22 @@ class CTCalculation(object):
         else:
             norms = [self._corp.size()] * len(words)
         ans = zip(words, freqs, norms)
-        if limit_type == 'abs':
-            return ans
-        else:
-            return [v for v in ans if v[1] / float(v[2]) * 1e6 >= limit]
+        if limit_type == 'ipm':
+            ans = [v for v in ans if v[1] / float(v[2]) * 1e6 >= limit]
+        elif limit_type == 'pabs':
+            values = sorted(ans, key=lambda v: v[1])
+            # math.floor(x) == math.ceil(x) - 1 (indexing from 0)
+            plimit = math.floor(limit / 100. * len(values))
+            ans = values[plimit:]
+        elif limit_type == 'pipm':
+            values = sorted(ans, key=lambda v: v[1] / float(v[2]) * 1e6)
+            # math.floor(x) == math.ceil(x) - 1 (indexing from 0)
+            plimit = math.floor(limit / 100. * len(values))
+            ans = values[plimit:]
+        if len(ans) > 1000:
+            raise UserActionException(
+                'The result size is too high. Please try to increase the minimum frequency.')
+        return ans
 
     def run(self):
         """
@@ -452,9 +468,15 @@ def calculate_freqs_ct(args):
     backend, conf = settings.get_full('global', 'calc_backend')
     if backend == 'celery':
         import task
-        app = task.get_celery_app(conf['conf'])
-        res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),))
-        calc_result = res.get()
+        try:
+            app = task.get_celery_app(conf['conf'])
+            res = app.send_task('worker.calculate_freqs_ct', args=(args.to_dict(),))
+            calc_result = res.get()
+        except Exception as ex:
+            if is_celery_user_error(ex):
+                raise UserActionException(ex.message)
+            else:
+                raise ex
     elif backend == 'multiprocessing':
         calc_result = calculate_freqs_mp(args)
     else:
