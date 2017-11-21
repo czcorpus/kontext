@@ -409,7 +409,7 @@ class CTCalculation(object):
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
 
-        abs_limit = limit if limit_type == 'abs' else 1
+        abs_limit = 1  # we always fetch all the values to be able to filter by percentiles and provide misc. info
         self._corp.freq_dist(self._conc.RS(), crit, abs_limit, words, freqs, norms)
 
         crit_lx = re.split(r'\s+', crit)
@@ -431,23 +431,24 @@ class CTCalculation(object):
             norms = self._calc_1sattr_norms(words, sattr=attrs[sattr_idx], sattr_idx=sattr_idx)
         else:
             norms = [self._corp.size()] * len(words)
-        ans = zip(words, freqs, norms)
-        if limit_type == 'ipm':
-            ans = [v for v in ans if v[1] / float(v[2]) * 1e6 >= limit]
+        mans = zip(words, freqs, norms)
+        if limit_type == 'abs':
+            ans = [v for v in mans if v[1] >= limit]
+        elif limit_type == 'ipm':
+            ans = [v for v in mans if v[1] / float(v[2]) * 1e6 >= limit]
         elif limit_type == 'pabs':
-            values = sorted(ans, key=lambda v: v[1])
-            # math.floor(x) == math.ceil(x) - 1 (indexing from 0)
-            plimit = math.floor(limit / 100. * len(values))
+            values = sorted(mans, key=lambda v: v[1])
+            plimit = int(math.floor(limit / 100. * len(values)))
             ans = values[plimit:]
         elif limit_type == 'pipm':
-            values = sorted(ans, key=lambda v: v[1] / float(v[2]) * 1e6)
+            values = sorted(mans, key=lambda v: v[1] / float(v[2]) * 1e6)
             # math.floor(x) == math.ceil(x) - 1 (indexing from 0)
             plimit = math.floor(limit / 100. * len(values))
             ans = values[plimit:]
         if len(ans) > 1000:
             raise UserActionException(
                 'The result size is too high. Please try to increase the minimum frequency.')
-        return ans
+        return ans, len(mans)
 
     def run(self):
         """
@@ -457,8 +458,9 @@ class CTCalculation(object):
         self._corp = cm.get_Corpus(self._args.corpname, self._args.subcname)
         self._conc = conclib.get_conc(corp=self._corp, user_id=self._args.user_id, minsize=self._args.minsize,
                                       q=self._args.q, fromp=0, pagesize=0, async=0, save=0, samplesize=0)
-        return [x[0] + x[1:] for x in self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
-                                                   limit_type=self._args.ctminfreq_type)]
+        result, full_size = self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
+                                         limit_type=self._args.ctminfreq_type)
+        return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
 
 
 def calculate_freqs_ct(args):
@@ -478,7 +480,7 @@ def calculate_freqs_ct(args):
             else:
                 raise ex
     elif backend == 'multiprocessing':
-        calc_result = calculate_freqs_mp(args)
+            raise NotImplementedError('Multi-processing backend is not yet supported for freq_ct calculation')
     else:
         raise ValueError('Invalid backend')
     return calc_result

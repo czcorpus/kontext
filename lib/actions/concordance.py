@@ -1120,7 +1120,7 @@ class Actions(Querying):
         try:
             ans = freq_calc.calculate_freqs_ct(args)
         except UserActionException as ex:
-            ans = []
+            ans = dict(data=[], full_size=0)
             self.add_system_message('error', ex.message)
 
         self._add_flux_save_menu_item('XLSX', save_format='xlsx')

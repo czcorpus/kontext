@@ -27,6 +27,9 @@ import * as React from 'vendor/react';
  * @param {*} he
  */
 export function init(dispatcher, he) {
+
+    const layoutViews = he.getLayoutViews();
+
     /**
      *
      */
@@ -52,8 +55,13 @@ export function init(dispatcher, he) {
                 {'\u00a0'}
                 <select onChange={handleTypeChange} value={props.freqType}>
                     <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
+                    <option value="pabs">{he.translate('freq__ct_min_pabs_freq_opt')}</option>
                     {props.canProvideIpm ?
                         <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option> :
+                        null
+                    }
+                    {props.canProvideIpm ?
+                        <option value="pipm">{he.translate('freq__ct_min_pipm_opt')}</option> :
                         null
                     }
                 </select>
@@ -61,6 +69,28 @@ export function init(dispatcher, he) {
                 <input type="text" style={{width: '3em'}} value={props.currVal}
                         onChange={handleInputChange} />
             </label>
+        );
+    };
+
+    // ----------------------- <ConfidenceIntervalHint /> --------------------
+
+    const ConfidenceIntervalHint = (props) => {
+        return (
+            <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true} customClass="hint">
+                <p>
+                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}',
+                        {threshold: props.confIntervalLeftMinWarn})}
+                </p>
+                <p>{he.translate('freq__ct_references')}:</p>
+                <ul className="references">
+                    <li>
+                        Wallis, Sean 2012 - <a href="https://corplingstats.wordpress.com/2012/04/30/inferential-statistics/" target="_blank">Inferential statistics – and other animals</a>
+                    </li>
+                    <li>
+                        <a href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval" target="_blank">Wilson score interval</a> (Wikipedia)
+                    </li>
+                </ul>
+            </layoutViews.PopupBox>
         );
     };
 

@@ -24,7 +24,23 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../pages/document';
-import {getAvailConfLevels} from './statTables';
+import {availConfLevels} from './confIntervalCalc';
+
+
+export function wilsonConfInterval(v:number, base:number, alphaId:string):[number, number] {
+    const z = {
+        '0.1': 1.6448536269514722,
+        '0.05': 1.959963984540054,
+        '0.01': 2.5758293035489004
+    }[alphaId];
+    const p = v / base;
+    const sq = z * Math.sqrt( p * (1 - p) / base + z ** 2 / (4 * base ** 2) );
+    const denom = 1 + z ** 2 / base;
+    const a = p + z ** 2 / (2 * base);
+
+    return [(a - sq) / denom, (a + sq) / denom];
+}
+
 
 
 const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
@@ -56,7 +72,7 @@ export interface CTFormProperties extends CTFormInputs {
 
 
 export interface CTFreqCell {
-    order:number;
+    origOrder:number;
     abs:number;
     absConfInterval:[number, number];
     ipm:number;
@@ -68,6 +84,19 @@ export interface CTFreqCell {
 
 
 export const roundFloat = (v:number):number => Math.round(v * 100) / 100;
+
+
+export const enum FreqQuantities {
+    ABS = "abs",
+    IPM = "ipm"
+}
+
+export const enum FreqFilterQuantities {
+    ABS = "abs",
+    ABS_PERCENTILE = "pabs",
+    IPM = "ipm",
+    IPM_PERCENTILE = "pipm"
+}
 
 
 export abstract class GeneralCTStore extends SimplePageStore {
@@ -111,6 +140,13 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     private availAlphaLevels:Immutable.List<[string, string]>;
 
+    /**
+     * A total number of possible items (meaning: all the combinations of attr1_val vs. attr2_val).
+     * This is calculated on server because some data are already filtered there so the client
+     * sees only a fraction.
+     */
+    protected fullSize:number;
+
     private static CONF_INTERVAL_LEFT_MIN_WARN = 0.0;
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
@@ -127,18 +163,38 @@ export abstract class GeneralCTStore extends SimplePageStore {
         this.availAlphaLevels = this.importAvailAlphaLevels();
         [this.ctxIndex1, this.alignType1] = this.importCtxValue(props.ctfcrit1);
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
+        this.fullSize = null;
     }
 
     protected calcIpm(v:FreqResultResponse.CTFreqResultItem) {
         return Math.round(v[2] / v[3] * 1e6 * 100) / 100;
     }
 
-    protected createMinFreqFilterFn():(item:CTFreqCell)=>boolean {
+    /**
+     * Generate a mapping from original items' order generated during
+     * import to indices within sorted list of these items according
+     * to the current freq. mode (ipm, abs). This is used when filtering
+     * values by percentile.
+     */
+    abstract createPercentileSortMapping():Immutable.Map<number, number>;
+
+    /**
+     *
+     */
+    protected createMinFreqFilterFn():(CTFreqCell)=>boolean {
+        const minFreq = parseInt(this.minFreq || '0', 10);
         switch (this.minFreqType) {
-            case 'abs':
-                return (v:CTFreqCell) => v && v.abs >= parseInt(this.minFreq || '0', 10);
-            case 'ipm':
-                return (v:CTFreqCell) => v && v.ipm >= parseInt(this.minFreq || '0', 10);
+            case FreqFilterQuantities.ABS:
+                return (v:CTFreqCell) => v && v.abs >= minFreq;
+            case FreqFilterQuantities.IPM:
+                return (v:CTFreqCell) => v && v.ipm >= minFreq;
+            case FreqFilterQuantities.ABS_PERCENTILE:
+            case FreqFilterQuantities.IPM_PERCENTILE:
+                const sortMap = this.createPercentileSortMapping();
+                const emptyItemsRatio = 1 - sortMap.size / this.fullSize;
+                return (v:CTFreqCell) => {
+                    return v && sortMap.get(v.origOrder) / this.fullSize + emptyItemsRatio > minFreq / 100;
+                }
             default:
                 throw new Error('Unknown freq type: ' + this.minFreqType);
         }
@@ -146,18 +202,10 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     private importAvailAlphaLevels():Immutable.List<[string, string]> {
         return Immutable.List<[string, string]>(
-            getAvailConfLevels()
-                .sort((x1, x2) => {
-                    if (parseFloat(x1) > parseFloat(x2)) {
-                        return 1;
-                    }
-                    if (parseFloat(x1) < parseFloat(x2)) {
-                        return -1;
-                    }
-                    return 0;
-
-                }).map(item => {
-                    return <[string, string]>[item, (1 - parseFloat(item)).toFixed(2)];
+            availConfLevels
+                .sort((x1, x2) => parseFloat(x1) - parseFloat(x2))
+                .map(item => {
+                    return <[string, string]>[item, (1 - parseFloat(item)).toFixed(3)];
 
                 })
         );
