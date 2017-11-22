@@ -183,7 +183,9 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
                 {'\u00a0'}
                 <select onChange={handleTypeChange} value={props.freqType}>
                     <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
+                    <option value="pabs">{he.translate('freq__ct_min_pabs_freq_opt')}</option>
                     <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option>
+                    <option value="ipm">{he.translate('freq__ct_min_pipm_opt')}</option>
                 </select>
                 {'\u00a0'}:{'\u00a0'}
                 <input type="text" onChange={handleInputChange}

@@ -234,29 +234,6 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         );
     };
 
-    // ----------------------- <ConfidenceIntervalHint /> --------------------
-
-    const ConfidenceIntervalHint = (props) => {
-        return (
-            <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true} customClass="hint">
-                <p>
-                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}',
-                        {threshold: props.confIntervalLeftMinWarn})}
-                </p>
-                <p>{he.translate('freq__ct_references')}:</p>
-                <ul className="references">
-                    <li>
-                        Newcombe, Robert G.: <a href="https://books.google.cz/books?id=hQxvnp2b47YC&lpg=PA65&dq=%22Clopper-Pearson%22%20interval&pg=PP1#v=onepage&q=%22Clopper-Pearson%22%20interval&f=false">
-                        Confidence Intervals for Proportions and Related Measures of Effect Size</a> (CRC Press 2013)
-                    </li>
-                    <li>
-                        <a href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval">Binomial proportion confidence interval</a> (Wikipedia)
-                    </li>
-                </ul>
-            </layoutViews.PopupBox>
-        );
-    };
-
     /**
      *
      * @param {*} props
@@ -660,7 +637,31 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
      *
      * @param {*} props
      */
-    const CTDataTable = (props) => {
+    const CTEmptyDataTable = (props) => {
+        return (
+            <div>
+                <table className="ct-data">
+                    <tbody>
+                        <tr>
+                            <THRowColLabels attr1={props.attr1} attr2={props.attr2} />
+                            <th />
+                        </tr>
+                        <tr>
+                            <th />
+                            <td className="empty-cell">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
+
+    /**
+     *
+     * @param {*} props
+     */
+    const CTFullDataTable = (props) => {
         const labels1 = () => {
             return props.d1Labels.filter(x => x[1]).map(x => x[0]);
         };
@@ -758,9 +759,25 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                         })}
                     </tbody>
                 </table>
+                <TableInfo {...props.tableInfo} />
             </div>
         );
     };
+
+
+    /**
+     *
+     * @param {*} props
+     */
+    const CTDataTable = (props) => {
+        if (!props.isEmpty) {
+            return <CTFullDataTable {...props} />
+
+        } else {
+            return <CTEmptyDataTable attr1={props.attr1} attr2={props.attr2} />
+        }
+    }
+
 
     /**
      *
@@ -782,6 +799,21 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                     </tr>
                 </tbody>
             </table>
+        );
+    };
+
+    /**
+     *
+     * @param {*} props
+     */
+    const TableInfo = (props) => {
+        return (
+            <p>
+                {he.translate('freq__ct_total_nonzero_pairs')}:{'\u00a0'}
+                <strong>{he.formatNumber(props.numNonZero)},{'\u00a0'}</strong>
+                {he.translate('freq__ct_total_abs_frequency')}:{'\u00a0'}
+                <strong>{he.formatNumber(props.totalAbs)}</strong>
+            </p>
         );
     };
 
@@ -821,7 +853,9 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 colorMapping: ctFreqDataRowsStore.getColorMapping(),
                 highlightedGroup: ctFreqDataRowsStore.getHighlightedGroup(),
                 quickFreqMode: ctFreqDataRowsStore.getQuickFreqMode(),
-                canProvideIpm: ctFreqDataRowsStore.canProvideIpm()
+                canProvideIpm: ctFreqDataRowsStore.canProvideIpm(),
+                isEmpty: ctFreqDataRowsStore.isEmpty(),
+                tableInfo: ctFreqDataRowsStore.getTableInfo()
             };
         }
 
@@ -918,7 +952,9 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 highlightedCoord={this.state.highlightedCoord}
                                 confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn}
                                 highlightedGroup={this.state.highlightedGroup}
-                                canProvideIpm={this.state.canProvideIpm} />
+                                canProvideIpm={this.state.canProvideIpm}
+                                isEmpty={this.state.isEmpty}
+                                tableInfo={this.state.tableInfo} />
                     }
                 </div>
             );

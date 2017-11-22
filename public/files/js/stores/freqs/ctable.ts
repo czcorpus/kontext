@@ -27,8 +27,8 @@ import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
-import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat} from './generalCtable';
-import {confIntervalClopperPearson, getAvailConfLevels} from './statTables';
+import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat, FreqQuantities} from './generalCtable';
+import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
 
 /**
@@ -106,12 +106,6 @@ export const enum ColorMappings {
 }
 
 
-export const enum DisplayQuantities {
-    ABS = "abs",
-    IPM = "ipm"
-}
-
-
 /**
  *
  */
@@ -135,7 +129,7 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private colorMapping:ColorMappings;
 
-    private displayQuantity:DisplayQuantities;
+    private displayQuantity:FreqQuantities;
 
     /**
      * A lower freq. limit used by server when fetching data.
@@ -168,7 +162,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.sortDim2 = 'attr';
         this.serverMinFreq = parseInt(props.ctminfreq, 10);
         this.isWaiting = false;
-        this.displayQuantity = DisplayQuantities.ABS;
+        this.displayQuantity = FreqQuantities.ABS;
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
         this.highlightedGroup = [null, null];
 
@@ -367,6 +361,31 @@ export class ContingencyTableStore extends GeneralCTStore {
         return items.sort((x1, x2) => cmpValFn(x1[0], x2[0])).toList();
     }
 
+
+    createPercentileSortMapping():Immutable.Map<number, number> {
+        const fetchFreq = this.getFreqFetchFn();
+        const data = mapDataTableAsList(this.origData, x => [x.origOrder, fetchFreq(x)]);
+        return Immutable.Map<number, number>(data
+            .filter(x => x !== undefined)
+            .sort((x1, x2) => x1[1] - x2[1])
+            .map((x, i) => [x[0], i]));
+    }
+
+    getTableInfo():{size:number, numNonZero:number, totalAbs:number} {
+        let size = this.fullSize;
+        let numNonZero:number = 0;
+        let totalAbs:number = 0;
+        for (let p in this.data) {
+            for (let p2 in this.data[p]) {
+                if (this.data[p] && this.data[p][p2]) {
+                    numNonZero += 1;
+                    totalAbs += this.data[p][p2].abs;
+                }
+            }
+        }
+        return {size: size, numNonZero: numNonZero, totalAbs: totalAbs};
+    }
+
     private updateLocalData():void {
         this.data = filterDataTable(this.origData, this.createMinFreqFilterFn());
         if (this.filterZeroVectors) {
@@ -509,9 +528,9 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private recalculateConfIntervals():void {
         this.origData = mapDataTable(this.origData, cell => {
-            const confInt = confIntervalClopperPearson(cell.abs, cell.domainSize, this.alphaLevel);
+            const confInt = wilsonConfInterval(cell.abs, cell.domainSize, this.alphaLevel);
             return {
-                order: cell.order,
+                origOrder: cell.origOrder,
                 ipm: cell.ipm,
                 ipmConfInterval: [confInt[0] * 1e6, confInt[1] * 1e6],
                 abs: cell.abs,
@@ -528,7 +547,8 @@ export class ContingencyTableStore extends GeneralCTStore {
         const d2Labels:{[name:string]:boolean} = {};
         const tableData:Data2DTable = {};
 
-        data.forEach((item, i) => {
+        this.fullSize = data.full_size;
+        data.data.forEach((item, i) => {
             d1Labels[item[0]] = true;
             d2Labels[item[1]] = true;
 
@@ -536,9 +556,9 @@ export class ContingencyTableStore extends GeneralCTStore {
                 tableData[item[0]] = {};
             }
             const ipm = this.calcIpm(item);
-            const confInt = confIntervalClopperPearson(item[2], item[3], this.alphaLevel);
+            const confInt = wilsonConfInterval(item[2], item[3], this.alphaLevel);
             tableData[item[0]][item[1]] = {
-                order: i,
+                origOrder: i,
                 ipm: ipm,
                 ipmConfInterval: [roundFloat(confInt[0] * 1e6), roundFloat(confInt[1] * 1e6)],
                 abs: item[2],
@@ -557,9 +577,9 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private getFreqFetchFn():(c:CTFreqCell)=>number {
         switch (this.displayQuantity) {
-            case DisplayQuantities.ABS:
+            case FreqQuantities.ABS:
                 return (c:CTFreqCell) => c.abs;
-            case DisplayQuantities.IPM:
+            case FreqQuantities.IPM:
                 return (c:CTFreqCell) => c.ipm;
             default:
                 throw new Error('Unknown quantity: ' + this.displayQuantity);
@@ -568,7 +588,7 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     private recalcHeatmap():void {
         const fetchFreq = this.getFreqFetchFn();
-        const data = mapDataTableAsList(this.data, x => [x.order, fetchFreq(x)]);
+        const data = mapDataTableAsList(this.data, x => [x.origOrder, fetchFreq(x)]);
         let fMin = data.size > 0 ? data.find(x => x !== undefined)[1] : null;
         let fMax = data.size > 0 ? data.find(x => x !== undefined)[1] : null;
         data.filter(x => x !== undefined).forEach(item => {
@@ -592,7 +612,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                     .sort((x1, x2) => x1[1] - x2[1])
                     .map((x, i) => [x[0], i]));
 
-                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor(ordered.get(c.order) * (a + 1) / ordered.size)]
+                return (c:CTFreqCell) => ContingencyTableStore.COLOR_HEATMAP[~~Math.floor(ordered.get(c.origOrder) * (a + 1) / ordered.size)];
 
             } else {
                 throw new Error('Falied to define mapping func');
@@ -606,7 +626,7 @@ export class ContingencyTableStore extends GeneralCTStore {
             domainSize: item.domainSize,
             ipm: item.ipm,
             ipmConfInterval: item.ipmConfInterval,
-            order: item.order,
+            origOrder: item.origOrder,
             pfilter: item.pfilter
         }));
     }
@@ -664,9 +684,9 @@ export class ContingencyTableStore extends GeneralCTStore {
 
         const fetchVals:(c:CTFreqCell)=>NumberTriple = (() => {
             switch (this.displayQuantity) {
-                case DisplayQuantities.ABS:
+                case FreqQuantities.ABS:
                 return (c:CTFreqCell) => <NumberTriple>[c.absConfInterval[0], c.abs, c.absConfInterval[1]];
-                case DisplayQuantities.IPM:
+                case FreqQuantities.IPM:
                 return (c:CTFreqCell) => <NumberTriple>[c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1]];
                 default:
                 throw new Error('Unknown display quantity');
@@ -735,7 +755,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         return this.colorMapping;
     }
 
-    getDisplayQuantity():DisplayQuantities {
+    getDisplayQuantity():FreqQuantities {
         return this.displayQuantity;
     }
 
@@ -748,5 +768,9 @@ export class ContingencyTableStore extends GeneralCTStore {
             return this.displayQuantity;
         }
         return null;
+    }
+
+    isEmpty():boolean {
+        return Object.keys(this.data).length === 0;
     }
 }

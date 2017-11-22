@@ -270,7 +270,11 @@ declare module FreqResultResponse {
     }
 
     export type CTFreqResultItem = [string, string, number, number];
-    export type CTFreqResultData = Array<CTFreqResultItem>;
+
+    export interface CTFreqResultData {
+        data: Array<CTFreqResultItem>;
+        full_size:number;
+    }
 
     export interface CTFreqResultResponse extends Kontext.AjaxConcResponse {
         data:CTFreqResultData;

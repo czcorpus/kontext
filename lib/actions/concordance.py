@@ -30,8 +30,7 @@ from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 import settings
 import conclib
 import corplib
-from bgcalc import freq_calc
-from bgcalc import coll_calc
+from bgcalc import freq_calc, coll_calc
 import plugins
 from kwiclib import Kwic, KwicPageArgs
 import l10n
@@ -1118,7 +1117,11 @@ class Actions(Querying):
         args.ctminfreq_type = request.args.get('ctminfreq_type')
         args.fcrit = '{0} {1} {2} {3}'.format(self.args.ctattr1, self.args.ctfcrit1,
                                               self.args.ctattr2, self.args.ctfcrit2)
-        ans = freq_calc.calculate_freqs_ct(args)
+        try:
+            ans = freq_calc.calculate_freqs_ct(args)
+        except UserActionException as ex:
+            ans = dict(data=[], full_size=0)
+            self.add_system_message('error', ex.message)
 
         self._add_flux_save_menu_item('XLSX', save_format='xlsx')
 

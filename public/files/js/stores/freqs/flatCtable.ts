@@ -25,8 +25,8 @@
 
 import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
-import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat} from './generalCtable';
-import {confIntervalClopperPearson} from './statTables';
+import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat, FreqFilterQuantities} from './generalCtable';
+import {wilsonConfInterval} from './confIntervalCalc';
 
 /**
  *
@@ -95,9 +95,9 @@ export class CTFlatStore extends GeneralCTStore {
 
     private recalculateConfIntervals():void {
         this.origData = this.origData.map((cell, i) => {
-            const confInt = confIntervalClopperPearson(cell.abs, cell.domainSize, this.alphaLevel);
+            const confInt = wilsonConfInterval(cell.abs, cell.domainSize, this.alphaLevel);
             return {
-                order: i,
+                origOrder: i,
                 val1: cell.val1,
                 val2: cell.val2,
                 ipm: cell.ipm,
@@ -154,9 +154,11 @@ export class CTFlatStore extends GeneralCTStore {
     }
 
     importData(data:FreqResultResponse.CTFreqResultData):void {
-        this.origData = Immutable.List<FreqDataItem>(data.map(item => {
-            const confInt = confIntervalClopperPearson(item[2], item[3], this.alphaLevel);
+        this.fullSize = data.full_size;
+        this.origData = Immutable.List<FreqDataItem>(data.data.map((item, i) => {
+            const confInt = wilsonConfInterval(item[2], item[3], this.alphaLevel);
             return {
+                origOrder: i,
                 val1: item[0],
                 val2: item[1],
                 abs: item[2],
@@ -168,6 +170,28 @@ export class CTFlatStore extends GeneralCTStore {
             };
         }));
         this.updateData();
+    }
+
+    private getFreqFetchFn():(c:CTFreqCell)=>number {
+        switch (this.minFreqType) {
+            case FreqFilterQuantities.ABS:
+            case FreqFilterQuantities.ABS_PERCENTILE:
+                return (c:CTFreqCell) => c.abs;
+            case FreqFilterQuantities.IPM:
+            case FreqFilterQuantities.IPM_PERCENTILE:
+                return (c:CTFreqCell) => c.ipm;
+            default:
+                throw new Error('Unknown quantity: ' + this.minFreqType);
+        }
+    }
+
+    createPercentileSortMapping():Immutable.Map<number, number> {
+        const fetchFreq = this.getFreqFetchFn();
+        return Immutable.Map<number, number>(this.origData
+            .map(x => [x.origOrder, fetchFreq(x)])
+            .filter(x => x !== undefined)
+            .sort((x1, x2) => x1[1] - x2[1])
+            .map((x, i) => [x[0], i]));
     }
 
     importDataAndNotify(data:FreqResultResponse.CTFreqResultData):void {
