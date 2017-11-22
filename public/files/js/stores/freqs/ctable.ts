@@ -242,10 +242,6 @@ export class ContingencyTableStore extends GeneralCTStore {
                     this.updateLocalData();
                     this.notifyChangeListeners();
                 break;
-                case 'MAIN_MENU_DIRECT_SAVE':
-                    this.submitDataConversion(payload.props['saveformat']);
-                    // no need to notify here
-                break;
                 case 'FREQ_CT_SET_DISPLAY_QUANTITY':
                     this.displayQuantity = payload.props['value'];
                     this.recalcHeatmap();
@@ -290,11 +286,12 @@ export class ContingencyTableStore extends GeneralCTStore {
         }, 400);
     }
 
-    private submitDataConversion(format:string):void {
+    submitDataConversion(format:string):void {
         const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
         const form = <HTMLFormElement>document.getElementById('iframe-submit-form');
         const args = new MultiDict();
         args.set('saveformat', format);
+        args.set('savemode', 'table');
         form.setAttribute('action', this.pageModel.createActionUrl('export_freqct', args));
         const dataElm = document.getElementById('iframe-submit-data');
         dataElm.setAttribute('value', JSON.stringify(this.exportData()));
@@ -685,9 +682,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         const fetchVals:(c:CTFreqCell)=>NumberTriple = (() => {
             switch (this.displayQuantity) {
                 case FreqQuantities.ABS:
-                return (c:CTFreqCell) => <NumberTriple>[c.absConfInterval[0], c.abs, c.absConfInterval[1]];
+                return (c:CTFreqCell) => <NumberTriple>[c.absConfInterval[0], c.abs, c.absConfInterval[1], c.bgColor];
                 case FreqQuantities.IPM:
-                return (c:CTFreqCell) => <NumberTriple>[c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1]];
+                return (c:CTFreqCell) => <NumberTriple>[c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1], c.bgColor];
                 default:
                 throw new Error('Unknown display quantity');
             }
@@ -712,7 +709,7 @@ export class ContingencyTableStore extends GeneralCTStore {
             attr2: this.attr2,
             labels1: d1Labels.toArray(),
             labels2: d2Labels.toArray(),
-            minFreq: parseInt(this.minFreq, 10),
+            minFreq: parseFloat(this.minFreq),
             minFreqType: this.minFreqType,
             alphaLevel: parseFloat(this.alphaLevel),
             data: rows
