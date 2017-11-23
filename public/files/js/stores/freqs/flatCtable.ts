@@ -27,6 +27,7 @@ import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat, FreqFilterQuantities} from './generalCtable';
 import {wilsonConfInterval} from './confIntervalCalc';
+import {MultiDict} from '../../util';
 
 /**
  *
@@ -34,6 +35,17 @@ import {wilsonConfInterval} from './confIntervalCalc';
 export interface FreqDataItem extends CTFreqCell {
     val1:string;
     val2:string;
+}
+
+export type ExportTableRow = [string, string, number, number, number, number, number, number];
+
+export interface FormatConversionExportData {
+    attr1:string;
+    attr2:string;
+    minFreq:number;
+    minFreqType:string;
+    alphaLevel:number;
+    data:Array<ExportTableRow>;
 }
 
 /**
@@ -197,6 +209,39 @@ export class CTFlatStore extends GeneralCTStore {
     importDataAndNotify(data:FreqResultResponse.CTFreqResultData):void {
         this.importData(data);
         this.notifyChangeListeners();
+    }
+
+    exportData():FormatConversionExportData {
+        const data = this.data.map<ExportTableRow>(v => ([
+            v.val1,
+            v.val2,
+            v.absConfInterval[0],
+            v.abs,
+            v.absConfInterval[1],
+            v.ipmConfInterval[0],
+            v.ipm,
+            v.ipmConfInterval[1]
+        ]));
+        return {
+            attr1: this.attr1,
+            attr2: this.attr2,
+            minFreq: parseFloat(this.minFreq),
+            minFreqType: this.minFreqType,
+            alphaLevel: parseFloat(this.alphaLevel),
+            data: data.toArray()
+        };
+    }
+
+    submitDataConversion(format:string):void {
+        const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
+        const form = <HTMLFormElement>document.getElementById('iframe-submit-form');
+        const args = new MultiDict();
+        args.set('saveformat', format);
+        args.set('savemode', 'flat');
+        form.setAttribute('action', this.pageModel.createActionUrl('export_freqct', args));
+        const dataElm = document.getElementById('iframe-submit-data');
+        dataElm.setAttribute('value', JSON.stringify(this.exportData()));
+        form.submit();
     }
 
     getData():Immutable.List<FreqDataItem> {

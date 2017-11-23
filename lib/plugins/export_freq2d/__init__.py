@@ -31,7 +31,16 @@ class AbstractExportFreq2d(object):
     def content_type(self):
         raise NotImplementedError()
 
+    def set_mode(self, mode):
+        """
+        mode -- either 'table' or 'flat'
+        """
+        raise NotImplementedError()
+
     def set_content(self, attr1, attr2, labels1, labels2, alpha_level, min_freq, min_freq_type, data):
+        raise NotImplementedError()
+
+    def set_content_flat(self, headings, alpha_level, min_freq, min_freq_type, data):
         raise NotImplementedError()
 
     def raw_content(self):

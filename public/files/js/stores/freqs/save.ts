@@ -25,6 +25,8 @@ import * as Immutable from 'vendor/immutable';
 import {SimplePageStore, validateGzNumber, validateNumber} from '../../stores/base';
 import {PageModel} from '../../pages/document';
 import {MultiDict} from '../../util';
+import {ContingencyTableStore} from './ctable';
+import {CTFlatStore} from './flatCtable';
 
 /**
  *
@@ -180,4 +182,39 @@ export class FreqResultsSaveStore extends SimplePageStore {
     getToLine():string {
         return this.toLine;
     }
+}
+
+
+
+export class FreqCTResultsSaveStore extends SimplePageStore {
+
+    ctTableStore:ContingencyTableStore;
+
+    ctFlatStore:CTFlatStore;
+
+    saveMode:string;
+
+
+    constructor(dispatcher:Kontext.FluxDispatcher, ctTableStore:ContingencyTableStore, ctFlatStore:CTFlatStore) {
+        super(dispatcher);
+        this.ctTableStore = ctTableStore;
+        this.ctFlatStore = ctFlatStore;
+
+        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'FREQ_CT_SET_SAVE_MODE':
+                    this.saveMode = payload.props['value'];
+                break;
+                case 'MAIN_MENU_DIRECT_SAVE':
+                    if (this.saveMode === 'table') {
+                        this.ctTableStore.submitDataConversion(payload.props['saveformat']);
+
+                    } else if (this.saveMode === 'list') {
+                        this.ctFlatStore.submitDataConversion(payload.props['saveformat']);
+                    }
+                break;
+            }
+        });
+    }
+
 }

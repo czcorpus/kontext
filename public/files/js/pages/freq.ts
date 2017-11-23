@@ -38,7 +38,7 @@ import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview
 import {init as resultViewInit, FreqsResultViews} from 'views/freqs/main';
 import {init as ctResultViewInit, CTFreqsResultViews} from 'views/freqs/ctResult';
 import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
-import {FreqResultsSaveStore} from '../stores/freqs/save';
+import {FreqResultsSaveStore, FreqCTResultsSaveStore} from '../stores/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
 
 declare var require:any;
@@ -59,6 +59,8 @@ class FreqPage {
     private ctFreqStore:ContingencyTableStore;
 
     private ctFlatFreqStore:CTFlatStore;
+
+    private ctResultSaveStore:FreqCTResultsSaveStore;
 
     private collFormStore:CollFormStore;
 
@@ -124,6 +126,12 @@ class FreqPage {
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps
+        );
+
+        this.ctResultSaveStore = new FreqCTResultsSaveStore(
+            this.layoutModel.dispatcher,
+            this.ctFreqStore,
+            this.ctFlatFreqStore
         );
 
         const freqFormViews = freqFormInit(

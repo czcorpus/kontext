@@ -973,6 +973,10 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         }
 
         _handleModeSwitch(evt) {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_SAVE_MODE',
+                props: {value: evt.target.value}
+            });
             this.setState({mode: evt.target.value});
         }
 

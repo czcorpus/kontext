@@ -1140,10 +1140,15 @@ class Actions(Querying):
         with plugins.runtime.EXPORT_FREQ2D as plg:
             data = json.loads(request.form['data'])
             exporter = plg.load_plugin(request.args['saveformat'])
-            exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
-                                 labels1=data['labels1'], labels2=data['labels2'], alpha_level=data['alphaLevel'],
-                                 min_freq=data['minFreq'], min_freq_type=data['minFreqType'],
-                                 data=data['data'])
+            if request.args['savemode'] == 'table':
+                exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
+                                     labels1=data.get('labels1', []), labels2=data.get('labels2', []),
+                                     alpha_level=data['alphaLevel'], min_freq=data['minFreq'],
+                                     min_freq_type=data['minFreqType'], data=data['data'])
+            elif request.args['savemode'] == 'flat':
+                exporter.set_content_flat(headings=data.get('headings', []), alpha_level=data['alphaLevel'],
+                                          min_freq=data['minFreq'], min_freq_type=data['minFreqType'],
+                                          data=data['data'])
             self._headers['Content-Type'] = exporter.content_type()
             self._headers['Content-Disposition'] = 'attachment; filename="{0}-2dfreq-distrib.xlsx"'.format(
                 self.args.corpname)
