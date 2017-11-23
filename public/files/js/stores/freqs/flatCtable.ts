@@ -40,8 +40,7 @@ export interface FreqDataItem extends CTFreqCell {
 export type ExportTableRow = [string, string, number, number, number, number, number, number];
 
 export interface FormatConversionExportData {
-    attr1:string;
-    attr2:string;
+    headings:Array<string>;
     minFreq:number;
     minFreqType:string;
     alphaLevel:number;
@@ -223,8 +222,16 @@ export class CTFlatStore extends GeneralCTStore {
             v.ipmConfInterval[1]
         ]));
         return {
-            attr1: this.attr1,
-            attr2: this.attr2,
+            headings: [
+                this.attr1,
+                this.attr2,
+                '',
+                this.pageModel.translate('freq__ct_abs_freq_label'),
+                '',
+                '',
+                this.pageModel.translate('freq__ct_ipm_freq_label'),
+                ''
+            ],
             minFreq: parseFloat(this.minFreq),
             minFreqType: this.minFreqType,
             alphaLevel: parseFloat(this.alphaLevel),
@@ -263,5 +270,4 @@ export class CTFlatStore extends GeneralCTStore {
     getSortColIsReversed():boolean {
         return this.sortReversed;
     }
-
 }
