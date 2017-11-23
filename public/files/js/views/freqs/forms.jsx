@@ -23,7 +23,9 @@
 import * as React from 'vendor/react';
 
 
-export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormStore, ctFreqStore) {
+export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFormStore) {
+
+    const layoutViews = he.getLayoutViews();
 
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
@@ -41,28 +43,40 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
         return (
             <table className="struct-attr-list">
                 <tbody>
-                    {props.structAttrList.map((item, i) => {
-                        return (
-                            <tr key={`item_${i}`}>
-                                <td>
-                                    <label htmlFor={`ttsort_${i}`}>{item.label}</label>
+                    <tr>
+                        {props.structAttrListSplitTypes.map((chunk, i) => {
+                            return (
+                                <td key={`block${i}`} style={{verticalAlign: 'top'}}>
+                                    <table>
+                                        <tbody>
+                                            {chunk.map((item, j) => {
+                                                return (
+                                                    <tr key={`item_${j}`}>
+                                                        <td>
+                                                            <label htmlFor={`ttsort_${i}_${j}`}>{item.label}</label>
+                                                        </td>
+                                                        <td>
+                                                            <input id={`ttsort_${i}_${j}`}
+                                                                type="checkbox"
+                                                                value={item.n}
+                                                                checked={props.fttattr.contains(item.n)}
+                                                                onChange={handleCheckboxChange}  />
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </td>
-                                <td>
-                                    <input id={`ttsort_${i}`}
-                                        type="checkbox"
-                                        value={item.n}
-                                        checked={props.fttattr.contains(item.n)}
-                                        onChange={handleCheckboxChange}  />
-                                </td>
-                            </tr>
-                        );
-                    })}
+                            );
+                        })}
+                    </tr>
                 </tbody>
             </table>
         );
     };
 
-    // ---------------------- <StructAttrSelect /> --------------------------------------------
+    // ---------------------- <FreqLimitInput /> --------------------------------------------
 
     const FreqLimitInput = (props) => {
 
@@ -75,7 +89,7 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
             });
         };
 
-        return <input type="text" name="flimit" value={props.flimit}
+        return <input id="freq-limit-input" type="text" name="flimit" value={props.flimit}
                     style={{width: '3em'}} onChange={handleInputChange} />;
     };
 
@@ -90,7 +104,7 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
             });
         };
 
-        return <input type="checkbox" checked={props.fttIncludeEmpty}
+        return <input id="include-empty-checkbox" type="checkbox" checked={props.fttIncludeEmpty}
                     onChange={handleCheckboxChange} />;
     };
 
@@ -106,7 +120,7 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         _getStoreState() {
             return {
-                structAttrList: ttFreqFormStore.getStructAttrList(),
+                structAttrListSplitTypes: ttFreqFormStore.getStructAttrListSplitTypes(),
                 fttattr: ttFreqFormStore.getFttattr(),
                 fttIncludeEmpty: ttFreqFormStore.getFttIncludeEmpty(),
                 flimit: ttFreqFormStore.getFlimit()
@@ -127,32 +141,42 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         render() {
             return (
-                <table className="form">
-                    <tbody>
-                        <tr>
-                            <th>
-                                {he.translate('freq__freq_limit_label')}:
-                            </th>
-                            <td>
-                                <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_TT" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>
-                                {he.translate('freq__incl_no_hits_cats_label')}:
-                            </th>
-                            <td>
-                                <IncludeEmptyCheckbox fttIncludeEmpty={this.state.fttIncludeEmpty} />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colSpan="2">
-                                <StructAttrSelect structAttrList={this.state.structAttrList}
-                                        fttattr={this.state.fttattr} />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <table className="form">
+                        <tbody>
+                            <tr>
+                                <th>
+                                    <label htmlFor="freq-limit-input">
+                                        {he.translate('freq__freq_limit_label')}:
+                                    </label>
+                                </th>
+                                <td>
+                                    <FreqLimitInput flimit={this.state.flimit} actionPrefix="FREQ_TT" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>
+                                    <label htmlFor="include-empty-checkbox">
+                                        {he.translate('freq__incl_no_hits_cats_label')}:
+                                    </label>
+                                </th>
+                                <td>
+                                    <IncludeEmptyCheckbox fttIncludeEmpty={this.state.fttIncludeEmpty} />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table className="form">
+                        <tbody>
+                            <tr>
+                                <td colSpan="2">
+                                    <StructAttrSelect structAttrListSplitTypes={this.state.structAttrListSplitTypes}
+                                            fttattr={this.state.fttattr} />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             );
         }
     }
@@ -163,7 +187,7 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_FREQ',
+                actionType: 'FREQ_CT_FORM_SET_MIN_FREQ',
                 props: {
                     value: evt.target.value
                 }
@@ -172,25 +196,28 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         const handleTypeChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_MIN_FREQ_TYPE',
+                actionType: 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE',
                 props: {value: evt.target.value}
             });
         };
 
         return (
-            <label>
-                {he.translate('freq__ct_min_freq_label')}
-                {'\u00a0'}
-                <select onChange={handleTypeChange} value={props.freqType}>
-                    <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
-                    <option value="pabs">{he.translate('freq__ct_min_pabs_freq_opt')}</option>
-                    <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option>
-                    <option value="ipm">{he.translate('freq__ct_min_pipm_opt')}</option>
-                </select>
-                {'\u00a0'}:{'\u00a0'}
-                <input type="text" onChange={handleInputChange}
-                        value={props.value} style={{width: '3em'}} />
-            </label>
+            <span>
+                <label>
+                    {he.translate('freq__ct_min_freq_label')}
+                    {'\u00a0'}
+                    <select onChange={handleTypeChange} value={props.freqType}>
+                        <option value="abs">{he.translate('freq__ct_min_abs_freq_opt')}</option>
+                        <option value="pabs">{he.translate('freq__ct_min_pabs_freq_opt')}</option>
+                        <option value="ipm">{he.translate('freq__ct_min_ipm_opt')}</option>
+                        <option value="pipm">{he.translate('freq__ct_min_pipm_opt')}</option>
+                    </select>
+                    {'\u00a0'}:{'\u00a0'}
+                    <input type="text" onChange={handleInputChange}
+                            value={props.value} style={{width: '3em'}} />
+                </label>
+                {props.hint ? <span className="hint"> ({props.hint})</span> : null}
+            </span>
         );
     };
 
@@ -200,7 +227,7 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_CTX',
+                actionType: 'FREQ_CT_FORM_SET_CTX',
                 props: {
                     dim: props.dim,
                     value: parseInt(evt.target.value, 10)
@@ -221,7 +248,7 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
-                actionType: 'FREQ_CT_SET_ALIGN_TYPE',
+                actionType: 'FREQ_CT_FORM_SET_ALIGN_TYPE',
                 props: {
                     dim: props.dim,
                     value: evt.target.value
@@ -251,20 +278,21 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         _fetchState() {
             return {
-                posAttrs: ctFreqStore.getPosAttrs(),
-                structAttrs: ctFreqStore.getStructAttrs(),
-                attr1: ctFreqStore.getAttr1(),
-                attr1IsStruct: ctFreqStore.getAttr1IsStruct(),
-                attr2: ctFreqStore.getAttr2(),
-                attr2IsStruct: ctFreqStore.getAttr2IsStruct(),
-                minFreq: ctFreqStore.getMinFreq(),
-                minFreqType: ctFreqStore.getMinFreqType(),
-                setupError: ctFreqStore.getSetupError(),
-                positionRangeLabels: ctFreqStore.getPositionRangeLabels(),
-                alignType1: ctFreqStore.getAlignType(1),
-                alignType2: ctFreqStore.getAlignType(2),
-                ctxIndex1: ctFreqStore.getCtxIndex(1),
-                ctxIndex2: ctFreqStore.getCtxIndex(2)
+                posAttrs: ctFreqFormStore.getPosAttrs(),
+                structAttrs: ctFreqFormStore.getStructAttrs(),
+                attr1: ctFreqFormStore.getAttr1(),
+                attr1IsStruct: ctFreqFormStore.getAttr1IsStruct(),
+                attr2: ctFreqFormStore.getAttr2(),
+                attr2IsStruct: ctFreqFormStore.getAttr2IsStruct(),
+                minFreq: ctFreqFormStore.getMinFreq(),
+                minFreqType: ctFreqFormStore.getMinFreqType(),
+                minFreqHint: ctFreqFormStore.getMinFreqHint(),
+                setupError: ctFreqFormStore.getSetupError(),
+                positionRangeLabels: ctFreqFormStore.getPositionRangeLabels(),
+                alignType1: ctFreqFormStore.getAlignType(1),
+                alignType2: ctFreqFormStore.getAlignType(2),
+                ctxIndex1: ctFreqFormStore.getCtxIndex(1),
+                ctxIndex2: ctFreqFormStore.getCtxIndex(2)
             };
         }
 
@@ -273,11 +301,11 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
         }
 
         componentDidMount() {
-            ctFreqStore.addChangeListener(this._storeChangeHandler);
+            ctFreqFormStore.addChangeListener(this._storeChangeHandler);
         }
 
         componentWillUnmount() {
-            ctFreqStore.removeChangeListener(this._storeChangeHandler);
+            ctFreqFormStore.removeChangeListener(this._storeChangeHandler);
         }
 
         _storeChangeHandler() {
@@ -342,7 +370,8 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
                         {this._rendersetupError()}
                     </div>
                     <div className="toolbar">
-                            <CTFreqFormMinFreqInput value={this.state.minFreq} freqType={this.state.minFreqType} />
+                            <CTFreqFormMinFreqInput value={this.state.minFreq} freqType={this.state.minFreqType}
+                                    hint={this.state.minFreqHint} />
                     </div>
                     <table className="form">
                         <tbody className="dim1">
@@ -687,6 +716,38 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
     }
 
 
+    // ---------------------- <FreqFormSelector /> ---------------------
+
+    const FreqFormSelector = (props) => {
+
+        const onItemClick = (ident) => {
+            return () => {
+                props.onChange(ident);
+            }
+        };
+
+        return (
+            <ul className="FreqFormSelector">
+                <li>
+                    <a className={props.formType === "ml" ? 'util-button active' : 'util-button'} onClick={onItemClick('ml')}>
+                        {he.translate('freq__sel_form_type_ml')}
+                    </a>
+                </li>
+                <li>
+                    <a className={props.formType === "tt" ? 'util-button active' : 'util-button'} onClick={onItemClick('tt')}>
+                        {he.translate('freq__sel_form_type_tt')}
+                    </a>
+                </li>
+                <li>
+                    <a className={props.formType === "ct" ? 'util-button active' : 'util-button'} onClick={onItemClick('ct')}>
+                        {he.translate('freq__sel_form_type_ct')}
+                    </a>
+                </li>
+            </ul>
+        );
+    };
+
+
     // ---------------------- <FrequencyForm /> ---------------------
 
     class FrequencyForm extends React.Component {
@@ -694,13 +755,13 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
         constructor(props) {
             super(props);
             this.state = {formType: this.props.initialFreqFormVariant};
-            this._handleFormSwitch = this._handleFormSwitch.bind(this);
             this._handleSubmitClick = this._handleSubmitClick.bind(this);
+            this._handleFormSwitch = this._handleFormSwitch.bind(this);
         }
 
-        _handleFormSwitch(evt) {
+        _handleFormSwitch(value) {
             this.setState({
-                formType: evt.target.value
+                formType: value
             });
         }
 
@@ -731,29 +792,18 @@ export function init(dispatcher, he, layoutViews, mlFreqFormStore, ttFreqFormSto
 
         render() {
             return (
-                <form className="freq-form">
-                    <fieldset>
-                        <legend>
-                            <select onChange={this._handleFormSwitch} value={this.state.formType}>
-                                <option value="ml">
-                                    {he.translate('freq__sel_form_type_ml')}
-                                </option>
-                                <option value="tt">
-                                    {he.translate('freq__sel_form_type_tt')}
-                                </option>
-                                <option value="ct">
-                                    {he.translate('freq__sel_form_type_ct')}
-                                </option>
-                            </select>
-                        </legend>
+                <div className="FrequencyForm">
+                    <FreqFormSelector formType={this.state.formType} onChange={this._handleFormSwitch} />
+                    <hr />
+                    <form className="freq-form">
                         {this._renderContents()}
-                    </fieldset>
-                    <div className="buttons">
-                        <button className="default-button" type="button" onClick={this._handleSubmitClick}>
-                            {he.translate('freq__make_freq_list_btn')}
-                        </button>
-                    </div>
-                </form>
+                        <div className="buttons">
+                            <button className="default-button" type="button" onClick={this._handleSubmitClick}>
+                                {he.translate('freq__make_freq_list_btn')}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             );
         }
     }

@@ -325,6 +325,19 @@ export class TTFreqFormStore extends SimplePageStore {
         return this.structAttrList;
     }
 
+    getStructAttrListSplitTypes():Immutable.List<Immutable.List<AttrValue>> {
+        const structOf = (a:AttrValue) => a.n.split('.')[0];
+        return this.structAttrList.reduce<Immutable.List<Immutable.List<AttrValue>>>((prev, curr) => {
+            if (prev.size === 0 || structOf(curr) !== structOf(prev.last().last())) {
+                return prev.push(Immutable.List<AttrValue>([{n: curr.n, label: curr.label}]));
+
+            } else {
+                const tmp = prev.last();
+                return prev.pop().push(tmp.push({n: curr.n, label: curr.label}));
+            }
+        }, Immutable.List<Immutable.List<AttrValue>>());
+    }
+
     getFttattr():Immutable.Set<string> {
         return this.fttattr;
     }

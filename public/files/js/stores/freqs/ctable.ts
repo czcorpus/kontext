@@ -27,19 +27,24 @@ import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
-import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat, FreqQuantities} from './generalCtable';
+import {GeneralCTStore, CTFreqCell, FreqQuantities} from './generalCtable';
+import {CTFormProperties, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
 
 /**
- *
+ * A representation of 2D freq table.
  */
 type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
 
+/**
+ * A helper type used when exporting data for Excel etc.
+ */
 type NumberTriple = [number, number, number];
 
 /**
- *
+ * A type representing exported (for Excel etc.) data
+ * sent to a server for conversion.
  */
 export interface FormatConversionExportData {
     attr1:string;
@@ -53,7 +58,8 @@ export interface FormatConversionExportData {
 }
 
 /**
- *
+ * A helper function used to apply a filter to an existing
+ * 2d data table. Returns a new instance.
  */
 const filterDataTable = (t:Data2DTable, cond:(cell:CTFreqCell)=>boolean):Data2DTable => {
     const ans:Data2DTable = {};
@@ -74,7 +80,7 @@ const filterDataTable = (t:Data2DTable, cond:(cell:CTFreqCell)=>boolean):Data2DT
 };
 
 /**
- *
+ * An implementation of MAP for 2d data table. Returns a new instance.
  */
 const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTable => {
     const ans:Data2DTable = {};
@@ -89,6 +95,10 @@ const mapDataTable = (t:Data2DTable, fn:(cell:CTFreqCell)=>CTFreqCell):Data2DTab
     return ans;
 };
 
+/**
+ * A function similar to flatMap which applies a provided function
+ * on existing 2d table and returns a 1d list.
+ */
 const mapDataTableAsList = <T>(t:Data2DTable, fn:(cell:CTFreqCell)=>T):Immutable.List<T> => {
     const ans:Array<T> = [];
     for (let k1 in t) {
@@ -99,7 +109,9 @@ const mapDataTableAsList = <T>(t:Data2DTable, fn:(cell:CTFreqCell)=>T):Immutable
     return Immutable.List(ans);
 };
 
-
+/**
+ * Available color mappings for 2d data table cells.
+ */
 export const enum ColorMappings {
     LINEAR = "linear",
     PERCENTILE = "percentile"
@@ -107,22 +119,46 @@ export const enum ColorMappings {
 
 
 /**
- *
+ * A store for 2d frequency table operations
  */
 export class ContingencyTableStore extends GeneralCTStore {
 
-    private data:Data2DTable;
-
+    /**
+     * Original data as imported from page initialization.
+     */
     private origData:Data2DTable;
 
+    /**
+     * Current data derived from origData by applying filters etc.
+     */
+    private data:Data2DTable;
+
+    /**
+     * Rows labels. It contains all the server-returned values
+     * even if some of them are not displayed (due to all zero
+     * values in a row) - the show/hide status is given by the
+     * boolean value in the pair.
+     */
     private d1Labels:Immutable.List<[string, boolean]>;
 
+    /**
+     * Column labels. It contains all the server-returned values
+     * even if some of them are not displayed (due to all zero
+     * values in a column) - the show/hide status is given by the
+     * boolean value in the pair.
+     */
     private d2Labels:Immutable.List<[string, boolean]>;
 
     private filterZeroVectors:boolean;
 
+    /**
+     * An attribute/quantity current rows are sorted by
+     */
     private sortDim1:string;
 
+    /**
+     * An attribute/quantity current columns are sorted by
+     */
     private sortDim2:string;
 
     private isTransposed:boolean;
@@ -166,46 +202,16 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.onNewDataHandlers = Immutable.List<(data:FreqResultResponse.CTFreqResultData)=>void>();
         this.highlightedGroup = [null, null];
 
+        // TODO attrs from form store:
+        // 1.
+
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
-                case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
-                    this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
-                    this.validateAttrs();
-                    this.notifyChangeListeners();
-                break;
-                case 'FREQ_CT_SET_CTX':
-                    if (payload.props['dim'] === 1) {
-                        this.ctxIndex1 = payload.props['value'];
-
-                    } else if (payload.props['dim'] === 2) {
-                        this.ctxIndex2 = payload.props['value'];
-                    }
-                    this.notifyChangeListeners();
-                break;
-                case 'FREQ_CT_SET_ALIGN_TYPE':
-                    if (payload.props['dim'] === 1) {
-                        this.alignType1 = payload.props['value'];
-
-                    } else if (payload.props['dim'] === 2) {
-                        this.alignType2 = payload.props['value'];
-                    }
-                    this.notifyChangeListeners();
-                break;
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
                     this.alphaLevel = payload.props['value'];
                     this.recalculateConfIntervals();
                     this.updateLocalData();
                     this.notifyChangeListeners();
-                break;
-                case 'FREQ_CT_SUBMIT':
-                    if (!this.setupError) {
-                        this.submitForm();
-                        // leaves the page here
-
-                    } else {
-                        this.pageModel.showMessage('error', this.setupError);
-                        this.notifyChangeListeners();
-                    }
                 break;
                 case 'FREQ_CT_SET_MIN_FREQ_TYPE':
                     this.minFreqType = payload.props['value'];
@@ -401,7 +407,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         return parseInt(this.minFreq, 10) < this.serverMinFreq || this.serverMinFreq === null;
     }
 
-    private updateData():RSVP.Promise<boolean> { // TODO type
+    private updateData():RSVP.Promise<boolean> {
         return (() => {
             if (this.mustLoadDueToLimit()) {
                 return this.fetchData();
@@ -476,15 +482,10 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.data = this.origData;
     }
 
-    private generateCrit(dim:number):string {
-        const attr = this.getAttrOfDim(dim);
-        return this.isStructAttr(attr) ? '0' : this.getAttrCtx(dim);
-    }
-
     private getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
-        args.set('ctfcrit1', this.generateCrit(1));
-        args.set('ctfcrit2', this.generateCrit(2));
+        args.set('ctfcrit1', this.ctFcrit1);
+        args.set('ctfcrit2', this.ctFcrit2);
         args.set('ctattr1', this.attr1);
         args.set('ctattr2', this.attr2);
         args.set('ctminfreq', this.minFreq);
@@ -492,11 +493,12 @@ export class ContingencyTableStore extends GeneralCTStore {
         return args;
     }
 
-    submitForm():void {
-        const args = this.getSubmitArgs();
-        window.location.href = this.pageModel.createActionUrl('freqct', args.items());
-    }
-
+    /**
+     * This is intended especially for flat table data store which must
+     * be kept synchronized with this store. I.e. once something changes
+     * here - the flat store (which registered its listener here) will
+     * update its data accordingly.
+     */
     addOnNewDataHandler(fn:(data:FreqResultResponse.CTFreqResultData)=>void) {
         this.onNewDataHandlers = this.onNewDataHandlers.push(fn);
     }
@@ -511,14 +513,8 @@ export class ContingencyTableStore extends GeneralCTStore {
 
         ).then(
             (data) => {
-                if (!data.contains_errors) {
-                    this.onNewDataHandlers.forEach(fn => fn(data.data));
-                    return data;
-
-
-                } else {
-                    throw new Error(data.messages[0]);
-                }
+                this.onNewDataHandlers.forEach(fn => fn(data.data));
+                return data;
             }
         );
     }
@@ -586,6 +582,9 @@ export class ContingencyTableStore extends GeneralCTStore {
     private recalcHeatmap():void {
         const fetchFreq = this.getFreqFetchFn();
         const data = mapDataTableAsList(this.data, x => [x.origOrder, fetchFreq(x)]);
+        if (!data.find(x => x !== undefined)) {
+            return;
+        }
         let fMin = data.size > 0 ? data.find(x => x !== undefined)[1] : null;
         let fMax = data.size > 0 ? data.find(x => x !== undefined)[1] : null;
         data.filter(x => x !== undefined).forEach(item => {
@@ -632,7 +631,6 @@ export class ContingencyTableStore extends GeneralCTStore {
         return this.data;
     }
 
-
     exportGroupLabel(row, col):string {
         if (row !== null) {
             return `${this.attr1} = "${this.d1Labels.filter(v => v[1]).get(row)[0]}" vs. ${this.attr2}`;
@@ -643,6 +641,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         return '';
     }
 
+    /**
+     * Generate data for d3.js visualisation of confidence intervals.
+     */
     exportGroup(row, col):Array<DataPoint> {
         const d1Labels = this.d1Labels.filter(v => v[1]).map(v => v[0]);
         const d2Labels = this.d2Labels.filter(v => v[1]).map(v => v[0]);
@@ -675,6 +676,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         return ans.filter(x => x !== null).sort((x1, x2) => x2.data[1] - x1.data[1]);
     }
 
+    /**
+     * Export data for Excel etc. conversion on server.
+     */
     exportData():FormatConversionExportData {
         const d1Labels = this.d1Labels.filter(v => v[1]).map(v => v[0]);
         const d2Labels = this.d2Labels.filter(v => v[1]).map(v => v[0]);
@@ -738,10 +742,6 @@ export class ContingencyTableStore extends GeneralCTStore {
 
     getSortDim2():string {
         return this.sortDim2;
-    }
-
-    getPositionRangeLabels():Array<string> {
-        return GeneralCTStore.POSITION_LABELS;
     }
 
     getIsWaiting():boolean {

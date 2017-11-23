@@ -28,7 +28,7 @@ import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collF
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
-import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
+import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../stores/freqs/ctFreqForm';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {QuerySaveAsFormStore} from '../stores/query/save';
 import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
@@ -59,6 +59,8 @@ class FreqPage {
     private ctFreqStore:ContingencyTableStore;
 
     private ctFlatFreqStore:CTFlatStore;
+
+    private cTFreqFormStore:CTFreqFormStore;
 
     private ctResultSaveStore:FreqCTResultsSaveStore;
 
@@ -117,6 +119,11 @@ class FreqPage {
             ctminfreq_type: ctFormInputs.ctminfreq_type
         };
 
+        this.cTFreqFormStore = new CTFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            ctFormProps
+        );
         this.ctFreqStore = new ContingencyTableStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -127,7 +134,6 @@ class FreqPage {
             this.layoutModel,
             ctFormProps
         );
-
         this.ctResultSaveStore = new FreqCTResultsSaveStore(
             this.layoutModel.dispatcher,
             this.ctFreqStore,
@@ -137,11 +143,9 @@ class FreqPage {
         const freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
             this.mlFreqStore,
             this.ttFreqStore,
-            this.ctFreqStore,
-            this.ctFlatFreqStore
+            this.cTFreqFormStore
         );
 
         // -------------------- coll form -------------------

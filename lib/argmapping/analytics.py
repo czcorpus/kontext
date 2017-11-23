@@ -60,8 +60,8 @@ class FreqFormArgs(object):
 class CTFreqFormArgs(object):
 
     def __init__(self, default_attr='word'):
-        self.ctminfreq = 1
-        self.ctminfreq_type = 'abs'
+        self.ctminfreq = 80
+        self.ctminfreq_type = 'pabs'
         self.ctattr1 = default_attr
         self.ctfcrit1 = '0<0'
         self.ctattr2 = default_attr
