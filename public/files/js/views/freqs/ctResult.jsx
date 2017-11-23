@@ -991,6 +991,13 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
             }
         }
 
+        componentDidMount() {
+            dispatcher.dispatch({
+                actionType: 'FREQ_CT_SET_SAVE_MODE',
+                props: {value: this.state.mode}
+            });
+        }
+
         render() {
             return (
                 <div className="CTFreqResultView">
