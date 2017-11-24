@@ -72,6 +72,61 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         }
     }
 
+    // ------------------- <TRQueryTypeField /> -----------------------------
+
+    class QueryTypeHints extends React.Component {
+
+        constructor(props) {
+            super(props);
+            this.state = {visible: false};
+            this._handleHintClick = this._handleHintClick.bind(this);
+        }
+
+        _handleHintClick() {
+            this.setState({visible: !this.state.visible});
+        }
+
+        _getHintText() {
+            switch (this.props.queryType) {
+                case 'iquery':
+                return [he.translate('query__qt_basic'), he.translate('query__type_hint_basic')];
+                case 'lemma':
+                return [he.translate('query__qt_lemma'), he.translate('query__type_hint_lemma')];
+                case 'phrase':
+                return [he.translate('query__qt_phrase'), he.translate('query__type_hint_phrase')];
+                case 'word':
+                return [he.translate('query__qt_word_form'), he.translate('query__type_hint_word')];
+                case 'char':
+                return [he.translate('query__qt_word_part'), he.translate('query__type_hint_char')];
+                case 'cql':
+                return [he.translate('query__qt_cql'), he.translate('query__type_hint_cql')];
+            }
+        }
+
+        render() {
+            const [heading, text] = this._getHintText();
+            return (
+                <span>
+                    <sup className="hint" onClick={this._handleHintClick}>
+                        <a>
+                            <img src={he.createStaticUrl('img/question-mark.svg')}
+                                alt={he.translate('global__info_icon')} />
+                        </a>
+                    </sup>
+                    {this.state.visible ?
+                        <layoutViews.PopupBox onCloseClick={this._handleHintClick} takeFocus={true} customClass="hint">
+                            <div>
+                                <h3>{he.translate('query__select_type')} <span className="type">"{heading}"</span></h3>
+                                <p>{text}</p>
+                            </div>
+                        </layoutViews.PopupBox> :
+                        null
+                    }
+                </span>
+            );
+        }
+    }
+
 
     // ------------------- <TRQueryTypeField /> -----------------------------
 
@@ -88,7 +143,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         };
 
         return (
-            <tr>
+            <tr className="TRQueryTypeField">
                 <th>{he.translate('query__select_type')}:</th>
                 <td>
                     <select value={props.queryType} onChange={handleSelection}>
@@ -99,6 +154,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                         <option value="char">{he.translate('query__qt_word_part')}</option>
                         <option value="cql">{he.translate('query__qt_cql')}</option>
                     </select>
+                    <QueryTypeHints queryType={props.queryType} />
                 </td>
             </tr>
         );
