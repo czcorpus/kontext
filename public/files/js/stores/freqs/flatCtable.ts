@@ -239,12 +239,8 @@ export class CTFlatStore extends GeneralCTStore {
             headings: [
                 this.attr1,
                 this.attr2,
-                '',
                 this.pageModel.translate('freq__ct_abs_freq_label'),
-                '',
-                '',
-                this.pageModel.translate('freq__ct_ipm_freq_label'),
-                ''
+                this.pageModel.translate('freq__ct_ipm_freq_label')
             ],
             minFreq: parseFloat(this.minFreq),
             minFreqType: this.minFreqType,
