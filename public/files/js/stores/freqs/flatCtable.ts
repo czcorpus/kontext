@@ -25,36 +25,53 @@
 
 import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
-import {CTFormInputs, CTFormProperties, GeneralCTStore, CTFreqCell, roundFloat, FreqFilterQuantities} from './generalCtable';
+import {GeneralCTStore, CTFreqCell} from './generalCtable';
+import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {MultiDict} from '../../util';
 
 /**
- *
+ * En extended 2d freq. data item containing
+ * also a value pair.
  */
 export interface FreqDataItem extends CTFreqCell {
     val1:string;
     val2:string;
 }
 
+
+/**
+ * A helper type used when exporting data for Excel etc.
+ */
 export type ExportTableRow = [string, string, number, number, number, number, number, number];
 
+
+/**
+ * A type representing exported (for Excel etc.) data
+ * sent to a server for conversion.
+ */
 export interface FormatConversionExportData {
-    attr1:string;
-    attr2:string;
+    headings:Array<string>;
     minFreq:number;
     minFreqType:string;
     alphaLevel:number;
     data:Array<ExportTableRow>;
 }
 
+
 /**
- *
+ * A store for operations on a flat version of 2d frequency table
  */
 export class CTFlatStore extends GeneralCTStore {
 
+    /**
+     * Original data as imported from page initialization.
+     */
     private origData:Immutable.List<FreqDataItem>;
 
+    /**
+     * Current data derived from origData by applying filters etc.
+     */
     private data:Immutable.List<FreqDataItem>;
 
     private sortBy:string;
@@ -66,13 +83,9 @@ export class CTFlatStore extends GeneralCTStore {
         this.origData = Immutable.List<FreqDataItem>();
         this.sortBy = 'ipm';
         this.sortReversed = true;
+
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
-                case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
-                    this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
-                    this.validateAttrs();
-                    this.notifyChangeListeners();
-                break;
                 case 'FREQ_CT_SET_MIN_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {
                         this.minFreq = payload.props['value'];
@@ -223,8 +236,12 @@ export class CTFlatStore extends GeneralCTStore {
             v.ipmConfInterval[1]
         ]));
         return {
-            attr1: this.attr1,
-            attr2: this.attr2,
+            headings: [
+                this.attr1,
+                this.attr2,
+                this.pageModel.translate('freq__ct_abs_freq_label'),
+                this.pageModel.translate('freq__ct_ipm_freq_label')
+            ],
             minFreq: parseFloat(this.minFreq),
             minFreqType: this.minFreqType,
             alphaLevel: parseFloat(this.alphaLevel),
@@ -263,5 +280,4 @@ export class CTFlatStore extends GeneralCTStore {
     getSortColIsReversed():boolean {
         return this.sortReversed;
     }
-
 }

@@ -46,7 +46,8 @@ class Parameter(object):
         elif self.value == {}:
             ans = {}
         elif type(self.value) is dict:
-            raise TypeError('Cannot define static property as a non-empty dictionary: %s' % (self.value, ))
+            raise TypeError(
+                'Cannot define static property as a non-empty dictionary: %s' % (self.value, ))
         else:
             ans = self.value
         return ans
@@ -207,7 +208,8 @@ class GlobalArgs(object):
     line_numbers = Parameter(0, persistent=Parameter.PERSISTENT)
     # end
 
-    corpname = Parameter('', persistent=Parameter.SEMI_PERSISTENT)  # must be an empty string and not None
+    # must be an empty string and not None
+    corpname = Parameter('', persistent=Parameter.SEMI_PERSISTENT)
     usesubcorp = Parameter(u'')
     subcname = Parameter(u'')
     subcpath = Parameter([])
@@ -271,8 +273,8 @@ class GlobalArgs(object):
 
     # Contingency table
 
-    ctminfreq = Parameter(1)
-    ctminfreq_type = Parameter('abs')
+    ctminfreq = Parameter(80)   # 80th percentile (see ctminfreq_type)
+    ctminfreq_type = Parameter('pabs')  # percentile as a default filter mode
     ctattr1 = Parameter('word')
     ctattr2 = Parameter('word')
     ctfcrit1 = Parameter('0<0')

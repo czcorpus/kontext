@@ -50,7 +50,7 @@ import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collF
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
-import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
+import {CTFreqFormStore, CTFormInputs, CTFormProperties} from '../stores/freqs/ctFreqForm';
 import {ConcSaveStore} from '../stores/concordance/save';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
@@ -147,9 +147,7 @@ export class ViewPage {
 
     private ttFreqStore:TTFreqFormStore;
 
-    private ctFreqStore:ContingencyTableStore;
-
-    private ctFlatFreqStore:CTFlatStore;
+    private ctFreqFormStore:CTFreqFormStore;
 
     private freqFormViews:FreqFormViews;
 
@@ -809,25 +807,18 @@ export class ViewPage {
             ctminfreq_type: ctFormInputs.ctminfreq_type
         };
 
+        this.ctFreqFormStore = new CTFreqFormStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            ctFormProps
+        );
 
-        this.ctFreqStore = new ContingencyTableStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            ctFormProps
-        );
-        this.ctFlatFreqStore = new CTFlatStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            ctFormProps
-        );
         this.freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
             this.mlFreqStore,
             this.ttFreqStore,
-            this.ctFreqStore,
-            this.ctFlatFreqStore
+            this.ctFreqFormStore
         );
         this.analysisViews = analysisFrameInit(
             this.layoutModel.dispatcher,

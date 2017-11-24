@@ -581,6 +581,22 @@ fieldset.FieldsetOutputOptions {
     }
 }
 
+ul.FreqFormSelector {
+    list-style-type: none;
+    margin: 0 auto 2em auto;
+    padding: 0;
+
+    li {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+    }
+
+    li:not(:first-child) {
+        margin-left: 1em;
+    }
+}
+
 
 .CTFreqForm {
 
@@ -641,4 +657,44 @@ fieldset.FieldsetOutputOptions {
             }
         }
     }
+}
+
+.FrequencyForm {
+
+    padding-left: 1em;
+    padding-right: 1em;
+
+    .freq-form {
+        margin-top: 0.7em;
+
+        fieldset {
+            margin-top: 0.4em;
+            padding: 1em 0.7em;
+        }
+
+        table.struct-attr-list {
+            table {
+                border-spacing: 0;
+                padding: 0;
+                margin: 0;
+
+                td {
+                    padding: 0;
+
+                    label {
+                        display: block;
+                    }
+                }
+
+                td:last-child {
+                    padding-left: 0.3em;
+                }
+
+                tr:hover {
+                    background-color: @color-light-frame;
+                }
+            }
+        }
+    }
+
 }

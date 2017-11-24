@@ -23,9 +23,7 @@ import {PageModel} from './document';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {ContingencyTableStore} from '../stores/freqs/ctable';
-import {CTFlatStore} from '../stores/freqs/flatCtable';
-import {CTFormProperties, CTFormInputs} from '../stores/freqs/generalCtable';
+import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../stores/freqs/ctFreqForm';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {QuerySaveAsFormStore} from '../stores/query/save';
 import {CollResultStore, CollResultData, CollResultHeading} from '../stores/coll/result';
@@ -53,9 +51,7 @@ export class CollPage {
 
     private ttFreqStore:TTFreqFormStore;
 
-    private ctFreqStore:ContingencyTableStore;
-
-    private ctFlatFreqStore:CTFlatStore;
+    private ctFreqFormStore:CTFreqFormStore;
 
     private queryReplayStore:IndirectQueryReplayStore;
 
@@ -113,12 +109,7 @@ export class CollPage {
         };
 
 
-        this.ctFreqStore = new ContingencyTableStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            ctFormProps
-        );
-        this.ctFlatFreqStore = new CTFlatStore(
+        this.ctFreqFormStore = new CTFreqFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
             ctFormProps
@@ -127,11 +118,9 @@ export class CollPage {
         const freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
             this.mlFreqStore,
             this.ttFreqStore,
-            this.ctFreqStore,
-            this.ctFlatFreqStore
+            this.ctFreqFormStore
         );
 
         // collocations ------------------------------------

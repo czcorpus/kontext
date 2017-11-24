@@ -532,11 +532,9 @@ declare module "views/freqs/forms" {
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
         mlFreqStore:Kontext.PageStore,
         ttFreqStore:Kontext.PageStore,
-        ctFreqStore:Kontext.PageStore,
-        ctFlatFreqStore:Kontext.PageStore
+        ctFreqFormStore:Kontext.PageStore
     ):FreqFormViews;
 }
 
