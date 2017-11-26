@@ -4,14 +4,8 @@
 
 ## Introduction
 
-KonText is a **fully featured corpus query interface** for the [Manatee open](http://nlp.fi.muni.cz/trac/noske)
-corpus search engine. It started as a fork of the Bonito 2.68 web interface and while still sharing
-a lot of code with the original Bonito (now *bonito-open*), KonText is gradually becoming more independent.
-
-It is maintained by the
-[Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
-Current version contains all the key features of the Bonito 2.98.3 (primarily a support for parallel
-corpora).
+KonText is an **advanced corpus query interface** for the [Manatee-open](http://nlp.fi.muni.cz/trac/noske)
+corpus search engine. It builds on top of core server-side libraries from NoSketchEngine and both applications are data-compatible as well. The development is maintained by the [Institute of the Czech National Corpus](http://ucnk.ff.cuni.cz/).
 
 ## Features
 
@@ -22,20 +16,21 @@ corpora).
     and the whole sequence is then re-executed.
 * support for **spoken corpora**
     * defined concordance segments can be played back as audio
-    * KWIC detail provides a custom rendering with easily distinguishable speeches
+    * KWIC detail provides a custom rendering with **easily distinguishable speeches**
 * support for **user-defined line groups**
     * user can define custom numeric tags attached to concordance lines, filter out other lines, review groups ratios
 * **improved subcorpus creation**
     * user can easily examine corpus structure by selecting some text types and see how other text type attributes 
       availability changed ("which publishers are there in case only *fiction* is selected?")
-    * a custom text types ratio can be defined ("give me 20% fiction and 80% journalism") 
+    * a **custom text types ratio** can be defined ("give me 20% fiction and 80% journalism") 
     * a sub-corpus can be created by a custom CQL expression
     * subcorpora are backed up as CQL queries which makes further modification/restoring possible
 * **frequency distribution**
+    * **2-dimensional frequency distribution** for both positional and structural attributes
     * result caching decreases time required to navigate between pages
     * on the multilevel frequency distribution page, starting word can be specified for multi-word KWICs
 * **persistent URLs for large queries** - you can send a link to someone even if the query was in megabytes
-* access to **previous queries**
+* access to **previous queries**, named queries
 * **access to favorite corpora** (subcorpora, aligned corpora)
 * **interactive PoS tag tool** - in case of positional PoS tag formats an interactive tool can be used to write tag queries
 * a concordance/frequency/collocation listing can be **saved in Excel format** (xlsx)
