@@ -1119,7 +1119,6 @@ class Actions(Querying):
                                               self.args.ctattr2, self.args.ctfcrit2)
         try:
             ans = freq_calc.calculate_freqs_ct(args)
-            logging.getLogger(__name__).warning('ans.full_size: %s' % (ans['full_size']))
         except UserActionException as ex:
             ans = dict(data=[], full_size=0)
             self.add_system_message('error', ex.message)
