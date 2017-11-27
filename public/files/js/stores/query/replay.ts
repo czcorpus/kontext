@@ -115,6 +115,74 @@ function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>
     }));
 }
 
+/**
+ * This is a basic variant of query info/replay store which
+ * can only fetch query overview info without any edit
+ * functions. It is typically used on pages where an active
+ * concordance exists but it is not visible at the moment
+ * (e.g. freq. & coll. pages). In such case it is typically
+ * extended further (see IndirectQueryReplayStore) to allow
+ * returning to the 'view' page in case user wants to use
+ * some of its functions.
+ */
+export class QueryInfoStore extends SimplePageStore {
+
+    /**
+     * This is a little bit independent from the rest. It just
+     * contains data required to render tabular query overview.
+     */
+    private currentQueryOverview:any;
+
+    protected pageModel:PageModel;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
+        super(dispatcher);
+        this.pageModel = pageModel;
+
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+            switch (payload.actionType) {
+                case 'CLEAR_QUERY_OVERVIEW_DATA':
+                    this.currentQueryOverview = null;
+                    this.notifyChangeListeners();
+                break;
+                case 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO':
+                    this.loadQueryOverview().then(
+                        (data) => {
+                            this.notifyChangeListeners();
+                        },
+                        (err) => {
+                            this.pageModel.showMessage('error', err);
+                        }
+                    );
+            break;
+            }
+        });
+    }
+
+    private loadQueryOverview():RSVP.Promise<any> {
+        const args = this.pageModel.getConcArgs();
+        return this.pageModel.ajax<any>(
+            'GET',
+            this.pageModel.createActionUrl('concdesc_json'),
+            args,
+            {}
+        ).then(
+            (data) => {
+                if (!data.contains_errors) {
+                    this.currentQueryOverview = data.Desc;
+
+                } else {
+                    throw new Error(this.pageModel.translate('global__failed_to_load_query_overview'));
+                }
+            }
+        );
+    }
+
+    getCurrentQueryOverview():any {
+        return this.currentQueryOverview;
+    }
+}
+
 
 /**
  * QueryReplayStore reads operations stored in the breadcrumb-like navigation
@@ -124,9 +192,7 @@ function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>
  * server requests one-by-one (while updating query operation ID) and the final
  * request is used to redirect client to see the result.
  */
-export class QueryReplayStore extends SimplePageStore {
-
-    private pageModel:PageModel;
+export class QueryReplayStore extends QueryInfoStore {
 
     private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
 
@@ -169,17 +235,11 @@ export class QueryReplayStore extends SimplePageStore {
      */
     private stopAfterOpIdx:number;
 
-    /**
-     * This is a little bit independent from the rest. It just
-     * contains data required to render tabular query overview.
-     */
-    private currentQueryOverview:any;
-
     private _editIsLocked:boolean;
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
             currentOperations:Array<Kontext.QueryOperation>, concArgsCache:LocalQueryFormData) {
-        super(dispatcher);
+        super(dispatcher, pageModel);
         this.pageModel = pageModel;
         this.currEncodedOperations = importEncodedOperations(currentOperations);
         this.replayOperations = Immutable.List<string>(currentOperations.map(item => null));
@@ -237,23 +297,12 @@ export class QueryReplayStore extends SimplePageStore {
                             }
                         );
                     break;
-                    case 'OVERVIEW_SHOW_QUERY_INFO':
-                        this.editedOperationIdx = null;
-                        this.loadQueryOverview().then(
-                            (data) => {
-                                this.notifyChangeListeners();
-                            },
-                            (err) => {
-                                this.pageModel.showMessage('error', err);
-                            }
-                        );
-                    break;
-                    case 'CLEAR_QUERY_OVERVIEW_DATA':
-                        this.currentQueryOverview = null;
-                        this.notifyChangeListeners();
-                    break;
                     case 'QUERY_SET_STOP_AFTER_IDX':
                         this.stopAfterOpIdx = payload.props['value'];
+                        this.notifyChangeListeners();
+                    break;
+                    case 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO':
+                        this.editedOperationIdx = null;
                         this.notifyChangeListeners();
                     break;
                 }
@@ -850,32 +899,6 @@ export class QueryReplayStore extends SimplePageStore {
         return this.branchReplayIsRunning;
     }
 
-
-    private loadQueryOverview():RSVP.Promise<any> {
-        const args = this.pageModel.getConcArgs();
-        return this.pageModel.ajax<any>(
-            'GET',
-            this.pageModel.createActionUrl('concdesc_json'),
-            args,
-            {
-                contentType : 'application/x-www-form-urlencoded'
-            }
-        ).then(
-            (data) => {
-                if (!data.contains_errors) {
-                    this.currentQueryOverview = data.Desc;
-
-                } else {
-                    throw new Error(this.pageModel.translate('global__failed_to_load_query_overview'));
-                }
-            }
-        );
-    }
-
-    getCurrentQueryOverview():any {
-        return this.currentQueryOverview;
-    }
-
     getEditedOperationIdx():number {
         return this.editedOperationIdx;
     }
@@ -903,15 +926,13 @@ export class QueryReplayStore extends SimplePageStore {
  * 'view' page and open a respective operation form in case
  * user clicks a item.
  */
-export class IndirectQueryReplayStore extends SimplePageStore {
-
-    private pageModel:PageModel;
+export class IndirectQueryReplayStore extends QueryInfoStore {
 
     private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
 
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
-        super(dispatcher);
+        super(dispatcher, pageModel);
         this.pageModel = pageModel;
         this.currEncodedOperations = importEncodedOperations(currentOperations);
 

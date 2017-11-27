@@ -302,6 +302,7 @@ declare module Kontext {
         InlineHelp:React.Component;
         Messages:React.Component;
         EmptyQueryOverviewBar:React.Component;
+        QueryOverivewTable:React.Component;
         ImgWithMouseover:React.Component;
         IssueReportingLink:React.Component;
         AjaxLoaderImage:React.Component;

@@ -469,20 +469,6 @@ export function init(dispatcher, he, storeProvider) {
         );
     };
 
-    // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
-
-    const EmptyQueryOverviewBar = (props) => {
-
-        return (
-            <ul id="query-overview-bar">
-                <CorpnameInfoTrigger
-                        corpname={props.corpname}
-                        humanCorpname={props.humanCorpname}
-                        usesubcorp={props.usesubcorp} />
-            </ul>
-        );
-    };
-
     // ------------------------ <IssueReportingLink /> --------------------------------
 
     const IssueReportingLink = (props) => {
@@ -525,7 +511,6 @@ export function init(dispatcher, he, storeProvider) {
         InlineHelp: InlineHelp,
         Messages: Messages,
         CorpnameInfoTrigger: CorpnameInfoTrigger,
-        EmptyQueryOverviewBar: EmptyQueryOverviewBar,
         ImgWithMouseover: ImgWithMouseover,
         IssueReportingLink: IssueReportingLink,
         AjaxLoaderImage: AjaxLoaderImage,
