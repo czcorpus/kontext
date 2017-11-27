@@ -60,7 +60,7 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
                 return data.items.map<PluginInterfaces.TokenDetail.DataAndRenderer>(x => ({
                     renderer: this.selectRenderer(x.renderer),
                     contents: x.contents,
-                    status: x.status,
+                    found: x.found,
                     heading: x.heading
                 }));
             }

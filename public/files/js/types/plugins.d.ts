@@ -151,7 +151,7 @@ declare module PluginInterfaces {
             items:Array<{
                 renderer:string;
                 contents:Array<[string, string]>;
-                status:number;
+                found:boolean;
                 heading:string;
             }>;
         }
@@ -159,7 +159,7 @@ declare module PluginInterfaces {
         export interface DataAndRenderer {
             renderer:React.Component;
             contents:Array<[string, string]>;
-            status:number;
+            found:boolean;
             heading:string;
         }
 
