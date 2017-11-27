@@ -208,7 +208,7 @@ export class FreqDataRowsStore extends SimplePageStore {
         return this.pageModel.ajax<FreqResultResponse.FreqResultResponse>(
             'GET',
             this.pageModel.createActionUrl('freqs'),
-            this.getSubmitArgs
+            this.getSubmitArgs()
 
         ).then(
             (data) => {
