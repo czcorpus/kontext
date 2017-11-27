@@ -39,6 +39,20 @@ element token_detail {
     attribute extension-by { "default" }
     { text } # a path to a JSON configuration file containing all available backends and frontends
   }
+  optional {
+    element cache_db_path {
+      attribute extension-by { "default" }
+      { text } a path to sqlite3 file where all the cache data for all the providers will be stored
+    }
+    element cache_rows_limit {
+      attribute extension-by { "default" }
+      { xsd:integer }
+    }
+    element cache_ttl_days {
+      attribute extension-by { "default" }
+      { xsd:integer }
+    }
+  }
 }
 """
 
@@ -137,6 +151,7 @@ class DefaultTokenDetail(AbstractTokenDetail):
                 ans.append(frontend.export_data(data, status, lang).to_dict())
             except Exception as ex:
                 logging.getLogger(__name__).error('TokenDetail backend error: {0}'.format(ex))
+                raise ex
         return ans
 
     def _map_providers(self, provider_ids):
@@ -153,6 +168,7 @@ class DefaultTokenDetail(AbstractTokenDetail):
         for backend, frontend in self._map_providers(self._providers):
             backend.set_cache_path(path)
 
+
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
     conf = settings.get('plugins', 'token_detail')
@@ -160,12 +176,12 @@ def create_instance(settings, corparch):
         providers_conf = json.load(fr)
     cache_path = conf.get('default:cache_db_path')
     if cache_path and not os.path.isfile(cache_path):
-            cache_path = conf.get('default:cache_db_path')
-            cache_rows_limit = conf.get('default:cache_rows_limit')
-            cache_ttl_days = conf.get('default:cache_ttl_days')
-            cacheMan = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
-            cacheMan.prepare_cache()
-    tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b)) for b in providers_conf), corparch)
+        cache_rows_limit = conf.get('default:cache_rows_limit')
+        cache_ttl_days = conf.get('default:cache_ttl_days')
+        cache_manager = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
+        cache_manager.prepare_cache()
+    tok_det = DefaultTokenDetail(dict((b['ident'], init_provider(b))
+                                      for b in providers_conf), corparch)
     if cache_path:
         tok_det.set_cache_path(cache_path)
     return tok_det

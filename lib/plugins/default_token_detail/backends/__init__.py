@@ -63,22 +63,20 @@ def cached(f):
                 res = f(self, word, lemma, pos, aligned_corpora, lang)
                 # if a result is returned by the backend function, zip its data part and store it in the cache
                 if res:
-                    zipped = buffer(zlib.compress(res[0]))
+                    zipped = buffer(zlib.compress(res[0].encode('utf-8')))
                     curs.execute("INSERT INTO cache (key, data, last_access) VALUES (?,?,?)",
                                  (key, zipped, int(round(time.time()))))
             else:
                 # unzip the cached result
-                res = [zlib.decompress(res[0])]
+                res = [zlib.decompress(res[0]).decode('utf-8')]
                 # update last access
-                curs.execute("UPDATE cache SET last_access = ? WHERE key = ?", (int(round(time.time())), key))
+                curs.execute("UPDATE cache SET last_access = ? WHERE key = ?",
+                             (int(round(time.time())), key))
             conn.commit()
             conn.close()
         else:
             res = f(self, word, lemma, pos, aligned_corpora, lang)
-        if res:
-            return res[0], True
-        else:
-            return '', False
+        return res if res else '', False
 
     return wrapper
 
@@ -103,6 +101,14 @@ class HTTPBackend(AbstractBackend):
     def __init__(self, conf):
         self._conf = conf
 
+    @staticmethod
+    def _is_valid_response(response):
+        return response and (200 <= response.status < 300 or 400 <= response.status < 500)
+
+    @staticmethod
+    def _is_found(response):
+        return 200 <= response.status < 300
+
     @cached
     def fetch_data(self, word, lemma, tag, aligned_corpora, lang):
         if self._conf['ssl']:
@@ -116,8 +122,8 @@ class HTTPBackend(AbstractBackend):
             args = dict(word=word, lemma=lemma, tag=tag, ui_lang=lang, other_lang=al_corpus)
             connection.request('GET', self._conf['path'].encode('utf-8').format(**args))
             response = connection.getresponse()
-            if response and (response.status == 200 or 400 <= response.status < 500):
-                return response.read().decode('utf-8'), response.status == 200
+            if self._is_valid_response(response):
+                return response.read().decode('utf-8'), self._is_found(response)
             else:
                 raise Exception('Failed to load the data - error {0}'.format(response.status))
         finally:

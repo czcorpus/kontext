@@ -42,7 +42,7 @@ class CacheMan(object):
         c = conn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS cache ("
                   "key text, "
-                  "data text, "
+                  "data blob, "
                   "last_access integer NOT NULL, "
                   "PRIMARY KEY (key))")
         conn.commit()
@@ -54,7 +54,7 @@ class CacheMan(object):
         """
         conn = sqlite3.connect(self.cache_path)
         c = conn.cursor()
-        c.execute("DELETE FROM cache WHERE last_access <= ?", (str(time.time() - self.cache_ttl),))
+        c.execute("DELETE FROM cache WHERE last_access <= ?", (time.time() - self.cache_ttl,))
         conn.commit()
         conn.close()
 
