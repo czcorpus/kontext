@@ -63,12 +63,12 @@ def cached(f):
                 res = f(self, word, lemma, pos, aligned_corpora, lang)
                 # if a result is returned by the backend function, zip its data part and store it in the cache
                 if res:
-                    zipped = buffer(zlib.compress(res[0]))
+                    zipped = buffer(zlib.compress(res[0].encode('utf-8')))
                     curs.execute("INSERT INTO cache (key, data, last_access) VALUES (?,?,?)",
                                  (key, zipped, int(round(time.time()))))
             else:
                 # unzip the cached result
-                res = [zlib.decompress(res[0])]
+                res = [zlib.decompress(res[0]).decode('utf-8')]
                 # update last access
                 curs.execute("UPDATE cache SET last_access = ? WHERE key = ?",
                              (int(round(time.time())), key))

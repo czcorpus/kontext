@@ -39,6 +39,20 @@ element token_detail {
     attribute extension-by { "default" }
     { text } # a path to a JSON configuration file containing all available backends and frontends
   }
+  optional {
+    element cache_db_path {
+      attribute extension-by { "default" }
+      { text } a path to sqlite3 file where all the cache data for all the providers will be stored
+    }
+    element cache_rows_limit {
+      attribute extension-by { "default" }
+      { xsd:integer }
+    }
+    element cache_ttl_days {
+      attribute extension-by { "default" }
+      { xsd:integer }
+    }
+  }
 }
 """
 
@@ -162,7 +176,6 @@ def create_instance(settings, corparch):
         providers_conf = json.load(fr)
     cache_path = conf.get('default:cache_db_path')
     if cache_path and not os.path.isfile(cache_path):
-        cache_path = conf.get('default:cache_db_path')
         cache_rows_limit = conf.get('default:cache_rows_limit')
         cache_ttl_days = conf.get('default:cache_ttl_days')
         cache_manager = CacheMan(cache_path, cache_rows_limit, cache_ttl_days)
