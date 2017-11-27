@@ -625,8 +625,17 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 <layoutViews.PopupBox onCloseClick={this.props.onCloseClick} takeFocus={true}>
                     <div id="confidence-intervals-frame" className="IntervalGroupVisualisation">
                         <h2 className="top" />
-                        <svg width={this.props.d3PaneWidth} height={this.props.d3PaneHeight} />
-                        <div className="tooltip" style={{display: 'none'}} />
+                        <div className="chart-wrapper">
+                            <svg width={this.props.d3PaneWidth} height={this.props.d3PaneHeight} />
+                            <div className="tooltip" style={{display: 'none'}} />
+                        </div>
+                        <div className="chart-help">
+                                <img src={he.createStaticUrl('img/info-icon.svg')} style={{width: '1em'}}
+                                        alt={he.translate('global__info_icon')} />
+                                <span className="hint">
+                                    {he.translate('freq__ct_ipm_x_axis_hint_{prob}', {prob: (100 * (1 - this.props.alphaLevel)).toFixed(2)})}
+                                </span>
+                            </div>
                     </div>
                 </layoutViews.PopupBox>
             );
@@ -936,7 +945,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                 onCloseClick={this._handleHighlightedGroupClose}
                                 onConfIntervalFrameReady={this.props.onConfIntervalFrameReady}
                                 d3PaneWidth={this.props.d3PaneWidth}
-                                d3PaneHeight={this.props.d3PaneHeight} /> : null}
+                                d3PaneHeight={this.props.d3PaneHeight}
+                                alphaLevel={this.state.alphaLevel} /> : null}
                     {this.state.isWaiting ?
                         <WaitingAnim attr1={this.state.attr1}
                                 attr2={this.state.attr2} /> :

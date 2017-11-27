@@ -61,7 +61,7 @@ export class ConfIntervals {
         this.width = width;
         this.height = height;
         this.target = target;
-        this.paddingTop = 40;
+        this.paddingTop = 35;
         this.paddingBottom = 30;
         this.tooltipElm = d3.select('div.tooltip');
         this.tooltipOpacity = 0.9;
@@ -70,18 +70,8 @@ export class ConfIntervals {
     }
 
     private renderLines(root:d3.Selection<any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
-        root
-            .append('g')
-            .selectAll('line')
-            .data(data)
-            .enter()
-            .append('line')
-            .attr('x1', (d, _) => xScale(d.data[0]))
-            .attr('y1', (_, i) => yScale(i))
-            .attr('x2', (d, _) => xScale(d.data[2]))
-            .attr('y2', (_, i) => yScale(i))
-            .attr('stroke', '#009EE0')
-            .attr('stroke-width', 3);
+
+
     }
 
     private getRealHeight():number {
@@ -107,6 +97,35 @@ export class ConfIntervals {
             .enter()
             .append('g')
             .attr('class', 'data-point');
+
+        dataPoints
+            .append('line')
+            .attr('x1', (d, _) => xScale(d.data[0]))
+            .attr('y1', (_, i) => yScale(i))
+            .attr('x2', (d, _) => xScale(d.data[2]))
+            .attr('y2', (_, i) => yScale(i))
+            .attr('stroke', '#009EE0')
+            .attr('stroke-width', 2);
+
+        dataPoints
+            .append('line')
+            .attr('x1', (d, _) => xScale(d.data[0]))
+            .attr('y1', (_, i) => yScale(i))
+            .attr('x2', (d, _) => xScale(d.data[0]))
+            .attr('y2', (_, i) => yScale(i) - 10)
+            .attr('transform', `translate(0, 5)`)
+            .attr('stroke', '#009EE0')
+            .attr('stroke-width', 2);
+
+        dataPoints
+            .append('line')
+            .attr('x1', (d, _) => xScale(d.data[2]))
+            .attr('y1', (_, i) => yScale(i))
+            .attr('x2', (d, _) => xScale(d.data[2]))
+            .attr('y2', (_, i) => yScale(i) - 10)
+            .attr('transform', `translate(0, 5)`)
+            .attr('stroke', '#009EE0')
+            .attr('stroke-width', 2);
 
         dataPoints
             .append('circle')
@@ -180,9 +199,9 @@ export class ConfIntervals {
             .append('text')
             .text(this.pageModel.translate('freq__ct_ipm_x_axis_label'))
             .attr('x', 0)
-            .attr('y', this.getRealHeight() + 40);
-
-
+            .attr('y', this.getRealHeight() + 40)
+            .attr("text-anchor", "middle")
+            .attr('transform', `translate(${this.width / 2}, 0)`);
     }
 
     renderChart(data:Array<DataPoint>, heading:string):void {
@@ -191,7 +210,7 @@ export class ConfIntervals {
         frame.select('h2.top').text(heading);
 
         const svg = frame.select('svg');
-        this.height = 53 * data.length;
+        this.height = Math.max(70 * data.length, 70 * 2);
         svg.attr('height', this.height);
 
         const xScale = d3.scaleLinear()
