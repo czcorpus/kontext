@@ -330,7 +330,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         for (let k in this.data) {
             const d = this.data[k][attrVal];
             sumIpm += d ? d.ipm : 0;
-            sumAbs += d ? d.ipm : 0;
+            sumAbs += d ? d.abs : 0;
         }
         return {ipm: sumIpm, abs: sumAbs};
     }
