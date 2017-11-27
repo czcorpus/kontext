@@ -327,13 +327,22 @@ export class TTFreqFormStore extends SimplePageStore {
 
     getStructAttrListSplitTypes():Immutable.List<Immutable.List<AttrValue>> {
         const structOf = (a:AttrValue) => a.n.split('.')[0];
-        return this.structAttrList.reduce<Immutable.List<Immutable.List<AttrValue>>>((prev, curr) => {
-            if (prev.size === 0 || structOf(curr) !== structOf(prev.last().last())) {
-                return prev.push(Immutable.List<AttrValue>([{n: curr.n, label: curr.label}]));
+        return this.structAttrList.reduce<Immutable.List<Immutable.List<AttrValue>>>((reduc, curr) => {
+            if (reduc.size === 0 || structOf(curr) !== structOf(reduc.last().last())) {
+                if (reduc.last()) {
+                    const tmp = reduc.last();
+                    return reduc
+                        .pop()
+                        .push(tmp.sort((v1, v2) => v1.n.localeCompare(v2.n)).toList())
+                        .push(Immutable.List<AttrValue>([{n: curr.n, label: curr.label}]));
+
+                } else {
+                    return reduc.push(Immutable.List<AttrValue>([{n: curr.n, label: curr.label}]));
+                }
 
             } else {
-                const tmp = prev.last();
-                return prev.pop().push(tmp.push({n: curr.n, label: curr.label}));
+                const tmp = reduc.last();
+                return reduc.pop().push(tmp.push({n: curr.n, label: curr.label}));
             }
         }, Immutable.List<Immutable.List<AttrValue>>());
     }

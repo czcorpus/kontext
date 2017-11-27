@@ -330,7 +330,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         for (let k in this.data) {
             const d = this.data[k][attrVal];
             sumIpm += d ? d.ipm : 0;
-            sumAbs += d ? d.ipm : 0;
+            sumAbs += d ? d.abs : 0;
         }
         return {ipm: sumIpm, abs: sumAbs};
     }
@@ -418,7 +418,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 });
             }
         })().then(
-            (data:any) => { // TODO type
+            (data:FreqResultResponse.CTFreqResultResponse) => {
                 if (data !== null) {
                     this.serverMinFreq = parseInt(data.ctfreq_form_args.ctminfreq, 10);
                     this.importData(data.data);
@@ -561,7 +561,6 @@ export class ContingencyTableStore extends GeneralCTStore {
                 pfilter: this.generatePFilter(item[0], item[1])
             };
         });
-
         this.d1Labels = Immutable.List<[string, boolean]>(Object.keys(d1Labels).sort().map(x => [x, true]));
         this.d2Labels = Immutable.List<[string, boolean]>(Object.keys(d2Labels).sort().map(x => [x, true]));
         this.origData = tableData;

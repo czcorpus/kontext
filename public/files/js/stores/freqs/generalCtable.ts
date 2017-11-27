@@ -144,7 +144,7 @@ export abstract class GeneralCTStore extends SimplePageStore {
                 const sortMap = this.createPercentileSortMapping();
                 const emptyItemsRatio = 1 - sortMap.size / this.fullSize;
                 return (v:CTFreqCell) => {
-                    return v && sortMap.get(v.origOrder) / this.fullSize + emptyItemsRatio > minFreq / 100;
+                    return v && sortMap.get(v.origOrder) / this.fullSize + emptyItemsRatio >= minFreq / 100;
                 }
             default:
                 throw new Error('Unknown freq type: ' + this.minFreqType);
