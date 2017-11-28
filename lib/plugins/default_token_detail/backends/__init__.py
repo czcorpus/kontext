@@ -19,10 +19,10 @@
 
 import httplib
 import sqlite3
-from hashlib import md5
-from functools import wraps
 import time
 import zlib
+from functools import wraps
+from hashlib import md5
 
 from plugins.abstract.token_detail import AbstractBackend
 
@@ -57,18 +57,19 @@ def cached(f):
             key = mk_token_detail_cache_key(pth, cls, word, lemma, pos, aligned_corpora, lang)
             conn = sqlite3.connect(cache_path)
             curs = conn.cursor()
-            res = curs.execute("SELECT data FROM cache WHERE key = ?", (key,)).fetchone()
+            res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
             # if no result is found in the cache, call the backend function
             if res is None:
                 res = f(self, word, lemma, pos, aligned_corpora, lang)
-                # if a result is returned by the backend function, zip its data part and store it in the cache
+                # if a result is returned by the backend function, encode and zip its data part and store it in
+                # the cache along with the "found" parameter
                 if res:
                     zipped = buffer(zlib.compress(res[0].encode('utf-8')))
-                    curs.execute("INSERT INTO cache (key, data, last_access) VALUES (?,?,?)",
-                                 (key, zipped, int(round(time.time()))))
+                    curs.execute("INSERT INTO cache (key, data, found, last_access) VALUES (?,?,?,?)",
+                                 (key, zipped, 1 if res[1] else 0, int(round(time.time()))))
             else:
-                # unzip the cached result
-                res = [zlib.decompress(res[0]).decode('utf-8')]
+                # unzip and decode the cached result, convert the "found" parameter value back to boolean
+                res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]
                 # update last access
                 curs.execute("UPDATE cache SET last_access = ? WHERE key = ?",
                              (int(round(time.time())), key))

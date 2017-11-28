@@ -43,6 +43,7 @@ class CacheMan(object):
         c.execute("CREATE TABLE IF NOT EXISTS cache ("
                   "key text, "
                   "data blob, "
+                  "found integer, "
                   "last_access integer NOT NULL, "
                   "PRIMARY KEY (key))")
         conn.commit()
