@@ -36,25 +36,19 @@ export function init(dispatcher, he) {
 
     // ------------------------ <EmptyQueryOverviewBar /> --------------------------------
 
-    class EmptyQueryOverviewBar extends React.Component {
+    const EmptyQueryOverviewBar = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.state = {overviewVisible: false};
-        }
 
-        render() {
-            return (
-                <div>
-                    <ul id="query-overview-bar">
-                        <CorpnameInfoTrigger
-                                corpname={props.corpname}
-                                humanCorpname={props.humanCorpname}
-                                usesubcorp={props.usesubcorp} />
-                    </ul>
-                </div>
-            );
-        }
+        return (
+            <div>
+                <ul id="query-overview-bar">
+                    <layoutViews.CorpnameInfoTrigger
+                            corpname={props.corpname}
+                            humanCorpname={props.humanCorpname}
+                            usesubcorp={props.usesubcorp} />
+                </ul>
+            </div>
+        );
     };
 
     // ----------------------------- <QueryOverivewTable /> --------------------------
