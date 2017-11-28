@@ -307,6 +307,18 @@ declare module "views/query/sampleShuffle" {
     ):SampleFormViews;
 }
 
+declare module "views/query/basicOverview" {
+
+    export interface BasicQueryOverviewViews {
+        EmptyQueryOverviewBar:React.Component;
+    }
+
+    export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        componentHelpers:Kontext.ComponentHelpers,
+    ):BasicQueryOverviewViews;
+}
+
 
 declare module "views/query/overview" {
 
