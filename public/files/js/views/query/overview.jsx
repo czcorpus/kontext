@@ -22,12 +22,15 @@
 
 import * as React from 'vendor/react';
 import {init as saveViewInit} from './save';
+import {init as basicOverviewInit} from './basicOverview';
 
 
 
 export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, mainMenuStore, querySaveAsStore) {
 
     const saveViews = saveViewInit(dispatcher, he, layoutViews, querySaveAsStore);
+    const basicOverviewViews = basicOverviewInit(dispatcher, he);
+
 
     const formTypeToTitle = (opFormType) => {
         switch (opFormType) {
@@ -233,64 +236,6 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
         );
     };
 
-    // ----------------------------- <QueryOverivewTable /> --------------------------
-
-    const QueryOverivewTable = (props) => {
-
-        const handleCloseClick = () => {
-            dispatcher.dispatch({
-                actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
-                props: {}
-            });
-        };
-
-        const handleEditClickFn = (idx) => {
-            return () => {
-                dispatcher.dispatch({
-                    actionType: 'CLEAR_QUERY_OVERVIEW_DATA',
-                    props: {}
-                }); // this is synchronous
-                props.onEditClick(idx);
-            };
-        };
-
-        return (
-            <layoutViews.PopupBox customClass="query-overview centered" onCloseClick={handleCloseClick} takeFocus={true}>
-                <div>
-                    <h3>{he.translate('global__query_overview')}</h3>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <th>{he.translate('global__operation')}</th>
-                                <th>{he.translate('global__parameters')}</th>
-                                <th>{he.translate('global__num_of_hits')}</th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                            {props.data.map((item, i) => (
-                                <tr key={i}>
-                                    <td>{item.op}</td>
-                                    <td>{item.arg}</td>
-                                    <td>{item.size}</td>
-                                    <td>
-                                        <a href={he.createActionLink('view?' + item.tourl)}>
-                                            {he.translate('global__view_result')}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <a onClick={handleEditClickFn(i)}>
-                                            {he.translate('query__overview_edit_query')}
-                                        </a>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </layoutViews.PopupBox>
-        );
-    };
-
 
     // ------------------------ <QueryOverview /> --------------------------------
 
@@ -385,7 +330,7 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
             return (
                 <div>
                     {this.state.queryOverview ?
-                            <QueryOverivewTable data={this.state.queryOverview} onEditClick={this._handleEditClick} />
+                            <basicOverviewViews.QueryOverivewTable data={this.state.queryOverview} onEditClick={this._handleEditClick} />
                             : null}
                     {this.state.replayIsRunning ? <QueryReplayView /> : null}
 
@@ -586,15 +531,37 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
 
         constructor(props) {
             super(props);
-            this.state = {
-                ops: queryReplayStore.getCurrEncodedOperations()
+            this.state = this._fetchStoreState();
+            this._handleStoreChange = this._handleStoreChange.bind(this);
+        }
+
+        _fetchStoreState() {
+            return {
+                ops: queryReplayStore.getCurrEncodedOperations(),
+                queryOverview: queryReplayStore.getCurrentQueryOverview()
             };
+        }
+
+        _handleStoreChange() {
+            this.setState(this._fetchStoreState());
+        }
+
+        componentDidMount() {
+            queryReplayStore.addChangeListener(this._handleStoreChange);
+        }
+
+        componentWillUnmount() {
+            queryReplayStore.removeChangeListener(this._handleStoreChange);
         }
 
         render() {
             return (
                 <div>
                     <RedirectingQueryOverview {...this.props} ops={this.state.ops} />
+                    {this.state.queryOverview ?
+                        <basicOverviewViews.QueryOverivewTable data={this.state.queryOverview}
+                                onEditClick={this._handleEditClick} /> :
+                    null}
                 </div>
             );
         }

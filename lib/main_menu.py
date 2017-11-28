@@ -383,7 +383,7 @@ class MenuGenerator(object):
 
         self.query_overview = (
             EventTriggeringItem(MainMenu.CONCORDANCE('query-overview'),
-                                _('Query overview'), 'OVERVIEW_SHOW_QUERY_INFO')
+                                _('Query overview'), 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO')
         )
 
         self.query_save_as = (
