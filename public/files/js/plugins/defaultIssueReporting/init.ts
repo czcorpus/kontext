@@ -110,14 +110,14 @@ export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 
     private store:IssueReportingStore;
 
-    private view:React.Component;
+    private view:typeof React.Component;
 
-    constructor(store:IssueReportingStore, view:React.Component) {
+    constructor(store:IssueReportingStore, view:typeof React.Component) {
         this.store = store;
         this.view = view;
     }
 
-    getWidgetView():React.Component {
+    getWidgetView():typeof React.Component {
         return this.view;
     }
 }

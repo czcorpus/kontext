@@ -27,6 +27,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import {init as initQueryHistoryViews} from 'views/query/history';
 import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
+import {init as basicOverviewViewsInit} from 'views/query/basicOverview';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -47,8 +48,12 @@ class QueryHistoryPage {
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.getStores().corpusInfoStore
         );
+        const queryOverviewViews = basicOverviewViewsInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.getComponentHelpers(),
+        );
         this.layoutModel.renderReactComponent(
-            this.layoutModel.layoutViews.EmptyQueryOverviewBar,
+            queryOverviewViews.EmptyQueryOverviewBar,
             window.document.getElementById('query-overview-mount'),
             {
                 corpname: this.layoutModel.getConf<string>('corpname'),

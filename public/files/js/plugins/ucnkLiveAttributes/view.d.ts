@@ -30,7 +30,7 @@ export interface LiveAttributesViews {
 export function init(
     dispatcher:Kontext.FluxDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
-    subcMixerComponent:React.Component,
+    subcMixerComponent:typeof React.Component,
     textTypesStore:Kontext.PageStore,
     liveAttrsStore:Kontext.PageStore
 ):LiveAttributesViews;

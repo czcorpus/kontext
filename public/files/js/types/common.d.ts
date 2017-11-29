@@ -107,7 +107,7 @@ declare module Kontext {
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         getComponentHelpers():Kontext.ComponentHelpers;
-        renderReactComponent(reactClass:React.Component,
+        renderReactComponent(reactClass:typeof React.Component|React.FuncComponent,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
@@ -296,17 +296,16 @@ declare module Kontext {
      *
      */
     export interface LayoutViews {
-        ModalOverlay:React.Component;
-        PopupBox:React.Component;
-        CloseableFrame:React.Component;
-        InlineHelp:React.Component;
-        Messages:React.Component;
-        EmptyQueryOverviewBar:React.Component;
-        QueryOverivewTable:React.Component;
-        ImgWithMouseover:React.Component;
-        IssueReportingLink:React.Component;
-        AjaxLoaderImage:React.Component;
-        AjaxLoaderBarImage:React.Component;
+        ModalOverlay:typeof React.Component | React.FuncComponent;
+        PopupBox:typeof React.Component | React.FuncComponent;
+        CloseableFrame:typeof React.Component | React.FuncComponent;
+        InlineHelp:typeof React.Component | React.FuncComponent;
+        Messages:typeof React.Component | React.FuncComponent;
+        CorpnameInfoTrigger:typeof React.Component | React.FuncComponent;
+        ImgWithMouseover:typeof React.Component | React.FuncComponent;
+        IssueReportingLink:typeof React.Component | React.FuncComponent;
+        AjaxLoaderImage:typeof React.Component | React.FuncComponent;
+        AjaxLoaderBarImage:typeof React.Component | React.FuncComponent;
     }
 
     /**

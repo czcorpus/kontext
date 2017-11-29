@@ -21,7 +21,10 @@
 /// <reference path="../../types/common.d.ts" />
 
 export interface IssueReportingViews {
-    IssueReportingWidget:React.Component;
+    IssueReportingWidget:typeof React.Component;
 }
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers):IssueReportingViews;
+export function init(
+    dispatcher:Kontext.FluxDispatcher,
+    he:Kontext.ComponentHelpers
+):IssueReportingViews;

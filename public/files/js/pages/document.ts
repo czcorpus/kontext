@@ -33,7 +33,7 @@
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import {Dispatcher} from 'vendor/Dispatcher';
-import {init as documentViewsInit} from 'views/document';
+import {init as documentViewsInit} from '../views/document';
 import {init as commonViewsInit} from 'views/common';
 import {init as menuViewsInit} from 'views/menu';
 import {init as overviewAreaViewsInit} from 'views/overview';
@@ -261,7 +261,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
      */
-    renderReactComponent(reactClass:React.Component,
+    renderReactComponent(reactClass:typeof React.Component|React.FuncComponent,
             target:HTMLElement, props?:React.Props):void {
         ReactDOM.render(React.createElement(reactClass, props), target);
     }
@@ -1108,7 +1108,7 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.getComponentHelpers();
     }
 
-    renderReactComponent(reactClass:React.Component,
+    renderReactComponent(reactClass:typeof React.Component|React.FuncComponent,
             target:HTMLElement, props?:React.Props):void {
         this.pageModel.renderReactComponent(reactClass, target, props);
     }
