@@ -261,8 +261,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
      */
-    renderReactComponent(reactClass:typeof React.Component|React.FuncComponent,
-            target:HTMLElement, props?:React.Props):void {
+    renderReactComponent<T, U>(reactClass:typeof React.Component|React.FuncComponent<T>,
+            target:HTMLElement, props?:T):void {
         ReactDOM.render(React.createElement(reactClass, props), target);
     }
 
@@ -1108,8 +1108,8 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.getComponentHelpers();
     }
 
-    renderReactComponent(reactClass:typeof React.Component|React.FuncComponent,
-            target:HTMLElement, props?:React.Props):void {
+    renderReactComponent<T, U>(reactClass:typeof React.Component|React.FuncComponent<T>,
+            target:HTMLElement, props?:T):void {
         this.pageModel.renderReactComponent(reactClass, target, props);
     }
 

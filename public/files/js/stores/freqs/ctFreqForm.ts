@@ -107,6 +107,16 @@ export const enum FreqFilterQuantities {
     IPM_PERCENTILE = "pipm"
 }
 
+export const enum AlignTypes {
+    RIGHT = "right",
+    LEFT = "left"
+}
+
+export const enum Dimensions {
+    FIRST = 1,
+    SECOND = 2
+}
+
 /**
  *
  */
@@ -134,11 +144,11 @@ export class CTFreqFormStore extends SimplePageStore {
 
     private minFreqType:FreqFilterQuantities;
 
-    private alignType1:string;
+    private alignType1:AlignTypes;
 
     private ctxIndex1:number;
 
-    private alignType2:string;
+    private alignType2:AlignTypes;
 
     private ctxIndex2:number;
 
@@ -229,16 +239,16 @@ export class CTFreqFormStore extends SimplePageStore {
         }
     }
 
-    private importCtxValue(v:string):[number, string] {
+    private importCtxValue(v:string):[number, AlignTypes] {
         let srchIdx = CTFreqFormStore.POSITION_LA.indexOf(v);
         if (srchIdx > -1) {
-            return [srchIdx, 'left'];
+            return [srchIdx, AlignTypes.LEFT];
         }
         srchIdx = CTFreqFormStore.POSITION_RA.indexOf(v);
         if (srchIdx > -1) {
-            return [srchIdx, 'right'];
+            return [srchIdx, AlignTypes.RIGHT];
         }
-        return  [6, 'left'];
+        return  [6, AlignTypes.LEFT];
     }
 
     private validateAttrs():Error {
@@ -257,11 +267,11 @@ export class CTFreqFormStore extends SimplePageStore {
         }
     }
 
-    private setDimensionAttr(dimNum:number, v:string):void {
-        if (dimNum === 1) {
+    private setDimensionAttr(dimNum:Dimensions, v:string):void {
+        if (dimNum === Dimensions.FIRST) {
             this.attr1 = v;
 
-        } else if (dimNum === 2) {
+        } else if (dimNum === Dimensions.SECOND) {
             this.attr2 = v;
 
         } else {
@@ -269,11 +279,11 @@ export class CTFreqFormStore extends SimplePageStore {
         }
     }
 
-    private getAttrOfDim(dim:number):string {
+    private getAttrOfDim(dim:Dimensions):string {
         switch (dim) {
-            case 1:
+            case Dimensions.FIRST:
             return this.attr1;
-            case 2:
+            case Dimensions.SECOND:
             return this.attr2;
             default:
             throw new Error(`Unknown dimension: ${dim}`);
@@ -285,7 +295,7 @@ export class CTFreqFormStore extends SimplePageStore {
      *
      * @param dim either 1 (rows) or 2 (cols)
      */
-    private getAttrCtx(dim:number):string {
+    private getAttrCtx(dim:Dimensions):string {
         if (dim === 1) {
             return this.alignType1 === 'left' ?
                 CTFreqFormStore.POSITION_LA[this.ctxIndex1] :
@@ -299,7 +309,7 @@ export class CTFreqFormStore extends SimplePageStore {
         throw new Error('Unknown dimension ' + dim);
     }
 
-    private generateCrit(dim:number):string {
+    private generateCrit(dim:Dimensions):string {
         const attr = this.getAttrOfDim(dim);
         return isStructAttr(attr) ? '0' : this.getAttrCtx(dim);
     }
@@ -357,7 +367,7 @@ export class CTFreqFormStore extends SimplePageStore {
         return null;
     }
 
-    getMinFreqType():string {
+    getMinFreqType():FreqFilterQuantities {
         return this.minFreqType;
     }
 
@@ -365,25 +375,24 @@ export class CTFreqFormStore extends SimplePageStore {
         return CTFreqFormStore.POSITION_LABELS;
     }
 
-    getAlignType(dim:number):string {
-        if (dim === 1) {
+    getAlignType(dim:Dimensions):AlignTypes {
+        if (dim === Dimensions.FIRST) {
             return this.alignType1;
 
-        } else if (dim === 2) {
+        } else if (dim === Dimensions.SECOND) {
             return this.alignType2;
         }
         return undefined;
     }
 
-    getCtxIndex(dim:number):number {
-        if (dim === 1) {
+    getCtxIndex(dim:Dimensions):number {
+        if (dim === Dimensions.FIRST) {
             return this.ctxIndex1;
 
-        } else if (dim === 2) {
+        } else if (dim === Dimensions.SECOND) {
             return this.ctxIndex2;
         }
         return undefined;
     }
-
 
 }
