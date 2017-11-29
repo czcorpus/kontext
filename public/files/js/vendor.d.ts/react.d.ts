@@ -22,20 +22,18 @@
  */
 declare module React {
 
-    export type Props = {[name:string]:any};
-
-    export function createClass(src:{[attr:string]:any}):React.Component;
+    export function createClass<T, U>(src:{[attr:string]:any}):React.Component<T, U>;
 
     export interface ReactElement {
     }
 
-    class Component {
+    class Component<T, U> {
 
-        constructor(props:{[key:string]:any});
+        constructor(props:T);
 
-        props:Props;
+        props:T;
 
-        state:Props;
+        state:U;
 
         render():ReactElement;
 
@@ -43,25 +41,43 @@ declare module React {
 
         componentDidMount();
 
-        componentWillReceiveProps(nextProps:Props);
+        componentWillReceiveProps(nextProps:T);
 
-        shouldComponentUpdate(nextProps:Props, nextState:Props);
+        shouldComponentUpdate(nextProps:T, nextState:U);
 
-        componentWillUpdate(nextProps:Props, nextState:Props);
+        componentWillUpdate(nextProps:T, nextState:U);
 
-        componentDidUpdate(prevProps:Props, prevState:Props);
+        componentDidUpdate(prevProps:T, prevState:U);
 
         componentWillUnmount(updater, [callback]);
 
-        setState(newState:Props, callback?:() => any);
-        setState(updater:(prevState:Props, props:Props) => Props, callback?:() => any);
+        setState(newState:U, callback?:() => any);
+        setState(updater:(prevState:U, props:T) => T, callback?:() => any);
 
         forceUpdate(callback?:() => any);
     }
 
-    export type FuncComponent = (Props)=>ReactElement;
+    export interface FuncComponent<T> {
+        (Props:T):ReactElement;
+    }
 
-    export function createElement(elmType:typeof React.Component|React.FuncComponent, props:Props,
+    export interface SyntheticEvent {
+        bubbles:boolean;
+        cancelable:boolean;
+        currentTarget:EventTarget;
+        defaultPrevented:boolean;
+        eventPhase:number;
+        isTrusted:boolean;
+        nativeEvent:Event;
+        target:EventTarget;
+        type:string;
+        timeStamp:Date;
+
+        preventDefault():void;
+        stopPropagation():void;
+    }
+
+    export function createElement<T, U>(elmType:typeof React.Component|React.FuncComponent<T>, props:T,
                                   ...children:any[]):ReactElement;
 }
 

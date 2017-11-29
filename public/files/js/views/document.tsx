@@ -28,7 +28,16 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <ModalOverlay /> -----------------------------
 
-    class ModalOverlay extends React.Component {
+    interface ModalOverlayProps {
+        onCloseKey:()=>void;
+        isScrollable:boolean;
+        children:React.ReactElement;
+    }
+
+    interface ModalOverlayState {
+    }
+
+    class ModalOverlay extends React.Component<ModalOverlayProps, ModalOverlayState> {
 
         constructor(props) {
             super(props);
@@ -65,22 +74,52 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <PopupBox /> -----------------------------
 
+    interface PopupBoxProps {
+
+        /**
+         * a custom action to be performed once the component is mounted
+         */
+        onReady:(elm:HTMLElement)=>void;
+
+        /**
+         * a custom action to be performed when user clicks 'close'
+         */
+        onCloseClick:()=>void;
+
+        status:string;
+
+        /**
+         * an optional inline CSS
+         */
+        customStyle?:{[prop:string]:string};
+
+        /**
+         * if true then the "close" button will take the focus
+         * allowing instant closing by ESC or handling keys
+         * by a custom handler (see the next prop)
+         */
+        takeFocus?:boolean;
+
+        /**
+         * an optional function called in case of a 'onKeyDown' event
+         */
+        keyPressHandler:(evt:React.SyntheticEvent)=>void;
+
+        customClass:string;
+
+        autoSize:boolean;
+
+        children:Array<React.ReactElement>;
+    }
+
+    interface PopupBoxState {}
+
     /**
      * A general PopupBox for displaying overlay information. The box
      * is not modal but in can be wrapped in <ModalOverlay />
      * component to get modal box/window.
-     *
-     * supported properties:
-     * customStyle -- an optional inline CSS
-     * onCloseClick -- custom action to be performed when user clicks 'close'
-     * onReady -- a custom action to be performed once the component is mounted
-     *            (signature: onReady(DOMNode) )
-     * takeFocus (boolean) -- if true then the "close" button will take the focus
-     *                        allowing instant closing by ESC or handling keys
-     *                        by a custom handler (see the next prop)
-     * keyPressHandler -- an optional function called in case of a 'onKeyDown' event
      */
-    class PopupBox extends React.Component {
+    class PopupBox extends React.Component<PopupBoxProps, PopupBoxState> {
 
         constructor(props) {
             super(props);
@@ -179,7 +218,19 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <ImgWithMouseover /> -----------------------------
 
-    class ImgWithMouseover extends React.Component {
+    interface ImgWithMouseoverProps {
+        src:string;
+        src2?:string;
+        htmlClass:string;
+        clickHandler:()=>void;
+        alt:string;
+    }
+
+    interface ImgWithMouseoverState {
+        isMouseover:boolean;
+    }
+
+    class ImgWithMouseover extends React.Component<ImgWithMouseoverProps, ImgWithMouseoverState> {
 
         constructor(props) {
             super(props);
@@ -215,7 +266,15 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <CloseableFrame /> -----------------------------
 
-    const CloseableFrame = (props:React.Props):React.ReactElement => {
+    interface CloseableFrameProps {
+        onCloseClick:()=>void;
+        customClass:string;
+        scrollable:boolean;
+        label:string;
+        children:Array<React.ReactElement>;
+    }
+
+    const CloseableFrame:React.FuncComponent<CloseableFrameProps> = (props) => {
 
         const closeClickHandler = () => {
             if (typeof props.onCloseClick === 'function') {
@@ -251,7 +310,16 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <InlineHelp /> -----------------------------
 
-    class InlineHelp extends React.Component {
+    interface InlineHelpProps {
+        customStyle:string;
+        children:Array<React.ReactElement>;
+    }
+
+    interface InlineHelpState {
+        helpVisible:boolean;
+    }
+
+    class InlineHelp extends React.Component<InlineHelpProps, InlineHelpState> {
 
         constructor(props) {
             super(props);
@@ -288,7 +356,15 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
     // ------------------------------ <Message /> -----------------------------
     // (info/error/warning message box)
 
-    const Message = (props:React.Props):React.ReactElement => {
+    interface MessageProps {
+        messageId:string;
+        fadingOut:boolean;
+        transitionTime:number;
+        messageType:string;
+        messageText:string;
+    }
+
+    const Message:React.FuncComponent<MessageProps> = (props) => {
 
         const handleCloseClick = (e) => {
             e.preventDefault();
@@ -344,7 +420,17 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <FadeInFrame /> -----------------------------
 
-    class FadeInFrame extends React.Component {
+    interface FadeInFrameProps {
+        mode:string;
+        transitionTime:number;
+        children:Array<React.ReactElement>;
+    }
+
+    interface FadeInFrameState {
+        opacity:number;
+    }
+
+    class FadeInFrame extends React.Component<FadeInFrameProps, FadeInFrameState> {
 
         constructor(props) {
             super(props);
@@ -374,7 +460,16 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <Messages /> -----------------------------
 
-    class Messages extends React.Component {
+    interface MessagesProps {
+
+    }
+
+    interface MessagesState {
+        messages:any; // TODO type
+        transitionTime:number;
+    }
+
+    class Messages extends React.Component<MessagesProps, MessagesState> {
 
         constructor(props) {
             super(props);
@@ -418,12 +513,13 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
-    /**
-     * Props:
-     * - humanCorpname
-     * - usesubcorp
-     */
-    const CorpnameInfoTrigger = (props:React.Props):React.ReactElement => {
+    interface CorpnameInfoTriggerProps {
+        corpname:string;
+        usesubcorp:string;
+        humanCorpname:string;
+    }
+
+    const CorpnameInfoTrigger:React.FuncComponent<CorpnameInfoTriggerProps> = (props) => {
 
         const handleCorpnameClick = () => {
             dispatcher.dispatch({
@@ -475,7 +571,15 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------ <IssueReportingLink /> --------------------------------
 
-    const IssueReportingLink = (props:React.Props):React.ReactElement => {
+    interface IssueReportingLinkProps {
+        url:string;
+        blank_window:boolean;
+        type:string;
+        label:string;
+        onClick:()=>void;
+    }
+
+    const IssueReportingLink:React.FuncComponent<IssueReportingLinkProps> = (props) => {
         if (props.type === 'static') {
             return (
                 <a href={props.url} target={props.blank_window ? '_blank' : '_self'}
@@ -495,13 +599,17 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------ <AjaxLoaderImage /> --------------------------------
 
-    const AjaxLoaderImage = (props:React.Props):React.ReactElement => {
+    interface AjaxLoaderImageProps {}
+
+    const AjaxLoaderImage:React.FuncComponent<AjaxLoaderImageProps> = (props) => {
         return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
     };
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
 
-    const AjaxLoaderBarImage = (props:React.Props):React.ReactElement => {
+    interface AjaxLoaderBarImageProps {}
+
+    const AjaxLoaderBarImage:React.FuncComponent<AjaxLoaderBarImageProps> = (props) => {
         return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
     };
 

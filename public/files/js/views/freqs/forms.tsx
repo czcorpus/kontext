@@ -19,17 +19,49 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
 
+import {MLFreqFormStore, TTFreqFormStore, AttrValue} from '../../stores/freqs/freqForms';
+import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../stores/freqs/ctFreqForm';
 
-export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFormStore) {
+// -------------------------- exported component ----------
+
+interface FrequencyFormProps {
+    initialFreqFormVariant:string;
+}
+
+interface FrequencyFormState {
+    formType:string;
+}
+
+export class FrequencyFormExport extends React.Component<FrequencyFormProps, FrequencyFormState> {
+}
+
+export interface FreqFormViews {
+    FrequencyForm:typeof FrequencyFormExport;
+}
+
+
+export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        he:Kontext.ComponentHelpers,
+        mlFreqFormStore:MLFreqFormStore,
+        ttFreqFormStore:TTFreqFormStore,
+        ctFreqFormStore:CTFreqFormStore):FreqFormViews {
 
     const layoutViews = he.getLayoutViews();
 
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
-    const StructAttrSelect = (props) => {
+    interface StructAttrSelectProps {
+        structAttrListSplitTypes:Immutable.List<Immutable.List<AttrValue>>;
+        fttattr:Immutable.Set<string>;
+    }
+
+    const StructAttrSelect:React.FuncComponent<StructAttrSelectProps> = (props) => {
 
         const handleCheckboxChange = (evt) => {
             dispatcher.dispatch({
@@ -78,7 +110,12 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <FreqLimitInput /> --------------------------------------------
 
-    const FreqLimitInput = (props) => {
+    interface FreqLimitInputProps {
+        actionPrefix:string;
+        flimit:string;
+    }
+
+    const FreqLimitInput:React.FuncComponent<FreqLimitInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -95,7 +132,11 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <IncludeEmptyCheckbox /> --------------------------------------------
 
-    const IncludeEmptyCheckbox = (props) => {
+    interface IncludeEmptyCheckboxProps {
+        fttIncludeEmpty:boolean;
+    }
+
+    const IncludeEmptyCheckbox:React.FuncComponent<IncludeEmptyCheckboxProps> = (props) => {
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch({
@@ -110,15 +151,25 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <TTFreqForm /> --------------------------------------------
 
-    class TTFreqForm extends React.Component {
+    interface TTFreqFormProps {
+    }
 
-        constructor(props) {
+    interface TTFreqFormState {
+        flimit:string;
+        structAttrListSplitTypes:Immutable.List<Immutable.List<AttrValue>>;
+        fttattr:Immutable.Set<String>;
+        fttIncludeEmpty:boolean;
+    }
+
+    class TTFreqForm extends React.Component<TTFreqFormProps, TTFreqFormState> {
+
+        constructor(props:TTFreqFormProps) {
             super(props);
             this.state = this._getStoreState();
             this._storeChangeHandler = this._storeChangeHandler.bind(this);
         }
 
-        _getStoreState() {
+        _getStoreState():TTFreqFormState {
             return {
                 structAttrListSplitTypes: ttFreqFormStore.getStructAttrListSplitTypes(),
                 fttattr: ttFreqFormStore.getFttattr(),
@@ -139,7 +190,7 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
             ttFreqFormStore.removeChangeListener(this._storeChangeHandler);
         }
 
-        render() {
+        render():React.ReactElement {
             return (
                 <div>
                     <table className="form">
@@ -183,7 +234,13 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // -------------------- <CTFreqFormMinFreqInput /> --------------------------------------------
 
-    const CTFreqFormMinFreqInput = (props) => {
+    interface CTFreqFormMinFreqInputProps {
+        freqType:FreqFilterQuantities;
+        value:string;
+        hint:string;
+    }
+
+    const CTFreqFormMinFreqInput:React.FuncComponent<CTFreqFormMinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -223,7 +280,13 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // -------- <CTFreqPosSelect /> --------------------------------
 
-    const CTFreqPosSelect = (props) => {
+    interface CTFreqPosSelectProps {
+        dim:number;
+        value:string;
+        positionRangeLabels:Immutable.List<string>;
+    }
+
+    const CTFreqPosSelect:React.FuncComponent<CTFreqPosSelectProps> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -244,7 +307,12 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // -------- <CTFreqNodeStartSelect /> --------------------------------
 
-    const CTFreqNodeStartSelect = (props) => {
+    interface CTFreqNodeStartSelectProps {
+        dim:number;
+        value:string;
+    }
+
+    const CTFreqNodeStartSelect:React.FuncComponent<CTFreqNodeStartSelectProps> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -266,7 +334,28 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // -------------------- <CTFreqForm /> --------------------------------------------
 
-    class CTFreqForm extends React.Component {
+    interface CTFreqFormProps {
+
+    }
+
+    interface CTFreqFormState {
+        posAttrs:Immutable.List<Kontext.AttrItem>;
+        structAttrs:Immutable.List<Kontext.AttrItem>;
+        attr1:string;
+        attr1IsStruct:boolean;
+        attr2:string;
+        attr2IsStruct:boolean;
+        minFreq:string;
+        minFreqType:FreqFilterQuantities;
+        minFreqHint:string;
+        positionRangeLabels:Array<string>,
+        alignType1:AlignTypes;
+        alignType2:AlignTypes;
+        ctxIndex1:number;
+        ctxIndex2:number;
+    }
+
+    class CTFreqForm extends React.Component<CTFreqFormProps, CTFreqFormState> {
 
         constructor(props) {
             super(props);
@@ -321,7 +410,7 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
             });
         }
 
-        _renderPosAttrOpts(dim, alignType) {
+        _renderPosAttrOpts(dim:Dimensions) {
             return [
                 <tr key="label">
                     <th>
@@ -413,7 +502,13 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // -------------------- <MLAttrSelection /> --------------------------------------------
 
-    const MLAttrSelection = (props) => {
+    interface MLAttrSelectionProps {
+        levelIdx:number;
+        mlxAttrValue:string;
+        attrList:Immutable.List<AttrValue>;
+    }
+
+    const MLAttrSelection:React.FuncComponent<MLAttrSelectionProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
@@ -437,7 +532,12 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <MLIgnoreCaseCheckbox /> ---------------------
 
-    const MLIgnoreCaseCheckbox = (props) => {
+    interface MLIgnoreCaseCheckboxProps {
+        levelIdx:number;
+        mlxicaseValue:string;
+    }
+
+    const MLIgnoreCaseCheckbox:React.FuncComponent<MLIgnoreCaseCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -454,7 +554,13 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <MLPositionSelect /> ---------------------
 
-    const MLPositionSelect = (props) => {
+    interface MLPositionSelectProps {
+        levelIdx:number;
+        mlxctxIndex:number;
+        positionRangeLabels:Array<string>;
+    }
+
+    const MLPositionSelect:React.FuncComponent<MLPositionSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
@@ -478,7 +584,12 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <MLPosAlignmentSelect /> ---------------------
 
-    const MLPosAlignmentSelect = (props) => {
+    interface MLPosAlignmentSelectProps {
+        levelIdx:number;
+        alignType:AlignTypes;
+    }
+
+    const MLPosAlignmentSelect:React.FuncComponent<MLPosAlignmentSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch({
@@ -501,7 +612,12 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <MLMoveLevelControl /> ---------------------
 
-    const MLMoveLevelControl = (props) => {
+    interface MLMoveLevelControlProps {
+        levelIdx:number;
+        numLevels:number;
+    }
+
+    const MLMoveLevelControl:React.FuncComponent<MLMoveLevelControlProps> = (props) => {
 
         const handleClick = (direction) => {
             dispatcher.dispatch({
@@ -532,7 +648,19 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <SingleLevelField /> ---------------------
 
-    const SingleLevelFieldTR = (props) => {
+    interface SingleLevelFieldTRProps {
+        levelIdx:number;
+        attrList:Immutable.List<AttrValue>;
+        mlxAttrValue:string;
+        mlxicaseValue:string;
+        positionRangeLabels:Array<string>;
+        mlxctxIndex:number;
+        alignType:string; // TODO use enum, use general align definition (not just CT)
+        numLevels:number;
+        isRemovable:boolean;
+    }
+
+    const SingleLevelFieldTR:React.FuncComponent<SingleLevelFieldTRProps> = (props) => {
 
         const handleRemoveLevelClick = () => {
             dispatcher.dispatch({
@@ -586,7 +714,23 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <MLFreqForm /> ---------------------
 
-    class MLFreqForm extends React.Component {
+    interface MLFreqFormProps {
+
+    }
+
+    interface MLFreqFormState {
+        attrList:Immutable.List<AttrValue>;
+        flimit:string;
+        levels:Immutable.List<number>;
+        mlxattrValues:Immutable.List<string>;
+        mlxicaseValues:Immutable.List<boolean>;
+        positionRangeLabels:Array<string>;
+        mlxctxIndices:Immutable.List<number>;
+        alignTypes:Immutable.List<string>;
+        maxNumLevels:number;
+    }
+
+    class MLFreqForm extends React.Component<MLFreqFormProps, MLFreqFormState> {
 
         constructor(props) {
             super(props);
@@ -699,7 +843,12 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <FreqFormSelector /> ---------------------
 
-    const FreqFormSelector = (props) => {
+    interface FreqFormSelectorProps {
+        onChange:(ident:string)=>void;
+        formType:string;
+    }
+
+    const FreqFormSelector:React.FuncComponent<FreqFormSelectorProps> = (props) => {
 
         const onItemClick = (ident) => {
             return () => {
@@ -731,7 +880,7 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
 
     // ---------------------- <FrequencyForm /> ---------------------
 
-    class FrequencyForm extends React.Component {
+    class FrequencyForm extends FrequencyFormExport {
 
         constructor(props) {
             super(props);
