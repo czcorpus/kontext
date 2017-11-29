@@ -24,7 +24,6 @@
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../pages/document';
 import * as Immutable from 'vendor/immutable';
-import { dispatch } from 'vendor/d3';
 import {MultiDict} from '../../util';
 
 
@@ -46,27 +45,52 @@ export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
  */
 export const roundFloat = (v:number):number => Math.round(v * 100) / 100;
 
-
+/**
+ * Test whether a provided identifier represents
+ * a structural attribute (e.g. 'doc.id', 'div.author').
+ */
 export const isStructAttr = (v:string):boolean => {
     return v.indexOf('.') > -1;
 };
 
-
+/**
+ * Test for non-negative values.
+ */
 export const validateMinAbsFreqAttr = (v:string):boolean => {
     return /^(0?|([1-9][0-9]*))$/.exec(v) !== null;
 };
 
+/**
+ * Test for values 0 < x <= 100
+ */
+export const validatePercentile = (v:string):boolean => {
+    return validateMinAbsFreqAttr(v) && parseFloat(v) > 0 && parseFloat(v) <= 100;
+};
 
+/**
+ * Test whether a provided quantity represents
+ * a percentile-based one.
+ */
+export const isPercentileFilterQuantity = (v:FreqFilterQuantities):boolean => {
+    return v === FreqFilterQuantities.ABS_PERCENTILE || v === FreqFilterQuantities.IPM_PERCENTILE;
+};
+
+/**
+ * Input values for 2d frequency entry form.
+ */
 export interface CTFormInputs {
     ctminfreq:string;
-    ctminfreq_type:string;
+    ctminfreq_type:FreqFilterQuantities;
     ctattr1:string;
     ctattr2:string;
     ctfcrit1:string;
     ctfcrit2:string;
 }
 
-
+/**
+ * All the inputs and required data for 2d freq.
+ * entry form.
+ */
 export interface CTFormProperties extends CTFormInputs {
     attrList:Array<Kontext.AttrItem>;
     structAttrList:Array<Kontext.AttrItem>;
@@ -83,7 +107,9 @@ export const enum FreqFilterQuantities {
     IPM_PERCENTILE = "pipm"
 }
 
-
+/**
+ *
+ */
 export class CTFreqFormStore extends SimplePageStore {
 
     public static POSITION_LA = ['-6<0', '-5<0', '-4<0', '-3<0', '-2<0', '-1<0', '0<0', '1<0', '2<0', '3<0', '4<0', '5<0', '6<0'];
@@ -106,9 +132,7 @@ export class CTFreqFormStore extends SimplePageStore {
 
     private minFreq:string;
 
-    private minFreqType:string;
-
-    private setupError:string;
+    private minFreqType:FreqFilterQuantities;
 
     private alignType1:string;
 
@@ -136,7 +160,10 @@ export class CTFreqFormStore extends SimplePageStore {
             switch (payload.actionType) {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
                     this.setDimensionAttr(payload.props['dimension'], payload.props['value']);
-                    this.validateAttrs();
+                    const err1 = this.validateAttrs();
+                    if (err1) {
+                        this.pageModel.showMessage('error', err1);
+                    }
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE':
@@ -144,18 +171,12 @@ export class CTFreqFormStore extends SimplePageStore {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_FORM_SET_MIN_FREQ':
-                    if (validateMinAbsFreqAttr(payload.props['value']) &&
-                            this.minFreqType !== FreqFilterQuantities.ABS_PERCENTILE &&
-                            this.minFreqType !== FreqFilterQuantities.IPM_PERCENTILE ||
-                            parseFloat(payload.props['value'] || '0') > 0 &&
-                            parseFloat(payload.props['value'] || '0') <= 100) {
-                        this.minFreq = payload.props['value'];
-                        this.notifyChangeListeners();
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('freq__ct_min_freq_val_error'));
-                        this.notifyChangeListeners();
+                    this.minFreq = payload.props['value'];
+                    const err2 = this.validateMinFreq();
+                    if (err2) {
+                        this.pageModel.showMessage('error', err2);
                     }
+                    this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_FORM_SET_CTX':
                     if (payload.props['dim'] === 1) {
@@ -176,17 +197,36 @@ export class CTFreqFormStore extends SimplePageStore {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_CT_SUBMIT':
-                    if (!this.setupError) {
+                    const err3 = this.validateMinFreq();
+                    const err4 = this.validateAttrs();
+                    if (!err3 && !err4) {
                         this.submitForm();
                         // leaves the page here
 
                     } else {
-                        this.pageModel.showMessage('error', this.setupError);
+                        if (err3) {
+                            this.pageModel.showMessage('error', err3);
+                        }
+                        if (err4) {
+                            this.pageModel.showMessage('error', err4);
+                        }
                         this.notifyChangeListeners();
                     }
             break;
             }
         });
+    }
+
+    private validateMinFreq():Error {
+        if (isPercentileFilterQuantity(this.minFreqType) &&
+                validatePercentile(this.minFreq) ||
+                !isPercentileFilterQuantity(this.minFreqType) &&
+                validateMinAbsFreqAttr(this.minFreq)) {
+            return null;
+
+        } else {
+            return Error(this.pageModel.translate('freq__ct_min_freq_val_error'));
+        }
     }
 
     private importCtxValue(v:string):[number, string] {
@@ -201,18 +241,19 @@ export class CTFreqFormStore extends SimplePageStore {
         return  [6, 'left'];
     }
 
-    private validateAttrs():void {
+    private validateAttrs():Error {
         if (isStructAttr(this.attr1) && isStructAttr(this.attr2)
-            && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
+                && (this.multiSattrAllowedStructs.indexOf(this.attr1.split('.')[0]) === -1
                 || this.multiSattrAllowedStructs.indexOf(this.attr2.split('.')[0]) === -1)) {
-            this.setupError =
+            return new Error(
                 this.multiSattrAllowedStructs.size > 0 ?
                     this.pageModel.translate('freq__ct_only_some_sattr_allowed_{allowed_sattrs}',
                                              {allowed_sattrs: this.multiSattrAllowedStructs.join(', ')}) :
-                    this.pageModel.translate('freq__ct_two_sattrs_not_allowed');
+                    this.pageModel.translate('freq__ct_two_sattrs_not_allowed')
+                );
 
         } else {
-            this.setupError = '';
+            return null;
         }
     }
 
@@ -318,10 +359,6 @@ export class CTFreqFormStore extends SimplePageStore {
 
     getMinFreqType():string {
         return this.minFreqType;
-    }
-
-    getSetupError():string {
-        return this.setupError;
     }
 
     getPositionRangeLabels():Array<string> {

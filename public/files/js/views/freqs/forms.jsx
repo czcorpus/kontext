@@ -287,7 +287,6 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
                 minFreq: ctFreqFormStore.getMinFreq(),
                 minFreqType: ctFreqFormStore.getMinFreqType(),
                 minFreqHint: ctFreqFormStore.getMinFreqHint(),
-                setupError: ctFreqFormStore.getSetupError(),
                 positionRangeLabels: ctFreqFormStore.getPositionRangeLabels(),
                 alignType1: ctFreqFormStore.getAlignType(1),
                 alignType2: ctFreqFormStore.getAlignType(2),
@@ -322,21 +321,6 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
             });
         }
 
-        _rendersetupError() {
-            if (this.state.setupError) {
-                return (
-                    <p className="setup-warning">
-                        <img src={he.createStaticUrl('img/warning-icon.svg')}
-                                alt={he.translate('global__warning')} />
-                        {this.state.setupError}
-                    </p>
-                );
-
-            } else {
-                return null;
-            }
-        }
-
         _renderPosAttrOpts(dim, alignType) {
             return [
                 <tr key="label">
@@ -366,9 +350,6 @@ export function init(dispatcher, he, mlFreqFormStore, ttFreqFormStore, ctFreqFor
         render() {
             return (
                 <div className="CTFreqForm">
-                    <div>
-                        {this._rendersetupError()}
-                    </div>
                     <div className="toolbar">
                             <CTFreqFormMinFreqInput value={this.state.minFreq} freqType={this.state.minFreqType}
                                     hint={this.state.minFreqHint} />
