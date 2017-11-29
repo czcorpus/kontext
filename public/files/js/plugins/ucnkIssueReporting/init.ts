@@ -31,13 +31,13 @@ import * as RSVP from 'vendor/rsvp';
 export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 
 
-    private view:React.Component;
+    private view:typeof React.Component;
 
-    constructor(view:React.Component) {
+    constructor(view:typeof React.Component) {
         this.view = view;
     }
 
-    getWidgetView():React.Component {
+    getWidgetView():typeof React.Component {
         return this.view;
     }
 }

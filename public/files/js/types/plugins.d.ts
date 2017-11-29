@@ -37,7 +37,7 @@ declare module PluginInterfaces {
 
     export interface ISubcMixer {
         refreshData():void;
-        getWidgetView():React.Component;
+        getWidgetView():typeof React.Component;
     }
 
     export interface ISyntaxViewer extends Kontext.PageStore {
@@ -48,7 +48,7 @@ declare module PluginInterfaces {
     }
 
     export interface ITagHelper {
-        getWidgetView():React.Component;
+        getWidgetView():typeof React.Component;
     }
 
     export interface IQueryStorageStore extends Kontext.PageStore {
@@ -68,7 +68,7 @@ declare module PluginInterfaces {
          */
         importData(data:Array<Kontext.QueryHistoryItem>):void;
 
-        getWidgetView():React.Component;
+        getWidgetView():typeof React.Component;
 
         getStore():IQueryStorageStore;
     }
@@ -81,7 +81,7 @@ declare module PluginInterfaces {
     }
 
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
-        getViews(subcMixerView:React.Component, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
+        getViews(subcMixerView:typeof React.Component, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
         getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
         notifyChangeListeners():void;
     }
@@ -131,15 +131,15 @@ declare module PluginInterfaces {
 
         setData(data:any):void; // TODO type
 
-        getForm():React.Component;
+        getForm():typeof React.Component;
 
-        getList():React.Component;
+        getList():typeof React.Component;
     }
 
 
     export interface IIssueReporting {
 
-        getWidgetView():React.Component;
+        getWidgetView():typeof React.Component;
 
     }
 
@@ -157,7 +157,7 @@ declare module PluginInterfaces {
         }
 
         export interface DataAndRenderer {
-            renderer:React.Component;
+            renderer:typeof React.Component;
             contents:Array<[string, string]>;
             found:boolean;
             heading:string;
@@ -168,7 +168,7 @@ declare module PluginInterfaces {
 
             fetchTokenDetail(corpusId:string, tokenId:number):RSVP.Promise<Array<DataAndRenderer>>;
 
-            selectRenderer(typeId:string):React.Component;
+            selectRenderer(typeId:string):typeof React.Component;
         }
     }
 }
@@ -209,7 +209,7 @@ declare module 'plugins/footerBar/init' {
 declare module "plugins/corparch/init" {
 
     export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.Component;
+        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):typeof React.Component;
 
     export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):PluginInterfaces.ICorplistPage;
 }

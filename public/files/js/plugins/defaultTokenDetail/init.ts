@@ -67,7 +67,7 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
         );
     }
 
-    selectRenderer(typeId:string):React.Component {
+    selectRenderer(typeId:string):typeof React.Component {
         switch (typeId) {
             case 'raw-html':
                 return this.views.RawHtmlRenderer;

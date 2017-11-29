@@ -215,11 +215,11 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
         this.components = viewsInit(this.corplistFormStore, this.corplistTableStore);
     }
 
-    getForm():React.Component {
+    getForm():typeof React.Component {
         return this.components.FilterForm;
     }
 
-    getList():React.Component {
+    getList():typeof React.Component {
         return this.components.CorplistTable;
     }
 

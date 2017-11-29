@@ -43,7 +43,7 @@ require('styles/subcorpForm.less');
 
 
 export interface TTInitData {
-    component:React.Component;
+    component:typeof React.Component;
     props:{[p:string]:any};
     ttStore:TextTypesStore;
     attachedAlignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
@@ -88,7 +88,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return Immutable.List<{n:string; label:string}>();
     }
 
-    initSubcorpForm(ttComponent:React.Component, ttProps:{[p:string]:any}):void {
+    initSubcorpForm(ttComponent:typeof React.Component, ttProps:{[p:string]:any}):void {
         this.layoutModel.renderReactComponent(
             this.viewComponents.SubcorpForm,
             window.document.getElementById('subcorp-form-mount'),
@@ -147,7 +147,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return RSVP.all([p1, p2]).then(
             (args:[PluginInterfaces.ILiveAttributes, PluginInterfaces.ISubcMixer]) => {
                 const [liveAttrs, subcmixerPlugin] = args;
-                let subcMixerComponent:React.Component;
+                let subcMixerComponent:typeof React.Component;
                 if (this.layoutModel.pluginIsActive('subcmixer')) {
                     if (liveAttrs) {
                         liveAttrs.addUpdateListener(subcmixerPlugin.refreshData.bind(subcmixerPlugin));
@@ -232,7 +232,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         );
 
         RSVP.all([p1, p2]).then(
-            (items:[TTInitData, React.Component]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
+            (items:[TTInitData, typeof React.Component]) => { // TODO typescript d.ts problem (should see wrapped value, not the promise)
                 this.viewComponents = subcorpViewsInit(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),

@@ -16,11 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../types/common.d.ts" />
+/// <reference path="../vendor.d.ts/react.d.ts" />
+
+
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 
 
-export function init(dispatcher, he, storeProvider) {
+export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers, storeProvider:any):Kontext.LayoutViews { // TODO type
 
     // ------------------------------ <ModalOverlay /> -----------------------------
 
@@ -211,7 +215,7 @@ export function init(dispatcher, he, storeProvider) {
 
     // ------------------------------ <CloseableFrame /> -----------------------------
 
-    const CloseableFrame = (props) => {
+    const CloseableFrame = (props:React.Props):React.ReactElement => {
 
         const closeClickHandler = () => {
             if (typeof props.onCloseClick === 'function') {
@@ -284,7 +288,7 @@ export function init(dispatcher, he, storeProvider) {
     // ------------------------------ <Message /> -----------------------------
     // (info/error/warning message box)
 
-    const Message = (props) => {
+    const Message = (props:React.Props):React.ReactElement => {
 
         const handleCloseClick = (e) => {
             e.preventDefault();
@@ -419,7 +423,7 @@ export function init(dispatcher, he, storeProvider) {
      * - humanCorpname
      * - usesubcorp
      */
-    const CorpnameInfoTrigger = (props) => {
+    const CorpnameInfoTrigger = (props:React.Props):React.ReactElement => {
 
         const handleCorpnameClick = () => {
             dispatcher.dispatch({
@@ -471,7 +475,7 @@ export function init(dispatcher, he, storeProvider) {
 
     // ------------------------ <IssueReportingLink /> --------------------------------
 
-    const IssueReportingLink = (props) => {
+    const IssueReportingLink = (props:React.Props):React.ReactElement => {
         if (props.type === 'static') {
             return (
                 <a href={props.url} target={props.blank_window ? '_blank' : '_self'}
@@ -491,13 +495,13 @@ export function init(dispatcher, he, storeProvider) {
 
     // ------------------------ <AjaxLoaderImage /> --------------------------------
 
-    const AjaxLoaderImage = (props) => {
+    const AjaxLoaderImage = (props:React.Props):React.ReactElement => {
         return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
     };
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
 
-    const AjaxLoaderBarImage = (props) => {
+    const AjaxLoaderBarImage = (props:React.Props):React.ReactElement => {
         return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
     };
 

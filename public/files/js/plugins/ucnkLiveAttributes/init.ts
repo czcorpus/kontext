@@ -46,7 +46,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.ILiveAttributes {
         this.store = store;
     }
 
-    getViews(subcMixerView:React.Component, textTypesStore:Kontext.PageStore):any {// TODO store types
+    getViews(subcMixerView:typeof React.Component, textTypesStore:Kontext.PageStore):any {// TODO store types
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),

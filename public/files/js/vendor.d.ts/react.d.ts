@@ -29,7 +29,11 @@ declare module React {
     export interface ReactElement {
     }
 
-    export interface Component {
+    class Component {
+
+        constructor(props:{[key:string]:any});
+
+        props:Props;
 
         state:Props;
 
@@ -53,10 +57,11 @@ declare module React {
         setState(updater:(prevState:Props, props:Props) => Props, callback?:() => any);
 
         forceUpdate(callback?:() => any);
-
     }
 
-    export function createElement(elmType:React.Component, props:Props,
+    export type FuncComponent = (Props)=>ReactElement;
+
+    export function createElement(elmType:typeof React.Component|React.FuncComponent, props:Props,
                                   ...children:any[]):ReactElement;
 }
 

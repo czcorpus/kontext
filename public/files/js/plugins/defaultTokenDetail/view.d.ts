@@ -19,10 +19,10 @@
  */
 
 export interface DefaultTokenDetailRenderers {
-    RawHtmlRenderer:React.Component;
-    SimpleTabularRenderer:React.Component;
-    DescriptionListRenderer:React.Component;
-    UnsupportedRenderer:React.Component;
+    RawHtmlRenderer:typeof React.Component;
+    SimpleTabularRenderer:typeof React.Component;
+    DescriptionListRenderer:typeof React.Component;
+    UnsupportedRenderer:typeof React.Component;
 }
 
 export function init(dispatcher, he):DefaultTokenDetailRenderers;
