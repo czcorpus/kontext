@@ -18,13 +18,45 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+
 import * as React from 'vendor/react';
-import {init as viewOptsInit} from './ctViewOpts';
+import {CTFlatStore, FreqDataItem} from '../../stores/freqs/flatCtable';
+import {FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
+import {init as ctViewOptsFactory} from './ctViewOpts';
+
+interface CTFlatFreqResultViewProps {}
+
+interface CTFlatFreqResultViewState {
+    data:Immutable.List<FreqDataItem>;
+    attr1:string;
+    attr2:string;
+    minFreq:string;
+    minFreqType:FreqFilterQuantities;
+    sortCol:string;
+    sortColIsReversed:boolean;
+    confIntervalLeftMinWarn:number;
+    alphaLevel:string;
+    availAlphaLevels:Immutable.List<[string, string]>;
+    canProvideIpm:boolean;
+}
+
+class CTFlatFreqResultViewExport extends React.Component<CTFlatFreqResultViewProps, CTFlatFreqResultViewState> {
+}
+
+interface Views {
+    CTFlatFreqResultView:typeof CTFlatFreqResultViewExport;
+}
 
 
-export function init(dispatcher, he, ctFlatFreqDataRowsStore) {
+export function init(
+            dispatcher:Kontext.FluxDispatcher,
+            he:Kontext.ComponentHelpers,
+            ctFlatFreqDataRowsStore:CTFlatStore):Views {
 
-    const optsViews = viewOptsInit(dispatcher, he);
+    const ctViewOpts = ctViewOptsFactory(dispatcher, he);
 
     /**
      *
@@ -118,7 +150,7 @@ export function init(dispatcher, he, ctFlatFreqDataRowsStore) {
     /**
      *
      */
-    class CTFlatFreqResultView extends React.Component {
+    class CTFlatFreqResultView extends CTFlatFreqResultViewExport {
 
         constructor(props) {
             super(props);
@@ -164,11 +196,11 @@ export function init(dispatcher, he, ctFlatFreqDataRowsStore) {
                                 <div>
                                     <ul className="items">
                                         <li>
-                                            <optsViews.MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType}
+                                            <ctViewOpts.MinFreqInput currVal={this.state.minFreq} freqType={this.state.minFreqType}
                                                     canProvideIpm={this.state.canProvideIpm} />
                                         </li>
                                         <li>
-                                            <optsViews.AlphaLevelSelect alphaLevel={this.state.alphaLevel}
+                                            <ctViewOpts.AlphaLevelSelect alphaLevel={this.state.alphaLevel}
                                                     availAlphaLevels={this.state.availAlphaLevels}
                                                     confIntervalLeftMinWarn={this.state.confIntervalLeftMinWarn} />
                                         </li>

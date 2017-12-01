@@ -18,17 +18,50 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../vendor.d.ts/react.d.ts" />
+
 import * as React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
-import {init as flatResultViewInit} from './ctFlatResult';
-import {init as viewOptsInit} from './ctViewOpts';
+import {init as ctFlatResultFactory} from './ctFlatResult';
+import {init as ctViewOptsFactory} from './ctViewOpts';
+import {CTFlatStore} from '../../stores/freqs/flatCtable';
+import {ContingencyTableStore, Data2DTable, ColorMappings, TableInfo} from '../../stores/freqs/ctable';
+import {Dimensions, FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
+import {FreqQuantities, CTFreqCell} from '../../stores/freqs/generalCtable';
+import {DataPoint} from '../../charts/confIntervals';
 
 
-export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStore) {
+const enum TableViewMode {
+    TABLE = "table",
+    LIST = "list"
+}
+
+
+interface CTFreqResultViewProps {}
+
+
+interface CTFreqResultViewState {
+    mode:TableViewMode;
+}
+
+
+class CTFreqResultViewExport extends React.Component<CTFreqResultViewProps, CTFreqResultViewState> {}
+
+interface Views {
+    CTFreqResultView:CTFreqResultViewExport;
+}
+
+
+export function init(
+            dispatcher:Kontext.FluxDispatcher,
+            he:Kontext.ComponentHelpers,
+            ctFreqDataRowsStore:ContingencyTableStore,
+            ctFlatFreqDataRowsStore:CTFlatStore) {
 
     const layoutViews = he.getLayoutViews();
-    const flatResultViews = flatResultViewInit(dispatcher, he, ctFlatFreqDataRowsStore);
-    const optsViews = viewOptsInit(dispatcher, he);
+    const flatResultViews = ctFlatResultFactory(dispatcher, he, ctFlatFreqDataRowsStore);
+    const ctViewOpts = ctViewOptsFactory(dispatcher, he);
 
     const formatIpm = (v) => v >= 0.1 ? he.formatNumber(v, 1) : '\u2248 0';
 
@@ -115,11 +148,21 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         );
     };
 
+    // ------------------------------- <ColorMappingSelector /> ---------------------
+
+    interface ColorMappingSelectorProps {
+        colorMapping:ColorMappings;
+    }
+
+    interface ColorMappingSelectorState {
+        hintVisible:boolean;
+    }
+
     /**
      *
      * @param {*} props
      */
-    class ColorMappingSelector extends React.Component {
+    class ColorMappingSelector extends React.Component<ColorMappingSelectorProps, ColorMappingSelectorState> {
 
         constructor(props) {
             super(props);
@@ -305,11 +348,31 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         );
     };
 
+    // ------------------------- <FieldsetAdvancedOptions /> ----------------------
+
+    interface FieldsetAdvancedOptionsProps {
+        displayQuantity:FreqQuantities;
+        canProvideIpm:boolean;
+        minFreq:string;
+        minFreqType:FreqFilterQuantities;
+        hideEmptyVectors:boolean;
+        alphaLevel:string;
+        availAlphaLevels:Immutable.List<[string, string]>;
+        confIntervalLeftMinWarn:number;
+        colorMapping:ColorMappings;
+        sortDim1:string;
+        sortDim2:string;
+    }
+
+    interface FieldsetAdvancedOptionsState {
+        visible:boolean;
+    }
+
     /**
      *
      * @param {*} props
      */
-    class FieldsetAdvancedOptions extends React.Component {
+    class FieldsetAdvancedOptions extends React.Component<FieldsetAdvancedOptionsProps, FieldsetAdvancedOptionsState> {
 
         constructor(props) {
             super(props);
@@ -333,13 +396,13 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                                     <QuantitySelect value={this.props.displayQuantity} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
-                                    <optsViews.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} canProvideIpm={this.props.canProvideIpm} />
+                                    <ctViewOpts.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType} canProvideIpm={this.props.canProvideIpm} />
                                 </li>
                                 <li>
                                     <EmptyVectorVisibilitySwitch hideEmptyVectors={this.props.hideEmptyVectors} />
                                 </li>
                                 <li>
-                                    <optsViews.AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
+                                    <ctViewOpts.AlphaLevelSelect alphaLevel={this.props.alphaLevel} availAlphaLevels={this.props.availAlphaLevels}
                                             confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
                                 </li>
                             </ul>
@@ -363,10 +426,21 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         }
     };
 
-    /**
-     * ------------------------ <CellAttrVals /> -------------------------------------
-     */
-    class TbodyCellAttrVals extends React.Component {
+    // ------------------------ <TbodyCellAttrVals /> -------------------------------------
+
+    interface TbodyCellAttrValsProps {
+        attr1:string;
+        attr2:string;
+        label1:string;
+        label2:string;
+        pfilter:string;
+    }
+
+    interface TbodyCellAttrValsState {
+        highlighted:boolean;
+    }
+
+    class TbodyCellAttrVals extends React.Component<TbodyCellAttrValsProps, TbodyCellAttrValsState> {
 
         constructor(props) {
             super(props);
@@ -469,10 +543,34 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         );
     };
 
+    // --------------------------- <CTCell /> -----------------------------------------
+
+    interface CTCellProps {
+        quantity:FreqQuantities;
+        data:CTFreqCell;
+        confIntervalLeftMinWarn:number;
+        attr1:string;
+        attr2:string;
+        ipmConfInterval:[number, number];
+        absConfInterval:[number, number];
+        isHighlighted:boolean;
+        color:string;
+        canProvideIpm:boolean;
+        label1:string;
+        label2:string;
+
+        onClick:()=>void;
+        onClose:()=>void;
+    }
+
+    interface CTCellState {
+
+    }
+
     /**
      *
      */
-    class CTCell extends React.Component {
+    class CTCell extends React.Component<CTCellProps, CTCellState> {
 
         constructor(props) {
             super(props);
@@ -482,9 +580,9 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         getValue() {
             if (this.isNonEmpty()) {
                 switch (this.props.quantity) {
-                    case 'ipm':
+                    case FreqQuantities.IPM:
                         return formatIpm(this.props.data.ipm);
-                    case 'abs':
+                    case FreqQuantities.ABS:
                         return he.formatNumber(this.props.data.abs, 0);
                     default:
                         return NaN;
@@ -554,7 +652,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
                 } else {
                     bgStyle['backgroundColor'] = this.props.data.bgColor;
-                    linkStyle.color = color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)));
+                    linkStyle['color'] = color2str(calcTextColorFromBg(importColor(this.props.data.bgColor, 1)));
                 }
                 return (
                     <td className={tdClasses.join(' ')} style={bgStyle}>
@@ -602,11 +700,27 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         );
     };
 
+    // ------------ <IntervalGroupVisualisation /> -----------------------------
+
+    interface IntervalGroupVisualisationProps {
+        highlightedGroup:[number, number];
+        onConfIntervalFrameReady:(data:Array<DataPoint>, label:string)=>void;
+        d3PaneWidth:number;
+        d3PaneHeight:number;
+        onCloseClick:()=>void;
+        alphaLevel:number;
+    }
+
+    interface IntervalGroupVisualisationState {
+        data:Array<DataPoint>;
+        label:string;
+    }
+
     /**
      *
      * @param {*} props
      */
-    class IntervalGroupVisualisation extends React.Component {
+    class IntervalGroupVisualisation extends React.Component<IntervalGroupVisualisationProps, IntervalGroupVisualisationState> {
 
         constructor(props) {
             super(props);
@@ -826,10 +940,45 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         );
     };
 
+    // ---------------- <CT2dFreqResultView /> -----------------------------
+
+    interface CT2dFreqResultViewProps {
+        onConfIntervalFrameReady:()=>void;
+        d3PaneWidth:number;
+        d3PaneHeight:number;
+    }
+
+    interface CT2dFreqResultViewState {
+        d1Labels:Immutable.List<[string, boolean]>;
+        d2Labels:Immutable.List<[string, boolean]>;
+        data:Data2DTable;
+        attr1:string;
+        attr2:string;
+        sortDim1:string;
+        sortDim2:string;
+        minFreq:string;
+        minFreqType:FreqFilterQuantities;
+        displayQuantity:FreqQuantities;
+        highlightedCoord:[number, number];
+        transposeIsChecked:boolean;
+        hideEmptyVectors:boolean;
+        isWaiting:boolean;
+        alphaLevel:string;
+        availAlphaLevels:Immutable.List<[string, string]>;
+        confIntervalLeftMinWarn:number;
+        colorMapping:ColorMappings;
+        highlightedGroup:[number, number];
+        quickFreqMode:string;
+        canProvideIpm:boolean;
+        isEmpty:boolean;
+        tableInfo:TableInfo;
+        usesAdHocSubcorpus:boolean;
+    }
+
     /**
      *
      */
-    class CT2dFreqResultView extends React.Component {
+    class CT2dFreqResultView extends React.Component<CT2dFreqResultViewProps, CT2dFreqResultViewState> {
 
         constructor(props) {
             super(props);
@@ -864,7 +1013,8 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
                 quickFreqMode: ctFreqDataRowsStore.getQuickFreqMode(),
                 canProvideIpm: ctFreqDataRowsStore.canProvideIpm(),
                 isEmpty: ctFreqDataRowsStore.isEmpty(),
-                tableInfo: ctFreqDataRowsStore.getTableInfo()
+                tableInfo: ctFreqDataRowsStore.getTableInfo(),
+                usesAdHocSubcorpus: ctFreqDataRowsStore.getUsesAdHocSubcorpus()
             };
         }
 
@@ -892,7 +1042,7 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
         }
 
         _renderWarning() {
-            if (this.state.adHocSpfilterVisibleubcWarning) {
+            if (this.state.usesAdHocSubcorpus) {
                 return (
                     <p className="warning">
                         <img src={he.createStaticUrl('img/warning-icon.svg')}
@@ -974,11 +1124,11 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
     /**
      *
      */
-    class CTFreqResultView extends React.Component {
+    class CTFreqResultView extends CTFreqResultViewExport {
 
         constructor(props) {
             super(props);
-            this.state = {mode: 'table'};
+            this.state = {mode: TableViewMode.TABLE};
             this._handleModeSwitch = this._handleModeSwitch.bind(this);
         }
 
@@ -992,9 +1142,9 @@ export function init(dispatcher, he, ctFreqDataRowsStore, ctFlatFreqDataRowsStor
 
         _renderContents() {
             switch (this.state.mode) {
-                case 'table':
+                case TableViewMode.TABLE:
                     return <CT2dFreqResultView {...this.props} />
-                case 'list':
+                case TableViewMode.LIST:
                     return <flatResultViews.CTFlatFreqResultView {...this.props} />
                 default:
                     return null;
