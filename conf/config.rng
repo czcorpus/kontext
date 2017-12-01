@@ -246,6 +246,15 @@
                             processing time pops-up when applying *shuffle*</a:documentation>
                         </element>
                     </optional>
+                    <optional>
+                        <element name="help_links_path">
+                            <text />
+                            <a:documentation>A path to a JSON file containing terms and custom idents used
+                            throughout the application as hooks for adding links to external sites containing
+                            more info about specific piece (typically, a term, abbreviation etc.). See
+                            sample config for more info.</a:documentation>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <optional>

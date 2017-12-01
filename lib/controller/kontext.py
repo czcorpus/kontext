@@ -1155,6 +1155,7 @@ class Kontext(Controller):
 
         # asynchronous tasks
         result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
+        result['help_links'] = settings.get_help_links(self.ui_lang)
         return result
 
     @staticmethod

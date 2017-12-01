@@ -261,7 +261,7 @@ export function init(
 
         render() {
             return (
-                <span>
+                <span className="InlineHelp">
                     <sup style={{display: 'inline-block'}}>
                         <a className="context-help" onClick={this._clickHandler}>
                             <ImgWithMouseover
@@ -274,9 +274,12 @@ export function init(
                                     customStyle={this.props.customStyle}>
                                 {this.props.children}
                                 {this.props.url ?
-                                    <p className="link"><a href={this.props.url} target='_blank'>
-                                        {he.translate('global__get_more_info')}
-                                        </a></p> : null}
+                                    <div className="link">
+                                        <hr />
+                                        <a href={this.props.url} target='_blank'>
+                                            {he.translate('global__get_more_info')}
+                                        </a>
+                                    </div> : null}
                             </PopupBox>
                             : null}
                 </span>

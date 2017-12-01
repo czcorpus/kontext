@@ -27,8 +27,10 @@ import json
 class ConfState(object):
     conf_path = None
 
+
 _conf = {}  # contains parsed data, it should not be accessed directly (use set, get, get_*)
 _meta = {}  # contains data of attributes of XML elements representing configuration values
+_help_links = {}
 _state = ConfState()
 
 SECTIONS = ('global', 'theme', 'plugins', 'cache', 'corpora', 'logging', 'mailing')
@@ -219,6 +221,17 @@ def parse_config(path):
                     _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_config_section(item)
 
 
+def _load_help_links():
+    hlpath = get('global', 'help_links_path', None)
+    if hlpath is not None:
+        with open(hlpath, 'rb') as fr:
+            _help_links.update(json.load(fr))
+
+
+def get_help_links(lang_id):
+    return dict((k, v.get(lang_id, None)) for k, v in _help_links.items())
+
+
 def load(path):
     """
     Loads application's configuration from a provided file
@@ -229,6 +242,7 @@ def load(path):
     _state.conf_path = path
     parse_config(_state.conf_path)
     _load_version()
+    _load_help_links()
 
 
 def conf_path():
