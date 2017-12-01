@@ -71,7 +71,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
  * @param options A configuration for the widget
  */
 export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):typeof React.Component { // TODO opts type
+        queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type
     const favData:Array<common.ServerFavlistItem> = pluginData['favorite'] || [];
@@ -100,7 +100,6 @@ export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
     return widgetInit(
         pluginApi.dispatcher(),
         pluginApi.getComponentHelpers(),
-        pluginApi.getComponentHelpers().getLayoutViews(),
         store,
         queryStore
     );

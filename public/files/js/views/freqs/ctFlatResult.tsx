@@ -27,6 +27,8 @@ import {CTFlatStore, FreqDataItem} from '../../stores/freqs/flatCtable';
 import {FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
 import {init as ctViewOptsFactory} from './ctViewOpts';
 
+// ----------------------- exported types ------------------------------------
+
 interface CTFlatFreqResultViewProps {}
 
 interface CTFlatFreqResultViewState {
@@ -43,13 +45,11 @@ interface CTFlatFreqResultViewState {
     canProvideIpm:boolean;
 }
 
-class CTFlatFreqResultViewExport extends React.Component<CTFlatFreqResultViewProps, CTFlatFreqResultViewState> {
-}
-
 interface Views {
-    CTFlatFreqResultView:typeof CTFlatFreqResultViewExport;
+    CTFlatFreqResultView:React.ComponentClass<CTFlatFreqResultViewProps, CTFlatFreqResultViewState>;
 }
 
+// ------------------------- factory -----------------------------------------
 
 export function init(
             dispatcher:Kontext.FluxDispatcher,
@@ -150,7 +150,7 @@ export function init(
     /**
      *
      */
-    class CTFlatFreqResultView extends CTFlatFreqResultViewExport {
+    class CTFlatFreqResultView extends React.Component<CTFlatFreqResultViewProps, CTFlatFreqResultViewState> {
 
         constructor(props) {
             super(props);

@@ -22,7 +22,7 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 export interface ISubcMixerViews {
-    Widget:typeof React.Component;
+    Widget:React.ComponentClass;
 }
 
 export function init(

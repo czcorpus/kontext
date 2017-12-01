@@ -107,11 +107,11 @@ declare module Kontext {
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         getComponentHelpers():Kontext.ComponentHelpers;
-        renderReactComponent(reactClass:typeof React.Component|React.FuncComponent,
+        renderReactComponent(reactClass:React.ComponentClass|React.FuncComponent,
                              target:HTMLElement, props?:React.Props):void;
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
-        getViews():Kontext.LayoutViews;
+        getViews():LayoutComponents;
         getUserSettings():Kontext.IUserSettings;
         pluginIsActive(name:string):boolean;
         getConcArgs():IMultiDict;
@@ -260,11 +260,20 @@ declare module Kontext {
         bindDynamicItem(ident:string, label:string, handler:()=>void);
     }
 
+    export interface UserNotification {
+        messageId:string;
+        messageType:string;
+        messageText:string;
+        fadingOut:boolean;
+    }
+
     /**
      * A store managing system messages presented to a user
      */
     export interface MessagePageStore extends PageStore {
         addMessage(messageType:string, messageText:string, onClose:()=>void);
+        getMessages():Immutable.List<UserNotification>;
+        getTransitionTime():number;
     }
 
     /**
@@ -290,22 +299,6 @@ declare module Kontext {
          * object should be always used.
          */
         props:GeneralProps;
-    }
-
-    /**
-     *
-     */
-    export interface LayoutViews {
-        ModalOverlay:typeof React.Component | React.FuncComponent;
-        PopupBox:typeof React.Component | React.FuncComponent;
-        CloseableFrame:typeof React.Component | React.FuncComponent;
-        InlineHelp:typeof React.Component | React.FuncComponent;
-        Messages:typeof React.Component | React.FuncComponent;
-        CorpnameInfoTrigger:typeof React.Component | React.FuncComponent;
-        ImgWithMouseover:typeof React.Component | React.FuncComponent;
-        IssueReportingLink:typeof React.Component | React.FuncComponent;
-        AjaxLoaderImage:typeof React.Component | React.FuncComponent;
-        AjaxLoaderBarImage:typeof React.Component | React.FuncComponent;
     }
 
     /**

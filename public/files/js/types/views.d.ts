@@ -22,13 +22,13 @@
 
 
 declare interface CommonViews {
-    SaveFormatSelect:typeof React.Component;
+    SaveFormatSelect:React.ComponentClass;
 }
 
 declare module "views/common" {
 
     export interface CommonViews {
-        SaveFormatSelect:typeof React.Component;
+        SaveFormatSelect:React.ComponentClass;
     }
 
     export function init(componentHelpers:Kontext.ComponentHelpers):CommonViews;
@@ -38,8 +38,8 @@ declare module "views/common" {
 declare module "views/concordance/lineSelection" {
 
     export interface LineSelectionViews {
-        LineBinarySelectionMenu:typeof React.Component;
-        LockedLineGroupsMenu:typeof React.Component;
+        LineBinarySelectionMenu:React.ComponentClass;
+        LockedLineGroupsMenu:React.ComponentClass;
     }
 
     export function init(
@@ -52,10 +52,10 @@ declare module "views/concordance/lineSelection" {
 declare module "views/concordance/lineExtras" {
 
     export interface LineExtrasViews {
-        AudioLink:typeof React.Component;
-        TdLineSelection:typeof React.Component;
-        SyntaxTreeButton:typeof React.Component;
-        RefInfo:typeof React.Component;
+        AudioLink:React.ComponentClass;
+        TdLineSelection:React.ComponentClass;
+        SyntaxTreeButton:React.ComponentClass;
+        RefInfo:React.ComponentClass;
     }
 
     export function init(
@@ -68,7 +68,7 @@ declare module "views/concordance/lineExtras" {
 declare module "views/concordance/lines" {
 
     export interface ConcLinesViews {
-        ConcLines:typeof React.Component;
+        ConcLines:React.ComponentClass;
     }
 
     export function init(
@@ -84,7 +84,7 @@ declare module "views/concordance/lines" {
 declare module "views/concordance/paginator" {
 
     export interface PaginatorViews {
-        Paginator:typeof React.Component;
+        Paginator:React.ComponentClass;
     }
 
     export function init(
@@ -97,7 +97,7 @@ declare module "views/concordance/paginator" {
 declare module "views/concordance/main" {
 
     export interface ConcordanceView {
-        ConcordanceView:typeof React.Component;
+        ConcordanceView:React.ComponentClass;
     }
 
     export function init(
@@ -110,7 +110,7 @@ declare module "views/concordance/main" {
 declare module "views/concordance/detail" {
 
     export interface RefDetail {
-        RefDetail:typeof React.Component;
+        RefDetail:React.ComponentClass;
     }
 
     export function init(
@@ -125,7 +125,7 @@ declare module "views/concordance/detail" {
 declare module "views/concordance/save" {
 
     export interface ConcSaveViews {
-        ConcSaveForm:typeof React.Component;
+        ConcSaveForm:React.ComponentClass;
     }
 
     export function init(
@@ -139,14 +139,14 @@ declare module "views/concordance/save" {
 declare module "views/subcorp/forms" {
 
     export interface SubcorpFormViews {
-        SubcorpForm:typeof React.Component;
+        SubcorpForm:React.ComponentClass;
     }
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        corparchComponent:typeof React.Component,
+        corparchComponent:React.ComponentClass,
         subcorpFormStore:Kontext.PageStore,
         subcorpWithinFormStore:Kontext.PageStore
     ):SubcorpFormViews;
@@ -156,7 +156,7 @@ declare module "views/subcorp/forms" {
 declare module "views/subcorp/list" {
 
     export interface SubcorpListViews {
-        SubcorpList:typeof React.Component;
+        SubcorpList:React.ComponentClass;
     }
 
     export function init(
@@ -170,7 +170,7 @@ declare module "views/subcorp/list" {
 declare module "views/textTypes" {
 
     export interface TextTypesViews {
-        TextTypesPanel:typeof React.Component;
+        TextTypesPanel:React.ComponentClass;
     }
 
     export function init(
@@ -185,7 +185,7 @@ declare module "views/textTypes" {
 declare module "views/menu" {
 
     export interface MainMenuViews {
-        MainMenu:typeof React.Component|React.FuncComponent;
+        MainMenu:React.ComponentClass|React.FuncComponent;
     }
 
     export function init(
@@ -202,14 +202,14 @@ declare module "views/menu" {
 declare module "views/query/main" {
 
     export interface QueryFormViews {
-        QueryForm:typeof React.Component;
-        QueryFormLite:typeof React.Component;
+        QueryForm:React.ComponentClass;
+        QueryFormLite:React.ComponentClass;
     }
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
-        CorparchWidget:typeof React.Component,
+        CorparchWidget:React.ComponentClass,
         queryStore:Kontext.PageStore,
         textTypesStore:Kontext.PageStore,
         queryHintStore:Kontext.PageStore,
@@ -223,7 +223,7 @@ declare module "views/query/main" {
 declare module "views/query/aligned" {
 
     export interface AlignedQueryFormViews {
-        AlignedCorpora:typeof React.Component;
+        AlignedCorpora:React.ComponentClass;
     }
 
     export function init(
@@ -240,7 +240,7 @@ declare module "views/query/aligned" {
 declare module "views/query/context" {
 
     export interface QueryContextViews {
-        SpecifyContextForm:typeof React.Component;
+        SpecifyContextForm:React.ComponentClass;
     }
 
     export function init(
@@ -253,7 +253,7 @@ declare module "views/query/context" {
 declare module "views/query/filter" {
 
     export interface FilterFormViews {
-        FilterForm:typeof React.Component;
+        FilterForm:React.ComponentClass;
     }
 
     export function init(
@@ -270,7 +270,7 @@ declare module "views/query/filter" {
 declare module "views/query/sort" {
 
     export interface SortFormViews {
-        SortFormView:typeof React.Component;
+        SortFormView:React.ComponentClass;
     }
 
     export function init(
@@ -285,9 +285,9 @@ declare module "views/query/sort" {
 declare module "views/query/sampleShuffle" {
 
     export interface SampleFormViews {
-        SampleFormView:typeof React.Component;
-        ShuffleFormView:typeof React.Component;
-        SwitchMainCorpFormView:typeof React.Component;
+        SampleFormView:React.ComponentClass;
+        ShuffleFormView:React.ComponentClass;
+        SwitchMainCorpFormView:React.ComponentClass;
     }
 
     export function init(
@@ -301,7 +301,7 @@ declare module "views/query/sampleShuffle" {
 declare module "views/query/basicOverview" {
 
     export interface BasicQueryOverviewViews {
-        EmptyQueryOverviewBar:typeof React.Component;
+        EmptyQueryOverviewBar:React.ComponentClass;
     }
 
     export function init(
@@ -314,17 +314,17 @@ declare module "views/query/basicOverview" {
 declare module "views/query/overview" {
 
     export interface QueryToolbarViewDeps {
-        QueryFormView:typeof React.Component;
-        FilterFormView:typeof React.Component;
-        SortFormView:typeof React.Component;
-        SampleFormView:typeof React.Component;
-        ShuffleFormView:typeof React.Component;
-        SwitchMainCorpFormView:typeof React.Component;
+        QueryFormView:React.ComponentClass;
+        FilterFormView:React.ComponentClass;
+        SortFormView:React.ComponentClass;
+        SampleFormView:React.ComponentClass;
+        ShuffleFormView:React.ComponentClass;
+        SwitchMainCorpFormView:React.ComponentClass;
     }
 
     export interface QueryToolbarViews {
-        QueryToolbar:typeof React.Component;
-        NonViewPageQueryToolbar:typeof React.Component;
+        QueryToolbar:React.ComponentClass;
+        NonViewPageQueryToolbar:React.ComponentClass;
     }
 
     export function init(
@@ -342,7 +342,7 @@ declare module "views/query/overview" {
 declare module "views/query/history" {
 
     export interface RecentQueriesPageViews {
-        RecentQueriesPageList:typeof React.Component;
+        RecentQueriesPageList:React.ComponentClass;
     }
 
     export function init(
@@ -357,7 +357,7 @@ declare module "views/query/history" {
 declare module "views/query/save" {
 
     export interface QuerySaveViews {
-        QuerySaveAsForm:typeof React.Component;
+        QuerySaveAsForm:React.ComponentClass;
     }
 
     export function init(
@@ -372,7 +372,7 @@ declare module "views/query/save" {
 declare module "views/wordlist/save" {
 
     export interface WordlistSaveViews {
-        WordlistSaveForm:typeof React.Component;
+        WordlistSaveForm:React.ComponentClass;
     }
 
     export function init(
@@ -388,15 +388,15 @@ declare module "views/wordlist/save" {
 declare module "views/wordlist/form" {
 
     export interface WordlistFormViews {
-        WordListForm:typeof React.Component;
-        CorpInfoToolbar:typeof React.Component;
+        WordListForm:React.ComponentClass;
+        CorpInfoToolbar:React.ComponentClass;
     }
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
-        CorparchWidget:typeof React.Component,
+        CorparchWidget:React.ComponentClass,
         wordlistFormStore:Kontext.PageStore
     ):WordlistFormViews;
 }
@@ -404,7 +404,7 @@ declare module "views/wordlist/form" {
 declare module "views/wordlist/result" {
 
     export interface WordlistResultViews {
-        WordlistResult:typeof React.Component;
+        WordlistResult:React.ComponentClass;
     }
 
     export function init(
@@ -420,7 +420,7 @@ declare module "views/wordlist/result" {
 declare module "views/options/structsAttrs" {
 
     export interface StructsAndAttrsViews {
-        StructAttrsViewOptions:typeof React.Component;
+        StructAttrsViewOptions:React.ComponentClass;
     }
 
     export function init(
@@ -435,7 +435,7 @@ declare module "views/options/structsAttrs" {
 declare module "views/options/general" {
 
     export interface GeneralOptionsViews {
-        GeneralOptions:typeof React.Component;
+        GeneralOptions:React.ComponentClass;
     }
 
     export function init(
@@ -450,7 +450,7 @@ declare module "views/options/general" {
 declare module "views/options/main" {
 
     export interface OptionsContainerViews {
-        OptionsContainer:typeof React.Component;
+        OptionsContainer:React.ComponentClass;
     }
 
     export function init(
@@ -467,8 +467,8 @@ declare module "views/options/main" {
 declare module "views/overview" {
 
     export interface OverviewViews {
-        OverviewArea:typeof React.Component;
-        CorpusInfoBox:typeof React.Component;
+        OverviewArea:React.ComponentClass;
+        CorpusInfoBox:React.ComponentClass;
     }
 
     export function init(
@@ -482,7 +482,7 @@ declare module "views/overview" {
 declare module "views/analysis" {
 
     export interface AnalysisFrameViews {
-        AnalysisFrame:typeof React.Component;
+        AnalysisFrame:React.ComponentClass;
     }
 
     export function init(
@@ -499,7 +499,7 @@ declare module "views/analysis" {
 declare module "views/coll/forms" {
 
     export interface CollFormViews {
-        CollForm:typeof React.Component;
+        CollForm:React.ComponentClass;
     }
 
     export function init(
@@ -514,7 +514,7 @@ declare module "views/coll/forms" {
 declare module "views/coll/result" {
 
     export interface CollResultView {
-        CollResultView:typeof React.Component;
+        CollResultView:React.ComponentClass;
     }
 
     export function init(
@@ -523,78 +523,4 @@ declare module "views/coll/result" {
         layoutViews:Kontext.LayoutViews,
         collFormStore:Kontext.PageStore
     ):CollResultView;
-}
-
-
-declare module "views/freqs/forms" {
-
-    export interface FreqFormViews {
-        FrequencyForm:typeof React.Component;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        mlFreqStore:Kontext.PageStore,
-        ttFreqStore:Kontext.PageStore,
-        ctFreqFormStore:Kontext.PageStore
-    ):FreqFormViews;
-}
-
-
-declare module "views/freqs/dataRows" {
-
-    export interface FreqsDataRowsViews {
-        DataTable:typeof React.Component;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        freqDataRowsStore:Kontext.PageStore
-    );
-}
-
-
-declare module "views/freqs/main" {
-
-    export interface FreqsResultViews {
-        FreqResultView:typeof React.Component;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        freqDataRowsStore:Kontext.PageStore,
-        layoutViews:Kontext.LayoutViews
-    ):FreqsResultViews;
-}
-
-declare module "views/freqs/save" {
-
-    export interface SaveFreqFormViews {
-        SaveFreqForm:typeof React.Component;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        collSaveStore:Kontext.PageStore
-    ):SaveFreqFormViews;
-}
-
-
-declare module "views/freqs/ctResult" {
-
-    export interface CTFreqsResultViews {
-        CTFreqResultView:typeof React.Component;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        ctFreqDataRowsStore:Kontext.PageStore,
-        ctFlatFreqDataRowsStore:Kontext.PageStore
-    ):CTFreqsResultViews;
 }

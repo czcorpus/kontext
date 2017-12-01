@@ -75,7 +75,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
         );
     }
 
-    private initCorparchPlugin():typeof React.Component {
+    private initCorparchPlugin():React.ComponentClass {
         return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),

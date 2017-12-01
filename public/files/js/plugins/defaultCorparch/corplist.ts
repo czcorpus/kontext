@@ -433,11 +433,11 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage  {
         this.corplistTableStore.setData(data);
     }
 
-    getForm():typeof React.Component {
+    getForm():React.ComponentClass {
         return this.components.FilterForm;
     }
 
-    getList():typeof React.Component {
+    getList():React.ComponentClass {
         return this.components.CorplistTable;
     }
 }

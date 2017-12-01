@@ -27,6 +27,10 @@ declare module React {
     export interface ReactElement {
     }
 
+    interface ComponentClass<T = {}, U = {}> {
+        new(props:T, context?:any):Component<T, U>;
+    }
+
     class Component<T, U> {
 
         constructor(props:T, context?:any);
@@ -77,7 +81,7 @@ declare module React {
         stopPropagation():void;
     }
 
-    export function createElement<T, U>(elmType:typeof React.Component|React.FuncComponent<T>, props:T,
+    export function createElement<T, U>(elmType:React.ComponentClass<T, U>|React.FuncComponent<T>, props:T,
                                   ...children:any[]):ReactElement;
 }
 

@@ -22,14 +22,14 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 export interface UcnkCorparchViews {
-    CorplistTable:typeof React.Component;
-    FilterForm:typeof React.Component;
+    CorplistTable:React.ComponentClass;
+    FilterForm:React.ComponentClass;
 }
 
 export function init(
     dispatcher:Kontext.FluxDispatcher,
     componentHelper:Kontext.ComponentHelpers,
-    CorpusInfoBox:typeof React.Component,
+    CorpusInfoBox:React.ComponentClass,
     formStore:Kontext.PageStore,
     listStore:Kontext.PageStore
 );

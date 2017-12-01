@@ -46,10 +46,8 @@ interface CTFreqResultViewState {
 }
 
 
-class CTFreqResultViewExport extends React.Component<CTFreqResultViewProps, CTFreqResultViewState> {}
-
 interface Views {
-    CTFreqResultView:CTFreqResultViewExport;
+    CTFreqResultView:React.ComponentClass<CTFreqResultViewProps, CTFreqResultViewState>;
 }
 
 
@@ -1124,7 +1122,7 @@ export function init(
     /**
      *
      */
-    class CTFreqResultView extends CTFreqResultViewExport {
+    class CTFreqResultView extends React.Component<CTFreqResultViewProps, CTFreqResultViewState> {
 
         constructor(props) {
             super(props);

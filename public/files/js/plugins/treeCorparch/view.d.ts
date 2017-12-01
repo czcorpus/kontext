@@ -22,9 +22,9 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 export class TreeCorparchViews {
-    CorptreeWidget:typeof React.Component;
-    CorptreePageComponent:typeof React.Component;
-    FilterPageComponent:typeof React.Component;
+    CorptreeWidget:React.ComponentClass;
+    CorptreePageComponent:React.ComponentClass;
+    FilterPageComponent:React.ComponentClass;
 }
 
 export function init(

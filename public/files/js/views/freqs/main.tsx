@@ -19,19 +19,52 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
+import {FreqDataRowsStore, ResultBlock} from '../../stores/freqs/dataRows';
 
-export function init(dispatcher, he, freqDataRowsStore, layoutViews) {
+// --------------------------- exported types --------------------------------------
+
+interface FreqResultViewProps {
+}
+
+interface FreqResultViewState {
+    blocks:Immutable.List<ResultBlock>;
+    minFreqVal:string;
+    currentPage:string;
+    sortColumn:string;
+    hasNextPage:boolean;
+    hasPrevPage:boolean;
+    saveFormIsActive:boolean;
+    isLoading:boolean;
+}
+
+interface ExportedComponents {
+    FreqResultView:React.ComponentClass<FreqResultViewProps, FreqResultViewState>;
+}
+
+// ------------------------ factory --------------------------------
+
+export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        he:Kontext.ComponentHelpers,
+        freqDataRowsStore:FreqDataRowsStore) {
 
     const drViews = dataRowsInit(dispatcher, he, freqDataRowsStore);
-    const saveViews = initSaveViews(dispatcher, he, layoutViews, freqDataRowsStore.getSaveStore());
+    const saveViews = initSaveViews(dispatcher, he, freqDataRowsStore.getSaveStore());
+    const layoutViews = he.getLayoutViews();
 
     // ----------------------- <ResultSizeInfo /> -------------------------
 
-    const ResultSizeInfo = (props) => {
+    interface ResultSizeInfoProps {
+        totalPages:number;
+        totalItems:number;
+    }
+
+    const ResultSizeInfo:React.FuncComponent<ResultSizeInfoProps> = (props) => {
 
         return (
             <p>
@@ -48,7 +81,16 @@ export function init(dispatcher, he, freqDataRowsStore, layoutViews) {
 
     // ----------------------- <Paginator /> -------------------------
 
-    const Paginator = (props) => {
+    interface PaginatorProps {
+        isLoading:boolean;
+        currentPage:number;
+        hasNextPage:boolean;
+        hasPrevPage:boolean;
+        current:number; // TODO !!!
+        setLoadingFlag:()=>void;
+    }
+
+    const Paginator:React.FuncComponent<PaginatorProps> = (props) => {
 
         const handlePageChangeByClick = (curr, step) => {
             props.setLoadingFlag();
@@ -112,55 +154,48 @@ export function init(dispatcher, he, freqDataRowsStore, layoutViews) {
 
     // ----------------------- <FilterForm /> -------------------------
 
-    class FilterForm extends React.Component {
+    interface FilterFormProps {
+        minFreqVal:string;
+        setLoadingFlag:()=>void;
+    }
 
-        constructor(props) {
-            super(props);
-            this._handleInputChange = this._handleInputChange.bind(this);
-            this._handleApplyClick = this._handleApplyClick.bind(this);
-            this.state = {
-                minFreqVal: freqDataRowsStore.getMinFreq(),
-                currentPage: freqDataRowsStore.getCurrentPage()
-            };
-        }
+    const FilterForm:React.FuncComponent<FilterFormProps> = (props) => {
 
-        _handleInputChange(evt) {
+        const handleInputChange = (evt) => {
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_SET_MIN_FREQ_VAL',
                 props: {value: evt.target.value}
             });
-        }
+        };
 
-        _handleApplyClick(evt) {
-            this.props.setLoadingFlag();
+        const handleApplyClick = (evt) => {
+            props.setLoadingFlag();
             dispatcher.dispatch({
                 actionType: 'FREQ_RESULT_APPLY_MIN_FREQ',
                 props: {}
             });
-        }
+        };
 
-        render() {
-            return (
-                <form action="freqs">
-                    <label>
-                        {he.translate('freq__limit_input_label')}:
-                        {'\u00a0'}
-                        <input type="text" name="flimit" value={this.props.minFreqVal}
-                                style={{width: '3em'}}
-                                onChange={this._handleInputChange} />
-                    </label>
+        return (
+            <form action="freqs">
+                <label>
+                    {he.translate('freq__limit_input_label')}:
                     {'\u00a0'}
-                    <button type="button" className="util-button" onClick={this._handleApplyClick}>
-                        {he.translate('global__apply_btn')}
-                    </button>
-                </form>
-            );
-        }
-    }
+                    <input type="text" name="flimit" value={props.minFreqVal}
+                            style={{width: '3em'}}
+                            onChange={handleInputChange} />
+                </label>
+                {'\u00a0'}
+                <button type="button" className="util-button" onClick={handleApplyClick}>
+                    {he.translate('global__apply_btn')}
+                </button>
+            </form>
+        );
+    };
 
     // ----------------------- <FreqResultView /> -------------------------
 
-    class FreqResultView extends React.Component {
+    class FreqResultView extends React.Component<FreqResultViewProps, FreqResultViewState> {
 
         constructor(props) {
             super(props);
@@ -240,6 +275,7 @@ export function init(dispatcher, he, freqDataRowsStore, layoutViews) {
             );
         }
     }
+
 
     return {
         FreqResultView: FreqResultView

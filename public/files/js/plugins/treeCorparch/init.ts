@@ -162,7 +162,7 @@ export class TreeWidgetStore extends SimplePageStore {
  * @param options A configuration of the widget
  */
 export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-            queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):typeof React.Component {
+            queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
     const widgetWrapper = window.document.createElement('div');
 
     const treeStore = new TreeWidgetStore(
@@ -209,11 +209,11 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
     setData(data:any):void {
     }
 
-    getForm():typeof React.Component {
+    getForm():React.ComponentClass {
         return this.viewsLib.FilterPageComponent;
     }
 
-    getList():typeof React.Component {
+    getList():React.ComponentClass {
         return this.viewsLib.CorptreePageComponent;
     }
 }

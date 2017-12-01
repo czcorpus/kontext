@@ -17,6 +17,7 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/coreViews.d.ts" />
 /// <reference path="../vendor.d.ts/react.d.ts" />
 
 
@@ -24,20 +25,16 @@ import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers, storeProvider:any):Kontext.LayoutViews { // TODO type
+
+
+export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        he:Kontext.ComponentHelpers,
+        storeProvider:Kontext.LayoutStores):CoreViews.Runtime {
 
     // ------------------------------ <ModalOverlay /> -----------------------------
 
-    interface ModalOverlayProps {
-        onCloseKey:()=>void;
-        isScrollable:boolean;
-        children:React.ReactElement;
-    }
-
-    interface ModalOverlayState {
-    }
-
-    class ModalOverlay extends React.Component<ModalOverlayProps, ModalOverlayState> {
+    class ModalOverlay extends React.Component<CoreViews.ModalOverlay.Props, CoreViews.ModalOverlay.State> {
 
         constructor(props) {
             super(props);
@@ -74,52 +71,12 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <PopupBox /> -----------------------------
 
-    interface PopupBoxProps {
-
-        /**
-         * a custom action to be performed once the component is mounted
-         */
-        onReady:(elm:HTMLElement)=>void;
-
-        /**
-         * a custom action to be performed when user clicks 'close'
-         */
-        onCloseClick:()=>void;
-
-        status:string;
-
-        /**
-         * an optional inline CSS
-         */
-        customStyle?:{[prop:string]:string};
-
-        /**
-         * if true then the "close" button will take the focus
-         * allowing instant closing by ESC or handling keys
-         * by a custom handler (see the next prop)
-         */
-        takeFocus?:boolean;
-
-        /**
-         * an optional function called in case of a 'onKeyDown' event
-         */
-        keyPressHandler:(evt:React.SyntheticEvent)=>void;
-
-        customClass:string;
-
-        autoSize:boolean;
-
-        children:Array<React.ReactElement>;
-    }
-
-    interface PopupBoxState {}
-
     /**
      * A general PopupBox for displaying overlay information. The box
      * is not modal but in can be wrapped in <ModalOverlay />
      * component to get modal box/window.
      */
-    class PopupBox extends React.Component<PopupBoxProps, PopupBoxState> {
+    class PopupBox extends React.Component<CoreViews.PopupBox.Props, CoreViews.PopupBox.State> {
 
         constructor(props) {
             super(props);
@@ -218,19 +175,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <ImgWithMouseover /> -----------------------------
 
-    interface ImgWithMouseoverProps {
-        src:string;
-        src2?:string;
-        htmlClass:string;
-        clickHandler:()=>void;
-        alt:string;
-    }
-
-    interface ImgWithMouseoverState {
-        isMouseover:boolean;
-    }
-
-    class ImgWithMouseover extends React.Component<ImgWithMouseoverProps, ImgWithMouseoverState> {
+    class ImgWithMouseover extends React.Component<CoreViews.ImgWithMouseover.Props, CoreViews.ImgWithMouseover.State> {
 
         constructor(props) {
             super(props);
@@ -266,15 +211,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <CloseableFrame /> -----------------------------
 
-    interface CloseableFrameProps {
-        onCloseClick:()=>void;
-        customClass:string;
-        scrollable:boolean;
-        label:string;
-        children:Array<React.ReactElement>;
-    }
-
-    const CloseableFrame:React.FuncComponent<CloseableFrameProps> = (props) => {
+    const CloseableFrame:React.FuncComponent<CoreViews.CloseableFrame.Props> = (props) => {
 
         const closeClickHandler = () => {
             if (typeof props.onCloseClick === 'function') {
@@ -310,16 +247,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <InlineHelp /> -----------------------------
 
-    interface InlineHelpProps {
-        customStyle:string;
-        children:Array<React.ReactElement>;
-    }
-
-    interface InlineHelpState {
-        helpVisible:boolean;
-    }
-
-    class InlineHelp extends React.Component<InlineHelpProps, InlineHelpState> {
+    class InlineHelp extends React.Component<CoreViews.InlineHelp.Props, CoreViews.InlineHelp.State> {
 
         constructor(props) {
             super(props);
@@ -345,6 +273,10 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                             <PopupBox onCloseClick={this._clickHandler}
                                     customStyle={this.props.customStyle}>
                                 {this.props.children}
+                                {this.props.url ?
+                                    <p className="link"><a href={this.props.url} target='_blank'>
+                                        {he.translate('global__get_more_info')}
+                                        </a></p> : null}
                             </PopupBox>
                             : null}
                 </span>
@@ -356,15 +288,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
     // ------------------------------ <Message /> -----------------------------
     // (info/error/warning message box)
 
-    interface MessageProps {
-        messageId:string;
-        fadingOut:boolean;
-        transitionTime:number;
-        messageType:string;
-        messageText:string;
-    }
-
-    const Message:React.FuncComponent<MessageProps> = (props) => {
+    const Message:React.FuncComponent<CoreViews.Message.Props> = (props) => {
 
         const handleCloseClick = (e) => {
             e.preventDefault();
@@ -420,17 +344,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <FadeInFrame /> -----------------------------
 
-    interface FadeInFrameProps {
-        mode:string;
-        transitionTime:number;
-        children:Array<React.ReactElement>;
-    }
-
-    interface FadeInFrameState {
-        opacity:number;
-    }
-
-    class FadeInFrame extends React.Component<FadeInFrameProps, FadeInFrameState> {
+    class FadeInFrame extends React.Component<CoreViews.FadeInFrame.Props, CoreViews.FadeInFrame.State> {
 
         constructor(props) {
             super(props);
@@ -460,16 +374,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------------ <Messages /> -----------------------------
 
-    interface MessagesProps {
-
-    }
-
-    interface MessagesState {
-        messages:any; // TODO type
-        transitionTime:number;
-    }
-
-    class Messages extends React.Component<MessagesProps, MessagesState> {
+    class Messages extends React.Component<CoreViews.Messages.Props, CoreViews.Messages.State> {
 
         constructor(props) {
             super(props);
@@ -513,13 +418,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------ <CorpnameInfoTrigger /> --------------------------------
 
-    interface CorpnameInfoTriggerProps {
-        corpname:string;
-        usesubcorp:string;
-        humanCorpname:string;
-    }
-
-    const CorpnameInfoTrigger:React.FuncComponent<CorpnameInfoTriggerProps> = (props) => {
+    const CorpnameInfoTrigger:React.FuncComponent<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
 
         const handleCorpnameClick = () => {
             dispatcher.dispatch({
@@ -571,15 +470,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------ <IssueReportingLink /> --------------------------------
 
-    interface IssueReportingLinkProps {
-        url:string;
-        blank_window:boolean;
-        type:string;
-        label:string;
-        onClick:()=>void;
-    }
-
-    const IssueReportingLink:React.FuncComponent<IssueReportingLinkProps> = (props) => {
+    const IssueReportingLink:React.FuncComponent<CoreViews.IssueReportingLink.Props> = (props) => {
         if (props.type === 'static') {
             return (
                 <a href={props.url} target={props.blank_window ? '_blank' : '_self'}
@@ -599,20 +490,15 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------------ <AjaxLoaderImage /> --------------------------------
 
-    interface AjaxLoaderImageProps {}
-
-    const AjaxLoaderImage:React.FuncComponent<AjaxLoaderImageProps> = (props) => {
+    const AjaxLoaderImage:React.FuncComponent<CoreViews.AjaxLoaderImage.Props> = (props) => {
         return <img src={he.createStaticUrl('img/ajax-loader.gif')} alt={he.translate('global__loading')} />;
     };
 
     // ------------------------ <AjaxLoaderBarImage /> --------------------------------
 
-    interface AjaxLoaderBarImageProps {}
-
-    const AjaxLoaderBarImage:React.FuncComponent<AjaxLoaderBarImageProps> = (props) => {
+    const AjaxLoaderBarImage:React.FuncComponent<CoreViews.AjaxLoaderBarImage.Props> = (props) => {
         return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
     };
-
 
     // ------------------------------------------------------------------------------------
 

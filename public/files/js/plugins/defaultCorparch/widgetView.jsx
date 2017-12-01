@@ -20,7 +20,9 @@
 
 import * as React from 'vendor/react';
 
-export function init(dispatcher, util, layoutViews, widgetStore, queryStore) {
+export function init(dispatcher, util, widgetStore, queryStore) {
+
+    const layoutViews = util.getLayoutViews();
 
     /**
      *

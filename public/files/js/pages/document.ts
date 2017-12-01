@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../types/common.d.ts" />
+/// <reference path="../types/coreViews.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
@@ -33,11 +34,11 @@
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import {Dispatcher} from 'vendor/Dispatcher';
-import {init as documentViewsInit} from '../views/document';
-import {init as commonViewsInit} from 'views/common';
-import {init as menuViewsInit} from 'views/menu';
-import {init as overviewAreaViewsInit} from 'views/overview';
-import {init as viewOptionsInit} from 'views/options/main';
+import {init as documentViewsFactory} from '../views/document';
+import {init as commonViewsFactory} from 'views/common';
+import {init as menuViewsFactory} from 'views/menu';
+import {init as overviewAreaViewsFactory} from 'views/overview';
+import {init as viewOptionsFactory} from 'views/options/main';
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 import * as RSVP from 'vendor/rsvp';
@@ -134,7 +135,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     /**
      * React component classes
      */
-    layoutViews:Kontext.LayoutViews;
+    layoutViews:CoreViews.Runtime;
 
     commonViews:CommonViews;
 
@@ -203,7 +204,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             formatDate:(d:Date, timeFormat:number=0):string => {
                 return this.formatDate(d, timeFormat);
             },
-            getLayoutViews:():Kontext.LayoutViews => {
+            getLayoutViews:():CoreViews.Runtime => {
                 return this.layoutViews;
             },
             addGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {
@@ -261,7 +262,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param target An element whose content will be replaced by rendered React component
      * @param props Properties used by created component
      */
-    renderReactComponent<T, U>(reactClass:typeof React.Component|React.FuncComponent<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
             target:HTMLElement, props?:T):void {
         ReactDOM.render(React.createElement(reactClass, props), target);
     }
@@ -857,7 +858,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *
      */
     private initMainMenu():void {
-        const menuViews = menuViewsInit(this.dispatcher, this.getComponentHelpers(), this,
+        const menuViews = menuViewsFactory(this.dispatcher, this.getComponentHelpers(), this,
                 this.mainMenuStore, this.getStores().asyncTaskInfoStore, this.layoutViews);
         this.renderReactComponent(
             menuViews.MainMenu,
@@ -870,7 +871,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *
      */
     private initOverviewArea():void {
-        const overviewViews = overviewAreaViewsInit(
+        const overviewViews = overviewAreaViewsFactory(
             this.dispatcher,
             this.getComponentHelpers(),
             this.corpusInfoStore
@@ -888,7 +889,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     private initViewOptions(mainMenuStore:Kontext.IMainMenuStore,
                 generalViewOptionsStore:ViewOptions.IGeneralViewOptionsStore,
                 corpViewOptionsStore:ViewOptions.ICorpViewOptionsStore):void {
-        const viewOptionsViews = viewOptionsInit(
+        const viewOptionsViews = viewOptionsFactory(
             this.dispatcher,
             this.getComponentHelpers(),
             this.layoutViews,
@@ -990,13 +991,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     }
                 );
 
-                this.layoutViews = documentViewsInit(
+                this.layoutViews = documentViewsFactory(
                     this.dispatcher,
                     this.getComponentHelpers(),
                     this.getStores()
                 );
 
-                this.commonViews = commonViewsInit(this.getComponentHelpers());
+                this.commonViews = commonViewsFactory(this.getComponentHelpers());
 
                 window.onkeydown = (evt) => {
                     this.globalKeyHandlers.forEach(fn => fn(evt));
@@ -1108,7 +1109,7 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.getComponentHelpers();
     }
 
-    renderReactComponent<T, U>(reactClass:typeof React.Component|React.FuncComponent<T>,
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
             target:HTMLElement, props?:T):void {
         this.pageModel.renderReactComponent(reactClass, target, props);
     }
@@ -1121,7 +1122,7 @@ export class PluginApi implements Kontext.PluginApi {
         return this.pageModel.getStores();
     }
 
-    getViews():Kontext.LayoutViews {
+    getViews():CoreViews.Runtime {
         return this.pageModel.layoutViews;
     }
 

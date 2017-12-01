@@ -21,7 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 
 export interface IssueReportingViews {
-    IssueReportingWidget:typeof React.Component;
+    IssueReportingWidget:React.ComponentClass;
 }
 
 export function init(

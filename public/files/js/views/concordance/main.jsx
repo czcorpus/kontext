@@ -341,8 +341,9 @@ export function init(dispatcher, he, stores) {
                     {'\u00A0'}
                     <span className="separ">|</span>
                     <abbr>ARF</abbr>
-                    <layoutViews.InlineHelp customStyle={{minWidth: '20em'}}>
-                    {he.translate('concview__arf_help')}
+                    <layoutViews.InlineHelp customStyle={{minWidth: '20em'}}
+                            url="http://wiki.korpus.cz/doku.php/pojmy:arf">
+                        {he.translate('concview__arf_help')}
                     </layoutViews.InlineHelp>
                     :{'\u00A0'}
                     {this._getArf()}
