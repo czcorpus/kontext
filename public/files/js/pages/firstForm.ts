@@ -53,7 +53,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
 
     private clStorage:ConcLinesStorage;
 
-    private corplistComponent:typeof React.Component;
+    private corplistComponent:React.ComponentClass;
 
     private layoutModel:PageModel;
 
@@ -107,7 +107,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     }
 
 
-    private initCorplistComponent():typeof React.Component {
+    private initCorplistComponent():React.ComponentClass {
         return corplistComponent.createWidget(
             'first_form',
             this.layoutModel.pluginApi(),
@@ -241,7 +241,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         this.onQueryStoreReady(this.queryStore);
     }
 
-    private attachQueryForm(properties:{[key:string]:any}, corparchWidget:typeof React.Component):void {
+    private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {
 
         this.layoutModel.registerSwitchCorpAwareObject(this.queryStore);
         const queryFormComponents = queryFormInit(

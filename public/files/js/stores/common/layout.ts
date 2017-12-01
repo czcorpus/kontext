@@ -27,19 +27,12 @@ import {MultiDict, uid} from '../../util';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'vendor/immutable';
 
-export class UserNotification {
-    messageId:string;
-    messageType:string;
-    messageText:string;
-    fadingOut:boolean;
-}
-
 /**
  *
  */
 export class MessageStore extends SimplePageStore implements Kontext.MessagePageStore {
 
-    messages:Immutable.List<UserNotification>;
+    messages:Immutable.List<Kontext.UserNotification>;
 
     onClose:{[id:string]:()=>void};
 
@@ -47,7 +40,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
 
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
-        this.messages = Immutable.List<UserNotification>();
+        this.messages = Immutable.List<Kontext.UserNotification>();
         this.onClose = {};
         this.pluginApi = pluginApi;
 
@@ -104,7 +97,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
         this.notifyChangeListeners();
     }
 
-    getMessages():Immutable.List<UserNotification> {
+    getMessages():Immutable.List<Kontext.UserNotification> {
         return this.messages;
     }
 

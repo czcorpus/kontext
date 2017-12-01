@@ -19,13 +19,37 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import {FreqDataRowsStore, ResultHeader, ResultItem} from '../../stores/freqs/dataRows';
 
-export function init(dispatcher, he, freqDataRowsStore) {
+interface DataTableProps {
+    head:Immutable.List<ResultHeader>;
+    rows:Immutable.List<ResultItem>;
+    sortColumn:string;
+    setLoadingFlag:()=>void;
+}
+
+
+interface ExportedComponents {
+    DataTable:React.FuncComponent<DataTableProps>;
+}
+
+export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        he:Kontext.ComponentHelpers,
+        freqDataRowsStore:FreqDataRowsStore):ExportedComponents {
 
     // ----------------------- <DataRowPNFilter /> --------------------------------
-    const DataRowPNFilter = (props) => {
+
+    interface DataRowPNFilterProps {
+        pfilter: Immutable.List<[string, string]>;
+        nfilter: Immutable.List<[string, string]>;
+    }
+
+    const DataRowPNFilter:React.FuncComponent<DataRowPNFilterProps> = (props) => {
 
         const handlePosClick = (evt) => {
             dispatcher.dispatch({
@@ -64,7 +88,12 @@ export function init(dispatcher, he, freqDataRowsStore) {
     };
 
     // ----------------------- <DataRow /> --------------------------------
-    const DataRow = (props) => {
+
+    interface DataRowProps {
+        data:ResultItem;
+    }
+
+    const DataRow:React.FuncComponent<DataRowProps> = (props) => {
 
         return (
             <tr>
@@ -81,7 +110,12 @@ export function init(dispatcher, he, freqDataRowsStore) {
     };
 
     // ----------------------- <DataRowNoRel /> --------------------------------
-    const DataRowNoRel = (props) => {
+
+    interface DataRowNoRelProps {
+        data:ResultItem;
+    }
+
+    const DataRowNoRel:React.FuncComponent<DataRowNoRelProps> = (props) => {
 
         return (
             <tr>
@@ -94,12 +128,19 @@ export function init(dispatcher, he, freqDataRowsStore) {
                 </td>
             </tr>
         );
-    }
+    };
 
     /**
      *  ----------------------- <TableColHead /> --------------------------------
      */
-    const TableColHead = (props) => {
+
+    interface TableColHeadProps {
+        data:ResultHeader;
+        sortColumn:string;
+        setLoadingFlag:()=>void;
+    }
+
+    const TableColHead:React.FuncComponent<TableColHeadProps> = (props) => {
 
         const handleClick = () => {
             props.setLoadingFlag();
@@ -131,7 +172,7 @@ export function init(dispatcher, he, freqDataRowsStore) {
 
         return (
             <th key={props.data.n}
-                    title={props.data.title || ''}>
+                    title={props.data.s || ''}>
                 {renderSortingIcon()}
             </th>
         );
@@ -140,11 +181,11 @@ export function init(dispatcher, he, freqDataRowsStore) {
     /**
      * ----------------------- <DataTable /> --------------------------------
      */
-    const DataTable = (props) => {
+    const DataTable:React.FuncComponent<DataTableProps> = (props) => {
 
         const getBarChartTitle = () => {
             if (props.head.size > 0) {
-                return props.head.get(-1).title || '';
+                return props.head.get(-1).s || '';
             }
             return '';
         };

@@ -64,6 +64,6 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
  * @param options
  */
 export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
-        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):typeof React.Component {
+        queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
     return dcInit.createWidget(targetAction, pluginApi, queryStore, querySetupHandler, options);
 }

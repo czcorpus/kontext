@@ -31,12 +31,12 @@ import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../stores/freqs/ctFreqForm';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {QuerySaveAsFormStore} from '../stores/query/save';
-import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
-import {init as collFormInit, CollFormViews} from 'views/coll/forms';
+import {init as freqFormFactory} from '../views/freqs/forms';
+import {init as collFormFactory, CollFormViews} from 'views/coll/forms';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
-import {init as resultViewInit, FreqsResultViews} from 'views/freqs/main';
-import {init as ctResultViewInit, CTFreqsResultViews} from 'views/freqs/ctResult';
+import {init as resultViewFactory} from '../views/freqs/main';
+import {init as ctResultViewInit} from '../views/freqs/ctResult';
 import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
 import {FreqResultsSaveStore, FreqCTResultsSaveStore} from '../stores/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
@@ -140,7 +140,7 @@ class FreqPage {
             this.ctFlatFreqStore
         );
 
-        const freqFormViews = freqFormInit(
+        const freqFormViews = freqFormFactory(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.mlFreqStore,
@@ -166,7 +166,7 @@ class FreqPage {
             }
         );
 
-        const collFormViews = collFormInit(
+        const collFormViews = collFormFactory(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
@@ -254,11 +254,10 @@ class FreqPage {
                     this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     1
                 );
-                const freqResultView = resultViewInit(
+                const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    freqResultStore,
-                    this.layoutModel.layoutViews
+                    freqResultStore
                 );
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,

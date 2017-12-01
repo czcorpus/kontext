@@ -404,7 +404,7 @@ class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
         this.store.refreshData();
     }
 
-    getWidgetView():typeof React.Component {
+    getWidgetView():React.ComponentClass {
         return viewInit(
             this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),

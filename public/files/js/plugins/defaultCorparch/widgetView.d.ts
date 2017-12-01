@@ -25,7 +25,6 @@
 export function init(
     dispatcher:Kontext.FluxDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
-    layoutViews:Kontext.LayoutViews,
     widgetStore:Kontext.PageStore,
     queryStore
-):typeof React.Component;
+):React.ComponentClass;

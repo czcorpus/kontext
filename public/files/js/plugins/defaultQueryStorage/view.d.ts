@@ -25,4 +25,4 @@ export function init(
     dispatcher:Kontext.FluxDispatcher,
     he:Kontext.ComponentHelpers,
     queryStorageStore:Kontext.PageStore
-):{QueryStorage:typeof React.Component};
+):{QueryStorage:React.ComponentClass};

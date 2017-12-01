@@ -19,16 +19,49 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import {FreqResultsSaveStore} from '../../stores/freqs/save';
 
-export function init(dispatcher, utils, layoutViews, freqSaveStore) {
+
+interface SaveFreqFormProps {
+    onClose:()=>void;
+}
+
+interface SaveFreqFormState {
+    saveformat:string;
+    includeColHeaders:boolean;
+    includeHeading:boolean;
+    fromLine:string;
+    toLine:string;
+}
+
+interface ExportedViews {
+    SaveFreqForm:React.ComponentClass<SaveFreqFormProps, SaveFreqFormState>;
+}
+
+
+// ------------------------------------ factory -------------------------------------------
+
+export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        utils:Kontext.ComponentHelpers,
+        freqSaveStore:FreqResultsSaveStore):ExportedViews {
+
+
+    const layoutViews = utils.getLayoutViews();
+
+    // ---------------------------- <TRSaveFormatSelect /> ----------------------------
+
+    interface TRSaveFormatSelectProps {
+        value:string;
+    }
 
     /**
      *
-     * @param {*} props
      */
-    const TRSaveFormatSelect = (props) => {
+    const TRSaveFormatSelect:React.FuncComponent<TRSaveFormatSelectProps> = (props) => {
 
         const handleSelect = (evt) => {
             dispatcher.dispatch({
@@ -54,11 +87,17 @@ export function init(dispatcher, utils, layoutViews, freqSaveStore) {
         );
     };
 
+    // --------------------------------------------------------------------------------------
+    // ---------------------------- <TRIncludeHeadingCheckbox /> ----------------------------
+
+    interface TRIncludeHeadingCheckboxProps {
+        value:string;
+    }
+
     /**
      *
-     * @param {*} props
      */
-    const TRIncludeHeadingCheckbox = (props) => {
+    const TRIncludeHeadingCheckbox:React.FuncComponent<TRIncludeHeadingCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -71,7 +110,11 @@ export function init(dispatcher, utils, layoutViews, freqSaveStore) {
 
         return (
             <tr className="separator">
-                <th><label htmlFor="tr-include-heading-checkbox">{utils.translate('coll__save_form_incl_heading')}</label>:</th>
+                <th>
+                    <label htmlFor="tr-include-heading-checkbox">
+                        {utils.translate('coll__save_form_incl_heading')}
+                    </label>:
+                </th>
                 <td>
                     <input id="tr-include-heading-checkbox" type="checkbox" checked={props.value} onChange={handleChange} />
                 </td>
@@ -79,11 +122,17 @@ export function init(dispatcher, utils, layoutViews, freqSaveStore) {
         );
     }
 
+    // --------------------------------------------------------------------------------------
+    // ---------------------------- <TRColHeadersCheckbox /> --------------------------------
+
+    interface TRColHeadersCheckboxProps {
+        value:string;
+    }
+
     /**
      *
-     * @param {*} props
      */
-    const TRColHeadersCheckbox = (props) => {
+    const TRColHeadersCheckbox:React.FuncComponent<TRColHeadersCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch({
@@ -102,13 +151,17 @@ export function init(dispatcher, utils, layoutViews, freqSaveStore) {
                 </td>
             </tr>
         );
+    };
+
+    // --------------------------------------------------------------------------------------
+    // ---------------------------- <TRSelLineRangeInputs /> --------------------------------
+
+    interface TRSelLineRangeInputsProps {
+        fromValue:string;
+        toValue:string;
     }
 
-    /**
-     *
-     * @param {*} props
-     */
-    const TRSelLineRangeInputs = (props) => {
+    const TRSelLineRangeInputs:React.FuncComponent<TRSelLineRangeInputsProps> = (props) => {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch({
@@ -147,13 +200,16 @@ export function init(dispatcher, utils, layoutViews, freqSaveStore) {
                     </div>
                 </td>
             </tr>
-        )
+        );
     };
+
+    // --------------------------------------------------------------------------------------
+    // ---------------------------- <SaveFreqForm /> ----------------------------------------
 
     /**
      *
      */
-    class SaveFreqForm extends React.Component {
+    class SaveFreqForm extends React.Component<SaveFreqFormProps, SaveFreqFormState> {
 
         constructor(props) {
             super(props);

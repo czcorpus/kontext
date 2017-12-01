@@ -23,7 +23,7 @@
 import {IssueReportingStore} from './init';
 
 export interface IssueReportingViews {
-    IssueReportingWidget:typeof React.Component;
+    IssueReportingWidget:React.ComponentClass;
 }
 
 export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers,
