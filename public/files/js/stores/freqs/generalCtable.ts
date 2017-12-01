@@ -68,7 +68,7 @@ export abstract class GeneralCTStore extends SimplePageStore {
      */
     protected minFreq:string;
 
-    protected minFreqType:string;
+    protected minFreqType:FreqFilterQuantities;
 
     /**
      * Already encoded criterion for the 1st attribute
@@ -242,7 +242,7 @@ export abstract class GeneralCTStore extends SimplePageStore {
         return this.minFreq;
     }
 
-    getMinFreqType():string {
+    getMinFreqType():FreqFilterQuantities {
         return this.minFreqType;
     }
 
@@ -256,5 +256,9 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     getConfIntervalLeftMinWarn():number {
         return GeneralCTStore.CONF_INTERVAL_LEFT_MIN_WARN;
+    }
+
+    getUsesAdHocSubcorpus():boolean {
+        return false; // TODO !!!!
     }
 }

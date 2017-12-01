@@ -339,7 +339,7 @@ declare module Kontext {
         /**
          * Format a number based on current UI locales.
          */
-        formatNumber(value:number, fractionDigits:number):string;
+        formatNumber(value:number, fractionDigits?:number):string;
 
         /**
          * Format a date based on current UI locales.

@@ -29,7 +29,7 @@ declare module React {
 
     class Component<T, U> {
 
-        constructor(props:T);
+        constructor(props:T, context?:any);
 
         props:T;
 
@@ -58,7 +58,7 @@ declare module React {
     }
 
     export interface FuncComponent<T> {
-        (Props:T):ReactElement;
+        (Props:T, context?:any):ReactElement;
     }
 
     export interface SyntheticEvent {

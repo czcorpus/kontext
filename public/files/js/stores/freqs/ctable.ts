@@ -28,14 +28,14 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 import {GeneralCTStore, CTFreqCell, FreqQuantities} from './generalCtable';
-import {CTFormProperties, roundFloat} from './ctFreqForm';
+import {CTFormProperties, roundFloat, Dimensions} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
 import {DataPoint} from '../../charts/confIntervals';
 
 /**
  * A representation of 2D freq table.
  */
-type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
+export type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
 
 /**
  * A helper type used when exporting data for Excel etc.
@@ -55,6 +55,12 @@ export interface FormatConversionExportData {
     labels1:Array<string>;
     labels2:Array<string>;
     data:Array<Array<[number, number, number, string]>>;
+}
+
+export interface TableInfo {
+    size:number;
+    numNonZero:number;
+    totalAbs:number;
 }
 
 /**
@@ -374,7 +380,7 @@ export class ContingencyTableStore extends GeneralCTStore {
             .map((x, i) => [x[0], i]));
     }
 
-    getTableInfo():{size:number, numNonZero:number, totalAbs:number} {
+    getTableInfo():TableInfo {
         let size = this.fullSize;
         let numNonZero:number = 0;
         let totalAbs:number = 0;
