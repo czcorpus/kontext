@@ -1008,6 +1008,9 @@ class Actions(Querying):
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
+        result['text_types_data'] = json.dumps(
+            get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
+        self._attach_query_params(result)
         return result
 
     @exposed(access_level=1, legacy=True, template='txtexport/savefreq.tmpl', return_type='plain')
@@ -1118,22 +1121,26 @@ class Actions(Querying):
         args.fcrit = '{0} {1} {2} {3}'.format(self.args.ctattr1, self.args.ctfcrit1,
                                               self.args.ctattr2, self.args.ctfcrit2)
         try:
-            ans = freq_calc.calculate_freqs_ct(args)
+            freq_data = freq_calc.calculate_freqs_ct(args)
         except UserActionException as ex:
-            ans = dict(data=[], full_size=0)
+            freq_data = dict(data=[], full_size=0)
             self.add_system_message('error', ex.message)
 
         self._add_flux_save_menu_item('XLSX', save_format='xlsx')
 
-        return dict(
+        ans = dict(
             freq_type='ct',
             attr1=self.args.ctattr1,
             attr2=self.args.ctattr2,
-            data=ans,
+            data=freq_data,
             freq_form_args=FreqFormArgs().update(self.args).to_dict(),
             coll_form_args=CollFormArgs().update(self.args).to_dict(),
             ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
         )
+        ans['text_types_data'] = json.dumps(
+            get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
+        self._attach_query_params(ans)
+        return ans
 
     @exposed(access_level=1, return_type='plain')
     def export_freqct(self, request):
