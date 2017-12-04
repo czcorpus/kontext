@@ -105,7 +105,8 @@ export interface InitialData {
  * All the state data is based on Immutable.js except for individual data
  * items which are updated via manual copying (i.e. no Immutable.Record).
  */
-export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTypesStore {
+export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTypesStore,
+        TextTypes.IAdHocSubcorpusDetector {
 
     private attributes:Immutable.List<TextTypes.AttributeSelection>;
 
@@ -593,7 +594,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         return Immutable.List<TextTypes.AttributeValue>();
     }
 
-    exportSelections(lockedOnesOnly:boolean):{[attr:string]:any} {
+    exportSelections(lockedOnesOnly:boolean):{[attr:string]:Array<string>} {
         const ans = {};
         this.attributes.forEach((attrSel:TextTypes.AttributeSelection) => {
             if (attrSel.hasUserChanges()) {
@@ -666,6 +667,10 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         } else {
             return this.getAttributes().some(item => item.hasUserChanges());
         }
+    }
+
+    usesAdHocSubcorpus():boolean {
+        return this.hasSelectedItems();
     }
 
     getAttributesWithSelectedItems(includeLocked:boolean):Array<string> {

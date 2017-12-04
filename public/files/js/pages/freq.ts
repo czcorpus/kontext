@@ -31,6 +31,7 @@ import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../stores/freqs/ctFreqForm';
 import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
 import {QuerySaveAsFormStore} from '../stores/query/save';
+import {fetchQueryFormArgs} from '../stores/query/main';
 import {init as freqFormFactory} from '../views/freqs/forms';
 import {init as collFormFactory, CollFormViews} from 'views/coll/forms';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
@@ -40,6 +41,7 @@ import {init as ctResultViewInit} from '../views/freqs/ctResult';
 import {FreqDataRowsStore, ResultBlock} from '../stores/freqs/dataRows';
 import {FreqResultsSaveStore, FreqCTResultsSaveStore} from '../stores/freqs/save';
 import {ConfIntervals, DataPoint} from '../charts/confIntervals';
+import {TextTypesStore} from '../stores/textTypes/attrValues';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -74,7 +76,7 @@ class FreqPage {
         this.layoutModel = layoutModel;
     }
 
-    private initAnalysisViews():void {
+    private initAnalysisViews(adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
 
         // -------------------- freq form -------------------
@@ -122,17 +124,20 @@ class FreqPage {
         this.cTFreqFormStore = new CTFreqFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps
+            ctFormProps,
+            adhocSubcDetector
         );
         this.ctFreqStore = new ContingencyTableStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps
+            ctFormProps,
+            adhocSubcDetector
         );
         this.ctFlatFreqStore = new CTFlatStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps
+            ctFormProps,
+            adhocSubcDetector
         );
         this.ctResultSaveStore = new FreqCTResultsSaveStore(
             this.layoutModel.dispatcher,
@@ -302,6 +307,18 @@ class FreqPage {
         }
     }
 
+    initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+        const ttStore = new TextTypesStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel.pluginApi(),
+            this.layoutModel.getConf<any>('textTypesData')
+        );
+        ttStore.applyCheckedItems(queryFormArgs.selected_text_types, {});
+        return ttStore;
+    }
+
     init() {
         this.layoutModel.init().then(
             () => {
@@ -343,7 +360,8 @@ class FreqPage {
                         break;
                     }
                 });
-                this.initAnalysisViews();
+                const adhocSubcIdentifier = this.initAdhocSubcDetector();
+                this.initAnalysisViews(adhocSubcIdentifier);
                 this.initQueryOpNavigation();
                 this.initFreqResult();
             }

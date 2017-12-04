@@ -70,6 +70,44 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
 
 export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 
+/**
+ *
+ * @param data
+ */
+export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArgs}):AjaxResponse.QueryFormArgsResponse => {
+
+    const k = (() => {
+        for (let p in data) {
+            if (data.hasOwnProperty(p) && data[p].form_type === 'query') {
+                return p;
+            }
+        }
+        return null;
+    })();
+
+    if (k !== null) {
+        return <AjaxResponse.QueryFormArgsResponse>data[k];
+
+    } else {
+        return {
+            contains_errors: false,
+            messages: [],
+            form_type: 'query',
+            op_key: '__new__',
+            curr_query_types: {},
+            curr_queries: {},
+            curr_pcq_pos_neg_values: {},
+            curr_lpos_values: {},
+            curr_qmcase_values: {},
+            curr_default_attr_values: {},
+            tag_builder_support: {},
+            selected_text_types: {},
+            bib_mapping: {}
+        };
+    }
+};
+
+
 
 /**
  *

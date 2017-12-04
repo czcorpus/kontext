@@ -382,7 +382,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
         }) !== undefined;
     }
 
-    exportSelections(lockedOnesOnly:boolean):any {
+    exportSelections(lockedOnesOnly:boolean):Array<string> {
         let items = lockedOnesOnly ?
                 this.values.filter((item:TextTypes.AttributeValue)=>item.locked) : this.values;
         return items
@@ -391,7 +391,7 @@ export class FullAttributeSelection implements TextTypes.AttributeSelection {
             })
             .map((item:TextTypes.AttributeValue) => {
                 return item.ident;
-            }).toJS();
+            }).toArray();
     }
 
     updateItems(items:Array<string>):TextTypes.AttributeSelection {

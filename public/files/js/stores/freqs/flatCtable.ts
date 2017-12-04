@@ -78,8 +78,9 @@ export class CTFlatStore extends GeneralCTStore {
 
     private sortReversed:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
-        super(dispatcher, pageModel, props);
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+            adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
+        super(dispatcher, pageModel, props, adhocSubcDetector);
         this.origData = Immutable.List<FreqDataItem>();
         this.sortBy = 'ipm';
         this.sortReversed = true;

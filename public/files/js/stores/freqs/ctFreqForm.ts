@@ -130,6 +130,8 @@ export class CTFreqFormStore extends SimplePageStore {
 
     private pageModel:PageModel;
 
+    private adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector;
+
     private availAttrList:Immutable.List<Kontext.AttrItem>;
 
     private availStructAttrList:Immutable.List<Kontext.AttrItem>;
@@ -152,7 +154,8 @@ export class CTFreqFormStore extends SimplePageStore {
 
     private ctxIndex2:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+            adhocSubcIdentifier:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
 
         this.pageModel = pageModel;
@@ -165,6 +168,7 @@ export class CTFreqFormStore extends SimplePageStore {
         this.minFreqType = props.ctminfreq_type;
         [this.ctxIndex1, this.alignType1] = this.importCtxValue(props.ctfcrit1);
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
+        this.adhocSubcDetector = adhocSubcIdentifier;
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -393,6 +397,10 @@ export class CTFreqFormStore extends SimplePageStore {
             return this.ctxIndex2;
         }
         return undefined;
+    }
+
+    getUsesAdHocSubcorpus():boolean {
+        return this.adhocSubcDetector.usesAdHocSubcorpus();
     }
 
 }

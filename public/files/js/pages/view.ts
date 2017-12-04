@@ -35,7 +35,7 @@ import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
 import {ConcLineStore, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewStore} from '../stores/concordance/lines';
-import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore} from '../stores/query/main';
+import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore, fetchQueryFormArgs} from '../stores/query/main';
 import {QueryReplayStore, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
 import {SampleStore, SampleFormProperties, fetchSampleFormArgs} from '../stores/query/sample';
@@ -65,7 +65,7 @@ import {init as sortFormInit, SortFormViews} from 'views/query/sort';
 import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
-import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
+import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
 import {LineSelGroupsRatiosChart} from '../charts/lineSelection';
 import tokenDetailInit from 'plugins/tokenDetail/init';
 
@@ -99,6 +99,7 @@ export class QueryStores {
     switchMcStore:SwitchMainCorpStore;
     saveAsFormStore:QuerySaveAsFormStore;
 }
+
 
 /**
  * This is the concordance viewing and operating model with
@@ -393,42 +394,9 @@ export class ViewPage {
                 this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
     }
 
-    private fetchQueryFormKey(data:{[ident:string]:AjaxResponse.ConcFormArgs}):string {
-        for (let p in data) {
-            if (data.hasOwnProperty(p) && data[p].form_type === 'query') {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    private fetchQueryFormArgs(data:{[ident:string]:AjaxResponse.ConcFormArgs}):AjaxResponse.QueryFormArgsResponse {
-        const k = this.fetchQueryFormKey(data);
-        if (k !== null) {
-            return <AjaxResponse.QueryFormArgsResponse>data[k];
-
-        } else {
-            return {
-                contains_errors: false,
-                messages: [],
-                form_type: 'query',
-                op_key: '__new__',
-                curr_query_types: {},
-                curr_queries: {},
-                curr_pcq_pos_neg_values: {},
-                curr_lpos_values: {},
-                curr_qmcase_values: {},
-                curr_default_attr_values: {},
-                tag_builder_support: {},
-                selected_text_types: {},
-                bib_mapping: {}
-            };
-        }
-    }
-
     private initQueryForm():void {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const queryFormArgs = this.fetchQueryFormArgs(concFormArgs);
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
 
         this.queryStores.queryHintStore = new QueryHintStore(
             this.layoutModel.dispatcher,
@@ -741,7 +709,7 @@ export class ViewPage {
         );
     }
 
-    initAnalysisViews():void {
+    initAnalysisViews(ttStore:TextTypesStore):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
         const collFormInputs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
@@ -810,7 +778,8 @@ export class ViewPage {
         this.ctFreqFormStore = new CTFreqFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps
+            ctFormProps,
+            ttStore
         );
 
         this.freqFormViews = freqFormInit(
@@ -890,7 +859,7 @@ export class ViewPage {
             this.layoutModel.getConf<any>('textTypesData')
         );
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const queryFormArgs = this.fetchQueryFormArgs(concFormArgs);
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
         // the pop-up query form does not display text-types form (yet the values are still
         // applied thanks to this).
@@ -1034,27 +1003,34 @@ export class ViewPage {
      *
      */
     init():RSVP.Promise<any> {
-        const p0 = RSVP.all([
-            this.layoutModel.init().then(
-                () => {
-                    const sv = syntaxViewerInit(this.layoutModel.pluginApi());
-                    if (sv) {
-                        return sv;
-                    }
-                    return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
-                        resolve(new DummySyntaxViewStore(this.layoutModel.dispatcher));
-                    });
+        const ttProm = this.layoutModel.init().then(
+            () => {
+                return this.initTextTypesStore();
+            }
+        );
+        const syntaxViewerProm = ttProm.then(
+            () => {
+                const sv = syntaxViewerInit(this.layoutModel.pluginApi());
+                if (sv) {
+                    return sv;
                 }
-            ),
-            this.initTokenDetail()
-        ]);
+                return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
+                    resolve(new DummySyntaxViewStore(this.layoutModel.dispatcher));
+                });
+            }
+        );
 
-        const p1 = p0.then(
+        const tokenDetailProp = ttProm.then(
+            () => {
+                return this.initTokenDetail()
+            }
+        );
+
+        const p2 = RSVP.all([ttProm, syntaxViewerProm, tokenDetailProp]).then(
             (args) => {
-                const ttStore = this.initTextTypesStore();
-                const [sv, tokenDetailPlg] = args;
+                const [ttStore, sv, tokenDetailPlg] = args;
                 const lineViewProps = this.initStores(
-                    ttStore,
+                    <TextTypesStore>ttStore,
                     <PluginInterfaces.ISyntaxViewer>sv,
                     <PluginInterfaces.TokenDetail.IPlugin>tokenDetailPlg
                 );
@@ -1076,13 +1052,13 @@ export class ViewPage {
             }
         );
 
-        const p2 = p1.then(
+        const p3 = p2.then(
             (lineViewProps) => {
                 return this.renderLines(lineViewProps);
             }
         );
 
-        const p3 = p2.then(
+        const p4 = p3.then(
             () => {
                 this.setupHistoryOnPopState();
                 this.onBeforeUnloadAsk();
@@ -1090,29 +1066,29 @@ export class ViewPage {
             }
         );
 
-        const p4 = p3.then(
+        const queryStorageProm = p4.then(
             () => {
                 const pageSize = this.layoutModel.getConf<number>('QueryHistoryPageNumRecords');
                 return queryStoragePlugin(this.layoutModel.pluginApi(), 0, pageSize, pageSize);
             }
         );
 
-        const p5 = p4.then(
+        const tagHelperProm = p4.then(
             () => {
                 return tagHelperPlugin(this.layoutModel.pluginApi());
             }
         );
 
-        return RSVP.all([p1, p4, p5]).then(
+        return RSVP.all([ttProm, p2, queryStorageProm, tagHelperProm]).then(
             (args:any) => {
-                const [lvprops, qs, tagh] = args;
+                const [ttStore, lvprops, qs, tagh] = args;
                 this.initQueryForm();
                 this.initFilterForm();
                 this.initSortForm();
                 this.initSwitchMainCorpForm();
                 this.initSampleForm(this.queryStores.switchMcStore);
                 this.initQueryOverviewArea(tagh, qs);
-                this.initAnalysisViews();
+                this.initAnalysisViews(<TextTypesStore>ttStore);
                 this.updateMainMenu();
                 this.initKeyShortcuts();
                 this.updateHistory();
