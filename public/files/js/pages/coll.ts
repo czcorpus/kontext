@@ -30,8 +30,9 @@ import {CollResultStore, CollResultData, CollResultHeading} from '../stores/coll
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as collResultViewInit} from 'views/coll/result';
-import {init as freqFormInit, FreqFormViews} from 'views/freqs/forms';
+import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
+import {TextTypesStore} from '../stores/textTypes/attrValues';
 
 
 declare var require:any;
@@ -112,7 +113,8 @@ export class CollPage {
         this.ctFreqFormStore = new CTFreqFormStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            ctFormProps
+            ctFormProps,
+            this.initAdhocSubcDetector()
         );
 
         const freqFormViews = freqFormInit(
@@ -235,6 +237,14 @@ export class CollPage {
     setDownloadLink(url:string):void {
         const iframe = <HTMLIFrameElement>document.getElementById('download-frame');
         iframe.src = url;
+    }
+
+    initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
+        return  new TextTypesStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel.pluginApi(),
+            this.layoutModel.getConf<any>('textTypesData')
+        );
     }
 
     init():void {

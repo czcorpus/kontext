@@ -103,7 +103,10 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     private static CONF_INTERVAL_LEFT_MIN_WARN = 0.0;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
+    private adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+            adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.ctFcrit1 = props.ctfcrit1;
@@ -112,6 +115,7 @@ export abstract class GeneralCTStore extends SimplePageStore {
         this.attr2 = props.ctattr2;
         this.minFreq = props.ctminfreq;
         this.minFreqType = props.ctminfreq_type;
+        this.adhocSubcDetector = adhocSubcDetector;
         this.alphaLevel = '0.05';
         this.availAlphaLevels = this.importAvailAlphaLevels();
         this.fullSize = null;
@@ -259,6 +263,10 @@ export abstract class GeneralCTStore extends SimplePageStore {
     }
 
     getUsesAdHocSubcorpus():boolean {
-        return false; // TODO !!!!
+        return this.adhocSubcDetector.usesAdHocSubcorpus();
+    }
+
+    getConcSelectedTextTypes():{[attr:string]:Array<string>} {
+        return this.adhocSubcDetector.exportSelections(false);
     }
 }

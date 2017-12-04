@@ -45,6 +45,7 @@ interface CTFreqFormState {
     alignType2:AlignTypes;
     ctxIndex1:number;
     ctxIndex2:number;
+    usesAdHocSubcorpus:boolean;
 }
 
 interface ExportedComponents {
@@ -185,7 +186,8 @@ export function init(
                 alignType1: ctFreqFormStore.getAlignType(1),
                 alignType2: ctFreqFormStore.getAlignType(2),
                 ctxIndex1: ctFreqFormStore.getCtxIndex(1),
-                ctxIndex2: ctFreqFormStore.getCtxIndex(2)
+                ctxIndex2: ctFreqFormStore.getCtxIndex(2),
+                usesAdHocSubcorpus: ctFreqFormStore.getUsesAdHocSubcorpus()
             };
         }
 
@@ -239,6 +241,18 @@ export function init(
                     </td>
                 </tr>
             ];
+        }
+
+        _renderWarning() {
+            if (this.state.usesAdHocSubcorpus) {
+                return (
+                    <p className="warning">
+                        <img src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning')} />
+                        {he.translate('freq__ct_uses_ad_hoc_subcorpus_future_warn')}
+                    </p>
+                );
+            }
         }
 
         render() {
@@ -300,6 +314,7 @@ export function init(
                             {!this.state.attr2IsStruct ? this._renderPosAttrOpts(2) : <tr><td colSpan="2" rowSpan="2" /></tr>}
                         </tbody>
                     </table>
+                    {this._renderWarning()}
                 </div>
             );
         }

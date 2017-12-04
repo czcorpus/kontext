@@ -662,6 +662,7 @@ declare module ViewOptions {
     export interface IGeneralViewOptionsStore extends Kontext.PageStore {
         // TODO
     }
+
 }
 
 
@@ -815,7 +816,7 @@ declare module TextTypes {
         /**
          * Export selection status to a simple object
          */
-        exportSelections(lockedOnesOnly:boolean):any;
+        exportSelections(lockedOnesOnly:boolean):Array<string>;
 
         getNumOfSelectedItems():number;
 
@@ -860,7 +861,6 @@ declare module TextTypes {
 
         resetAutoComplete():ITextInputAttributeSelection;
     }
-
 
     /**
      *
@@ -1053,6 +1053,16 @@ declare module TextTypes {
         setControlsEnabled(v:boolean):void;
         reset():void;
         notifyChangeListeners():void;
+    }
+
+    export type ExportedSelection = {[attr:string]:Array<string>};
+
+    /**
+     *
+     */
+    export interface IAdHocSubcorpusDetector {
+        usesAdHocSubcorpus():boolean;
+        exportSelections(lockedOnesOnly:boolean):ExportedSelection;
     }
 }
 

@@ -193,8 +193,9 @@ export class ContingencyTableStore extends GeneralCTStore {
         '#ffffff', '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties) {
-        super(dispatcher, pageModel, props);
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+                adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
+        super(dispatcher, pageModel, props, adhocSubcDetector);
         this.d1Labels = Immutable.List<[string, boolean]>();
         this.d2Labels = Immutable.List<[string, boolean]>();
         this.filterZeroVectors = true;

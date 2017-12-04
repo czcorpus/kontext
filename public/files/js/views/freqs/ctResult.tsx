@@ -778,11 +778,32 @@ export function init(
     };
 
 
+    // ------------------------ <CTFullDataTable /> -----------------------------
+
+    interface CTFullDataTableProps {
+        d1Labels:Immutable.List<[string, boolean]>;
+        d2Labels:Immutable.List<[string, boolean]>;
+        highlightedCoord:[number, number];
+        highlightedGroup:[number, number];
+        usesAdHocSubcorpus:boolean;
+        attr1:string;
+        attr2:string;
+        displayQuantity:FreqQuantities;
+        confIntervalLeftMinWarn:number;
+        canProvideIpm:boolean;
+        tableInfo:TableInfo;
+        data:Data2DTable;
+        concSelectedTextTypes:TextTypes.ExportedSelection;
+
+        onHighlight:(i:number, j:number)=>void;
+        onResetHighlight:()=>void;
+    }
+
     /**
      *
      * @param {*} props
      */
-    const CTFullDataTable = (props) => {
+    const CTFullDataTable:React.FuncComponent<CTFullDataTableProps> = (props) => {
         const labels1 = () => {
             return props.d1Labels.filter(x => x[1]).map(x => x[0]);
         };
@@ -820,6 +841,27 @@ export function init(
                 });
             };
         };
+
+        const renderWarning = () => {
+            if (props.usesAdHocSubcorpus) {
+                return (
+                    <p className="warning">
+                        <img src={he.createStaticUrl('img/warning-icon.svg')}
+                                alt={he.translate('global__warning')} />
+                        {he.translate('freq__ct_uses_ad_hoc_subcorpus_warn')}
+                        {'\u00a0'}
+                        {he.translate('freq__ct_current_adhoc_subc_is')}:
+                        {'\u00a0'}
+                        {Object.keys(props.concSelectedTextTypes).map(v => (
+                            <span key={v}>
+                                <strong>{v}</strong>
+                                {' \u2208 {' + props.concSelectedTextTypes[v].map(v => `"${v}"`).join(', ') + '}'}
+                            </span>
+                        ))}
+                    </p>
+                );
+            }
+        }
 
         return (
             <div>
@@ -880,6 +922,7 @@ export function init(
                         })}
                     </tbody>
                 </table>
+                {renderWarning()}
                 <TableInfo {...props.tableInfo} />
             </div>
         );
@@ -971,6 +1014,7 @@ export function init(
         isEmpty:boolean;
         tableInfo:TableInfo;
         usesAdHocSubcorpus:boolean;
+        concSelectedTextTypes:TextTypes.ExportedSelection;
     }
 
     /**
@@ -1012,7 +1056,8 @@ export function init(
                 canProvideIpm: ctFreqDataRowsStore.canProvideIpm(),
                 isEmpty: ctFreqDataRowsStore.isEmpty(),
                 tableInfo: ctFreqDataRowsStore.getTableInfo(),
-                usesAdHocSubcorpus: ctFreqDataRowsStore.getUsesAdHocSubcorpus()
+                usesAdHocSubcorpus: ctFreqDataRowsStore.getUsesAdHocSubcorpus(),
+                concSelectedTextTypes: ctFreqDataRowsStore.getConcSelectedTextTypes()
             };
         }
 
@@ -1039,18 +1084,6 @@ export function init(
             ctFreqDataRowsStore.removeChangeListener(this._handleStoreChange);
         }
 
-        _renderWarning() {
-            if (this.state.usesAdHocSubcorpus) {
-                return (
-                    <p className="warning">
-                        <img src={he.createStaticUrl('img/warning-icon.svg')}
-                                alt={he.translate('global__warning')} />
-                        {he.translate('freq__ct_uses_ad_hoc_subcorpus_warn')}
-                    </p>
-                );
-            }
-        }
-
         _resetHighlight() {
             const newState = this._fetchState();
             newState.highlightedCoord = null;
@@ -1067,7 +1100,6 @@ export function init(
         render() {
             return (
                 <div className="CT2dFreqResultView">
-                    {this._renderWarning()}
                     <div className="toolbar">
                         <form className="CTTableModForm">
                             <FieldsetBasicOptions
@@ -1112,7 +1144,9 @@ export function init(
                                 highlightedGroup={this.state.highlightedGroup}
                                 canProvideIpm={this.state.canProvideIpm}
                                 isEmpty={this.state.isEmpty}
-                                tableInfo={this.state.tableInfo} />
+                                tableInfo={this.state.tableInfo}
+                                usesAdHocSubcorpus={this.state.usesAdHocSubcorpus}
+                                concSelectedTextTypes={this.state.concSelectedTextTypes} />
                     }
                 </div>
             );
