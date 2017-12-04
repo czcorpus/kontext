@@ -16,6 +16,7 @@
 # 02110-1301, USA.
 
 import logging
+import json
 
 import settings
 import plugins

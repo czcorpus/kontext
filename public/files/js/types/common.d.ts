@@ -23,6 +23,8 @@
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 
+/// <reference path="../types/coreViews.d.ts" />
+
 
 declare interface ObjectConstructor {
     assign(target: any, ...sources: any[]): any;
@@ -107,16 +109,17 @@ declare module Kontext {
         userIsAnonymous():boolean;
         dispatcher():Kontext.FluxDispatcher;
         getComponentHelpers():Kontext.ComponentHelpers;
-        renderReactComponent(reactClass:React.ComponentClass|React.FuncComponent,
-                             target:HTMLElement, props?:React.Props):void;
+        renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
+                             target:HTMLElement, props?:T):void;
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
-        getViews():LayoutComponents;
+        getViews():CoreViews.Runtime;
         getUserSettings():Kontext.IUserSettings;
         pluginIsActive(name:string):boolean;
         getConcArgs():IMultiDict;
         registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
         resetMenuActiveItemAndNotify():void;
+        getHelpLink(ident:string):string;
     }
 
     /**
@@ -343,7 +346,7 @@ declare module Kontext {
          * Provides access to shared (= related to page layout)
          * components.
          */
-        getLayoutViews():Kontext.LayoutViews;
+        getLayoutViews():CoreViews.Runtime;
 
         addGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
 
@@ -357,6 +360,8 @@ declare module Kontext {
         cloneState<T>(obj:T):T;
 
         delayHandler(immediateFn:()=>void, actualFn:()=>void, delay:number):void;
+
+        getHelpLink(ident:string):string;
     }
 
     export interface LayoutStores {

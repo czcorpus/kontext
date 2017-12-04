@@ -331,7 +331,8 @@ export function init(dispatcher, he, stores) {
                     <span id="conc-calc-info" title="90"></span>
                     <span className="separ">|</span>
                     <abbr>i.p.m.</abbr>
-                    <layoutViews.InlineHelp customStyle={{minWidth: '25em'}}>
+                    <layoutViews.InlineHelp customStyle={{minWidth: '25em'}}
+                            url={he.getHelpLink('term_ipm')}>
                         {he.translate('concview__ipm_help')}
                     </layoutViews.InlineHelp>
                     :{'\u00A0'}
@@ -342,7 +343,7 @@ export function init(dispatcher, he, stores) {
                     <span className="separ">|</span>
                     <abbr>ARF</abbr>
                     <layoutViews.InlineHelp customStyle={{minWidth: '20em'}}
-                            url="http://wiki.korpus.cz/doku.php/pojmy:arf">
+                            url={he.getHelpLink('term_arf')}>
                         {he.translate('concview__arf_help')}
                     </layoutViews.InlineHelp>
                     :{'\u00A0'}

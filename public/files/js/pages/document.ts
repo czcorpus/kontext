@@ -173,6 +173,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private componentTools:Kontext.ComponentHelpers;
 
+    private helpLinks:Immutable.Map<string, string>;
+
     /**
      *
      * @param conf page configuration
@@ -187,6 +189,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
         this.switchCorpAwareObjects = Immutable.List<Kontext.ICorpusSwitchAware<any>>();
         this.switchCorpStateStorage = Immutable.Map<string, any>();
+        this.helpLinks = Immutable.Map<string, string>(this.conf['helpLinks'] || {});
 
         this.componentTools = {
             translate:(s:string, values?:any):string => {
@@ -232,6 +235,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                 window.setTimeout(() => {
                     actualFn();
                 }, delay);
+            },
+            getHelpLink:(ident:string) => {
+                return this.helpLinks.get(ident);
             }
         };
     }
@@ -952,6 +958,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
         }
     }
 
+    getHelpLink(ident:string):string {
+        return this.helpLinks.get(ident);
+    }
+
     /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.
@@ -1148,5 +1158,9 @@ export class PluginApi implements Kontext.PluginApi {
 
     resetMenuActiveItemAndNotify():void {
         this.pageModel.resetMenuActiveItemAndNotify();
+    }
+
+    getHelpLink(ident:string):string {
+        return this.getHelpLink(ident);
     }
 }

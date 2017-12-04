@@ -1,0 +1,10 @@
+{
+  "term_arf": {
+    "en_US": "http://wiki.korpus.cz/doku.php/pojmy:arf",
+    "cs_CZ": "http://wiki.korpus.cz/doku.php/pojmy:arf"
+  },
+  "term_ipm": {
+      "en_US": "http://wiki.korpus.cz/doku.php/pojmy:ipm",
+      "cs_CZ": "http://wiki.korpus.cz/doku.php/pojmy:ipm"
+  }
+}
