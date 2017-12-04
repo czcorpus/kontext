@@ -20,7 +20,7 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 
-import {PageModel, PluginApi} from './document';
+import {PageModel, PluginApi} from '../app/main';
 import * as corplist from 'plugins/corparch/init';
 import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';
 import {init as listViewInit} from 'views/subcorp/list';

@@ -23,7 +23,7 @@
 
 import {MultiDict} from '../../util';
 import {SimplePageStore, validateNumber} from '../base';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import * as Immutable from 'vendor/immutable';
 
 

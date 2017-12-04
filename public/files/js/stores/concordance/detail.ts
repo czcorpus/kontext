@@ -24,7 +24,7 @@
 
 import {MultiDict, importColor} from '../../util';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'vendor/immutable';

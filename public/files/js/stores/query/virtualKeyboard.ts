@@ -21,7 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import * as kbLayouts from 'misc/keyboardLayouts';
 
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;

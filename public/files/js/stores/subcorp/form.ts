@@ -26,7 +26,7 @@
 import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {TextTypesStore} from '../../stores/textTypes/attrValues';
 
 export class SubcorpFormStore extends SimplePageStore {

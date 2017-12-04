@@ -19,7 +19,7 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 
-import {PageModel} from './document';
+import {PageModel} from '../app/main';
 import * as corparch from 'plugins/corparch/init';
 
 declare var require:any;

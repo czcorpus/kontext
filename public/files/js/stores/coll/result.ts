@@ -24,7 +24,7 @@
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore, validateGzNumber, validateNumber} from '../../stores/base';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {CollFormStore} from '../../stores/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';

@@ -21,7 +21,7 @@
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../types/ajaxResponses.d.ts" />
 
-import {PageModel} from './document';
+import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import {init as initQueryHistoryViews} from 'views/query/history';

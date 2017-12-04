@@ -26,7 +26,7 @@
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import * as corplistComponent from 'plugins/corparch/init';
-import {PageModel} from './document';
+import {PageModel} from '../app/main';
 import liveAttributes from 'plugins/liveAttributes/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'vendor/immutable';
