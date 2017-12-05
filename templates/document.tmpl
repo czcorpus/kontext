@@ -42,8 +42,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <link rel="stylesheet" type="text/css" href="$footer_bar_css" />
 #end if
 
-<link rel="stylesheet" type="text/css" href="$files_path/dist/common.css#if $deployment_id#?v=$deployment_id#end if#" />
-<link rel="stylesheet" type="text/css" href="$files_path/dist/${page_model}.css#if $deployment_id#?v=$deployment_id#end if#" />
+<link rel="stylesheet" type="text/css" href="$files_path/dist/common.css${deployment_suff}" />
+<link rel="stylesheet" type="text/css" href="$files_path/dist/${page_model}.css${deployment_suff}" />
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
@@ -59,8 +59,8 @@ if("undefined"==typeof Map||"undefined"==typeof Set){var script=document.createE
 <script type="text/javascript" src="${abjs}"></script>
 #end for
 <!-- --------------------- -->
-<script type="text/javascript" src="$files_path/dist/common.js#if $deployment_id#?v=$deployment_id#end if#"></script>
-<script type="text/javascript" src="$files_path/dist/${page_model}.js"></script>
+<script type="text/javascript" src="$files_path/dist/common.js${deployment_suff}"></script>
+<script type="text/javascript" src="$files_path/dist/${page_model}.js${deployment_suff}"></script>
 #block headers
 #end block
 
