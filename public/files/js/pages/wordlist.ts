@@ -215,6 +215,9 @@ export class WordlistPage extends SimplePageStore  {
                 this.initCorpInfoToolbar();
             }
 
+        ).then(
+            this.layoutModel.addUiTestingFlag
+
         ).catch(
             (err) => console.error(err)
         );

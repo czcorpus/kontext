@@ -292,6 +292,9 @@ export class CollPage {
                 this.initQueryOpNavigation();
             }
 
+        ).then(
+            this.layoutModel.addUiTestingFlag
+
         ).catch((err) => {
             console.error(err);
         });

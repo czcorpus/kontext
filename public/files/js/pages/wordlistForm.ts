@@ -128,6 +128,10 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
                     {}
                 );
             }
+
+        ).then(
+            this.layoutModel.addUiTestingFlag
+
         ).catch(
             (err) => console.error(err)
         );
@@ -135,7 +139,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
 }
 
 
-export function init(conf:Kontext.Conf) {
+export function init(conf:Kontext.Conf):void {
     const layoutModel = new PageModel(conf);
     new WordlistFormPage(layoutModel).init();
 }

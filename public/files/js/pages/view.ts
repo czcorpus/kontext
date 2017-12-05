@@ -1002,7 +1002,7 @@ export class ViewPage {
     /**
      *
      */
-    init():RSVP.Promise<any> {
+    init():void {
         const ttProm = this.layoutModel.init().then(
             () => {
                 return this.initTextTypesStore();
@@ -1079,7 +1079,7 @@ export class ViewPage {
             }
         );
 
-        return RSVP.all([ttProm, p2, queryStorageProm, tagHelperProm]).then(
+        RSVP.all([ttProm, p2, queryStorageProm, tagHelperProm]).then(
             (args:any) => {
                 const [ttStore, lvprops, qs, tagh] = args;
                 this.initQueryForm();
@@ -1096,22 +1096,21 @@ export class ViewPage {
                     this.reloadHits();
                 }
             }
+
+        ).then(
+            this.layoutModel.addUiTestingFlag
+
+        ).catch(
+            (err) => console.error(err)
         );
     }
 }
 
-export function init(conf):ViewPage {
+export function init(conf):void {
     const layoutModel = new PageModel(conf);
     const pageModel = new ViewPage(
         layoutModel,
         layoutModel.getConf<number>('NumLinesInGroups') > 0
     );
-    pageModel.init().then(
-        _ => undefined,
-        (err) => {
-            console.error(err);
-            layoutModel.showMessage('error', err);
-        }
-    )
-    return pageModel;
+    pageModel.init();
 };

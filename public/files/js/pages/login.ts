@@ -28,5 +28,12 @@ require('styles/login.less');
 
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new PageModel(conf);
-    layoutModel.init();
+    layoutModel.init().then(
+        layoutModel.addUiTestingFlag
+
+    ).catch(
+        (err) => {
+            console.error(err);
+        }
+    );
 }
