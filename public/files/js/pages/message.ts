@@ -42,7 +42,13 @@ class MessagePage {
             (err) => {
                 this.layoutModel.showMessage('error', err);
             }
-        )
+
+        ).then(
+            this.layoutModel.addUiTestingFlag
+
+        ).catch(
+            (err) => console.error(err)
+        );
     }
 }
 

@@ -138,6 +138,22 @@
                         </choice>
                     </element>
                     <optional>
+                        <element name="ui_testing_flag">
+                            <a:documentation>
+                                If true/1 then KonText adds a special attribute 'data-kontext-init' to
+                                the 'body' element once everything is set-up. This serves CasperJS to
+                                be able to watch for the element as a sign that the application
+                                is completely ready.
+                            </a:documentation>
+                            <choice>
+                                <value>0</value>
+                                <value>1</value>
+                                <value>false</value>
+                                <value>true</value>
+                            </choice>
+                        </element>
+                    </optional>
+                    <optional>
                         <element name="profile_log_path">
                             <a:documentation>Path to a file where profiling information is stored
                             (applies only if debug is 2)</a:documentation>

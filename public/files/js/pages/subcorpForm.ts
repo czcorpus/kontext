@@ -243,15 +243,18 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
                 );
                 this.initSubcorpForm(items[0].component, items[0].props);
             }
-        ).catch((err) => {
-            this.layoutModel.showMessage('error', err);
-            return null;
-        });
+
+        ).then(
+            this.layoutModel.addUiTestingFlag
+
+        ).catch(
+            (err) => console.error(err)
+        );
     }
 }
 
 
-export function init(conf:Kontext.Conf) {
+export function init(conf:Kontext.Conf):void {
     const layoutModel:PageModel = new PageModel(conf);
     const pageModel = new SubcorpForm(
         layoutModel,

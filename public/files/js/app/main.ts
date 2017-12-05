@@ -134,6 +134,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
         this.appNavig = new AppNavigation(this);
         this.componentTools = new ComponentTools(this);
+        this.addUiTestingFlag = this.addUiTestingFlag.bind(this);
     }
 
     /**
@@ -650,6 +651,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     getHistory():Kontext.IHistory {
         return this.appNavig.getHistory();
     }
+
+    /**
+     * note: this fn is (and must be) bound to 'this' in constructor
+     */
+    addUiTestingFlag():void {
+        if (this.getConf('uiTestingFlag')) {
+            document.querySelector('body').setAttribute('data-kontext-init', '');
+        }
+    };
 
     /**
      * Page layout initialization. Any concrete page should

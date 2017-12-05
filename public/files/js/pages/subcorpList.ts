@@ -92,19 +92,20 @@ class SubcorpListPage {
                 );
                 this.renderView();
             }
+
         ).then(
-            _ => undefined,
-            (err) => {
-                this.layoutModel.showMessage('error', err);
-            }
-        )
+            this.layoutModel.addUiTestingFlag
+
+        ).catch(
+            (err) => console.error(err)
+        );
     }
 }
 
 /**
  * A function used to initialize the model on a respective page.
  */
-export function init(conf) {
+export function init(conf):void {
     const layoutModel = new PageModel(conf);
     const pageModel = new SubcorpListPage(layoutModel);
     pageModel.init();

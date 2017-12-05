@@ -365,8 +365,11 @@ class FreqPage {
                 this.initQueryOpNavigation();
                 this.initFreqResult();
             }
+
         ).then(
-            () => undefined,
+            this.layoutModel.addUiTestingFlag
+
+        ).catch(
             (err) => {
                 this.layoutModel.showMessage('error', err);
             }

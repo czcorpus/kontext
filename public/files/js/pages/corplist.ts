@@ -31,21 +31,28 @@ require('styles/corplist.less');
  */
 export function init(conf:Kontext.Conf, corplistParams, corplistData):void {
     const layoutModel = new PageModel(conf);
-    layoutModel.init();
-    const pagePlugin = corparch.initCorplistPageComponents(layoutModel.pluginApi());
+    layoutModel.init().then(
+        () => {
+            const pagePlugin = corparch.initCorplistPageComponents(layoutModel.pluginApi());
+            pagePlugin.setData(corplistData);
+            layoutModel.renderReactComponent(
+                pagePlugin.getForm(),
+                <HTMLElement>document.getElementById('content').querySelector('form.filter'),
+                corplistParams
+            );
 
-    pagePlugin.setData(corplistData);
+            corplistData['anonymousUser'] = layoutModel.getConf('anonymousUser'); // TODO not a very good solution
+            layoutModel.renderReactComponent(
+                pagePlugin.getList(),
+                document.getElementById('corplist'),
+                corplistData
+            );
+        }
 
-    layoutModel.renderReactComponent(
-        pagePlugin.getForm(),
-        <HTMLElement>document.getElementById('content').querySelector('form.filter'),
-        corplistParams
-    );
+    ).then(
+        layoutModel.addUiTestingFlag
 
-    corplistData['anonymousUser'] = layoutModel.getConf('anonymousUser'); // TODO not a very good solution
-    layoutModel.renderReactComponent(
-        pagePlugin.getList(),
-        document.getElementById('corplist'),
-        corplistData
+    ).catch(
+        (err) => console.error(err)
     );
 }

@@ -92,6 +92,10 @@ class QueryHistoryPage {
 
                 this.initCorpnameLink();
             }
+
+        ).then(
+            this.layoutModel.addUiTestingFlag
+
         ).catch(
             (err) => {
                 console.error(err);
