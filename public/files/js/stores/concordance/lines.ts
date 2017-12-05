@@ -28,7 +28,7 @@
 
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import * as Immutable from 'vendor/immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
@@ -465,7 +465,7 @@ export class ConcLineStore extends SimplePageStore {
     private pushHistoryState(pageNum:number):void {
         const args = this.layoutModel.getConcArgs();
         args.set('fromp', pageNum);
-        this.layoutModel.history.pushState(
+        this.layoutModel.getHistory().pushState(
             'view', args, { pagination: true, pageNum: pageNum });
     }
 

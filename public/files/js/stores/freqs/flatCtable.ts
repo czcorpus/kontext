@@ -23,7 +23,7 @@
 /// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import * as Immutable from 'vendor/immutable';
 import {GeneralCTStore, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';

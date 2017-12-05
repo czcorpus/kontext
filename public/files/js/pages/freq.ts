@@ -22,7 +22,7 @@
 /// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 
-import {PageModel} from './document';
+import {PageModel} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
 import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';

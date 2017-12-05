@@ -23,7 +23,7 @@
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import {SimplePageStore} from './base';
-import {PageModel} from '../pages/document';
+import {PageModel} from '../app/main';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'vendor/immutable';
 

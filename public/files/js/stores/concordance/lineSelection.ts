@@ -25,7 +25,7 @@
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
 import {ConcLinesStorage} from '../../conclines';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {ConcLineStore} from './lines';
 import * as RSVP from 'vendor/rsvp';
 
@@ -126,7 +126,7 @@ export class LineSelectionStore extends SimplePageStore {
                             this._isBusy = false;
                             this.concLineStore.notifyChangeListeners();
                             this.notifyChangeListeners();
-                            this.layoutModel.history.replaceState('view', args);
+                            this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;
@@ -151,7 +151,7 @@ export class LineSelectionStore extends SimplePageStore {
                             this._isBusy = false;
                             this.notifyChangeListeners();
                             this.concLineStore.notifyChangeListeners();
-                            this.layoutModel.history.replaceState('view', args);
+                            this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;
@@ -171,7 +171,7 @@ export class LineSelectionStore extends SimplePageStore {
                             this._isBusy = false;
                             this.concLineStore.notifyChangeListeners();
                             this.notifyChangeListeners();
-                            this.layoutModel.history.replaceState('view', args);
+                            this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;
@@ -188,7 +188,7 @@ export class LineSelectionStore extends SimplePageStore {
                             this._isBusy = false;
                             this.concLineStore.notifyChangeListeners();
                             this.notifyChangeListeners();
-                            this.layoutModel.history.replaceState('view', args);
+                            this.layoutModel.getHistory().replaceState('view', args);
                         },
                         (err) => {
                             this._isBusy = false;

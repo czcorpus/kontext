@@ -21,7 +21,7 @@
 /// <reference path="../types/common.d.ts" />
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 
-import {PageModel, PluginApi} from './document';
+import {PageModel, PluginApi} from '../app/main';
 import {createWidget as createCorparch} from 'plugins/corparch/init';
 import * as Immutable from 'vendor/immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';

@@ -25,7 +25,7 @@
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';

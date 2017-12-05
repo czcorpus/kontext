@@ -17,7 +17,37 @@
  */
 
 
-/// <reference path="./types/common.d.ts" />
+/// <reference path="../types/common.d.ts" />
+
+
+
+/**
+ *
+ */
+class NullStorage implements Storage {
+
+    key(idx:number):string {
+        return null
+    }
+
+    getItem(key:string):string {
+        return null;
+    }
+
+    setItem(key:string, value:string) {
+    }
+
+    removeItem(key:string) {
+    }
+
+    clear():void {
+    }
+
+    length:number = 0;
+    remainingSpace:number = 0;
+    [key: string]: any;
+    [index: number]: any;
+}
 
 
 /**
@@ -37,7 +67,7 @@ export class UserSettings implements Kontext.IUserSettings {
 
     data:{[k:string]:any};
 
-    constructor(storage:Storage, storageKey:string, timestampKey:string, uiStateTTL:number) {
+    private constructor(storage:Storage, storageKey:string, timestampKey:string, uiStateTTL:number) {
         this.storage = storage;
         this.storageKey = storageKey;
         this.timestampKey = timestampKey;
@@ -80,4 +110,18 @@ export class UserSettings implements Kontext.IUserSettings {
             this.data[this.timestampKey] = this.getTimstamp();
         }
     }
+
+    /**
+     * createInstance is a factory function
+     */
+    static createInstance(conf:Kontext.IConfHandler):UserSettings {
+        return new UserSettings(
+            (typeof window.localStorage === 'object') ? window.localStorage : new NullStorage(),
+            'kontext_ui',
+            '__timestamp__',
+            conf.getConf('uiStateTTL')
+        );
+    }
 }
+
+

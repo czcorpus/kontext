@@ -29,7 +29,7 @@
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {SimplePageStore} from '../base';
 
 

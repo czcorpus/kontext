@@ -25,12 +25,12 @@
 /// <reference path="../vendor.d.ts/react.d.ts" />
 
 import * as RSVP from 'vendor/rsvp';
-import {PageModel} from './document';
+import {PageModel} from '../app/main';
 import {init as subcorpViewsInit} from 'views/subcorp/forms';
 import {SubcorpWithinFormStore, SubcorpFormStore} from '../stores/subcorp/form';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
-import {UserSettings} from '../userSettings';
+import {UserSettings} from '../app/userSettings';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {init as ttViewsInit} from 'views/textTypes';
 import * as corplistComponent from 'plugins/corparch/init'

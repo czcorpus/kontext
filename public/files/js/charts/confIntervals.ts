@@ -23,7 +23,7 @@
 
 import * as d3 from 'vendor/d3';
 import * as d3Color from 'vendor/d3-color';
-import {PageModel} from '../pages/document';
+import {PageModel} from '../app/main';
 
 
 export type NumTriplet = [number, number, number];

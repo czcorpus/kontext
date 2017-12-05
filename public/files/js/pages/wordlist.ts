@@ -20,7 +20,7 @@
 
 /// <reference path="../types/common.d.ts" />
 
-import {PageModel} from './document';
+import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {init as wordlistResultViewInit} from 'views/wordlist/result';

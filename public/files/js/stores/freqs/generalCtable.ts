@@ -23,7 +23,7 @@
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {availConfLevels} from './confIntervalCalc';
 import {sortAttrVals, isStructAttr, CTFreqFormStore, CTFormProperties, validateMinAbsFreqAttr,
     FreqFilterQuantities, roundFloat} from './ctFreqForm';

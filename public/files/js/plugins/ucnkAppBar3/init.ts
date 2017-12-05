@@ -24,7 +24,7 @@
 
 import * as RSVP from 'vendor/rsvp';
 import * as toolbar from 'plugins/applicationBar/toolbar';
-import {PageModel} from '../../pages/document';
+import {PageModel} from '../../app/main';
 import {SimplePageStore} from '../../stores/base';
 
 export class AppBarStore extends SimplePageStore {

@@ -20,7 +20,7 @@
 
 /// <reference path="../types/common.d.ts" />
 
-import {PageModel} from './document';
+import {PageModel} from '../app/main';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
