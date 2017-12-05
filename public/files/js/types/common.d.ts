@@ -82,6 +82,12 @@ declare module Kontext {
         [key:string]: any;
     }
 
+    export interface IConfHandler {
+        getConf<T>(item:string):T;
+        setConf<T>(key:string, value:T):void;
+        addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void;
+    }
+
     /**
      *
      */
@@ -114,7 +120,6 @@ declare module Kontext {
         unmountReactComponent(element:HTMLElement):boolean;
         getStores():Kontext.LayoutStores;
         getViews():CoreViews.Runtime;
-        getUserSettings():Kontext.IUserSettings;
         pluginIsActive(name:string):boolean;
         getConcArgs():IMultiDict;
         registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
@@ -359,7 +364,7 @@ declare module Kontext {
          */
         cloneState<T>(obj:T):T;
 
-        delayHandler(immediateFn:()=>void, actualFn:()=>void, delay:number):void;
+        doThingsWithDelay(immediateFn:()=>void, actualFn:()=>void, delay:number):void;
 
         getHelpLink(ident:string):string;
     }

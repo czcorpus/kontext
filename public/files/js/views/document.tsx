@@ -295,7 +295,7 @@ export function init(
 
         const handleCloseClick = (e) => {
             e.preventDefault();
-            he.delayHandler(
+            he.doThingsWithDelay(
                 () => {
                     dispatcher.dispatch({
                         actionType: 'MESSAGE_FADE_OUT_ITEM',

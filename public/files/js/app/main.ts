@@ -28,8 +28,6 @@
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
-/// <reference path="../vendor.d.ts/intl-messageformat.d.ts" />
-/// <reference path="../vendor.d.ts/translations.d.ts" />
 
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
@@ -42,82 +40,40 @@ import {init as viewOptionsFactory} from 'views/options/main';
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 import * as RSVP from 'vendor/rsvp';
-import * as rsvpAjax from 'vendor/rsvp-ajax';
-import {MultiDict, createHistory} from '../util';
+import {MultiDict} from '../util';
 import * as docStores from '../stores/common/layout';
 import {UserInfo} from '../stores/userStores';
 import {CorpusViewOptionsStore} from '../stores/options/structsAttrs';
 import {GeneralViewOptionsStore} from '../stores/options/general';
-import * as translations from 'translations';
-import IntlMessageFormat = require('vendor/intl-messageformat');
+import {L10n} from './l10n';
 import * as Immutable from 'vendor/immutable';
 import {AsyncTaskChecker} from '../stores/asyncTask';
-import {UserSettings} from '../userSettings';
+import {UserSettings} from './userSettings';
 import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
+import {AppNavigation, AjaxArgs} from './navigation';
 
 declare var require:any; // webpack's require
 require('styles/kontext.less');
 
-/**
- *
- */
-class NullStorage implements Storage {
-
-    key(idx:number):string {
-        return null
-    }
-
-    getItem(key:string):string {
-        return null;
-    }
-
-    setItem(key:string, value:string) {
-    }
-
-    removeItem(key:string) {
-    }
-
-    clear():void {
-    }
-
-    length:number = 0;
-    remainingSpace:number = 0;
-    [key: string]: any;
-    [index: number]: any;
-}
 
 /**
- *
- * A local storage factory. If a respective
- * API is not supported then @link{NullStorage} is returned.
+ * PageModel represents a core functionality which must be initialized
+ * on any KonText page before any of page's own functionalities are
+ * inited/involved.
  */
-function getLocalStorage():Storage {
-    if (typeof window.localStorage === 'object') {
-        return window.localStorage;
-
-    } else {
-        new NullStorage();
-    }
-}
-
-/**
- * Possible types for PageModel's ajax method request args
- */
-export type AjaxArgs = MultiDict|{[key:string]:any}|string;
-
-
-/**
- *
- */
-export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler {
+export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler, Kontext.IConfHandler {
 
     /**
      * KonText configuration (per-page dynamic object)
      */
     conf:Kontext.Conf;
 
+    /**
+     * Functions listening for change in app config (triggered by
+     * setConf()).
+     */
     confChangeHandlers:Immutable.Map<string, Immutable.List<(v:any)=>void>>;
 
     /**
@@ -129,8 +85,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * Local user settings
      */
     userSettings:UserSettings;
-
-    history:Kontext.IHistory;
 
     /**
      * React component classes
@@ -153,10 +107,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     private authPlugin:PluginInterfaces.IAuth;
 
-    /**
-     * A dictionary containing translations for current UI language (conf['uiLang']).
-     */
-    private translations:{[key:string]:string};
+    private l10n:L10n;
 
     private asyncTaskChecker:AsyncTaskChecker;
 
@@ -167,13 +118,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     private globalKeyHandlers:Immutable.List<(evt:Event)=>void>;
 
-    private switchCorpAwareObjects:Immutable.List<Kontext.ICorpusSwitchAware<any>>;
-
-    private switchCorpStateStorage:Immutable.Map<string, any>;
-
     private componentTools:Kontext.ComponentHelpers;
 
-    private helpLinks:Immutable.Map<string, string>;
+    private appNavig:AppNavigation;
 
     /**
      *
@@ -182,64 +129,11 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
         this.confChangeHandlers = Immutable.Map<string, Immutable.List<(v:any)=>void>>();
-        this.userSettings = new UserSettings(getLocalStorage(), 'kontext_ui',
-                '__timestamp__', this.conf['uiStateTTL']);
-        this.history = createHistory(this);
-        this.translations = translations[this.conf['uiLang']] || {};
+        this.userSettings = UserSettings.createInstance(this);
+        this.l10n = new L10n(this.conf['uiLang'], this.conf['helpLinks'] || {});
         this.globalKeyHandlers = Immutable.List<(evt:Event)=>void>();
-        this.switchCorpAwareObjects = Immutable.List<Kontext.ICorpusSwitchAware<any>>();
-        this.switchCorpStateStorage = Immutable.Map<string, any>();
-        this.helpLinks = Immutable.Map<string, string>(this.conf['helpLinks'] || {});
-
-        this.componentTools = {
-            translate:(s:string, values?:any):string => {
-                return this.translate(s, values);
-            },
-            createActionLink:(path:string, args?:Array<[string,string]>):string => {
-                return this.createActionUrl(path, args);
-            },
-            createStaticUrl:(path:string):string => {
-                return this.createStaticUrl(path);
-            },
-            formatNumber:(value:number, fractionDigits:number=2):string => {
-                return this.formatNumber(value, fractionDigits);
-            },
-            formatDate:(d:Date, timeFormat:number=0):string => {
-                return this.formatDate(d, timeFormat);
-            },
-            getLayoutViews:():CoreViews.Runtime => {
-                return this.layoutViews;
-            },
-            addGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {
-                this.addGlobalKeyEventHandler(fn);
-            },
-            removeGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {
-                this.removeGlobalKeyEventHandler(fn);
-            },
-            cloneState:<T extends {[key:string]:any}>(obj:T):T => {
-                if (Object.assign) {
-                    return <T>Object.assign({}, obj);
-
-                } else {
-                    const ans:{[key:string]:any} = {};
-                    for (let p in obj) {
-                        if (obj.hasOwnProperty(p)) {
-                            ans[p] = obj[p];
-                        }
-                    }
-                    return <T>ans;
-                }
-            },
-            delayHandler:(immediateFn:()=>void, actualFn:()=>void, delay:number) => {
-                immediateFn();
-                window.setTimeout(() => {
-                    actualFn();
-                }, delay);
-            },
-            getHelpLink:(ident:string) => {
-                return this.helpLinks.get(ident);
-            }
-        };
+        this.appNavig = new AppNavigation(this);
+        this.componentTools = new ComponentTools(this);
     }
 
     /**
@@ -323,12 +217,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * as it would lead to an infinite recursion.
      */
     registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void {
-        this.switchCorpAwareObjects = this.switchCorpAwareObjects.push(obj);
-        // now we look at the possible previous stored state
-        const v = this.switchCorpStateStorage.get(obj.csGetStateKey());
-        if (v) {
-            obj.csSetState(v);
-        }
+        this.appNavig.registerSwitchCorpAwareObject(obj);
     }
 
     /**
@@ -348,53 +237,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param subcorpus - an optional subcorpus
      */
     switchCorpus(corpora:Array<string>, subcorpus?:string):RSVP.Promise<any> {
-        this.switchCorpAwareObjects.forEach((item, key) => {
-            this.switchCorpStateStorage = this.switchCorpStateStorage.set(item.csGetStateKey(), item.csExportState());
-        });
-        this.switchCorpAwareObjects = this.switchCorpAwareObjects.clear();
-        return this.ajax<AjaxResponse.CorpusSwitchResponse>(
-            'POST',
-            this.createActionUrl('ajax_switch_corpus'),
-            {
-                corpname: corpora[0],
-                usesubcorp: subcorpus,
-                align: corpora.slice(1)
-            }
-
-        ).then(
-            (data) => {
-                if (data.contains_errors) {
-                    throw this.unpackServerError(data);
-                }
-                const args = new MultiDict();
-                args.set('corpname', data.corpname);
-                args.set('usesubcorp', data.subcorpname);
-                this.history.pushState(this.getConf<string>('currentAction'), args);
-
-                this.setConf<string>('corpname', data.corpname);
-                this.setConf<string>('subcorpname', data.subcorpname);
-                this.setConf<string>('humanCorpname', data.humanCorpname);
-                this.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
-                this.setConf<string>('baseAttr', data.baseAttr);
-                this.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
-                this.setConf<Array<string>>('compiledQuery', data.compiledQuery);
-                this.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
-                this.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
-                this.setConf<Array<{n:string; label:string}>>('availableAlignedCorpora', data.availableAlignedCorpora);
-                this.setConf<Array<string>>('activePlugins', data.activePlugins);
-                this.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
-                this.setConf<number>('numQueryOps', data.numQueryOps);
-                this.setConf<any>('textTypesData', data.textTypesData); // TODO type
-                this.setConf<any>('menuData', data.menuData); // TODO type
-                this.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
-                this.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
-                this.setConf<string>('TagsetDocUrl', data.TagsetDocUrl);
-                this.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
-                this.setConf<boolean>('hasLemmaAttr', data.hasLemmaAttr);
-                this.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
-                this.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
-                this.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
-                this.setConf<string>('TextTypesNotes', data.TextTypesNotes);
+        return this.appNavig.switchCorpus(corpora, subcorpus).then(
+            () => {
                 return this.init();
             }
         );
@@ -412,98 +256,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param options Additional settings
      */
     ajax<T>(method:string, url:string, args:AjaxArgs, options?:Kontext.AjaxOptions):RSVP.Promise<T> {
-        if (options === undefined) {
-            options = {};
-        }
-        if (!options.accept) {
-            options.accept = 'application/json';
-        }
-        if (!options.contentType) {
-            options.contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
-        }
-
-        function exportValue(v) {
-            return v === null || v === undefined ? '' : encodeURIComponent(v);
-        }
-
-        function encodeArgs(obj) {
-            const ans = [];
-            let p; // ES5 issue
-            for (p in obj) {
-                if (obj.hasOwnProperty(p)) {
-                    const val = obj[p] !== null && obj[p] !== undefined ? obj[p] : '';
-                    if (Object.prototype.toString.apply(val) === '[object Array]') {
-                        val.forEach(item => {
-                            ans.push(encodeURIComponent(p) + '=' + exportValue(item));
-                        });
-
-                    } else {
-                        ans.push(encodeURIComponent(p) + '=' + exportValue(val));
-                    }
-                }
-            }
-            return ans.join('&');
-        }
-
-        const decodeArgs = (s:string) => {
-            let ans = {};
-            s.split('&').map((s2)=>s2.split('=').map((s3)=>decodeURIComponent(s3))).forEach((item) => {
-                ans[item[0]] = item[1];
-            });
-            return ans;
-        };
-
-        let body;
-
-        if (args instanceof MultiDict) {
-            body = this.encodeURLParameters(args);
-
-        } else if (typeof args === 'object') {
-            if (options.contentType === 'application/json') {
-                body = JSON.stringify(args);
-
-            } else {
-                body = encodeArgs(args);
-            }
-
-        } else if (typeof args === 'string') {
-            body = args;
-
-        } else {
-            throw new Error('ajax() error: unsupported args type ' + (typeof args));
-        }
-
-        if (method === 'GET') {
-            let elms = url.split('?');
-            if (!elms[1]) {
-                url += '?' + body;
-
-            } else {
-                url += '&' + body;
-            }
-        }
-
-        return rsvpAjax.requestObject<string>({
-            accept: options.accept,
-            contentType: options.contentType,
-            method: method,
-            requestBody: body,
-            url: url
-        }).then<T>(
-            (data:string) => {
-                switch (options.accept) {
-                    case 'application/json':
-                    case 'text/x-json':
-                        return JSON.parse(data);
-                    case 'application/x-www-form-urlencoded':
-                        return decodeArgs(data);
-                    default:
-                        return data;
-                }
-            }
-        );
+        return this.appNavig.ajax(method, url, args, options);
     }
 
+    /**
+     *
+     * @param resp
+     */
     unpackServerError(resp:Kontext.AjaxResponse):Error {
         if (resp.contains_errors) {
             return new Error(resp.messages
@@ -602,39 +361,15 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
 
     /**
      *
-     */
-    reload():void {
-        window.document.location.reload();
-    }
-
-    /**
-     *
      * @param msg
      * @returns {*}
      */
     translate(msg:string, values?:any):string {
-        if (msg) {
-            let tmp = this.translations[msg];
-            if (tmp) {
-                try {
-                    let format = new IntlMessageFormat(this.translations[msg], this.conf['uiLang']);
-                    return format.format(values);
-
-                } catch (e) {
-                    console.error('Failed to translate ', msg, e);
-                    return tmp;
-                }
-            }
-            return msg;
-        }
-        return '';
+        return this.l10n.translate(msg, values);
     }
 
     formatNumber(v:number, fractionDigits:number=2):string {
-        let format:any = new Intl.NumberFormat(this.conf['uiLang'], {
-            maximumFractionDigits: fractionDigits
-        });
-        return format.format(v);
+        return this.l10n.formatNumber(v, fractionDigits);
     }
 
     /**
@@ -643,26 +378,21 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      *  (hours, minutes and seconds are always in 2-digit format)
      */
     formatDate(d:Date, timeFormat:number=0):string {
-        const opts = {year: 'numeric', month: '2-digit', day: '2-digit'};
+        return this.l10n.formatDate(d, timeFormat);
+    }
 
-        if (timeFormat > 0) {
-            opts['hour'] = '2-digit';
-            opts['minute'] = '2-digit';
-        }
-        if (timeFormat === 2) {
-            opts['second'] = '2-digit';
-        }
-        return new Intl.DateTimeFormat(this.conf['uiLang'], opts).format(d);
+    /**
+     *
+     */
+    reload():void {
+        this.appNavig.reload();
     }
 
     /**
      * Create a URL for a static resource (e.g. img/close-icon.svg)
      */
     createStaticUrl(path):string {
-        if (typeof path !== 'string') {
-            throw new Error(`Cannot create static url. Invalid path: ${path}`);
-        }
-        return this.getConf<string>('staticPath') + (path.indexOf('/') === 0 ? '' : '/') + path;
+        return this.appNavig.createStaticUrl(path);
     }
 
     /**
@@ -675,20 +405,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * are left out.
      */
     createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string {
-        if (typeof path !== 'string') {
-            throw new Error(`Cannot create action url. Invalid path: ${path}`);
-        }
-        let urlArgs = '';
-        if (args !== undefined) {
-            const nArgs = Array.isArray(args) ? args : args.items();
-            urlArgs = nArgs
-                .filter(item => item[1] !== null && item[1] !== undefined)
-                .map(item => encodeURIComponent(item[0]) + '=' + encodeURIComponent(item[1]))
-                .join('&');
-        }
-        return this.conf['rootPath'] +
-                (path.indexOf('/') === 0 ? path.substr(1) : path) +
-                (urlArgs ? '?' + urlArgs : '');
+        return this.appNavig.createActionUrl(path, args);
     }
 
     /**
@@ -699,25 +416,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @param args
      */
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
-        const body = window.document.getElementsByTagName('body')[0];
-        const form = window.document.createElement('form');
-        form.setAttribute('method', 'post');
-        form.setAttribute('action', path);
-        if (blankWindow) {
-            form.setAttribute('target', '_blank');
-        }
-        body.appendChild(form);
-        (args || []).filter(v => !!v[1]).forEach(item => {
-            const input = window.document.createElement('input');
-            input.setAttribute('type', 'hidden');
-            input.setAttribute('name', item[0]);
-            input.setAttribute('value', item[1]);
-            form.appendChild(input);
-        });
-        form.submit();
-        window.onbeforeunload = () => {
-            body.removeChild(form);
-        };
+        this.appNavig.setLocationPost(path, args, blankWindow);
     }
 
     /**
@@ -726,12 +425,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      * @returns {string}
      */
     encodeURLParameters(params:MultiDict):string {
-        function exportValue(v) {
-            return v === null || v === undefined ? '' : encodeURIComponent(v);
-        }
-        return params.items().map((item) => {
-            return encodeURIComponent(item[0]) + '=' + exportValue(item[1]);
-        }).join('&');
+        return this.appNavig.encodeURLParameters(params);
     }
 
     /**
@@ -741,6 +435,17 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     getConf<T>(item:string):T {
         return this.conf[item];
+    }
+
+    /**
+     * Set page configuration item. Setting an item
+     * triggers a configuration change event.
+     */
+    setConf<T>(key:string, value:T):void {
+        this.conf[key] = value;
+        if (this.confChangeHandlers.has(key)) {
+            this.confChangeHandlers.get(key).forEach(item => item(value));
+        }
     }
 
     /**
@@ -758,17 +463,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             key,
             this.confChangeHandlers.get(key).push(handler)
         );
-    }
-
-    /**
-     * Set page configuration item. Setting an item
-     * triggers a configuration change event.
-     */
-    setConf<T>(key:string, value:T):void {
-        this.conf[key] = value;
-        if (this.confChangeHandlers.has(key)) {
-            this.confChangeHandlers.get(key).forEach(item => item(value));
-        }
     }
 
     /**
@@ -802,7 +496,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
             if (!args) {
                 return [];
 
-            } else if (Object.prototype.toString.call(args) !== '[object Array]') {
+            } else if (!Array.isArray(args)) {
                 const impArgs:Array<[string,string]> = [];
                 for (let p in args) {
                     if (args.hasOwnProperty(p)) {
@@ -832,16 +526,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
      */
     pluginApi():PluginApi {
         return new PluginApi(this);
-    }
-
-
-    // TODO dispatcher misuse (this should conform Flux pattern)
-    private registerCoreEvents():void {
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
-            if (payload.props['message']) {
-                this.showMessage(payload.props['msgType'], payload.props['message']);
-            }
-        });
     }
 
     /**
@@ -959,7 +643,12 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 
     getHelpLink(ident:string):string {
-        return this.helpLinks.get(ident);
+        return this.l10n.getHelpLink(ident);
+    }
+
+
+    getHistory():Kontext.IHistory {
+        return this.appNavig.getHistory();
     }
 
     /**
@@ -1023,7 +712,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
                     this.corpViewOptionsStore
                 );
                 this.asyncTaskChecker.init();
-                this.registerCoreEvents();
                 resolve(null);
 
             } catch (e) {
@@ -1057,11 +745,85 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler 
     }
 }
 
+/**
+ * ComponentTools provide a set of runtime functions
+ * used by React components (e.g. for message translation,
+ * generating URLs, accessing shared components).
+ */
+class ComponentTools {
+
+    private pageModel:PageModel;
+
+    constructor(pageModel:PageModel) {
+        this.pageModel = pageModel;
+    }
+
+    translate(s:string, values?:any):string {
+        return this.pageModel.translate(s, values);
+    }
+
+    createActionLink(path:string, args?:Array<[string,string]>):string {
+        return this.pageModel.createActionUrl(path, args);
+    }
+
+    createStaticUrl(path:string):string {
+        return this.pageModel.createStaticUrl(path);
+    }
+
+    formatNumber(value:number, fractionDigits:number=2):string {
+        return this.pageModel.formatNumber(value, fractionDigits);
+    }
+
+    formatDate(d:Date, timeFormat:number=0):string {
+        return this.pageModel.formatDate(d, timeFormat);
+    }
+
+    getLayoutViews():CoreViews.Runtime {
+        return this.pageModel.layoutViews;
+    }
+
+    addGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
+        this.pageModel.addGlobalKeyEventHandler(fn);
+    }
+
+    removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void {
+        this.pageModel.removeGlobalKeyEventHandler(fn);
+    }
+
+    cloneState<T extends {[key:string]:any}>(obj:T):T {
+        if (Object.assign) {
+            return <T>Object.assign({}, obj);
+
+        } else {
+            const ans:{[key:string]:any} = {};
+            for (let p in obj) {
+                if (obj.hasOwnProperty(p)) {
+                    ans[p] = obj[p];
+                }
+            }
+            return <T>ans;
+        }
+    }
+
+    doThingsWithDelay(immediateFn:()=>void, actualFn:()=>void, delay:number) {
+        immediateFn();
+        window.setTimeout(() => {
+            actualFn();
+        }, delay);
+    }
+
+    getHelpLink(ident:string) {
+        return this.pageModel.getHelpLink(ident);
+    }
+}
+
 
 /**
  * PluginApi exports some essential functions from PageModel
  * to plug-ins while preventing them from accessing whole
- * PageModel.
+ * PageModel. This is expected to be used by plug-ins'
+ * stores and 'models'. For React component helpers see
+ * 'ComponentTools'
  */
 export class PluginApi implements Kontext.PluginApi {
 
@@ -1138,10 +900,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     getCommonViews():CommonViews {
         return this.pageModel.commonViews;
-    }
-
-    getUserSettings():Kontext.IUserSettings {
-        return this.pageModel.userSettings;
     }
 
     pluginIsActive(name:string):boolean {

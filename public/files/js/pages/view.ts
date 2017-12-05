@@ -55,7 +55,7 @@ import {ConcSaveStore} from '../stores/concordance/save';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
-import {UserSettings} from '../userSettings';
+import {UserSettings} from '../app/userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../stores/userStores';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
@@ -248,7 +248,7 @@ export class ViewPage {
      */
     private setupHistoryOnPopState():void {
         // register event to load lines via ajax in case user hits back
-        this.layoutModel.history.setOnPopState((event) => {
+        this.layoutModel.getHistory().setOnPopState((event) => {
             if (event.state) {
                 if (event.state['modalAction']) {
                     this.layoutModel.dispatcher.dispatch(event.state['modalAction']);
@@ -347,7 +347,7 @@ export class ViewPage {
             case 'shuffle':
             case 'reduce':
                 const formArgs = this.layoutModel.getConf<AjaxResponse.ConcFormArgs>('ConcFormsArgs')['__latest__'];
-                this.layoutModel.history.replaceState(
+                this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),
                     {
@@ -360,7 +360,7 @@ export class ViewPage {
                     },
                     window.document.title
                 );
-                this.layoutModel.history.pushState(
+                this.layoutModel.getHistory().pushState(
                     'view',
                     this.layoutModel.getConcArgs(),
                     {
@@ -371,7 +371,7 @@ export class ViewPage {
                 );
             break;
             default:
-                this.layoutModel.history.replaceState(
+                this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),
                     {
