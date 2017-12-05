@@ -290,8 +290,8 @@ class Controller(object):
         """
         result['methodname'] = methodname
         deployment_id = settings.get('global', 'deployment_id', None)
-        result['deployment_id'] = hashlib.md5(deployment_id).hexdigest()[
-            :6] if deployment_id else None
+        result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id).hexdigest()[
+            :6]) if deployment_id else ''
         result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
 
     def _get_template_class(self, name):
