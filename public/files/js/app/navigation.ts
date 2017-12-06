@@ -34,6 +34,17 @@ import {MultiDict} from '../util';
 export type AjaxArgs = MultiDict|{[key:string]:any}|string;
 
 
+/**
+ * Parse a URL args string (k1=v1&k2=v2&...&kN=vN) into
+ * a list of pairs [[k1, v1], [k2, v2],...,[kN, vN]]
+ */
+export function parseUrlArgs(args:string):Array<[string, string]> {
+    return args.split('&').map<[string, string]>(item => {
+        const tmp = item.split('=', 2);
+        return [decodeURIComponent(tmp[0]), decodeURIComponent(tmp[1])];
+    });
+}
+
 
 /**
  * NullHistory is a fallback object to be used
@@ -411,5 +422,41 @@ export class AppNavigation implements Kontext.IURLHandler {
 
     getHistory():Kontext.IHistory {
         return this.history;
+    }
+
+    /**
+     * @param overwriteArgs a list of arguments whose values overwrite the current ones
+     * @param appendArgs a list of arguments which will be appended to the existing ones
+     */
+    exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
+        const tmp = new MultiDict(this.conf.getConf<Array<Array<string>>>('currentArgs'));
+
+        function importArgs(args:Kontext.MultiDictSrc):Array<[string,string]> {
+            if (!args) {
+                return [];
+
+            } else if (!Array.isArray(args)) {
+                const impArgs:Array<[string,string]> = [];
+                for (let p in args) {
+                    if (args.hasOwnProperty(p)) {
+                        impArgs.push([p, args[p]]);
+                    }
+                }
+                return impArgs;
+
+            } else {
+                return <Array<[string,string]>>args;
+            }
+        }
+
+        const overwriteArgs2 = importArgs(overwriteArgs);
+        overwriteArgs2.forEach(item => {
+            tmp.replace(item[0], []);
+        });
+
+        overwriteArgs2.concat(importArgs(appendArgs)).forEach(item => {
+            tmp.add(item[0], item[1]);
+        });
+        return this.encodeURLParameters(tmp);
     }
 }

@@ -39,8 +39,6 @@ export class L10n {
 
     /**
      *
-     * @param uiLang
-     * @param helpLinks
      */
     constructor(uiLang:string, helpLinks:{[key:string]:string}) {
         this.uiLang = uiLang;
@@ -49,9 +47,10 @@ export class L10n {
     }
 
     /**
-     *
-     * @param msg
-     * @returns {*}
+     * Translate a message identified by a provided key.
+     * Null/undefined messages are translated into
+     * an empty string. Non-translated keys are passed
+     * as they are.
      */
     translate(msg:string, values?:any):string {
         if (msg) {
@@ -96,6 +95,9 @@ export class L10n {
         return new Intl.DateTimeFormat(this.uiLang, opts).format(d);
     }
 
+    /**
+     *
+     */
     getHelpLink(ident:string):string {
         return this.helpLinks.get(ident);
     }

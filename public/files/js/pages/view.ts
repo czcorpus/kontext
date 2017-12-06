@@ -29,7 +29,8 @@ import * as SoundManager from 'vendor/SoundManager';
 import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from '../app/main';
-import {MultiDict, parseUrlArgs, updateProps} from '../util';
+import {MultiDict, updateProps} from '../util';
+import {parseUrlArgs} from '../app/navigation';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';

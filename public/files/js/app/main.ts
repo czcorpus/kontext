@@ -124,7 +124,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     /**
      *
-     * @param conf page configuration
      */
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
@@ -261,8 +260,43 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
+     * Initialize language switching widget located in footer
+     */
+    bindLangSwitch():void {
+        //
+        const srch = document.getElementById('switch-language-box');
+        if (srch) {
+            const linkSrch = srch.querySelectorAll('a');
+            for (let i = 0; i < linkSrch.length; i += 1) {
+                const lang = linkSrch[i].getAttribute('data-lang');
+                const form = document.getElementById('language-switch-form');
+                form.addEventListener('click', () => {
+                    (<HTMLInputElement>form.querySelector('input.language')).value = lang;
+                    (<HTMLInputElement>form.querySelector('input.continue')).value = window.location.href;
+                    (<HTMLFormElement>form).submit();
+                });
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    initNotifications() {
+        this.renderReactComponent(
+            this.layoutViews.Messages,
+            <HTMLElement>document.querySelector('#content .messages-mount')
+        );
+
+        (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
+            this.messageStore.addMessage(msg[0], msg[1], null);
+        });
+    }
+
+    /**
      *
      * @param resp
+     * @deprecated
      */
     unpackServerError(resp:Kontext.AjaxResponse):Error {
         if (resp.contains_errors) {
@@ -327,43 +361,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
-     * Initialize language switching widget located in footer
-     */
-    bindLangSwitch():void {
-        //
-        const srch = document.getElementById('switch-language-box');
-        if (srch) {
-            const linkSrch = srch.querySelectorAll('a');
-            for (let i = 0; i < linkSrch.length; i += 1) {
-                const lang = linkSrch[i].getAttribute('data-lang');
-                const form = document.getElementById('language-switch-form');
-                form.addEventListener('click', () => {
-                    (<HTMLInputElement>form.querySelector('input.language')).value = lang;
-                    (<HTMLInputElement>form.querySelector('input.continue')).value = window.location.href;
-                    (<HTMLFormElement>form).submit();
-                });
-            }
-        }
-    }
-
-    /**
      *
-     */
-    initNotifications() {
-        this.renderReactComponent(
-            this.layoutViews.Messages,
-            <HTMLElement>document.querySelector('#content .messages-mount')
-        );
-
-        (this.getConf<Array<any>>('notifications') || []).forEach((msg) => {
-            this.messageStore.addMessage(msg[0], msg[1], null);
-        });
-    }
-
-    /**
-     *
-     * @param msg
-     * @returns {*}
      */
     translate(msg:string, values?:any):string {
         return this.l10n.translate(msg, values);
@@ -383,7 +381,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
-     *
+     * Reload the current page.
      */
     reload():void {
         this.appNavig.reload();
@@ -412,9 +410,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     /**
      * Creates a temporary form with passed args and submits it
      * via POST method.
-     *
-     * @param path
-     * @param args
      */
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
         this.appNavig.setLocationPost(path, args, blankWindow);
@@ -422,17 +417,19 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
     /**
      *
-     * @param params
-     * @returns {string}
      */
     encodeURLParameters(params:MultiDict):string {
         return this.appNavig.encodeURLParameters(params);
     }
 
+    getHistory():Kontext.IHistory {
+        return this.appNavig.getHistory();
+    }
+
     /**
-     * Return page configuration item
+     * Return page configuration item. If not found
+     * 'undefined' is returned.
      *
-     * @param item
      */
     getConf<T>(item:string):T {
         return this.conf[item];
@@ -452,9 +449,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     /**
      * Register a handler triggered when configuration is
      * changed via setConf(), replaceConcArg() functions.
-     *
-     * @param key
-     * @param handler
      */
     addConfChangeHandler<T>(key:string, handler:(v:T)=>void):void {
         if (!this.confChangeHandlers.has(key)) {
@@ -476,9 +470,8 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
-     *
-     * @param name
-     * @param values
+     * Replace a specified argument of the current concordance. The action
+     * triggers an event calling all the config change handlers.
      */
     replaceConcArg(name:string, values:Array<string>):void {
         let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
@@ -491,35 +484,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      * @param appendArgs a list of arguments which will be appended to the existing ones
      */
     exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
-        const tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
-
-        function importArgs(args:Kontext.MultiDictSrc):Array<[string,string]> {
-            if (!args) {
-                return [];
-
-            } else if (!Array.isArray(args)) {
-                const impArgs:Array<[string,string]> = [];
-                for (let p in args) {
-                    if (args.hasOwnProperty(p)) {
-                        impArgs.push([p, args[p]]);
-                    }
-                }
-                return impArgs;
-
-            } else {
-                return <Array<[string,string]>>args;
-            }
-        }
-
-        const overwriteArgs2 = importArgs(overwriteArgs);
-        overwriteArgs2.forEach(item => {
-            tmp.replace(item[0], []);
-        });
-
-        overwriteArgs2.concat(importArgs(appendArgs)).forEach(item => {
-            tmp.add(item[0], item[1]);
-        });
-        return this.encodeURLParameters(tmp);
+        return this.appNavig.exportConcArgs(overwriteArgs, appendArgs);
     }
 
     /**
@@ -539,10 +504,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      * server names and not by JS camel-case names - i.e. use
      * 'live_attributes' and not 'liveAttributes' to test the plug-in status.
      *
-     * @param name
      */
     pluginIsActive(name:string):boolean {
         return this.getConf<Array<string>>('activePlugins').indexOf(name) > -1;
+    }
+
+    resetMenuActiveItemAndNotify():void {
+        this.mainMenuStore.resetActiveItemAndNotify();
     }
 
     /**
@@ -609,17 +577,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         );
     }
 
-    resetMenuActiveItemAndNotify():void {
-        this.mainMenuStore.resetActiveItemAndNotify();
-    }
-
-    initCoreOnly():RSVP.Promise<any> {
-        return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
-            this.dispatcher = new Dispatcher<Kontext.DispatcherPayload>();
-            resolve(null);
-        });
-    }
-
     /**
      * @return true if the plug-in has been installed else false
      */
@@ -643,13 +600,13 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         }
     }
 
+    /**
+     * Return a URL for a specified term optionally defined in a separate config
+     * (see global/help_links_path in config.xml). This is used by enhanced
+     * InlineHint component.
+     */
     getHelpLink(ident:string):string {
         return this.l10n.getHelpLink(ident);
-    }
-
-
-    getHistory():Kontext.IHistory {
-        return this.appNavig.getHistory();
     }
 
     /**
@@ -659,7 +616,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         if (this.getConf('uiTestingFlag')) {
             document.querySelector('body').setAttribute('data-kontext-init', '');
         }
-    };
+    }
 
     /**
      * Page layout initialization. Any concrete page should
