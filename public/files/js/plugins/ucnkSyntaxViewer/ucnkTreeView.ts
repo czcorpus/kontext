@@ -379,6 +379,10 @@ class TreeGenerator {
                 value: srch[2]
             };
         }
+        return {
+            color: '#000000',
+            value: ''
+        }
     }
 
     private generateLabelSpan(label:Label):string {
@@ -434,11 +438,15 @@ class TreeGenerator {
             .style('padding', 0)
             .style('background', 'none');
 
+        const generateNodeHtml = (t:Token, labels:Array<Label>) => {
+            return [t.value].concat(labels.slice(1).map(v => this.generateLabelSpan(v))).join('<br />');
+        };
+
         const div = body
             .append('xhtml:div')
             .classed('token-node', true)
             .attr('title', d => `${d.value} (${this.componentHelpers.translate('ucnkSyntaxViewer__click_to_see_details')})`)
-            .html(d => `${d.value}<br />${this.generateLabelSpan(nodeMap[d.id].labels[1])}`);
+            .html(d => generateNodeHtml(d, nodeMap[d.id].labels));
 
         div.each((d, i, items) => {
             this.sent2NodeActionMap[d.id] = items[i];
