@@ -386,7 +386,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                     queryType={this.state.queryTypes.get(this.props.corpname)}
                                     sourceId={this.props.corpname}
                                     actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.props.hasLemmaAttr} />
+                                    hasLemmaAttr={this.state.hasLemmaAttr} />
                             <inputViews.TRQueryInputField
                                 queryType={this.state.queryTypes.get(this.props.corpname)}
                                 widgets={this.state.supportedWidgets.get(this.props.corpname)}

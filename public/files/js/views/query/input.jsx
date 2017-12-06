@@ -72,7 +72,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         }
     }
 
-    // ------------------- <TRQueryTypeField /> -----------------------------
+    // ------------------- <QueryTypeHints /> -----------------------------
 
     class QueryTypeHints extends React.Component {
 
@@ -131,7 +131,6 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
     // ------------------- <TRQueryTypeField /> -----------------------------
 
     const TRQueryTypeField = (props) => {
-
         const handleSelection = (evt) => {
             dispatcher.dispatch({
                 actionType: props.actionPrefix + 'QUERY_INPUT_SELECT_TYPE',
