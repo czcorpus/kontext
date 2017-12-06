@@ -28,7 +28,7 @@ export function dictToPairs<T>(d:{[key:string]:T|Array<T>}):Array<[string, T]> {
     const ans = [];
     for (let k in d) {
         if (d.hasOwnProperty(k)) {
-            if (Object.prototype.toString.call(d[k]) === '[object Array]') {
+            if (Array.isArray(d[k])) {
                 (<Array<T>>d[k]).forEach((item) => {
                     ans.push(k, item);
                 });
@@ -40,61 +40,6 @@ export function dictToPairs<T>(d:{[key:string]:T|Array<T>}):Array<[string, T]> {
     }
     return ans;
 }
-
-
-/**
- * Parse a URL args string (k1=v1&k2=v2&...&kN=vN) into
- * a list of pairs [[k1, v1], [k2, v2],...,[kN, vN]]
- */
-export function parseUrlArgs(args:string):Array<[string, string]> {
-    return args.split('&').map<[string, string]>(item => {
-        const tmp = item.split('=', 2);
-        return [decodeURIComponent(tmp[0]), decodeURIComponent(tmp[1])];
-    });
-}
-
-// --------------------------- COLOR related functions --------------------
-
-export function color2str(c:Kontext.RGBAColor):string {
-    return c !== null ? `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})` : 'transparent';
-}
-
-export function calcTextColorFromBg(bgColor:Kontext.RGBAColor):Kontext.RGBAColor {
-    const color = bgColor ? bgColor : [255, 255, 255, 1];
-    const lum = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2];
-    return lum > 128 ? [1, 1, 1, 1] : [231, 231, 231, 1];
-}
-
-export function importColor(color:string, opacity:number):Kontext.RGBAColor {
-    const fromHex = pos => parseInt(color.substr(2 * pos + 1, 2), 16);
-    if (color.substr(0, 1) === '#') {
-        return [
-            fromHex(0),
-            fromHex(1),
-            fromHex(2),
-            parseFloat(opacity.toFixed(1))
-        ];
-
-    } else if (color.toLowerCase().indexOf('rgb') === 0) {
-        const srch = /rgb\((\d+),\s*(\d+),\s*(\d+)\s*(,\s*[\d\.]+)*\)/i.exec(color);
-        if (srch) {
-            return [
-                parseInt(srch[1]),
-                parseInt(srch[2]),
-                parseInt(srch[3]),
-                parseFloat(opacity.toFixed(1))
-            ];
-
-        } else {
-            throw new Error('Cannot import color ' + color);
-        }
-
-    } else {
-        throw new Error('Cannot import color ' + color);
-    }
-}
-
-// ------------------------------------------------------------
 
 /**
  * Update a general key-value object with an incoming one.
@@ -251,6 +196,51 @@ export class MultiDict implements Kontext.IMultiDict {
 }
 
 
+// --------------------------- COLOR related functions --------------------
+
+export function color2str(c:Kontext.RGBAColor):string {
+    return c !== null ? `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})` : 'transparent';
+}
+
+export function calcTextColorFromBg(bgColor:Kontext.RGBAColor):Kontext.RGBAColor {
+    const color = bgColor ? bgColor : [255, 255, 255, 1];
+    const lum = 0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2];
+    return lum > 128 ? [1, 1, 1, 1] : [231, 231, 231, 1];
+}
+
+export function importColor(color:string, opacity:number):Kontext.RGBAColor {
+    const fromHex = pos => parseInt(color.substr(2 * pos + 1, 2), 16);
+    if (color.substr(0, 1) === '#') {
+        return [
+            fromHex(0),
+            fromHex(1),
+            fromHex(2),
+            parseFloat(opacity.toFixed(1))
+        ];
+
+    } else if (color.toLowerCase().indexOf('rgb') === 0) {
+        const srch = /rgb\((\d+),\s*(\d+),\s*(\d+)\s*(,\s*[\d\.]+)*\)/i.exec(color);
+        if (srch) {
+            return [
+                parseInt(srch[1]),
+                parseInt(srch[2]),
+                parseInt(srch[3]),
+                parseFloat(opacity.toFixed(1))
+            ];
+
+        } else {
+            throw new Error('Cannot import color ' + color);
+        }
+
+    } else {
+        throw new Error('Cannot import color ' + color);
+    }
+}
+
+
+/**
+ *
+ */
 export function uid():string {
     return `${new Date().getTime()}${Math.random()}`.substr(2);
 }
