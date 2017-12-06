@@ -322,7 +322,7 @@ class TreeBuilder(object):
         """
         def export_labels(item):
             values = [v[1] for v in self._dict_portion(item, tree_conf.node_attrs)]
-            return [k % v for k, v in zip(tree_conf.label_templates, values)]
+            return [k % (v if v is not None else '') for k, v in zip(tree_conf.label_templates, values)]
 
         nodes = [TreeNode(idx=i,
                           data=dict(self._dict_portion(d, tree_conf.detail_attrs)),
