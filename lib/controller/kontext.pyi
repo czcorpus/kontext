@@ -58,6 +58,8 @@ class Kontext(Controller):
 
     _curr_corpus:Corpus
 
+    _corpus_variant:str
+
     return_url:str
 
     cm:CorpusManager

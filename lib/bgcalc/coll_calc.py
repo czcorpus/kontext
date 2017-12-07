@@ -104,9 +104,10 @@ def calculate_colls_bg(coll_args):
     from Celery or from other process (via multiprocessing).
     """
     cm = corplib.CorpusManager(subcpath=coll_args.subcpath)
-    corp = cm.get_Corpus(coll_args.corpname, coll_args.subcname)
+    corp = cm.get_Corpus(coll_args.corpname, subcname=coll_args.subcname)
     try:
-        corplib.frq_db(corp, coll_args.cattr)  # try to fetch precalculated data; if none then MissingSubCorpFreqFile
+        # try to fetch precalculated data; if none then MissingSubCorpFreqFile
+        corplib.frq_db(corp, coll_args.cattr)
         conc = conclib.get_conc(corp=corp, user_id=coll_args.user_id, minsize=coll_args.minsize, q=coll_args.q,
                                 fromp=0, pagesize=0, async=0, save=coll_args.save, samplesize=coll_args.samplesize)
         if not conc.finished():
@@ -147,7 +148,8 @@ def calculate_colls(coll_args):
         collstart = 0
         collend = coll_args.num_lines
     else:
-        collstart = (int(coll_args.collpage) - 1) * int(coll_args.citemsperpage) + int(coll_args.line_offset)
+        collstart = (int(coll_args.collpage) - 1) * \
+            int(coll_args.citemsperpage) + int(coll_args.line_offset)
         collend = collstart + int(coll_args.citemsperpage) + 1
 
     cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
@@ -165,7 +167,8 @@ def calculate_colls(coll_args):
         if os.path.isfile(cache_path):  # cache avail. but not enough items
             os.unlink(cache_path)
         if collend >= num_fetch_items:
-            num_fetch_items += (collend - num_fetch_items) + 10 * int(coll_args.citemsperpage)  # TODO heuristics :)
+            num_fetch_items += (collend - num_fetch_items) + 10 * \
+                int(coll_args.citemsperpage)  # TODO heuristics :)
 
         coll_args.cache_path = cache_path
         coll_args.num_fetch_items = num_fetch_items

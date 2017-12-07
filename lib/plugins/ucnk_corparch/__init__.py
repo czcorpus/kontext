@@ -69,7 +69,7 @@ see default_corparch/resources/corplist.rng.
 try:
     from markdown import markdown
 except ImportError:
-    markdown = lambda s: s
+    def markdown(s): return s
 import smtplib
 from email.mime.text import MIMEText
 import time
@@ -91,6 +91,7 @@ class UcnkCorpusInfo(CorpusInfo):
     """
     A modified CorpusInfo containing 'internal' flag
     """
+
     def __init__(self):
         super(UcnkCorpusInfo, self).__init__()
         self.requestable = False
@@ -149,7 +150,8 @@ class UcnkCorpArch(CorpusArchive):
 
     def export(self, plugin_api):
         ans = super(UcnkCorpArch, self).export(plugin_api)
-        ans['initial_keywords'] = plugin_api.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
+        ans['initial_keywords'] = plugin_api.session.get(
+            self.SESSION_KEYWORDS_KEY, [self.default_label])
         return ans
 
     def create_corplist_provider(self, plugin_api):
@@ -228,8 +230,8 @@ class UcnkCorpArch(CorpusArchive):
         self._get_range_attributes(corpus_info, node)
 
     def customize_search_result_item(self, plugin_api, item, permitted_corpora, corpus_info):
-        item['requestable'] = corpus_info.requestable and corpus_info.id not in permitted_corpora \
-                              and not plugin_api.user_is_anonymous
+        item['requestable'] = (corpus_info.requestable and corpus_info.id not in permitted_corpora
+                               and not plugin_api.user_is_anonymous)
 
     def custom_filter(self, plugin_api, corpus_info, permitted_corpora):
         return corpus_info.id in permitted_corpora or (corpus_info.requestable and not plugin_api.user_is_anonymous)
@@ -242,28 +244,28 @@ class UcnkCorpArch(CorpusArchive):
         """
         cl = []
         for item in self._raw_list(plugin_api.user_lang).values():
-            canonical_id, path, web = item['id'], item['path'], item['sentence_struct']
-            corp_id = user_allowed_corpora.get(canonical_id, canonical_id)
-            try:
-                corp_info = self._manatee_corpora.get_info(corp_id)
-                cl.append({'id': corp_id,
-                           'canonical_id': canonical_id,
-                           'name': l10n.import_string(corp_info.name,
-                                                      from_encoding=corp_info.encoding),
-                           'desc': l10n.import_string(corp_info.description,
-                                                      from_encoding=corp_info.encoding),
-                           'size': corp_info.size,
-                           'path': path,
-                           'requestable': item.get('requestable', False)
-                           })
-            except Exception, e:
-                import logging
-                logging.getLogger(__name__).warn(
-                    u'Failed to fetch info about %s with error %s (%r)' % (corp_id,
-                                                                           type(e).__name__, e))
-                cl.append({
-                    'id': corp_id, 'canonical_id': canonical_id, 'name': corp_id,
-                    'path': path, 'desc': '', 'size': None})
+            corp_id, path, web = item['id'], item['path'], item['sentence_struct']
+            if corp_id in user_allowed_corpora:
+                try:
+                    corp_info = self._manatee_corpora.get_info(corp_id)
+                    cl.append({'id': corp_id,
+                               'canonical_id': corp_id,
+                               'name': l10n.import_string(corp_info.name,
+                                                          from_encoding=corp_info.encoding),
+                               'desc': l10n.import_string(corp_info.description,
+                                                          from_encoding=corp_info.encoding),
+                               'size': corp_info.size,
+                               'path': path,
+                               'requestable': item.get('requestable', False)
+                               })
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).warn(
+                        u'Failed to fetch info about %s with error %s (%r)' % (corp_id,
+                                                                               type(e).__name__, e))
+                    cl.append({
+                        'id': corp_id, 'canonical_id': corp_id, 'name': corp_id,
+                        'path': path, 'desc': '', 'size': None})
         return cl
 
     def export_actions(self):

@@ -109,7 +109,8 @@ class AuthConf(object):
         self.login_url = conf.get('plugins', 'auth')['login_url']
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
         self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
-        self.toolbar_server_timeout = int(conf.get('plugins', 'auth')['ucnk:toolbar_server_timeout'])
+        self.toolbar_server_timeout = int(conf.get('plugins', 'auth')[
+                                          'ucnk:toolbar_server_timeout'])
 
 
 class SyncDbConf(object):
@@ -213,6 +214,9 @@ class CentralAuth(AbstractRemoteAuth):
     def canonical_corpname(self, corpname):
         return corpname.rsplit('/', 1)[-1]
 
+    def _variant_prefix(self, corpname):
+        return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
+
     def permitted_corpora(self, user_dict):
         """
         Fetches list of corpora available to the current user
@@ -221,12 +225,12 @@ class CentralAuth(AbstractRemoteAuth):
         user_dict -- a user credentials dictionary
 
         returns:
-        a dict (canonical_corp_name, corp_name)
+        a dict (canonical_corp_name, corpus_variant)
         """
         corpora = self._db.get(self._mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
-        return dict([(self.canonical_corpname(c), c) for c in corpora])
+        return dict((self.canonical_corpname(c), self._variant_prefix(c)) for c in corpora)
 
     def refresh_user_permissions(self, plugin_api):
         src_db = MySQLdb.connect(host=self._sync_conf.host, user=self._sync_conf.user,
@@ -269,4 +273,3 @@ class CentralAuth(AbstractRemoteAuth):
 @inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
 def create_instance(conf, db_provider, sessions):
     return CentralAuth(db=db_provider, sessions=sessions, conf=conf)
-

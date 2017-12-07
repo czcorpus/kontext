@@ -161,11 +161,15 @@ class DefaultAuthHandler(AbstractInternalAuth):
         """
         return corpname.rsplit('/', 1)[-1]
 
+    @staticmethod
+    def _variant_prefix(corpname):
+        return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
+
     def permitted_corpora(self, user_dict):
         corpora = self.db.get(self._mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
-        return dict([(self.canonical_corpname(c), c) for c in corpora])
+        return dict((self.canonical_corpname(c), self._variant_prefix(c)) for c in corpora)
 
     def get_user_info(self, user_id):
         user_key = self._mk_user_key(user_id)

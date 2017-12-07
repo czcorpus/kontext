@@ -212,6 +212,7 @@ class Kontext(Controller):
         super(Kontext, self).__init__(request=request, ui_lang=ui_lang)
         # Note: always use _corp() method to access current corpus even from inside the class
         self._curr_corpus = None
+        self._corpus_variant = ''  # a prefix for a registry file
 
         self.return_url = None
 
@@ -372,16 +373,15 @@ class Kontext(Controller):
         a corpus name must be provided to be able to filter out
         settings of other corpora. Otherwise, no action is performed.
         """
-        if len(corpname) > 0:
-            ans = {}
-            for k, v in options.items():
-                # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
-                tokens = k.rsplit(':', 1)
-                if len(tokens) == 2:
-                    if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
-                        ans[tokens[1]] = v
-            convert_types(options, self.clone_args(), selector=1)
-            self.args.__dict__.update(ans)
+        ans = {}
+        for k, v in options.items():
+            # e.g. public/syn2010:structattrs => ['public/syn2010', 'structattrs']
+            tokens = k.rsplit(':', 1)
+            if len(tokens) == 2:
+                if tokens[0] == corpname and tokens[1] not in self.GENERAL_OPTIONS:
+                    ans[tokens[1]] = v
+        convert_types(options, self.clone_args(), selector=1)
+        self.args.__dict__.update(ans)
 
     @staticmethod
     def _get_save_excluded_attributes():
@@ -633,17 +633,26 @@ class Kontext(Controller):
         self.args.__dict__.update(na)
 
     def _check_corpus_access(self, path, form, action_metadata):
-        allowed_corpora = plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user'))
-        if not action_metadata.get('skip_corpus_init', False):
-            self.args.corpname, fallback_url = self._determine_curr_corpus(form, allowed_corpora)
-            if fallback_url:
-                path = [Controller.NO_OPERATION]
-                self.redirect(fallback_url)
-        elif len(allowed_corpora) > 0:
-            self.args.corpname = ''
-        else:
-            self.args.corpname = ''
-        return path
+        """
+        Args:
+            path: current action path as a list 
+            form: 
+            action_metadata: 
+
+        Returns: a 3-tuple (copus id, corpus variant, action path) 
+        """
+        with plugins.runtime.AUTH as auth:
+            allowed_corpora = auth.permitted_corpora(self.session_get('user'))
+            if not action_metadata.get('skip_corpus_init', False):
+                corpname, corpus_variant, fallback_url = self._determine_curr_corpus(
+                    form, allowed_corpora)
+                if fallback_url:
+                    path = [Controller.NO_OPERATION]
+                    self.redirect(fallback_url)
+            else:
+                corpname = ''
+                corpus_variant = ''
+            return corpname, corpus_variant, path
 
     def _apply_semi_persistent_args(self, form_proxy):
         """
@@ -707,13 +716,15 @@ class Kontext(Controller):
         self._apply_general_user_settings(options, self._init_default_settings)
 
         # corpus access check and modify path in case user cannot access currently requested corp.
-        path = self._check_corpus_access(path, form, action_metadata)
+        corpname, corpus_variant, path = self._check_corpus_access(path, form, action_metadata)
 
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
-        self._apply_corpus_user_settings(corp_options, self.args.corpname)
+        if len(corpname) > 0:
+            self._apply_corpus_user_settings(corp_options, self.args.corpname)
         self._map_args_to_attrs(form, named_args)
-
+        self.args.corpname = corpname  # always prefer corpname returned by _check_corpus_access()
+        self._corpus_variant = corpus_variant
         self.cm = corplib.CorpusManager(self.subcpath)
 
         # return url (for 3rd party pages etc.)
@@ -779,8 +790,8 @@ class Kontext(Controller):
         corp_list -- a dict (canonical_id => full_id) representing all the corpora user can access
 
         Return:
-        2-tuple containing a corpus name and a fallback URL where application
-        may be redirected (if not None)
+        3-tuple containing a corpus name, corpus variant prefix and a fallback URL where application
+        may be redirected in case no other option is available
         """
         cn = ''
 
@@ -805,24 +816,15 @@ class Kontext(Controller):
 
         # 1) reload permissions in case of no access and if available
         with plugins.runtime.AUTH as auth:
-            if cn not in corp_list and isinstance(auth, AbstractRemoteAuth):
-                auth.refresh_user_permissions(self._plugin_api)
-                corp_list = auth.permitted_corpora(self.session_get('user'))
-        # 2) try alternative corpus configuration (e.g. with restricted access)
-        # automatic restricted/unrestricted corpus name selection
-        # according to user rights
-        canonical_name = self._canonical_corpname(cn)
-        if canonical_name in corp_list:  # user has "some" access to the corpus
-            if corp_list[canonical_name] != cn:  # user has access to a variant of the corpus
-                cn = canonical_name
-                fallback = self.updated_current_url({'corpname': corp_list[canonical_name]})
-            else:
-                cn = corp_list[canonical_name]
+            cn = auth.canonical_corpname(cn)  # always convert corpus variant into a canonical form
+            if cn in corp_list:
+                variant = corp_list[cn]
                 fallback = None
-        else:
-            cn = ''
-            fallback = '%scorpora/corplist' % self.get_root_url()  # TODO hardcoded '/corpora/'
-        return cn, fallback
+            else:
+                cn = ''
+                variant = None
+                fallback = '%scorpora/corplist' % self.get_root_url()  # TODO hardcoded '/corpora/'
+        return cn, variant, fallback
 
     @property
     def corp_encoding(self):
@@ -854,10 +856,10 @@ class Kontext(Controller):
         """
         if self.args.corpname:
             try:
-                if not self._curr_corpus or (self.args.usesubcorp and not hasattr(self._curr_corpus,
-                                                                                  'subcname')):
+                if not self._curr_corpus or (self.args.usesubcorp and not hasattr(self._curr_corpus, 'subcname')):
                     self._curr_corpus = self.cm.get_Corpus(self.args.corpname,
-                                                           self.args.usesubcorp)
+                                                           subcname=self.args.usesubcorp,
+                                                           corp_variant=self._corpus_variant)
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
             except Exception as ex:
@@ -1131,7 +1133,9 @@ class Kontext(Controller):
             result['multi_sattr_allowed_structs'] = lattr.get_supported_structures(
                 self.args.corpname)
 
-        result['corpus_ident'] = dict(id=self.args.corpname, canonicalId=self._canonical_corpname(self.args.corpname),
+        result['corpus_ident'] = dict(id=self.args.corpname,
+                                      canonicalId=self._canonical_corpname(self.args.corpname),
+                                      variant=self._corpus_variant,
                                       name=self._human_readable_corpname())
 
         # we export plug-ins data KonText core does not care about (it is used

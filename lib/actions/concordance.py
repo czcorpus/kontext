@@ -1359,8 +1359,8 @@ class Actions(Querying):
             })}
         try:
             if wltype == 'keywords':
-                args = (self.cm.get_Corpus(self.args.corpname, usesubcorp),
-                        self.cm.get_Corpus(ref_corpname, ref_usesubcorp))
+                args = (self.cm.get_Corpus(self.args.corpname, subcname=usesubcorp),
+                        self.cm.get_Corpus(ref_corpname, subcname=ref_usesubcorp))
                 kw_func = getattr(corplib, 'subc_keywords_onstr')
                 args = args + (self.args.wlattr,)
                 out = self.call_function(kw_func, args, wlmaxitems=wlmaxitems)[wlstart:]

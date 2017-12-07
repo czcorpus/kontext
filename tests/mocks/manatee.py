@@ -30,11 +30,10 @@ class Concordance(object):
 
 class CorpusManager(object):
 
-    def get_Corpus(self, name, subcname=None):
+    def get_Corpus(self, name, corp_variant='', subcname=None):
         ans = EmptyCorpus()
         ans.corpname = name
         ans.subcname = subcname
         ans.size = 3000
         ans.search_size = lambda: 4000
         return ans
-

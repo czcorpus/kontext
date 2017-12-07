@@ -111,6 +111,10 @@ def conf_bool(v):
 class CorpusManager(object):
 
     def __init__(self, subcpath=()):
+        """
+        Args:
+            subcpath: a list of paths where user corpora are located
+        """
         self.subcpath = list(subcpath)
 
     def default_subcpath(self, corp):
@@ -121,10 +125,18 @@ class CorpusManager(object):
         cpath = corp.get_conf('PATH')
         return os.path.join(cpath, 'subcorp')
 
-    def get_Corpus(self, corpname, subcname=''):
+    def get_Corpus(self, corpname, corp_variant='', subcname=''):
+        """
+        args:
+            corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
+                          please note that in many cases this can be omitted as only in case user
+                          wants to see a continuous text (e.g. kwic context) we must make sure he
+                          sees only a 'legal' chunk.
+        """
         if ':' in corpname:
             corpname, subcname = corpname.split(':', 1)
-        corp = manatee.Corpus(corpname)
+        registry_file = os.path.join(corp_variant, corpname) if corp_variant else corpname
+        corp = manatee.Corpus(registry_file)
         corp.corpname = str(corpname)  # never unicode (paths)
         corp.cm = self
         dsubcpath = self.default_subcpath(corp)
@@ -142,7 +154,7 @@ class CorpusManager(object):
                     subc.spath = spath
                     try:
                         open(spath[:-4] + 'used', 'w')
-                    except Exception:
+                    except IOError:
                         pass
                     subc.corpname = str(corpname)  # never unicode (paths)
                     subc.subcname = subcname
