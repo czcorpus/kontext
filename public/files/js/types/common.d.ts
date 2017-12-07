@@ -95,7 +95,8 @@ declare module Kontext {
 
     export interface FullCorpusIdent {
         id:string;
-        canonicalId:string;
+        canonicalId:string; // will be deprecated in 0.12.x
+        variant:string;
         name:string;
     }
 

@@ -74,7 +74,7 @@ class AbstractAuth(object):
                      of AbstractRemoteAuth implementations).
 
         returns:
-        a dict canonical_corpus_id=>corpus_id
+        a dict canonical_corpus_id=>corpus_variant
         """
         raise NotImplementedError()
 

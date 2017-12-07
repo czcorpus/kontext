@@ -147,7 +147,7 @@ class LINDATAuth(AbstractSemiInternalAuth):
 
 def _load_corplist(corptree_path):
     _, metadata = CorptreeParser().parse_xml_tree(corptree_path)
-    return dict((k, k) for k in metadata.keys())
+    return dict((k, '') for k in metadata.keys())
 
 
 @plugins.inject(plugins.runtime.SESSIONS)

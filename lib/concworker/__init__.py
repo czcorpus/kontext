@@ -113,7 +113,7 @@ class TaskRegistration(GeneralWorker):
 
     def __call__(self, corpus_name, subc_name, subchash, subcpath, query, samplesize):
         corpus_manager = CorpusManager(subcpath=(subcpath,))
-        corpus_obj = corpus_manager.get_Corpus(corpus_name, subc_name)
+        corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         new_status = self.create_new_calc_status()
         cachefile, prev_status = cache_map.add_to_map(subchash, query, 0, new_status)
@@ -143,7 +143,7 @@ class ConcCalculation(GeneralWorker):
         cache_map = None
         try:
             corpus_manager = CorpusManager(subcpath=(subc_dir,))
-            corpus_obj = corpus_manager.get_Corpus(corpus_name, subc_name)
+            corpus_obj = corpus_manager.get_Corpus(corpus_name, subcname=subc_name)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
 
             if not initial_args['already_running']:
@@ -189,4 +189,5 @@ class ConcCalculation(GeneralWorker):
             logging.getLogger(__name__).error('Background calculation error: %s' % e)
             logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
             if cache_map is not None:
-                cache_map.update_calc_status(subchash, query, dict(curr_wait=sleeptime, error=str(e)))
+                cache_map.update_calc_status(
+                    subchash, query, dict(curr_wait=sleeptime, error=str(e)))

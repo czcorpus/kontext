@@ -262,7 +262,7 @@ class Subcorpus(Querying):
         for corp in user_corpora:
             try:
                 for item in self.cm.subcorp_names(corp):
-                    sc = self.cm.get_Corpus(corp, item['n'])
+                    sc = self.cm.get_Corpus(corp, subcname=item['n'])
                     data.append({
                         'name': '%s:%s' % (self._canonical_corpname(corp), item['n']),
                         'size': sc.search_size(),
@@ -316,7 +316,7 @@ class Subcorpus(Querying):
 
     @exposed(access_level=1, return_type='json', legacy=True)
     def ajax_subcorp_info(self, subcname=''):
-        sc = self.cm.get_Corpus(self.args.corpname, subcname)
+        sc = self.cm.get_Corpus(self.args.corpname, subcname=subcname)
         ans = {
             'corpusName': self._canonical_corpname(self.args.corpname),
             'subCorpusName': subcname,

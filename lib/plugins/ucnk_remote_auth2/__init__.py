@@ -92,7 +92,8 @@ class AuthConf(object):
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
         self.cookie_name = conf.get('plugins', 'auth').get('ucnk:central_auth_cookie_name', None)
         self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
-        self.toolbar_server_timeout = int(conf.get('plugins', 'auth')['ucnk:toolbar_server_timeout'])
+        self.toolbar_server_timeout = int(conf.get('plugins', 'auth')[
+                                          'ucnk:toolbar_server_timeout'])
 
 
 class CentralAuth(AbstractRemoteAuth):
@@ -152,7 +153,8 @@ class CentralAuth(AbstractRemoteAuth):
         connection.request('GET', self._toolbar_conf.path % {
             'id': ticket_id,
             'lang': curr_lang,
-            'continue': ''   # this is filled-in on client-side (this the value is not known yet here)
+            # this is filled-in on client-side (this the value is not known yet here)
+            'continue': ''
         })
         response = connection.getresponse()
         if response and response.status == 200:
@@ -196,7 +198,8 @@ class CentralAuth(AbstractRemoteAuth):
 
         if curr_user_id != remote_data['id']:
             plugin_api.refresh_session_id()
-            if remote_data['id'] != self._anonymous_id:  # user logged in => keep session data (except for credentials)
+            # user logged in => keep session data (except for credentials)
+            if remote_data['id'] != self._anonymous_id:
                 plugin_api.session['user'] = {
                     'id': int(remote_data['id']),  # CNC toolbar seems to return 'string' here
                     'user': remote_data['user'],
@@ -209,6 +212,9 @@ class CentralAuth(AbstractRemoteAuth):
     def canonical_corpname(self, corpname):
         return corpname.rsplit('/', 1)[-1]
 
+    def variant_prefix(self, corpname):
+        return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
+
     def permitted_corpora(self, user_dict):
         """
         Fetches list of corpora available to the current user
@@ -217,12 +223,12 @@ class CentralAuth(AbstractRemoteAuth):
         user_id -- a database user ID
 
         returns:
-        a dict (canonical_corp_name, corp_name)
+        a dict (canonical_corp_name, corpus_variant)
         """
         corpora = self._db.get(self._mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
-        return dict([(self.canonical_corpname(c), c) for c in corpora])
+        return dict((self.canonical_corpname(c), self.variant_prefix(c)) for c in corpora)
 
     def get_user_info(self, user_id):
         user_key = self._mk_user_key(user_id)
@@ -263,4 +269,3 @@ class CentralAuth(AbstractRemoteAuth):
 @inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
 def create_instance(conf, db_provider, sessions):
     return CentralAuth(db=db_provider, sessions=sessions, conf=conf)
-
