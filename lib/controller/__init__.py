@@ -737,6 +737,7 @@ class Controller(object):
             else:
                 raise NotFoundException(_('Unknown action [%s]') % path[0])
         except UserActionException as ex:
+            self._status = ex.code
             self.add_system_message('error', fetch_exception_msg(ex))
             methodname, tmpl, result = self.process_action('message', path, named_args)
         except Exception as ex:
