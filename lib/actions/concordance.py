@@ -1889,7 +1889,7 @@ class Actions(Querying):
             activePlugins=plg_status['active_plugins'],
             queryOverview=[],
             numQueryOps=0,
-            textTypesData=get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False),
+            textTypesData=get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True),
             menuData=MenuGenerator(tmp_out, self.args).generate(disabled_items=self.disabled_menu_items,
                                                                 save_items=self._save_menu,
                                                                 corpus_dependent=tmp_out['uses_corp_instance'],
