@@ -35,7 +35,12 @@ const CONF_DOC = kontext.loadKontextConf(path.resolve(__dirname, 'conf/config.xm
 module.exports = merge(common, {
 	plugins: [
 		new OptimizeCssAssetsPlugin({
-    		assetNameRegExp: /\.css/
+			assetNameRegExp: /\.css/,
+			cssProcessorOptions: {
+				discardComments: { removeAll: true },
+				reduceIdents: false,
+				discardUnused: false
+			}
     	}),
 		new UglifyJSPlugin(),
 		new kplugins.PreparePlugin({
