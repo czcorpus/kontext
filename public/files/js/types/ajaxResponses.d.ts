@@ -125,6 +125,8 @@ declare module AjaxResponse {
         tag_builder_support:{[corpname:string]:boolean};
         selected_text_types:TextTypes.ServerCheckedValues;
         bib_mapping:TextTypes.BibMapping;
+        has_lemma:{[corpname:string]:boolean};
+        tagset_docs:{[corpname:string]:boolean};
     }
 
     export interface QueryFormArgsResponse extends QueryFormArgs, Kontext.AjaxResponse {}
@@ -143,6 +145,8 @@ declare module AjaxResponse {
         tag_builder_support:boolean;
         lpos:string;
         within:number; // used when switching to an aligned corp without specific query (set to 1)
+        has_lemma:boolean;
+        tagset_doc:string;
     }
 
     export interface FilterFormArgsResponse extends FilterFormArgs, Kontext.AjaxResponse {}

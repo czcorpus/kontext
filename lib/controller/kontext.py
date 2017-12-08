@@ -906,9 +906,6 @@ class Kontext(Controller):
             poslist = self.cm.corpconf_pairs(maincorp, 'WPOSLIST')
         result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
         result['lpos_dict'] = dict([(y, x) for x, y in poslist])
-
-        result['has_lemmaattr'] = 'lempos' in attrlist \
-            or 'lemma' in attrlist
         result['default_attr'] = corpus_get_conf(maincorp, 'DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
             if listname in result:
@@ -917,7 +914,6 @@ class Kontext(Controller):
                 [{'label': corpus_get_conf(maincorp, n + '.LABEL') or n, 'n': n}
                  for n in corpus_get_conf(maincorp, listname.upper()).split(',')
                  if n]
-        result['tagsetdoc'] = corpus_get_conf(maincorp, 'TAGSETDOC')
 
         if corpus_get_conf(maincorp, 'FREQTTATTRS'):
             ttcrit_attrs = corpus_get_conf(maincorp, 'FREQTTATTRS')

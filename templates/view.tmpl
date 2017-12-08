@@ -67,7 +67,6 @@ __conf.ConcUseSafeFont = $to_json($conc_use_safe_font);
 __conf.ChartExportFormats = $to_json($chart_export_formats);
 ## query form
 __conf.textTypesData = $to_json($text_types_data);
-__conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
 __conf.Wposlist = $to_json($Wposlist);
 __conf.ConcFormsArgs = $to_json($conc_forms_args);
 __conf.NumQueryOpSteps = $len($query_overview);
@@ -80,7 +79,6 @@ __conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
 __conf.DefaultAttr = $to_json($default_attr);
 __conf.AttrList = $to_json($getVar('AttrList', []));
 __conf.StructAttrList = $to_json($getVar('StructAttrList', []));
-__conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
 __conf.InputLanguages = $to_json($input_languages);
 __conf.FreqFormProps = $to_json($freq_form_args);
 __conf.CTFreqFormProps = $to_json($ctfreq_form_args);

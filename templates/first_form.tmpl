@@ -29,7 +29,6 @@ KonText - $_("query form")#slurp
 
 #def bodyonload
 __conf.textTypesData = $to_json($text_types_data);
-__conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
 __conf.Wposlist = $to_json($Wposlist);
 __conf.ConcFormsArgs = $to_json($conc_forms_args);
 __conf.SubcorpList = $to_json($SubcorpList);
@@ -39,7 +38,6 @@ __conf.Lposlist = $to_json($Lposlist);
 __conf.ForcedAttr = $to_json($getVar('force_cql_default_attr', None));
 __conf.DefaultAttr = $to_json($default_attr);
 __conf.AttrList = $to_json($getVar('AttrList', []));
-__conf.TagsetDocUrl = $to_json($getVar('tagsetdoc', None));
 __conf.InputLanguages = $to_json($input_languages);
 __conf.TextTypesNotes = $to_json($text_types_notes);
 __conf.QueryHistoryPageNumRecords = $to_json($query_history_page_num_records);

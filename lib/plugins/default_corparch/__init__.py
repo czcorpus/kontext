@@ -142,7 +142,7 @@ from lxml import etree
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
 from plugins.abstract.corpora import BrokenCorpusInfo
-from plugins.abstract.corpora import CorplistProvider
+from plugins.abstract.corpora import CorplistProvider, ManateeCorpusInfo
 from plugins import inject
 import l10n
 import manatee
@@ -163,13 +163,14 @@ def translate_markup(s):
     return markdown(s.strip())
 
 
-class ManateeCorpusInfo(object):
+class DcManateeCorpusInfo(ManateeCorpusInfo):
     """
     Represents a subset of corpus information
     as provided by manatee.Corpus instance
     """
 
     def __init__(self, corpus, canonical_id):
+        super(DcManateeCorpusInfo, self).__init__()
         self.encoding = corpus.get_conf('ENCODING')
         import_string = partial(l10n.import_string, from_encoding=self.encoding)
         self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
@@ -177,6 +178,9 @@ class ManateeCorpusInfo(object):
         self.description = import_string(corpus.get_info())
         self.attrs = filter(lambda x: len(x) > 0, corpus.get_conf('ATTRLIST').split(','))
         self.size = corpus.size()
+        attrlist = corpus.get_conf('ATTRLIST').split(',')
+        self.has_lemma = 'lempos' in attrlist or 'lemma' in attrlist
+        self.tagset_doc = corpus.get_conf('TAGSETDOC')
 
 
 class ManateeCorpora(object):
@@ -187,16 +191,16 @@ class ManateeCorpora(object):
     def __init__(self):
         self._cache = {}
 
-    def get_info(self, canonical_corpus_id):
+    def get_info(self, corpus_id):
         try:
-            if canonical_corpus_id not in self._cache:
-                self._cache[canonical_corpus_id] = ManateeCorpusInfo(
-                    manatee.Corpus(canonical_corpus_id), canonical_corpus_id)
-            return self._cache[canonical_corpus_id]
+            if corpus_id not in self._cache:
+                self._cache[corpus_id] = DcManateeCorpusInfo(
+                    manatee.Corpus(corpus_id), corpus_id)
+            return self._cache[corpus_id]
         except:
             # probably a misconfigured/missing corpus
-            return ManateeCorpusInfo(EmptyCorpus(corpname=canonical_corpus_id),
-                                     canonical_corpus_id)
+            return DcManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
+                                       corpus_id)
 
 
 def parse_query(tag_prefix, query):
@@ -645,10 +649,12 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             corp_name = corp_name.split('/')[-1].lower()
             if corp_name in self._raw_list(user_lang):
                 if user_lang is not None:
-                    return self._localize_corpus_info(self._raw_list(user_lang)[corp_name],
-                                                      lang_code=user_lang)
+                    ans = self._localize_corpus_info(self._raw_list(user_lang)[corp_name],
+                                                     lang_code=user_lang)
                 else:
-                    return self._raw_list(user_lang)[corp_name]
+                    ans = self._raw_list(user_lang)[corp_name]
+                ans.manatee = self.manatee_corpora.get_info(corp_name)
+                return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()

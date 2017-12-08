@@ -226,14 +226,14 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
                 attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
-                tagsetDocUrl: this.layoutModel.getConf<string>('TagsetDocUrl'),
                 lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
-                hasLemmaAttr: this.layoutModel.getConf<boolean>('hasLemmaAttr'),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
                 inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
-                selectedTextTypes: queryFormArgs.selected_text_types
+                selectedTextTypes: queryFormArgs.selected_text_types,
+                hasLemma: queryFormArgs.has_lemma,
+                tagsetDocs: queryFormArgs.tagset_docs
             }
         );
         this.queryStore.registerCorpusSelectionListener((corpname, aligned, subcorp) =>

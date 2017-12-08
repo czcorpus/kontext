@@ -18,12 +18,6 @@ import logging
 import plugins
 
 
-def has_tag_support(corpname):
-    ans = False
-    with plugins.runtime.TAGHELPER as th:
-        ans = th.tag_variants_file_exists(corpname)
-    return ans
-
 
 class ConcFormArgs(object):
     """
@@ -131,10 +125,21 @@ class QueryFormArgs(ConcFormArgs):
         self.curr_qmcase_values = dict((c, None) for c in corpora)
         self.curr_default_attr_values = dict((c, None) for c in corpora)
         self.tag_builder_support = dict((c, None) for c in corpora)
+        self.tagset_docs = dict((c, None) for c in corpora)
+        self.has_lemma = dict((c, False) for c in corpora)
         self.selected_text_types = {}
         self.bib_mapping = {}  # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
         for corp in self.tag_builder_support.keys():
-            self.tag_builder_support[corp] = has_tag_support(corp)
+            self._add_corpus_metadata(corp)
+
+    def _add_corpus_metadata(self, corpus_id):
+        with plugins.runtime.TAGHELPER as th:
+            self.tag_builder_support[corpus_id] = th.tag_variants_file_exists(corpus_id)
+
+        with plugins.runtime.CORPARCH as ca:
+            corp_info = ca.get_corpus_info('en_US', corpus_id)
+            self.has_lemma[corpus_id] = corp_info.manatee.has_lemma
+            self.tagset_docs[corpus_id] = corp_info.manatee.tagset_doc
 
 
 class FilterFormArgs(ConcFormArgs):
@@ -159,7 +164,19 @@ class FilterFormArgs(ConcFormArgs):
         self.inclkwic = True
         self.qmcase = False
         self.default_attr = 'word'
-        self.tag_builder_support = has_tag_support(self.maincorp)
+        self.has_lemma = False
+        self.tagset_doc = ''
+        self.tag_builder_support = False
+        self._add_corpus_metadata()
+
+    def _add_corpus_metadata(self):
+        with plugins.runtime.TAGHELPER as th:
+            self.tag_builder_support = th.tag_variants_file_exists(self.maincorp)
+
+        with plugins.runtime.CORPARCH as ca:
+            corp_info = ca.get_corpus_info('en_US', self.maincorp)
+            self.has_lemma = corp_info.manatee.has_lemma
+            self.tagset_doc = corp_info.manatee.tagset_doc
 
 
 class SortFormArgs(ConcFormArgs):

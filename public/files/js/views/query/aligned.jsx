@@ -144,11 +144,11 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                             forcedAttr={props.forcedAttr}
                             defaultAttr={props.defaultAttrValues.get(item)}
                             attrList={props.attrList}
-                            tagsetDocUrl={props.tagsetDocUrl}
+                            tagsetDocUrl={props.tagsetDocUrls.get(item)}
                             pcqPosNegValue={props.pcqPosNegValues.get(item)}
                             inputLanguage={props.inputLanguages.get(item)}
                             queryStorageView={props.queryStorageView}
-                            hasLemmaAttr={props.hasLemmaAttr} />;
+                            hasLemmaAttr={props.hasLemmaAttr.get(item)} />;
                 })}
             </fieldset>
         );
