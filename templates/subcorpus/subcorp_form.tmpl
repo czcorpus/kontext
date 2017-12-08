@@ -30,7 +30,7 @@ KonText - $corpname - $_("Create Subcorpus")#slurp
 #def bodyonload
 __conf.structsAndAttrs = $to_json($structs_and_attrs);
 __conf.currentWithinJson = $to_json($within_data);
-__conf.textTypesData = $text_types_data;
+__conf.textTypesData = $to_json($text_types_data);
 __conf.HasSubcmixer = $to_json($has_subcmixer);
 __conf.CorpusIdAttr = $to_json($id_attr);
 subcorpFormPage.init(__conf);

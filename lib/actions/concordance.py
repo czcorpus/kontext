@@ -252,8 +252,7 @@ class Actions(Querying):
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # query form data
-        out['text_types_data'] = json.dumps(
-            get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
+        out['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         self._attach_query_params(out)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
@@ -299,7 +298,7 @@ class Actions(Querying):
         out['aligned_corpora'] = self.args.align
         tt_data = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
-        out['text_types_data'] = json.dumps(tt_data)
+        out['text_types_data'] = tt_data
 
         corp_info = self.get_corpus_info(self.args.corpname)
         out['text_types_notes'] = corp_info.metadata.desc
@@ -1008,8 +1007,7 @@ class Actions(Querying):
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        result['text_types_data'] = json.dumps(
-            get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
+        result['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         self._attach_query_params(result)
         return result
 
@@ -1137,8 +1135,7 @@ class Actions(Querying):
             coll_form_args=CollFormArgs().update(self.args).to_dict(),
             ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
         )
-        ans['text_types_data'] = json.dumps(
-            get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True))
+        ans['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         self._attach_query_params(ans)
         return ans
 
@@ -1203,6 +1200,7 @@ class Actions(Querying):
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         ans['save_line_limit'] = 100000
+        ans['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         return ans
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl', return_type='plain')

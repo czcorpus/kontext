@@ -214,7 +214,7 @@ class Subcorpus(Querying):
         corpus_info = self.get_corpus_info(self.args.corpname)
         out.update(dict(
             Normslist=tt_sel['Normslist'],
-            text_types_data=json.dumps(tt_sel),
+            text_types_data=tt_sel,
             structs_and_attrs=structs_and_attrs,
             method=method,
             within_data=within_data,
