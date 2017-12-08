@@ -28,7 +28,7 @@ KonText - $_("query form")#slurp
 #end def
 
 #def bodyonload
-__conf.textTypesData = $text_types_data;
+__conf.textTypesData = $to_json($text_types_data);
 __conf.hasLemmaAttr = #if $has_lemmaattr#true#else#false#end if#;
 __conf.Wposlist = $to_json($Wposlist);
 __conf.ConcFormsArgs = $to_json($conc_forms_args);
