@@ -193,20 +193,20 @@ class Actions(Querying):
         try:
             conc = self.call_function(conclib.get_conc, (self.corp, self.session_get('user', 'id')),
                                       samplesize=corpus_info.sample_size)
-            self._apply_linegroups(conc)
-            conc.switch_aligned(os.path.basename(self.args.corpname))
+            if conc:
+                self._apply_linegroups(conc)
+                conc.switch_aligned(os.path.basename(self.args.corpname))
 
-            kwic = Kwic(self.corp, self.args.corpname, conc)
-            kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
-            kwic_args.speech_attr = self._get_speech_segment()
-            kwic_args.labelmap = {}
-            kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
-            kwic_args.structs = self._get_struct_opts()
-            out.update(kwic.kwicpage(kwic_args))
-            out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (),
-                                                 enc=self.corp_encoding)
+                kwic = Kwic(self.corp, self.args.corpname, conc)
+                kwic_args = KwicPageArgs(self.args, base_attr=Kontext.BASE_ATTR)
+                kwic_args.speech_attr = self._get_speech_segment()
+                kwic_args.labelmap = {}
+                kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
+                kwic_args.structs = self._get_struct_opts()
+                out['Sort_idx'] = self.call_function(kwic.get_sort_idx, (), enc=self.corp_encoding)
+                out.update(kwic.kwicpage(kwic_args))
+                out.update(self.get_conc_sizes(conc))
             out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-            out.update(self.get_conc_sizes(conc))
         except Exception as ex:
             self.add_system_message('error', ex.message)
             logging.getLogger(__name__).error(ex)
@@ -688,7 +688,6 @@ class Actions(Querying):
         # 1) store query forms arguments for later reuse on client-side
         corpora = self._select_current_aligned_corpora(active_only=True)
         qinfo = QueryFormArgs(corpora=corpora, persist=True)
-
         for i, corp in enumerate(corpora):
             suffix = '_{0}'.format(corp) if i > 0 else ''
             qtype = self.import_qs(getattr(self.args, 'queryselector' + suffix, None))
@@ -719,11 +718,10 @@ class Actions(Querying):
                 self.acknowledge_auto_generated_conc_op(
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
-            ans['TextTypeSel'] = get_tt(
-                self.corp, self._plugin_api).export_with_norms(ret_nums=False)
-            ans.update(self.view())
+            ans['TextTypeSel'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)
         except ConcError as e:
-            self.add_system_message('message', e.message)
+            self.add_system_message('info', e.message)
+        ans.update(self.view())
         return ans
 
     @exposed(template='view.tmpl', page_model='view')
@@ -1898,9 +1896,7 @@ class Actions(Querying):
             Wposlist=[{'n': x[0], 'v': x[1]} for x in poslist],
             Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
             AttrList=tmp_out['AttrList'],
-            TagsetDocUrl=corpus_get_conf(self.corp, 'TAGSETDOC'),
             InputLanguages=tmp_out['input_languages'],
-            hasLemmaAttr='lempos' in attrlist or 'lemma' in attrlist,
             ConcFormsArgs=tmp_out['conc_forms_args'],
             CurrentSubcorp=self.args.usesubcorp,
             SubcorpList=tmp_out['SubcorpList'],

@@ -74,6 +74,22 @@ class CitationInfo(DictLike):
         return dict((k, v) for k, v in self.__dict__.items())
 
 
+class ManateeCorpusInfo(DictLike):
+    """
+    Represents a subset of corpus information
+    as provided by manatee.Corpus instance
+    """
+
+    def __init__(self):
+        self.encoding = None
+        self.name = None
+        self.description = None
+        self.attrs = []
+        self.size = 0
+        self.has_lemma = False
+        self.tagset_doc = None
+
+
 class TokenDetail(DictLike):
 
     def __init__(self):
@@ -106,6 +122,7 @@ class CorpusInfo(DictLike):
         self.citation_info = CitationInfo()
         self.metadata = CorpusMetadata()
         self.token_detail = TokenDetail()
+        self.manatee = ManateeCorpusInfo()
 
 
 class BrokenCorpusInfo(CorpusInfo):
@@ -120,6 +137,7 @@ class BrokenCorpusInfo(CorpusInfo):
         super(BrokenCorpusInfo, self).__init__()
         self.name = (name if name else 'undefined') + '(!)'
         self.metadata = CorpusMetadata()
+        self.manatee = ManateeCorpusInfo()
 
 
 class CorpInfoEncoder(json.JSONEncoder):

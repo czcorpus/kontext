@@ -38,10 +38,8 @@ import * as RSVP from 'vendor/rsvp';
 export interface GeneralQueryFormProperties {
     forcedAttr:string;
     attrList:Array<{n:string; label:string}>;
-    tagsetDocUrl:string;
     lemmaWindowSizes:Array<number>;
     posWindowSizes:Array<number>;
-    hasLemmaAttr:boolean;
     wPoSList:Array<{v:string; n:string}>;
 }
 
@@ -66,6 +64,8 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     shuffleConcByDefault:boolean;
     inputLanguages:{[corpname:string]:string};
     selectedTextTypes:{[structattr:string]:Array<string>};
+    hasLemma:{[corpname:string]:boolean};
+    tagsetDocs:{[corpname:string]:boolean};
 }
 
 export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
@@ -75,7 +75,6 @@ export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
  * @param data
  */
 export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArgs}):AjaxResponse.QueryFormArgsResponse => {
-
     const k = (() => {
         for (let p in data) {
             if (data.hasOwnProperty(p) && data[p].form_type === 'query') {
@@ -102,7 +101,9 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
             curr_default_attr_values: {},
             tag_builder_support: {},
             selected_text_types: {},
-            bib_mapping: {}
+            bib_mapping: {},
+            has_lemma: {},
+            tagset_docs:{}
         };
     }
 };
@@ -120,13 +121,9 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected attrList:Immutable.List<{n:string; label:string}>;
 
-    protected tagsetDocUrl:string;
-
     protected lemmaWindowSizes:Immutable.List<number>;
 
     protected posWindowSizes:Immutable.List<number>;
-
-    protected hasLemmaAttr:boolean;
 
     protected wPoSList:Immutable.List<{v:string; n:string}>;
 
@@ -152,10 +149,8 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.queryContextStore = queryContextStore;
         this.forcedAttr = props.forcedAttr;
         this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
-        this.tagsetDocUrl = props.tagsetDocUrl;
         this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
         this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
-        this.hasLemmaAttr = props.hasLemmaAttr;
         this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
 
         this.onCorpusSelectionChangeActions = Immutable.List<(subcname:string)=>void>();
@@ -192,20 +187,12 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         return this.attrList;
     }
 
-    getTagsetDocUrl():string {
-        return this.tagsetDocUrl;
-    }
-
     getLemmaWindowSizes():Immutable.List<number> {
         return this.lemmaWindowSizes;
     }
 
     getPosWindowSizes():Immutable.List<number> {
         return this.posWindowSizes;
-    }
-
-    getHasLemmaAttr():boolean {
-        return this.hasLemmaAttr;
     }
 
     getwPoSList():Immutable.List<{v:string; n:string}> {
@@ -289,6 +276,10 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     private activeWidgets:Immutable.Map<string, string>;
 
+    private hasLemma:Immutable.Map<string, boolean>;
+
+    private tagsetDocs:Immutable.Map<string, string>;
+
     /**
      * Text descriptions of text type structure for end user.
      * (applies for the main corpus)
@@ -324,6 +315,8 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.pcqPosNegValues = Immutable.Map<string, string>(props.corpora.map(item => [item, props.currPcqPosNegValues[item] || 'pos']));
         this.tagBuilderSupport = Immutable.Map<string, boolean>(props.tagBuilderSupport);
         this.inputLanguages = Immutable.Map<string, string>(props.inputLanguages);
+        this.hasLemma = Immutable.Map<string, boolean>(props.hasLemma);
+        this.tagsetDocs = Immutable.Map<string, string>(props.tagsetDocs);
         this.textTypesNotes = props.textTypesNotes;
         this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
         this.setUserValues(props);
@@ -333,7 +326,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SELECT_TYPE':
                     let qType = payload.props['queryType'];
-                    if (!self.hasLemmaAttr &&  qType === 'lemma') {
+                    if (!self.hasLemma.get(payload.props['sourceId']) &&  qType === 'lemma') {
                         qType = 'phrase';
                         self.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
                     }
@@ -461,6 +454,9 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                         currQmcaseValues: data.curr_qmcase_values,
                         currPcqPosNegValues: data.curr_pcq_pos_neg_values
                     });
+                    this.tagBuilderSupport = Immutable.Map<string, boolean>(data.tag_builder_support);
+                    this.hasLemma = Immutable.Map<string, boolean>(data.has_lemma);
+                    this.tagsetDocs = Immutable.Map<string, string>(data.tagset_docs);
                     return data;
 
                 } else if (data.form_type === 'locked') {
@@ -697,6 +693,14 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     getTextTypesNotes():string {
         return this.textTypesNotes;
+    }
+
+    getHasLemmaAttr():Immutable.Map<string, boolean> {
+        return this.hasLemma;
+    }
+
+    getTagsetDocUrls():Immutable.Map<string, string> {
+        return this.tagsetDocs;
     }
 }
 

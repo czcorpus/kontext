@@ -112,7 +112,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                 forcedAttr: queryStore.getForcedAttr(),
                 defaultAttrValues: queryStore.getDefaultAttrValues(),
                 attrList: queryStore.getAttrList(),
-                tagsetDocUrl: queryStore.getTagsetDocUrl(),
+                tagsetDocUrls: queryStore.getTagsetDocUrls(),
                 pcqPosNegValues: queryStore.getPcqPosNegValues(),
                 lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
                 posWindowSizes: queryStore.getPosWindowSizes(),
@@ -187,7 +187,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                     queryType={this.state.queryTypes.get(primaryCorpname)}
                                     sourceId={primaryCorpname}
                                     actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.state.hasLemmaAttr} />
+                                    hasLemmaAttr={this.state.hasLemmaAttr.get(primaryCorpname)} />
                         </tbody>
                         <tbody>
                             <inputViews.TRQueryInputField
@@ -200,7 +200,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 forcedAttr={this.state.forcedAttr}
                                 defaultAttr={this.state.defaultAttrValues.get(primaryCorpname)}
                                 attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                tagsetDocUrl={this.state.tagsetDocUrls.get(primaryCorpname)}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(primaryCorpname)}
@@ -220,7 +220,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 forcedAttr={this.state.forcedAttr}
                                 defaultAttrValues={this.state.defaultAttrValues}
                                 attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                tagsetDocUrls={this.state.tagsetDocUrls}
                                 pcqPosNegValues={this.state.pcqPosNegValues}
                                 inputLanguages={this.state.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
@@ -308,7 +308,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                 forcedAttr: queryStore.getForcedAttr(),
                 defaultAttrValues: queryStore.getDefaultAttrValues(),
                 attrList: queryStore.getAttrList(),
-                tagsetDocUrl: queryStore.getTagsetDocUrl(),
+                tagsetDocUrls: queryStore.getTagsetDocUrls(),
                 pcqPosNegValues: queryStore.getPcqPosNegValues(),
                 lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
                 posWindowSizes: queryStore.getPosWindowSizes(),
@@ -386,7 +386,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                     queryType={this.state.queryTypes.get(this.props.corpname)}
                                     sourceId={this.props.corpname}
                                     actionPrefix={this.props.actionPrefix}
-                                    hasLemmaAttr={this.state.hasLemmaAttr} />
+                                    hasLemmaAttr={this.state.hasLemmaAttr.get(this.props.corpname)} />
                             <inputViews.TRQueryInputField
                                 queryType={this.state.queryTypes.get(this.props.corpname)}
                                 widgets={this.state.supportedWidgets.get(this.props.corpname)}
@@ -397,7 +397,7 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 forcedAttr={this.state.forcedAttr}
                                 defaultAttr={this.state.defaultAttrValues.get(this.props.corpname)}
                                 attrList={this.state.attrList}
-                                tagsetDocUrl={this.state.tagsetDocUrl}
+                                tagsetDocUrl={this.state.tagsetDocUrls.get(this.props.corpname)}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
