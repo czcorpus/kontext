@@ -156,7 +156,7 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
         };
 
         return (
-            <fieldset className="settings-group">
+            <fieldset className="FieldsetAttributes">
                 <legend>{helpers.translate('options__attributes_hd')}</legend>
                 <ul>
                 {props.attrList.map((item, i) => {
@@ -229,7 +229,7 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
         };
 
         return (
-            <fieldset className="settings-group">
+            <fieldset className="FieldsetStructures">
                 <legend>{helpers.translate('options__structures_hd')}</legend>
                 <ul>
                     {props.availStructs.map((item) => {
@@ -290,7 +290,7 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
         };
 
         return (
-            <fieldset className="settings-group">
+            <fieldset className="FieldsetMetainformation">
                 <legend>{helpers.translate('options__references_hd')}</legend>
                 <ul>
                     {props.availRefs.map((item, i) => {
@@ -351,7 +351,7 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
 
         if (props.hasLoadedData) {
             return (
-                <form method="POST" action={helpers.createActionLink('options/viewattrsx')}>
+                <form method="POST" className="StructsAndAttrsForm" action={helpers.createActionLink('options/viewattrsx')}>
                     <div>
                         <FieldsetAttributes fixedAttr={props.fixedAttr} attrList={props.attrList}
                                 hasSelectAll={props.hasSelectAllAttrs} attrsAllpos={props.attrsAllpos}

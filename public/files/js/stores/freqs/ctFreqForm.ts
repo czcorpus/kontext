@@ -126,7 +126,7 @@ export class CTFreqFormStore extends SimplePageStore {
 
     public static POSITION_RA = ['-6>0', '-5>0', '-4>0', '-3>0', '-2>0', '-1>0', '0>0', '1>0', '2>0', '3>0', '4>0', '5>0', '6>0'];
 
-    public static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
+    public static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
     private pageModel:PageModel;
 

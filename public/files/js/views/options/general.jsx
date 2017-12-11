@@ -142,7 +142,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
 
     const FieldsetConcordance = (props) => {
         return (
-            <fieldset className="options">
+            <fieldset className="FieldsetConcordance">
                 <legend>
                     {helpers.translate('options__concordance_fieldset_heading')}
                 </legend>
@@ -188,7 +188,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
 
     const FieldsetWordlist = (props) => {
         return (
-            <fieldset className="options">
+            <fieldset className="FieldsetWordlist">
                 <legend>
                     {helpers.translate('options__worlist_fieldset_heading')}
                 </legend>
@@ -231,7 +231,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
 
     const FieldsetFreqDistrib = (props) => {
         return (
-            <fieldset className="options">
+            <fieldset className="FieldsetFreqDistrib">
                 <legend>
                     {helpers.translate('options__freq_fieldset_heading')}
                 </legend>
@@ -260,7 +260,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
         return (
             <tr>
                 <th>
-                    {helpers.translate('options__coll_page_size')}
+                    {helpers.translate('options__coll_page_size')}:
                 </th>
                 <td>
                     <input type="text" value={props.value} onChange={handleInputChange}
@@ -274,7 +274,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
 
     const FieldsetColl = (props) => {
         return (
-            <fieldset className="options">
+            <fieldset className="FieldsetColl">
                 <legend>
                     {helpers.translate('options__coll_fieldset_heading')}
                 </legend>

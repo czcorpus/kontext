@@ -491,13 +491,39 @@ fieldset.FieldsetOutputOptions {
     }
 }
 
-.StructAttrsViewOptions,
 .GeneralOptions {
 
-    fieldset.settings-group {
+    fieldset {
+        padding: 10pt 10pt;
+
+        legend {
+            font-weight: bold;
+        }
+
+        legend:first-letter {
+            text-transform: capitalize;
+        }
+
+        input[type='text'] {
+            margin-left: 5pt;
+        }
+    }
+
+    fieldset:not(:first-of-type) {
+        margin-top: 0.7em;
+    }
+}
+
+.StructAttrsViewOptions .StructsAndAttrsForm {
+
+    fieldset {
         display: inline-block;
         vertical-align: top;
         margin-right: 1em;
+
+        legend {
+            font-weight: bold;
+        }
 
         ul {
             margin: 0;
