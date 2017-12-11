@@ -18,7 +18,6 @@ import logging
 import plugins
 
 
-
 class ConcFormArgs(object):
     """
     A helper class to handle miscellaneous
@@ -57,6 +56,16 @@ class ConcFormArgs(object):
             tmp['op_key'] = self._op_key
         return tmp
 
+    def serialize(self):
+        """
+        Export data required to be saved. In case there
+        are some corpus-dependent and fixed data (e.g. list of PoS),
+        it can be omitted here and re-initialized in __init__
+        from user-independent data. By default - all the
+        object's attributes are exported.
+        """
+        return self.to_dict()
+
     @property
     def is_persistent(self):
         return self._persistent
@@ -85,6 +94,7 @@ class LgroupOpArgs(ConcFormArgs):
     way and thus cannot be edited again (e.g. lines groups
     operations).
     """
+
     def __init__(self, persist):
         super(LgroupOpArgs, self).__init__(persist)
         self.form_type = 'lgroup'
@@ -100,6 +110,7 @@ class LockedOpFormsArgs(ConcFormArgs):
     of token IDs - nothing human-friendly). We actually
     do not bother with storing the arguments.
     """
+
     def __init__(self, persist):
         super(LockedOpFormsArgs, self).__init__(persist)
         self.form_type = 'locked'
@@ -115,6 +126,7 @@ class QueryFormArgs(ConcFormArgs):
     serializing data easier. Stored data are expected
     to be JSON-serializable.
     """
+
     def __init__(self, corpora, persist):
         super(QueryFormArgs, self).__init__(persist)
         self.form_type = 'query'
@@ -128,8 +140,9 @@ class QueryFormArgs(ConcFormArgs):
         self.tagset_docs = dict((c, None) for c in corpora)
         self.has_lemma = dict((c, False) for c in corpora)
         self.selected_text_types = {}
-        self.bib_mapping = {}  # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
-        for corp in self.tag_builder_support.keys():
+        # for bibliography structattr - maps from hidden ids to visible titles (this is optional)
+        self.bib_mapping = {}
+        for corp in corpora:
             self._add_corpus_metadata(corp)
 
     def _add_corpus_metadata(self, corpus_id):
@@ -141,6 +154,13 @@ class QueryFormArgs(ConcFormArgs):
             self.has_lemma[corpus_id] = corp_info.manatee.has_lemma
             self.tagset_docs[corpus_id] = corp_info.manatee.tagset_doc
 
+    def serialize(self):
+        ans = super(QueryFormArgs, self).to_dict()
+        del ans['has_lemma']
+        del ans['tagset_docs']
+        del ans['tag_builder_support']
+        return ans
+
 
 class FilterFormArgs(ConcFormArgs):
     """
@@ -151,6 +171,7 @@ class FilterFormArgs(ConcFormArgs):
     serializing data easier. Stored data are expected
     to be JSON-serializable.
     """
+
     def __init__(self, maincorp, persist):
         super(FilterFormArgs, self).__init__(persist)
         self.form_type = 'filter'
@@ -188,6 +209,7 @@ class SortFormArgs(ConcFormArgs):
     serializing data easier. Stored data are expected
     to be JSON-serializable.
     """
+
     def __init__(self, persist):
         """
         args:
@@ -248,7 +270,7 @@ class KwicSwitchArgs(ConcFormArgs):
         self.maincorp = maincorp
 
 
-def build_conc_form_args(data, op_key):
+def build_conc_form_args(corpora, data, op_key):
     """
     A factory method to create a conc form args
     instance based on deserialized data from
@@ -256,7 +278,7 @@ def build_conc_form_args(data, op_key):
     """
     tp = data['form_type']
     if tp == 'query':
-        return QueryFormArgs(corpora=data.get('corpora', []), persist=False).updated(data, op_key)
+        return QueryFormArgs(corpora=corpora, persist=False).updated(data, op_key)
     elif tp == 'filter':
         return FilterFormArgs(maincorp=data['maincorp'], persist=False).updated(data, op_key)
     elif tp == 'sort':
