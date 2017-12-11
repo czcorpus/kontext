@@ -180,7 +180,7 @@ class DcManateeCorpusInfo(ManateeCorpusInfo):
         self.size = corpus.size()
         attrlist = corpus.get_conf('ATTRLIST').split(',')
         self.has_lemma = 'lempos' in attrlist or 'lemma' in attrlist
-        self.tagset_doc = corpus.get_conf('TAGSETDOC')
+        self.tagset_doc = import_string(corpus.get_conf('TAGSETDOC'))
 
 
 class ManateeCorpora(object):
