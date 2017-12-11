@@ -83,7 +83,7 @@ class Querying(Kontext):
         ans = super(Querying, self).get_saveable_conc_data()
 
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
-            ans.update(lastop_form=self._curr_conc_form_args.to_dict())
+            ans.update(lastop_form=self._curr_conc_form_args.serialize())
         return ans
 
     @staticmethod
@@ -110,7 +110,8 @@ class Querying(Kontext):
         if self._prev_q_data is not None and 'lastop_form' in self._prev_q_data:
             op_key = self._prev_q_data['id']
             conc_forms_args = {
-                op_key: build_conc_form_args(self._prev_q_data['lastop_form'], op_key).to_dict()
+                op_key: build_conc_form_args(self._prev_q_data.get('corpora', []), self._prev_q_data['lastop_form'],
+                                             op_key).to_dict()
             }
         else:
             conc_forms_args = {}
@@ -214,11 +215,13 @@ class Querying(Kontext):
             with plugins.runtime.CONC_PERSISTENCE as cp:
                 data = cp.open(last_id)
                 if data is not None:
-                    ans.append(build_conc_form_args(data['lastop_form'], data['id']))
+                    ans.append(build_conc_form_args(
+                        data.get('corpora', []), data['lastop_form'], data['id']))
                 limit = 100
                 while data is not None and data.get('prev_id') and limit > 0:
                     data = cp.open(data['prev_id'])
-                    ans.insert(0, build_conc_form_args(data['lastop_form'], data['id']))
+                    ans.insert(0, build_conc_form_args(
+                        data.get('corpora', []), data['lastop_form'], data['id']))
                     limit -= 1
                     if limit == 0:
                         logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
