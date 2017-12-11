@@ -973,10 +973,10 @@ export function init(
     const TableInfo = (props) => {
         return (
             <p>
-                {he.translate('freq__ct_total_nonzero_pairs')}:{'\u00a0'}
+                ({he.translate('freq__ct_total_nonzero_pairs')}:{'\u00a0'}
                 <strong>{he.formatNumber(props.numNonZero)},{'\u00a0'}</strong>
                 {he.translate('freq__ct_total_abs_frequency')}:{'\u00a0'}
-                <strong>{he.formatNumber(props.totalAbs)}</strong>
+                <strong>{he.formatNumber(props.totalAbs)}</strong>)
             </p>
         );
     };
