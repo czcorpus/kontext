@@ -563,7 +563,10 @@ export function init(dispatcher, util, widgetStore, queryStore) {
                             </span>) :
                             null
                         }
-                        <StarComponent currFavitemId={this.state.currFavitemId} />
+                        {!this.state.anonymousUser ?
+                            <StarComponent currFavitemId={this.state.currFavitemId} /> :
+                            null
+                        }
                     </div>
                     {this.state.visible ? this._renderWidget() : null}
                 </div>
