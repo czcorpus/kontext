@@ -123,7 +123,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         this.wlnums = 'frq';
         this.wltype = 'simple';
         this.wlminfreq = '5';
-        this.wlsort = '';
+        this.wlsort = 'f';
         this.wlposattr1 = '';
         this.wlposattr2 = '';
         this.wlposattr3 = '';

@@ -198,7 +198,8 @@ export class FreqDataRowsStore extends SimplePageStore {
         });
         args.set('flimit', this.flimit);
         args.set('freq_sort', this.sortColumn);
-        args.set('fpage', this.currentPage);
+        // fpage: for client, null means 'multi-block' output, for server '1' must be filled in
+        args.set('fpage', this.currentPage !== null ? this.currentPage : '1');
         args.set('ftt_include_empty', this.ftt_include_empty);
         args.set('format', 'json');
         return args;
