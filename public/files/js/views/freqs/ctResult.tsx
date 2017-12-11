@@ -479,7 +479,7 @@ export function init(
                     <tr>
                         <th />
                         <td colSpan="2">
-                            <a className="conc" href={this.props.pfilter} target="_blank"
+                            <a className="conc" href={this.props.pfilter}
                                     onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
                                 {he.translate('freq__ct_pfilter_btn_label')}
                             </a>

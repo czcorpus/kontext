@@ -90,7 +90,7 @@ export function init(
             <tr>
                 <td className="num">{props.idx}.</td>
                 <td>
-                    <a href={props.data.pfilter} target="_blank">p</a>
+                    <a href={props.data.pfilter}>p</a>
                 </td>
                 <td>{props.data.val1}</td>
                 <td>{props.data.val2}</td>
