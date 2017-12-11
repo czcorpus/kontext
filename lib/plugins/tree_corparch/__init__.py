@@ -56,9 +56,12 @@ from lxml import etree
 import copy
 
 import plugins
-from plugins.abstract.corpora import AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo
+from plugins.abstract.corpora import (
+    AbstractCorporaArchive, BrokenCorpusInfo, CorpusInfo, DefaultManateeCorpusInfo)
+from fallback_corpus import EmptyCorpus
 from controller import exposed
 from actions import corpora
+import manatee
 
 
 class CorptreeParser(object):
@@ -117,6 +120,26 @@ def ajax_get_corptree_data(ctrl, request):
     return plugins.runtime.CORPARCH.instance.get_all(ctrl._plugin_api)
 
 
+class ManateeCorpora(object):
+    """
+    A caching source of ManateeCorpusInfo instances.
+    """
+
+    def __init__(self):
+        self._cache = {}
+
+    def get_info(self, corpus_id):
+        try:
+            if corpus_id not in self._cache:
+                self._cache[corpus_id] = DefaultManateeCorpusInfo(
+                    manatee.Corpus(corpus_id), corpus_id)
+            return self._cache[corpus_id]
+        except:
+            # probably a misconfigured/missing corpus
+            return DefaultManateeCorpusInfo(EmptyCorpus(corpname=corpus_id),
+                                            corpus_id)
+
+
 class TreeCorparch(AbstractCorporaArchive):
     """
     This is a 'bare bones' version of the plug-in
@@ -127,11 +150,14 @@ class TreeCorparch(AbstractCorporaArchive):
     def __init__(self, corplist_path):
         parser = CorptreeParser()
         self._data, self._metadata = parser.parse_xml_tree(corplist_path)
+        self._manatee_corpora = ManateeCorpora()
 
     def _srch_item(self, node, name):
         for item in node.get('corplist', []):
             if 'corplist' in item:
-                return self._srch_item(item, name)
+                ans = self._srch_item(item, name)
+                if ans:
+                    return ans
             elif item.get('ident') == name:
                 return item
         return None
@@ -158,6 +184,7 @@ class TreeCorparch(AbstractCorporaArchive):
             ans = CorpusInfo()
             ans.id = info.get('id')
             ans.name = info.get('name')
+            ans.manatee = self._manatee_corpora.get_info(corp_id)
             return self._localize_corpus_info(ans, user_lang)
         else:
             return self._localize_corpus_info(BrokenCorpusInfo(), user_lang)
@@ -178,4 +205,3 @@ class TreeCorparch(AbstractCorporaArchive):
 def create_instance(conf):
     plugin_conf = conf.get('plugins', 'corparch')
     return TreeCorparch(corplist_path=plugin_conf['file'])
-

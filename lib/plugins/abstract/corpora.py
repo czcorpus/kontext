@@ -33,6 +33,9 @@ files.
 """
 
 import json
+from functools import partial
+
+import l10n
 
 
 class DictLike(object):
@@ -88,6 +91,26 @@ class ManateeCorpusInfo(DictLike):
         self.size = 0
         self.has_lemma = False
         self.tagset_doc = None
+
+
+class DefaultManateeCorpusInfo(ManateeCorpusInfo):
+    """
+    Represents a subset of corpus information
+    as provided by manatee.Corpus instance
+    """
+
+    def __init__(self, corpus, canonical_id):
+        super(DefaultManateeCorpusInfo, self).__init__()
+        self.encoding = corpus.get_conf('ENCODING')
+        import_string = partial(l10n.import_string, from_encoding=self.encoding)
+        self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
+                                  else canonical_id)
+        self.description = import_string(corpus.get_info())
+        self.attrs = filter(lambda x: len(x) > 0, corpus.get_conf('ATTRLIST').split(','))
+        self.size = corpus.size()
+        attrlist = corpus.get_conf('ATTRLIST').split(',')
+        self.has_lemma = 'lempos' in attrlist or 'lemma' in attrlist
+        self.tagset_doc = import_string(corpus.get_conf('TAGSETDOC'))
 
 
 class TokenDetail(DictLike):
