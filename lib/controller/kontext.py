@@ -691,7 +691,8 @@ class Kontext(Controller):
     def pre_dispatch(self, path, named_args, action_metadata=None):
         """
         Runs before main action is processed. The action includes
-        mapping of URL/form parameters to self.args.
+        mapping of URL/form parameters to self.args, loading user
+        options, validating corpus access rights, scheduled actions.
         """
         super(Kontext, self).pre_dispatch(path, named_args, action_metadata)
 
@@ -721,7 +722,7 @@ class Kontext(Controller):
         # now we can apply also corpus-dependent settings
         # because the corpus name is already known
         if len(corpname) > 0:
-            self._apply_corpus_user_settings(corp_options, self.args.corpname)
+            self._apply_corpus_user_settings(corp_options, corpname)
         self._map_args_to_attrs(form, named_args)
         self.args.corpname = corpname  # always prefer corpname returned by _check_corpus_access()
         self._corpus_variant = corpus_variant
