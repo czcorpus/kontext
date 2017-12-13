@@ -576,6 +576,32 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
         }
     }
 
+    // -------------------------- <SortFormSelector /> -------------------------
+
+    const SortFormSelector = (props) => {
+
+        const onItemClick = (ident) => {
+            return () => {
+                props.onChange(ident);
+            }
+        };
+
+        return (
+            <ul className="SortFormSelector">
+                <li>
+                    <a className={props.formType === "sortx" ? 'util-button active' : 'util-button'} onClick={onItemClick('sortx')}>
+                        {he.translate('query__sort_type_simple_hd')}
+                    </a>
+                </li>
+                <li>
+                    <a className={props.formType === "mlsortx" ? 'util-button active' : 'util-button'} onClick={onItemClick('mlsortx')}>
+                        {he.translate('query__sort_type_multilevel_hd')}
+                    </a>
+                </li>
+            </ul>
+        );
+    };
+
     // -------------------------- <SortForm /> ---------------------------------
 
     class SortForm extends React.Component {
@@ -589,16 +615,16 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
             };
         }
 
-        _handleSortTypeChange(evt) {
+        _handleSortTypeChange(formType) {
             dispatcher.dispatch({
                 actionType: 'SORT_SET_ACTIVE_STORE',
                 props: {
                     sortId: this.props.sortId,
-                    formAction: evt.target.value
+                    formAction: formType
                 }
             }); // <-- synchronous stuff
             this.setState({
-                sortType: evt.target.value
+                sortType: formType
             });
         }
 
@@ -646,15 +672,9 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
             return (
                 <div>
                     <form>
-                        <fieldset>
-                            <legend>
-                                <select onChange={this._handleSortTypeChange} value={this.state.sortType}>
-                                    <option value="sortx">{he.translate('query__sort_type_simple_hd')}</option>
-                                    <option value="mlsortx">{he.translate('query__sort_type_multilevel_hd')}</option>
-                                </select>
-                            </legend>
-                            {this._renderFields()}
-                        </fieldset>
+                        <SortFormSelector formType={this.state.sortType} onChange={this._handleSortTypeChange} />
+                        <hr />
+                        {this._renderFields()}
                         <p>
                             <button type="button" className="default-button"
                                     onClick={this._handleFormSubmit}>
