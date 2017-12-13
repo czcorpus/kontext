@@ -95,8 +95,6 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
             this._handleSbwardCheck = this._handleSbwardCheck.bind(this);
             this._handleSposChange = this._handleSposChange.bind(this);
             this._handleStoreChange = this._handleStoreChange.bind(this);
-            this._enableBackwardLabelHelp = this._enableBackwardLabelHelp.bind(this);
-            this._backwardLabelHelpClose = this._backwardLabelHelpClose.bind(this);
             this.state = this._fetchStateValues();
         }
 
@@ -147,8 +145,7 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
                 skey: sortStore.getSkeyValues().get(this.props.sortId),
                 spos: sortStore.getSposValues().get(this.props.sortId),
                 sicase: sortStore.getSicaseValues().get(this.props.sortId),
-                sbward: sortStore.getSbwardValues().get(this.props.sortId),
-                backwardLabelHelpVisible: false
+                sbward: sortStore.getSbwardValues().get(this.props.sortId)
             };
         }
 
@@ -162,16 +159,6 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
 
         componentWillUnmount() {
             sortStore.removeChangeListener(this._handleStoreChange);
-        }
-
-        _enableBackwardLabelHelp() {
-            const state = this._fetchStateValues();
-            state['backwardLabelHelpVisible'] = true;
-            this.setState(state);
-        }
-
-        _backwardLabelHelpClose() {
-            this.setState(this._fetchStateValues());
         }
 
         render() {
@@ -218,16 +205,9 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
                                 <label htmlFor="sbward_checkbox">
                                 {he.translate('query__sort_th_backward')}
                                 </label>
-                                <a className="context-help" onClick={this._enableBackwardLabelHelp}>
-                                    <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
-                                </a>
-                                <span>
-                                    {this.state.backwardLabelHelpVisible ?
-                                        <layoutViews.PopupBox onCloseClick={this._backwardLabelHelpClose}>
-                                            {he.translate('global__sorting_backwards_explanation')}
-                                        </layoutViews.PopupBox>
-                                        : null}
-                                </span>:
+                                <layoutViews.InlineHelp>
+                                    {he.translate('global__sorting_backwards_explanation')}
+                                </layoutViews.InlineHelp>:
                             </th>
                             <td>
                                 <input id="sbward_checkbox" type="checkbox" checked={this.state.sbward === 'r'}
@@ -298,14 +278,6 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
             this._handleSicaseCheck = this._handleSicaseCheck.bind(this);
             this._handleSbwardCheck = this._handleSbwardCheck.bind(this);
             this._handleCtxAlignChange = this._handleCtxAlignChange.bind(this);
-            this._enableBackwardLabelHelp = this._enableBackwardLabelHelp.bind(this);
-            this._disableBackwardLabelHelp = this._disableBackwardLabelHelp.bind(this);
-            this._enableNodeStartAtHelp = this._enableNodeStartAtHelp.bind(this);
-            this._disableNodeStartAtHelp = this._disableNodeStartAtHelp.bind(this);
-            this.state = {
-                backwardLabelHelpVisible: false,
-                nodeStartAtHelpVisible: false
-            };
         }
 
         _handleAttrSelect(value) {
@@ -352,37 +324,9 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
             });
         }
 
-        _enableBackwardLabelHelp() {
-            this.setState({
-                backwardLabelHelpVisible: true,
-                nodeStartAtHelpVisible: false
-            });
-        }
-
-        _disableBackwardLabelHelp() {
-            this.setState({
-                backwardLabelHelpVisible: false,
-                nodeStartAtHelpVisible: false
-            });
-        }
-
-        _enableNodeStartAtHelp() {
-            this.setState({
-                backwardLabelHelpVisible: false,
-                nodeStartAtHelpVisible: true
-            });
-        }
-
-        _disableNodeStartAtHelp() {
-            this.setState({
-                backwardLabelHelpVisible: false,
-                nodeStartAtHelpVisible: false
-            });
-        }
-
         render() {
             return (
-                <table className="sort-level">
+                <table className="MLSingleLevelFields">
                     <tbody>
                         <tr>
                             <th colSpan="2" className="level">
@@ -422,16 +366,10 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
                                 <label htmlFor="sbward_checkbox2">
                                     {he.translate('query__sort_th_backward')}
                                 </label>
-                                <a className="context-help" onClick={this._enableBackwardLabelHelp}>
-                                    <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
-                                </a>
-                                <span>
-                                    {this.state.backwardLabelHelpVisible ?
-                                        <layoutViews.PopupBox onCloseClick={this._disableBackwardLabelHelp}>
-                                            {he.translate('global__sorting_backwards_explanation')}
-                                        </layoutViews.PopupBox>
-                                        : null}
-                                </span>:
+                                <layoutViews.InlineHelp>
+                                    {he.translate('global__sorting_backwards_explanation')}
+                                </layoutViews.InlineHelp>
+                                :
                             </th>
                             <td>
                                 <input id="sbward_checkbox2" type="checkbox"
@@ -452,16 +390,9 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
                         <tr>
                             <th>
                                 {he.translate('query__sort_th_node_start_at')}
-                                <a className="context-help" onClick={this._enableNodeStartAtHelp}>
-                                    <img className="over-img" src={he.createStaticUrl('img/question-mark.svg')} />
-                                </a>
-                                <span>
-                                {this.state.nodeStartAtHelpVisible ?
-                                        <layoutViews.PopupBox onCloseClick={this._disableNodeStartAtHelp}>
-                                            {he.translate('global__this_applies_only_for_mk')}
-                                        </layoutViews.PopupBox>
-                                        : null}
-                                </span>:
+                                <layoutViews.InlineHelp>
+                                    {he.translate('global__this_applies_only_for_mk')}
+                                </layoutViews.InlineHelp>:
                             </th>
                             <td>
                                 <select value={this.props.ctxAlign}
@@ -479,14 +410,9 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
 
     // -------------------------- <AddMLLevelButton /> ---------------------------------
 
-    const TDAddLevelButton = (props) => {
-
-        return (
-            <td className="add-level">
-                <a onClick={props.onAddLevel}
-                    title={he.translate('query__sort_plus_btn_add_level')}>+</a>
-            </td>
-        );
+    const AddLevelButton = (props) => {
+        return  <button type="button" className="AddLevelButton util-button" onClick={props.onAddLevel}
+                    title={he.translate('query__sort_plus_btn_add_level')}>+</button>
     };
 
     // -------------------------- <MultiLevelSortForm /> ---------------------------------
@@ -548,30 +474,27 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
 
         render() {
             return (
-                <table className="multi-level-blocks">
-                    <tbody>
-                        <tr>
-                            {this.state.levels.map(level => {
-                                return (
-                                    <td key={`level_${level}`}>
-                                        <MLSingleLevelFields availAttrs={this.state.availAttrs}
-                                            level={level}
-                                            numLevels={this.state.levels.size}
-                                            sortId={this.props.sortId}
-                                            onRemoveLevel={this._removeLevelFn(level)}
-                                            mlxattr={this.state.mlxattrValues.get(level)}
-                                            mlxicase={this.state.mlxicaseValues.get(level)}
-                                            mlxbward={this.state.mlxbwardValues.get(level)}
-                                            ctxIndex={this.state.ctxIndexValues.get(level)}
-                                            ctxAlign={this.state.ctxAlignValues.get(level)} />
-                                    </td>
-                                );
-                            })}
-                            {this.state.levels.size < this.state.maxNumLevels ?
-                                <TDAddLevelButton onAddLevel={this._addLevel} /> : null}
-                        </tr>
-                    </tbody>
-                </table>
+                <ul className="MultiLevelSortForm">
+                    {this.state.levels.map(level => {
+                        return (
+                            <li key={`level_${level}`}>
+                                <MLSingleLevelFields availAttrs={this.state.availAttrs}
+                                    level={level}
+                                    numLevels={this.state.levels.size}
+                                    sortId={this.props.sortId}
+                                    onRemoveLevel={this._removeLevelFn(level)}
+                                    mlxattr={this.state.mlxattrValues.get(level)}
+                                    mlxicase={this.state.mlxicaseValues.get(level)}
+                                    mlxbward={this.state.mlxbwardValues.get(level)}
+                                    ctxIndex={this.state.ctxIndexValues.get(level)}
+                                    ctxAlign={this.state.ctxAlignValues.get(level)} />
+                            </li>
+                        );
+                    })}
+                    {this.state.levels.size < this.state.maxNumLevels ?
+                        <li><AddLevelButton onAddLevel={this._addLevel} /></li> : null
+                    }
+                </ul>
             );
         }
     }

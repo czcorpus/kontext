@@ -1527,41 +1527,6 @@ fieldset.colloc-metrics {
     }
 }
 
-table.multilevel-freq-params {
-    border-spacing: 0;
-    border: 1px solid @color-light-frame;
-    border-radius: @border-radius-default;
-
-    .add-level td {
-        padding-top: 10px;
-        text-align: center;
-    }
-
-    td,
-    th {
-        padding: 4px 8px;
-    }
-
-    th {
-        color: @color-default-text;
-        background-color: @color-data-table-footer;
-    }
-
-    tr:nth-child(odd):not(:first-child):not(:last-child) {
-        background-color: @color-light-green;
-    }
-
-    tr.last-line td {
-        border-width: 1px 1px;
-    }
-
-    td.level {
-        text-align: center;
-        font-size: 120%;
-        font-weight: bold;
-    }
-}
-
 #content form.login {
     background-color: @color-light-frame;
     border: @input-border-style;
@@ -1712,11 +1677,6 @@ footer .debug-warning {
     }
 }
 
-
-.multilevel-freq-params #add-freq-level-button {
-    .plus-button;
-}
-
 .remove-level img {
     width: @close-button-size;
     height: @close-button-size;
@@ -1859,23 +1819,6 @@ label.struct {
     font-size: 130%;
 }
 
-td.add-level {
-    font-size: 3em;
-    padding: 1em;
-
-    a {
-        color: #FFFFFF;
-        display: block;
-        width: 1em;
-        height: 1em;
-        line-height: 1em;
-        text-align: center;
-        background-color: @color-logo-blue;
-        text-decoration: none;
-        .default-shadow-tpl();
-    }
-}
-
 table.radio-like-sel {
         font-size: 0.9em;
         border-spacing: 0.2em 1em;
@@ -1907,44 +1850,6 @@ table.radio-like-sel {
             }
         }
     }
-
-table.sort-level {
-
-    border: 1px solid @color-light-green;
-    border-radius: @border-radius-default;
-    border-spacing: 0;
-    margin: 14px;
-
-    > tbody > tr > td,
-    > tbody > tr > th {
-        padding: 0.4em 0.8em;
-    }
-
-    th.level {
-        background-color: @color-default-green;
-    }
-
-    th.level .close-icon {
-        float: right;
-
-        img {
-            vertical-align: middle;
-            width: 1em;
-        }
-    }
-}
-
-
-table.multi-level-blocks button.add-level-button {
-    cursor: pointer;
-    margin: 14px;
-    background-color: transparent;
-    border: 1px solid @color-logo-blue;
-    color: @color-logo-blue;
-    border-radius: @border-radius-default;
-    font-size: 200%;
-}
-
 
 // ------------------------------ corplist --------
 
