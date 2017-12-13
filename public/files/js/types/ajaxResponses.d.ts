@@ -221,9 +221,7 @@ declare module AjaxResponse {
         menuData:any; // TODO type
         Wposlist:Array<any>; // TODO type
         AttrList:Array<any>; // TODO type
-        TagsetDocUrl:string;
         InputLanguages:{[corpname:string]:string};
-        hasLemmaAttr:boolean;
         ConcFormsArgs:any; // TODO type
         CurrentSubcorp:string;
         SubcorpList:Array<{v:string; n:string}>;
