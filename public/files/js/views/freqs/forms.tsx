@@ -505,7 +505,7 @@ export function init(
 
         render() {
             return (
-                <table className="form">
+                <table className="MLFreqForm">
                     <tbody>
                         <tr>
                             <td>
