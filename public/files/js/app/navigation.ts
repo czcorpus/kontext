@@ -409,9 +409,7 @@ export class AppNavigation implements Kontext.IURLHandler {
                 this.conf.setConf<any>('menuData', data.menuData); // TODO type
                 this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
                 this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
-                this.conf.setConf<string>('TagsetDocUrl', data.TagsetDocUrl);
                 this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
-                this.conf.setConf<boolean>('hasLemmaAttr', data.hasLemmaAttr);
                 this.conf.setConf<any>('ConcFormsArgs', data.ConcFormsArgs); // TODO type
                 this.conf.setConf<string>('CurrentSubcorp', data.CurrentSubcorp);
                 this.conf.setConf<Array<{v:string; n:string}>>('SubcorpList', data.SubcorpList);
