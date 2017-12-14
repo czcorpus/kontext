@@ -257,7 +257,7 @@ class Subcorpus(Querying):
                            corpname=request.args.get('corpname'))
         data = []
         user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
-            self.session_get('user')).values()
+            self.session_get('user')).keys()
         related_corpora = set()
         for corp in user_corpora:
             try:
