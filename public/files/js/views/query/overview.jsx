@@ -475,7 +475,8 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
         _fetchStoreState() {
             return {
                 activeItem: mainMenuStore.getActiveItem(),
-                lastOpSize: queryReplayStore.getCurrEncodedOperations().get(-1).size
+                lastOpSize: queryReplayStore.getCurrEncodedOperations().size > 0 ?
+                        queryReplayStore.getCurrEncodedOperations().get(-1).size : 0
             };
         }
 
