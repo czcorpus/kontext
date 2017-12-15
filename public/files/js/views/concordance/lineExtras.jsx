@@ -19,8 +19,11 @@
  */
 
  import * as React from 'vendor/react';
+ import {init as initMediaViews} from './media';
 
- export function init(dispatcher, he) {
+ export function init(dispatcher, he, lineStore) {
+
+    const mediaViews = initMediaViews(dispatcher, he, lineStore);
 
     // ------------------------- <AudioLink /> ---------------------------
 

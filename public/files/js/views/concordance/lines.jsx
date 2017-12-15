@@ -20,15 +20,13 @@
 
 import * as React from 'vendor/react';
 
-import {init as initMediaViews} from './media';
 import {calcTextColorFromBg, color2str, importColor} from '../../util';
 import {init as lineExtrasViewsInit} from './lineExtras';
 
 
 export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailStore) {
 
-    const mediaViews = initMediaViews(dispatcher, he, lineStore);
-    const extras = lineExtrasViewsInit(dispatcher, he);
+    const extras = lineExtrasViewsInit(dispatcher, he, lineStore);
 
     // ------------------------- <ConcColHideSwitch /> ---------------------------
 
