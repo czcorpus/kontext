@@ -615,9 +615,7 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
         }
 
         _canStartPlayback(speechPart) {
-            return this.props.speechSegment
-                && this.props.speechSegment[1]
-                && speechPart.segments.size > 0
+            return speechPart.segments.size > 0
                 && speechPart.segments.find(v => !!v);
         }
 
@@ -638,7 +636,6 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
                                 key={`sp-line-${i}`}
                                 speeches={item}
                                 idx={i}
-                                speechOverlapVal={this.props.speechOverlapVal}
                                 handlePlayClick={this._handlePlayClick.bind(this, item[0].segments, i)}
                                 handleStopClick={this._handleStopClick}
                                 isPlaying={this.state.playerWaitingIdx === i}
@@ -761,9 +758,7 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
                 case 'default':
                     return <DefaultView />;
                 case 'speech':
-                    return <SpeechView speechOverlapAttr={this.props.speechOverlapAttr}
-                                       speechOverlapVal={this.props.speechOverlapVal}
-                                       speechSegment={this.props.speechSegment} />;
+                    return <SpeechView />;
             }
         }
 
