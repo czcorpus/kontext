@@ -1690,10 +1690,11 @@ class Actions(Querying):
                 if self.environ.get('HTTP_RANGE', None):
                     self._headers['Content-Range'] = 'bytes 0-%s/%s' % (
                         os.path.getsize(rpath) - 1, os.path.getsize(rpath))
-                return f.read()
+                ans = f.read()
+                return lambda: ans
         else:
             self.set_not_found()
-            return None
+            return lambda: None
 
     def _collect_conc_next_url_params(self, query_id):
         params = {
