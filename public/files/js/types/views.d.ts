@@ -60,7 +60,8 @@ declare module "views/concordance/lineExtras" {
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers
+        componentHelpers:Kontext.ComponentHelpers,
+        lineStore:Kontext.PageStore
     );
 }
 
