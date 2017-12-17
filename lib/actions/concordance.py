@@ -1009,7 +1009,7 @@ class Actions(Querying):
         self._attach_query_params(result)
         return result
 
-    @exposed(access_level=1, legacy=True, template='txtexport/savefreq.tmpl', return_type='plain')
+    @exposed(access_level=1, legacy=True, return_type='plain')
     def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
                  saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
         """
@@ -1034,8 +1034,11 @@ class Actions(Querying):
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % \
                                                    saved_filename
+            output = {}
+            output.update(self.args.__dict__)
             output = result
             output['Desc'] = self.concdesc_json()['Desc']
+            output = self._apply_template('txtexport/savefreq.tmpl', output)
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-freq-distrib.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
@@ -1201,7 +1204,7 @@ class Actions(Querying):
         ans['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         return ans
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl', return_type='plain')
+    @exposed(access_level=1, vars=('concsize',), legacy=True, return_type='plain')
     def savecoll(self, from_line=1, to_line='', saveformat='text', heading=0, colheaders=0):
         """
         save collocations
@@ -1223,8 +1226,11 @@ class Actions(Querying):
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % (
                 saved_filename,)
+            out_data = {}
+            out_data.update(self.args.__dict__)
             out_data = result
             out_data['Desc'] = self.concdesc_json()['Desc']
+            out_data = self._apply_template('txtexport/savecoll.tmpl', out_data)
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-collocations.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
@@ -1474,7 +1480,7 @@ class Actions(Querying):
                            ml1attr=self.args.wlposattr1, ml2attr=self.args.wlposattr2,
                            ml3attr=self.args.wlposattr3)
 
-    @exposed(access_level=1, legacy=True, template='txtexport/savewl.tmpl', return_type='plain')
+    @exposed(access_level=1, legacy=True, return_type='plain')
     def savewl(self, from_line=1, to_line='', wltype='simple', usesubcorp='',
                ref_corpname='', ref_usesubcorp='', saveformat='text', colheaders=0, heading=0):
         """
@@ -1497,8 +1503,11 @@ class Actions(Querying):
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-word-list.txt"' % (
                 saved_filename,)
+            out_data = {}
+            out_data.update(self.args.__dict__)
             out_data = ans
             out_data['pattern'] = self.args.wlpat
+            out_data = self._apply_template('txtexport/savewl.tmpl', out_data)
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-word-list.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
@@ -1537,7 +1546,7 @@ class Actions(Querying):
                     raise task.ExternalTaskError('Task %s failed' % (t,))
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
 
-    @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/saveconc.tmpl', return_type='plain')
+    @exposed(access_level=1, vars=('concsize',), legacy=True, return_type='plain')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0,
                  leftctx='-40', rightctx='40'):
 
@@ -1604,6 +1613,7 @@ class Actions(Querying):
             def mkfilename(suffix): return '%s-concordance.%s' % (
                 self._canonical_corpname(self.args.corpname), suffix)
             if saveformat == 'text':
+                output.update(self.args.__dict__)
                 self._headers['Content-Type'] = 'text/plain'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
                     mkfilename('txt'),)
@@ -1615,6 +1625,9 @@ class Actions(Querying):
                 output['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(
                     contains_within=False)
                 output['Desc'] = self.concdesc_json()['Desc']
+                output['num_lines_in_groups'] = len(self._lines_groups)
+                output['align_kwic'] = 1
+                output = self._apply_template('txtexport/saveconc.tmpl', output)
             elif saveformat in ('csv', 'xlsx', 'xml'):
                 writer = plugins.runtime.EXPORT.instance.load_plugin(
                     saveformat, subtype='concordance')
