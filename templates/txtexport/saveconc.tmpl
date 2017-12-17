@@ -44,7 +44,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 $num	#slurp
 #end if
 #if $num_lines_in_groups > 0#$l.linegroup#end if# #slurp
-$l.ref	#slurp
+$(', '.join($l.ref))	#slurp
 #if $align_kwic
 $l.leftspace #slurp
 #end if
@@ -69,9 +69,9 @@ $l.rightspace	#slurp
 #if $align
 #for $ii, $ll in enumerate($l.get('Align', []))
 #if $align_kwic
-$ll.ref[0]	#slurp
+$(', '.join($ll.ref))	#slurp
 #else
-    $ll.ref[0]	#slurp  # there is a tab character as a prefix
+    $(', '.join($ll.ref))	#slurp  # there is a tab character as a prefix
 #end if
 #if $align_kwic
 $ll.leftspace #slurp
