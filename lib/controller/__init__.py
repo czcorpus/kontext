@@ -887,6 +887,20 @@ class Controller(object):
             ans.append(('Set-Cookie', self._new_cookies[cookie_id].OutputString()))
         return ans
 
+    def _apply_template(self, template, data):
+        """
+        This is rather a hack used to solve TXT save problem in 0.11.x.
+        Newer version should avoid legacy templates for TXT saving.
+        """
+        try:
+            outf = StringIO.StringIO()
+            template_class = self._get_template_class(template[:-5])
+            tpl_ans = template_class(searchList=[data, self.args])
+            tpl_ans.respond(CheetahResponseFile(outf))
+            return outf.getvalue()
+        finally:
+            outf.close()
+
     def output_result(self, methodname, template, result, action_metadata, outf,
                       return_template=False):
         """

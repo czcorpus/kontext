@@ -54,47 +54,47 @@ $ll.str #slurp
 #end unless
 #end for
 <#slurp
-        #for $kw in $l.Kwic
+    #for $kw in $l.Kwic
+    $kw.str #slurp
+    #end for
+    >#slurp
+#for $rr in $l.Right
+#unless $rr.class == 'strc'
+$rr.str #slurp
+#end unless
+#end for
+#if $align_kwic
+$l.rightspace	#slurp
+#end if
+#if $align
+#for $ii, $ll in enumerate($l.get('Align', []))
+#if $align_kwic
+$ll.ref[0]	#slurp
+#else
+    $ll.ref[0]	#slurp  # there is a tab character as a prefix
+#end if
+#if $align_kwic
+$ll.leftspace #slurp
+#end if
+#for $lw in $ll.Left
+#unless $lw.class == 'strc'
+$lw.str #slurp
+#end unless
+#end for
+<#slurp
+        #for $kw in $ll.Kwic
         $kw.str #slurp
         #end for
         >#slurp
-    #for $rr in $l.Right
+    #for $rr in $ll.Right
     #unless $rr.class == 'strc'
     $rr.str #slurp
     #end unless
     #end for
     #if $align_kwic
-    $l.rightspace	#slurp
+    $ll.rightspace	#slurp
     #end if
-    #if $align
-    #for $ii, $ll in enumerate($l.get('Align', []))
-    #if $align_kwic
-    $ll.ref	#slurp
-    #else
-    	$ll.ref	#slurp  # there is a tab character as a prefix
-    #end if
-    #if $align_kwic
-    $ll.leftspace #slurp
-    #end if
-    #for $lw in $ll.Left
-    #unless $lw.class == 'strc'
-    $lw.str #slurp
-    #end unless
     #end for
-    <#slurp
-            #for $kw in $ll.Kwic
-            $kw.str #slurp
-            #end for
-            >#slurp
-        #for $rr in $ll.Right
-        #unless $rr.class == 'strc'
-        $rr.str #slurp
-        #end unless
-        #end for
-        #if $align_kwic
-        $ll.rightspace	#slurp
-        #end if
-        #end for
-        #end if
+    #end if
 
-        #end for
+    #end for
