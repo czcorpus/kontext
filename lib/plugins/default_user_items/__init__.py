@@ -24,7 +24,7 @@ def import_legacy_record(data):
     ans = FavoriteItem()
     ans.ident = data['id']
     ans.name = data.get('name', '??')
-    if 'corpora' in data:
+    if data.get('corpora', None):
         ans.corpora = data.get('corpora')
     else:
         ans.corpora = [
@@ -32,7 +32,6 @@ def import_legacy_record(data):
     ans.subcorpus_id = data.get('subcorpus_id', None)
     ans.size = data.get('size', None)
     ans.size_info = data.get('size_info', None)
-
     return ans
 
 
