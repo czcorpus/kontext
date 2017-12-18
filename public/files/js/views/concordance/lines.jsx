@@ -213,10 +213,10 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                         chunks={[itemList.get(i - 1), item]} />);
             }
             if (hasKwic) {
-                ans.push(<strong key={`lc:${ans.length}`} className={item.className} title={mouseover}>{item.text.join(' ')}</strong>);
+                ans.push(<strong key={`lc:${ans.length}`} className={item.className} title={mouseover}>{item.text.join(' ')} </strong>);
 
             } else if (!item.text) { // TODO test array length??
-                ans.push('<--not translated-->');
+                ans.push('<--not translated--> ');
 
             } else {
                 ans.push(<span key={`lc:${ans.length}`} className={item.className === 'strc' ? 'strc' : null}>{item.text.join(' ')} </span>);
