@@ -1614,6 +1614,7 @@ class Actions(Querying):
                 self._canonical_corpname(self.args.corpname), suffix)
             if saveformat == 'text':
                 output.update(self.args.__dict__)
+                output['human_corpname'] = self._human_readable_corpname()
                 self._headers['Content-Type'] = 'text/plain'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
                     mkfilename('txt'),)
