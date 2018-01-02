@@ -159,7 +159,8 @@ class PyConc(manatee.Concordance):
                 self.add_aligned(canonical_corpname(options[1:]))
             except RuntimeError as e:
                 logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
-                raise EmptyParallelCorporaIntersection(_('No alignment available for the selected languages'))
+                raise EmptyParallelCorporaIntersection(
+                    _('No alignment available for the selected languages'))
             self.switch_aligned(options[1:])
             self.corpname = options[1:]
         else:
@@ -374,15 +375,15 @@ class PyConc(manatee.Concordance):
         return zip(vals, begs)
 
     def collocs(self, cattr='-', csortfn='m', cbgrfns='mt', cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, max_lines=0):
-        statdesc = {'t': 'T-score',
-                    'm': 'MI',
-                    '3': 'MI3',
-                    'l': 'log likelihood',
-                    's': 'min. sensitivity',
-                    'p': 'MI.log_f',
-                    'r': 'relative freq. [%]',
-                    'f': 'absolute freq.',
-                    'd': 'logDice',
+        statdesc = {'t': _('T-score'),
+                    'm': _('MI'),
+                    '3': _('MI3'),
+                    'l': _('log likelihood'),
+                    's': _('min. sensitivity'),
+                    'p': _('MI.log_f'),
+                    'r': _('relative freq. [%]'),
+                    'f': _('absolute freq.'),
+                    'd': _('logDice')
                     }
         items = []
         colls = manatee.CollocItems(self, cattr, csortfn, cminfreq, cminbgr,
@@ -402,7 +403,8 @@ class PyConc(manatee.Concordance):
             colls.next()
             i += 1
 
-        head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] + [{'n': statdesc.get(s, s), 's': s} for s in cbgrfns]
+        head = [{'n': ''}, {'n': 'Freq', 's': 'f'}] + \
+            [{'n': statdesc.get(s, s), 's': s} for s in cbgrfns]
         return dict(Head=head, Items=items)
 
     def linegroup_info_select(self, selected_count=5):

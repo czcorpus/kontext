@@ -11,37 +11,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.5.7\n"
 
-#: lib/plugins/ucnk_auth.py:69
+
 msgid "anonymous"
 msgstr "anonymní"
 
-#: lib/plugins/dummy_auth.py:113
 msgid "The string must be at least 5 characters long."
 msgstr "Řetězec musí být alespoň 5 znaků dlouhý."
 
-#: lib/conclib.py:619
-#, python-format
 msgid "Unknown action: %s"
 msgstr "Neznámá akce: %s"
 
-#: lib/conclib.py:798 cmpltmpl/wordlist.py:634 cmpltmpl/wordlist.py:646
-#: cmpltmpl/wordlist.py:756 cmpltmpl/wordlist.py:769
-msgid "Freq"
-msgstr "Frekvence"
-
-#: lib/conclib.py:815
 msgid "instances per million positions (refers to the respective category)"
 msgstr "výskytů na milion pozic (vztaženo k příslušné kategorii)"
 
-#: lib/conclib.py:1374
 msgid "enabled"
 msgstr "povoleno"
 
-#: lib/conclib.py:1448 lib/actions.py:325
 msgid "Token number"
 msgstr "Počet tokenů"
 
-#: lib/CGIPublisher.py:491 lib/CGIPublisher.py:549
 msgid ""
 "Failed to process your request. Please try again later or contact system "
 "support."
@@ -49,147 +37,111 @@ msgstr ""
 "Chyba při zpracování požadavku. Opakujte prosím akci později nebo "
 "kontaktujte technickou podporu."
 
-#: lib/corplib.py:75
 #, python-format
 msgid "Subcorpus \"%s\" not found"
 msgstr "Subkorpus \"%s\" nebyl nalezen"
 
-#: lib/actions.py:41 lib/actions.py:48
 msgid "This function is disabled."
 msgstr "Tato funkce je vypnuta."
 
-#: lib/actions.py:51
 msgid "Invalid user or password"
 msgstr "Neznámý uživatel či heslo"
 
-#: lib/actions.py:58
 msgid "New password and its confirmation do not match."
 msgstr "Nové heslo a jeho ověření nesouhlasí."
 
-#: lib/actions.py:84
 msgid "Incorrect username or password"
 msgstr "Nesprávné uživatelské jméno nebo heslo."
 
-#: lib/actions.py:98
 msgid "You have been logged out"
 msgstr "Byli jste odhlášeni."
 
-#: lib/actions.py:174
 msgid "No result. Please make sure the query and selected query type are correct."
 msgstr "Žádný výsledek. Zkontrolujte prosím zadání a zvolený typ dotazu."
 
-#: lib/actions.py:182 cmpltmpl/wordlist.py:311 cmpltmpl/document.py:2213
-#: cmpltmpl/document.py:2325 cmpltmpl/document.py:2355
 msgid "Custom"
 msgstr "Vlastní"
 
-#: lib/actions.py:333
 msgid "Document number"
 msgstr "Pořadí dokumentu"
 
-#: lib/actions.py:352
 #, python-format
 msgid ""
 "Value [%s] cannot be used as a context width. Please use numbers 0,1,2,..."
 msgstr ""
 "Hodnotu [%s] nelze použít pro určení šírky kontextu. Použijte čísla 0,1,2,..."
 
-#: lib/actions.py:475 lib/actions.py:776
 msgid "No query entered."
 msgstr "Nebyl zadán dotaz"
 
-#: lib/actions.py:519
 msgid "Undefined lemma PoS"
 msgstr "Nezadán slovní druh lemmatu"
 
-#: lib/actions.py:528 lib/actions.py:547
 msgid "Undefined word form PoS"
 msgstr "Nezadán slovní druh tvaru"
 
-#: lib/actions.py:551
 msgid "No char entered"
 msgstr "Nebyl zadán žádný znak."
 
-#: lib/actions.py:765
 msgid "Select Positive or Negative filter type"
 msgstr "Vyberte pozitivní nebo negativní filtr"
 
-#: lib/actions.py:874
 msgid "Empty list"
 msgstr "Prázdný výsledek"
 
-#: lib/actions.py:1054
 msgid "No text type selected"
 msgstr "Nebyl vybrán typ textu"
 
-#: lib/actions.py:1403
-#, fuzzy
 msgid "Text types are limited to Simple output"
 msgstr "Text types are limited to Simple output"
 
-#: lib/actions.py:1542
 msgid "No output attribute specified"
 msgstr "Nebyl vybrán výstupní atribut"
 
-#: lib/actions.py:1633
 msgid "Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF)."
 msgstr "Chybí konfigurace zobrazení strukturních atributů (SUBCORPATTRS or FULLREF)."
 
-#: lib/actions.py:1693
 msgid "Document counts"
 msgstr "Počty dokumentů"
 
-#: lib/actions.py:1694
 msgid "Tokens"
 msgstr "tokenů"
 
-#: lib/actions.py:1702
 msgid "Word counts"
 msgstr "Počty slov"
 
-#: lib/actions.py:1811
 msgid "No subcorpus name specified!"
 msgstr "Chybí jméno subkorpusu!"
 
-#: lib/actions.py:1841
 msgid "Nothing specified!"
 msgstr "Nebylo nic vybráno!"
 
-#: lib/actions.py:1850
 msgid "Empty subcorpus!"
 msgstr "Prázdný subkorpus!"
 
-#: lib/actions.py:2016
 msgid "Invalid data"
 msgstr "Chybné údaje"
 
-#: lib/actions.py:2033
 msgid "Unknown export data type"
 msgstr "Neznámý formát dat pro export."
 
-#: lib/actions.py:2089
 msgid "Failed to load"
 msgstr "Nepodařilo se načíst"
 
-#: lib/actions.py:2119
 #, python-format
 msgid "Corpus %s is not supported by this widget."
 msgstr "Korpus %s nelze s touto funkcionalitou použít."
 
-#: lib/taghelper.py:111
 msgid "no description"
 msgstr "Popis není k dispozici."
 
-#: lib/conccgi.py:77
 msgid "Invalid range - cannot select rows from an empty list."
 msgstr "Neplatný rozsah - nelze vybrat řádky z prázdného seznamu."
 
-#: lib/conccgi.py:79
 #, python-format
 msgid "Range [%s, %s] is invalid. It must be non-empty and within [%s, %s]."
 msgstr "Rozsah [%s, %s] je neplatný. Musí být neprázdný a z rozsahu [%s, %s]."
 
-#: lib/conccgi.py:82
 #, python-format
 msgid ""
 "Range [%s, %s] is invalid. It must be non-empty and left value must be "
@@ -198,58 +150,39 @@ msgstr ""
 "Rozsah [%s, %s] je neplatný. Musí být neprázdný a levá hodnota musí být "
 "větší nebo rovna %s."
 
-#: lib/conccgi.py:378 cmpltmpl/document.py:535
 msgid "whole corpus"
 msgstr "celý korpus"
 
-
-#: cmpltmpl/subcorp.py:246 cmpltmpl/first_form.py:407
-#: cmpltmpl/first_form.py:553
 msgid "tokens"
 msgstr "tokenů"
 
-#: cmpltmpl/subcorp_form.py:191
 msgid "New subcorpus"
 msgstr "Nový subkorpus"
 
-#: cmpltmpl/filter_form.py:126 cmpltmpl/filter_form.py:341
-#: cmpltmpl/document.py:2307
 msgid "Text Types"
 msgstr "Typy textů"
 
-#: cmpltmpl/filter_form.py:231 cmpltmpl/document.py:2176
-#: cmpltmpl/lngroupinfo.py:205 cmpltmpl/stats.py:192
 msgid "Filter"
 msgstr "Filtr"
 
-#: cmpltmpl/filter_form.py:242
 msgid "positive"
 msgstr "pozitivní"
 
-#: cmpltmpl/filter_form.py:253
 msgid "negative"
 msgstr "negativní"
 
-
-#: cmpltmpl/user_password_form.py:88 cmpltmpl/user_password_form.py:119
-#: cmpltmpl/first_form.py:234 cmpltmpl/user_password.py:88
-#: cmpltmpl/user_password.py:119
 msgid "Password change"
 msgstr "Změna hesla"
 
-#: cmpltmpl/user_password_form.py:131
 msgid "Current password"
 msgstr "Dosavadní heslo"
 
-#: cmpltmpl/user_password_form.py:140
 msgid "New password"
 msgstr "Nové heslo"
 
-#: cmpltmpl/user_password_form.py:149
 msgid "New password again"
 msgstr "Potvrzení nového hesla"
 
-#: cmpltmpl/user_password_form.py:159
 msgid ""
 "After a successful password update, you will be logged out and prompted to "
 "enter your new credentials."
@@ -257,115 +190,48 @@ msgstr ""
 "Po úspěšné aktualizaci hesla budete odhlášeni a vyzváni k zadání vašich "
 "nových přihlašovacích údajů."
 
-#: cmpltmpl/user_password_form.py:165 cmpltmpl/wordlist.py:224
-#: cmpltmpl/collx.py:180 cmpltmpl/freqs.py:156 cmpltmpl/document.py:1991
-#: cmpltmpl/view.py:208
 msgid "Save"
 msgstr "Uložit"
 
-#: cmpltmpl/wordlist.py:88 cmpltmpl/wordlist.py:520
-#: cmpltmpl/wordlist_form.py:227
 msgid "Word list"
 msgstr "Seznam slov"
 
-#: cmpltmpl/login.py:88 cmpltmpl/login.py:133
 msgid "Login"
 msgstr "Přihlásit se"
 
-#: cmpltmpl/login.py:121
 msgid "username"
 msgstr "jméno"
 
-#: cmpltmpl/login.py:127
 msgid "password"
 msgstr "heslo"
 
-#: cmpltmpl/first_form.py:269
 msgid "Search in the corpus"
 msgstr "Hledat v korpusu"
 
-#: cmpltmpl/collx.py:88 cmpltmpl/document.py:2342
 msgid "Collocations"
 msgstr "Kolokace"
 
-#: cmpltmpl/collx.py:381 cmpltmpl/document.py:2337 cmpltmpl/coll.py:152
 msgid "Collocation candidates"
 msgstr "Kolokace"
 
-#: cmpltmpl/subcorp_list.py:89
 msgid "List of my subcorpora"
 msgstr "Mé subkorpusy"
 
-#: cmpltmpl/subcorp_list.py:150 cmpltmpl/document.py:1979
 msgid "My subcorpora"
 msgstr "Mé subkorpusy"
 
-#: cmpltmpl/wordlist_form.py:88
 msgid "Word List Form"
 msgstr "Formulář seznamu slov"
 
-#: cmpltmpl/viewopts.py:88 cmpltmpl/document.py:2367 cmpltmpl/viewattrs.py:88
 msgid "View"
 msgstr "Zobrazení"
 
-#: cmpltmpl/viewopts.py:158 cmpltmpl/document.py:2475
 msgid "General view options"
 msgstr "Obecné volby zobrazení"
 
-#: cmpltmpl/viewopts.py:164
-msgid "Following settings apply for all the corpora."
-msgstr "Následující nastavení platí pro všechny korpusy."
-
-#: cmpltmpl/viewopts.py:199
-msgid "Page size (number of lines)"
-msgstr "Velikost stránky (počet řádků)"
-
-#: cmpltmpl/viewopts.py:211
-msgid "KWIC Context size (positions)"
-msgstr "Velikost KWIC kontextu (počet pozic)"
-
-#: cmpltmpl/viewopts.py:297
-msgid "Shuffle concordance lines by default"
-msgstr "Automaticky promíchat konkordanční řádky"
-
-#: cmpltmpl/viewopts.py:304
-msgid "no effect to current concordance"
-msgstr "Nemá vliv na aktuální konkordanci."
-
-#: cmpltmpl/viewopts.py:314 cmpltmpl/viewattrs.py:313
-msgid "Apply View Options"
-msgstr "Použít volby zobrazení"
-
-#: cmpltmpl/document.py:1000
-msgid "Basic"
-msgstr "Základní"
-
-#: cmpltmpl/document.py:1012 cmpltmpl/document.py:1102
-msgid "Lemma"
-msgstr "Lemma"
-
-#: cmpltmpl/document.py:1023 cmpltmpl/document.py:1175
-msgid "Phrase"
-msgstr "Fráze"
-
-#: cmpltmpl/document.py:1034 cmpltmpl/document.py:1201
-msgid "Word form"
-msgstr "Slovní tvar"
-
-msgid "Word part"
-msgstr "Část slova"
-
-#: cmpltmpl/document.py:1056 cmpltmpl/document.py:1311
-#: cmpltmpl/query_history.py:198
-msgid "CQL"
-msgstr "CQL"
-
-#: cmpltmpl/document.py:1075 cmpltmpl/document.py:1889
-#: cmpltmpl/document.py:1894
 msgid "Query"
 msgstr "Dotaz"
 
-#: cmpltmpl/document.py:1794
 msgid ""
 "Query type <em>basic</em> is suitable for getting to know the corpus. It "
 "searches for the input expression as a word form case-insensitively; if it "
@@ -377,140 +243,98 @@ msgstr ""
 "zároveň o základní slovníkový tvar (lemma), vyhledají se také všechny jeho "
 "tvary."
 
-#: cmpltmpl/document.py:1871
 msgid "logout"
 msgstr "Odhlásit se"
 
-#: cmpltmpl/document.py:1901
 msgid "Enter new query"
 msgstr "Zadat nový dotaz"
 
-#: cmpltmpl/document.py:1932 cmpltmpl/query_history.py:177
 msgid "Recent queries"
 msgstr "Předchozí dotazy"
 
-#: cmpltmpl/document.py:1946
 msgid "Word List"
 msgstr "Seznam slov"
 
-#: cmpltmpl/document.py:2029 cmpltmpl/view.py:90
 msgid "Concordance"
 msgstr "Konkordance"
 
-#: cmpltmpl/document.py:2047
 msgid "Current concordance"
 msgstr "Aktuální konkordance"
 
-#: cmpltmpl/document.py:2064
 msgid "Sorting"
 msgstr "Třídění"
 
-#: cmpltmpl/document.py:2081
 msgid "Shuffle"
 msgstr "Promíchat"
 
-#: cmpltmpl/document.py:2098
 msgid "Sample"
 msgstr "Vzorek"
 
-#: cmpltmpl/document.py:2118
 msgid "Query overview"
 msgstr "Popis dotazu"
 
-#: cmpltmpl/document.py:2138 cmpltmpl/document.py:2157
-#: cmpltmpl/query_history.py:142
-msgid "Undo"
-msgstr "Zpět"
-
-#: cmpltmpl/document.py:2189
 msgid "Positive"
 msgstr "Pozitivní"
 
-#: cmpltmpl/document.py:2201
 msgid "Negative"
 msgstr "Negativní"
 
-#: cmpltmpl/document.py:2225
 msgid "Frequency"
 msgstr "Frekvence"
 
-#: cmpltmpl/document.py:2263
 msgid "Node forms"
 msgstr "Slovní tvary"
 
-#: cmpltmpl/document.py:2285
 msgid "Doc IDs"
 msgstr "Dokumenty"
 
-#: cmpltmpl/document.py:2460
 msgid "Corpus-specific settings"
 msgstr "Korpusová nastavení"
 
-#: cmpltmpl/document.py:2492
 msgid "Help"
 msgstr "Nápověda"
 
-#: cmpltmpl/document.py:2511
 msgid "Available corpora"
 msgstr "Dostupné korpusy"
 
-#: cmpltmpl/document.py:2722
 msgid "user interface languages"
 msgstr "jazyky uživatelského rozhraní"
 
-#: cmpltmpl/document.py:2737
 msgid "version"
 msgstr "verze"
 
-#: cmpltmpl/user_password.py:128
 msgid "Your password has been changed successfully."
 msgstr "Vaše heslo bylo úspěšně změněno."
 
-#: cmpltmpl/reduce_form.py:152
 msgid "Random sample"
 msgstr "Náhodný vzorek"
 
-#: cmpltmpl/coll.py:255 cmpltmpl/coll.py:393
 msgid "T-score"
 msgstr "T-score"
 
-#: cmpltmpl/coll.py:271 cmpltmpl/coll.py:409
 msgid "MI"
 msgstr "MI"
 
-#: cmpltmpl/coll.py:287 cmpltmpl/coll.py:425
 msgid "MI3"
 msgstr "MI3"
 
-#: cmpltmpl/coll.py:303 cmpltmpl/coll.py:441
 msgid "log likelihood"
 msgstr "log likelihood"
 
-#: cmpltmpl/coll.py:319 cmpltmpl/coll.py:457
 msgid "min. sensitivity"
 msgstr "min. citlivost"
 
-#: cmpltmpl/coll.py:335 cmpltmpl/coll.py:473
 msgid "logDice"
 msgstr "logDice"
 
-#: cmpltmpl/coll.py:351 cmpltmpl/coll.py:489
 msgid "MI.log_f"
 msgstr "MI.log_f"
 
-#: cmpltmpl/stats.py:270
 msgid "Corpora"
 msgstr "Korpusy"
 
-#: cmpltmpl/view.py:532 cmpltmpl/view.py:557 cmpltmpl/view.py:676
-#: cmpltmpl/view.py:1121 cmpltmpl/view.py:1145 cmpltmpl/view.py:1173
-#: cmpltmpl/view.py:1234 cmpltmpl/widectx.py:121 cmpltmpl/widectx.py:198
 msgid "Loading..."
 msgstr "Načítá se..."
-
-#: cmpltmpl/view.py:541
-msgid "<--not translated-->"
-msgstr "<--nepřeloženo-->"
 
 msgid "Create new subcorpus"
 msgstr "Vytvořit nový subkorpus"
@@ -529,12 +353,6 @@ msgstr "Ohlásit chybu"
 
 msgid "Unknown action [%s]"
 msgstr "Neznámá akce [%s]"
-
-msgid "query"
-msgstr "dotaz"
-
-msgid "query type"
-msgstr "typ dotazu"
 
 msgid "Invalid or expired query"
 msgstr "Neplatný nebo vypršelý dotaz"
@@ -566,15 +384,6 @@ msgstr "Atribut nebyl nalezen."
 msgid "%s Please make sure the query and selected query type are correct."
 msgstr "%s Zkontrolujte prosím zadání a zvolený typ dotazu."
 
-msgid "KWIC/Alignment"
-msgstr "KWIC/zarovnání"
-
-msgid "case sensitive"
-msgstr "rozlišovat velikost písmen"
-
-msgid "default attr."
-msgstr "výchozí atribut"
-
 msgid "Subcorpus created but there was a problem saving a backup copy."
 msgstr "Subkorpus byl vytvořen, ale nepodařilo se uložit záložní kopii."
 
@@ -586,12 +395,6 @@ msgstr "Předchozí dotazy lze zobrazit také pomocí šipky dolů"
 
 msgid "In CQL mode you can use Shift+ENTER to enter a new line"
 msgstr "V dotazu CQL můžete vložit další řádek stisknutím klávesy Shift+ENTER"
-
-msgid "positive filter"
-msgstr "pozitivní filtr"
-
-msgid "negative filter"
-msgstr "negativní filtr"
 
 msgid "Positive filter"
 msgstr "Pozitivní filtr"
@@ -614,9 +417,6 @@ msgstr "Pro vybrané korpusy nejsou k dispozici žádná zarovnání"
 msgid "Failed to get the syntax tree due to limited KWIC context (too long sentence)."
 msgstr "Nepodařilo se získat syntaktický strom kvůli omezení kontextu KWIC (příliš dlouhá věta)."
 
-msgid "Show line numbers"
-msgstr "Zobrazovat čísla řádků"
-
 msgid "Character encoding of this corpus ({0}) does not support one or more characters in the query."
 msgstr "Kódování znaků tohoto korpusu ({0}) nepodporuje jeden či více znaků ve vašem dotazu."
 
@@ -628,9 +428,6 @@ msgstr "Nepodařilo se otevřít korpus {0}"
 
 msgid "Two-attribute interrelationship"
 msgstr "Vzájemný vztah dvou atributů"
-
-msgid "Name the query"
-msgstr "Pojmenovat dotaz"
 
 msgid "Archive query"
 msgstr "Archivovat dotaz"
@@ -646,9 +443,6 @@ msgstr "KonText - zpětná vazba od uživatele {0} z {1}"
 
 msgid "browser info"
 msgstr "informace o browseru"
-
-msgid "date and time: {0}"
-msgstr "datum a čas: {0}"
 
 msgid "KWIC/Sentence"
 msgstr "KWIC/Věta"
