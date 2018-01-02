@@ -330,7 +330,7 @@ export function init(dispatcher, he, stores) {
                     {he.translate('concview__hits_label')}:  {this._renderNumHits()}
                     <span id="conc-calc-info" title="90"></span>
                     <span className="separ">|</span>
-                    <abbr>i.p.m.</abbr>
+                    <abbr>{he.translate('global__abbr_ipm')}</abbr>
                     <layoutViews.InlineHelp customStyle={{minWidth: '25em'}}
                             url={he.getHelpLink('term_ipm')}>
                         {he.translate('concview__ipm_help')}
@@ -341,7 +341,7 @@ export function init(dispatcher, he, stores) {
                     {this._getIpmDesc()}
                     {'\u00A0'}
                     <span className="separ">|</span>
-                    <abbr>ARF</abbr>
+                    <abbr>{he.translate('global__abbr_arf')}</abbr>
                     <layoutViews.InlineHelp customStyle={{minWidth: '20em'}}
                             url={he.getHelpLink('term_arf')}>
                         {he.translate('concview__arf_help')}

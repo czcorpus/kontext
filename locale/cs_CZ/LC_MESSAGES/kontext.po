@@ -649,3 +649,6 @@ msgstr "informace o browseru"
 
 msgid "date and time: {0}"
 msgstr "datum a čas: {0}"
+
+msgid "KWIC/Sentence"
+msgstr "KWIC/Věta"
