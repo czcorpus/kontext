@@ -251,7 +251,9 @@ export function init(dispatcher, he, sortStore, multiLevelSortStore) {
                             <a onClick={setValFn(2)}>1L</a>
                         </td>
                         <td className={props.currentValue === 3 ? 'selected' : null}>
-                            <a onClick={setValFn(3)}>Node</a>
+                            <a onClick={setValFn(3)}>
+                                {he.translate('query__sort_label_node')}
+                            </a>
                         </td>
                         <td className={props.currentValue === 4 ? 'selected' : null}>
                             <a onClick={setValFn(4)}>1R</a>
