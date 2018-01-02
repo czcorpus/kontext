@@ -136,7 +136,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
     const AlignedQueryInfo = (props) => {
         return (
             <div className="query-line">
-                <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u23F5\u00a0'}</span>
+                <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u25BA\u00a0'}</span>
                 <span className="query">{props.query}</span>
             </div>
         );
@@ -189,7 +189,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
         return (
             <div className="query-info">
                 <div className="query-line">
-                    <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u23F5\u00a0'}</span>
+                    <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u25BA\u00a0'}</span>
                     <span className="query">{props.query}</span>
                 </div>
                 {props.aligned.map(v => <AlignedQueryInfo key={v.corpname}
