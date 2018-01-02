@@ -29,6 +29,27 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
     const mediaViews = initMediaViews(dispatcher, he, lineStore);
     const layoutViews = he.getLayoutViews();
 
+    // ------------------------- <RefValue /> ---------------------------
+
+    const RefValue = (props) => {
+
+        if (props.val.indexOf('http://') === 0 || props.val.indexOf('https://') === 0) {
+            let val, title;
+            if ((props.val.length) > 50) {
+                val = props.val.substr(0, 50) + '\u2026';
+                title = props.val;
+
+            } else {
+                val = props.val;
+                title = '';
+            }
+            return <a className="external" href={props.val} title={title} target="_blank">{val}</a>;
+
+        } else {
+            return <span>{props.val}</span>
+        }
+    };
+
 
     // ------------------------- <RefLine /> ---------------------------
 
@@ -40,7 +61,7 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
 
             if (item[0]) {
                 ans.push(<th key="c1">{item[0].name}</th>);
-                ans.push(<td key="c2" className="data">{item[0].val}</td>);
+                ans.push(<td key="c2" className="data"><RefValue val={item[0].val} /></td>);
 
             } else {
                 ans.push(<th key="c1" />);
@@ -48,7 +69,7 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
             }
             if (item[1]) {
                 ans.push(<th key="c3">{item[1].name}</th>);
-                ans.push(<td key="c4" className="data">{item[1].val}</td>);
+                ans.push(<td key="c4" className="data"><RefValue val={item[1].val} /></td>);
 
             } else {
                 ans.push(<th key="c3" />);
