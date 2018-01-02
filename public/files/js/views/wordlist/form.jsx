@@ -575,7 +575,7 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormSt
                                 <TRWlminfreqInput wlminfreq={this.state.wlminfreq} />
                                 <TRFilterFile label={he.translate('wordlist__whitelist_label')} target="wlwords"
                                             hasValue={this.state.hasWlwords} fileName={this.state.wlFileName} />
-                                <TRFilterFile label="Blacklist" target="blacklist"
+                                <TRFilterFile label={he.translate('wordlist__blacklist_label')} target="blacklist"
                                             hasValue={this.state.hasBlacklist} fileName={this.state.blFileName} />
                                 <TRFileFormatHint />
                                 <TRIncludeNonWordsCheckbox value={this.state.includeNonwords} />
