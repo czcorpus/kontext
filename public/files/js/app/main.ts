@@ -614,7 +614,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      */
     addUiTestingFlag():void {
         if (this.getConf('uiTestingFlag')) {
-            document.querySelector('body').setAttribute('data-kontext-init', '');
+            document.body.setAttribute('data-kontext-init', '');
         }
     }
 
