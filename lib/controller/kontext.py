@@ -1095,12 +1095,6 @@ class Kontext(Controller):
 
         result['uiLang'] = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
 
-        if settings.contains('global', 'intl_polyfill_url'):
-            result['intl_polyfill_url'] = settings.get('global', 'intl_polyfill_url').format(
-                ','.join('Intl.~locale.%s' % x for x in get_avail_languages()))
-        else:
-            result['intl_polyfill_url'] = None
-
         # util functions
         result['format_number'] = partial(format_number)
         result['to_str'] = lambda s: unicode(s) if s is not None else u''
