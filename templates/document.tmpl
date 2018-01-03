@@ -47,13 +47,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <noscript>
     <link rel="stylesheet" type="text/css" href="${files_path}/css/main-menu.css" />
 </noscript>
-
-<script type="text/javascript">
-#if $intl_polyfill_url
-if(!window.Intl)try{var hd=document.getElementsByTagName("head")[0],sc=window.document.createElement("script");sc.type="text/javascript",sc.src="${intl_polyfill_url}",hd.appendChild(sc)}catch(a){console.error(a)}
+#if $ui_testing_flag
+<script src="https://cdn.polyfill.io/v2/polyfill.js?features=Intl.~locale.en,Intl.~locale.cs"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.min.js"></script>
 #end if
-if("undefined"==typeof Map||"undefined"==typeof Set){var script=document.createElement("script");script.src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.min.js",document.head.appendChild(script)}
-</script>
 <!-- plug-ins dependencies -->
 #for $abjs in $app_bar_js
 <script type="text/javascript" src="${abjs}"></script>
