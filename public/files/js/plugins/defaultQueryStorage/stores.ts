@@ -63,8 +63,6 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     private editingQueryName:string;
 
-    private editingQueryKeepArchived:boolean;
-
     constructor(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
@@ -79,7 +77,6 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         this.archivedOnly = false;
         this.editingQueryId = null;
         this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
-        this.editingQueryKeepArchived = true;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -112,7 +109,6 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                     const srch = this.data.find(v => v.query_id === this.editingQueryId);
                     if (srch) {
                         this.editingQueryName = srch.name ? srch.name : '';
-                        this.editingQueryKeepArchived = true;
                     }
                     this.notifyChangeListeners();
                 break;
@@ -125,12 +121,22 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                     this.editingQueryName = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
-                case 'QUERY_STORAGE_EDITOR_SET_KEEP_ARCHIVED':
-                    this.editingQueryKeepArchived = payload.props['value'];
-                    this.notifyChangeListeners();
+                case 'QUERY_STORAGE_DO_NOT_ARCHIVE':
+                    this.saveItem(payload.props['queryId'], null).then(
+                        (msg) => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.pluginApi.showMessage('info', msg);
+                        },
+                        (err) => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                            this.pluginApi.showMessage('error', err);
+                        }
+                    );
                 break;
                 case 'QUERY_STORAGE_EDITOR_CLICK_SAVE':
-                    if (!this.editingQueryName && this.editingQueryKeepArchived) {
+                    if (!this.editingQueryName) {
                         this.pluginApi.showMessage('error',
                             this.pluginApi.translate('query__save_as_cannot_have_empty_name'));
                         this.notifyChangeListeners();
@@ -226,7 +232,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
             const args = new MultiDict();
             args.set('query_id', queryId);
             args.set('name', name);
-            if (this.editingQueryKeepArchived) {
+            if (name) {
                 return this.pluginApi.ajax<any>(
                     'POST',
                     this.pluginApi.createActionUrl('save_query'),
@@ -246,14 +252,13 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         })().then(
             (data) => {
                 this.editingQueryId = null;
-                this.editingQueryKeepArchived = true;
                 this.editingQueryName = null;
                 return this.loadData();
             }
 
         ).then(
             () => {
-                return this.editingQueryKeepArchived ?
+                return name ?
                     this.pluginApi.translate('query__save_as_item_saved') :
                     this.pluginApi.translate('query__save_as_item_removed');
             }
@@ -310,9 +315,5 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     getEditingQueryName():string {
         return this.editingQueryName;
-    }
-
-    getEditingQueryKeepArchived():boolean {
-        return this.editingQueryKeepArchived;
     }
 }
