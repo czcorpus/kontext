@@ -252,7 +252,8 @@ class Actions(Querying):
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # query form data
-        out['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        out['text_types_data'] = get_tt(
+            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         self._attach_query_params(out)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
@@ -718,7 +719,8 @@ class Actions(Querying):
                 self.acknowledge_auto_generated_conc_op(
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
             ans['replicable_query'] = False if self.get_http_method() == 'POST' else True
-            ans['TextTypeSel'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=False)
+            ans['TextTypeSel'] = get_tt(
+                self.corp, self._plugin_api).export_with_norms(ret_nums=False)
         except ConcError as e:
             self.add_system_message('info', e.message)
         ans.update(self.view())
@@ -833,7 +835,7 @@ class Actions(Querying):
         self.args.q.append('r' + self.args.rlines)
         return self.view()
 
-    @exposed(access_level=1, template='view.tmpl', page_model='view', legacy=True)
+    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True)
     def shuffle(self):
         if len(self._lines_groups) > 0:
             self._exceptmethod = 'view'
@@ -1005,7 +1007,8 @@ class Actions(Querying):
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        result['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        result['text_types_data'] = get_tt(
+            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         self._attach_query_params(result)
         return result
 
@@ -1133,7 +1136,8 @@ class Actions(Querying):
             coll_form_args=CollFormArgs().update(self.args).to_dict(),
             ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
         )
-        ans['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        ans['text_types_data'] = get_tt(
+            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         self._attach_query_params(ans)
         return ans
 
@@ -1198,7 +1202,8 @@ class Actions(Querying):
         ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
         ans['save_line_limit'] = 100000
-        ans['text_types_data'] = get_tt(self.corp, self._plugin_api).export_with_norms(ret_nums=True)
+        ans['text_types_data'] = get_tt(
+            self.corp, self._plugin_api).export_with_norms(ret_nums=True)
         return ans
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, template='txtexport/savecoll.tmpl', return_type='plain')
