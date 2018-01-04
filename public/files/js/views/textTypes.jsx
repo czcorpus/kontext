@@ -705,8 +705,8 @@ export function init(dispatcher, he, textTypesStore) {
                 <table className={classes.join(' ')}>
                     <tbody>
                         <tr className="attrib-name">
-                            <th>
-                                {this.props.attrObj.name}
+                            <th title={this.props.attrObj.name !== this.props.attrObj.label ? this.props.attrObj.name : null}>
+                                {this.props.attrObj.label}
                                 {this._renderAttrInfo()}
                             </th>
                         </tr>
