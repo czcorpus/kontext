@@ -203,7 +203,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
 
     const SavedNameInfo = (props) => {
 
-        const handleClick = (evt) => {
+        const handleEditClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'QUERY_STORAGE_SET_EDITING_QUERY_ID',
                 props: {
@@ -212,8 +212,17 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
             });
         };
 
+        const handleDoNotSaveClick = () => {
+            dispatcher.dispatch({
+                actionType: 'QUERY_STORAGE_DO_NOT_ARCHIVE',
+                props: {
+                    queryId: props.queryId
+                }
+            });
+        };
+
         if (props.hasEditor) {
-            return <SaveItemForm name={props.editingQueryName} keepArchived={props.editingQueryKeepArchived} />;
+            return <SaveItemForm name={props.editingQueryName} />;
 
         } else {
             if (props.name) {
@@ -222,14 +231,14 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                         {he.translate('query__save_as_saved_as')}:{'\u00a0'}
                         <span className="saved-name">{props.name}</span>
                         {'\u00a0'}
-                        <a className="util-button" onClick={handleClick}>{he.translate('global__edit')}{'\u2026'}</a>
+                        <a className="util-button" onClick={handleDoNotSaveClick}>{he.translate('query__save_as_transient')}</a>
                     </div>
                 );
 
             } else {
                 return (
                     <div>
-                        <a className="util-button" onClick={handleClick}>
+                        <a className="util-button" onClick={handleEditClick}>
                             {he.translate('query__save_button')}{'\u2026'}
                         </a>
                     </div>
@@ -237,27 +246,6 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
             }
         }
     }
-
-    // -------------------- <ArchiveFlagSelection /> ------------------------
-
-    const ArchiveFlagSelection = (props) => {
-
-        const handleKeepArchivedChange = () => {
-            dispatcher.dispatch({
-                actionType: 'QUERY_STORAGE_EDITOR_SET_KEEP_ARCHIVED',
-                props: {
-                    value: !props.keepArchived
-                }
-            });
-        };
-
-        return (
-            <select value={props.keepArchived} onChange={handleKeepArchivedChange} style={{verticalAlign: 'middle'}}>
-                <option value={true}>{he.translate('query__save_as_keep_archived')}</option>
-                <option value={false}>{he.translate('query__save_as_transient')}</option>
-            </select>
-        );
-    };
 
     // -------------------- <SaveItemForm /> ------------------------
 
@@ -305,16 +293,11 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                     <img src={he.createStaticUrl('img/close-icon.svg')} alt={he.translate('global__close')}
                                 style={{width: '1em', verticalAlign: 'middle'}} />
                 </a>
-                {'\u00a0'}
-                <ArchiveFlagSelection keepArchived={props.keepArchived} />
-                {'\u00a0'}
-                {props.keepArchived ?
-                    <input type="text" style={{width: '15em'}}
-                            value={props.keepArchived ? props.name : ''}
-                            onChange={handleInputChange} disabled={!props.keepArchived}
-                            ref={item => item ? item.focus() : null} /> :
-                    null
-                }
+                {'\u00a0'}{he.translate('query__save_as_keep_archived')}:{'\u00a0'}
+                <input type="text" style={{width: '15em'}}
+                        value={props.name}
+                        onChange={handleInputChange}
+                        ref={item => item ? item.focus() : null} />
                 {'\u00a0'}
                 <button type="button" className="default-button"
                         onClick={handleSubmitClick}>
@@ -368,8 +351,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                     {props.data.query_id ?
                     <SavedNameInfo name={props.data.name} queryId={props.data.query_id}
                             hasEditor={props.hasEditor}
-                            editingQueryName={props.editingQueryName}
-                            editingQueryKeepArchived={props.editingQueryKeepArchived} /> :
+                            editingQueryName={props.editingQueryName} /> :
                             null /* legacy query history record cannot be archived  */
                     }
                 </div>
@@ -436,8 +418,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                         {props.data.map((item, i) => {
                             const hasEditor = item.query_id === props.editingQueryId;
                             return <DataRow key={i + props.offset} data={item} hasEditor={hasEditor}
-                                            editingQueryName={hasEditor ? props.editingQueryName : undefined}
-                                            editingQueryKeepArchived={hasEditor ? props.editingQueryKeepArchived : undefined} />;
+                                            editingQueryName={hasEditor ? props.editingQueryName : undefined} />;
                         })}
                     </ul>
                     <DataTableFooter dataLength={props.data.size} storeIsBusy={props.storeIsBusy}
@@ -466,8 +447,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                 hasMoreItems: queryHistoryStore.getHasMoreItems(),
                 archivedOnly: queryHistoryStore.getArchivedOnly(),
                 editingQueryId: queryHistoryStore.getEditingQueryId(),
-                editingQueryName: queryHistoryStore.getEditingQueryName(),
-                editingQueryKeepArchived: queryHistoryStore.getEditingQueryKeepArchived()
+                editingQueryName: queryHistoryStore.getEditingQueryName()
             };
         }
 
@@ -494,8 +474,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                             storeIsBusy={this.state.storeIsBusy}
                             hasMoreItems={this.state.hasMoreItems}
                             editingQueryId={this.state.editingQueryId}
-                            editingQueryName={this.state.editingQueryName}
-                            editingQueryKeepArchived={this.state.editingQueryKeepArchived} />
+                            editingQueryName={this.state.editingQueryName} />
                 </div>
             );
         }
