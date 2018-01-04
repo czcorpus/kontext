@@ -576,6 +576,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                     evt.keyCode === 40 && !this.state.historyVisible) {
                 this._toggleHistoryWidget();
                 evt.stopPropagation();
+                evt.preventDefault();
 
             } else if (evt.keyCode === 13 && !evt.shiftKey) {
                 this.props.onEnterKey();
