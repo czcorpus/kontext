@@ -66,12 +66,12 @@ export function init(dispatcher, he, queryStorageStore) {
                         query: historyItem.query
                     }
                 });
-                evt.preventDefault();
-                evt.stopPropagation();
 
             } else if (evt.keyCode === 27) { // ESC key
                 this.props.onCloseTrigger();
             }
+            evt.preventDefault();
+            evt.stopPropagation();
         }
 
         _handleClickSelection(itemNum) {
