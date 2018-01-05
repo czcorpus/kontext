@@ -97,15 +97,15 @@ declare module "views/concordance/paginator" {
 
 declare module "views/concordance/main" {
 
-    export interface ConcordanceView {
-        ConcordanceView:React.ComponentClass;
+    export interface ConcordanceViews {
+        ConcordanceDashboard:React.ComponentClass;
     }
 
     export function init(
         dispatcher:Kontext.FluxDispatcher,
         componentHelpers:Kontext.ComponentHelpers,
         stores:any // TODO type
-    ):ConcordanceView;
+    ):ConcordanceViews;
 }
 
 declare module "views/concordance/detail" {

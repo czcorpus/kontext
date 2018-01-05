@@ -1,11 +1,69 @@
 @import "shared.less";
 
-#conc-wrapper {
-    overflow: hidden;
-    border-radius: 9px;
-    margin-bottom: 1em;
-    margin-top: 1em;
-    box-shadow: @portal-box-shadow;
+#conc-dashboard-mount {
+
+    .ConcordanceView,
+    .TextTypesDist {
+        overflow: hidden;
+        border-radius: 9px;
+        margin-bottom: 1em;
+        margin-top: 1em;
+        box-shadow: @portal-box-shadow;
+
+        .contents {
+
+            margin: 1em;
+
+            .loader {
+                text-align: center;
+            }
+        }
+
+        .FreqBar {
+
+            .data {
+                .item {
+                    display: inline-block;
+                    margin: 0;
+                    padding: 0;
+                    height: 1em;
+                }
+            }
+
+            .legend {
+                font-size: 0.9em;
+
+                strong {
+                    margin-right: 0.7em;
+                }
+
+                .item .color-box {
+                    padding-right: 0.2em;
+                }
+
+                .item:not(:last-child) {
+                    padding-right: 0.7em;
+                }
+            }
+        }
+    }
+
+    .TextTypesDist {
+
+        background-color: #FFFFFF;
+
+        h2 {
+            margin: 0;
+            padding: 0.4em 1em;
+            background-color: @color-default-green;
+            font-size: 1.2em;
+        }
+
+        p.note {
+            font-size: 0.8em;
+            text-align: center;
+        }
+    }
 
     .root-loader {
         display: block;
