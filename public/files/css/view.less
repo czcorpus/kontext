@@ -178,17 +178,24 @@ td.maincorp {
 
 /* concordance formating */
 
-.ref a {
-    text-decoration: none;
-    font-size: 0.85em;
-    white-space: nowrap;
-    cursor: pointer;
-    color: #009EE0;
-    font-weight: bold;
-    max-width: 12em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-right: 2em;
+.ref  {
+
+    a {
+        text-decoration: none;
+        font-size: 0.85em;
+        white-space: nowrap;
+        cursor: pointer;
+        color: #009EE0;
+        font-weight: bold;
+        max-width: 12em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-right: 2em;
+
+        .item:not(:last-child)::after {
+            content: " \2726 ";
+        }
+    }
 }
 
 tr.active .ref {
