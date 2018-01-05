@@ -24,6 +24,7 @@ import {init as paginatorViewsInit} from './paginator';
 import {init as linesViewInit} from './lines';
 import {init as concDetailViewsInit} from 'views/concordance/detail';
 import {init as concSaveViewsInit} from 'views/concordance/save';
+import {init as ttOverviewInit} from './ttOverview';
 
 
 export function init(dispatcher, he, stores) {
@@ -44,6 +45,7 @@ export function init(dispatcher, he, stores) {
     const linesViews = linesViewInit(dispatcher, he, lineStore, lineSelectionStore, concDetailStore);
     const concDetailViews = concDetailViewsInit(dispatcher, he, concDetailStore, refsDetailStore, lineStore);
     const concSaveViews = concSaveViewsInit(dispatcher, he, layoutViews, concSaveStore);
+    const ttDistViews = ttOverviewInit(dispatcher, he, stores.ttDistStore);
 
 
     // ------------------------- <LineSelectionMenu /> ---------------------------
@@ -688,7 +690,7 @@ export function init(dispatcher, he, stores) {
 
         render() {
             return (
-                <div>
+                <div className="ConcordanceView">
                     {this.state.syntaxBoxData ?
                         <SyntaxViewPane onCloseClick={this._handleSyntaxBoxClose}
                                 tokenNumber={this.state.syntaxBoxData.tokenNumber}
@@ -741,8 +743,22 @@ export function init(dispatcher, he, stores) {
         }
     }
 
+
+    // ------------------------- <ConcordanceDashboard /> ---------------------------
+
+    const ConcordanceDashboard = (props) => {
+
+        return (
+            <div>
+                {props.hasTTCrit ? <ttDistViews.TextTypesDist /> : null}
+                <ConcordanceView {...props.concViewProps} />
+            </div>
+        );
+    };
+
+
     return {
-        ConcordanceView: ConcordanceView
+        ConcordanceDashboard: ConcordanceDashboard
     };
 
 }

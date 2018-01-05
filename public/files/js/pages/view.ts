@@ -32,7 +32,7 @@ import {PageModel} from '../app/main';
 import {MultiDict, updateProps} from '../util';
 import {parseUrlArgs} from '../app/navigation';
 import * as conclines from '../conclines';
-import {init as concViewsInit, ConcordanceView} from 'views/concordance/main';
+import {init as concViewsInit, ConcordanceViews} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
 import {ConcLineStore, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewStore} from '../stores/concordance/lines';
@@ -59,6 +59,7 @@ import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../app/userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../stores/userStores';
+import {TextTypesDistStore, TextTypesDistStoreProps, TTCrit} from '../stores/concordance/ttDistStore';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
@@ -83,6 +84,7 @@ export class ViewPageStores {
     userInfoStore:Kontext.IUserInfoStore;
     collFormStore:CollFormStore;
     mainMenuStore:Kontext.IMainMenuStore;
+    ttDistStore:TextTypesDistStore;
 }
 
 export class QueryStores {
@@ -123,7 +125,7 @@ export class ViewPage {
 
     private hasLockedGroups:boolean;
 
-    private concViews:ConcordanceView;
+    private concViews:ConcordanceViews;
 
     private analysisViews:AnalysisFrameViews;
 
@@ -267,14 +269,17 @@ export class ViewPage {
         });
     }
 
-    renderLines(props:ViewConfiguration):RSVP.Promise<any> {
+    renderLines(props:ViewConfiguration, hasTTCrit:boolean):RSVP.Promise<any> {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             props.onReady = () => resolve(null);
             try {
                 this.layoutModel.renderReactComponent(
-                    this.concViews.ConcordanceView,
-                    window.document.getElementById('conc-wrapper'),
-                    props
+                    this.concViews.ConcordanceDashboard,
+                    window.document.getElementById('conc-dashboard-mount'),
+                    {
+                        concViewProps: props,
+                        hasTTCrit: hasTTCrit
+                    }
                 );
 
             } catch (e) {
@@ -992,6 +997,14 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.viewStores.lineViewStore
         );
+        this.viewStores.ttDistStore = new TextTypesDistStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.viewStores.lineViewStore,
+            {
+                ttCrit: this.layoutModel.getConf<TTCrit>('TTCrit')
+            }
+        );
         return lineViewProps;
     }
 
@@ -1055,7 +1068,10 @@ export class ViewPage {
 
         const p3 = p2.then(
             (lineViewProps) => {
-                return this.renderLines(lineViewProps);
+                return this.renderLines(
+                    lineViewProps,
+                    this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
+                );
             }
         );
 
