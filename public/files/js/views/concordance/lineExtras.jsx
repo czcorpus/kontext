@@ -24,6 +24,7 @@
  export function init(dispatcher, he, lineStore) {
 
     const mediaViews = initMediaViews(dispatcher, he, lineStore);
+    const layoutViews = he.getLayoutViews();
 
     // ------------------------- <AudioLink /> ---------------------------
 
@@ -172,7 +173,10 @@
         return (
             <a title={he.translate('concview__click_for_details')}
                     onClick={()=>props.refsDetailClickHandler(props.corpusId, props.tokenNumber, props.lineIdx)}>
-                {props.data.map(x => x !== '' ? x : props.emptyRefValPlaceholder).join(', ')}
+                {props.data.map((x, i) => x !== '' ?
+                    <layoutViews.Shortener key={`${i}:${x.substr(0, 5)}`} text={x} limit={50} className="item" /> :
+                    props.emptyRefValPlaceholder)
+                }
             </a>
         );
     };

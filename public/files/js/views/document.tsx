@@ -505,6 +505,15 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
+    const Shortener:React.FuncComponent<CoreViews.Shortener.Props> = (props) => {
+        const limit = props.limit ? props.limit : 50;
+        return <span title={props.text.length > limit ? props.text : null} className={props.className}>
+            {props.text.length > limit ? props.text.substr(0, props.limit) + '\u2026' : props.text}
+        </span>;
+    };
+
+    // ------------------------------------------------------------------------------------
+
     return {
         ModalOverlay: ModalOverlay,
         PopupBox: PopupBox,
@@ -515,6 +524,7 @@ export function init(
         ImgWithMouseover: ImgWithMouseover,
         IssueReportingLink: IssueReportingLink,
         AjaxLoaderImage: AjaxLoaderImage,
-        AjaxLoaderBarImage: AjaxLoaderBarImage
+        AjaxLoaderBarImage: AjaxLoaderBarImage,
+        Shortener:Shortener
     };
 }

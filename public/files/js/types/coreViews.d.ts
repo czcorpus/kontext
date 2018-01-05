@@ -231,6 +231,17 @@ declare namespace CoreViews {
 
     }
 
+    namespace Shortener {
+
+        interface Props {
+            text:string;
+            limit?:number;
+            className?:string;
+        }
+
+        type Component = React.FuncComponent<Props>;
+    }
+
     // -------------------------------
 
     interface Runtime {
@@ -244,6 +255,7 @@ declare namespace CoreViews {
         AjaxLoaderImage:AjaxLoaderImage.Component;
         AjaxLoaderBarImage:AjaxLoaderBarImage.Component;
         CorpnameInfoTrigger:CorpnameInfoTrigger.Component;
+        Shortener:Shortener.Component;
     }
 }
 
