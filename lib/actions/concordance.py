@@ -1868,6 +1868,11 @@ class Actions(Querying):
         attrlist = corpus_get_conf(self.corp, 'ATTRLIST').split(',')
         tmp_out['AttrList'] = [{'label': corpus_get_conf(
             self.corp, n + '.LABEL') or n, 'n': n} for n in attrlist if n]
+
+        tmp_out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
+                                     for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',')
+                                     if n]
+
         sref = corpus_get_conf(self.corp, 'SHORTREF')
         tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 
@@ -1914,6 +1919,7 @@ class Actions(Querying):
             Wposlist=[{'n': x[0], 'v': x[1]} for x in poslist],
             Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
             AttrList=tmp_out['AttrList'],
+            StructAttrList=tmp_out['StructAttrList'],
             InputLanguages=tmp_out['input_languages'],
             ConcFormsArgs=tmp_out['conc_forms_args'],
             CurrentSubcorp=self.args.usesubcorp,
