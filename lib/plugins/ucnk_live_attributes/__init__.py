@@ -70,7 +70,7 @@ def cached(f):
     """
     @wraps(f)
     def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        db = self.db(plugin_api, canonical_corpname(corpus.corpname))
+        db = self.db(plugin_api.user_lang, canonical_corpname(corpus.corpname))
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora,
                                    autocomplete_attr, limit_lists)
