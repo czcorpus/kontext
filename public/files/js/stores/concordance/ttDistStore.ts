@@ -36,41 +36,71 @@ export interface TextTypesDistStoreProps {
     ttCrit:TTCrit;
 }
 
-export interface FreqItem {
-    Word:Array<{n:string}>;
-    fbar:number;
-    freq:number;
-    freqbar:number;
-    nbar:number;
-    nfilter:Array<[string, string]>;
-    norel:number;
-    norm:number;
-    pfilter:Array<[string, string]>;
-    rel:number;
-    relbar:number;
+
+namespace Response {
+
+    interface FreqItem {
+        Word:Array<{n:string}>;
+        fbar:number;
+        freq:number;
+        freqbar:number;
+        nbar:number;
+        nfilter:Array<[string, string]>;
+        norel:number;
+        norm:number;
+        pfilter:Array<[string, string]>;
+        rel:number;
+        relbar:number;
+    }
+
+    interface FreqBlock {
+        Total:number;
+        TotalPages:number;
+        Items:Array<FreqItem>;
+        Head:Array<{s:string; n:string}>;
+    }
+
+    export interface FreqData {
+        FCrit:TTCrit;
+        Blocks:Array<FreqBlock>;
+        paging:number;
+        concsize:number;
+        fmaxitems:number;
+        quick_from_line:number;
+        quick_to_line:number;
+    }
+
+    export interface Reduce extends Kontext.AjaxResponse {
+        sampled_size:number;
+        conc_persistence_op_id:string;
+    }
 }
+
+
+export interface FreqItem {
+    value:string;
+    ipm:number;
+    abs:number;
+    barWidth:number;
+    color:string;
+}
+
 
 export interface FreqBlock {
-    Total:number;
-    TotalPages:number;
-    Items:Array<FreqItem>;
-    Head:Array<{s:string; n:string}>;
+    label:string;
+    items:Array<FreqItem>;
 }
 
-export interface FreqDataResponse {
-    FCrit:TTCrit;
-    Blocks:Array<FreqBlock>;
-    paging:number;
-    concsize:number;
-    fmaxitems:number;
-    quick_from_line:number;
-    quick_to_line:number;
-}
 
 
 export class TextTypesDistStore extends SimplePageStore {
 
     private static SAMPLE_SIZE = 10000;
+
+    private static IPM_BAR_WIDTH = 300;
+
+    private static COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+                             "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
 
     private layoutModel:PageModel;
 
@@ -92,7 +122,7 @@ export class TextTypesDistStore extends SimplePageStore {
         this.concLineStore = concLineStore;
         this.ttCrit = props.ttCrit;
         this.blocks = Immutable.List<FreqBlock>();
-        this.flimit = 100; // TODO
+        this.flimit = 100; // this is always recalculated according to data
         this.isBusy = false;
         this.sampleSize = 0;
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -149,18 +179,18 @@ export class TextTypesDistStore extends SimplePageStore {
                 });
             }
         })().then(
-            (reduceAns) => {  // TODO  types !!!
+            (reduceAns:Response.Reduce) => {
                 const args = this.layoutModel.getConcArgs();
                 this.ttCrit.forEach(v => args.add(v[0], v[1]));
                 this.flimit = this.calcMinFreq();
                 args.set('ml', 0);
                 args.set('flimit', this.flimit);
                 args.set('format', 'json');
-                if (reduceAns['conc_persistence_op_id']) {
-                    this.sampleSize = reduceAns['sampled_size'];
-                    args.set('q', `~${reduceAns['conc_persistence_op_id']}`);
+                if (reduceAns.conc_persistence_op_id) {
+                    this.sampleSize = reduceAns.sampled_size;
+                    args.set('q', `~${reduceAns.conc_persistence_op_id}`);
                 }
-                return this.layoutModel.ajax<FreqDataResponse>(
+                return this.layoutModel.ajax<Response.FreqData>(
                     'GET',
                     this.layoutModel.createActionUrl('freqs'),
                     args
@@ -168,7 +198,21 @@ export class TextTypesDistStore extends SimplePageStore {
             }
         ).then(
             (data) => {
-                this.blocks = Immutable.List<FreqBlock>(data.Blocks);
+                this.blocks = Immutable.List<FreqBlock>(data.Blocks.map(block => {
+                    const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
+                    return {
+                        label: block.Head[0] ? block.Head[0].n : null,
+                        items: block.Items.sort((v1, v2) => v2.rel - v1.rel).map((v, i) => {
+                            return {
+                                value: v.Word.map(v => v.n).join(', '),
+                                ipm: v.rel,
+                                abs: v.freq,
+                                barWidth: ~~Math.round(v.rel / sumRes * TextTypesDistStore.IPM_BAR_WIDTH),
+                                color: TextTypesDistStore.COLORS[i % TextTypesDistStore.COLORS.length]
+                            };
+                        })
+                    };
+                }));
                 return true;
             }
         );
