@@ -97,10 +97,9 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         const handleClick = () => {
             if (window.confirm(
-                    he.translate('concview__close_tt_overview_for_now') + ' ' +
-                    he.translate('concview__close_tt_overview_for_now_hint'))) {
+                    he.translate('concview__close_tt_overview_confirm_msg'))) {
                 dispatcher.dispatch({
-                    actionType: 'CONC_DASHBOARD_SET_TT_OVERVIEW_VISIBILITY',
+                    actionType: 'GENERAL_VIEW_OPTIONS_SET_TT_OVERVIEW_VISIBILITY',
                     props: {
                         value: false
                     }

@@ -458,7 +458,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                 emptyRefValPlaceholder: lineStore.getEmptyRefValPlaceholder(),
                 corporaColumns: lineStore.getCorporaColumns(),
                 viewMode: lineStore.getViewMode(),
-                supportsTokenDetail: concDetailStore.supportsTokenDetail()
+                supportsTokenDetail: concDetailStore.supportsTokenDetail(),
+                showLineNumbers: lineStore.getShowLineNumbers()
             };
         }
 
@@ -502,7 +503,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                          baseCorpname={this.props.baseCorpname}
                          mainCorp={this.props.mainCorp}
                          corpsWithKwic={this.props.KWICCorps}
-                         showLineNumbers={this.props.ShowLineNumbers}
+                         showLineNumbers={this.state.showLineNumbers}
                          lineSelMode={this.state.lineSelMode}
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                          audioPlayerIsVisible={this.state.audioPlayerIsVisible}

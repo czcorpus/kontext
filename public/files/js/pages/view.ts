@@ -963,7 +963,7 @@ export class ViewPage {
                 this.layoutModel.getConf<Array<ServerLineData>>('Lines')
         );
         this.layoutModel.getStores().corpusViewOptionsStore.addOnSave(
-            (_) => this.viewStores.lineViewStore.updateOnViewOptsChange());
+            (_) => this.viewStores.lineViewStore.updateOnCorpViewOptsChange());
         this.layoutModel.getStores().corpusViewOptionsStore.addOnSave(
             (data) => this.viewStores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
         this.viewStores.lineSelectionStore = new LineSelectionStore(
@@ -1001,9 +1001,10 @@ export class ViewPage {
         this.viewStores.dashboardStore = new ConcDashboard(
             this.layoutModel.dispatcher,
             this.layoutModel,
+            this.layoutModel.getStores().generalViewOptionsStore,
             {
-                showTTOverview: !!this.layoutModel.getConf<number>('ShowTTOverview') &&
-                    this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
+                showTTOverview: !!this.layoutModel.getConf<number>('ShowTTOverview'),
+                hasTTCrit: this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
             }
         );
         this.viewStores.ttDistStore = new TextTypesDistStore(
@@ -1028,6 +1029,12 @@ export class ViewPage {
     init():void {
         const ttProm = this.layoutModel.init().then(
             () => {
+                this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(
+                    (optsStore) => {
+                        this.viewStores.lineViewStore.updateOnGlobalViewOptsChange(optsStore);
+                        this.viewStores.dashboardStore.updateOnGlobalViewOptsChange(optsStore);
+                    }
+                );
                 return this.initTextTypesStore();
             }
         );
