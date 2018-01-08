@@ -136,7 +136,34 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                 </td>
             </tr>
         );
-    }
+    };
+
+    // ------------ <TRShowTextTypesOverview /> ----------------------------
+
+    const TRShowTextTypesOverview = (props) => {
+
+        const handleCheckbox = () => {
+            dispatcher.dispatch({
+                actionType: 'GENERAL_VIEW_OPTIONS_SET_SHOW_TT_OVERVIEW',
+                props: {
+                    value: !props.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    <label htmlFor="show-tt-overview">
+                        {helpers.translate('options__conc_show_tt_overview')}:
+                    </label>
+                </th>
+                <td>
+                    <input id="show-tt-overview" type="checkbox" onChange={handleCheckbox} checked={props.value} />
+                </td>
+            </tr>
+        );
+    };
 
     // ------------- <FieldsetConcordance /> ---------------------
 
@@ -152,6 +179,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                         <TRKwicContextSize value={props.newCtxSize} />
                         <TRShowLineNumbersCheckbox value={props.lineNumbers} />
                         <TRAlwaysShuffleCheckbox value={props.shuffle} />
+                        <TRShowTextTypesOverview value={props.showTTOverview} />
                     </tbody>
                 </table>
             </fieldset>
@@ -332,6 +360,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                 wlPageSize: generalOptionsStore.getWlPageSize(),
                 fmaxItems: generalOptionsStore.getFmaxItems(),
                 citemsPerPage: generalOptionsStore.getCitemsPerPage(),
+                showTTOverview: generalOptionsStore.getShowTTOverview(),
                 storeIsBusy: generalOptionsStore.getIsBusy()
             };
         }
@@ -358,7 +387,8 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                         <FieldsetConcordance pageSize={this.state.pageSize}
                                 newCtxSize={this.state.newCtxSize}
                                 lineNumbers={this.state.lineNumbers}
-                                shuffle={this.state.shuffle} />
+                                shuffle={this.state.shuffle}
+                                showTTOverview={this.state.showTTOverview} />
                         <FieldsetWordlist wlPageSize={this.state.wlPageSize}  />
                         <FieldsetFreqDistrib fmaxItems={this.state.fmaxItems} />
                         <FieldsetColl citemsPerPage={this.state.citemsPerPage} />

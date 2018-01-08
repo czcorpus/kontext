@@ -242,6 +242,7 @@ class GlobalArgs(object):
     wlsendmail = Parameter(u'')
     cup_hl = Parameter(u'q', persistent=Parameter.PERSISTENT)
     structattrs = Parameter([], persistent=Parameter.PERSISTENT)
+    tt_overview = Parameter(0, persistent=Parameter.PERSISTENT)
 
     flimit = Parameter(1)
     freqlevel = Parameter(1)

@@ -271,7 +271,7 @@ def calculate_freqs(args):
     calculate_freqs.cache_path = args.cache_path
     ans = freq_calc.calc_freqs_bg(args)
     trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
-    if max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
+    if args.force_cache or max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
         calculate_freqs.cache_data = ans
     else:
         calculate_freqs.cache_data = None

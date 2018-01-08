@@ -242,7 +242,11 @@ class PyConc(manatee.Concordance):
         normwidth_freq = 100
         normwidth_rel = 100
 
-        def compute_corrections(freqs, norms):
+        def calc_scale(freqs, norms):
+            """
+            Create proper scaling coefficients for freqs and norms
+            to match a 100 units length bar.
+            """
             from operator import add
             sumn = float(reduce(add, norms))
             if sumn == 0:
@@ -276,7 +280,7 @@ class PyConc(manatee.Concordance):
                 for x in range(0, len(attrs), 2)]
         head.append(dict(n=_('Freq'), s='freq', title=_('Frequency')))
 
-        tofbar, tonbar = compute_corrections(freqs, norms)
+        tofbar, tonbar = calc_scale(freqs, norms)
         if tonbar and not ml:
             maxf = max(freqs)  # because of bar height
             minf = min(freqs)

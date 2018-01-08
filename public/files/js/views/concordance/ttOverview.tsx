@@ -48,24 +48,26 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     const layoutViews = he.getLayoutViews();
 
-    const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-                    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
-
     const FreqBar = (props:{items:Array<FreqItem>, label:string}) => {
+
+        const mkTitle = (v:FreqItem) => he.translate('concview__abs_ipm_bar_title_{abs}{ipm}', {abs: v.abs, ipm: v.ipm});
+
         return (
             <div className="FreqBar">
                 <div className="legend">
                     <strong>{props.label}:</strong>
                     {props.items.map((item, i) =>
-                        <span key={`${i}:${item.fbar}`} className="item">
-                            <span className="color-box" style={{color: colors[i]}}>{'\u25A0'}</span>
-                            {item.Word[0].n ? item.Word[0].n : '\u2014'}
+                        <span key={`${i}:${item.value}`} className="item" title={mkTitle(item)}>
+                            <span className="color-box" style={{color: item.color}}>{'\u25A0'}</span>
+                            {item.value ? item.value : '\u2014'}
                         </span>)
                     }
                 </div>
                 <div className="data">
                     {props.items.map((item, i) =>
-                                <div key={`${i}:${item.fbar}`} className="item" style={{backgroundColor: colors[i], width: `${item.fbar}px`}}></div>)}
+                                <div key={`${i}:${item.value}`} className="item"
+                                        style={{backgroundColor: item.color, width: `${item.barWidth}px`}}
+                                        title={`${item.value}, ${mkTitle(item)}`}></div>)}
                 </div>
             </div>
         );
@@ -77,7 +79,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
     const FreqsView = (props:{blocks:Immutable.List<FreqBlock>, minFreq:number, sampleSize:number}) => {
         return (
             <div>
-                {props.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.Items} label={item.Head[0].n} />)}
+                {props.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
                 <p className="note">
                     {he.translate('concview__using_min_freq_{value}', {value: props.minFreq})}.
                     {props.sampleSize > 0 ?
@@ -86,6 +88,29 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                 </p>
             </div>
         );
+    };
+
+    /**
+     *
+     */
+    const CloseIcon = (props) => {
+
+        const handleClick = () => {
+            if (window.confirm(
+                    he.translate('concview__close_tt_overview_for_now') + ' ' +
+                    he.translate('concview__close_tt_overview_for_now_hint'))) {
+                dispatcher.dispatch({
+                    actionType: 'CONC_DASHBOARD_SET_TT_OVERVIEW_VISIBILITY',
+                    props: {
+                        value: false
+                    }
+                });
+            }
+        };
+
+        return <a className="CloseIcon" onClick={handleClick} title={he.translate('global__close')}>
+            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')} />
+        </a>;
     };
 
     /**
@@ -128,6 +153,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         render() {
             return (
                 <div className="TextTypesDist">
+                    <CloseIcon />
                     <h2>{he.translate('concview__text_types_ratios_head')}</h2>
                     <div className="contents">
                         {this.state.isBusy ?

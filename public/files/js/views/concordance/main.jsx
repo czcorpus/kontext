@@ -39,6 +39,7 @@ export function init(dispatcher, he, stores) {
     const userInfoStore = stores.userInfoStore;
     const mainMenuStore = stores.mainMenuStore;
     const syntaxViewStore = lineStore.getSyntaxViewStore();
+    const dashboardStore = stores.dashboardStore;
 
     const lineSelViews = lineSelViewsInit(dispatcher, he, lineSelectionStore, userInfoStore);
     const paginationViews = paginatorViewsInit(dispatcher, he, lineStore);
@@ -746,14 +747,40 @@ export function init(dispatcher, he, stores) {
 
     // ------------------------- <ConcordanceDashboard /> ---------------------------
 
-    const ConcordanceDashboard = (props) => {
+    class ConcordanceDashboard extends React.Component {
 
-        return (
-            <div>
-                {props.hasTTCrit ? <ttDistViews.TextTypesDist /> : null}
-                <ConcordanceView {...props.concViewProps} />
-            </div>
-        );
+        constructor(props) {
+            super(props);
+            this.state = this._fetchStoreState();
+            this._storeChangeListener = this._storeChangeListener.bind(this);
+        }
+
+        _storeChangeListener() {
+            this.setState(this._fetchStoreState());
+        }
+
+        _fetchStoreState() {
+            return {
+                showTTOverview: dashboardStore.getShowTTOverview()
+            };
+        }
+
+        componentDidMount() {
+            dashboardStore.addChangeListener(this._storeChangeListener);
+        }
+
+        componentWillUnmount() {
+            dashboardStore.removeChangeListener(this._storeChangeListener);
+        }
+
+        render() {
+            return (
+                <div>
+                    {this.state.showTTOverview ? <ttDistViews.TextTypesDist /> : null}
+                    <ConcordanceView {...this.props.concViewProps} />
+                </div>
+            );
+        }
     };
 
 

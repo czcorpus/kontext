@@ -197,7 +197,8 @@ class Kontext(Controller):
                            MainMenu.CORPORA('create-subcorpus'))
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
-                       'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers')
+                       'shuffle', 'citemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
+                       'tt_overview')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 

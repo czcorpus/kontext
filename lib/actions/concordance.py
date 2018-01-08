@@ -845,7 +845,7 @@ class Actions(Querying):
         return self.view()
 
     @exposed(access_level=1, legacy=True, page_model='freq')
-    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0):
+    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, line_offset=0, force_cache=0):
         """
         display a frequency list
         """
@@ -896,6 +896,7 @@ class Actions(Querying):
         args.fmaxitems = self.args.fmaxitems
         args.fpage = self.args.fpage
         args.line_offset = line_offset
+        args.force_cache = True if force_cache else False
 
         calc_result = freq_calc.calculate_freqs(args)
         result.update(
