@@ -750,7 +750,7 @@ export function init(dispatcher, he, stores) {
 
         return (
             <div>
-                {props.hasTTCrit ? <ttDistViews.TextTypesDist /> : null}
+                {props.showTTOverview ? <ttDistViews.TextTypesDist /> : null}
                 <ConcordanceView {...props.concViewProps} />
             </div>
         );

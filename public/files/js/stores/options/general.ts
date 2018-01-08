@@ -37,6 +37,7 @@ interface ViewOptsResponse extends Kontext.AjaxResponse {
     wlpagesize:number;
     fmaxitems:number;
     citemsperpage:number;
+    tt_overview:number;
 }
 
 
@@ -55,6 +56,8 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
     private lineNumbers:string;
 
     private shuffle:boolean;
+
+    private showTTOverview:boolean;
 
     // --- word list opts
 
@@ -94,6 +97,10 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE':
                     this.shuffle = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'GENERAL_VIEW_OPTIONS_SET_SHOW_TT_OVERVIEW':
+                    this.showTTOverview = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE':
@@ -145,6 +152,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                 this.wlpagesize = String(data.wlpagesize);
                 this.fmaxitems = String(data.fmaxitems);
                 this.citemsperpage = String(data.citemsperpage);
+                this.showTTOverview = !!data.tt_overview;
                 return true;
             }
         );
@@ -160,6 +168,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         args.set('wlpagesize', this.wlpagesize);
         args.set('fmaxitems', this.fmaxitems);
         args.set('citemsperpage', this.citemsperpage);
+        args.set('tt_overview', this.showTTOverview ? '1' : '0');
         return this.layoutModel.ajax<Kontext.AjaxResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewoptsx'),
@@ -197,5 +206,9 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     getIsBusy():boolean {
         return this.isBusy;
+    }
+
+    getShowTTOverview():boolean {
+        return this.showTTOverview;
     }
 }

@@ -313,7 +313,7 @@ export class ConcLineStore extends SimplePageStore {
 
     private supportsSyntaxView:boolean;
 
-    private ttStore:TextTypes.ITextTypesStore
+    private ttStore:TextTypes.ITextTypesStore;
 
 
     constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,

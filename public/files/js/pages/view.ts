@@ -269,7 +269,7 @@ export class ViewPage {
         });
     }
 
-    renderLines(props:ViewConfiguration, hasTTCrit:boolean):RSVP.Promise<any> {
+    renderLines(props:ViewConfiguration, showTTOverview:boolean):RSVP.Promise<any> {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             props.onReady = () => resolve(null);
             try {
@@ -278,7 +278,7 @@ export class ViewPage {
                     window.document.getElementById('conc-dashboard-mount'),
                     {
                         concViewProps: props,
-                        hasTTCrit: hasTTCrit
+                        showTTOverview: showTTOverview,
                     }
                 );
 
@@ -1068,9 +1068,11 @@ export class ViewPage {
 
         const p3 = p2.then(
             (lineViewProps) => {
+                const showTTOverview = !!this.layoutModel.getConf<number>('ShowTTOverview') &&
+                        this.layoutModel.getConf<TTCrit>('TTCrit').length > 0;
                 return this.renderLines(
                     lineViewProps,
-                    this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
+                    showTTOverview
                 );
             }
         );
