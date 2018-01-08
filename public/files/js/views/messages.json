@@ -960,7 +960,7 @@
         "concview__display_whole_document": "Zobrazit celý dokument",
         "concview__click_to_see_external_token_info": "Klikněte pro zobrazení dalších informací o slovu.",
         "concview__text_types_ratios_head": "Výskyty v textech (i.p.m.)",
-        "concview__using_min_freq_{value}": "Zobrazuji položky s alespoň {value, plural, one{# výskytem} few{# výskyty}}",
+        "concview__using_min_freq_{value}": "Zobrazuji položky s alespoň {value, plural, one{# výskytem} other{# výskyty}}",
         "concview__using_sample_{value}": "Vzhledem k velikosti konkordance je přehled vytvořen na náhodném vzorku o velikosti {value}",
         "concview__abs_ipm_bar_title_{abs}{ipm}": "abs. frekv.: {abs}, i.p.m.: {ipm}",
         "concview__close_tt_overview_confirm_msg": "Zavřít přehled. Zpět ho lze obnovit v menu Zobrazení \u2192 Obecné volby zobrazení.",
