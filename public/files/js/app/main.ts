@@ -652,9 +652,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 this.generalViewOptionsStore = new GeneralViewOptionsStore(
                     this.dispatcher,
                     this,
-                    () => {
-                        this.mainMenuStore.resetActiveItemAndNotify();
-                    }
+                );
+                this.generalViewOptionsStore.addOnSubmitResponseHandler(
+                    ()=>this.mainMenuStore.resetActiveItemAndNotify()
                 );
 
                 this.layoutViews = documentViewsFactory(

@@ -671,7 +671,16 @@ declare module ViewOptions {
     }
 
     export interface IGeneralViewOptionsStore extends Kontext.PageStore {
-        // TODO
+        getPageSize():string;
+        getNewCtxSize():string;
+        getLineNumbers():boolean;
+        getShuffle():boolean;
+        getWlPageSize():string;
+        getFmaxItems():string;
+        getCitemsPerPage():string;
+        getIsBusy():boolean;
+        getShowTTOverview():boolean;
+        addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsStore)=>void):void;
     }
 
 }

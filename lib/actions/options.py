@@ -148,3 +148,8 @@ class Options(Kontext):
                                tt_overview=tt_overview)
         self._save_options(self.GENERAL_OPTIONS)
         return {}
+
+    @exposed(access_level=1, return_type='json', http_method='POST')
+    def set_tt_overview(self, request):
+        self._save_options(('tt_overview',))
+        return {}

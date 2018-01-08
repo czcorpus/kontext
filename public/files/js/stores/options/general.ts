@@ -53,7 +53,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     private ctxUnit:string;
 
-    private lineNumbers:string;
+    private lineNumbers:boolean;
 
     private shuffle:boolean;
 
@@ -73,12 +73,12 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     private isBusy:boolean;
 
-    private onSubmitResponse:()=>void;
+    private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsStore)=>void>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, onSubmitResponse:()=>void) {
+    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.onSubmitResponse = onSubmitResponse;
+        this.submitResponseHandlers = Immutable.List<()=>void>();
         this.isBusy = false;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -115,6 +115,19 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                     this.citemsperpage = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
+                case 'GENERAL_VIEW_OPTIONS_SET_TT_OVERVIEW_VISIBILITY':
+                    this.showTTOverview = payload.props['value'];
+                    this.submitTTOverview().then(
+                        (_) => {
+                            this.notifyChangeListeners();
+                            this.submitResponseHandlers.forEach(fn => fn(this));
+                        },
+                        (err) => {
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                        }
+                    );
+                break;
                 case 'GENERAL_VIEW_OPTIONS_SUBMIT':
                     this.isBusy = true;
                     this.notifyChangeListeners();
@@ -122,7 +135,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                         () => {
                             this.isBusy = false;
                             this.notifyChangeListeners();
-                            this.onSubmitResponse();
+                            this.submitResponseHandlers.forEach(fn => fn(this));
                         },
                         (err) => {
                             this.isBusy = false;
@@ -136,6 +149,18 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         });
     }
 
+    private submitTTOverview():RSVP.Promise<Kontext.AjaxResponse> {
+        return this.layoutModel.ajax<Kontext.AjaxResponse>(
+            'POST',
+            this.layoutModel.createActionUrl('options/set_tt_overview'),
+            {tt_overview: this.showTTOverview ? '1' : '0'}
+        );
+    }
+
+    addOnSubmitResponseHandler(fn:(store:ViewOptions.IGeneralViewOptionsStore)=>void):void {
+        this.submitResponseHandlers = this.submitResponseHandlers.push(fn);
+    }
+
     loadData():RSVP.Promise<boolean> {
         return this.layoutModel.ajax<ViewOptsResponse>(
             'GET',
@@ -147,7 +172,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                 this.pageSize = String(data.pagesize);
                 this.newCtxSize = String(data.newctxsize);
                 this.ctxUnit = data.ctxunit;
-                this.lineNumbers = String(data.line_numbers);
+                this.lineNumbers = !!data.line_numbers;
                 this.shuffle = !!data.shuffle;
                 this.wlpagesize = String(data.wlpagesize);
                 this.fmaxitems = String(data.fmaxitems);
@@ -173,7 +198,13 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
             'POST',
             this.layoutModel.createActionUrl('options/viewoptsx'),
             args
-        );
+
+        ).then(
+            (d) => {
+                this.layoutModel.replaceConcArg('pagesize', [this.pageSize]);
+                return d;
+            }
+        )
     }
 
     getPageSize():string {
@@ -184,7 +215,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         return this.newCtxSize;
     }
 
-    getLineNumbers():string {
+    getLineNumbers():boolean {
         return this.lineNumbers;
     }
 

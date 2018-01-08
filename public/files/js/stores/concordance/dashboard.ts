@@ -20,12 +20,14 @@
 
 /// <reference path="../../types/common.d.ts" />
 
+
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
 
 
 export interface ConcDashboardProps {
     showTTOverview:boolean;
+    hasTTCrit:boolean;
 }
 
 
@@ -35,22 +37,24 @@ export class ConcDashboard extends SimplePageStore {
 
     private showTTOverview:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, props:ConcDashboardProps) {
+    private globalOpts:ViewOptions.IGeneralViewOptionsStore;
+
+    private hasTTCrit:boolean;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+                globalOpts:ViewOptions.IGeneralViewOptionsStore, props:ConcDashboardProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.showTTOverview = props.showTTOverview;
+        this.hasTTCrit = props.hasTTCrit;
+    }
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
-            switch (payload.actionType) {
-                case 'CONC_DASHBOARD_SET_TT_OVERVIEW_VISIBILITY':
-                    this.showTTOverview = payload.props['value'];
-                    this.notifyChangeListeners();
-                break;
-            }
-        });
+    updateOnGlobalViewOptsChange(store:ViewOptions.IGeneralViewOptionsStore):void {
+        this.showTTOverview = store.getShowTTOverview();
+        this.notifyChangeListeners();
     }
 
     getShowTTOverview():boolean {
-        return this.showTTOverview;
+        return this.showTTOverview && this.hasTTCrit;
     }
 }
