@@ -1153,6 +1153,9 @@ class Kontext(Controller):
         result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
         result['help_links'] = settings.get_help_links(self.ui_lang)
         result['ui_testing_flag'] = settings.get_bool('global', 'ui_testing_flag', '0')
+        result['use_phantom_polyfills'] = 'phantomjs' in self._request.environ.get(
+            'HTTP_USER_AGENT').lower()
+
         return result
 
     @staticmethod
