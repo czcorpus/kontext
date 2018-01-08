@@ -93,6 +93,29 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
     /**
      *
      */
+    const CloseIcon = (props) => {
+
+        const handleClick = () => {
+            if (window.confirm(
+                    he.translate('concview__close_tt_overview_for_now') + ' ' +
+                    he.translate('concview__close_tt_overview_for_now_hint'))) {
+                dispatcher.dispatch({
+                    actionType: 'CONC_DASHBOARD_SET_TT_OVERVIEW_VISIBILITY',
+                    props: {
+                        value: false
+                    }
+                });
+            }
+        };
+
+        return <a className="CloseIcon" onClick={handleClick} title={he.translate('global__close')}>
+            <layoutViews.ImgWithMouseover src={he.createStaticUrl('img/close-icon.svg')} />
+        </a>;
+    };
+
+    /**
+     *
+     */
     class TextTypesDist extends React.Component<TextTypesProps, TextTypesState> {
 
         constructor(props:TextTypesProps) {
@@ -130,6 +153,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         render() {
             return (
                 <div className="TextTypesDist">
+                    <CloseIcon />
                     <h2>{he.translate('concview__text_types_ratios_head')}</h2>
                     <div className="contents">
                         {this.state.isBusy ?

@@ -97,7 +97,7 @@ export class TextTypesDistStore extends SimplePageStore {
 
     private static SAMPLE_SIZE = 10000;
 
-    private static IPM_BAR_WIDTH = 300;
+    private static IPM_BAR_WIDTH = 400;
 
     private static COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
                              "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
@@ -185,6 +185,7 @@ export class TextTypesDistStore extends SimplePageStore {
                 this.flimit = this.calcMinFreq();
                 args.set('ml', 0);
                 args.set('flimit', this.flimit);
+                args.set('force_cache', '1');
                 args.set('format', 'json');
                 if (reduceAns.conc_persistence_op_id) {
                     this.sampleSize = reduceAns.sampled_size;

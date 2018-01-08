@@ -65,6 +65,7 @@ class FreqCalsArgs(FixedDict):
     fmaxitems = None  # default ??
     line_offset = None  # ??
     cache_path = None
+    force_cache = False
 
 
 def corp_freqs_cache_path(corp, attrname):

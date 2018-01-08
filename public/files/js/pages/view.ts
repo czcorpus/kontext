@@ -53,6 +53,7 @@ import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
 import {CTFreqFormStore, CTFormInputs, CTFormProperties} from '../stores/freqs/ctFreqForm';
 import {ConcSaveStore} from '../stores/concordance/save';
+import {ConcDashboard} from '../stores/concordance/dashboard';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
@@ -85,6 +86,7 @@ export class ViewPageStores {
     collFormStore:CollFormStore;
     mainMenuStore:Kontext.IMainMenuStore;
     ttDistStore:TextTypesDistStore;
+    dashboardStore:ConcDashboard;
 }
 
 export class QueryStores {
@@ -269,7 +271,7 @@ export class ViewPage {
         });
     }
 
-    renderLines(props:ViewConfiguration, showTTOverview:boolean):RSVP.Promise<any> {
+    renderLines(props:ViewConfiguration):RSVP.Promise<any> {
         let ans = new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             props.onReady = () => resolve(null);
             try {
@@ -277,8 +279,7 @@ export class ViewPage {
                     this.concViews.ConcordanceDashboard,
                     window.document.getElementById('conc-dashboard-mount'),
                     {
-                        concViewProps: props,
-                        showTTOverview: showTTOverview,
+                        concViewProps: props
                     }
                 );
 
@@ -997,6 +998,14 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.viewStores.lineViewStore
         );
+        this.viewStores.dashboardStore = new ConcDashboard(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                showTTOverview: !!this.layoutModel.getConf<number>('ShowTTOverview') &&
+                    this.layoutModel.getConf<TTCrit>('TTCrit').length > 0
+            }
+        );
         this.viewStores.ttDistStore = new TextTypesDistStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
@@ -1068,11 +1077,8 @@ export class ViewPage {
 
         const p3 = p2.then(
             (lineViewProps) => {
-                const showTTOverview = !!this.layoutModel.getConf<number>('ShowTTOverview') &&
-                        this.layoutModel.getConf<TTCrit>('TTCrit').length > 0;
                 return this.renderLines(
-                    lineViewProps,
-                    showTTOverview
+                    lineViewProps
                 );
             }
         );
