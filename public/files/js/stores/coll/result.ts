@@ -23,7 +23,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore, validateGzNumber, validateNumber} from '../../stores/base';
+import {SimplePageStore, validateGzNumber} from '../../stores/base';
 import {PageModel} from '../../app/main';
 import {CollFormStore} from '../../stores/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
@@ -114,36 +114,10 @@ export class CollResultsSaveStore extends SimplePageStore {
                 case 'COLL_SAVE_FORM_SET_FROM_LINE':
                     this.fromLine = payload.props['value'];
                     this.notifyChangeListeners();
-                    this.throttleAction('validate-from-line', () => {
-                        if (!validateGzNumber(this.toLine)) {
-                            this.toLine = '';
-                        }
-                        if (!this.validateFromVal()) {
-                            this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('coll__save_form_from_val_err_msg'));
-                        }
-                        this.notifyChangeListeners();
-                    });
                 break;
                 case 'COLL_SAVE_FORM_SET_TO_LINE':
                     this.toLine = payload.props['value'];
                     this.notifyChangeListeners();
-                    this.throttleAction('validate-to-line', () => {
-                        if (!validateGzNumber(this.fromLine)) {
-                            this.fromLine = '1';
-                        }
-                        if (!this.validateToVal()) {
-                            this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('coll__save_form_to_val_err_msg_{value1}{value2}',
-                                    {
-                                        value1: this.layoutModel.formatNumber(parseInt(this.fromLine || '1', 10) + 1),
-                                        value2: this.layoutModel.formatNumber(CollResultsSaveStore.GLOBAL_SAVE_LINE_LIMIT)
-                                    }
-                                )
-                            );
-                        }
-                        this.notifyChangeListeners();
-                    });
                 break;
                 case 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS':
                     this.includeColHeaders = payload.props['value'];
@@ -154,28 +128,39 @@ export class CollResultsSaveStore extends SimplePageStore {
                     this.notifyChangeListeners();
                 break;
                 case 'COLL_SAVE_FORM_SUBMIT':
-                    if (this.validateFromVal() && this.validateToVal()) {
-                        this.submit();
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                            this.layoutModel.translate('global__the_form_contains_errors_msg'));
+                    const err0 = this.validateNumberFormat(this.fromLine, false) ||
+                            this.validateNumberFormat(this.toLine, true);
+                    if (err0) {
+                        this.layoutModel.showMessage('error', err0);
+                        break;
                     }
+                    const err1 = this.validateFromToVals();
+                    if (err1) {
+                        this.layoutModel.showMessage('error', err1);
+                        break;
+                    }
+                    this.submit();
                     this.notifyChangeListeners();
                 break;
             }
         });
     }
 
-    private validateFromVal() {
-        return validateNumber(this.fromLine) &&
-                (this.toLine === '' || parseInt(this.fromLine, 10) < parseInt(this.toLine, 10)) &&
-                parseInt(this.fromLine, 10) > 0;
+    private validateNumberFormat(v:string, allowEmpty:boolean):Error {
+        if (!isNaN(parseInt(v, 10)) || allowEmpty && v === '') {
+            return null;
+        }
+        return Error(this.layoutModel.translate('global__invalid_number_format'));
     }
 
-    private validateToVal() {
-        return validateNumber(this.toLine) && parseInt(this.toLine, 10) <= CollResultsSaveStore.GLOBAL_SAVE_LINE_LIMIT
-                && parseInt(this.toLine, 10) > parseInt(this.fromLine, 10);
+    private validateFromToVals():Error {
+        const v1 = parseInt(this.fromLine, 10);
+        const v2 = parseInt(this.toLine, 10);
+
+        if (v1 >= 1 && (v1 < v2 || this.toLine === '')) {
+            return null;
+        }
+        return Error(this.layoutModel.translate('coll__save_form_from_val_err_msg'));
     }
 
     private submit():void {

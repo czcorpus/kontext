@@ -22,7 +22,7 @@
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore, validateGzNumber, validateNumber} from '../../stores/base';
+import {SimplePageStore} from '../../stores/base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 import {ContingencyTableStore} from './ctable';
@@ -91,31 +91,10 @@ export class FreqResultsSaveStore extends SimplePageStore {
                 case 'FREQ_SAVE_FORM_SET_FROM_LINE':
                     this.fromLine = payload.props['value'];
                     this.notifyChangeListeners();
-                    this.throttleAction('from-line-validate', () => {
-                        if (!validateGzNumber(this.toLine)) {
-                            this.toLine = '';
-                        }
-                        if (!this.validateFromLine()) {
-                            this.layoutModel.showMessage('error',
-                                    this.layoutModel.translate('freq__save_form_from_value_err_msg'));
-                        }
-                        this.notifyChangeListeners();
-                    });
                 break;
                 case 'FREQ_SAVE_FORM_SET_TO_LINE':
                     this.toLine = payload.props['value'];
                     this.notifyChangeListeners();
-                    this.throttleAction('to-line-validate', () => {
-                        if (!validateGzNumber(this.fromLine)) {
-                            this.fromLine = '1';
-                        }
-                        if (!this.validateToLine()) {
-                            this.layoutModel.showMessage('error',
-                                    this.layoutModel.translate('freq__save_form_to_value_err_msg_{value}',
-                                            {value: this.fromLine}));
-                        }
-                        this.notifyChangeListeners();
-                    });
                 break;
                 case 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING':
                     this.includeHeading = payload.props['value'];
@@ -126,26 +105,39 @@ export class FreqResultsSaveStore extends SimplePageStore {
                     this.notifyChangeListeners();
                 break;
                 case 'FREQ_SAVE_FORM_SUBMIT':
-                    if (this.validateFromLine() && this.validateToLine()) {
-                        this.submit();
-
-                    } else {
-                        this.layoutModel.showMessage('error',
-                                this.layoutModel.translate('global__the_form_contains_errors_msg'));
+                    const err0 = this.validateNumberFormat(this.fromLine, false) ||
+                            this.validateNumberFormat(this.toLine, true);
+                    if (err0) {
+                        this.layoutModel.showMessage('error', err0);
+                        break;
                     }
+                    const err1 = this.validateFromToLines();
+                    if (err1) {
+                        this.layoutModel.showMessage('error', err1);
+                        break;
+                    }
+                    this.submit();
                     this.notifyChangeListeners();
                 break;
             }
         });
     }
 
-    private validateFromLine():boolean {
-        return validateGzNumber(this.fromLine) &&
-                (this.toLine === '' || parseInt(this.fromLine, 10) < parseInt(this.toLine, 10));
+    private validateNumberFormat(v:string, allowEmpty:boolean):Error {
+        if (!isNaN(parseInt(v, 10)) || allowEmpty && v === '') {
+            return null;
+        }
+        return Error(this.layoutModel.translate('global__invalid_number_format'));
     }
 
-    private validateToLine():boolean {
-        return validateGzNumber(this.toLine) && parseInt(this.toLine, 10) > parseInt(this.fromLine, 10);
+    private validateFromToLines():Error {
+        const v1 = parseInt(this.fromLine, 10);
+        const v2 = parseInt(this.toLine, 10);
+
+        if (v1 >= 1 && (v1 < v2 || this.toLine === '')) {
+            return null;
+        }
+        return Error(this.layoutModel.translate('freq__save_form_from_value_err_msg'));
     }
 
     private submit():void {
