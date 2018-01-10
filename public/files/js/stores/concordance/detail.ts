@@ -341,6 +341,39 @@ export class ConcDetailStore extends SimplePageStore {
                         }
                     );
                 break;
+                case 'CONCORDANCE_DETAIL_SWITCH_MODE':
+                    (() => {
+                        if (payload.props['value'] === 'default') {
+                            this.mode = 'default';
+                            this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                            this.expandRightArgs = Immutable.List<ExpandArgs>();
+                            this.expaningSide = null;
+                            this.isBusy = true;
+                            this.notifyChangeListeners();
+                            return this.reloadConcDetail();
+
+                        } else if (payload.props['value'] === 'speech') {
+                            this.mode = 'speech';
+                            this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                            this.expandRightArgs = Immutable.List<ExpandArgs>();
+                            this.speakerColorsAttachments = this.speakerColorsAttachments.clear();
+                            this.expaningSide = null;
+                            this.isBusy = true;
+                            this.notifyChangeListeners();
+                            return this.reloadSpeechDetail();
+                        }
+                    })().then(
+                        () => {
+                            this.isBusy = false;
+                            this.notifyChangeListeners();
+                        },
+                        (err) => {
+                            this.isBusy = false;
+                            this.layoutModel.showMessage('error', err);
+                            this.notifyChangeListeners();
+                        }
+                    );
+                break;
                 case 'CONCORDANCE_RESET_DETAIL':
                     this.resetKwicDetail();
                     this.resetTokenDetail();
@@ -592,6 +625,10 @@ export class ConcDetailStore extends SimplePageStore {
         return this.loadConcDetail(corpusId, tokenNum, kwicLength, lineIdx, args, expand);
     }
 
+    private reloadSpeechDetail():RSVP.Promise<any> {
+        return this.loadSpeechDetail(this.corpusId, this.kwicTokenNum, this.kwicLength, this.lineIdx);
+    }
+
     private loadTokenDetail(corpusId:string, tokenNum:number, lineIdx:number):RSVP.Promise<boolean> {
         return (() => {
             if (this.tokenDetailPlg) {
@@ -698,6 +735,10 @@ export class ConcDetailStore extends SimplePageStore {
         );
     }
 
+    private reloadConcDetail():RSVP.Promise<any> {
+        return this.loadConcDetail(this.corpusId, this.kwicTokenNum, this.kwicLength, this.lineIdx, [], 'reload');
+    }
+
     hasExpandLeft():boolean {
         return !!this.expandLeftArgs.get(-1);
     }
@@ -710,7 +751,7 @@ export class ConcDetailStore extends SimplePageStore {
         return this.structCtx && !this.wholeDocumentLoaded;
     }
 
-    getDefaultViewMode():string {
+    getViewMode():string {
         return this.mode;
     }
 
@@ -736,6 +777,10 @@ export class ConcDetailStore extends SimplePageStore {
 
     supportsTokenDetail():boolean {
         return !!this.tokenDetailPlg;
+    }
+
+    supportsSpeechView():boolean {
+        return !!this.speechOpts.speakerIdAttr;
     }
 }
 
