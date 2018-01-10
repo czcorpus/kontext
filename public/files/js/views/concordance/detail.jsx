@@ -716,10 +716,13 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
     const ConcDetailMenu = (props) => {
 
         const handleMenuClick = (mode) => {
-            props.changeHandler(mode);
+            dispatcher.dispatch({
+                actionType: 'CONCORDANCE_DETAIL_SWITCH_MODE',
+                props: {value: mode}
+            });
         };
 
-        if (props.speakerIdAttr) {
+        if (props.supportsSpeechView) {
             return (
                 <ul className="view-mode">
                     <li className={props.mode === 'default' ? 'current' : null}>
@@ -746,16 +749,19 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
 
         constructor(props) {
             super(props);
-            this.state = {
-                mode: concDetailStore.getDefaultViewMode()
-            };
+            this.state = this._fetchStoreState();
             this._storeChangeHandler = this._storeChangeHandler.bind(this);
         }
 
+        _fetchStoreState() {
+            return {
+                mode: concDetailStore.getViewMode(),
+                supportsSpeechView: concDetailStore.supportsSpeechView()
+            };
+        }
+
         _storeChangeHandler() {
-            this.setState({
-                mode: concDetailStore.getDefaultViewMode()
-            });
+            this.setState(this._fetchStoreState());
         }
 
         componentDidMount() {
@@ -782,7 +788,7 @@ export function init(dispatcher, he, concDetailStore, refsDetailStore, lineStore
                         customStyle={{overflowY: 'auto'}}
                         takeFocus={true}>
                     <div>
-                        <ConcDetailMenu speakerIdAttr={this.props.speakerIdAttr} mode={this.state.mode} />
+                        <ConcDetailMenu supportsSpeechView={this.state.supportsSpeechView} mode={this.state.mode} />
                         {this._renderContents()}
                     </div>
                 </layoutViews.PopupBox>
