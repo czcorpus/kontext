@@ -89,23 +89,6 @@ export class SimplePageStore implements Kontext.PageStore {
             }
         }
     }
-
-    /**
-     * This method is intended to be used for delayed
-     * value validation (i.e. we give user a time to write
-     * a correct value and then run the validation).
-     * @param id
-     * @param fn
-     */
-    protected throttleAction(id:string, fn:()=>void):void {
-        if (this.throttlingTimeouts.hasOwnProperty(id)) {
-            window.clearTimeout(this.throttlingTimeouts[id]);
-        }
-        this.throttlingTimeouts[id] = window.setTimeout(() => {
-            fn();
-            delete this.throttlingTimeouts[id];
-        }, SimplePageStore.THROTTLING_TIMEOUT_MS);
-    }
 }
 
 
