@@ -595,7 +595,7 @@ export function init(dispatcher, he, stores) {
         }
 
         _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
-            if (concDetailStore.getDefaultViewMode() === 'default') {
+            if (concDetailStore.getViewMode() === 'default') {
                 if (kwicLength > 0) {
                     dispatcher.dispatch({
                         actionType: 'CONCORDANCE_SHOW_KWIC_DETAIL',
@@ -618,7 +618,7 @@ export function init(dispatcher, he, stores) {
                     });
                 }
 
-            } else if (concDetailStore.getDefaultViewMode() === 'speech') {
+            } else if (concDetailStore.getViewMode() === 'speech') {
                 dispatcher.dispatch({
                     actionType: 'CONCORDANCE_SHOW_SPEECH_DETAIL',
                     props: {
