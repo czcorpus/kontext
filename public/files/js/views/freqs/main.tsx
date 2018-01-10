@@ -176,6 +176,18 @@ export function init(
             });
         };
 
+        const inputKeyDownHandler = (evt:KeyboardEvent) => {
+            if (evt.keyCode === 13) {
+                props.setLoadingFlag();
+                dispatcher.dispatch({
+                    actionType: 'FREQ_RESULT_APPLY_MIN_FREQ',
+                    props: {}
+                });
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+        };
+
         return (
             <form action="freqs">
                 <label>
@@ -183,7 +195,8 @@ export function init(
                     {'\u00a0'}
                     <input type="text" name="flimit" value={props.minFreqVal}
                             style={{width: '3em'}}
-                            onChange={handleInputChange} />
+                            onChange={handleInputChange}
+                            onKeyDown={inputKeyDownHandler} />
                 </label>
                 {'\u00a0'}
                 <button type="button" className="util-button" onClick={handleApplyClick}>
