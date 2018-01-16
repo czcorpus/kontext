@@ -51,6 +51,7 @@ import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collF
 import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
 import {ContingencyTableStore} from '../stores/freqs/ctable';
 import {CTFlatStore} from '../stores/freqs/flatCtable';
+import {FirstHitsStore} from '../stores/query/firstHits';
 import {CTFreqFormStore, CTFormInputs, CTFormProperties} from '../stores/freqs/ctFreqForm';
 import {ConcSaveStore} from '../stores/concordance/save';
 import {ConcDashboard} from '../stores/concordance/dashboard';
@@ -62,10 +63,10 @@ import * as applicationBar from 'plugins/applicationBar/init';
 import {UserInfo} from '../stores/userStores';
 import {TextTypesDistStore, TextTypesDistStoreProps, TTCrit} from '../stores/concordance/ttDistStore';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
-import {init as filterFormInit, FilterFormViews} from 'views/query/filter';
+import {init as filterFormInit, FilterFormViews} from '../views/query/filter';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
 import {init as sortFormInit, SortFormViews} from 'views/query/sort';
-import {init as sampleFormInit, SampleFormViews} from 'views/query/sampleShuffle';
+import {init as sampleFormInit, SampleFormViews} from '../views/query/miscActions';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
@@ -103,6 +104,7 @@ export class QueryStores {
     sampleStore:SampleStore;
     switchMcStore:SwitchMainCorpStore;
     saveAsFormStore:QuerySaveAsFormStore;
+    firstHitsStore:FirstHitsStore;
 }
 
 
@@ -141,7 +143,7 @@ export class ViewPage {
 
     private sortFormViews:SortFormViews;
 
-    private sampleFormViews:SampleFormViews;
+    private miscQueryOpsViews:SampleFormViews;
 
     private concFormsInitialArgs:AjaxResponse.ConcFormsInitialArgs;
 
@@ -467,7 +469,7 @@ export class ViewPage {
 
     }
 
-    private initFilterForm():void {
+    private initFilterForm(firstHitsStore:FirstHitsStore):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
         const filterFormProps:FilterFormProperties = {
@@ -525,7 +527,8 @@ export class ViewPage {
             this.queryStores.filterStore,
             this.queryStores.queryHintStore,
             this.queryStores.withinBuilderStore,
-            this.queryStores.virtualKeyboardStore
+            this.queryStores.virtualKeyboardStore,
+            firstHitsStore
         );
     }
 
@@ -611,7 +614,7 @@ export class ViewPage {
                 });
             }
         );
-        this.sampleFormViews = sampleFormInit(
+        this.miscQueryOpsViews = sampleFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.queryStores.sampleStore,
@@ -645,6 +648,23 @@ export class ViewPage {
         );
     }
 
+    private initFirsthitsForm():void {
+        this.queryStores.firstHitsStore = new FirstHitsStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel
+        );
+        this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
+            'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
+            (args:Kontext.GeneralProps) => {
+                return this.queryStores.firstHitsStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.FirstHitsFormArgs>((resolve:(v)=>void, reject:(err)=>void) => {
+                        resolve(updateProps(this.concFormsInitialArgs.firsthits, args));
+                    });
+                });
+            }
+        );
+    }
+
     /**
      *
      */
@@ -659,7 +679,8 @@ export class ViewPage {
                 mlSortStore: this.queryStores.multiLevelSortStore,
                 sampleStore: this.queryStores.sampleStore,
                 textTypesStore: this.queryStores.textTypesStore,
-                switchMcStore: this.queryStores.switchMcStore
+                switchMcStore: this.queryStores.switchMcStore,
+                firstHitsStore: this.queryStores.firstHitsStore
             },
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
@@ -671,10 +692,12 @@ export class ViewPage {
             {
                 QueryFormView: this.queryFormViews.QueryFormLite,
                 FilterFormView: this.filterFormViews.FilterForm,
+                SubHitsForm: this.filterFormViews.SubHitsForm,
+                FirstHitsForm: this.filterFormViews.FirstHitsForm,
                 SortFormView: this.sortFormViews.SortFormView,
-                SampleFormView: this.sampleFormViews.SampleFormView,
-                ShuffleFormView: this.sampleFormViews.ShuffleFormView,
-                SwitchMainCorpFormView: this.sampleFormViews.SwitchMainCorpFormView
+                SampleForm: this.miscQueryOpsViews.SampleForm,
+                ShuffleForm: this.miscQueryOpsViews.ShuffleForm,
+                SwitchMainCorpForm: this.miscQueryOpsViews.SwitchMainCorpForm
             },
             this.queryStores.queryReplayStore,
             this.layoutModel.getStores().mainMenuStore,
@@ -700,6 +723,14 @@ export class ViewPage {
                     queryStorageView: queryStoragePlugin.getWidgetView(),
                     allowCorpusSelection: false,
                     actionPrefix: 'FILTER_'
+                },
+                filterSubHitsFormProps: {
+                    submitFn:() => {
+                        const args = this.layoutModel.getConcArgs();
+                        window.location.href = this.layoutModel.createActionUrl('filter_subhits', args.items());
+                    }
+                },
+                filterFirstDocHitsFormProps: {
                 },
                 sortFormProps: {
                 },
@@ -1115,7 +1146,8 @@ export class ViewPage {
             (args:any) => {
                 const [ttStore, lvprops, qs, tagh] = args;
                 this.initQueryForm();
-                this.initFilterForm();
+                this.initFirsthitsForm();
+                this.initFilterForm(this.queryStores.firstHitsStore);
                 this.initSortForm();
                 this.initSwitchMainCorpForm();
                 this.initSampleForm(this.queryStores.switchMcStore);

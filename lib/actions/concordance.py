@@ -25,7 +25,7 @@ from controller import exposed
 from controller.errors import UserActionException
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
                               LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
-                              KwicSwitchArgs)
+                              KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 import settings
 import conclib
@@ -842,6 +842,24 @@ class Actions(Querying):
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
         self.add_conc_form_args(ShuffleFormArgs(persist=True))
         self.args.q.append('f')
+        return self.view()
+
+    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=True)
+    def filter_subhits(self):
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
+        self.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
+        self.args.q.append('D')
+        return self.view()
+
+    @exposed(access_level=0, template='view.tmpl', page_model='view', legacy=False)
+    def filter_firsthits(self, request):
+        if len(self._lines_groups) > 0:
+            self._exceptmethod = 'view'
+            raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
+        self.add_conc_form_args(FirstHitsFilterFormArgs(persist=True, doc_struct=self.corp.get_conf('DOCSTRUCTURE')))
+        self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
         return self.view()
 
     @exposed(access_level=1, legacy=True, page_model='freq')

@@ -46,6 +46,10 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
                 return he.translate('query__operation_name_shuffle');
             case 'switchmc':
                 return he.translate('query__operation_name_switchmc');
+            case 'subhits':
+                return he.translate('query__operation_name_subhits');
+            case 'firsthits':
+                return he.translate('query__operation_name_firsthits');
             default:
                 return null;
         }
@@ -147,16 +151,26 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
                 return <viewDeps.SortFormView sortId={props.opKey} operationIdx={props.operationIdx} />;
 
             } else if (props.operationFormType === 'sample') {
-                return <viewDeps.SampleFormView sampleId={props.opKey} operationIdx={props.operationIdx} />;
+                return <viewDeps.SampleForm sampleId={props.opKey} operationIdx={props.operationIdx} />;
 
             } else if (props.operationFormType === 'shuffle') {
-                return <viewDeps.ShuffleFormView {...props.editorProps} shuffleId={props.opKey}
+                return <viewDeps.ShuffleForm {...props.editorProps} shuffleId={props.opKey}
                             shuffleMinResultWarning={props.shuffleMinResultWarning}
                             lastOpSize={props.resultSize}
                             operationIdx={props.operationIdx} />;
 
             } else if (props.operationFormType === 'switchmc') {
-                return <viewDeps.SwitchMainCorpFormView {...props.editorProps}
+                return <viewDeps.SwitchMainCorpForm {...props.editorProps}
+                                operationIdx={props.operationIdx}
+                                operationId={props.opKey} />;
+
+            } else if (props.operationFormType === 'subhits') {
+                return <viewDeps.SubHitsForm {...props.editorProps}
+                                operationIdx={props.operationIdx}
+                                operationId={props.opKey} />;
+
+            } else if (props.operationFormType === 'firsthits') {
+                return <viewDeps.FirstHitsForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
                                 operationId={props.opKey} />;
 
@@ -318,6 +332,21 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
                     }
                 }
 
+            } else if (opId === 'D') {
+                return {
+                    submitFn: () => {
+                        dispatcher.dispatch({
+                            actionType: 'BRANCH_QUERY',
+                            props: {
+                                operationIdx: opIdx
+                            }
+                        });
+                    }
+                }
+
+            } else if (opId === 'F') {
+                return this.props.filterFirstDocHitsFormProps;
+
             } else if (opId === 'x') {
                 return this.props.switchMcFormProps;
 
@@ -409,8 +438,11 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
 
     // ------------------------ <AppendOperationOverlay /> --------------------------------
 
+    /**
+     * A component wrapping a new operation form to be
+     * added to the query chain.
+     */
     const AppendOperationOverlay = (props) => {
-
         const handleCloseClick = () => {
             dispatcher.dispatch({
                 actionType: 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
@@ -425,12 +457,18 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
                 case 'MAIN_MENU_SHOW_SORT':
                     return <viewDeps.SortFormView sortId="__new__" />;
                 case 'MAIN_MENU_SHOW_SAMPLE':
-                    return <viewDeps.SampleFormView sampleId="__new__" />;
+                    return <viewDeps.SampleForm sampleId="__new__" />;
                 case 'MAIN_MENU_APPLY_SHUFFLE':
-                    return <viewDeps.ShuffleFormView {...props.shuffleFormProps}
+                    return <viewDeps.ShuffleForm {...props.shuffleFormProps}
                                 lastOpSize={props.lastOpSize} sampleId="__new__" />;
+                case 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE':
+                    return <viewDeps.SubHitsForm {...props.filterSubHitsFormProps}
+                                    operationId="__new__" />;
+                case 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES':
+                    return <viewDeps.FirstHitsForm {...props.filterFirstDocHitsFormProps}
+                                    operationId="__new__" />;
                 case 'MAIN_MENU_SHOW_SWITCHMC':
-                    return <viewDeps.SwitchMainCorpFormView {...props.switchMcFormProps}
+                    return <viewDeps.SwitchMainCorpForm {...props.switchMcFormProps}
                                 lastOpSize={props.lastOpSize} sampleId="__new__" />;
                 default:
                     return <div>??</div>;
@@ -443,7 +481,9 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
                 MAIN_MENU_SHOW_SORT: 'sort',
                 MAIN_MENU_SHOW_SAMPLE: 'sample',
                 MAIN_MENU_APPLY_SHUFFLE: 'shuffle',
-                MAIN_MENU_SHOW_SWITCHMC: 'switchmc'
+                MAIN_MENU_SHOW_SWITCHMC: 'switchmc',
+                MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE: 'subhits',
+                MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES: 'firsthits'
             };
             const ident = formTypeToTitle(m[props.menuActiveItem.actionName]);
             return he.translate('query__add_an_operation_title_{opname}', {opname: ident});
@@ -497,7 +537,9 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
                 'MAIN_MENU_SHOW_SORT',
                 'MAIN_MENU_APPLY_SHUFFLE',
                 'MAIN_MENU_SHOW_SAMPLE',
-                'MAIN_MENU_SHOW_FILTER'
+                'MAIN_MENU_SHOW_FILTER',
+                'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE',
+                'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
             ];
             if (this.state.activeItem !== null && actions.indexOf(this.state.activeItem.actionName) > -1) {
                 return <AppendOperationOverlay {...this.props} menuActiveItem={this.state.activeItem}

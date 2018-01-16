@@ -412,6 +412,17 @@ class MenuGenerator(object):
             .mark_indirect()
         )
 
+        self.filter_subhits = (
+            EventTriggeringItem(MainMenu.FILTER('subhits'),
+                                _('Remove nested matches'), 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE')
+        )
+
+        self.filter_each_first = (
+            EventTriggeringItem(MainMenu.FILTER('each-first'),
+                                _('First hits in documents'),
+                                'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES')
+        )
+
         # ----------------------------------- menu-frequency ----------------------------
 
         self.freq_lemmas = (
@@ -560,7 +571,7 @@ class MenuGenerator(object):
             )),
             (MainMenu.FILTER.name, dict(
                 label=_('Filter'),
-                items=exp(MainMenu.FILTER, self.filter_pos, self.filter_neg),
+                items=exp(MainMenu.FILTER, self.filter_pos, self.filter_neg, self.filter_subhits, self.filter_each_first),
                 disabled=is_disabled(MainMenu.FILTER)
             )),
             (MainMenu.FREQUENCY.name, dict(

@@ -19,15 +19,64 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import * as React from 'vendor/react';
+import {SampleStore} from '../../stores/query/sample';
+import {SwitchMainCorpStore} from '../../stores/query/switchmc';
 
 
-export function init(dispatcher, he, sampleStore, switchMcStore) {
+export interface SampleFormViews {
+    SampleForm:React.ComponentClass;
+    ShuffleForm:React.ComponentClass;
+    SwitchMainCorpForm:React.ComponentClass;
+}
+
+// ----------
+
+export interface SampleFormProps {
+    sampleId:string;
+    operationIdx:number;
+}
+
+export interface SampleFormState {
+    rlines:string;
+}
+
+// -----------
+
+export interface ShuffleFormProps {
+    shuffleMinResultWarning:number;
+    lastOpSize:number;
+    lastOpIdx:number;
+    operationIdx:number;
+    shuffleSubmitFn:()=>void;
+}
+
+export interface ShuffleFormState {
+    isWarning:boolean;
+    isAutoSubmit:boolean;
+}
+
+// ----------
+
+export interface SwitchMainCorpFormProps {
+    operationIdx:number;
+    operationId:string;
+}
+
+export interface SwitchMainCorpFormState {
+    maincorpValues:Immutable.Map<string, string>;
+}
+
+// --------
+
+export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers,
+        sampleStore:SampleStore, switchMcStore:SwitchMainCorpStore):SampleFormViews {
 
     // ------------------------ <SampleForm /> --------------------------------
 
-    class SampleForm extends React.Component {
+    class SampleForm extends React.Component<SampleFormProps, SampleFormState> {
 
         constructor(props) {
             super(props);
@@ -105,7 +154,7 @@ export function init(dispatcher, he, sampleStore, switchMcStore) {
 
     // ------------------------ <ShuffleForm /> --------------------------------
 
-    class ShuffleForm extends React.Component {
+    class ShuffleForm extends React.Component<ShuffleFormProps, ShuffleFormState> {
 
         constructor(props) {
             super(props);
@@ -142,7 +191,7 @@ export function init(dispatcher, he, sampleStore, switchMcStore) {
         _renderDefaultState() {
             return (
                 <div>
-                    <p>{he.translate('query__shuffle_form_no_params_to_change')}.</p>
+                    <p>{he.translate('query__the_form_no_params_to_change')}.</p>
                     <p>
                         <button type="button" className="default-button"
                                     onClick={()=>this.props.shuffleSubmitFn()}>
@@ -181,7 +230,7 @@ export function init(dispatcher, he, sampleStore, switchMcStore) {
     /**
      *
      */
-    class SwitchMainCorpFormView extends React.Component {
+    class SwitchMainCorpForm extends React.Component<SwitchMainCorpFormProps, SwitchMainCorpFormState> {
 
         constructor(props) {
             super(props);
@@ -242,9 +291,9 @@ export function init(dispatcher, he, sampleStore, switchMcStore) {
 
 
     return {
-        SampleFormView: SampleForm,
-        ShuffleFormView: ShuffleForm,
-        SwitchMainCorpFormView: SwitchMainCorpFormView
+        SampleForm: SampleForm,
+        ShuffleForm: ShuffleForm,
+        SwitchMainCorpForm: SwitchMainCorpForm
     };
 
 }

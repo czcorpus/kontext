@@ -78,7 +78,7 @@ export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
 }
 
 /**
- * FilterStore handles all the filpublic/files/js/stores/query/replay.tsters applied within a query "pipeline".
+ * FilterStore handles all the filtsters applied within a query "pipeline".
  * Each filter is identified by its database ID (i.e. a key used by conc_persistence
  * plug-in to store it). Please note that it does not know the order of filters
  * in pipeline (it is up to QueryReplay store to handle this).

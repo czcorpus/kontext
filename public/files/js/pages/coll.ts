@@ -210,10 +210,12 @@ export class CollPage {
             {
                 QueryFormView: null,
                 FilterFormView: null,
+                SubHitsForm: null,
+                FirstHitsForm: null,
                 SortFormView: null,
-                SampleFormView: null,
-                ShuffleFormView: null,
-                SwitchMainCorpFormView: null
+                SampleForm: null,
+                ShuffleForm: null,
+                SwitchMainCorpForm: null
             },
             this.queryReplayStore,
             this.layoutModel.getStores().mainMenuStore,
