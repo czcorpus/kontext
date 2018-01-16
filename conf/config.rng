@@ -591,6 +591,21 @@
                             <ref name="customPluginConfiguration" />
                         </optional>
                     </element>
+                    <element name="token_detail">
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
+                    </element>
+                    <element name="export_freq2d">
+                        <interleave>
+                            <optional>
+                                <element name="xlsx">
+                                    <text />
+                                </element>
+                            </optional>
+                        </interleave>
+                    </element>
                 </interleave>
             </element>
         </element>
