@@ -42,21 +42,21 @@ export class FirstHitsStore extends SimplePageStore {
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'FILTER_FIRST_HITS_SUBMIT':
-                this.submitForm(payload.props['operationId']);
+                    this.submitForm(payload.props['opKey']);
                     // app leaves here
                 break;
             }
         });
     }
 
-    getSubmitUrl(opId:string):string {
+    getSubmitUrl(opKey:string):string {
         const args = this.layoutModel.getConcArgs();
-        args.set('fh_struct', this.docStructValues.get(opId));
+        args.set('fh_struct', this.docStructValues.get(opKey));
         return this.layoutModel.createActionUrl('filter_firsthits', args);
     }
 
-    submitForm(opId:string):void {
-        window.location.href = this.getSubmitUrl(opId);
+    submitForm(opKey:string):void {
+        window.location.href = this.getSubmitUrl(opKey);
     }
 
     syncFrom(fn:()=>RSVP.Promise<AjaxResponse.FirstHitsFormArgs>):RSVP.Promise<AjaxResponse.FirstHitsFormArgs> {

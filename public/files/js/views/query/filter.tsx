@@ -76,7 +76,7 @@ export interface FilterFormState {
 
 export interface SubHitsFormProps {
     operationIdx:number;
-    operationId:string;
+    opKey:string;
     submitFn:()=>void;
 }
 
@@ -88,7 +88,7 @@ export interface SubHitsFormState {
 
 export interface FirstHitsFormProps {
     operationIdx:number;
-    operationId:string;
+    opKey:string;
 }
 
 export interface FirstHitsFormState {
@@ -492,7 +492,7 @@ export function init(
                 dispatcher.dispatch({
                     actionType: 'FILTER_FIRST_HITS_SUBMIT',
                     props: {
-                        operationId: this.props.operationId
+                        opKey: this.props.opKey
                     }
                 });
             }
@@ -517,7 +517,7 @@ export function init(
                     <label>
                         {he.translate('query__used_first_hits_struct')}:{'\u00a0'}
                         <select disabled>
-                            <option>{this.state.docStructs.get(this.props.operationId)}</option>
+                            <option>{this.state.docStructs.get(this.props.opKey)}</option>
                         </select>
                     </label>
                     <p>{he.translate('query__the_form_no_params_to_change')}.</p>

@@ -62,7 +62,7 @@ export interface ShuffleFormState {
 
 export interface SwitchMainCorpFormProps {
     operationIdx:number;
-    operationId:string;
+    opKey:string;
 }
 
 export interface SwitchMainCorpFormState {
@@ -262,7 +262,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                 } else {
                     dispatcher.dispatch({
                         actionType: 'SWITCH_MC_FORM_SUBMIT',
-                        props: {operationId: this.props.operationId}
+                        props: {opKey: this.props.opKey}
                     });
                 }
                 evt.preventDefault();
@@ -275,7 +275,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                 <div>
                     <p>
                         <label>{he.translate('query__set_main_corp_to_label')}</label>:{'\u00a0'}
-                        <input type="text" readOnly={true} value={this.state.maincorpValues.get(this.props.operationId)}
+                        <input type="text" readOnly={true} value={this.state.maincorpValues.get(this.props.opKey)}
                                 title={he.translate('query__value_cannot_be_changed')} />
                     </p>
                     <p>
