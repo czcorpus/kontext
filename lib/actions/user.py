@@ -56,7 +56,7 @@ class User(Kontext):
         self.refresh_session_id()
         return ans
 
-    @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True)
+    @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True, page_model='login')
     def logoutx(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
         plugins.runtime.AUTH.instance.logout(self._session)
