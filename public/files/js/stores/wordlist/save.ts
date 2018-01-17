@@ -36,8 +36,6 @@ export class WordlistSaveStore extends SimplePageStore {
 
     private saveFormat:string;
 
-    private dispatcherToken:string;
-
     private includeHeading:boolean;
 
     private includeColHeaders:boolean;
@@ -59,7 +57,7 @@ export class WordlistSaveStore extends SimplePageStore {
         this.includeHeading = false;
         this.includeColHeaders = false;
 
-        this.dispatcherToken = dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;
@@ -127,10 +125,6 @@ export class WordlistSaveStore extends SimplePageStore {
 
     getSaveFormat():string {
         return this.saveFormat;
-    }
-
-    getDispatcherToken():string {
-        return this.dispatcherToken;
     }
 
     getIncludeHeading():boolean {

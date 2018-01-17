@@ -37,6 +37,7 @@ export interface TextTypesState {
     minFreq:number;
     isBusy:boolean;
     sampleSize:number;
+    blockedByAsyncConc:boolean;
 }
 
 export interface Views {
@@ -128,7 +129,8 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                 blocks: ttDistStore.getBlocks(),
                 isBusy: ttDistStore.getIsBusy(),
                 minFreq: ttDistStore.getMinFreq(),
-                sampleSize: ttDistStore.getSampleSize()
+                sampleSize: ttDistStore.getSampleSize(),
+                blockedByAsyncConc: ttDistStore.getBlockedByAsyncConc()
             };
         }
 
@@ -138,16 +140,17 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         componentDidMount() {
             ttDistStore.addChangeListener(this._handleStoreChange);
-            dispatcher.dispatch({
-                actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
-                props: {}
-            });
+            if (!this.state.blockedByAsyncConc) {
+                dispatcher.dispatch({
+                    actionType: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
+                    props: {}
+                });
+            }
         }
 
         componentWillUnmount() {
             ttDistStore.removeChangeListener(this._handleStoreChange);
         }
-
 
         render() {
             return (

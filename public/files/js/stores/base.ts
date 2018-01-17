@@ -31,14 +31,21 @@ export class SimplePageStore implements Kontext.PageStore {
 
     public static CHANGE_EVENT:string = 'change';
 
-    private throttlingTimeouts:{[id:string]:number};
-
     private static THROTTLING_TIMEOUT_MS = 300;
+
+    private dispatcherToken:string;
 
     constructor(dispatcher:Kontext.FluxDispatcher) {
         this.dispatcher = dispatcher;
         this.changeListeners = [];
-        this.throttlingTimeouts = {};
+    }
+
+    dispatcherRegister(fn:(payload:Kontext.DispatcherPayload)=>void):void {
+        this.dispatcherToken = this.dispatcher.register(fn);
+    }
+
+    getDispatcherToken():string {
+        return this.dispatcherToken;
     }
 
     /**

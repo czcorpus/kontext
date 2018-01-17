@@ -106,8 +106,6 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
     private includeNonwords:boolean;
 
-    private dispatcherToken:string;
-
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
@@ -135,7 +133,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         this.includeNonwords = false;
 
 
-        this.dispatcherToken = dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
                 this.currentSubcorpus = payload.props['subcorp'];
@@ -447,10 +445,6 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
 
     getCorpusIdent():Kontext.FullCorpusIdent {
         return this.corpusIdent;
-    }
-
-    getDispatcherToken():string {
-        return this.dispatcherToken;
     }
 
     getAllowsMultilevelWltype():boolean {
