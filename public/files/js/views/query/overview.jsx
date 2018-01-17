@@ -24,6 +24,18 @@ import * as React from 'vendor/react';
 import {init as saveViewInit} from './save';
 import {init as basicOverviewInit} from './basicOverview';
 
+/*
+Important note regarding variable naming conventions:
+
+opKey (operationKey): a hash representing stored query args or string '__new__' when appending
+                         a new operation
+opId (operationId): a general manatee operation type identifier (e.g. 's' - sample, 'q' - query)
+
+opIdx (operationIdx): an index of an operation within query pipeline (starting from zero).
+
+In general, client knows by default opId and opIdx when a page is loaded. Operation key 'opKey'
+may or may not be available without additional AJAX request.
+*/
 
 
 export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, mainMenuStore, querySaveAsStore) {
@@ -162,17 +174,17 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
             } else if (props.operationFormType === 'switchmc') {
                 return <viewDeps.SwitchMainCorpForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
-                                operationId={props.opKey} />;
+                                opKey={props.opKey} />;
 
             } else if (props.operationFormType === 'subhits') {
                 return <viewDeps.SubHitsForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
-                                operationId={props.opKey} />;
+                                opKey={props.opKey} />;
 
             } else if (props.operationFormType === 'firsthits') {
                 return <viewDeps.FirstHitsForm {...props.editorProps}
                                 operationIdx={props.operationIdx}
-                                operationId={props.opKey} />;
+                                opKey={props.opKey} />;
 
             } else {
                 return <div>???</div>;
@@ -463,10 +475,10 @@ export function init(dispatcher, he, layoutViews, viewDeps, queryReplayStore, ma
                                 lastOpSize={props.lastOpSize} sampleId="__new__" />;
                 case 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE':
                     return <viewDeps.SubHitsForm {...props.filterSubHitsFormProps}
-                                    operationId="__new__" />;
+                                    opKey="__new__" />;
                 case 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES':
                     return <viewDeps.FirstHitsForm {...props.filterFirstDocHitsFormProps}
-                                    operationId="__new__" />;
+                                    opKey="__new__" />;
                 case 'MAIN_MENU_SHOW_SWITCHMC':
                     return <viewDeps.SwitchMainCorpForm {...props.switchMcFormProps}
                                 lastOpSize={props.lastOpSize} sampleId="__new__" />;
