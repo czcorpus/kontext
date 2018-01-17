@@ -250,24 +250,6 @@ declare module "views/query/context" {
     ):QueryContextViews;
 }
 
-
-declare module "views/query/filter" {
-
-    export interface FilterFormViews {
-        FilterForm:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        filterStore:Kontext.PageStore,
-        queryHintStore:Kontext.PageStore,
-        withinBuilderStore:Kontext.PageStore,
-        virtualKeyboardStore:Kontext.PageStore
-    ):FilterFormViews;
-
-}
-
 declare module "views/query/sort" {
 
     export interface SortFormViews {
@@ -280,23 +262,6 @@ declare module "views/query/sort" {
         sortStore:Kontext.PageStore,
         multiLevelSortStore:Kontext.PageStore
     ):SortFormViews;
-}
-
-
-declare module "views/query/sampleShuffle" {
-
-    export interface SampleFormViews {
-        SampleFormView:React.ComponentClass;
-        ShuffleFormView:React.ComponentClass;
-        SwitchMainCorpFormView:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.FluxDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        sampleStore:Kontext.PageStore,
-        switchMcStore:Kontext.PageStore
-    ):SampleFormViews;
 }
 
 declare module "views/query/basicOverview" {
@@ -317,10 +282,12 @@ declare module "views/query/overview" {
     export interface QueryToolbarViewDeps {
         QueryFormView:React.ComponentClass;
         FilterFormView:React.ComponentClass;
+        SubHitsForm:React.ComponentClass;
+        FirstHitsForm:React.ComponentClass;
         SortFormView:React.ComponentClass;
-        SampleFormView:React.ComponentClass;
-        ShuffleFormView:React.ComponentClass;
-        SwitchMainCorpFormView:React.ComponentClass;
+        SampleForm:React.ComponentClass;
+        ShuffleForm:React.ComponentClass;
+        SwitchMainCorpForm:React.ComponentClass;
     }
 
     export interface QueryToolbarViews {

@@ -142,7 +142,11 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
                         () => {
                             this.notifyChangeListeners();
                         }
-                    );
+                    ).catch(
+                        (err) => {
+                            this.pageModel.showMessage('error', err);
+                        }
+                    )
 
                 } else {
                     this.notifyChangeListeners();
@@ -246,6 +250,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         }
     }
 
+    // TODO currently unused - remove if not needed
     bindDynamicItem(ident:string, label:string, handler:()=>void) {
         this.data.forEach((item, i) => {
             item[1].items.forEach((subitem, j) => {

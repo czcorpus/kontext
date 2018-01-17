@@ -27,7 +27,7 @@ import corplib
 import plugins
 import l10n
 from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
-                              build_conc_form_args)
+                              FirstHitsFilterFormArgs, build_conc_form_args)
 from translation import ugettext as _
 from controller import exposed
 
@@ -130,7 +130,8 @@ class Querying(Kontext):
                                   persist=False).to_dict(),
             sort=SortFormArgs(persist=False).to_dict(),
             sample=SampleFormArgs(persist=False).to_dict(),
-            shuffle=ShuffleFormArgs(persist=False).to_dict()
+            shuffle=ShuffleFormArgs(persist=False).to_dict(),
+            firsthits=FirstHitsFilterFormArgs(persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
         )
 
     def _attach_aligned_query_params(self, tpl_out):

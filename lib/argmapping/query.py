@@ -262,6 +262,21 @@ class ShuffleFormArgs(ConcFormArgs):
         self.form_type = 'shuffle'
 
 
+class SubHitsFilterFormArgs(ConcFormArgs):
+
+    def __init__(self, persist):
+        super(SubHitsFilterFormArgs, self).__init__(persist)
+        self.form_type = 'subhits'
+
+
+class FirstHitsFilterFormArgs(ConcFormArgs):
+
+    def __init__(self, persist, doc_struct):
+        super(FirstHitsFilterFormArgs, self).__init__(persist)
+        self.doc_struct = doc_struct
+        self.form_type = 'firsthits'
+
+
 class KwicSwitchArgs(ConcFormArgs):
 
     def __init__(self, maincorp, persist):
@@ -293,6 +308,10 @@ def build_conc_form_args(corpora, data, op_key):
         return LgroupOpArgs(persist=False).updated(data, op_key)
     elif tp == 'locked':
         return LockedOpFormsArgs(persist=False).updated(data, op_key)
+    elif tp == 'subhits':
+        return SubHitsFilterFormArgs(persist=False).updated(data, op_key)
+    elif tp == 'firsthits':
+        return FirstHitsFilterFormArgs(persist=False, doc_struct=data['doc_struct']).updated(data, op_key)
     else:
         raise ValueError('Cannot determine stored conc args class from type %s' % (tp,))
 

@@ -446,3 +446,9 @@ msgstr "informace o browseru"
 
 msgid "KWIC/Sentence"
 msgstr "KWIC/Věta"
+
+msgid "Remove nested matches"
+msgstr "Odstranit vnořené shody"
+
+msgid "First hits in documents"
+msgstr "První nálezy v dokumentech"

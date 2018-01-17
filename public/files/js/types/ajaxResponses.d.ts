@@ -191,6 +191,10 @@ declare module AjaxResponse {
         maincorp:string;
     }
 
+    export interface FirstHitsFormArgs extends ConcFormArgs {
+        doc_struct:string;
+    }
+
     export interface SampleFormArgsResponse extends SampleFormArgs, Kontext.AjaxResponse {}
 
     export interface ConcFormArgsResponse extends Kontext.AjaxResponse, ConcFormArgs {}
@@ -200,6 +204,7 @@ declare module AjaxResponse {
         filter:FilterFormArgs;
         sort:SortFormArgs;
         sample:SampleFormArgs;
+        firsthits:FirstHitsFormArgs;
         switchmc:{};
     }
 

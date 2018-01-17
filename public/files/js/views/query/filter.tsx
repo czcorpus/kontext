@@ -18,19 +18,103 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import * as React from 'vendor/react';
 import {init as inputInit} from './input';
+import {FilterStore} from '../../stores/query/filter';
+import {QueryHintStore} from '../../stores/query/main';
+import {WithinBuilderStore} from '../../stores/query/withinBuilder';
+import {VirtualKeyboardStore} from '../../stores/query/virtualKeyboard';
+import {FirstHitsStore} from '../../stores/query/firstHits';
 
 
-export function init(dispatcher, he, filterStore, queryHintStore, withinBuilderStore, virtualKeyboardStore) {
 
-    const inputViews = inputInit(dispatcher, he, filterStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+export interface FilterFormViews {
+    FilterForm:React.ComponentClass;
+    SubHitsForm:React.ComponentClass;
+    FirstHitsForm:React.ComponentClass;
+}
+
+// ---------
+
+export interface FilterFormProps {
+    filterId:string;
+    operationIdx:number;
+    tagHelperView:React.Component<{}, {}>; // TODO types
+    queryStorageView:React.Component<{}, {}>; // TODO types
+    actionPrefix:string;
+}
+
+export interface FilterFormState {
+    contextFormVisible:boolean;
+    inclKwicValue:boolean;
+    withinArg:number;
+    queryTypes:Immutable.Map<string, string>;
+    supportedWidgets:Immutable.Map<string, Immutable.List<string>>;
+    lposValues:Immutable.Map<string, string>;
+    matchCaseValues:Immutable.Map<string, boolean>;
+    forcedAttr:string;
+    defaultAttrValues:Immutable.Map<string, string>;
+    attrList:Immutable.List<{n:string; label:string}>;
+    tagsetDocUrl:string;
+    lemmaWindowSizes:Immutable.List<number>;
+    posWindowSizes:Immutable.List<number>;
+    hasLemmaAttr:boolean;
+    wPoSList:Immutable.List<{v:string; n:string}>;
+    inputLanguage:string;
+    pnFilterValue:string;
+    filfposValue:string;
+    filtposValue:string;
+    filflValue:string;
+    isLocked:boolean;
+}
+
+// ---------
+
+export interface SubHitsFormProps {
+    operationIdx:number;
+    operationId:string;
+    submitFn:()=>void;
+}
+
+export interface SubHitsFormState {
+    isAutoSubmit:boolean;
+}
+
+// ---------
+
+export interface FirstHitsFormProps {
+    operationIdx:number;
+    operationId:string;
+}
+
+export interface FirstHitsFormState {
+    isAutoSubmit:boolean;
+    docStructs:Immutable.Map<string, string>;
+}
+
+// ---------
+
+export function init(
+        dispatcher:Kontext.FluxDispatcher,
+        he:Kontext.ComponentHelpers,
+        filterStore:FilterStore,
+        queryHintStore:QueryHintStore,
+        withinBuilderStore:WithinBuilderStore,
+        virtualKeyboardStore:VirtualKeyboardStore,
+        firstHitsStore:FirstHitsStore):FilterFormViews {
+
+    const inputViews = inputInit(dispatcher, he, filterStore, queryHintStore, withinBuilderStore,
+                virtualKeyboardStore);
+
+    const layoutViews = he.getLayoutViews();
 
     // -------- <FilterForm /> ---------------------------------------
 
-    class FilterForm extends React.Component {
+    class FilterForm extends React.Component<FilterFormProps, FilterFormState> {
 
         constructor(props) {
             super(props);
@@ -312,7 +396,145 @@ export function init(dispatcher, he, filterStore, queryHintStore, withinBuilderS
         }
     }
 
+
+    /**
+     *
+     */
+    class SubHitsForm extends React.Component<SubHitsFormProps, SubHitsFormState> {
+
+        constructor(props) {
+            super(props);
+            this.state = {
+                isAutoSubmit: this.props.operationIdx === undefined
+            }
+        }
+
+        render() {
+            return (
+                <form>
+                    {this._renderContents()}
+                </form>
+            );
+        }
+
+        componentDidMount() {
+            if (this.state.isAutoSubmit) {
+                window.setTimeout(() => {
+                    this.props.submitFn();
+                }, 0);
+            }
+        }
+
+        _renderContents() {
+            if (this.state.isAutoSubmit) {
+                return this._renderAutoSubmitState();
+
+            } else {
+                return this._renderDefaultState();
+            }
+        }
+
+        _renderAutoSubmitState() {
+            return <div><layoutViews.AjaxLoaderBarImage /></div>;
+        }
+
+        _renderDefaultState() {
+            return (
+                <div>
+                    <p>{he.translate('query__the_form_no_params_to_change')}.</p>
+                    <p>
+                        <button type="button" className="default-button"
+                                    onClick={()=>this.props.submitFn()}>
+                            {he.translate('global__proceed')}
+                        </button>
+                    </p>
+                </div>
+            );
+        }
+    }
+
+    /**
+     *
+     */
+    class FirstHitsForm extends React.Component<FirstHitsFormProps, FirstHitsFormState> {
+
+        constructor(props) {
+            super(props);
+            this.state = {
+                isAutoSubmit: this.props.operationIdx === undefined,
+                docStructs: firstHitsStore.getDocStructValues()
+            }
+            this._handleSubmit = this._handleSubmit.bind(this);
+        }
+
+        render() {
+            return (
+                <form>
+                    {this._renderContents()}
+                </form>
+            );
+        }
+
+        componentDidMount() {
+            if (this.state.isAutoSubmit) {
+                window.setTimeout(this._handleSubmit, 0);
+            }
+        }
+
+        _handleSubmit() {
+            if (this.props.operationIdx !== undefined) {
+                dispatcher.dispatch({
+                    actionType: 'BRANCH_QUERY',
+                    props: {operationIdx: this.props.operationIdx}
+                });
+
+            } else {
+                dispatcher.dispatch({
+                    actionType: 'FILTER_FIRST_HITS_SUBMIT',
+                    props: {
+                        operationId: this.props.operationId
+                    }
+                });
+            }
+        }
+
+        _renderContents() {
+            if (this.state.isAutoSubmit) {
+                return this._renderAutoSubmitState();
+
+            } else {
+                return this._renderDefaultState();
+            }
+        }
+
+        _renderAutoSubmitState() {
+            return <div><layoutViews.AjaxLoaderBarImage /></div>;
+        }
+
+        _renderDefaultState() {
+            return (
+                <div>
+                    <label>
+                        {he.translate('query__used_first_hits_struct')}:{'\u00a0'}
+                        <select disabled>
+                            <option>{this.state.docStructs.get(this.props.operationId)}</option>
+                        </select>
+                    </label>
+                    <p>{he.translate('query__the_form_no_params_to_change')}.</p>
+                    <p>
+                        <button type="button" className="default-button"
+                                    onClick={this._handleSubmit}>
+                            {he.translate('global__proceed')}
+                        </button>
+                    </p>
+                </div>
+            );
+        }
+    }
+
     return {
-        FilterForm: FilterForm
+        FilterForm: FilterForm,
+        SubHitsForm: SubHitsForm,
+        FirstHitsForm: FirstHitsForm
     };
 }

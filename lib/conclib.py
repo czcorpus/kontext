@@ -343,6 +343,8 @@ def get_conc_desc(corpus, q=None, subchash=None, translate=True, skip_internals=
                 'r': _t('Random sample'),
                 's': _t('Sort'),
                 'f': _t('Shuffle'),
+                'D': _('Remove nested matches'),
+                'F': _('First hits in documents'),
                 'n': _t('Negative filter'),
                 'N': _t('Negative filter (excluding KWIC)'),
                 'p': _t('Positive filter'),

@@ -33,6 +33,7 @@ import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore}
 import {SampleStore} from './sample';
 import {SwitchMainCorpStore} from './switchmc';
 import {TextTypesStore} from '../textTypes/attrValues';
+import {FirstHitsStore} from '../query/firstHits';
 
 
 /**
@@ -53,6 +54,8 @@ function mapOpIdToFormType(opId:string):string {
         r: Random sample
         s: Sort
         f: Shuffle
+        D: Remove nested matches
+        F: First hits in documents
         n: Negative filter
         N: Negative filter (excluding KWIC)
         p: Positive filter
@@ -76,6 +79,12 @@ function mapOpIdToFormType(opId:string):string {
 
     } else if (opId === 'x') {
         return 'switchmc';
+
+    } else if (opId === 'D') {
+        return 'subhits';
+
+    } else if (opId === 'F') {
+        return 'firsthits';
     }
 }
 
@@ -97,6 +106,7 @@ export interface ReplayStoreDeps {
     sampleStore:SampleStore;
     textTypesStore:TextTypesStore;
     switchMcStore:SwitchMainCorpStore;
+    firstHitsStore:FirstHitsStore;
 }
 
 
@@ -212,6 +222,8 @@ export class QueryReplayStore extends QueryInfoStore {
 
     private textTypesStore:TextTypesStore;
 
+    private firstHitsStore:FirstHitsStore;
+
     /**
      * Contains args used by different input forms involved in the current query operations.
      * The used key is the one used by conc_persistence to store operations to db.
@@ -251,6 +263,7 @@ export class QueryReplayStore extends QueryInfoStore {
         this.sampleStore = replayStoreDeps.sampleStore;
         this.switchMcStore = replayStoreDeps.switchMcStore;
         this.textTypesStore = replayStoreDeps.textTypesStore;
+        this.firstHitsStore = replayStoreDeps.firstHitsStore;
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
         this.stopAfterOpIdx = null;
@@ -521,6 +534,52 @@ export class QueryReplayStore extends QueryInfoStore {
                 }
             };
 
+        } else if (formType === 'subhits') {
+            return () => {
+                return prepareFormData().then(
+                    () => {
+                        const targetUrl = this.pageModel.createActionUrl('filter_subhits', this.pageModel.getConcArgs().items());
+                        if (opIdx < numOps - 1) {
+                            return this.pageModel.ajax(
+                                'GET',
+                                targetUrl,
+                                {format: 'json'}
+                            );
+
+                        } else {
+                            return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                                resolve(() => {
+                                    window.location.href = targetUrl;
+                                });
+                            });
+                        }
+                    }
+                );
+            };
+
+        } else if (formType === 'firsthits') {
+            return () => {
+                return prepareFormData().then(
+                    () => {
+                        const targetUrl = this.firstHitsStore.getSubmitUrl(opKey);
+                        if (opIdx < numOps - 1) {
+                            return this.pageModel.ajax(
+                                'GET',
+                                targetUrl,
+                                {format: 'json'}
+                            );
+
+                        } else {
+                            return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
+                                resolve(() => {
+                                    this.firstHitsStore.submitForm(opKey);
+                                });
+                            });
+                        }
+                    }
+                );
+            };
+
         } else if (formType === 'locked') { // locked op uses compiled query (i.e. no form data)
             return () => {
                 const args = this.pageModel.getConcArgs();
@@ -786,14 +845,9 @@ export class QueryReplayStore extends QueryInfoStore {
 
                 ).then(
                     (data) => {
-                        if (!data.contains_errors) {
-                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                            return data;
-
-                        } else {
-                            throw new Error(data.messages[0]);
-                        }
+                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
                     }
                 )
             });
@@ -826,6 +880,68 @@ export class QueryReplayStore extends QueryInfoStore {
                     return data;
                 }
             );
+        }
+    }
+
+    private syncSubhitsForm(opIdx:number):RSVP.Promise<any> {
+        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+        if (queryKey !== undefined) {
+            return new RSVP.Promise<AjaxResponse.ConcFormArgs>(
+                (resolve:(data)=>void, reject:(err)=>void) => {
+                    resolve(this.concArgsCache.get(queryKey));
+                }
+            );
+
+        } else {
+            return this.pageModel.ajax<AjaxResponse.ConcFormArgsResponse>(
+                'GET',
+                this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                {
+                    corpname: this.getActualCorpname(),
+                    last_key: this.getCurrentQueryKey(),
+                    idx: opIdx
+                }
+
+            ).then(
+                (data) => {
+                    this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                    this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                    return data;
+                }
+            );
+        }
+    }
+
+    private syncFirstHitsForm(opIdx:number):RSVP.Promise<any> {
+        const queryKey = this.opIdxToCachedQueryKey(opIdx);
+        if (queryKey !== undefined) {
+            return this.firstHitsStore.syncFrom(() => {
+                return new RSVP.Promise<AjaxResponse.FirstHitsFormArgs>(
+                    (resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
+                    }
+                );
+            });
+
+        } else {
+            return this.firstHitsStore.syncFrom(() => {
+                return this.pageModel.ajax<AjaxResponse.FirstHitsFormArgs>(
+                    'GET',
+                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                    {
+                        corpname: this.getActualCorpname(),
+                        last_key: this.getCurrentQueryKey(),
+                        idx: opIdx
+                    }
+
+                ).then(
+                    (data) => {
+                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
+                    }
+                );
+            });
         }
     }
 
@@ -865,7 +981,6 @@ export class QueryReplayStore extends QueryInfoStore {
     private syncFormData(opIdx:number):RSVP.Promise<any> {
         const opId = this.currEncodedOperations.get(opIdx).opid;
         const formType = this.currEncodedOperations.get(opIdx).formType;
-
         if (this.concArgsCache.size === 0) {
             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                 resolve(null);
@@ -888,6 +1003,12 @@ export class QueryReplayStore extends QueryInfoStore {
 
         } else if (formType === 'switchmc') {
             return this.syncSwitchMcForm(opIdx);
+
+        } else if (formType === 'subhits') {
+            return this.syncSubhitsForm(opIdx);
+
+        } else if (formType === 'firsthits') {
+            return this.syncFirstHitsForm(opIdx);
         }
     }
 

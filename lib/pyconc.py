@@ -146,6 +146,12 @@ class PyConc(manatee.Concordance):
     def command_d(self, options):
         self.delete_lines(options)
 
+    def command_D(self, options):
+        self.delete_subparts()
+
+    def command_F(self, options):
+        self.delete_struct_repeats(options)
+
     def command_f(self, options):
         self.shuffle()
 
