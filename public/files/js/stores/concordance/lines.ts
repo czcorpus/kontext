@@ -354,7 +354,7 @@ export class ConcLineStore extends SimplePageStore {
             }
         );
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
                     this.changeMainCorpus(payload.props['maincorp']);

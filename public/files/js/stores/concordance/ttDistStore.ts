@@ -116,6 +116,8 @@ export class TextTypesDistStore extends SimplePageStore {
 
     private concLineStore:ConcLineStore;
 
+    private blockedByAsyncConc:boolean;
+
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, concLineStore:ConcLineStore, props:TextTypesDistStoreProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -123,31 +125,41 @@ export class TextTypesDistStore extends SimplePageStore {
         this.ttCrit = props.ttCrit;
         this.blocks = Immutable.List<FreqBlock>();
         this.flimit = 100; // this is always recalculated according to data
-        this.isBusy = false;
         this.sampleSize = 0;
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.blockedByAsyncConc = this.concLineStore.isUnfinishedCalculation();
+        this.isBusy = this.concLineStore.isUnfinishedCalculation();
+        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
+                case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+                    this.dispatcher.waitFor([this.concLineStore.getDispatcherToken()]);
+                    this.blockedByAsyncConc = this.concLineStore.isUnfinishedCalculation();
+                    this.performDataLoad();
+                break;
                 case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
-                    this.isBusy = true;
-                    this.notifyChangeListeners();
-                    this.loadData().then(
-                        (ans) => {
-                            this.isBusy = false;
-                            this.notifyChangeListeners();
-                        },
-                        (err) => {
-                            this.isBusy = false;
-                            this.layoutModel.showMessage('error', err);
-                            this.notifyChangeListeners();
-                        }
-                    );
+                    this.performDataLoad();
                 break;
             }
         });
     }
 
+    private performDataLoad():void {
+        this.isBusy = true;
+        this.notifyChangeListeners();
+        this.loadData().then(
+            (ans) => {
+                this.isBusy = false;
+                this.notifyChangeListeners();
+            },
+            (err) => {
+                this.isBusy = false;
+                this.layoutModel.showMessage('error', err);
+                this.notifyChangeListeners();
+            }
+        );
+    }
+
     private getConcSize():number {
-        return this.concLineStore.getConcSummary().fullSize;
+        return this.concLineStore.getConcSummary().concSize;
     }
 
     private calcMinFreq():number {
@@ -233,5 +245,9 @@ export class TextTypesDistStore extends SimplePageStore {
 
     getSampleSize():number {
         return this.sampleSize;
+    }
+
+    getBlockedByAsyncConc():boolean {
+        return this.blockedByAsyncConc;
     }
 }
