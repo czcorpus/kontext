@@ -11,7 +11,7 @@
  */
 
 Query =
-    Sequence _ (BINAND _ GlobPart)? (NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* SEMI
+    Sequence (_ BINAND _ GlobPart)? _ (NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* SEMI
 
 
 GlobPart =
