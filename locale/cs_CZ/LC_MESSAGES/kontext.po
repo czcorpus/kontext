@@ -429,6 +429,9 @@ msgstr "Nepodařilo se otevřít korpus {0}"
 msgid "Two-attribute interrelationship"
 msgstr "Vzájemný vztah dvou atributů"
 
+msgid "Frequency list"
+msgstr "Frekvenční seznam"
+
 msgid "Archive query"
 msgstr "Archivovat dotaz"
 
