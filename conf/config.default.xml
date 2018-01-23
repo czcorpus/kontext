@@ -1,0 +1,156 @@
+<kontext>
+    <theme>
+        <name>default</name>
+        <css/>
+        <logo>kontext-logo.svg</logo>
+        <logo_mouseover>kontext-logo_s.svg</logo_mouseover>
+        <logo_href>http://localhost:5000</logo_href> <!-- change this according to your settings -->
+        <logo_inline_css>width: 200px</logo_inline_css>
+        <fonts/>
+    </theme>
+    <global>
+        <deployment_id>20151031_v4
+        </deployment_id> <!-- can flush browser's cache when updating app even if HTTP caching headers are not ok -->
+        <manatee_path />
+        <umask>002</umask>
+        <debug>false</debug>
+        <maintenance>false</maintenance>
+        <profile_log_path/> <!-- leave this empty unless you want to do a low-level debugging -->
+        <max_attr_list_size>30</max_attr_list_size>
+        <translations>
+            <language label="česky">cs_CZ</language>
+            <language label="English">en_US</language>
+        </translations>
+        <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
+        <periodic_tasks conf="/opt/kontext/conf/beatconfig.py">celery</periodic_tasks>
+        <conc_line_max_group_num>99</conc_line_max_group_num>
+        <calc_backend conf="/opt/kontext/conf/celeryconfig.py">celery</calc_backend>
+        <action_path_prefix/>
+        <static_files_prefix>/files</static_files_prefix>
+        <use_conc_toolbar>0</use_conc_toolbar>
+    </global>
+    <mailing/>
+    <logging>
+        <path>/var/log/kontext/application.log</path>
+        <file_size>5000000</file_size>
+        <num_files>10</num_files>
+        <values>
+            <item>environ:REMOTE_ADDR</item>
+            <item>environ:HTTP_USER_AGENT</item>
+            <item>date</item>
+            <item>user</item>
+            <item>user_id</item>
+            <item>action</item>
+            <item>params</item>
+            <item>settings</item>
+            <item>proc_time</item>
+            <item>pid</item>
+        </values>
+    </logging>
+    <corpora>
+        <manatee_registry>/var/lib/manatee/registry</manatee_registry>
+        <manatee_registry_locale>cs_CZ</manatee_registry_locale>
+        <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <freqs_precalc_dir>/var/local/corpora/freqs-precalc</freqs_precalc_dir> <!-- this is optional -->
+        <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
+        <freqs_cache_ttl>3600</freqs_cache_ttl>
+        <freqs_cache_min_lines>100</freqs_cache_min_lines>
+        <colls_cache_dir>/var/local/corpora/colls-cache</colls_cache_dir>
+        <colls_cache_ttl>3600</colls_cache_ttl>
+        <colls_cache_min_lines>50</colls_cache_min_lines>
+        <conc_dir>/var/local/corpora/conc</conc_dir>
+        <default_corpora>
+            <item>susanne</item>
+            <!-- item>insert_your_default_corpus_here</item -->
+        </default_corpora>
+        <speech_files_path/>
+        <empty_attr_value_placeholder>--</empty_attr_value_placeholder>
+        <multilevel_freq_dist_max_levels>10</multilevel_freq_dist_max_levels>
+        <right_interval_char>+</right_interval_char>
+        <left_interval_char/>
+        <interval_char>±</interval_char>
+    </corpora>
+    <plugins>
+        <application_bar/>
+        <auth>
+            <module>default_auth</module>
+            <auth_cookie_name>kontext_session</auth_cookie_name>
+            <anonymous_user_id>0</anonymous_user_id>
+            <login_url>/user/login?continue=%s</login_url>
+            <logout_url>/user/logout?continue=%s</logout_url>
+        </auth>
+        <conc_cache>
+            <module>redis_conc_cache</module>
+            <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
+        </conc_cache>
+        <conc_persistence>
+            <module>default_conc_persistence</module>
+            <ttl_days extension-by="default">100</ttl_days>
+            <anonymous_user_ttl_days extension-by="default">7</anonymous_user_ttl_days>
+        </conc_persistence>
+        <corparch>
+            <module>default_corparch</module>
+            <js_module>defaultCorparch</js_module>
+            <file>/opt/kontext/conf/corplist.xml</file>
+            <root_elm_path>/corplist</root_elm_path>
+            <tag_prefix extension-by="default">+</tag_prefix>
+            <max_num_hints extension-by="default">10</max_num_hints>
+            <max_num_favorites extension-by="default">15</max_num_favorites>
+            <default_page_list_size extension-by="default">30</default_page_list_size>
+        </corparch>
+        <db>
+            <module>redis_db</module>
+            <host extension-by="default">localhost</host>
+            <port extension-by="default">6379</port>
+            <id extension-by="default">1</id>
+        </db>
+        <export>
+            <csv>default_csv</csv>
+            <xlsx>default_xlsx</xlsx>
+        </export>
+        <export_freq2d>
+            <xlsx>default_xlsx</xlsx>
+        </export_freq2d>
+        <footer_bar/>
+        <getlang>
+            <module>default_getlang</module>
+            <cookie extension-by="default">kontext_toolbar_lang</cookie>
+            <fallback_lang extension-by="default">en_US</fallback_lang>
+        </getlang>
+        <live_attributes/>
+        <menu_items>
+            <module>default_menu_items</module>
+            <data_path extension-by="default">/opt/kontext/conf/main-menu.sample.json</data_path>
+        </menu_items>
+        <query_storage>
+            <module>default_query_storage</module>
+            <js_module>defaultQueryStorage</js_module>
+            <page_append_records>5</page_append_records>
+            <page_num_records>10</page_num_records>
+            <num_kept_records extension-by="default">10</num_kept_records>
+        </query_storage>
+        <settings_storage>
+            <module>default_settings_storage</module>
+            <excluded_users>
+                <item>1</item>
+                <item>3</item>
+            </excluded_users>
+        </settings_storage>
+        <sessions>
+            <module>default_sessions</module>
+            <ttl>14400</ttl>
+        </sessions>
+        <subcmixer/>
+        <subc_restore/>
+        <syntax_viewer/>
+        <taghelper/>
+        <user_items>
+            <module>default_user_items</module>
+        </user_items>
+        <chart_export>
+            <module>default_chart_export</module>
+        </chart_export>
+        <issue_reporting/>
+        <token_detail/>
+    </plugins>
+</kontext>
