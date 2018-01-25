@@ -307,7 +307,9 @@ def calculate_freqs(args):
                     Head=data[0].get('Head', []))]
     else:
         for item in data:
-            item['Total'] = len(item['Items']) if 'Items' in item else 0
+            if 'Items' not in item:
+                item['Items'] = []
+            item['Total'] = len(item['Items'])
             item['TotalPages'] = None
         ans = data
         fstart = None

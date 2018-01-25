@@ -211,21 +211,23 @@ export class TextTypesDistStore extends SimplePageStore {
             }
         ).then(
             (data) => {
-                this.blocks = Immutable.List<FreqBlock>(data.Blocks.map(block => {
-                    const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
-                    return {
-                        label: block.Head[0] ? block.Head[0].n : null,
-                        items: block.Items.sort((v1, v2) => v2.rel - v1.rel).map((v, i) => {
-                            return {
-                                value: v.Word.map(v => v.n).join(', '),
-                                ipm: v.rel,
-                                abs: v.freq,
-                                barWidth: ~~Math.round(v.rel / sumRes * TextTypesDistStore.IPM_BAR_WIDTH),
-                                color: TextTypesDistStore.COLORS[i % TextTypesDistStore.COLORS.length]
-                            };
-                        })
-                    };
-                }));
+                this.blocks = Immutable.List<FreqBlock>(
+                    data.Blocks.filter(block => block.Items.length > 0).map(block => {
+                        const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
+                        return {
+                            label: block.Head && block.Head[0] ? block.Head.length > 0 && block.Head[0].n : null,
+                            items: block.Items.sort((v1, v2) => v2.rel - v1.rel).map((v, i) => {
+                                return {
+                                    value: v.Word.map(v => v.n).join(', '),
+                                    ipm: v.rel,
+                                    abs: v.freq,
+                                    barWidth: ~~Math.round(v.rel / sumRes * TextTypesDistStore.IPM_BAR_WIDTH),
+                                    color: TextTypesDistStore.COLORS[i % TextTypesDistStore.COLORS.length]
+                                };
+                            })
+                        };
+                    })
+                );
                 return true;
             }
         );
