@@ -176,13 +176,6 @@
                         in the text types component</a:documentation>
                         <data type="integer" />
                     </element>
-                    <optional>
-                        <element name="ui_state_ttl">
-                            <a:documentation>Specifies a number of seconds some client-side specific settings
-                            are stored</a:documentation>
-                            <data type="integer" />
-                        </element>
-                    </optional>
                     <element name="translations">
                         <a:documentation>Languages activated in user interface (use [language]_[region]
                             format, e.g. en_US)
@@ -456,14 +449,9 @@
                     <element name="query_storage">
                         <a:documentation>A plug-in for storing current queries for later retrieval</a:documentation>
                         <ref name="plugin_common" />
-                        <interleave>
-                            <element name="page_append_records">
-                                <data type="integer" />
-                            </element>
-                            <element name="page_num_records">
-                                <data type="integer" />
-                            </element>
-                        </interleave>
+                        <element name="page_num_records">
+                            <data type="integer" />
+                        </element>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="conc_persistence">
@@ -553,8 +541,10 @@
                     </element>
                     <element name="taghelper">
                         <a:documentation>An interactive builder of positional tags</a:documentation>
-                        <ref name="plugin_common" />
-                        <ref name="customPluginConfiguration" />
+                        <optional>
+                            <ref name="plugin_common" />
+                            <ref name="customPluginConfiguration" />
+                        </optional>
                     </element>
                     <element name="user_items">
                         <a:documentation>User favorite items (this is coupled with &quot;corparch&quot; plug-in)</a:documentation>

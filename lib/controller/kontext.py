@@ -1108,16 +1108,8 @@ class Kontext(Controller):
                 self._plugin_api).to_dict() if irp else None
         page_model = action_metadata.get('page_model', l10n.camelize(methodname))
         result['page_model'] = page_model
-
-        if settings.contains('global', 'ui_state_ttl'):
-            result['ui_state_ttl'] = settings.get('global', 'ui_state_ttl')
-        else:
-            result['ui_state_ttl'] = 3600 * 12
-
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
-
         result['can_send_mail'] = bool(settings.get('mailing'))
-
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
 
         result['multi_sattr_allowed_structs'] = []

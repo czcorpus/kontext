@@ -27,10 +27,6 @@ element query_storage {
     attribute extension-by { "default" }
     text # how many records to show in 'recent queries' page
   }
-  element page_append_records {
-    attribute extension-by { "default" }
-    text # how many records to load in case user clicks 'more'
-  }
   element clear_async {
     attribute extension-by { "default" }
     "1" | "0" | "true" | "false"  # if true then old records are removed in a separate task
@@ -59,7 +55,8 @@ class QueryStorage(AbstractQueryStorage):
         db -- default_db storage backend
         """
         tmp = conf.get('plugins', 'query_storage').get('default:num_kept_records', None)
-        self._async_cleanup = conf.import_bool(conf.get('plugins', 'query_storage').get('default:async_cleanup', '0'))
+        self._async_cleanup = conf.import_bool(
+            conf.get('plugins', 'query_storage').get('default:async_cleanup', '0'))
         self.num_kept_records = int(tmp) if tmp else 10
         self.db = db
         self._conc_persistence = conc_persistence
@@ -184,19 +181,22 @@ class QueryStorage(AbstractQueryStorage):
 
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]
-            from_date = time.mktime(datetime(from_date[0], from_date[1], from_date[2], 0, 0, 0).timetuple())
+            from_date = time.mktime(
+                datetime(from_date[0], from_date[1], from_date[2], 0, 0, 0).timetuple())
             full_data = filter(lambda x: x['created'] >= from_date, full_data)
 
         if to_date:
             to_date = [int(d) for d in to_date.split('-')]
-            to_date = time.mktime(datetime(to_date[0], to_date[1], to_date[2], 23, 59, 59).timetuple())
+            to_date = time.mktime(
+                datetime(to_date[0], to_date[1], to_date[2], 23, 59, 59).timetuple())
             full_data = filter(lambda x: x['created'] <= to_date, full_data)
 
         if query_type:
             full_data = filter(lambda x: matches_corp_prop(x, 'query_type', query_type), full_data)
 
         if corpname:
-            full_data = filter(lambda x: matches_corp_prop(x, 'canonical_corpus_id', corpname), full_data)
+            full_data = filter(lambda x: matches_corp_prop(
+                x, 'canonical_corpus_id', corpname), full_data)
 
         if archived_only:
             full_data = filter(lambda x: x.get('name', None) is not None, full_data)

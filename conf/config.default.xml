@@ -125,7 +125,6 @@
         <query_storage>
             <module>default_query_storage</module>
             <js_module>defaultQueryStorage</js_module>
-            <page_append_records>5</page_append_records>
             <page_num_records>10</page_num_records>
             <num_kept_records extension-by="default">10</num_kept_records>
         </query_storage>
