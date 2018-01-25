@@ -82,7 +82,6 @@ __conf.compiledQuery = $to_json($Q);
 __conf.concPersistenceOpId = $to_json($conc_persistence_op_id);
 __conf.uiLang = $to_json($uiLang);
 __conf.isDebug = #if $debug#true#else#false#end if#;
-__conf.uiStateTTL = ${ui_state_ttl};
 #if $varExists('aligned_corpora')
 __conf.alignedCorpora = $to_json($aligned_corpora);
 #end if

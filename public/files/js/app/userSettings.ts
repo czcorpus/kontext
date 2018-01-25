@@ -63,26 +63,17 @@ export class UserSettings implements Kontext.IUserSettings {
 
     timestampKey:string;
 
-    uiStateTTL:number;
-
     data:{[k:string]:any};
 
-    private constructor(storage:Storage, storageKey:string, timestampKey:string, uiStateTTL:number) {
+    private constructor(storage:Storage, storageKey:string, timestampKey:string) {
         this.storage = storage;
         this.storageKey = storageKey;
         this.timestampKey = timestampKey;
-        this.uiStateTTL = uiStateTTL;
         this.data = {};
     }
 
-
     private getTimstamp():number {
         return new Date().getTime() / 1000;
-    }
-
-    private dataIsRecent(data) {
-        return !data[this.timestampKey] || data[this.timestampKey]
-            && ( (new Date().getTime() / 1000 - data[this.timestampKey]) < this.uiStateTTL);
     }
 
     private dumpToStorage() {
@@ -101,10 +92,7 @@ export class UserSettings implements Kontext.IUserSettings {
 
     init():void {
         if (this.storageKey in this.storage) {
-            let tmp = JSON.parse(this.storage.getItem(this.storageKey));
-            if (this.dataIsRecent(tmp)) {
-                this.data = tmp;
-            }
+            this.data = JSON.parse(this.storage.getItem(this.storageKey));
 
         } else {
             this.data[this.timestampKey] = this.getTimstamp();
@@ -118,8 +106,7 @@ export class UserSettings implements Kontext.IUserSettings {
         return new UserSettings(
             (typeof window.localStorage === 'object') ? window.localStorage : new NullStorage(),
             'kontext_ui',
-            '__timestamp__',
-            conf.getConf('uiStateTTL')
+            '__timestamp__'
         );
     }
 }
