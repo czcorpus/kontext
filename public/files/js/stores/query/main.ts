@@ -29,7 +29,7 @@ import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
-import {parse as parseQuery} from 'cqlParser/parser';
+import {parse as parseQuery, ITracer} from 'cqlParser/parser';
 import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';
 import * as RSVP from 'vendor/rsvp';
@@ -135,6 +135,8 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected queryContextStore:QueryContextStore;
 
+    protected queryTracer:ITracer;
+
     // ----- non flux world handlers
 
     protected onCorpusSelectionChangeActions:Immutable.List<(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void>;
@@ -152,6 +154,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
         this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
         this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
+        this.queryTracer = {trace:(_)=>undefined};
 
         this.onCorpusSelectionChangeActions = Immutable.List<(subcname:string)=>void>();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -209,12 +212,12 @@ export abstract class GeneralQueryStore extends SimplePageStore {
                         }
                     }
                 case 'phrase':
-                    return parseQuery.bind(null, query, {startRule: 'PhraseQuery'});
+                    return parseQuery.bind(null, query, {startRule: 'PhraseQuery', tracer: this.queryTracer});
                 case 'lemma':
                 case 'word':
-                    return parseQuery.bind(null, query, {startRule: 'RegExpRaw'});
+                    return parseQuery.bind(null, query, {startRule: 'RegExpRaw', tracer: this.queryTracer});
                 case 'cql':
-                    return parseQuery.bind(null, query + ';');
+                    return parseQuery.bind(null, query + ';', {tracer: this.queryTracer});
                 default:
                     return () => {};
             }

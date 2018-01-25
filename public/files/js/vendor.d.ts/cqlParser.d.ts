@@ -20,9 +20,31 @@
 
 declare module "cqlParser/parser" {
 
+    interface SrcPos {
+        offset:number;
+        line:number;
+        column:number;
+    }
+
+    interface SrcRange {
+        start:SrcPos;
+        end:SrcPos;
+    }
+
+    interface TracerItem {
+        type:string;
+        rule:string;
+        result?:string|Array<string>;
+        location:SrcRange;
+    }
+
+    interface ITracer {
+        trace: (v:TracerItem)=>void;
+    }
+
     export interface Options {
-        startRule:string;
-        tracer:any;
+        startRule?:string;
+        tracer?:ITracer;
     }
 
     export function parse(input:string, options?:Options):Array<any>;

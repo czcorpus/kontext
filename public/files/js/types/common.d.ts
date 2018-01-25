@@ -524,6 +524,11 @@ declare module Kontext {
          */
         created:number;
         query:string;
+
+        /**
+         * Query with syntax highlighting (using embedded HTML)
+         */
+        query_sh?:string;
         query_type:string;
         query_id:string;
         subcorpname:string;
