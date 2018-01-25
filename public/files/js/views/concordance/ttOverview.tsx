@@ -81,12 +81,14 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         return (
             <div>
                 {props.blocks.map((item, i) => <FreqBar key={`freq:${i}`} items={item.items} label={item.label} />)}
-                <p className="note">
-                    {he.translate('concview__using_min_freq_{value}', {value: props.minFreq})}.
-                    {props.sampleSize > 0 ?
-                        ' ' + he.translate('concview__using_sample_{value}', {value: props.sampleSize}) + '.' : ''
-                    }
-                </p>
+                {props.blocks.size > 0 ?
+                    <p className="note">
+                        {he.translate('concview__using_min_freq_{value}', {value: props.minFreq})}.
+                        {props.sampleSize > 0 ?
+                            ' ' + he.translate('concview__using_sample_{value}', {value: props.sampleSize}) + '.' : ''
+                        }
+                    </p> : null
+                }
             </div>
         );
     };
