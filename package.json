@@ -31,8 +31,8 @@
     "ts-loader": "^3.0.5",
     "typescript": "^2.5.3",
     "uglifyjs-webpack-plugin": "^1.0.1",
-    "webpack": "^3.8.1",
-    "webpack-dev-server": "^2.9.3",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.11.1",
     "webpack-merge": "^4.1.0",
     "xmldom": "~0.1.22"
   }
