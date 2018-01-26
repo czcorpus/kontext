@@ -713,13 +713,15 @@ export class ViewPage {
                 usesubcorp: this.layoutModel.getConf<string>('subcorpname'),
                 queryFormProps: {
                     corpname: this.layoutModel.getConf<string>('corpname'),
-                    tagHelperView: taghelperPlugin ? taghelperPlugin.getWidgetView() : null,
+                    tagHelperView: this.layoutModel.isInstalledPlugin(taghelperPlugin) ?
+                            taghelperPlugin.getWidgetView() : null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
                     allowCorpusSelection: false,
                     actionPrefix: ''
                 },
                 filterFormProps: {
-                    tagHelperView: taghelperPlugin ? taghelperPlugin.getWidgetView() : null,
+                    tagHelperView: this.layoutModel.isInstalledPlugin(taghelperPlugin) ?
+                            taghelperPlugin.getWidgetView() : null,
                     queryStorageView: queryStoragePlugin.getWidgetView(),
                     allowCorpusSelection: false,
                     actionPrefix: 'FILTER_'
