@@ -53,6 +53,7 @@ import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';
 import authPlugin from 'plugins/auth/init';
 import issueReportingPlugin from 'plugins/issueReporting/init';
 import {AppNavigation, AjaxArgs} from './navigation';
+import {EmptyPlugin} from '../plugins/empty/init';
 
 declare var require:any; // webpack's require
 require('styles/kontext.less');
@@ -598,6 +599,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 resolve(false);
             });
         }
+    }
+
+    isInstalledPlugin(plugin:any):boolean {
+        return plugin && !(plugin instanceof EmptyPlugin);
     }
 
     /**
