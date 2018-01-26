@@ -117,9 +117,12 @@ RgAlt =
     LBRACKET (RgChar / DASH)+ RBRACKET
 
 RgChar =
-    RgEscaped / LETTER / [,\-_ ] / [0-9\?\*\+\.\|]
+    RG_ESCAPED / LETTER / RG_OP
 
-RgEscaped =
+RG_OP =
+    [,\-_ ] / [0-9\?\*\+\.\|]
+
+RG_ESCAPED =
     '\\{' / '\\}' / '\\(' / '\\)' / '\\[' / '\\]' / '\\?' / '\\!'
 
 // {n}, {n,}, {n,m}

@@ -191,7 +191,7 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                 <div className="query-line">
                     <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u25BA\u00a0'}</span>
                     {
-                        props.query_type === 'cql' ?
+                        props.query_sh ?
                         <pre className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
                         <span className="query">{props.query}</span>
                     }
