@@ -4,8 +4,8 @@ production :  templates client-production
 templates :
 	find ./templates -name "*.tmpl" -exec sh -c 'T=$$(echo {}); T=$${T#./templates/}; cheetah compile --nobackup --odir cmpltmpl --idir templates "$$T"' \;
 client-production :
-	webpack-cli --config webpack.prod.js
+	nodejs node_modules/webpack/bin/webpack.js --config webpack.prod.js
 client-devel :
-	webpack-cli --config webpack.dev.js
+	nodejs node_modules/webpack/bin/webpack.js --config webpack.dev.js
 devel-server :
-	webpack-dev-server --config webpack.dev.js
+	nodejs node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.dev.js
