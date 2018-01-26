@@ -190,7 +190,11 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
             <div className="query-info">
                 <div className="query-line">
                     <span className="query-type">{queryTypes[props.query_type]}{'\u00a0\u25BA\u00a0'}</span>
-                    <span className="query">{props.query}</span>
+                    {
+                        props.query_type === 'cql' ?
+                        <pre className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                        <span className="query">{props.query}</span>
+                    }
                 </div>
                 {props.aligned.map(v => <AlignedQueryInfo key={v.corpname}
                             query={v.query} query_type={v.query_type} />)}
@@ -340,9 +344,13 @@ export function init(dispatcher, he, layoutViews, queryHistoryStore) {
                     </span>
                     {props.data.aligned.map(v => <span key={v.corpname} className="corpname"> + {v.human_corpname}</span>)}
                 </div>
-                <QueryInfo human_corpname={props.data.human_corpname} query={props.data.query}
-                        query_type={props.data.query_type} subcorpname={props.data.subcorpname}
-                        aligned={props.data.aligned} textTypes={props.data.selected_text_types} />
+                <QueryInfo human_corpname={props.data.human_corpname}
+                        query={props.data.query}
+                        query_sh={props.data.query_sh}
+                        query_type={props.data.query_type}
+                        subcorpname={props.data.subcorpname}
+                        aligned={props.data.aligned}
+                        textTypes={props.data.selected_text_types} />
                 <div className="footer">
                     <a className="open-in-form util-button" onClick={handleFormClick}>
                         {he.translate('qhistory__open_in_form')}

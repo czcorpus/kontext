@@ -214,7 +214,8 @@
             {
                 allowedStartRules: ['Query', 'RegExpRaw' , 'PhraseQuery'],
                 output: 'source',
-                format: 'commonjs'
+                format: 'commonjs',
+                trace: true
             }
         );
         const filePath = path.resolve(targetDir, 'parser.js');

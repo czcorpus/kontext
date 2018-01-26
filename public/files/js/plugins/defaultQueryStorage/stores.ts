@@ -28,6 +28,7 @@
 import {SimplePageStore, cloneRecord} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
+import {highlightSyntax} from '../../cqlsh';
 
 
 export interface InputBoxHistoryItem {
@@ -35,6 +36,14 @@ export interface InputBoxHistoryItem {
     query_type:string;
     created:number;
 }
+
+
+const attachSh = (item:Kontext.QueryHistoryItem) => {
+    if (item.query_type === 'cql') {
+        item.query_sh = highlightSyntax(item.query);
+    }
+    return item;
+};
 
 
 export class QueryStorageStore extends SimplePageStore implements PluginInterfaces.IQueryStorageStore {
@@ -221,8 +230,9 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
             (data:AjaxResponse.QueryHistory) => {
                 this.hasMoreItems = data.data.length === this.limit + 1;
                 this.data = this.hasMoreItems ?
-                    Immutable.List<Kontext.QueryHistoryItem>(data.data.slice(0, data.data.length - 1)) :
-                    Immutable.List<Kontext.QueryHistoryItem>(data.data);
+                    Immutable.List<Kontext.QueryHistoryItem>(
+                        data.data.slice(0, data.data.length - 1).map(attachSh)) :
+                    Immutable.List<Kontext.QueryHistoryItem>(data.data.map(attachSh));
             }
         );
     }
@@ -266,7 +276,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
     }
 
     importData(data:Array<Kontext.QueryHistoryItem>):void {
-        this.data = Immutable.List<Kontext.QueryHistoryItem>(data);
+        this.data = Immutable.List<Kontext.QueryHistoryItem>(data).map(attachSh).toList();
     }
 
     getData():Immutable.List<Kontext.QueryHistoryItem> {

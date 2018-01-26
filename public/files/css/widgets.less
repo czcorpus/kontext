@@ -356,6 +356,7 @@ fieldset.FieldsetOutputOptions {
                 .corpname {
                     display: inline-block;
                     margin-right: 1em;
+                    color: @color-light-text;
 
                     em.subcorpname {
                         font-weight: bold;
@@ -382,12 +383,19 @@ fieldset.FieldsetOutputOptions {
 
                     .query {
                         overflow: hidden;
-                        white-space: nowrap;
                         padding: 0.3em 0.7em 0.3em 0.7em;
                         font-family: @monospace-font-family;
-                        background-color: @locked-attrs-bgcolor;
-                        border: @input-border-style;
-                        border-radius: @input-border-radius;
+                        background-color: transparent;
+                        border: none;
+                    }
+
+                    span.query {
+                        white-space: nowrap;
+                    }
+
+                    pre.query {
+                        display: inline-block;
+                        vertical-align: middle;
                     }
 
                     .query-type {
