@@ -25,7 +25,7 @@ import {parse as parseQuery} from 'cqlParser/parser';
  * for a query by embedding an HTML markup into
  * the resulting string.
  */
-export function highlightSyntax(query:string):string {
+export function highlightSyntax(query:string, queryType:string):string {
 
     const chars:Array<string> = [];
     const CLASS_REGEXP = 'sh-regexp';
@@ -35,8 +35,22 @@ export function highlightSyntax(query:string):string {
     const CLASS_BRACKETS = 'sh-bracket';
 
     const BREAK_CHR = query.length > 70 && query.indexOf('\n') === -1 ? '\n' : ' ';
+    const startRule = (() => {
+        switch (queryType) {
+            case 'phrase':
+                return 'PhraseQuery';
+            case 'word':
+            case 'lemma':
+                return 'RegExpRaw';
+            case 'cql':
+                return 'Query';
+            default:
+                throw new Error(`No parsing rule for type ${queryType}`);
+        }
+    })();
 
     parseQuery(query + ';', {
+        startRule: startRule,
         tracer: {
             trace: (v) => {
                 if (v.type === 'rule.match') {
@@ -57,13 +71,19 @@ export function highlightSyntax(query:string):string {
                             chars.push('[');
                             chars.push('</span>');
                         break;
-                        case 'RegExp':
-                            chars.push(`<span class="${CLASS_REGEXP}">`);
+                        case 'LSTRUCT':
+                        case 'RSTRUCT':
+                        case 'RBRACE':
+                        case 'LBRACE':
+                        case 'LPAREN':
+                        case 'RPAREN':
+                            chars.push(`<span class="${CLASS_BRACKETS}">`);
                             chars.push(query.substring(v.location.start.offset, v.location.end.offset));
                             chars.push('</span>');
                         break;
-                        case 'MuPart':
-                            chars.push(`<span class="${CLASS_KEYWORD}">`);
+                        case 'LETTER':
+                        case 'QUOT':
+                            chars.push(`<span class="${CLASS_REGEXP}">`);
                             chars.push(query.substring(v.location.start.offset, v.location.end.offset));
                             chars.push('</span>');
                         break;
@@ -83,12 +103,6 @@ export function highlightSyntax(query:string):string {
                         case 'KW_SWAP':
                         case 'KW_CCOLL':
                             chars.push(`<span class="${CLASS_KEYWORD}">`);
-                            chars.push(query.substring(v.location.start.offset, v.location.end.offset));
-                            chars.push('</span>');
-                        break;
-                        case 'LSTRUCT':
-                        case 'RSTRUCT':
-                            chars.push(`<span class="${CLASS_BRACKETS}">`);
                             chars.push(query.substring(v.location.start.offset, v.location.end.offset));
                             chars.push('</span>');
                         break;
@@ -114,6 +128,9 @@ export function highlightSyntax(query:string):string {
                         case 'BINOR':
                         case 'BINAND':
                         case 'NUMBER':
+                        case 'DASH':
+                        case 'RG_OP':
+                        case 'RG_ESCAPED':
                             chars.push(`<span class="${CLASS_OPERATOR}">`);
                             chars.push(query.substring(v.location.start.offset, v.location.end.offset));
                             chars.push('</span>');
