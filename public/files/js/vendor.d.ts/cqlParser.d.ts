@@ -47,5 +47,11 @@ declare module "cqlParser/parser" {
         tracer?:ITracer;
     }
 
+    export interface SyntaxError extends Error {
+        name:string;
+        location:SrcRange;
+        message:string;
+    }
+
     export function parse(input:string, options?:Options):Array<any>;
 }
