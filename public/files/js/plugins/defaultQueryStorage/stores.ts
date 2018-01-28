@@ -38,10 +38,10 @@ export interface InputBoxHistoryItem {
 }
 
 
-const attachSh = (item:Kontext.QueryHistoryItem) => {
+const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) => {
     if (item.query_type === 'cql' || item.query_type === 'word' ||
             item.query_type === 'phrase' || item.query_type === 'lemma') {
-        item.query_sh = highlightSyntax(item.query, item.query_type);
+        item.query_sh = highlightSyntax(item.query, item.query_type, he);
     }
     return item;
 };
@@ -232,8 +232,10 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                 this.hasMoreItems = data.data.length === this.limit + 1;
                 this.data = this.hasMoreItems ?
                     Immutable.List<Kontext.QueryHistoryItem>(
-                        data.data.slice(0, data.data.length - 1).map(attachSh)) :
-                    Immutable.List<Kontext.QueryHistoryItem>(data.data.map(attachSh));
+                        data.data.slice(0, data.data.length - 1)
+                            .map(attachSh.bind(null, this.pluginApi.getComponentHelpers()))) :
+                    Immutable.List<Kontext.QueryHistoryItem>(data.data
+                            .map(attachSh.bind(null, this.pluginApi.getComponentHelpers())));
             }
         );
     }
@@ -277,7 +279,8 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
     }
 
     importData(data:Array<Kontext.QueryHistoryItem>):void {
-        this.data = Immutable.List<Kontext.QueryHistoryItem>(data).map(attachSh).toList();
+        this.data = Immutable.List<Kontext.QueryHistoryItem>(data
+                        .map(attachSh.bind(null, this.pluginApi.getComponentHelpers())));
     }
 
     getData():Immutable.List<Kontext.QueryHistoryItem> {
