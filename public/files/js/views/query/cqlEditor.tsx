@@ -23,7 +23,7 @@
 /// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
-
+import {highlightSyntax} from '../../cqlsh';
 
 
 export interface CQLEditorProps {
@@ -54,35 +54,101 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    const CQLEditor = (props:CQLEditorProps) => {
+    class CQLEditor extends React.Component<CQLEditorProps, {}> {
 
-        const extractText = (root:Node) => {
-            const ans:Array<string> = [];
-            Array.from(root.childNodes).forEach(elm => {
+        private editorRoot:Node;
+
+        constructor(props:CQLEditorProps) {
+            super(props);
+            this.editorRoot = null;
+        }
+
+        private extractText(root:Node) {
+            const ans:Array<[string, Node]> = [];
+            for (let i = 0; i < root.childNodes.length; i += 1) {
+                const elm = root.childNodes[i];
                 switch (elm.nodeType) {
                     case Node.TEXT_NODE:
-                        ans.push(elm.textContent);
+                        ans.push([elm.nodeValue, elm]);
                     break;
                     case Node.ELEMENT_NODE:
-                        ans.splice(ans.length, 0, ...extractText(elm));
+                        ans.splice(ans.length, 0, ...this.extractText(elm));
                     break;
                 }
+            };
+            return ans;
+        }
+
+        private reapplySelection(root:Node, rawAnchorIdx:number, rawFocusIdx:number) {
+            const sel = window.getSelection();
+            const src = this.extractText(root);
+            let anchorNode = root;
+            let focusNode = root;
+            let currIdx = 0;
+            let anchorIdx = 0;
+            let focusIdx = 0;
+
+            src.forEach(([text, node]) => {
+                const nodeStartIdx = currIdx;
+                const nodeEndIdx = nodeStartIdx + text.length;
+                if (nodeStartIdx <= rawAnchorIdx && rawAnchorIdx <= nodeEndIdx) {
+                    anchorNode = node;
+                    anchorIdx = rawAnchorIdx - nodeStartIdx;
+                }
+                if (nodeStartIdx <= rawFocusIdx && rawFocusIdx <= nodeEndIdx) {
+                    focusNode = node;
+                    focusIdx = rawFocusIdx - nodeStartIdx;
+                }
+                currIdx += text.length;
             });
-            return ans.join('');
+            sel.setBaseAndExtent(anchorNode, anchorIdx, focusNode, focusIdx);
+        }
+
+        private getRawSelection(src:Array<[string, Node]>) {
+            const sel = window.getSelection();
+            let rawAnchorIdx = 0;
+            let rawFocusIdx = 0;
+            let currIdx = 0;
+
+            src.forEach(([text, node]) => {
+                if (node === sel.anchorNode) {
+                    rawAnchorIdx = currIdx + sel.anchorOffset;
+                }
+                if (node === sel.focusNode) {
+                    rawFocusIdx = currIdx + sel.focusOffset;
+                }
+                currIdx += text.length;
+            });
+            return [rawAnchorIdx, rawFocusIdx];
+        }
+
+        private updateEditor(elm) {
+            const src = this.extractText(elm);
+            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+            this.props.handleInputChange(src.map(v => v[0]).join(''));
+            elm.innerHTML = highlightSyntax(src.map(v => v[0]).join(''), 'cql', he);
+            this.reapplySelection(elm, rawAnchorIdx, rawFocusIdx);
         };
 
-        const updateEditor = (v) => {
-            const src = extractText(v.target);
-            props.handleInputChange(src);
-        };
+        private refFn(item) {
+            this.props.attachCurrInputElement(item);
+            this.editorRoot = item;
+        }
 
-        return <pre contentEditable={true}
-                        onInput={updateEditor}
-                        className="cql-input"
-                        style={{width: '40em', height: '3em'}}
-                        ref={item => props.attachCurrInputElement(item)}
-                        onChange={props.handleInputChange} value={props.query}
-                        onKeyDown={props.inputKeyHandler} />;
+        componentDidMount() {
+            this.editorRoot.appendChild(document.createTextNode(this.props.query));
+            this.updateEditor(this.editorRoot);
+        }
+
+        render() {
+            return <pre contentEditable={true}
+                            onInput={(evt) => this.updateEditor(evt.target)}
+                            className="cql-input"
+                            style={{width: '40em', height: '5em'}}
+                            ref={(item) => this.refFn(item)}
+                            onChange={this.props.handleInputChange} value={this.props.query}
+                            onKeyDown={this.props.inputKeyHandler} />;
+        }
     }
 
 
