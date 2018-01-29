@@ -22,11 +22,13 @@
 
 import * as React from 'vendor/react';
 import {init as keyboardInit} from './keyboard';
+import {init as cqlEditoInit} from './cqlEditor';
 
 
 export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore) {
 
     const keyboardViews = keyboardInit(dispatcher, he, queryStore, virtualKeyboardStore);
+    const cqlEditorViews = cqlEditoInit(dispatcher, he);
     const layoutViews = he.getLayoutViews();
 
 
@@ -537,6 +539,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         }
     };
 
+
     // ------------------- <TRQueryInputField /> -----------------------------
 
     class TRQueryInputField extends React.Component {
@@ -554,12 +557,12 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             };
         }
 
-        _handleInputChange(evt) {
+        _handleInputChange(value) {
             dispatcher.dispatch({
                 actionType: this.props.actionPrefix + 'QUERY_INPUT_SET_QUERY',
                 props: {
                     sourceId: this.props.sourceId,
-                    query: evt.target.value
+                    query: value
                 }
             });
         }
@@ -616,13 +619,16 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                 case 'char':
                     return <input className="simple-input" type="text"
                                 ref={item => this._queryInputElement = item}
-                                onChange={this._handleInputChange} value={this.state.query}
+                                onChange={(evt) => this._handleInputChange(evt.target.value)}
+                                value={this.state.query}
                                 onKeyDown={this._inputKeyHandler} />;
                 case 'cql':
-                    return <textarea className="cql-input" rows="2" cols="60" name="cql"
-                                ref={item => this._queryInputElement = item}
-                                onChange={this._handleInputChange} value={this.state.query}
-                                onKeyDown={this._inputKeyHandler} />;
+                    return <cqlEditorViews.CQLEditor
+                                sourceId={this.props.sourceId}
+                                attachCurrInputElement={(v) => this._queryInputElement = v}
+                                query={this.state.query}
+                                handleInputChange={this._handleInputChange}
+                                inputKeyHandler={this._inputKeyHandler} />;
             }
         }
 
