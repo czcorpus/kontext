@@ -243,6 +243,7 @@ class GlobalArgs(object):
     cup_hl = Parameter(u'q', persistent=Parameter.PERSISTENT)
     structattrs = Parameter([], persistent=Parameter.PERSISTENT)
     tt_overview = Parameter(0, persistent=Parameter.PERSISTENT)
+    cql_editor = Parameter(1, persistent=Parameter.PERSISTENT)
 
     flimit = Parameter(1)
     freqlevel = Parameter(1)

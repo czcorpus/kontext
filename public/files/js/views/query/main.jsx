@@ -121,7 +121,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                 contextFormVisible: false, // TODO use data from session?
                 textTypesFormVisible: textTypesStore.hasSelectedItems(),
                 inputLanguages: queryStore.getInputLanguages(),
-                textTypesNotes: queryStore.getTextTypesNotes()
+                textTypesNotes: queryStore.getTextTypesNotes(),
+                useCQLEditor: queryStore.getUseCQLEditor()
             };
         }
 
@@ -205,7 +206,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(primaryCorpname)}
                                 actionPrefix={this.props.actionPrefix}
-                                onEnterKey={this._handleSubmit} />
+                                onEnterKey={this._handleSubmit}
+                                useCQLEditor={this.state.useCQLEditor} />
                         </tbody>
                     </table>
                     {this.state.supportsParallelCorpora ?
@@ -225,7 +227,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 inputLanguages={this.state.inputLanguages}
                                 queryStorageView={this.props.queryStorageView}
                                 actionPrefix={this.props.actionPrefix}
-                                hasLemmaAttr={this.state.hasLemmaAttr} />
+                                hasLemmaAttr={this.state.hasLemmaAttr}
+                                useCQLEditor={this.state.useCQLEditor} />
                         : null
                     }
                     <fieldset id="specify-context">
@@ -317,7 +320,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                 contextFormVisible: false,
                 inputLanguages: queryStore.getInputLanguages(),
                 hasSelectedTextTypes: textTypesStore.hasSelectedItems(),
-                textTypeSelections: textTypesStore.exportSelections()
+                textTypeSelections: textTypesStore.exportSelections(),
+                useCQLEditor: queryStore.getUseCQLEditor()
             };
         }
 
@@ -402,7 +406,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguages.get(this.props.corpname)}
                                 actionPrefix={this.props.actionPrefix}
-                                onEnterKey={this._handleSubmit} />
+                                onEnterKey={this._handleSubmit}
+                                useCQLEditor={this.state.useCQLEditor} />
                         </tbody>
                     </table>
                     <fieldset id="specify-context">

@@ -221,32 +221,26 @@ function escapeString(v:string):string {
     return v.replace('<', '&lt;').replace('>', '&gt;');
 }
 
+function getStartRule(queryType:string):string {
+    switch (queryType) {
+        case 'phrase':
+            return 'PhraseQuery';
+        case 'word':
+        case 'lemma':
+            return 'RegExpRaw';
+        case 'cql':
+            return 'Query';
+        default:
+            throw new Error(`No parsing rule for type ${queryType}`);
+    }
+}
 
-export function _highlightSyntax(query:string, queryType:string, he:Kontext.ComponentHelpers, ignoreErrors:boolean):string {
-    const BREAK_CHR = query.length > 70 && query.indexOf('\n') === -1 ? '\n' : ' ';
 
-    const startRule = (() => {
-        switch (queryType) {
-            case 'phrase':
-                return 'PhraseQuery';
-            case 'word':
-            case 'lemma':
-                return 'RegExpRaw';
-            case 'cql':
-                return 'Query';
-            default:
-                throw new Error(`No parsing rule for type ${queryType}`);
-        }
-    })();
-
-    const isNonTerminal = (v:string) => {
-        return !/^[A-Z_]+$/.exec(v);
-    };
-
+export function _highlightSyntax(query:string, startRule:string, he:Kontext.ComponentHelpers, ignoreErrors:boolean):string {
     const stack = new ParserStack(query);
 
     try {
-        parseQuery(query + ';', {
+        parseQuery(query + (startRule === 'Query' ? ';' : ''), {
             startRule: startRule,
             tracer: {
                 trace: (v) => {
@@ -270,7 +264,29 @@ export function _highlightSyntax(query:string, queryType:string, he:Kontext.Comp
             throw e;
         }
     }
+
     const [ans, lastPos] = stack.generate();
+    if (lastPos === 0) {
+        return query;
+
+    } else if (lastPos < query.length) {
+        // try to apply a partial rule to the rest of the query
+        const srch = /^(\s*[^\s]*\s+|)(.+)$/.exec(query.substr(lastPos));
+        if (srch !== null) {
+            const subRules = ['WithinContainingPart', 'Sequence', 'RegExpRaw'];
+            let partial = escapeString(srch[2]);
+            for (let i = 0; i < subRules.length; i += 1) {
+                try {
+                    partial = _highlightSyntax(srch[2], subRules[i], he, false);
+
+                } catch (e) {
+                    continue;
+                }
+                break;
+            }
+            return ans + escapeString(srch[1]) + partial;
+        }
+    }
     return ans + escapeString(query.substr(lastPos));
 }
 
@@ -280,9 +296,9 @@ export function _highlightSyntax(query:string, queryType:string, he:Kontext.Comp
  * the resulting string.
  */
 export function highlightSyntax(query:string, queryType:string, he:Kontext.ComponentHelpers):string {
-    return _highlightSyntax(query, queryType, he, true);
+    return _highlightSyntax(query, getStartRule(queryType), he, true);
 }
 
 export function highlightSyntaxStrict(query:string, queryType:string, he:Kontext.ComponentHelpers):string {
-    return _highlightSyntax(query, queryType, he, false);
+    return _highlightSyntax(query, getStartRule(queryType), he, false);
 }

@@ -165,6 +165,33 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
         );
     };
 
+    // ------------- <TRUseCQLEditor /> ---------------------
+
+    const TRUseCQLEditor = (props) => {
+
+        const handleCheckbox = () => {
+            dispatcher.dispatch({
+                actionType: 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR',
+                props: {
+                    value: !props.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    <label htmlFor="use-cql-editor">
+                        {helpers.translate('options__use_advanced_cql_editor')}:
+                    </label>
+                </th>
+                <td>
+                    <input id="use-cql-editor" type="checkbox" onChange={handleCheckbox} checked={props.value} />
+                </td>
+            </tr>
+        );
+    }
+
     // ------------- <FieldsetConcordance /> ---------------------
 
     const FieldsetConcordance = (props) => {
@@ -180,6 +207,7 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                         <TRShowLineNumbersCheckbox value={props.lineNumbers} />
                         <TRAlwaysShuffleCheckbox value={props.shuffle} />
                         <TRShowTextTypesOverview value={props.showTTOverview} />
+                        <TRUseCQLEditor value={props.useCQLEditor} />
                     </tbody>
                 </table>
             </fieldset>
@@ -361,7 +389,8 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                 fmaxItems: generalOptionsStore.getFmaxItems(),
                 citemsPerPage: generalOptionsStore.getCitemsPerPage(),
                 showTTOverview: generalOptionsStore.getShowTTOverview(),
-                storeIsBusy: generalOptionsStore.getIsBusy()
+                storeIsBusy: generalOptionsStore.getIsBusy(),
+                useCQLEditor: generalOptionsStore.getUseCQLEditor()
             };
         }
 
@@ -388,7 +417,8 @@ export function init(dispatcher, helpers, layoutViews, generalOptionsStore) {
                                 newCtxSize={this.state.newCtxSize}
                                 lineNumbers={this.state.lineNumbers}
                                 shuffle={this.state.shuffle}
-                                showTTOverview={this.state.showTTOverview} />
+                                showTTOverview={this.state.showTTOverview}
+                                useCQLEditor={this.state.useCQLEditor} />
                         <FieldsetWordlist wlPageSize={this.state.wlPageSize}  />
                         <FieldsetFreqDistrib fmaxItems={this.state.fmaxItems} />
                         <FieldsetColl citemsPerPage={this.state.citemsPerPage} />

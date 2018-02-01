@@ -623,12 +623,18 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                                 value={this.state.query}
                                 onKeyDown={this._inputKeyHandler} />;
                 case 'cql':
-                    return <cqlEditorViews.CQLEditor
+                    return this.props.useCQLEditor ?
+                        <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
                                 attachCurrInputElement={(v) => this._queryInputElement = v}
                                 query={this.state.query}
                                 handleInputChange={this._handleInputChange}
-                                inputKeyHandler={this._inputKeyHandler} />;
+                                inputKeyHandler={this._inputKeyHandler} /> :
+                        <textarea className="cql-input" rows="2" cols="60" name="cql"
+                                ref={item => this._queryInputElement = item}
+                                onChange={(evt) => this._handleInputChange(evt.target.value)}
+                                value={this.state.query}
+                                onKeyDown={this._inputKeyHandler} />;
             }
         }
 
