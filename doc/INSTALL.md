@@ -2,7 +2,7 @@
 
 ## Contents
 
-* [Install dependencies](#install_install_dependencies)
+* [Install KonText](#install_install_kontext)
 * [Configure KonText (config.xml)](#install_configure_kontext)
   * [Plug-ins](#install_configure_kontext_plugins)
 * [Building the project](#install_building_the_project)
@@ -17,27 +17,56 @@
 * [Celery Beat](#install_celery_beat)
   * [Systemd configuration](#install_celery_beat_systemd_configuration)
 
-<a name="install_install_dependencies"></a>
-## Install dependencies
+<a name="install_install_kontext"></a>
+## Install KonText
 
+The easiest way to install and test-run KonText is to install it in an lxc container using the <a href="../scripts/install/install.sh">install.sh</a> script provided in this repository 
+that performs all the installation and configuration steps that are necessary to run KonText as a standalone server application for testing and development purposes.
 
-```
-pip install -r requirements.txt
-```
-
-Please note that the *lxml* package (referred within *requirements.txt*) requires specific dependencies to be
-installed on server:
-
-* *python-dev*
-* *libxml2-dev*
-* *libxslt-dev*
-
-
-On Ubuntu/Debian you can install them by entering the following command:
+Set up and start an lxc container:
 
 ```
-sudo apt-get install libxml2-dev libxslt-dev python-dev
+sudo apt-get install lxc
+
+sudo lxc-create -t download -n kontext-container -- -d ubuntu -r xenial -a amd64
+
+sudo lxc-start -n kontext-container
 ```
+
+Note down the container's IP address:
+
+```
+sudo lxc-info -n kontext-container -iH
+```
+
+Open the container's shell:
+
+```
+sudo lxc-attach -n kontext-container
+```
+
+(for more details about lxc containers, see <a href="https://linuxcontainers.org/lxc">https://linuxcontainers.org/lxc</a>)
+
+In the container, git-clone the KonText git repo to a directory of your choice (e.g. */opt/kontext*), set the required permissions and run the install script.
+
+```
+sudo apt-get update
+sudo apt-get install ca-certificates git
+git clone https://github.com/czcorpus/kontext.git /opt/kontext/
+cd /opt/kontext/scripts/install
+chmod +x install.sh
+./install.sh
+```
+By default, the script installs Manatee and Finlib from the deb packages. If you wish to build from sources and use the ucnk-specific manatee patch, you can use the *install.sh --type ucnk* option.
+
+(for more details about Manatee and Finlib installation, see <a href="https://nlp.fi.muni.cz/trac/noske/wiki/Downloads">https://nlp.fi.muni.cz/trac/noske/wiki/Downloads</a>)
+
+Once the installation is complete, you can start KonText by entering the following command in the install root directory you specified above (*/opt/kontext*):
+
+python public/app.py --address [container_IP_address] --port [optional, default TCP port number is 5000]
+
+Now open "container_IP_address:port" (e.g. *http://10.0.3.100:5000*) in your browser on the host. You should see KonText's first_page and be able to enter a query to search in the sample Susanne corpus.
+
 
 <a name="install_configure_kontext"></a>
 ## Configure KonText (config.xml)

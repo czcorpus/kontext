@@ -10,7 +10,7 @@ MANATEE_VER=2.151.5
 # set install path constant
 # -------------------------
 # run the install script from the installation root directory
-INSTALL_DIR="$( readlink -f "$( dirname "$0" )" )"
+INSTALL_DIR="$(dirname $(dirname $(readlink -f $(dirname "$0" ))))"
 echo Fullpath to the current KonText installation directory: $INSTALL_DIR
 
 # ---------------------
@@ -39,19 +39,19 @@ done
 # ------------------
 # set up environment
 # ------------------
+trap 'exit' ERR
 sudo apt-get update -y
-sudo apt-get upgrade -y
 
 sudo locale-gen en_US.UTF-8
 
 # install nodejs
-sudo apt-get install -y curl
-curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash
+sudo apt-get install -y ca-certificates curl
+curl https://deb.nodesource.com/setup_6.x | sudo -E bash
 sudo apt-get install -y nodejs
 npm install -g webpack
 
 # install general & manatee prerequisites
-sudo apt-get install -y openssh-server net-tools nginx redis-server build-essential openssl ca-certificates libssl-dev pkg-config wget
+sudo apt-get install -y openssh-server net-tools nginx redis-server build-essential openssl libssl-dev pkg-config wget
 sudo apt-get install -y python python-dev python-pip python-lxml python-cheetah python-simplejson 
 sudo apt-get install -y libltdl7 libpcre3 libpcre++-dev libxml2-dev libxslt-dev libltdl-dev
 
@@ -168,15 +168,7 @@ python scripts/validate_setup.py conf/config.xml
 # build kontext
 npm install; make production
 
-echo Fullpath to the current KonText installation directory: $INSTALL_DIR
-echo Please specify the full path to the required deployment directory:
-read deployDir
-
-mkdir -p $deployDir
-cp -r {cmpltmpl,conf,lib,locale,package.json,public,scripts,worker.py} $deployDir
-
-echo Kontext installation successfully completed
-echo You can now change to the deployment directory: $deployDir
-echo And enter the following command to start KonText:
-echo python public/app.py --address [IP address] --port [TCP port]
+echo "KonText installation successfully completed."
+echo "To start KonText, enter the following command in the KonText install root directory (i.e. $INSTALL_DIR):"
+echo "python public/app.py --address [IP address] --port [TCP port]"
 echo "(--address and --port parameters are optional; default serving address is 127.0.0.1:5000)"
