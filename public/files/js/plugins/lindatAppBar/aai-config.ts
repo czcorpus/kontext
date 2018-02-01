@@ -26,7 +26,7 @@
 
 
 export function init():void {
-    if (!('aai' in window)) {
+    if (!(window.hasOwnProperty('aai'))) {
         throw 'Failed to find LINDAT/CLARIN AAI object. See https://redmine.ms.mff.cuni.cz/projects/lindat-aai for more details!';
     }
     let opts:AAI.AaiOptions = {};
