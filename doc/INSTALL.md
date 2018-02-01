@@ -21,7 +21,8 @@
 ## Install KonText
 
 The easiest way to install and test-run KonText is to install it in an lxc container using the <a href="../scripts/install/install.sh">install.sh</a> script provided in this repository 
-that performs all the installation and configuration steps that are necessary to run KonText as a standalone server application for testing and development purposes.
+that performs all the installation and configuration steps that are necessary to run KonText as a standalone server application for testing and development purposes. The installation has been 
+tested for Ubuntu 16.04.3 LTS.
 
 Set up and start an lxc container:
 
