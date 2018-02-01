@@ -40,7 +40,7 @@ export type Data2DTable = {[d1:string]:{[d2:string]:CTFreqCell}};
 /**
  * A helper type used when exporting data for Excel etc.
  */
-type NumberTriple = [number, number, number];
+type ConfIntervalItem = [number, number, number, string];
 
 /**
  * A type representing exported (for Excel etc.) data
@@ -689,12 +689,12 @@ export class ContingencyTableStore extends GeneralCTStore {
         const d1Labels = this.d1Labels.filter(v => v[1]).map(v => v[0]);
         const d2Labels = this.d2Labels.filter(v => v[1]).map(v => v[0]);
 
-        const fetchVals:(c:CTFreqCell)=>NumberTriple = (() => {
+        const fetchVals:(c:CTFreqCell)=>ConfIntervalItem = (() => {
             switch (this.displayQuantity) {
                 case FreqQuantities.ABS:
-                return (c:CTFreqCell) => <NumberTriple>[c.absConfInterval[0], c.abs, c.absConfInterval[1], c.bgColor];
+                return (c:CTFreqCell) => <ConfIntervalItem>[c.absConfInterval[0], c.abs, c.absConfInterval[1], c.bgColor];
                 case FreqQuantities.IPM:
-                return (c:CTFreqCell) => <NumberTriple>[c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1], c.bgColor];
+                return (c:CTFreqCell) => <ConfIntervalItem>[c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1], c.bgColor];
                 default:
                 throw new Error('Unknown display quantity');
             }
