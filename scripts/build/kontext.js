@@ -212,7 +212,7 @@
         const parser = peg.generate(
             grammar,
             {
-                allowedStartRules: ['Query', 'RegExpRaw' , 'PhraseQuery'],
+                allowedStartRules: ['Query', 'RegExpRaw' , 'PhraseQuery', 'WithinContainingPart', 'Sequence'],
                 output: 'source',
                 format: 'commonjs',
                 trace: true
