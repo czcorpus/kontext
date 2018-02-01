@@ -86,7 +86,8 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                             tagsetDocUrl={props.tagsetDocUrl}
                             inputLanguage={props.inputLanguage}
                             queryStorageView={props.queryStorageView}
-                            actionPrefix="" />
+                            actionPrefix=""
+                            useCQLEditor={props.useCQLEditor} />
                     </tbody>
                 </table>
             </div>
@@ -148,7 +149,8 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                             pcqPosNegValue={props.pcqPosNegValues.get(item)}
                             inputLanguage={props.inputLanguages.get(item)}
                             queryStorageView={props.queryStorageView}
-                            hasLemmaAttr={props.hasLemmaAttr.get(item)} />;
+                            hasLemmaAttr={props.hasLemmaAttr.get(item)}
+                            useCQLEditor={props.useCQLEditor} />;
                 })}
             </fieldset>
         );

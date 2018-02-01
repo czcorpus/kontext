@@ -41,6 +41,7 @@ export interface GeneralQueryFormProperties {
     lemmaWindowSizes:Array<number>;
     posWindowSizes:Array<number>;
     wPoSList:Array<{v:string; n:string}>;
+    useCQLEditor:boolean;
 }
 
 
@@ -141,10 +142,16 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected onCorpusSelectionChangeActions:Immutable.List<(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void>;
 
+    protected useCQLEditor:boolean;
+
     // -------
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, textTypesStore:TextTypesStore,
-            queryContextStore:QueryContextStore, props:GeneralQueryFormProperties) {
+    constructor(
+            dispatcher:Kontext.FluxDispatcher,
+            pageModel:PageModel,
+            textTypesStore:TextTypesStore,
+            queryContextStore:QueryContextStore,
+            props:GeneralQueryFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.textTypesStore = textTypesStore;
@@ -155,6 +162,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
         this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
         this.queryTracer = {trace:(_)=>undefined};
+        this.useCQLEditor = props.useCQLEditor;
 
         this.onCorpusSelectionChangeActions = Immutable.List<(subcname:string)=>void>();
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -234,6 +242,12 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         }
         return mismatch;
     }
+
+
+    onSettingsChange(optsStore:ViewOptions.IGeneralViewOptionsStore):void {
+        this.useCQLEditor = optsStore.getUseCQLEditor();
+        this.notifyChangeListeners();
+    }
 }
 
 /**
@@ -301,8 +315,12 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     // ----------------------
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, textTypesStore:TextTypesStore,
-            queryContextStore:QueryContextStore, props:QueryFormProperties) {
+    constructor(
+            dispatcher:Kontext.FluxDispatcher,
+            pageModel:PageModel,
+            textTypesStore:TextTypesStore,
+            queryContextStore:QueryContextStore,
+            props:QueryFormProperties) {
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
         const self = this;
         this.corpora = Immutable.List<string>(props.corpora);
@@ -705,6 +723,10 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
     getTagsetDocUrls():Immutable.Map<string, string> {
         return this.tagsetDocs;
     }
+
+    getUseCQLEditor():boolean {
+        return this.useCQLEditor;
+    }
 }
 
 
@@ -744,4 +766,5 @@ export class QueryHintStore extends SimplePageStore {
     getHint():string {
         return this.hints[this.currentHint];
     }
+
 }

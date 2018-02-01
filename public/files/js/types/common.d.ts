@@ -686,6 +686,7 @@ declare module ViewOptions {
         getIsBusy():boolean;
         getShowTTOverview():boolean;
         addOnSubmitResponseHandler(fn:(store:IGeneralViewOptionsStore)=>void):void;
+        getUseCQLEditor():boolean;
     }
 
 }

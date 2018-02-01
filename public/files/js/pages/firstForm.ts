@@ -233,12 +233,17 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
-                tagsetDocs: queryFormArgs.tagset_docs
+                tagsetDocs: queryFormArgs.tagset_docs,
+                useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor')
             }
         );
+
         this.queryStore.registerCorpusSelectionListener((corpname, aligned, subcorp) =>
                 this.onAlignedCorporaChanged(aligned));
         this.onQueryStoreReady(this.queryStore);
+        this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
+            this.queryStore.onSettingsChange(store);
+        });
     }
 
     private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {

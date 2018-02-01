@@ -64,7 +64,7 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
 export type FilterWidgetsMap = Immutable.Map<string, Immutable.List<string>>;
 
 /**
- *
+ *import {GeneralViewOptionsStore} from '../options/general';
  */
 export function fetchFilterFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
         key:(item:AjaxResponse.FilterFormArgs)=>T):Array<[string, T]> {
@@ -140,8 +140,12 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
     private inputLanguage:string;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, textTypesStore:TextTypesStore,
-            queryContextStore:QueryContextStore, props:FilterFormProperties) {
+    constructor(
+            dispatcher:Kontext.FluxDispatcher,
+            pageModel:PageModel,
+            textTypesStore:TextTypesStore,
+            queryContextStore:QueryContextStore,
+            props:FilterFormProperties) {
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
 
         this.maincorps = Immutable.Map<string, string>(props.maincorps);

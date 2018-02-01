@@ -27,7 +27,7 @@ class Options(Kontext):
     def get_mapping_url_prefix(self):
         return '/options/'
 
-    def _set_new_viewopts(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0):
+    def _set_new_viewopts(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0, cql_editor=0):
         if ctxunit == '@pos':
             ctxunit = ''
         if "%s%s" % (newctxsize, ctxunit) != self.args.kwicrightctx:
@@ -39,6 +39,7 @@ class Options(Kontext):
             self.args.kwicrightctx = '%s%s' % (newctxsize, ctxunit)
         self.args.line_numbers = line_numbers
         self.args.tt_overview = tt_overview
+        self.args.cql_editor = cql_editor
 
     def _set_new_viewattrs(self, setattrs=(), allpos='', setstructs=(), setrefs=(), structattrs=()):
         self.args.attrs = ','.join(setattrs)
@@ -139,13 +140,14 @@ class Options(Kontext):
             wlpagesize=self.args.wlpagesize,
             fmaxitems=self.args.fmaxitems,
             citemsperpage=self.args.citemsperpage,
-            tt_overview=self.args.tt_overview
+            tt_overview=self.args.tt_overview,
+            cql_editor=self.args.cql_editor
         )
 
     @exposed(access_level=1, return_type='json', http_method='POST', legacy=True)
-    def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0):
+    def viewoptsx(self, newctxsize='', ctxunit='', line_numbers=0, tt_overview=0, cql_editor=0):
         self._set_new_viewopts(newctxsize=newctxsize, ctxunit=ctxunit, line_numbers=line_numbers,
-                               tt_overview=tt_overview)
+                               tt_overview=tt_overview, cql_editor=cql_editor)
         self._save_options(self.GENERAL_OPTIONS)
         return {}
 

@@ -38,6 +38,7 @@ interface ViewOptsResponse extends Kontext.AjaxResponse {
     fmaxitems:number;
     citemsperpage:number;
     tt_overview:number;
+    cql_editor:number;
 }
 
 
@@ -58,6 +59,8 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
     private shuffle:boolean;
 
     private showTTOverview:boolean;
+
+    private useCQLEditor:boolean;
 
     // --- word list opts
 
@@ -101,6 +104,10 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_SHOW_TT_OVERVIEW':
                     this.showTTOverview = payload.props['value'];
+                    this.notifyChangeListeners();
+                break;
+                case 'GENERAL_VIEW_OPTIONS_SET_USE_CQL_EDITOR':
+                    this.useCQLEditor = payload.props['value'];
                     this.notifyChangeListeners();
                 break;
                 case 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE':
@@ -178,6 +185,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                 this.fmaxitems = String(data.fmaxitems);
                 this.citemsperpage = String(data.citemsperpage);
                 this.showTTOverview = !!data.tt_overview;
+                this.useCQLEditor = !!data.cql_editor;
                 return true;
             }
         );
@@ -194,6 +202,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         args.set('fmaxitems', this.fmaxitems);
         args.set('citemsperpage', this.citemsperpage);
         args.set('tt_overview', this.showTTOverview ? '1' : '0');
+        args.set('cql_editor', this.useCQLEditor ? '1' : '0');
         return this.layoutModel.ajax<Kontext.AjaxResponse>(
             'POST',
             this.layoutModel.createActionUrl('options/viewoptsx'),
@@ -241,5 +250,9 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     getShowTTOverview():boolean {
         return this.showTTOverview;
+    }
+
+    getUseCQLEditor():boolean {
+        return this.useCQLEditor;
     }
 }

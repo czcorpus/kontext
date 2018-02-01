@@ -444,7 +444,8 @@ export class ViewPage {
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
-            selectedTextTypes: queryFormArgs.selected_text_types
+            selectedTextTypes: queryFormArgs.selected_text_types,
+            useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor')
         };
 
         this.queryStores.queryStore = new QueryStore(
@@ -454,6 +455,9 @@ export class ViewPage {
             this.queryStores.queryContextStore,
             queryFormProps
         );
+        this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
+            this.queryStores.queryStore.onSettingsChange(store);
+        });
 
         this.queryFormViews = queryFormInit(
             this.layoutModel.dispatcher,
@@ -496,7 +500,8 @@ export class ViewPage {
             tagsetDoc: fetchArgs<string>(item => item.tagset_doc),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
-            opLocks: fetchArgs<boolean>(item => item.form_type === 'locked')
+            opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
+            useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor')
         }
 
         this.queryStores.filterStore = new FilterStore(
@@ -506,6 +511,9 @@ export class ViewPage {
             this.queryStores.queryContextStore,
             filterFormProps
         );
+        this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
+            this.queryStores.filterStore.notifyChangeListeners();
+        });
 
         this.layoutModel.getStores().mainMenuStore.addItemActionPrerequisite(
             'MAIN_MENU_SHOW_FILTER',
