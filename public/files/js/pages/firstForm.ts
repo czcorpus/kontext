@@ -226,6 +226,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
                 attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+                structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList'),
                 lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),

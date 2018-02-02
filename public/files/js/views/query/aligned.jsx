@@ -83,6 +83,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                             forcedAttr={props.forcedAttr}
                             defaultAttr={props.defaultAttr}
                             attrList={props.attrList}
+                            structAttrList={props.structAttrList}
                             tagsetDocUrl={props.tagsetDocUrl}
                             inputLanguage={props.inputLanguage}
                             queryStorageView={props.queryStorageView}

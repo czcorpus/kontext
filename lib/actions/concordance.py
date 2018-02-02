@@ -334,6 +334,8 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, out)
         out['query_history_page_num_records'] = int(
             settings.get('plugins', 'query_storage')['page_num_records'])
+        out['StructAttrList'] = [{'label': corpus_get_conf(self.corp, n + '.LABEL') or n, 'n': n}
+                                 for n in corpus_get_conf(self.corp, 'StructAttrList'.upper()).split(',') if n]
         return out
 
     @exposed(return_type='json', legacy=True)
