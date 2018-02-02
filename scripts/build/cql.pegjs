@@ -17,8 +17,8 @@ GlobPart =
     GlobCond (_ BINAND _ GlobCond)*
 
 GlobCond =
-    NUMBER DOT ATTR (__ NOT)? _ EQ _ NUMBER DOT ATTR
-    / KW_FREQ LPAREN NUMBER DOT ATTR RPAREN NOT? _ ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) _ NUMBER
+    NUMBER DOT AttName (__ NOT)? _ EQ _ NUMBER DOT AttName
+    / KW_FREQ LPAREN NUMBER DOT AttName RPAREN NOT? _ ( EQ / LEQ / GEQ / LSTRUCT / RSTRUCT ) _ NUMBER
 
 Position =
     OnePosition
@@ -37,7 +37,7 @@ WithinContainingPart =
     / NOT? AlignedPart
 
 Structure =
-    ATTR _ AttValList?
+    AttName _ AttValList?
 
 // -------------------- meet/union query --------------------
 
@@ -69,7 +69,7 @@ AtomQuery =
     / LPAREN Sequence (_ NOT? _ KW_WITHIN _ WithinContainingPart)* RPAREN
 
 AlignedPart =
-    ATTR COLON _ Sequence  // parallel alignment
+    AttName COLON _ Sequence  // parallel alignment
 
 AttValList =
     AttValAnd (_ BINOR _ AttValAnd)*
@@ -78,7 +78,7 @@ AttValAnd =
     AttVal (_ BINAND _ AttVal)*
 
 AttVal =
-    ATTR (_ NOT)? (EQ / LEQ / GEQ / TEQ NUMBER?) _? RegExp
+    AttName (_ NOT)? (EQ / LEQ / GEQ / TEQ NUMBER?) _ RegExp
     / POSNUM NUMBER DASH NUMBER
     / POSNUM NUMBER
     / NOT AttVal
@@ -92,6 +92,9 @@ WithinNumber =
 
 RepOpt =
     STAR / PLUS / QUEST / LBRACE NUMBER (COMMA NUMBER?)? RBRACE
+
+AttName =
+    ASCII_LETTERS / ATTR_CHARS /* this alternatives are here just to keep non terminal AttrName relevant */
 
 // ----------------- Phrase (a query input mode) ------------------------
 
@@ -146,7 +149,8 @@ LETTER =
 NUMBER = [0-9]+
 NNUMBER = '-'[0-9]+
 
-ATTR = [a-zA-Z][a-zA-Z0-9@_]*
+ASCII_LETTERS = [a-zA-Z]+
+ATTR_CHARS = [a-zA-Z][a-zA-Z0-9@_]*
 
 QUOT = '"'
 DASH = '-'

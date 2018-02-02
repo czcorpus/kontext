@@ -626,6 +626,8 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                     return this.props.useCQLEditor ?
                         <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
+                                attrList={this.props.attrList}
+                                structAttrList={this.props.structAttrList}
                                 attachCurrInputElement={(v) => this._queryInputElement = v}
                                 query={this.state.query}
                                 handleInputChange={this._handleInputChange}

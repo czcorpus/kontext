@@ -20,16 +20,19 @@
 
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
-import {highlightSyntax} from '../../cqlsh';
+import {highlightSyntax, AttrHelper} from '../../cqlsh';
 
 
 export interface CQLEditorProps {
+    query:string;
+    attrList:Immutable.List<{n:string; label:string}>;
+    structAttrList:Immutable.List<{n:string; label:string}>;
     attachCurrInputElement:(elm:HTMLElement)=>void;
     handleInputChange:(v:string)=>void;
-    query:string;
     inputKeyHandler:(evt:KeyboardEvent)=>void;
 }
 
@@ -58,9 +61,12 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         private editorRoot:Node;
 
+        private attrHelper:AttrHelper;
+
         constructor(props:CQLEditorProps) {
             super(props);
             this.editorRoot = null;
+            this.attrHelper = new AttrHelper(props.attrList, props.structAttrList);
         }
 
         private extractText(root:Node) {
@@ -126,7 +132,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
             const src = this.extractText(elm);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
             this.props.handleInputChange(src.map(v => v[0]).join(''));
-            elm.innerHTML = highlightSyntax(src.map(v => v[0]).join(''), 'cql', he);
+            elm.innerHTML = highlightSyntax(src.map(v => v[0]).join(''), 'cql', he, this.attrHelper);
             this.reapplySelection(elm, rawAnchorIdx, rawFocusIdx);
         };
 

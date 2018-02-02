@@ -409,7 +409,8 @@ export class ViewPage {
 
         this.queryStores.queryHintStore = new QueryHintStore(
             this.layoutModel.dispatcher,
-            this.layoutModel.getConf<Array<string>>('queryHints')
+            ['query__tip_01', 'query__tip_02', 'query__tip_03'],
+            this.layoutModel.translate.bind(this.layoutModel)
         );
         this.queryStores.withinBuilderStore = new WithinBuilderStore(this.layoutModel.dispatcher,
                 this.layoutModel);
@@ -437,6 +438,7 @@ export class ViewPage {
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList'),
             lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: queryFormArgs.has_lemma,
@@ -494,6 +496,7 @@ export class ViewPage {
             withinArgValues: fetchArgs<number>(item => item.within),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList'),
             lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),

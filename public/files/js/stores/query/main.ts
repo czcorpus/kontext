@@ -38,6 +38,7 @@ import * as RSVP from 'vendor/rsvp';
 export interface GeneralQueryFormProperties {
     forcedAttr:string;
     attrList:Array<{n:string; label:string}>;
+    structAttrList:Array<{n:string; label:string}>;
     lemmaWindowSizes:Array<number>;
     posWindowSizes:Array<number>;
     wPoSList:Array<{v:string; n:string}>;
@@ -122,6 +123,8 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected attrList:Immutable.List<{n:string; label:string}>;
 
+    protected structAttrList:Immutable.List<{n:string; label:string}>;
+
     protected lemmaWindowSizes:Immutable.List<number>;
 
     protected posWindowSizes:Immutable.List<number>;
@@ -158,6 +161,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.queryContextStore = queryContextStore;
         this.forcedAttr = props.forcedAttr;
         this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
+        this.structAttrList = Immutable.List<{n:string; label:string}>(props.structAttrList);
         this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
         this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
         this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
@@ -196,6 +200,10 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     getAttrList():Immutable.List<{n:string; label:string}> {
         return this.attrList;
+    }
+
+    getStructAttrList():Immutable.List<{n:string; label:string}> {
+        return this.structAttrList;
     }
 
     getLemmaWindowSizes():Immutable.List<number> {
@@ -739,10 +747,13 @@ export class QueryHintStore extends SimplePageStore {
 
     private currentHint:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, hints:Array<string>) {
+    private translatorFn:(s:string)=>string;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, hints:Array<string>, translatorFn:(s:string)=>string) {
         super(dispatcher);
         const self = this;
         this.hints = hints ? hints : [];
+        this.translatorFn = translatorFn;
         this.currentHint = this.randomIndex();
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -764,7 +775,7 @@ export class QueryHintStore extends SimplePageStore {
     }
 
     getHint():string {
-        return this.hints[this.currentHint];
+        return this.translatorFn(this.hints[this.currentHint]);
     }
 
 }
