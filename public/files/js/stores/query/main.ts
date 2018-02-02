@@ -739,10 +739,13 @@ export class QueryHintStore extends SimplePageStore {
 
     private currentHint:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, hints:Array<string>) {
+    private translatorFn:(s:string)=>string;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, hints:Array<string>, translatorFn:(s:string)=>string) {
         super(dispatcher);
         const self = this;
         this.hints = hints ? hints : [];
+        this.translatorFn = translatorFn;
         this.currentHint = this.randomIndex();
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
@@ -764,7 +767,7 @@ export class QueryHintStore extends SimplePageStore {
     }
 
     getHint():string {
-        return this.hints[this.currentHint];
+        return this.translatorFn(this.hints[this.currentHint]);
     }
 
 }

@@ -293,7 +293,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             () => {
                 this.queryHintStore = new QueryHintStore(
                     this.layoutModel.dispatcher,
-                    this.layoutModel.getConf<Array<string>>('queryHints')
+                    ['query__tip_01', 'query__tip_02', 'query__tip_03'],
+                    this.layoutModel.translate.bind(this.layoutModel)
                 );
                 this.withinBuilderStore = new WithinBuilderStore(
                     this.layoutModel.dispatcher,

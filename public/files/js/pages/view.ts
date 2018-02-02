@@ -409,7 +409,8 @@ export class ViewPage {
 
         this.queryStores.queryHintStore = new QueryHintStore(
             this.layoutModel.dispatcher,
-            this.layoutModel.getConf<Array<string>>('queryHints')
+            ['query__tip_01', 'query__tip_02', 'query__tip_03'],
+            this.layoutModel.translate.bind(this.layoutModel)
         );
         this.queryStores.withinBuilderStore = new WithinBuilderStore(this.layoutModel.dispatcher,
                 this.layoutModel);
