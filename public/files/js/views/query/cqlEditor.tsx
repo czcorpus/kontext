@@ -52,7 +52,8 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         return <textarea className="cql-input" rows="2" cols="60" name="cql"
                             ref={item => props.attachCurrInputElement(item)}
                             onChange={props.handleInputChange} value={props.query}
-                            onKeyDown={props.inputKeyHandler} />;
+                            onKeyDown={props.inputKeyHandler}
+                            spellCheck={false} />;
     }
 
     // ------------------- <CQLEditor /> -----------------------------
@@ -148,6 +149,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         render() {
             return <pre contentEditable={true}
+                            spellCheck={false}
                             onInput={(evt) => this.updateEditor(evt.target)}
                             className="cql-input"
                             style={{width: '40em', height: '5em'}}

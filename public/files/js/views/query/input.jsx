@@ -618,6 +618,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                 case 'word':
                 case 'char':
                     return <input className="simple-input" type="text"
+                                spellCheck={false}
                                 ref={item => this._queryInputElement = item}
                                 onChange={(evt) => this._handleInputChange(evt.target.value)}
                                 value={this.state.query}
@@ -632,11 +633,11 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                                 query={this.state.query}
                                 handleInputChange={this._handleInputChange}
                                 inputKeyHandler={this._inputKeyHandler} /> :
-                        <textarea className="cql-input" rows="2" cols="60" name="cql"
-                                ref={item => this._queryInputElement = item}
-                                onChange={(evt) => this._handleInputChange(evt.target.value)}
-                                value={this.state.query}
-                                onKeyDown={this._inputKeyHandler} />;
+                        <cqlEditorViews.CQLEditorFallback
+                            attachCurrInputElement={item => this._queryInputElement = item}
+                            handleInputChange={evt => this._handleInputChange(evt.target.value)}
+                            query={this.state.query}
+                            inputKeyHandler={this._inputKeyHandler} />;
             }
         }
 
