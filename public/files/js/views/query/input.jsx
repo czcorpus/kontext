@@ -551,9 +551,11 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             this._handleStoreChange = this._handleStoreChange.bind(this);
             this._inputKeyHandler = this._inputKeyHandler.bind(this);
             this._toggleHistoryWidget = this._toggleHistoryWidget.bind(this);
+            this._handleCQLEditorHintChange = this._handleCQLEditorHintChange.bind(this);
             this.state = {
                 query: queryStore.getQuery(this.props.sourceId),
-                historyVisible: false
+                historyVisible: false,
+                cqlEditorMessage: null
             };
         }
 
@@ -570,7 +572,8 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         _handleStoreChange(store, action) {
             this.setState({
                 query: queryStore.getQuery(this.props.sourceId),
-                historyVisible: false
+                historyVisible: false,
+                cqlEditorMessage: this.state.cqlEditorMessage
             });
         }
 
@@ -591,7 +594,16 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
         _toggleHistoryWidget() {
             this.setState({
                 query: this.state.query,
-                historyVisible: !this.state.historyVisible
+                historyVisible: !this.state.historyVisible,
+                cqlEditorMessage: this.state.cqlEditorMessage
+            });
+        }
+
+        _handleCQLEditorHintChange(message) {
+            this.setState({
+                query: this.state.query,
+                historyVisible: this.state.historyVisible,
+                cqlEditorMessage: message
             });
         }
 
@@ -632,7 +644,8 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                                 attachCurrInputElement={(v) => this._queryInputElement = v}
                                 query={this.state.query}
                                 handleInputChange={this._handleInputChange}
-                                inputKeyHandler={this._inputKeyHandler} /> :
+                                inputKeyHandler={this._inputKeyHandler}
+                                onCQLEditorHintChange={this._handleCQLEditorHintChange} /> :
                         <cqlEditorViews.CQLEditorFallback
                             attachCurrInputElement={item => this._queryInputElement = item}
                             handleInputChange={evt => this._handleInputChange(evt.target.value)}
@@ -710,7 +723,12 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                                 : null
                             }
                             <div className="query-hints">
-                                <QueryHints actionPrefix={this.props.actionPrefix} />
+                                {
+                                    this.state.cqlEditorMessage !== null ?
+                                    <div className="cql-editor-message"
+                                            dangerouslySetInnerHTML={{__html: this.state.cqlEditorMessage}} /> :
+                                    <QueryHints actionPrefix={this.props.actionPrefix} />
+                                }
                             </div>
                         </div>
                         <div className="query-options">

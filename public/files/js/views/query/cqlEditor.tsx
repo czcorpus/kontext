@@ -35,6 +35,7 @@ export interface CQLEditorProps {
     attachCurrInputElement:(elm:HTMLElement)=>void;
     handleInputChange:(v:string)=>void;
     inputKeyHandler:(evt:KeyboardEvent)=>void;
+    onCQLEditorHintChange:(message:string)=>void;
 }
 
 export interface CQLEditorViews {
@@ -134,7 +135,13 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
             const src = this.extractText(elm);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
             this.props.handleInputChange(src.map(v => v[0]).join(''));
-            elm.innerHTML = highlightSyntax(src.map(v => v[0]).join(''), 'cql', he, this.attrHelper);
+            elm.innerHTML = highlightSyntax(
+                src.map(v => v[0]).join(''),
+                'cql',
+                he,
+                this.attrHelper,
+                this.props.onCQLEditorHintChange
+            );
             this.reapplySelection(elm, rawAnchorIdx, rawFocusIdx);
         };
 

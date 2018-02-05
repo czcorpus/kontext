@@ -76,12 +76,15 @@ class RuleCharMap {
 
     private attrHelper:IAttrHelper;
 
-    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper) {
+    private onHintChange:(message:string)=>void;
+
+    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper, onHintChange:(message:string)=>void) {
         this.query = query;
         this.data = {};
         this.nonTerminals = [];
         this.he = he;
         this.attrHelper = attrHelper;
+        this.onHintChange = onHintChange;
     }
 
     private mkKey(i:number, j:number):string {
@@ -162,31 +165,55 @@ class RuleCharMap {
     }
 
     private applyNonTerminals(chunks:Array<StyledChunk>, inserts:Array<Array<string>>):Array<string> {
+        const errors:Array<string> = [];
         this.nonTerminals.reverse().forEach(v => {
             switch (v.rule) {
                 case 'Position':
                     this.findSubRuleIn('AttName', v.from, v.to).forEach(pa => {
                         const range = this.convertRange(pa.from, pa.to, chunks);
-                        inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
-                        inserts[range[1]+1].push('</span>');
-                    });
-                break;
-                case 'Structure':
-                    this.findSubRuleIn('AttName', v.from, v.to).forEach((sa, i, arr) => {
-                        if (i === arr.length - 1) {
-                            const range = this.convertRange(sa.from, sa.to, chunks);
-                            inserts[range[0]].push(`<span title="${this.he.translate('query__structure')}">`);
+                        const posAttrName = this.query.substring(pa.from, pa.to);
+                        if (this.attrHelper.attrExists(posAttrName)) {
+                            inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
                             inserts[range[1]+1].push('</span>');
 
                         } else {
-                            const range = this.convertRange(sa.from, sa.to, chunks);
+                            errors.push(`${this.he.translate('query__attr_does_not_exist')}: <strong>${posAttrName}</strong>`);
+                        }
+                    });
+                break;
+                case 'Structure':
+                    const attrNamesInStruct = this.findSubRuleIn('AttName', v.from, v.to);
+                    const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
+                    const structRange = this.convertRange(structTmp.from, structTmp.to, chunks);
+                    const structName = this.query.substring(structTmp.from, structTmp.to);
+                    if (this.attrHelper.structExists(structName)) {
+                        inserts[structRange[0]].push(`<span title="${this.he.translate('query__structure')}">`);
+                        inserts[structRange[1]+1].push('</span>');
+
+                    } else {
+                        errors.push(`${this.he.translate('query__struct_does_not_exist')}: <strong>${structName}</strong>`);
+                    }
+                    attrNamesInStruct.reverse();
+                    attrNamesInStruct.slice(1).forEach((sa, i, arr) => {
+                        const range = this.convertRange(sa.from, sa.to, chunks);
+                        const structAttrName = this.query.substring(sa.from, sa.to);
+                        if (this.attrHelper.structAttrExists(structName, structAttrName)) {
                             inserts[range[0]].push(`<span title="${this.he.translate('query__structattr')}">`);
                             inserts[range[1]+1].push('</span>');
+
+                        } else {
+                            errors.push(`${this.he.translate('query__structattr_does_not_exist')}: <strong>${structName}.${structAttrName}</strong>`);
                         }
                     });
                 break;
             }
         });
+        if (errors.length > 0) {
+            this.onHintChange(errors.join('<br />')); // TODO
+
+        } else {
+            this.onHintChange(null);
+        }
         const ans:Array<string> = [];
         for (let i = 0; i < chunks.length; i += 1) {
             inserts[i].forEach(v => ans.push(v));
@@ -329,9 +356,9 @@ function escapeString(v:string):string {
 
 
 export function _highlightSyntax(query:string, startRule:string, he:Kontext.ComponentHelpers, ignoreErrors:boolean,
-        attrHelper:IAttrHelper):string {
+        attrHelper:IAttrHelper, onHintChange:(message:string)=>void):string {
 
-    const rcMap = new RuleCharMap(query, he, attrHelper);
+    const rcMap = new RuleCharMap(query, he, attrHelper, onHintChange);
     const stack = new ParserStack(query, rcMap);
 
     try {
@@ -374,7 +401,7 @@ export function _highlightSyntax(query:string, startRule:string, he:Kontext.Comp
             let partial = escapeString(srch[2]);
             for (let i = 0; i < subRules.length; i += 1) {
                 try {
-                    partial = _highlightSyntax(srch[2], subRules[i], he, false, attrHelper);
+                    partial = _highlightSyntax(srch[2], subRules[i], he, false, attrHelper, onHintChange);
 
                 } catch (e) {
                     continue;
@@ -410,10 +437,18 @@ export function highlightSyntax(
         query:string,
         queryType:string,
         he:Kontext.ComponentHelpers,
-        attrHelper:IAttrHelper):string {
-    return _highlightSyntax(query, getStartRule(queryType), he, true, attrHelper);
+        attrHelper:IAttrHelper,
+        onHintChange:(message:string)=>void):string {
+    return _highlightSyntax(
+        query,
+        getStartRule(queryType),
+        he,
+        true,
+        attrHelper ? attrHelper : new NullAttrHelper(),
+        onHintChange ? onHintChange : _ => undefined
+    );
 }
 
 export function highlightSyntaxStrict(query:string, queryType:string, he:Kontext.ComponentHelpers):string {
-    return _highlightSyntax(query, getStartRule(queryType), he, false, new NullAttrHelper());
+    return _highlightSyntax(query, getStartRule(queryType), he, false, new NullAttrHelper(), _ => undefined);
 }
