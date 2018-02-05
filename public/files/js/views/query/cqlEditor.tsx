@@ -114,10 +114,10 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         }
 
         private getRawSelection(src:Array<[string, Node]>) {
-            const sel = window.getSelection();
             let rawAnchorIdx = 0;
             let rawFocusIdx = 0;
             let currIdx = 0;
+            const sel = window.getSelection();
 
             src.forEach(([text, node]) => {
                 if (node === sel.anchorNode) {
@@ -152,6 +152,53 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         componentDidMount() {
             this.editorRoot.appendChild(document.createTextNode(this.props.query));
+            if (he.browserInfo.isFirefox()) {
+                this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
+                    if (evt.keyCode === 8 || evt.keyCode === 46) {
+                        const src = this.extractText(this.editorRoot);
+                        const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+                        const rawSrc = src.map(v => v[0]).join('');
+
+                        if (rawAnchorIdx === rawFocusIdx) {
+                            (this.editorRoot as HTMLElement).innerHTML = highlightSyntax(
+                                evt.keyCode === 8 ?
+                                    rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
+                                    rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
+                                'cql',
+                                he,
+                                this.attrHelper,
+                                this.props.onCQLEditorHintChange
+                            );
+                            this.reapplySelection(
+                                this.editorRoot,
+                                evt.keyCode === 8 ? rawAnchorIdx - 1 : rawAnchorIdx,
+                                evt.keyCode === 8 ? rawFocusIdx - 1 : rawFocusIdx
+                            );
+
+                        } else if (rawAnchorIdx < rawFocusIdx) {
+                            (this.editorRoot as HTMLElement).innerHTML = highlightSyntax(
+                                rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
+                                'cql',
+                                he,
+                                this.attrHelper,
+                                this.props.onCQLEditorHintChange
+                            );
+                            this.reapplySelection(this.editorRoot, rawAnchorIdx, rawAnchorIdx);
+
+                        } else {
+                            (this.editorRoot as HTMLElement).innerHTML = highlightSyntax(
+                                rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
+                                'cql',
+                                he,
+                                this.attrHelper,
+                                this.props.onCQLEditorHintChange
+                            );
+                            this.reapplySelection(this.editorRoot, rawFocusIdx, rawFocusIdx);
+                        }
+                        evt.preventDefault();
+                    }
+                });
+            }
             this.updateEditor(this.editorRoot);
         }
 

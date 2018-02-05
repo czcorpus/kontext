@@ -167,6 +167,7 @@ class RuleCharMap {
     private applyNonTerminals(chunks:Array<StyledChunk>, inserts:Array<Array<string>>):Array<string> {
         const errors:Array<string> = [];
         this.nonTerminals.reverse().forEach(v => {
+            console.log('nonterminal ', v);
             switch (v.rule) {
                 case 'Position':
                     this.findSubRuleIn('AttName', v.from, v.to).forEach(pa => {
