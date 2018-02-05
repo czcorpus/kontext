@@ -99,12 +99,25 @@ class RuleCharMap {
         };
     }
 
+    private containsNonTerminal(from:number, to:number, rule:string):boolean {
+        for (let i = 0; i < this.nonTerminals.length; i += 1) {
+            if (this.nonTerminals[i].from === from &&
+                    this.nonTerminals[i].to === to &&
+                    this.nonTerminals[i].rule === rule) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     addNonTerminal(i:number, j:number, rule:string):void {
-        this.nonTerminals.push({
-            from: i,
-            to: j,
-            rule: rule
-        });
+        if (!this.containsNonTerminal(i, j, rule)) {
+            this.nonTerminals.push({
+                from: i,
+                to: j,
+                rule: rule
+            });
+        }
     }
 
     generate():string {

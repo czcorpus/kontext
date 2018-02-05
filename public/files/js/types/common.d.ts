@@ -310,6 +310,10 @@ declare module Kontext {
         props:GeneralProps;
     }
 
+    export interface IBrowserInfo {
+        isFirefox():boolean;
+    }
+
     /**
      * Convenient functions used by KonText's React components
      */
@@ -368,6 +372,8 @@ declare module Kontext {
         doThingsWithDelay(immediateFn:()=>void, actualFn:()=>void, delay:number):void;
 
         getHelpLink(ident:string):string;
+
+        browserInfo:IBrowserInfo;
     }
 
     export interface LayoutStores {

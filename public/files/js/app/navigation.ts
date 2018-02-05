@@ -458,4 +458,7 @@ export class AppNavigation implements Kontext.IURLHandler {
         });
         return this.encodeURLParameters(tmp);
     }
+
+
+
 }

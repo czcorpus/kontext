@@ -726,8 +726,16 @@ class ComponentTools {
 
     private pageModel:PageModel;
 
+    public browserInfo:Kontext.IBrowserInfo;
+
     constructor(pageModel:PageModel) {
         this.pageModel = pageModel;
+        this.browserInfo = {
+            isFirefox: () => {
+                return window.navigator.userAgent.indexOf('Firefox') > -1
+                        && window.navigator.userAgent.indexOf('Seamonkey') === -1;
+            }
+        }
     }
 
     translate(s:string, values?:any):string {
