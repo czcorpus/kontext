@@ -24,7 +24,8 @@
 /// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
-import {highlightSyntax, AttrHelper} from '../../cqlsh';
+import {highlightSyntax} from '../../cqlsh/main';
+import {AttrHelper} from '../../cqlsh/attrs';
 
 
 export interface CQLEditorProps {
@@ -34,6 +35,7 @@ export interface CQLEditorProps {
     attachCurrInputElement:(elm:HTMLElement)=>void;
     handleInputChange:(v:string)=>void;
     inputKeyHandler:(evt:KeyboardEvent)=>void;
+    onCQLEditorHintChange:(message:string)=>void;
 }
 
 export interface CQLEditorViews {
@@ -52,7 +54,8 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         return <textarea className="cql-input" rows="2" cols="60" name="cql"
                             ref={item => props.attachCurrInputElement(item)}
                             onChange={props.handleInputChange} value={props.query}
-                            onKeyDown={props.inputKeyHandler} />;
+                            onKeyDown={props.inputKeyHandler}
+                            spellCheck={false} />;
     }
 
     // ------------------- <CQLEditor /> -----------------------------
@@ -132,7 +135,13 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
             const src = this.extractText(elm);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
             this.props.handleInputChange(src.map(v => v[0]).join(''));
-            elm.innerHTML = highlightSyntax(src.map(v => v[0]).join(''), 'cql', he, this.attrHelper);
+            elm.innerHTML = highlightSyntax(
+                src.map(v => v[0]).join(''),
+                'cql',
+                he,
+                this.attrHelper,
+                this.props.onCQLEditorHintChange
+            );
             this.reapplySelection(elm, rawAnchorIdx, rawFocusIdx);
         };
 
@@ -148,6 +157,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         render() {
             return <pre contentEditable={true}
+                            spellCheck={false}
                             onInput={(evt) => this.updateEditor(evt.target)}
                             className="cql-input"
                             style={{width: '40em', height: '5em'}}
