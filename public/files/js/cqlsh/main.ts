@@ -206,7 +206,6 @@ class RuleCharMap {
                     } else {
                         errors.push(`${this.he.translate('query__struct_does_not_exist')}: <strong>${structName}</strong>`);
                     }
-
                     attrNamesInStruct.reverse();
                     attrNamesInStruct.slice(1).forEach((sa, i, arr) => {
                         const range = this.convertRange(sa.from, sa.to, chunks);
