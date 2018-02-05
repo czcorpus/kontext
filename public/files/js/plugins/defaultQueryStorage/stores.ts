@@ -28,7 +28,7 @@
 import {SimplePageStore, cloneRecord} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
-import {highlightSyntax} from '../../cqlsh';
+import {highlightSyntax} from '../../cqlsh/main';
 
 
 export interface InputBoxHistoryItem {

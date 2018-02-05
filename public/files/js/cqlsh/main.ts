@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="./types/common.d.ts" />
-/// <reference path="./vendor.d.ts/immutable.d.ts" />
+/// <reference path="../types/common.d.ts" />
+/// <reference path="../vendor.d.ts/immutable.d.ts" />
 
 import {parse as parseQuery, SyntaxError, TracerItem} from 'cqlParser/parser';
 import * as Immutable from 'vendor/immutable';
