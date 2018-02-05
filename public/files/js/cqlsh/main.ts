@@ -23,17 +23,12 @@
 
 import {parse as parseQuery, SyntaxError, TracerItem} from 'cqlParser/parser';
 import * as Immutable from 'vendor/immutable';
+import {IAttrHelper, AttrHelper, NullAttrHelper} from './attrs';
 
 /**
- *
- */
-interface StackOp {
-    rule:string;
-    lastPos:number;
-}
-
-/**
- *
+ * CharsRule represents a pointer to the original
+ * CQL query specifying a single rule applied to a
+ * specific substring of the query.
  */
 interface CharsRule {
     /**
@@ -53,7 +48,8 @@ interface CharsRule {
 }
 
 /**
- *
+ * StyledChunk represents an already styled
+ * piece of the query.
  */
 interface StyledChunk {
     from:number;
@@ -109,27 +105,36 @@ class RuleCharMap {
     }
 
     generate():string {
-        const ans:Array<CharsRule> = [];
+        const rulePointers:Array<CharsRule> = [];
         for (let k in this.data) {
             if (this.data.hasOwnProperty(k)) {
-                ans.push(this.data[k]);
+                rulePointers.push(this.data[k]);
             }
         }
-        const items = ans
+        const chunks = rulePointers
             .filter(v => v.to <= this.query.length)
             .sort((x1, x2) => x1.from - x2.from)
             .map(v => ({
                 value: this.query.substring(v.from, v.to),
-                htmlValue: this.extractTerminal(v.rule, v.from, v.to),
+                htmlValue: this.emitTerminal(v.rule, v.from, v.to),
                 from: v.from,
                 to: v.to
             }));
-        const inserts = items.concat(null).map(_ => []);
-        const result = this.applyNonTerminals(items, inserts);
+        // 'inserts' contains values (= HTML tags) inserted
+        // before matching 'result' items. I.e. 0th item
+        // from 'inserts' is inserted before 0th item from 'result'
+        // and n-th item from 'inserts' is inserted to the end
+        const inserts = chunks.concat(null).map(_ => []);
+        const result = this.applyNonTerminals(chunks, inserts);
         return result.join('');
     }
 
-    private findRange(i1:number, i2:number, chunks:Array<StyledChunk>):[number, number] {
+    /**
+     * convertRange converts a range from original CQL query (i.e. [left char position,
+     * right char position]) to the one within chunked (and styled) pieces of the query
+     * ('chunks' arg).
+     */
+    private convertRange(i1:number, i2:number, chunks:Array<StyledChunk>):[number, number] {
         let ansLeft:number = -1;
         let ansRight:number = -1;
 
@@ -161,7 +166,7 @@ class RuleCharMap {
             switch (v.rule) {
                 case 'Position':
                     this.findSubRuleIn('AttName', v.from, v.to).forEach(pa => {
-                        const range = this.findRange(pa.from, pa.to, chunks);
+                        const range = this.convertRange(pa.from, pa.to, chunks);
                         inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
                         inserts[range[1]+1].push('</span>');
                     });
@@ -169,12 +174,12 @@ class RuleCharMap {
                 case 'Structure':
                     this.findSubRuleIn('AttName', v.from, v.to).forEach((sa, i, arr) => {
                         if (i === arr.length - 1) {
-                            const range = this.findRange(sa.from, sa.to, chunks);
+                            const range = this.convertRange(sa.from, sa.to, chunks);
                             inserts[range[0]].push(`<span title="${this.he.translate('query__structure')}">`);
                             inserts[range[1]+1].push('</span>');
 
                         } else {
-                            const range = this.findRange(sa.from, sa.to, chunks);
+                            const range = this.convertRange(sa.from, sa.to, chunks);
                             inserts[range[0]].push(`<span title="${this.he.translate('query__structattr')}">`);
                             inserts[range[1]+1].push('</span>');
                         }
@@ -191,7 +196,7 @@ class RuleCharMap {
         return ans;
     }
 
-    private extractTerminal(rule:string, startIdx:number, endIdx:number):string {
+    private emitTerminal(rule:string, startIdx:number, endIdx:number):string {
         const CLASS_REGEXP = 'sh-regexp';
         const CLASS_ATTR = 'sh-attr';
         const CLASS_KEYWORD = 'sh-keyword';
@@ -264,78 +269,24 @@ class RuleCharMap {
 }
 
 
-export interface IAttrHelper {
-
-    structExists(v:string):boolean;
-
-    structAttrExists(struct:string, attr:string):boolean;
-
-    attrExists(attr:string):boolean;
-}
-
-
-export class AttrHelper implements IAttrHelper {
-
-    private attrList:Immutable.List<{n:string; label:string}>;
-
-    private structAttrList:Immutable.List<{n:string; label:string}>;
-
-    private availStructs:Immutable.Set<string>;
-
-    constructor(attrList:Immutable.List<{n:string; label:string}>, structAttrList:Immutable.List<{n:string; label:string}>) {
-        this.attrList = attrList;
-        this.structAttrList = structAttrList;
-        this.availStructs = Immutable.Set<string>(this.structAttrList.map(v => v.n.split('.')[0]));
-    }
-
-    structExists(v:string):boolean {
-        return this.availStructs.contains(v);
-    }
-
-    structAttrExists(struct:string, attr:string):boolean {
-        return !!this.structAttrList.find(v => `${struct}.${attr}` === v.n);
-    }
-
-    attrExists(attr:string):boolean {
-        return !!this.attrList.find(v => attr === v.n);
-    }
-}
-
-
-class NullAttrHelper implements IAttrHelper {
-
-    structExists(v:string):boolean {
-        return true;
-    }
-
-    structAttrExists(struct:string, attr:string):boolean {
-        return true;
-    }
-
-    attrExists(attr:string):boolean {
-        return true;
-    }
-
-}
-
 
 /**
  * ParserStack is used along with PEG parser to walk
- * through rules (enter, exit, fail) and build style
- * for input query.
+ * through rules (enter, exit, fail) and insert rule
+ * marks to the query via RuleCharMap instance.
  */
 class ParserStack {
 
-    private stack:Array<StackOp>;
+    private stack:Array<{rule:string; lastPos:number}>;
 
     private rcMap:RuleCharMap;
 
     private lastPos:number;
 
 
-    constructor(query:string, he:Kontext.ComponentHelpers, attrHelper:IAttrHelper) {
+    constructor(query:string, rcMap:RuleCharMap) {
         this.stack = [];
-        this.rcMap = new RuleCharMap(query, he, attrHelper);
+        this.rcMap = rcMap;
         this.lastPos = 0;
     }
 
@@ -367,8 +318,8 @@ class ParserStack {
         return !!/^[A-Z_]+$/.exec(rule);
     }
 
-    generate():[string, number] {
-        return [this.rcMap.generate(), this.lastPos];
+    getLastPos():number {
+        return this.lastPos;
     }
 }
 
@@ -376,24 +327,12 @@ function escapeString(v:string):string {
     return v.replace('<', '&lt;').replace('>', '&gt;');
 }
 
-function getStartRule(queryType:string):string {
-    switch (queryType) {
-        case 'phrase':
-            return 'PhraseQuery';
-        case 'word':
-        case 'lemma':
-            return 'RegExpRaw';
-        case 'cql':
-            return 'Query';
-        default:
-            throw new Error(`No parsing rule for type ${queryType}`);
-    }
-}
-
 
 export function _highlightSyntax(query:string, startRule:string, he:Kontext.ComponentHelpers, ignoreErrors:boolean,
         attrHelper:IAttrHelper):string {
-    const stack = new ParserStack(query, he, attrHelper);
+
+    const rcMap = new RuleCharMap(query, he, attrHelper);
+    const stack = new ParserStack(query, rcMap);
 
     try {
         parseQuery(query + (startRule === 'Query' ? ';' : ''), {
@@ -421,7 +360,9 @@ export function _highlightSyntax(query:string, startRule:string, he:Kontext.Comp
         }
     }
 
-    const [ans, lastPos] = stack.generate();
+    const lastPos = stack.getLastPos();
+    const ans = rcMap.generate();
+
     if (lastPos === 0) {
         return query;
 
@@ -444,6 +385,20 @@ export function _highlightSyntax(query:string, startRule:string, he:Kontext.Comp
         }
     }
     return ans + escapeString(query.substr(lastPos));
+}
+
+function getStartRule(queryType:string):string {
+    switch (queryType) {
+        case 'phrase':
+            return 'PhraseQuery';
+        case 'word':
+        case 'lemma':
+            return 'RegExpRaw';
+        case 'cql':
+            return 'Query';
+        default:
+            throw new Error(`No parsing rule for type ${queryType}`);
+    }
 }
 
 /**

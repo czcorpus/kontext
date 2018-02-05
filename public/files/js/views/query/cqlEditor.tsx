@@ -24,7 +24,8 @@
 /// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
-import {highlightSyntax, AttrHelper} from '../../cqlsh/main';
+import {highlightSyntax} from '../../cqlsh/main';
+import {AttrHelper} from '../../cqlsh/attrs';
 
 
 export interface CQLEditorProps {
