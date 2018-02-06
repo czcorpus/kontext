@@ -104,6 +104,10 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
                 src = helpers.createStaticUrl('img/mouseover-available.svg')
                 title = helpers.translate('options__vmode_switch_indicator_desc');
 
+            } else if (props.attrsVmode === 'mixed') {
+                src = helpers.createStaticUrl('img/mouseover-mixed.svg')
+                title = helpers.translate('options__vmode_switch_indicator_desc');
+
             } else {
                 src = helpers.createStaticUrl('img/mouseover-not-available.svg');
                 title = helpers.translate('options__vmode_switch_indicator_desc');
@@ -114,7 +118,7 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
         return (
             <div>
                 <h3 className="label">
-                    {helpers.translate('options__attr_apply_header')}
+                    {helpers.translate('options__attr_apply_header')}{'\u2026'}
                 </h3>
                 <div>
                     <select name="attr_vmode"
@@ -123,6 +127,7 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
                             className="no-label">
                         <option value="visible">{helpers.translate('options__vmode_switch_visible')}</option>
                         <option value="mouseover">{helpers.translate('options__vmode_switch_mouseover')}</option>
+                        <option value="mixed">{helpers.translate('options__vmode_switch_mixed')}</option>
                     </select>
                     {props.showConcToolbar ? renderVmodeInfoIcon() : null}
                 </div>
@@ -131,14 +136,12 @@ export function init(dispatcher, helpers, viewOptionsStore, mainMenuStore) {
                             value={props.attrsAllpos}
                             className="no-label"
                             onChange={handleSelectChangeFn('allpos')}
-                            disabled={props.attrsVmode === 'mouseover'}
+                            disabled={props.attrsVmode === 'mouseover' || props.attrsVmode === 'mixed'}
                             title={props.attrsVmode === 'mouseover' ?
                                     helpers.translate('options__locked_allpos_expl') : null}>
                         <option value="all">{helpers.translate('options__attr_apply_all')}</option>
                         <option value="kw">{helpers.translate('options__attr_apply_kwic')}</option>
                     </select>
-                    {props.attrsVmode === 'mouseover' ?
-                        <input type="hidden" name="allpos" value="all" /> : null}
                 </div>
             </div>
         );

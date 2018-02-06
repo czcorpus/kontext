@@ -389,10 +389,15 @@ export function init(dispatcher, he, stores) {
         _renderMouseOverInfo() {
             let mouseoverImg;
             let mouseoverAlt;
-            if (this.props.usesMouseoverAttrs) {
+            if (this.props.viewMode === 'mouseover') {
                 mouseoverImg = he.createStaticUrl('img/mouseover-available.svg');
                 mouseoverAlt = he.translate('options__attribs_are_on_mouseover_{attrs}',
-                        {attrs: this.state.currViewAttrs.slice(1).join('/')});;
+                        {attrs: this.state.currViewAttrs.slice(1).join('/')});
+
+            } else if (this.props.viewMode === 'mixed') {
+                mouseoverImg = he.createStaticUrl('img/mouseover-mixed.svg');
+                mouseoverAlt = he.translate('options__attribs_are_mixed_{attrs}',
+                        {attrs: this.state.currViewAttrs.slice(1).join('/')});
 
             } else {
                 mouseoverImg = he.createStaticUrl('img/mouseover-not-available.svg');
@@ -458,7 +463,7 @@ export function init(dispatcher, he, stores) {
                             onChartFrameReady={this.props.onChartFrameReady}
                             canSendEmail={this.props.canSendEmail} />
                     {this.props.showConcToolbar ?
-                        <ConcOptions usesMouseoverAttrs={this.props.usesMouseoverAttrs} />
+                        <ConcOptions viewMode={this.props.viewMode} />
                         : null}
                 </div>
             );
@@ -570,7 +575,7 @@ export function init(dispatcher, he, stores) {
                 tokenDetailIsBusy: concDetailStore.getTokenDetailIsBusy(),
                 concDetailStoreIsBusy: concDetailStore.getIsBusy(),
                 refsDetailData: refsDetailStore.getData(),
-                usesMouseoverAttrs: lineStore.getViewAttrsVmode() === 'mouseover',
+                viewMode: lineStore.getViewAttrsVmode(),
                 isUnfinishedCalculation: lineStore.isUnfinishedCalculation(),
                 concSummary: lineStore.getConcSummary(),
                 showAnonymousUserWarn: this.props.anonymousUser,
@@ -722,7 +727,7 @@ export function init(dispatcher, he, stores) {
                                 onChartFrameReady={this.props.onChartFrameReady}
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
-                                usesMouseoverAttrs={this.state.usesMouseoverAttrs} />
+                                viewMode={this.state.viewMode} />
                         {this.state.showAnonymousUserWarn ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
