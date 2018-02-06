@@ -136,9 +136,8 @@ class UCNKSubcRestore(AbstractSubcRestore):
             deleted_keys = []
 
         def corpname_matches(cn):
-            canon_cn = plugin_api.get_canonical_corpname(cn)
             filter_cn = filter_args.get('corpname', None)
-            return not filter_cn or canon_cn == filter_cn
+            return not filter_cn or cn == filter_cn
 
         def escape_subcname(s):
             return werkzeug.urls.url_quote(s, unsafe='+')

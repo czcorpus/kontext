@@ -118,7 +118,6 @@ class QueryStorage(AbstractQueryStorage):
             ans['query_type'] = form_data['curr_query_types'][main_corp]
             ans['query'] = form_data['curr_queries'][main_corp]
             ans['corpname'] = main_corp
-            ans['canonical_corpus_id'] = self._auth.canonical_corpname(main_corp)
             ans['subcorpname'] = edata['usesubcorp']
             ans['default_attr'] = form_data['curr_default_attr_values'][main_corp]
             ans['lpos'] = form_data['curr_lpos_values'][main_corp]
@@ -128,7 +127,6 @@ class QueryStorage(AbstractQueryStorage):
             ans['aligned'] = []
             for aitem in edata['corpora'][1:]:
                 ans['aligned'].append(dict(corpname=aitem,
-                                           canonical_corpus_id=self._auth.canonical_corpname(aitem),
                                            query=form_data['curr_queries'][aitem],
                                            query_type=form_data['curr_query_types'][aitem],
                                            default_attr=form_data['curr_default_attr_values'][aitem],
@@ -169,7 +167,6 @@ class QueryStorage(AbstractQueryStorage):
                 # are no persistent history records based on the old format)
                 tmp = {}
                 tmp.update(item)
-                tmp['canonical_corpus_id'] = self._auth.canonical_corpname(tmp['corpname'])
                 tmp['default_attr'] = None
                 tmp['lpos'] = None
                 tmp['qmcase'] = None
@@ -196,7 +193,7 @@ class QueryStorage(AbstractQueryStorage):
 
         if corpname:
             full_data = filter(lambda x: matches_corp_prop(
-                x, 'canonical_corpus_id', corpname), full_data)
+                x, 'corpus_id', corpname), full_data)
 
         if archived_only:
             full_data = filter(lambda x: x.get('name', None) is not None, full_data)

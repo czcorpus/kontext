@@ -219,7 +219,7 @@ class Actions(Querying):
                                    'NAME') or w}
                               for w in self.corp.get_conf('ALIGNED').split(',')]
         if self.args.align and not self.args.maincorp:
-            self.args.maincorp = self._canonical_corpname(self.args.corpname)
+            self.args.maincorp = self.args.corpname
         if len(out['Lines']) == 0:
             msg = _('No result. Please make sure the query and selected query type are correct.')
             self.add_system_message('info', msg)
@@ -860,7 +860,8 @@ class Actions(Querying):
         if len(self._lines_groups) > 0:
             self._exceptmethod = 'view'
             raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
-        self.add_conc_form_args(FirstHitsFilterFormArgs(persist=True, doc_struct=self.corp.get_conf('DOCSTRUCTURE')))
+        self.add_conc_form_args(FirstHitsFilterFormArgs(
+            persist=True, doc_struct=self.corp.get_conf('DOCSTRUCTURE')))
         self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
         return self.view()
 
@@ -1052,7 +1053,7 @@ class Actions(Querying):
 
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit, flimit, freq_sort, ml)
-        saved_filename = self._canonical_corpname(self.args.corpname)
+        saved_filename = self.args.corpname
         output = None
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
@@ -1061,8 +1062,7 @@ class Actions(Querying):
             output = result
             output['Desc'] = self.concdesc_json()['Desc']
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            def mkfilename(suffix): return '%s-freq-distrib.%s' % (
-                self._canonical_corpname(self.args.corpname), suffix)
+            def mkfilename(suffix): return '%s-freq-distrib.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='freq')
 
             # Here we expect that when saving multi-block items, all the block have
@@ -1244,7 +1244,7 @@ class Actions(Querying):
         self.args.collpage = 1
         self.args.citemsperpage = Actions.SAVECOLL_MAX_LINES  # to make sure we include everything
         result = self.collx(line_offset=(from_line - 1), num_lines=num_lines)
-        saved_filename = self._canonical_corpname(self.args.corpname)
+        saved_filename = self.args.corpname
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
             self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % (
@@ -1252,8 +1252,7 @@ class Actions(Querying):
             out_data = result
             out_data['Desc'] = self.concdesc_json()['Desc']
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            def mkfilename(suffix): return '%s-collocations.%s' % (
-                self._canonical_corpname(self.args.corpname), suffix)
+            def mkfilename(suffix): return '%s-collocations.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
             writer.set_col_types(int, unicode, *(8 * (float,)))
 
@@ -1517,7 +1516,7 @@ class Actions(Querying):
             raise err
         ans['Items'] = ans['Items'][:(to_line - from_line + 1)]
 
-        saved_filename = self._canonical_corpname(self.args.corpname)
+        saved_filename = self.args.corpname
 
         if saveformat == 'text':
             self._headers['Content-Type'] = 'application/text'
@@ -1526,8 +1525,7 @@ class Actions(Querying):
             out_data = ans
             out_data['pattern'] = self.args.wlpat
         elif saveformat in ('csv', 'xml', 'xlsx'):
-            def mkfilename(suffix): return '%s-word-list.%s' % (
-                self._canonical_corpname(self.args.corpname), suffix)
+            def mkfilename(suffix): return '%s-word-list.%s' % (self.args.corpname, suffix)
             writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='wordlist')
             writer.set_col_types(int, unicode, float)
 
@@ -1627,8 +1625,7 @@ class Actions(Querying):
 
             data = kwic.kwicpage(kwic_args)
 
-            def mkfilename(suffix): return '%s-concordance.%s' % (
-                self._canonical_corpname(self.args.corpname), suffix)
+            def mkfilename(suffix): return '%s-concordance.%s' % (self.args.corpname, suffix)
             if saveformat == 'text':
                 self._headers['Content-Type'] = 'text/plain'
                 self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
@@ -1909,8 +1906,7 @@ class Actions(Querying):
             subcorpname=self.args.usesubcorp,
             baseAttr=Kontext.BASE_ATTR,
             humanCorpname=self._human_readable_corpname(),
-            corpusIdent=dict(id=self.args.corpname, canonicalId=self._canonical_corpname(self.args.corpname),
-                             name=self._human_readable_corpname()),
+            corpusIdent=dict(id=self.args.corpname, name=self._human_readable_corpname()),
             currentArgs=[['corpname', self.args.corpname]],
             compiledQuery=[],
             concPersistenceOpId=None,

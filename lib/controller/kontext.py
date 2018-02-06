@@ -789,7 +789,7 @@ class Kontext(Controller):
 
         Parameters:
         form -- currently processed HTML form (if any)
-        corp_list -- a dict (canonical_id => full_id) representing all the corpora user can access
+        corp_list -- a dict (corpus_id => corpus_variant) representing all the corpora user can access
 
         Return:
         3-tuple containing a corpus name, corpus variant prefix and a fallback URL where application
@@ -818,7 +818,6 @@ class Kontext(Controller):
 
         # 1) reload permissions in case of no access and if available
         with plugins.runtime.AUTH as auth:
-            cn = auth.canonical_corpname(cn)  # always convert corpus variant into a canonical form
             if cn in corp_list:
                 variant = corp_list[cn]
                 fallback = None
@@ -874,7 +873,7 @@ class Kontext(Controller):
         Returns corpora identifiers accessible by the current user.
 
         returns:
-        a dict (canonical_id, id)
+        a dict (corpus_id, corpus_variant)
         """
         return plugins.runtime.AUTH.instance.permitted_corpora(self.session_get('user'))
 
@@ -1118,7 +1117,6 @@ class Kontext(Controller):
                 self.args.corpname)
 
         result['corpus_ident'] = dict(id=self.args.corpname,
-                                      canonicalId=self._canonical_corpname(self.args.corpname),
                                       variant=self._corpus_variant,
                                       name=self._human_readable_corpname())
 
@@ -1150,15 +1148,6 @@ class Kontext(Controller):
 
         return result
 
-    @staticmethod
-    def _canonical_corpname(c):
-        """
-        Returns a corpus identifier without any additional prefixes used
-        to support multiple configurations per single corpus.
-        (e.g. 'public/bnc' will transform into just 'bnc')
-        """
-        return plugins.runtime.AUTH.instance.canonical_corpname(c)
-
     def _human_readable_corpname(self):
         """
         Returns an user-readable name of the current corpus (i.e. it cannot be used
@@ -1168,7 +1157,7 @@ class Kontext(Controller):
         if self.corp.get_conf('NAME'):
             return corpus_get_conf(self.corp, 'NAME')
         elif self.args.corpname:
-            return self._canonical_corpname(self.args.corpname)
+            return self.args.corpname
         else:
             return ''
 
@@ -1231,11 +1220,12 @@ class Kontext(Controller):
                 ans[p[4:]] = src_obj.getlist(p)
 
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_api, self.args.corpname):
-            ccn = plugins.runtime.AUTH.instance.canonical_corpname(self.args.corpname)
-            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self.ui_lang, ccn)
+            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
+                self.ui_lang, self.args.corpname)
             id_attr = corpus_info.metadata.id_attr
             if id_attr in ans:
-                bib_mapping = dict(plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(self._plugin_api, ccn,
+                bib_mapping = dict(plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(self._plugin_api,
+                                                                                            self.args.corpname,
                                                                                             ans[id_attr]))
         return ans, bib_mapping
 

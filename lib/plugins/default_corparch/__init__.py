@@ -415,7 +415,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def get_list(self, plugin_api, user_allowed_corpora):
         """
         arguments:
-        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
+        user_allowed_corpora -- a dict (corpus_id, corpus_variant) containing corpora ids
                                 accessible by the current user
         """
         cl = []
@@ -425,7 +425,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 try:
                     corp_info = self.manatee_corpora.get_info(corp_id)
                     cl.append({'id': corp_id,
-                               'canonical_id': corp_id,
                                'name': l10n.import_string(corp_info.name,
                                                           from_encoding=corp_info.encoding),
                                'desc': l10n.import_string(corp_info.description,
@@ -439,7 +438,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         u'Failed to fetch info about %s with error %s (%r)' % (corp_info.name,
                                                                                type(e).__name__, e))
                     cl.append({
-                        'id': corp_id, 'canonical_id': corp_id, 'name': corp_id,
+                        'id': corp_id, 'name': corp_id,
                         'path': path, 'desc': '', 'size': None})
         return cl
 
@@ -682,7 +681,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                     # on client-side, this may contain also subc. id, aligned ids
                     'id': x['id'],
                     'corpus_id': x['id'],
-                    'canonical_id': x['id'],
                     'name': self._manatee_corpora.get_info(x['id']).name,
                     'size': self._manatee_corpora.get_info(x['id']).size,
                     'size_info': l10n.simplify_num(self._manatee_corpora.get_info(x['id']).size),
@@ -696,7 +694,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_api):
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_api, self._manatee_corpora.get_info(item.main_corpus_canonical_id()).description)
+                plugin_api, self._manatee_corpora.get_info(item.main_corpus_id).description)
             ans.append(tmp)
         return ans
 

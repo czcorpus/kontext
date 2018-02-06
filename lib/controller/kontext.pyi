@@ -44,6 +44,8 @@ class LinesGroups(object):
 
 class AsyncTaskStatus(object):
 
+    def __init__(self, status:int, ident:str, category:str, label:str, args:Dict[str, Any]): ...
+
     def is_finished(self) -> bool: ...
 
     @staticmethod
@@ -116,9 +118,6 @@ class Kontext(Controller):
 
     def get_available_aligned_corpora(self) -> List[str]: ...
 
-    @staticmethod
-    def _canonical_corpname(c:str) -> str: ...
-
 
 class PluginApi(object):
 
@@ -154,8 +153,6 @@ class PluginApi(object):
 
     @property
     def current_corpus(self) -> Corpus: ...
-
-    def get_canonical_corpname(self, c:str) -> str: ...
 
     @property
     def current_url(self) -> str: ...

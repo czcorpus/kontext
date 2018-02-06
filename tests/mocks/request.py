@@ -32,9 +32,6 @@ class Controller(object):
         self.cm = CorpusManager()
         self._plugin_api = PluginApi()
 
-    def _canonical_corpname(self, corpname):
-        return corpname
-
 
 class Request(object):
 

@@ -153,28 +153,29 @@ class ManateeBackendConf(object):
     """
     Handles configuration for all the trees defined for a corpus
     """
+
     def __init__(self, data):
         self._data = data
 
-    def get_trees(self, canonical_corpus_id):
+    def get_trees(self, corpus_id):
         return dict((tc['id'], TreeConf(tc))
-                    for tc in self._data[canonical_corpus_id]['trees'])
+                    for tc in self._data[corpus_id]['trees'])
 
-    def get_tree_display_list(self, canonical_corpus_id):
-        return [tc['id'] for tc in self._data[canonical_corpus_id]['trees']]
+    def get_tree_display_list(self, corpus_id):
+        return [tc['id'] for tc in self._data[corpus_id]['trees']]
 
-    def get_sentence_struct(self, canonical_corpus_id):
-        return self._data[canonical_corpus_id]['sentenceStruct']
+    def get_sentence_struct(self, corpus_id):
+        return self._data[corpus_id]['sentenceStruct']
 
-    def get_empty_value_placeholders(self, canonical_corpus_id):
+    def get_empty_value_placeholders(self, corpus_id):
         """
         Args:
-            canonical_corpus_id (str): corpus ID
+            corpus_id (str): corpus ID
 
         Returns:
             (list of str)
         """
-        return self._data[canonical_corpus_id].get('emptyValuePlaceholders', [])
+        return self._data[corpus_id].get('emptyValuePlaceholders', [])
 
 
 class TreeNodeEncoder(json.JSONEncoder):
@@ -183,6 +184,7 @@ class TreeNodeEncoder(json.JSONEncoder):
     understood by the "JS Treex View" (https://github.com/ufal/js-treex-view)
     library.
     """
+
     def default(self, obj):
         if isinstance(obj, TreeNode):
             data = {'id': obj.id}
@@ -353,12 +355,12 @@ class ManateeBackend(SearchBackend):
         """
         self._conf = ManateeBackendConf(conf)
 
-    def _load_raw_sent(self, corpus, canonical_corpus_id, token_id, kwic_len, tree_attrs):
+    def _load_raw_sent(self, corpus, corpus_id, token_id, kwic_len, tree_attrs):
         """
         Retrieve a sentence via Manatee
         Args:
             corpus (manatee.Corpus): a corpus instance
-            canonical_corpus_id (str): canonical corpus ID
+            corpus_id (str): corpus ID
             token_id (int): token number/id
             kwic_len (int): number of tokens in KWIC
             tree_attrs (list of str): a list of positional attributes required by tree nodes/edges
@@ -368,8 +370,9 @@ class ManateeBackend(SearchBackend):
             kwic_pos: a tuple (first_kwic_idx, kwic_length)
         """
         encoding = corpus.get_conf('ENCODING')
-        sentence_struct = self._conf.get_sentence_struct(canonical_corpus_id)
-        conc = manatee.Concordance(corpus, ' '.join('[#%d]' % k for k in range(token_id, token_id + kwic_len)), 1, -1)
+        sentence_struct = self._conf.get_sentence_struct(corpus_id)
+        conc = manatee.Concordance(corpus, ' '.join(
+            '[#%d]' % k for k in range(token_id, token_id + kwic_len)), 1, -1)
         conc.sync()
         kl = manatee.KWICLines(corpus, conc.RS(True, 0, 1),
                                '-1:%s' % sentence_struct,
@@ -467,15 +470,15 @@ class ManateeBackend(SearchBackend):
             data[i][parent_attr] = abs_parent if abs_parent is not None else 0
             self._process_attr_refs(data, i, attr_refs)
 
-    def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
-        tree_configs = self._conf.get_trees(canonical_corpus_id)
+    def get_data(self, corpus, corpus_id, token_id, kwic_len):
+        tree_configs = self._conf.get_trees(corpus_id)
         tree_list = []
-        tree_id_list = self._conf.get_tree_display_list(canonical_corpus_id)
+        tree_id_list = self._conf.get_tree_display_list(corpus_id)
         for tree in tree_id_list:
             conf = tree_configs[tree]
-            raw_data = self._load_raw_sent(corpus, canonical_corpus_id, token_id, kwic_len, conf.all_attrs)
+            raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, conf.all_attrs)
             parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
-                                               self._conf.get_empty_value_placeholders(canonical_corpus_id))
+                                               self._conf.get_empty_value_placeholders(corpus_id))
             if conf.root_node:
                 parsed_data = [conf.root_node] + parsed_data
             self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs)
@@ -483,4 +486,3 @@ class ManateeBackend(SearchBackend):
             tree_list.append(tb.process(conf, parsed_data))
         template = TreexTemplate(tree_id_list, tree_list, tree_configs)
         return template.export(), TreeNodeEncoder
-

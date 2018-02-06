@@ -37,7 +37,7 @@ export interface ServerFavlistItem {
     subcorpus_id:string;
     size:number;
     size_info:string;
-    corpora:Array<{id:string; canonical_id:string; name:string}>;
+    corpora:Array<{id:string; name:string}>;
 }
 
 export interface GeneratedFavListItem {
@@ -53,7 +53,6 @@ export interface CorplistItem {
     id?: string;
     name: string;
     corpus_id: string;
-    canonical_id: string;
     subcorpus_id: string;
     corpora: Array<string>;
     description: string;

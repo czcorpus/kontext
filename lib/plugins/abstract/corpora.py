@@ -99,12 +99,12 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
     as provided by manatee.Corpus instance
     """
 
-    def __init__(self, corpus, canonical_id):
+    def __init__(self, corpus, corpus_id):
         super(DefaultManateeCorpusInfo, self).__init__()
         self.encoding = corpus.get_conf('ENCODING')
         import_string = partial(l10n.import_string, from_encoding=self.encoding)
         self.name = import_string(corpus.get_conf('NAME') if corpus.get_conf('NAME')
-                                  else canonical_id)
+                                  else corpus_id)
         self.description = import_string(corpus.get_info())
         self.attrs = filter(lambda x: len(x) > 0, corpus.get_conf('ATTRLIST').split(','))
         self.size = corpus.size()
@@ -189,7 +189,7 @@ class AbstractCorporaArchive(object):
 
         arguments:
         user_lang -- user language (e.g. en_US)
-        corp_id -- corpus identifier (both canonical and non-canonical should be accepted)
+        corp_id -- corpus identifier
 
         returns:
         A dictionary containing corpus information. Expected keys are:
@@ -205,7 +205,7 @@ class AbstractCorporaArchive(object):
 
         arguments:
         plugin_api --
-        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) of corpora ids the current
+        user_allowed_corpora -- a dict (corpus_id, corpus_variant) of corpora ids the current
                                 user can access
         """
         raise NotImplementedError()
@@ -306,7 +306,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         arguments:
         plugin_api -- a controller.PluginApi instance
         corpus_info -- a CorpusInfo object
-        permitted_corpora -- a dict (canonical_corp_id, corp_id) as returned
+        permitted_corpora -- a dict (corpus_id, corpus_variant) as returned
                              by auth.permitted_corpora
         """
         return True
@@ -337,7 +337,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         plugin_api -- a controller.PluginApi instance
         item -- a dict containing corpus information as required by client-side
         permitted_corpora -- list of permitted corpora as returned by the 'auth' plug-in
-                             (i.e. a dict canonical_corpus_id=>corpus_id)
+                             (i.e. a dict corpus_id=>corpus_variant)
         corpus_info -- a CorpusInfo instance
         """
         pass

@@ -68,9 +68,6 @@ class PluginApi(object):
     def current_corpus(self):
         return self._controller.corp
 
-    def get_canonical_corpname(self, c):
-        return plugins.runtime.AUTH.instance.canonical_corpname(c)
-
     @property
     def current_url(self):
         return self._controller.get_current_url()

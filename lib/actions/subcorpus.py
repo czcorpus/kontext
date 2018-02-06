@@ -139,8 +139,7 @@ class Subcorpus(Querying):
                                     (self.session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql))
                 self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                        category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                       label=u'%s:%s' % (self._canonical_corpname(basecorpname),
-                                                                         subcname),
+                                                       label=u'%s:%s' % (basecorpname, subcname),
                                                        args=dict(subcname=subcname, corpname=basecorpname)))
                 result = {}
             elif backend == 'multiprocessing':
@@ -264,14 +263,14 @@ class Subcorpus(Querying):
                 for item in self.cm.subcorp_names(corp):
                     sc = self.cm.get_Corpus(corp, subcname=item['n'])
                     data.append({
-                        'name': '%s:%s' % (self._canonical_corpname(corp), item['n']),
+                        'name': '%s:%s' % (corp, item['n']),
                         'size': sc.search_size(),
                         'created': time.mktime(sc.created.timetuple()),
                         'corpname': corp,
                         'human_corpname': sc.get_conf('NAME'),
                         'usesubcorp': item['n'],
                         'deleted': False})
-                    related_corpora.add(self._canonical_corpname(corp))
+                    related_corpora.add(corp)
             except Exception as e:
                 for d in data:
                     # permitted_corpora does this
@@ -318,7 +317,7 @@ class Subcorpus(Querying):
     def ajax_subcorp_info(self, subcname=''):
         sc = self.cm.get_Corpus(self.args.corpname, subcname=subcname)
         ans = {
-            'corpusName': self._canonical_corpname(self.args.corpname),
+            'corpusName': self.args.corpname,
             'subCorpusName': subcname,
             'corpusSize': format_number(sc.size()),
             'subCorpusSize': format_number(sc.search_size()),

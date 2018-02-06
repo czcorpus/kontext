@@ -18,7 +18,7 @@ from plugins.abstract import CorpusDependentPlugin
 
 class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):
 
-    def search_by_token_id(self, corp, canonical_corpname, token_id, kwic_len):
+    def search_by_token_id(self, corp, corpname, token_id, kwic_len):
         raise NotImplementedError()
 
     def is_enabled_for(self, plugin_api, corpname):
@@ -68,14 +68,14 @@ class SearchBackend(object):
         except ValueError:
             return []
 
-    def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
+    def get_data(self, corpus, corpus_id, token_id, kwic_len):
         """
         Return syntax tree data for a specified token and a proper
         JSON encoder to be able to serialize the data.
 
         Args:
             corpus (manatee.Corpus): a respective corpus instance
-            canonical_corpus_id (str): canonical corpus identifier
+            corpus_id (str): corpus identifier
             token_id (int): token numeric ID
             kwic_len (int): number of tokens in KWIC
         Returns (tuple(list_of_nodes, TreeNodeEncoder))

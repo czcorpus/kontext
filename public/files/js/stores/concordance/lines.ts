@@ -107,8 +107,6 @@ export interface ViewConfiguration {
 
     baseCorpname:string;
 
-    baseCanonicalCorpname:string;
-
     mainCorp:string;
 
     subCorpName:string;

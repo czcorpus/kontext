@@ -292,10 +292,10 @@ export class CorplistWidgetStore extends SimplePageStore {
         })();
     }
 
-    private getAlignedCorpusName(canonicalCorpusId:string):string {
+    private getAlignedCorpusName(corpusId:string):string {
         const srch = this.querySetupHandler.getAvailableAlignedCorpora()
-                .find(item => item.n === canonicalCorpusId);
-        return srch ? srch.label : canonicalCorpusId;
+                .find(item => item.n === corpusId);
+        return srch ? srch.label : corpusId;
     }
 
     /**

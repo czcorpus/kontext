@@ -30,10 +30,6 @@ from translation import ugettext as _
 import plugins
 
 
-def canonical_corpname(corpname):
-    return plugins.runtime.AUTH.instance.canonical_corpname(corpname)
-
-
 def get_conc_labelmap(infopath):
     labels = {}
     try:
@@ -162,7 +158,7 @@ class PyConc(manatee.Concordance):
         if options[0] == '-':
             self.switch_aligned(self.orig_corp.get_conffile())
             try:
-                self.add_aligned(canonical_corpname(options[1:]))
+                self.add_aligned(options[1:])
             except RuntimeError as e:
                 logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
                 raise EmptyParallelCorporaIntersection(

@@ -99,10 +99,7 @@ class User(Kontext):
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus, archived_only):
         if plugins.runtime.QUERY_STORAGE.exists:
-            if current_corpus:
-                corpname = self._canonical_corpname(self.args.corpname)
-            else:
-                corpname = None
+            corpname = self.args.corpname if current_corpus else None
             with plugins.runtime.QUERY_STORAGE as qs:
                 rows = qs.get_user_queries(
                     self.session_get('user', 'id'),

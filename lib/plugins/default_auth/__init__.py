@@ -145,22 +145,6 @@ class DefaultAuthHandler(AbstractInternalAuth):
         else:
             raise AuthException(_('User %s not found.') % user_id)
 
-    def canonical_corpname(self, corpname):
-        """
-        KonText introduces a convention that corpus_id can have a path-like prefix
-        which represents a different Manatee registry file. This allows attaching
-        a specially configured corpus to a user according to his access rights.
-
-        Example: let's say we have 'syn2010' and 'spec/syn2010' corpora where the latter
-        has some limitations (e.g. user can explore only a small KWIC range). These two
-        corpora are internally represented by two distinct Manatee registry files:
-        (/path/to/registry/syn2010 and /path/to/registry/spec/syn2010).
-        User cannot see the string 'spec/syn2010' anywhere in the interface (only in URL).
-
-        By the term 'canonical' we mean the original id (= Manatee registry file name).
-        """
-        return corpname.rsplit('/', 1)[-1]
-
     @staticmethod
     def _variant_prefix(corpname):
         return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
@@ -169,7 +153,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         corpora = self.db.get(self._mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
-        return dict((self.canonical_corpname(c), self._variant_prefix(c)) for c in corpora)
+        return dict((c, self._variant_prefix(c)) for c in corpora)
 
     def get_user_info(self, user_id):
         user_key = self._mk_user_key(user_id)

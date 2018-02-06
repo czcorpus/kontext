@@ -58,13 +58,13 @@ class UcnkManateeBackend(mbk.ManateeBackend):
     def import_parent_values(self, v):
         return [int(x) for x in v.split('|') if x != '']
 
-    def get_data(self, corpus, canonical_corpus_id, token_id, kwic_len):
-        tree_configs = self._conf.get_trees(canonical_corpus_id)
-        tree_id = self._conf.get_tree_display_list(canonical_corpus_id)[0]
+    def get_data(self, corpus, corpus_id, token_id, kwic_len):
+        tree_configs = self._conf.get_trees(corpus_id)
+        tree_id = self._conf.get_tree_display_list(corpus_id)[0]
         conf = tree_configs[tree_id]
-        raw_data = self._load_raw_sent(corpus, canonical_corpus_id, token_id, kwic_len, conf.all_attrs)
+        raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, conf.all_attrs)
         parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
-                                           self._conf.get_empty_value_placeholders(canonical_corpus_id))
+                                           self._conf.get_empty_value_placeholders(corpus_id))
         if conf.root_node:
             parsed_data = [conf.root_node] + parsed_data
         self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs)
