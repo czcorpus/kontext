@@ -239,7 +239,7 @@ class UcnkCorpArch(CorpusArchive):
     def get_list(self, plugin_api, user_allowed_corpora):
         """
         arguments:
-        user_allowed_corpora -- a dict (corpus_canonical_id, corpus_id) containing corpora ids
+        user_allowed_corpora -- a dict (corpus_id, corpus_variant) containing corpora ids
                                 accessible by the current user
         """
         cl = []
@@ -249,7 +249,6 @@ class UcnkCorpArch(CorpusArchive):
                 try:
                     corp_info = self._manatee_corpora.get_info(corp_id)
                     cl.append({'id': corp_id,
-                               'canonical_id': corp_id,
                                'name': l10n.import_string(corp_info.name,
                                                           from_encoding=corp_info.encoding),
                                'desc': l10n.import_string(corp_info.description,
@@ -264,8 +263,7 @@ class UcnkCorpArch(CorpusArchive):
                         u'Failed to fetch info about %s with error %s (%r)' % (corp_id,
                                                                                type(e).__name__, e))
                     cl.append({
-                        'id': corp_id, 'canonical_id': corp_id, 'name': corp_id,
-                        'path': path, 'desc': '', 'size': None})
+                        'id': corp_id, 'name': corp_id, 'path': path, 'desc': '', 'size': None})
         return cl
 
     def export_actions(self):

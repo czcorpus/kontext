@@ -161,7 +161,7 @@ export class LineSelGroupsRatiosChart {
         rootElm.append(() => labelWrapper);
     }
 
-    private renderExportLinks(rootElm:d3.Selection<any>, canonicalCorpusId:string) {
+    private renderExportLinks(rootElm:d3.Selection<any>, corpusId:string) {
         if (this.exportFormats.length > 0) {
             const div = rootElm.append('div');
             div.attr('class', 'footer');
@@ -178,7 +178,7 @@ export class LineSelGroupsRatiosChart {
                 aElm.text(ef);
                 aElm.on('click', () => {
                     const args = new MultiDict();
-                    args.set('corpname', canonicalCorpusId);
+                    args.set('corpname', corpusId);
                     args.set('data', JSON.stringify(this.lastGroupStats));
                     args.set('cformat', ef);
                     args.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
@@ -189,7 +189,7 @@ export class LineSelGroupsRatiosChart {
         }
     }
 
-    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean, canonicalCorpusId:string, size:[number, number]):void {
+    showGroupsStats(rootElm:HTMLElement, usePrevData:boolean, corpusId:string, size:[number, number]):void {
         [this.currWidth, this.currHeight] = size;
         (() => {
             if (this.lastGroupStats && usePrevData) {
@@ -230,7 +230,7 @@ export class LineSelGroupsRatiosChart {
                     .text(this.layoutModel.translate('linesel__groups_stats_heading'));
                 const colors = this.renderChart(d3Root, chartData);
                 this.renderLabels(chartData, colors, d3Root);
-                this.renderExportLinks(d3Root, canonicalCorpusId);
+                this.renderExportLinks(d3Root, corpusId);
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);

@@ -95,7 +95,6 @@ declare module Kontext {
 
     export interface FullCorpusIdent {
         id:string;
-        canonicalId:string; // will be deprecated in 0.12.x
         variant:string;
         name:string;
     }
@@ -523,7 +522,7 @@ declare module Kontext {
         name?:string;
 
         corpname:string;
-        canonical_corpus_id:string;
+        corpus_id:string;
         human_corpname:string;
         /**
          * a UNIX timestamp in seconds
@@ -567,7 +566,6 @@ declare module Kontext {
             query_type:string;
             query:string;
             corpname:string;
-            canonical_corpus_id: string;
             human_corpname:string;
             lpos:string;
             qmcase:string;

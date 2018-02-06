@@ -209,9 +209,6 @@ class CentralAuth(AbstractRemoteAuth):
                 plugin_api.session.clear()
                 plugin_api.session['user'] = self.anonymous_user()
 
-    def canonical_corpname(self, corpname):
-        return corpname.rsplit('/', 1)[-1]
-
     def variant_prefix(self, corpname):
         return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
 
@@ -223,12 +220,12 @@ class CentralAuth(AbstractRemoteAuth):
         user_id -- a database user ID
 
         returns:
-        a dict (canonical_corp_name, corpus_variant)
+        a dict (corpus_id, corpus_variant)
         """
         corpora = self._db.get(self._mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
-        return dict((self.canonical_corpname(c), self.variant_prefix(c)) for c in corpora)
+        return dict((c, self.variant_prefix(c)) for c in corpora)
 
     def get_user_info(self, user_id):
         user_key = self._mk_user_key(user_id)

@@ -185,12 +185,12 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         args.set('default_attr', item.default_attr);
         args.set('pcq_pos_neg', item.pcq_pos_neg);
         item.aligned.forEach(v => {
-            args.set(`${v.query_type}_${v.canonical_corpus_id}`, v.query);
-            args.set(`queryselector_${v.canonical_corpus_id}`, v.query_type + 'row');
-            args.set(`lpos_${v.canonical_corpus_id}`, v.lpos);
-            args.set(`qmcase_${v.canonical_corpus_id}`, v.qmcase ? '1' : '0');
-            args.set(`default_attr_${v.canonical_corpus_id}`, v.default_attr);
-            args.set(`pcq_pos_neg_${v.canonical_corpus_id}`, v.pcq_pos_neg);
+            args.set(`${v.query_type}_${v.corpname}`, v.query);
+            args.set(`queryselector_${v.corpname}`, v.query_type + 'row');
+            args.set(`lpos_${v.corpname}`, v.lpos);
+            args.set(`qmcase_${v.corpname}`, v.qmcase ? '1' : '0');
+            args.set(`default_attr_${v.corpname}`, v.default_attr);
+            args.set(`pcq_pos_neg_${v.corpname}`, v.pcq_pos_neg);
         });
         Object.keys(item.selected_text_types).forEach(k => {
             args.replace(`sca_${k}`, item.selected_text_types[k]);

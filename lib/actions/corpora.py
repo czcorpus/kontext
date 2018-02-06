@@ -65,7 +65,7 @@ class Corpora(Kontext):
         if corpus.get_conf('NAME'):
             corpus_name = corpus.get_conf('NAME')
         else:
-            corpus_name = self._canonical_corpname(corpus.corpname)
+            corpus_name = corpus.corpname
 
         ans = {
             'corpname': import_str(corpus_name),

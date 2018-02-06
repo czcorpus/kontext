@@ -64,11 +64,10 @@ def get_syntax_data(ctrl, request):
     skips its simple JSON serialization.
     """
     try:
-        canonical_corpname = getattr(ctrl, '_canonical_corpname')(ctrl.corp.corpname)
         with plugins.runtime.SYNTAX_VIEWER as sv:
-            data = sv.search_by_token_id(ctrl.corp, canonical_corpname,
-                                        int(request.args.get('kwic_id')),
-                                        int(request.args.get('kwic_len')))
+            data = sv.search_by_token_id(ctrl.corp, ctrl.corp.corpname,
+                                         int(request.args.get('kwic_id')),
+                                         int(request.args.get('kwic_len')))
     except MaximumContextExceeded:
         data = dict(contains_errors=True,
                     error=_('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
@@ -86,13 +85,13 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
         self._backend = backend
         self._auth = auth
 
-    def search_by_token_id(self, corp, canonical_corpname, token_id, kwic_len):
-        data, encoder = self._backend.get_data(corp, canonical_corpname, token_id, kwic_len)
+    def search_by_token_id(self, corp, corpname, token_id, kwic_len):
+        data, encoder = self._backend.get_data(corp, corpname, token_id, kwic_len)
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
-    def is_enabled_for(self, plugin_api,corpname):
-        return self._auth.canonical_corpname(corpname) in self._conf
+    def is_enabled_for(self, plugin_api, corpname):
+        return corpname in self._conf
 
     def export_actions(self):
         return {concordance.Actions: [get_syntax_data]}

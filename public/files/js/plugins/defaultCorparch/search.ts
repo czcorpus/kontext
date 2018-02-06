@@ -35,7 +35,6 @@ import {MultiDict} from '../../util';
 export interface SearchResultRow {
     name: string;
     favorite: boolean;
-    canonical_id: string;
     path: string;
     desc: string;
     id: string;

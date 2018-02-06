@@ -60,9 +60,6 @@ class FavoriteItem(object):
     def main_corpus_id(self):
         return self.corpora[0]['id']
 
-    def main_corpus_canonical_id(self):
-        return self.corpora[0]['canonical_id']
-
     @property
     def sort_key(self):
         return u'{0} {1}'.format(' '.join(x['name'] for x in self.corpora), self.subcorpus_id)

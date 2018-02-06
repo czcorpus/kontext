@@ -27,8 +27,7 @@ def import_legacy_record(data):
     if data.get('corpora', None):
         ans.corpora = data.get('corpora')
     else:
-        ans.corpora = [
-            dict(id=data['corpus_id'], canonical_id=data['canonical_id'], name=data['name'])]
+        ans.corpora = [dict(id=data['corpus_id'], name=data['name'])]
     ans.subcorpus_id = data.get('subcorpus_id', None)
     ans.size = data.get('size', None)
     ans.size_info = data.get('size_info', None)
@@ -60,8 +59,7 @@ def set_favorite_item(ctrl, request):
         corp = ctrl.cm.get_Corpus(c_id, subcname=request.form['subcorpus_id'] if i == 0 else None)
         if i == 0:
             main_size = corp.search_size()
-        corpora.append(dict(id=c_id, canonical_id=ctrl._canonical_corpname(c_id),
-                            name=corp.get_conf('NAME')))
+        corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     subcorpus_id = request.form['subcorpus_id']
     item = FavoriteItem(dict(
         name=' + '.join(c['name'] for c in corpora) +

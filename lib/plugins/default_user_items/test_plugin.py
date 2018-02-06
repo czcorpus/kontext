@@ -30,16 +30,15 @@ from plugins.default_user_items import import_legacy_record, set_favorite_item, 
 
 
 def create_corpus_obj(name='korpus syn 2010'):
-    return FavoriteItem(dict(name=name, corpora=[dict(canonical_id='syn2010', name='Korpus SYN2010')]))
+    return FavoriteItem(dict(name=name, corpora=[dict(id='syn2010', name='Korpus SYN2010')]))
 
 
 class TestActions(unittest.TestCase):
 
     def test_import_legacy_record(self):
         legacy_rec = dict(
-            id='public/foobar:1',
-            corpus_id='public/foobar',
-            canonical_id='foobar',
+            id='foobar:1',
+            corpus_id='foobar',
             name='The Foobar',
             subcorpus_id='my_work',
             size=1231,
@@ -47,14 +46,14 @@ class TestActions(unittest.TestCase):
         )
         new_rec = import_legacy_record(legacy_rec)
         self.assertTrue(isinstance(new_rec, FavoriteItem))
-        self.assertEqual(new_rec.ident, 'public/foobar:1')
+        self.assertEqual(new_rec.ident, 'foobar:1')
         self.assertEqual(new_rec.name, 'The Foobar')
         self.assertEqual(new_rec.subcorpus_id, 'my_work')
         self.assertEqual(new_rec.size, 1231)
         self.assertEqual(new_rec.size_info, '1k')
         self.assertEqual(type(new_rec.corpora), list)
         self.assertEqual(len(new_rec.corpora), 1)
-        self.assertDictEqual(new_rec.corpora[0], dict(id='public/foobar', canonical_id='foobar', name='The Foobar'))
+        self.assertDictEqual(new_rec.corpora[0], dict(id='foobar', name='The Foobar'))
 
     def test_set_favorite_item(self):
         ctrl = Controller()
@@ -70,10 +69,8 @@ class TestActions(unittest.TestCase):
         self.assertEqual(added_obj['size_info'], '4k')
         self.assertEqual(added_obj['name'], 'intercorp_en + intercorp_cs : my_subc1')
         self.assertEqual(added_obj['subcorpus_id'], 'my_subc1')
-        self.assertDictEqual(added_obj['corpora'][0], dict(canonical_id='intercorp_en', name='intercorp_en',
-                                                           id='intercorp_en'))
-        self.assertDictEqual(added_obj['corpora'][1], dict(canonical_id='intercorp_cs', name='intercorp_cs',
-                                                           id='intercorp_cs'))
+        self.assertDictEqual(added_obj['corpora'][0], dict(name='intercorp_en', id='intercorp_en'))
+        self.assertDictEqual(added_obj['corpora'][1], dict(name='intercorp_cs', id='intercorp_cs'))
 
     def test_unset_favorite_item(self):
         ctrl = Controller()
@@ -87,11 +84,13 @@ class TestActions(unittest.TestCase):
 class TestPlugin(unittest.TestCase):
 
     def setUp(self):
-        self.plugin = UserItems(object(), plugins.runtime.DB.instance, plugins.runtime.AUTH.instance)
+        self.plugin = UserItems(object(), plugins.runtime.DB.instance,
+                                plugins.runtime.AUTH.instance)
 
     def test_serialize(self):
-        corpus = dict(canonical_id='intercorp_en', name='intercorp_en', id='intercorp_en')
-        f = FavoriteItem(data=dict(name='xxx', corpora=[corpus], size=100, size_info='0.1k', subcorpus_id='foo'))
+        corpus = dict(name='intercorp_en', id='intercorp_en')
+        f = FavoriteItem(data=dict(name='xxx', corpora=[
+                         corpus], size=100, size_info='0.1k', subcorpus_id='foo'))
         ans = self.plugin.serialize(f)
         data = json.loads(ans)
         self.assertDictEqual(data['corpora'][0], corpus)
@@ -104,7 +103,7 @@ class TestPlugin(unittest.TestCase):
         papi = PluginApi()
         papi.user_id = 7
         item1 = {'size': 150426, 'name': 'susanne - the testing one', 'subcorpus_id': '',
-                 'corpora': [{'canonical_id': 'susanne', 'name': 'A) susanne - the testing one', 'id': 'susanne'}],
+                 'corpora': [{'name': 'A) susanne - the testing one', 'id': 'susanne'}],
                  'id': '6287f558d64ba0e0885d0e89492e457f', 'size_info': '150k'}
         plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',
@@ -112,7 +111,7 @@ class TestPlugin(unittest.TestCase):
             item1
         )
         item2 = {'size': 120748715, 'name': 'SYN2015 (local)', 'subcorpus_id': '',
-                 'corpora': [{'canonical_id': 'syn2015', 'name': 'B) SYN2015 (local)', 'id': 'syn2015'}],
+                 'corpora': [{'name': 'B) SYN2015 (local)', 'id': 'syn2015'}],
                  'id': 'f68842708bb9a89690793106738e8690', 'size_info': '121M'}
         plugins.runtime.DB.instance.hash_set(
             'favitems:user:7',

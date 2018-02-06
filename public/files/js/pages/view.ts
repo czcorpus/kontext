@@ -229,7 +229,7 @@ export class ViewPage {
         this.lineGroupsChart.showGroupsStats(
             rootElm,
             usePrevData,
-            this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent').canonicalId,
+            this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
             [200, 200]
         );
     }
@@ -956,7 +956,6 @@ export class ViewPage {
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),
             baseCorpname: corpIdent.id,
-            baseCanonicalCorpname: corpIdent.canonicalId,
             subCorpName: this.layoutModel.getConf<string>('subcorpname'),
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),

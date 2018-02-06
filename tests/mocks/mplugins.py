@@ -60,9 +60,6 @@ class MockAuth(AbstractAuth):
     def is_administrator(self, user_id):
         return False
 
-    def canonical_corpname(self, corpname):
-        return corpname
-
     def permitted_corpora(self, user_dict):
         raise NotImplementedError()
 

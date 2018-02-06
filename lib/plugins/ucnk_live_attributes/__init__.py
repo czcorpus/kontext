@@ -54,13 +54,6 @@ def create_cache_key(attr_map, max_attr_list_size, corpus, aligned_corpora, auto
                                       autocomplete_attr, limit_lists)).hexdigest()
 
 
-def canonical_corpname(corpname):
-    """
-    Removes all additional information from corpus name (in UCNK case this means removing path-like prefixes)
-    """
-    return corpname.rsplit('/', 1)[-1]
-
-
 def cached(f):
     """
     A decorator which tries to look for a key in cache before
@@ -70,7 +63,7 @@ def cached(f):
     """
     @wraps(f)
     def wrapper(self, plugin_api, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        db = self.db(plugin_api.user_lang, canonical_corpname(corpus.corpname))
+        db = self.db(plugin_api.user_lang, corpus.corpname)
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, corpus.corpname, aligned_corpora,
                                    autocomplete_attr, limit_lists)
@@ -126,10 +119,11 @@ class LiveAttributes(AbstractLiveAttributes):
 
         arguments:
         user_lang -- user language (e.g. en_US)
-        corpname -- canonical corpus name
+        corpname -- corpus id
         """
         if corpname not in self.databases:
-            db_path = self.corparch.get_corpus_info(user_lang, corpname).get('metadata', {}).get('database')
+            db_path = self.corparch.get_corpus_info(
+                user_lang, corpname).get('metadata', {}).get('database')
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
@@ -250,7 +244,7 @@ class LiveAttributes(AbstractLiveAttributes):
             else:
                 return '{0} is NULL'.format(sattr)
 
-        db = self.db('en_US', canonical_corpname(corpname))  # we don't care about info localization here
+        db = self.db('en_US', corpname)  # we don't care about info localization here
         where_sql = []
         where_args = []
         sattr1, sattr2 = sattr1.replace('.', '_'), sattr2.replace('.', '_')
@@ -305,8 +299,7 @@ class LiveAttributes(AbstractLiveAttributes):
         returns:
         a dictionary containing matching attributes and values
         """
-        corpname = canonical_corpname(corpus.corpname)
-        corpus_info = self.corparch.get_corpus_info(plugin_api.user_lang, corpname)
+        corpus_info = self.corparch.get_corpus_info(plugin_api.user_lang, corpus.corpname)
 
         srch_attrs = set(self._get_subcorp_attrs(corpus))
         expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
@@ -333,7 +326,8 @@ class LiveAttributes(AbstractLiveAttributes):
                                            aligned_corpora=aligned_corpora,
                                            autocomplete_attr=self.import_key(autocomplete_attr),
                                            empty_val_placeholder=self.empty_val_placeholder)
-        data_iterator = query.DataIterator(self.db(plugin_api.user_lang, corpname), query_builder)
+        data_iterator = query.DataIterator(
+            self.db(plugin_api.user_lang, corpus.corpname), query_builder)
 
         # initialize result dictionary
         ans = dict((attr, set()) for attr in srch_attrs)
@@ -341,18 +335,22 @@ class LiveAttributes(AbstractLiveAttributes):
 
         # 1) values collected one by one are collected in tmp_ans and then moved to 'ans' with some exporting tweaks
         # 2) in case of values exceeding max. allowed list size we just accumulate their size directly to ans[attr]
-        tmp_ans = defaultdict(lambda: defaultdict(lambda: 0))  # {attr_id: {attr_val: num_positions,...},...}
-        shorten_val = partial(self.shorten_value, length=self.calc_max_attr_val_visible_chars(corpus_info))
+        # {attr_id: {attr_val: num_positions,...},...}
+        tmp_ans = defaultdict(lambda: defaultdict(lambda: 0))
+        shorten_val = partial(self.shorten_value,
+                              length=self.calc_max_attr_val_visible_chars(corpus_info))
         bib_id = self.import_key(corpus_info.metadata.id_attr)
 
         # here we iterate through [(row1, key1), (row1, key2),..., (row1, keyM), (row2, key1), (row2, key2),...]
         for row, col_key in data_iterator:
             if type(ans[col_key]) is set:
                 val_ident = row[bib_id] if col_key == bib_label else row[col_key]
-                attr_val = (shorten_val(unicode(row[col_key])), val_ident, row[col_key], 1)  # 1 = grouping
+                attr_val = (shorten_val(unicode(row[col_key])),
+                            val_ident, row[col_key], 1)  # 1 = grouping
                 tmp_ans[col_key][attr_val] += row['poscount']
             elif type(ans[col_key]) is int:
-                ans[col_key] += int(row[col_key])  # we rely on proper 'ans' initialization here (in terms of types)
+                # we rely on proper 'ans' initialization here (in terms of types)
+                ans[col_key] += int(row[col_key])
         # here we append position count information to the respective items
         for attr, v in tmp_ans.items():
             for k, c in v.items():
@@ -383,18 +381,20 @@ class LiveAttributes(AbstractLiveAttributes):
         return exported
 
     def get_bibliography(self, plugin_api, corpus, item_id):
-        db = self.db(plugin_api.user_lang, canonical_corpname(corpus.corpname))
+        db = self.db(plugin_api.user_lang, corpus.corpname)
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
         corpus_info = self.corparch.get_corpus_info(plugin_api.user_lang, corpus.corpname)
         if corpus_info.metadata.sort_attrs:
-            col_rows = sorted(col_rows, key=lambda v: v[1])   # here we accept default collator as attr IDs are ASCII
+            # here we accept default collator as attr IDs are ASCII
+            col_rows = sorted(col_rows, key=lambda v: v[1])
         col_map = OrderedDict([(x[1], x[0]) for x in col_rows])
         if 'corpus_id' in col_map:
             ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? AND corpus_id = ? LIMIT 1',
-                                   (item_id, canonical_corpname(corpus.corpname))).fetchone()
+                                   (item_id, corpus.corpname)).fetchone()
         else:
-            ans = self.execute_sql(db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
+            ans = self.execute_sql(
+                db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
         return [(k, ans[i]) for k, i in col_map.items() if k != 'id']
 
     def find_bib_titles(self, plugin_api, corpus_id, id_list):
@@ -403,7 +403,8 @@ class LiveAttributes(AbstractLiveAttributes):
         label_attr = self.import_key(corpus_info.metadata.label_attr)
         db = self.db(plugin_api.user_lang, corpus_id)
         pch = ', '.join(['?'] * len(id_list))
-        ans = self.execute_sql(db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
+        ans = self.execute_sql(
+            db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
         return [(r[0], r[1]) for r in ans]
 
 
@@ -418,5 +419,6 @@ def create_instance(settings, corparch):
     la_settings = settings.get('plugins', 'live_attributes')
     return LiveAttributes(corparch=corparch,
                           max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
-                          empty_val_placeholder=settings.get('corpora', 'empty_attr_value_placeholder'),
+                          empty_val_placeholder=settings.get(
+                              'corpora', 'empty_attr_value_placeholder'),
                           max_attr_visible_chars=int(la_settings.get('ucnk:max_attr_visible_chars', 20)))

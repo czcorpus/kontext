@@ -390,7 +390,7 @@ export function init(dispatcher, util, widgetStore, queryStore) {
                 {props.isWaitingToSwitch ?
                     <img src={util.createStaticUrl('img/ajax-loader-bar.gif')}
                             alt={util.translate('global__loading')} /> :
-                    <span title={props.corpusIdent.name}>{props.corpusIdent.canonicalId}</span>
+                    <span title={props.corpusIdent.name}>{props.corpusIdent.id}</span>
                 }
             </button>
         );
