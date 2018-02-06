@@ -177,7 +177,7 @@ class KwicPageArgs(object):
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
         self.base_attr = base_attr
-        if self.attr_vmode == 'mouseover':
+        if self.attr_vmode in ('mouseover', 'mixed'):
             self.ctxattrs = self.attrs
 
     def _import_val(self, k, v):
@@ -227,6 +227,7 @@ class Kwic(object):
     corpus_fullname -- full (internal) name of the corpus (e.g. with path prefix if used)
     conc -- a manatee.Concordance instance
     """
+
     def __init__(self, corpus, corpus_fullname, conc):
         self.corpus = corpus
         self.corpus_fullname = corpus_fullname
@@ -415,7 +416,8 @@ class Kwic(object):
 
         """
         newline = []
-        speech_struct_str = speech_segment[0] if speech_segment and len(speech_segment) > 0 else None
+        speech_struct_str = speech_segment[0] if speech_segment and len(
+            speech_segment) > 0 else None
         fragment_separator = '<%s' % speech_struct_str
         last_fragment = None
         last_speech_id = prev_speech_id
@@ -545,11 +547,13 @@ class Kwic(object):
             else:
                 leftmost_speech_id = None
             leftwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
-                                                                           tokens2strclass(kl.get_left()),
+                                                                           tokens2strclass(
+                                                                               kl.get_left()),
                                                                            'left', filter_out_speech_tag,
                                                                            leftmost_speech_id)
             kwicwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
-                                                                           tokens2strclass(kl.get_kwic()),
+                                                                           tokens2strclass(
+                                                                               kl.get_kwic()),
                                                                            'kwic',
                                                                            filter_out_speech_tag,
                                                                            last_left_speech_id)
@@ -557,13 +561,19 @@ class Kwic(object):
                                                        filter_out_speech_tag, last_left_speech_id)[0]
 
             if args.attr_vmode == 'mouseover':
-                prev = {}
-                for item in leftwords + kwicwords + rightwords:
-                    if item.get('class') == 'attr':
-                        # TODO configurable delimiter
-                        prev['mouseover'] = [item['str'].strip('/')] # a list is used for future compatibility
-                        item['str'] = ''
-                    prev = item
+                postproc_tokens = leftwords + kwicwords + rightwords
+            elif args.attr_vmode == 'mixed':
+                postproc_tokens = leftwords + rightwords
+            else:
+                postproc_tokens = []
+            prev = {}
+            for item in postproc_tokens:
+                if item.get('class') == 'attr':
+                    # TODO configurable delimiter
+                    # a list is used for future compatibility
+                    prev['mouseover'] = [item['str'].strip('/')]
+                    item['str'] = ''
+                prev = item
 
             if args.righttoleft and Kwic.isengword(kwicwords[0]):
                 leftwords, rightwords = Kwic.update_right_to_left(leftwords, rightwords)
@@ -645,4 +655,3 @@ class Kwic(object):
                 # the same result as in case of official Bonito app.
                 pass
         return ans
-
