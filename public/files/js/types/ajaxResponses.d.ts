@@ -218,7 +218,7 @@ declare module AjaxResponse {
         compiledQuery:Array<string>;
         concPersistenceOpId:string;
         alignedCorpora:Array<string>;
-        availableAlignedCorpora:Array<{n:string; label:string}>;
+        availableAlignedCorpora:Array<Kontext.AttrItem>;
         activePlugins:Array<string>;
         queryOverview:Array<Kontext.QueryOperation>;
         numQueryOps:number;

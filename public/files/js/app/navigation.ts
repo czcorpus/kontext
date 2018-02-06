@@ -21,6 +21,7 @@
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../types/common.d.ts" />
 
 import * as rsvpAjax from 'vendor/rsvp-ajax';
 import * as Immutable from 'vendor/immutable';
@@ -401,7 +402,7 @@ export class AppNavigation implements Kontext.IURLHandler {
                 this.conf.setConf<Array<string>>('compiledQuery', data.compiledQuery);
                 this.conf.setConf<string>('concPersistenceOpId', data.concPersistenceOpId);
                 this.conf.setConf<Array<string>>('alignedCorpora', data.alignedCorpora);
-                this.conf.setConf<Array<{n:string; label:string}>>('availableAlignedCorpora', data.availableAlignedCorpora);
+                this.conf.setConf<Array<Kontext.AttrItem>>('availableAlignedCorpora', data.availableAlignedCorpora);
                 this.conf.setConf<Array<string>>('activePlugins', data.activePlugins);
                 this.conf.setConf<Array<Kontext.QueryOperation>>('queryOverview', data.queryOverview);
                 this.conf.setConf<number>('numQueryOps', data.numQueryOps);

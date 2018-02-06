@@ -27,8 +27,6 @@ import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 
-export type AttrValue = {n:string; label:string};
-
 /**
  *
  */
@@ -46,7 +44,7 @@ export interface CollFormInputs {
  *
  */
 export interface CollFormProps extends CollFormInputs {
-    attrList:Array<AttrValue>;
+    attrList:Array<Kontext.AttrItem>;
 }
 
 /**
@@ -56,7 +54,7 @@ export class CollFormStore extends SimplePageStore {
 
     private pageModel:PageModel;
 
-    private attrList:Immutable.List<AttrValue>;
+    private attrList:Immutable.List<Kontext.AttrItem>;
 
     private cattr:string;
 
@@ -76,7 +74,7 @@ export class CollFormStore extends SimplePageStore {
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CollFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.attrList = Immutable.List<AttrValue>(props.attrList);
+        this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.cattr = props.cattr;
         this.cfromw = props.cfromw;
         this.ctow = props.ctow;
@@ -172,7 +170,7 @@ export class CollFormStore extends SimplePageStore {
         window.location.href = this.pageModel.createActionUrl('collx', this.getSubmitArgs().items());
     }
 
-    getAttrList():Immutable.List<AttrValue> {
+    getAttrList():Immutable.List<Kontext.AttrItem> {
         return this.attrList;
     }
 

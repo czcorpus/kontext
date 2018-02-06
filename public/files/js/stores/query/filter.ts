@@ -309,8 +309,8 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         return Immutable.List<string>([this.maincorps]);
     }
 
-    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
-        return Immutable.List<{n:string; label:string}>();
+    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
+        return Immutable.List<Kontext.AttrItem>();
     }
 
     getQueryTypes():Immutable.Map<string, string> {

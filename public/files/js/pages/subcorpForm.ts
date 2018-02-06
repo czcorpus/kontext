@@ -84,8 +84,8 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
         return Immutable.List<string>([this.corpusIdent.id]);
     }
 
-    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
-        return Immutable.List<{n:string; label:string}>();
+    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
+        return Immutable.List<Kontext.AttrItem>();
     }
 
     initSubcorpForm(ttComponent:React.ComponentClass, ttProps:{[p:string]:any}):void {
@@ -120,7 +120,7 @@ export class SubcorpForm implements Kontext.QuerySetupHandler {
             () => this.textTypesStore.hasSelectedItems(),
             {
                 bibAttr: textTypesData['bib_attr'],
-                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
                 refineEnabled: true,
                 manualAlignCorporaMode: true
             }

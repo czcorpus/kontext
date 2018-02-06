@@ -37,8 +37,8 @@ import * as RSVP from 'vendor/rsvp';
 
 export interface GeneralQueryFormProperties {
     forcedAttr:string;
-    attrList:Array<{n:string; label:string}>;
-    structAttrList:Array<{n:string; label:string}>;
+    attrList:Array<Kontext.AttrItem>;
+    structAttrList:Array<Kontext.AttrItem>;
     lemmaWindowSizes:Array<number>;
     posWindowSizes:Array<number>;
     wPoSList:Array<{v:string; n:string}>;
@@ -58,7 +58,7 @@ export interface QueryFormUserEntries {
 
 export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFormUserEntries {
     corpora:Array<string>;
-    availableAlignedCorpora:Array<{n:string; label:string}>;
+    availableAlignedCorpora:Array<Kontext.AttrItem>;
     textTypesNotes:string;
     subcorpList:Array<string>;
     currentSubcorp:string;
@@ -121,9 +121,9 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected forcedAttr:string;
 
-    protected attrList:Immutable.List<{n:string; label:string}>;
+    protected attrList:Immutable.List<Kontext.AttrItem>;
 
-    protected structAttrList:Immutable.List<{n:string; label:string}>;
+    protected structAttrList:Immutable.List<Kontext.AttrItem>;
 
     protected lemmaWindowSizes:Immutable.List<number>;
 
@@ -160,8 +160,8 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.textTypesStore = textTypesStore;
         this.queryContextStore = queryContextStore;
         this.forcedAttr = props.forcedAttr;
-        this.attrList = Immutable.List<{n:string; label:string}>(props.attrList);
-        this.structAttrList = Immutable.List<{n:string; label:string}>(props.structAttrList);
+        this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
+        this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
         this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
         this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
         this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
@@ -198,11 +198,11 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         return this.forcedAttr;
     }
 
-    getAttrList():Immutable.List<{n:string; label:string}> {
+    getAttrList():Immutable.List<Kontext.AttrItem> {
         return this.attrList;
     }
 
-    getStructAttrList():Immutable.List<{n:string; label:string}> {
+    getStructAttrList():Immutable.List<Kontext.AttrItem> {
         return this.structAttrList;
     }
 
@@ -275,7 +275,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     private corpora:Immutable.List<string>;
 
-    private availableAlignedCorpora:Immutable.List<{n:string; label:string}>;
+    private availableAlignedCorpora:Immutable.List<Kontext.AttrItem>;
 
     private subcorpList:Immutable.List<string>;
 
@@ -332,7 +332,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
         const self = this;
         this.corpora = Immutable.List<string>(props.corpora);
-        this.availableAlignedCorpora = Immutable.List<{n:string; label:string}>(props.availableAlignedCorpora);
+        this.availableAlignedCorpora = Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora);
         this.subcorpList = Immutable.List<string>(props.subcorpList);
         this.currentSubcorp = props.currentSubcorp;
         this.shuffleConcByDefault = props.shuffleConcByDefault;
@@ -699,7 +699,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         return this.corpora;
     }
 
-    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
+    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
         return this.availableAlignedCorpora;
     }
 

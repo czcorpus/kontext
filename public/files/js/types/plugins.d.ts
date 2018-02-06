@@ -101,7 +101,7 @@ declare module PluginInterfaces {
          * A list of aligned corpora available to be attached to
          * the current corpus.
          */
-        availableAlignedCorpora:Array<{n:string; label:string}>;
+        availableAlignedCorpora:Array<Kontext.AttrItem>;
 
         /**
          * Enable "refine" button when component is initialized?

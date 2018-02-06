@@ -24,7 +24,7 @@
 
 import * as React from 'vendor/react';
 
-import {MLFreqFormStore, TTFreqFormStore, AttrValue} from '../../stores/freqs/freqForms';
+import {MLFreqFormStore, TTFreqFormStore} from '../../stores/freqs/freqForms';
 import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../stores/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
 
@@ -56,7 +56,7 @@ export function init(
     // ---------------------- <StructAttrSelect /> --------------------------------------------
 
     interface StructAttrSelectProps {
-        structAttrListSplitTypes:Immutable.List<Immutable.List<AttrValue>>;
+        structAttrListSplitTypes:Immutable.List<Immutable.List<Kontext.AttrItem>>;
         fttattr:Immutable.Set<string>;
     }
 
@@ -155,7 +155,7 @@ export function init(
 
     interface TTFreqFormState {
         flimit:string;
-        structAttrListSplitTypes:Immutable.List<Immutable.List<AttrValue>>;
+        structAttrListSplitTypes:Immutable.List<Immutable.List<Kontext.AttrItem>>;
         fttattr:Immutable.Set<String>;
         fttIncludeEmpty:boolean;
     }
@@ -236,7 +236,7 @@ export function init(
     interface MLAttrSelectionProps {
         levelIdx:number;
         mlxAttrValue:string;
-        attrList:Immutable.List<AttrValue>;
+        attrList:Immutable.List<Kontext.AttrItem>;
     }
 
     const MLAttrSelection:React.FuncComponent<MLAttrSelectionProps> = (props) => {
@@ -381,7 +381,7 @@ export function init(
 
     interface SingleLevelFieldTRProps {
         levelIdx:number;
-        attrList:Immutable.List<AttrValue>;
+        attrList:Immutable.List<Kontext.AttrItem>;
         mlxAttrValue:string;
         mlxicaseValue:string;
         positionRangeLabels:Array<string>;
@@ -450,7 +450,7 @@ export function init(
     }
 
     interface MLFreqFormState {
-        attrList:Immutable.List<AttrValue>;
+        attrList:Immutable.List<Kontext.AttrItem>;
         flimit:string;
         levels:Immutable.List<number>;
         mlxattrValues:Immutable.List<string>;
