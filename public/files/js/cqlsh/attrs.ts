@@ -19,6 +19,7 @@
  */
 
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../types/common.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
 
@@ -47,13 +48,13 @@ export interface IAttrHelper {
  */
 export class AttrHelper implements IAttrHelper {
 
-    private attrList:Immutable.List<{n:string; label:string}>;
+    private attrList:Immutable.List<Kontext.AttrItem>;
 
-    private structAttrList:Immutable.List<{n:string; label:string}>;
+    private structAttrList:Immutable.List<Kontext.AttrItem>;
 
     private availStructs:Immutable.Set<string>;
 
-    constructor(attrList:Immutable.List<{n:string; label:string}>, structAttrList:Immutable.List<{n:string; label:string}>) {
+    constructor(attrList:Immutable.List<Kontext.AttrItem>, structAttrList:Immutable.List<Kontext.AttrItem>) {
         this.attrList = attrList;
         this.structAttrList = structAttrList;
         this.availStructs = Immutable.Set<string>(this.structAttrList.map(v => v.n.split('.')[0]));

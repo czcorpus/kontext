@@ -30,8 +30,8 @@ import {AttrHelper} from '../../cqlsh/attrs';
 
 export interface CQLEditorProps {
     query:string;
-    attrList:Immutable.List<{n:string; label:string}>;
-    structAttrList:Immutable.List<{n:string; label:string}>;
+    attrList:Immutable.List<Kontext.AttrItem>;
+    structAttrList:Immutable.List<Kontext.AttrItem>;
     attachCurrInputElement:(elm:HTMLElement)=>void;
     handleInputChange:(v:string)=>void;
     inputKeyHandler:(evt:KeyboardEvent)=>void;

@@ -27,9 +27,6 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
 
-export type AttrValue = {n:string; label:string};
-
-
 export interface FreqFormInputs {
     fttattr:Array<string>;
     ftt_include_empty:boolean;
@@ -47,8 +44,8 @@ export interface FreqFormInputs {
  * Contains values for both freq form stores
  */
 export interface FreqFormProps extends FreqFormInputs {
-    structAttrList:Array<AttrValue>;
-    attrList:Array<AttrValue>;
+    structAttrList:Array<Kontext.AttrItem>;
+    attrList:Array<Kontext.AttrItem>;
 }
 
 /**
@@ -65,7 +62,7 @@ export class MLFreqFormStore extends SimplePageStore {
 
     private pageModel:PageModel;
 
-    private attrList:Immutable.List<AttrValue>;
+    private attrList:Immutable.List<Kontext.AttrItem>;
 
     private flimit:string;
 
@@ -90,7 +87,7 @@ export class MLFreqFormStore extends SimplePageStore {
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.attrList = Immutable.List<AttrValue>(props.attrList);
+        this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
         this.flimit = props.flimit;
         this.freqSort = props.freq_sort;
         this.mlxattr = Immutable.List<string>(props.mlxattr);
@@ -229,7 +226,7 @@ export class MLFreqFormStore extends SimplePageStore {
         return this.mlxattr.map((_, i) => i).toList();
     }
 
-    getAttrList():Immutable.List<AttrValue> {
+    getAttrList():Immutable.List<Kontext.AttrItem> {
         return this.attrList;
     }
 
@@ -261,7 +258,7 @@ export class TTFreqFormStore extends SimplePageStore {
 
     private pageModel:PageModel;
 
-    private structAttrList:Immutable.List<AttrValue>;
+    private structAttrList:Immutable.List<Kontext.AttrItem>;
 
     private fttattr:Immutable.Set<string>;
 
@@ -274,7 +271,7 @@ export class TTFreqFormStore extends SimplePageStore {
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
-        this.structAttrList = Immutable.List<AttrValue>(props.structAttrList);
+        this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
         this.fttattr = Immutable.Set<string>(props.fttattr);
         this.fttIncludeEmpty = props.ftt_include_empty;
         this.flimit = props.flimit;
@@ -321,30 +318,30 @@ export class TTFreqFormStore extends SimplePageStore {
         window.location.href = this.pageModel.createActionUrl('freqtt', args.items());
     }
 
-    getStructAttrList():Immutable.List<AttrValue> {
+    getStructAttrList():Immutable.List<Kontext.AttrItem> {
         return this.structAttrList;
     }
 
-    getStructAttrListSplitTypes():Immutable.List<Immutable.List<AttrValue>> {
-        const structOf = (a:AttrValue) => a.n.split('.')[0];
-        return this.structAttrList.reduce<Immutable.List<Immutable.List<AttrValue>>>((reduc, curr) => {
+    getStructAttrListSplitTypes():Immutable.List<Immutable.List<Kontext.AttrItem>> {
+        const structOf = (a:Kontext.AttrItem) => a.n.split('.')[0];
+        return this.structAttrList.reduce<Immutable.List<Immutable.List<Kontext.AttrItem>>>((reduc, curr) => {
             if (reduc.size === 0 || structOf(curr) !== structOf(reduc.last().last())) {
                 if (reduc.last()) {
                     const tmp = reduc.last();
                     return reduc
                         .pop()
                         .push(tmp.sort((v1, v2) => v1.n.localeCompare(v2.n)).toList())
-                        .push(Immutable.List<AttrValue>([{n: curr.n, label: curr.label}]));
+                        .push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
 
                 } else {
-                    return reduc.push(Immutable.List<AttrValue>([{n: curr.n, label: curr.label}]));
+                    return reduc.push(Immutable.List<Kontext.AttrItem>([{n: curr.n, label: curr.label}]));
                 }
 
             } else {
                 const tmp = reduc.last();
                 return reduc.pop().push(tmp.push({n: curr.n, label: curr.label}));
             }
-        }, Immutable.List<Immutable.List<AttrValue>>());
+        }, Immutable.List<Immutable.List<Kontext.AttrItem>>());
     }
 
     getFttattr():Immutable.Set<string> {

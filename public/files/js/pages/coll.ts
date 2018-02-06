@@ -67,7 +67,7 @@ export class CollPage {
     initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const currArgs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
-        const structAttrs = this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList');
+        const structAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList');
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
 
         const freqFormProps:FreqFormProps = {

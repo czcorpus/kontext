@@ -94,7 +94,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         return this.queryStore.getCorpora();
     }
 
-    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
+    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
         return this.queryStore.getAvailableAlignedCorpora();
     }
 
@@ -154,7 +154,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             () => this.textTypesStore.hasSelectedItems(),
             {
                 bibAttr: textTypesData['bib_attr'],
-                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
                 refineEnabled: this.layoutModel.getConf<Array<string>>('alignedCorpora').length > 0 ||
                                     Object.keys(queryFormArgs.selected_text_types).length > 0,
                 manualAlignCorporaMode: false
@@ -213,7 +213,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             {
                 corpora: [this.layoutModel.getConf<string>('corpname')].concat(
                     this.layoutModel.getConf<Array<string>>('alignedCorpora') || []),
-                availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+                availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
                 currQueryTypes: queryFormArgs.curr_query_types,
                 currQueries: queryFormArgs.curr_queries,
                 currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
@@ -225,8 +225,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 tagBuilderSupport: queryFormArgs.tag_builder_support,
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
-                attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
-                structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList'),
+                attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+                structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
                 lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),

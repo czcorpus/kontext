@@ -425,7 +425,7 @@ export class ViewPage {
 
         const queryFormProps:QueryFormProperties = {
             corpora: this.getActiveCorpora(),
-            availableAlignedCorpora: this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora'),
+            availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>('availableAlignedCorpora'),
             currQueryTypes: queryFormArgs.curr_query_types,
             currQueries: queryFormArgs.curr_queries,
             currPcqPosNegValues: queryFormArgs.curr_pcq_pos_neg_values,
@@ -437,8 +437,8 @@ export class ViewPage {
             tagBuilderSupport: queryFormArgs.tag_builder_support,
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
-            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList'),
+            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: queryFormArgs.has_lemma,
@@ -495,8 +495,8 @@ export class ViewPage {
             tagBuilderSupport: fetchArgs<boolean>(item => item.tag_builder_support),
             withinArgValues: fetchArgs<number>(item => item.within),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
-            attrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<{n:string; label:string}>>('StructAttrList'),
+            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             lemmaWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             posWindowSizes: [1, 2, 3, 4, 5, 7, 10, 15],
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
@@ -951,7 +951,7 @@ export class ViewPage {
             ViewMode: this.layoutModel.getConf<string>('ViewMode'),
             ShowLineNumbers: this.layoutModel.getConf<boolean>('ShowLineNumbers'),
             KWICCorps: this.layoutModel.getConf<Array<string>>('KWICCorps'),
-            CorporaColumns: this.layoutModel.getConf<Array<{n:string; label:string}>>('CorporaColumns').map(v =>
+            CorporaColumns: this.layoutModel.getConf<Array<Kontext.AttrItem>>('CorporaColumns').map(v =>
                         ({n: v.n, label: v.label, visible: true})),
             SortIdx: this.layoutModel.getConf<Array<{page:number; label:string}>>('SortIdx'),
             NumItemsInLockedGroups: this.layoutModel.getConf<number>('NumLinesInGroups'),

@@ -138,7 +138,7 @@ declare module Kontext {
 
         getCorpora():Immutable.List<string>;
 
-        getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}>;
+        getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem>;
 
         getCurrentSubcorpus():string;
     }

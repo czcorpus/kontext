@@ -58,7 +58,7 @@ export interface FilterFormState {
     matchCaseValues:Immutable.Map<string, boolean>;
     forcedAttr:string;
     defaultAttrValues:Immutable.Map<string, string>;
-    attrList:Immutable.List<{n:string; label:string}>;
+    attrList:Immutable.List<Kontext.AttrItem>;
     tagsetDocUrl:string;
     lemmaWindowSizes:Immutable.List<number>;
     posWindowSizes:Immutable.List<number>;

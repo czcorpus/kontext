@@ -59,8 +59,8 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
         return this.wordlistFormStore.getCurrentSubcorpus();
     }
 
-    getAvailableAlignedCorpora():Immutable.List<{n:string; label:string}> {
-        return Immutable.List<{n:string; label:string}>();
+    getAvailableAlignedCorpora():Immutable.List<Kontext.AttrItem> {
+        return Immutable.List<Kontext.AttrItem>();
     }
 
     private initCorpInfoToolbar():void {

@@ -191,7 +191,7 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
             {
                 registerCorpusSelectionListener: (fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void) => {},
                 getCorpora: () => Immutable.List<string>(pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id),
-                getAvailableAlignedCorpora: () => Immutable.List<{n:string; label:string}>(),
+                getAvailableAlignedCorpora: () => Immutable.List<Kontext.AttrItem>(),
                 getCurrentSubcorpus: () => null
             },
             (corpora:Array<string>, subcorpId:string) => {
