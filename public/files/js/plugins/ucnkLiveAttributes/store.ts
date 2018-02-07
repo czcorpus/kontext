@@ -31,13 +31,11 @@ import * as Immutable from 'vendor/immutable';
 
 
 interface ServerBibData {
-    contains_errors:boolean;
     error?:string;
     bib_data:Array<Array<string>>;
 }
 
 interface ServerRefineResponse {
-    contains_errors:boolean;
     error?:string;
     aligned:Array<string>;
     poscount:number;
@@ -254,14 +252,11 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
                 if (this.bibliographyIds.contains(ident)) {
                     return this.loadBibInfo(ident).then(
                         (serverData:ServerBibData) => {
-                            if (!serverData.contains_errors) {
-                                this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
-                                        ident, Immutable.OrderedMap<string, any>(serverData.bib_data));
+                            this.textTypesStore.setExtendedInfo(this.bibliographyAttribute,
+                                    ident, Immutable.OrderedMap<string, any>(serverData.bib_data));
 
-                            } else {
-                                throw new Error(serverData.error);
-                            }
-                        },
+                        }
+                    ).catch(
                         (err:any) => {
                             this.pluginApi.showMessage('error', err);
                         }
@@ -516,21 +511,16 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
                     value, attrName, this.textTypesStore.exportSelections(true));
                 return prom.then(
                     (v:ServerRefineResponse) => {
-                        if (!v.contains_errors) {
-                            let filterData = this.importFilter(v.attr_values);
-                            if (isArr(filterData[this.bibliographyAttribute])) {
-                                this.attachBibData(filterData);
-                            }
-                            this.textTypesStore.setAutoComplete(
-                                attrName,
-                                v.attr_values[attrName].map((v) => {
-                                        return {ident: v[1], label: v[2]};
-                                })
-                            );
-
-                        } else {
-                            throw new Error(v.error);
+                        let filterData = this.importFilter(v.attr_values);
+                        if (isArr(filterData[this.bibliographyAttribute])) {
+                            this.attachBibData(filterData);
                         }
+                        this.textTypesStore.setAutoComplete(
+                            attrName,
+                            v.attr_values[attrName].map((v) => {
+                                    return {ident: v[1], label: v[2]};
+                            })
+                        );
                     },
                     (err) => {
                         console.error(err);

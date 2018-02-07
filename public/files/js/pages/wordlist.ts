@@ -80,24 +80,19 @@ export class WordlistPage extends SimplePageStore  {
 
         ).then(
             (data:Kontext.AjaxResponse) => {
-                if (data.contains_errors) {
+                if (data['status'] === 100) {
+                    this.stopWatching(); // just for sure
+                    window.location.href = this.layoutModel.getConf<string>('reloadUrl');
+
+                } else if (this.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
                     this.stopWithError();
 
-                } else {
-                    // $('#processbar').css('width', data['status'] + '%');
-                    if (data['status'] === 100) {
-                        this.stopWatching(); // just for sure
-                        window.location.href = this.layoutModel.getConf<string>('reloadUrl');
-
-                    } else if (this.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
-                        this.stopWithError();
-
-                    } else if (data['status'] === this.lastStatus) {
-                        this.numNoChange += 1;
-                    }
-                    this.lastStatus = data['status'];
+                } else if (data['status'] === this.lastStatus) {
+                    this.numNoChange += 1;
                 }
-            },
+                this.lastStatus = data['status'];
+            }
+        ).catch(
             (err) => {
                 this.stopWithError();
             }

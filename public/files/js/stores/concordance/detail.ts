@@ -590,15 +590,10 @@ export class ConcDetailStore extends SimplePageStore {
 
         ).then(
             (data) => {
-                if (!data.contains_errors) {
-                    this.concDetail = data.content;
-                    this.wholeDocumentLoaded = true;
-                    this.expandLeftArgs = Immutable.List<ExpandArgs>();
-                    this.expandRightArgs = Immutable.List<ExpandArgs>();
-
-                } else {
-                    throw new Error(data.messages[0]);
-                }
+                this.concDetail = data.content;
+                this.wholeDocumentLoaded = true;
+                this.expandLeftArgs = Immutable.List<ExpandArgs>();
+                this.expandRightArgs = Immutable.List<ExpandArgs>();
             }
         );
     }
@@ -709,27 +704,22 @@ export class ConcDetailStore extends SimplePageStore {
 
         ).then(
             (data) => {
-                if (!data.contains_errors) {
-                    this.concDetail = data.content;
-                    if (data.expand_left_args) {
-                        this.expandLeftArgs = this.expandLeftArgs.push([
-                            data.expand_left_args.detail_left_ctx, data.expand_left_args.detail_right_ctx
-                        ]);
-
-                    } else {
-                        this.expandLeftArgs = this.expandLeftArgs.push(null);
-                    }
-                    if (data.expand_right_args) {
-                        this.expandRightArgs = this.expandRightArgs.push([
-                            data.expand_right_args.detail_left_ctx, data.expand_right_args.detail_right_ctx
-                        ]);
-
-                    } else {
-                        this.expandRightArgs = this.expandRightArgs.push(null);
-                    }
+                this.concDetail = data.content;
+                if (data.expand_left_args) {
+                    this.expandLeftArgs = this.expandLeftArgs.push([
+                        data.expand_left_args.detail_left_ctx, data.expand_left_args.detail_right_ctx
+                    ]);
 
                 } else {
-                    throw new Error(data.messages[0]);
+                    this.expandLeftArgs = this.expandLeftArgs.push(null);
+                }
+                if (data.expand_right_args) {
+                    this.expandRightArgs = this.expandRightArgs.push([
+                        data.expand_right_args.detail_left_ctx, data.expand_right_args.detail_right_ctx
+                    ]);
+
+                } else {
+                    this.expandRightArgs = this.expandRightArgs.push(null);
                 }
             }
         );

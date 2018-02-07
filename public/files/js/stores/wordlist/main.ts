@@ -215,7 +215,6 @@ export class WordlistResultStore extends SimplePageStore {
                 return new RSVP.Promise<WlSizeAjaxResponse>((resolve:(d)=>void, reject:(err)=>void) => {
                     resolve({
                         messages: [],
-                        contains_errors: false,
                         size: this.numItems
                     });
                 });

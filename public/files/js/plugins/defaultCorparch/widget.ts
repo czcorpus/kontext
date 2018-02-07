@@ -317,18 +317,12 @@ export class CorplistWidgetStore extends SimplePageStore {
 
         ).then(
             (data) => {
-                if (!data.contains_errors) {
-                    return this.pluginApi.ajax<Array<common.CorplistItem>>(
-                        'GET',
-                        this.pluginApi.createActionUrl('user/get_favorite_corpora'),
-                        {},
-                        {contentType : 'application/x-www-form-urlencoded'}
-                    );
-
-                } else {
-                    throw new Error(data.messages[0]);
-                }
-
+                return this.pluginApi.ajax<Array<common.CorplistItem>>(
+                    'GET',
+                    this.pluginApi.createActionUrl('user/get_favorite_corpora'),
+                    {},
+                    {contentType : 'application/x-www-form-urlencoded'}
+                );
             }
 
         ).then(

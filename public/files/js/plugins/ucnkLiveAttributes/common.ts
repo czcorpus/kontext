@@ -49,7 +49,6 @@ export interface AvailAttrValues {
 export interface AttributesMap {
     poscount?: number;
     aligned?: Array<string>;
-    contains_errors?: boolean;
     //[attr: string]: AvailAttrValues;
 }
 

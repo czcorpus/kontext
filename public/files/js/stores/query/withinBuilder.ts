@@ -82,19 +82,14 @@ export class WithinBuilderStore extends SimplePageStore {
         ).then(
             (data) => {
                 this.data = this.data.clear();
-                if (data.contains_errors) {
-                    throw new Error(data.messages[0]);
-
-                } else {
-                    for (let attr in data.structattrs) {
-                        if (data.structattrs.hasOwnProperty(attr)) {
-                            data.structattrs[attr].forEach(item => {
-                                this.data = this.data.push([attr, item]);
-                            });
-                        }
+                for (let attr in data.structattrs) {
+                    if (data.structattrs.hasOwnProperty(attr)) {
+                        data.structattrs[attr].forEach(item => {
+                            this.data = this.data.push([attr, item]);
+                        });
                     }
-                    this.currAttrIdx = 0;
                 }
+                this.currAttrIdx = 0;
             }
         );
     }

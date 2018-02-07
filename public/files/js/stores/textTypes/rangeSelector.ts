@@ -214,32 +214,21 @@ export class RangeSelector {
         return this.pluginApi.ajax(
             'GET',
             requestURL,
-            args,
-            {contentType : 'application/x-www-form-urlencoded'}
+            args
         );
     }
 
-    private loadAndReplaceRawInput(attribName:string, from:number, to:number):RSVP.Promise<Array<string>> {
+    private loadAndReplaceRawInput(attribName:string, from:number, to:number):RSVP.Promise<Kontext.GeneralProps> {
         let args:{[key:string]:any} = {};
         args[attribName] = {from: from, to: to};
-        return new RSVP.Promise((fullfill:(d)=>void, reject:(err)=>void) => {
-            this.loadData(args).then(
-                // TODO data type relies on liveattrs specific returned data
-                (data:{attr_values:{[key:string]:any}}) => {
-                    if (!data['contains_errors']) {
-                        this.textTypesStore.setValues(attribName,
-                                data.attr_values[attribName].map(item=>item[0]));
-                        fullfill(data);
-
-                    } else {
-                        reject(data['error'] || '');
-                    }
-                },
-                (err) => {
-                    reject(err);
-                }
-            );
-        });
+        return this.loadData(args).then(
+            // TODO data type relies on liveattrs specific returned data
+            (data:{attr_values:{[key:string]:any}}) => {
+                this.textTypesStore.setValues(attribName,
+                        data.attr_values[attribName].map(item=>item[0]));
+                return data.attr_values;
+            }
+        );
     }
 
     applyRange(attrName:string, fromVal:number, toVal:number, strictInterval:boolean,

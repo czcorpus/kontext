@@ -293,12 +293,7 @@ export class SubcorpListStore extends SimplePageStore {
             }
         ).then(
             (data) => {
-                if (data.contains_errors) {
-                    throw new Error(data.messages[0]);
-
-                } else {
-                    return this.reloadItems();
-                }
+                return this.reloadItems();
             }
         );
     }
@@ -318,18 +313,13 @@ export class SubcorpListStore extends SimplePageStore {
 
         ).then(
             (data) => {
-                if (data.contains_errors) {
-                    throw new Error(data.messages[0]);
-
-                } else {
-                    this.importLines(data.subcorp_list);
-                    this.importUnfinished(data.unfinished_subc);
-                    this.relatedCorpora = Immutable.List<string>(data.related_corpora);
-                    this.sortKey = {
-                        name: data.sort_key.name,
-                        reverse: data.sort_key.reverse
-                    };
-                }
+                this.importLines(data.subcorp_list);
+                this.importUnfinished(data.unfinished_subc);
+                this.relatedCorpora = Immutable.List<string>(data.related_corpora);
+                this.sortKey = {
+                    name: data.sort_key.name,
+                    reverse: data.sort_key.reverse
+                };
             }
         );
     }
@@ -366,17 +356,12 @@ export class SubcorpListStore extends SimplePageStore {
 
         ).then(
             (data) => {
-                if (data.contains_errors) {
-                    throw new Error(data.messages[0]);
-
-                } else {
-                    this.importLines(data.subcorp_list);
-                    this.importUnfinished(data.unfinished_subc);
-                    this.relatedCorpora = Immutable.List<string>(data.related_corpora);
-                    for (let p in filter) {
-                        if (filter.hasOwnProperty(p)) {
-                            this.filter[p] = filter[p];
-                        }
+                this.importLines(data.subcorp_list);
+                this.importUnfinished(data.unfinished_subc);
+                this.relatedCorpora = Immutable.List<string>(data.related_corpora);
+                for (let p in filter) {
+                    if (filter.hasOwnProperty(p)) {
+                        this.filter[p] = filter[p];
                     }
                 }
             }

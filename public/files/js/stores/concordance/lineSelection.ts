@@ -316,14 +316,9 @@ export class LineSelectionStore extends SimplePageStore {
                 }
             ).then<MultiDict>(
                 (data) => {
-                    if (!data.contains_errors) {
-                        this.currentGroupIds = data['lines_groups_numbers'];
-                        this.updateGlobalArgs(data);
-                        return this.concLineStore.reloadPage();
-
-                    } else {
-                        throw new Error(data['error']);
-                    }
+                    this.currentGroupIds = data['lines_groups_numbers'];
+                    this.updateGlobalArgs(data);
+                    return this.concLineStore.reloadPage();
                 }
             );
         }
@@ -344,7 +339,7 @@ export class LineSelectionStore extends SimplePageStore {
 
         return prom.then(
             (data) => {
-                if (!data.contains_errors && data.ok) {
+                if (data.ok) {
                     this.layoutModel.showMessage('info',
                         this.layoutModel.translate('linesel__mail_has_been_sent'));
                     return true;
@@ -367,18 +362,14 @@ export class LineSelectionStore extends SimplePageStore {
         prom.then(
             (data:Kontext.AjaxConcResponse) => { // TODO type
                 this.performActionFinishHandlers();
-                if (!data.contains_errors) {
-                    this.clStorage.clear();
-                    const args = this.layoutModel.getConcArgs();
-                    args.replace('q', data.Q);
-                    const nextUrl = this.layoutModel.createActionUrl('view', args.items());
-                    this.onLeavePage();
-                    window.location.href = nextUrl; // we're leaving Flux world here so it's ok
-
-                } else {
-                    this.layoutModel.showMessage('error', data.messages[0]);
-                }
-            },
+                this.clStorage.clear();
+                const args = this.layoutModel.getConcArgs();
+                args.replace('q', data.Q);
+                const nextUrl = this.layoutModel.createActionUrl('view', args.items());
+                this.onLeavePage();
+                window.location.href = nextUrl; // we're leaving Flux world here so it's ok
+            }
+        ).catch(
             (err) => {
                 this.performActionFinishHandlers();
                 this.layoutModel.showMessage('error', err);

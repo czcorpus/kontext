@@ -277,7 +277,6 @@ export class CorplistTableStore extends SimplePageStore {
             description: null,
             size: null,
             web_url: null,
-            contains_errors: false,
             messages: []
         };
     }
