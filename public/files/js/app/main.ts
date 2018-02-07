@@ -295,20 +295,6 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     }
 
     /**
-     *
-     * @param resp
-     * @deprecated
-     */
-    unpackServerError(resp:Kontext.AjaxResponse):Error {
-        if (resp.contains_errors) {
-            return new Error(resp.messages
-                .filter(item => item[0] === 'error')
-                .map(item => this.translate(item[1])).join(', '));
-        }
-        return undefined;
-    }
-
-    /**
      * Pops-up a user message at the center of page. It is able
      * to handle process error-returned XMLHttpRequest objects
      * when using RSVP-ajax too.
@@ -329,10 +315,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                 const respText = (<XMLHttpRequest>message).responseText;
                 try {
                     const respObj = JSON.parse(respText);
-                    if (respObj['contains_errors'] && respObj['error_code']) {
+                    if (respObj['error_code']) {
                         outMsg = this.translate(respObj['error_code'], respObj['error_args'] || {});
 
-                    } else if (respObj['contains_errors'] && respObj['messages']) {
+                    } else if (respObj['messages']) {
                         outMsg = respObj['messages'].join(', ');
 
                     } else {
@@ -340,6 +326,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
                     }
 
                 } catch (e) {
+                    console.error(e);
                     if (message.statusText && message.status >= 400) {
                         outMsg = `${message.status}: ${message.statusText} (${String(respText).substr(0, 100)}...)`;
 
@@ -831,10 +818,6 @@ export class PluginApi implements Kontext.PluginApi {
 
     showMessage(type, message, onClose) {
         return this.pageModel.showMessage(type, message, onClose);
-    }
-
-    unpackServerError(resp:Kontext.AjaxResponse):Error {
-        return this.pageModel.unpackServerError(resp);
     }
 
     translate(msg, values?) {

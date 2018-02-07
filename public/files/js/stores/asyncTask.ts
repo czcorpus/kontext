@@ -28,7 +28,6 @@ import {SimplePageStore} from './base';
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
     data:Array<Kontext.AsyncTaskInfo>;
-    contains_errors: boolean;
 }
 
 /**
@@ -75,12 +74,7 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
                 case 'INBOX_CLEAR_FINISHED_TASKS':
                     self.deleteFinishedTaskInfo().then(
                         (data) => {
-                            if (!data.contains_errors) {
-                                self.updateMessageList(data.data);
-
-                            } else {
-                                throw new Error(data.messages[0]);
-                            }
+                            self.updateMessageList(data.data);
                             self.notifyChangeListeners();
                         },
                         (err) => {
@@ -166,29 +160,25 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
                 this.asyncTaskCheckerInterval = window.setInterval(() => {
                     this.checkForStatus().then(
                         (data) => {
-                            if (!data.contains_errors) {
-                                this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(data.data);
-                                if (this.getNumRunningTasks() === 0) {
-                                    window.clearInterval(this.asyncTaskCheckerInterval);
-                                    this.asyncTaskCheckerInterval = null;
-                                }
-                                const finished = this.getFinishedTasks();
-                                if (finished.size > 0) {
-                                    this.onUpdate.forEach(item => {
-                                        item(finished);
-                                    });
-                                }
-                                this.updateMessageList(data.data);
-                                this.notifyChangeListeners();
-
-                            } else {
-                                this.pageModel.showMessage('error', data.messages.join(', '));
+                            this.asyncTasks = Immutable.List<Kontext.AsyncTaskInfo>(data.data);
+                            if (this.getNumRunningTasks() === 0) {
+                                window.clearInterval(this.asyncTaskCheckerInterval);
+                                this.asyncTaskCheckerInterval = null;
                             }
-                        },
+                            const finished = this.getFinishedTasks();
+                            if (finished.size > 0) {
+                                this.onUpdate.forEach(item => {
+                                    item(finished);
+                                });
+                            }
+                            this.updateMessageList(data.data);
+                            this.notifyChangeListeners();
+                        }
+                    ).catch(
                         (err) => {
                             this.pageModel.showMessage('error', err);
                         }
-                    )
+                    );
                 }, AsyncTaskChecker.CHECK_INTERVAL);
             }
         }

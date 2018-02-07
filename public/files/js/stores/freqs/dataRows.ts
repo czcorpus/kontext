@@ -124,9 +124,6 @@ export class FreqDataRowsStore extends SimplePageStore {
                 case 'FREQ_RESULT_APPLY_MIN_FREQ':
                     this.loadPage().then(
                         (data) => {
-                            if (data.contains_errors) {
-                                this.pageModel.showMessage('error', data.messages);
-                            }
                             this.notifyChangeListeners();
 
                         },
@@ -140,13 +137,7 @@ export class FreqDataRowsStore extends SimplePageStore {
                     this.sortColumn = payload.props['value'];
                     this.loadPage().then(
                         (data) => {
-                            if (!data.contains_errors) {
-                                this.notifyChangeListeners();
-
-                            } else {
-                                this.pageModel.showMessage('error', data.messages);
-                                this.notifyChangeListeners();
-                            }
+                            this.notifyChangeListeners();
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);

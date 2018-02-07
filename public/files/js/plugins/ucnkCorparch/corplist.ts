@@ -176,18 +176,7 @@ export class CorpusAccessRequestStore extends SimplePageStore {
         return this.pluginApi.ajax<any>(
             'POST',
             this.pluginApi.createActionUrl('user/ask_corpus_access'),
-            data,
-            {contentType : 'application/x-www-form-urlencoded'}
-
-        ).then(
-            (data) => {
-                if (!data.contains_errors) {
-                    return data;
-
-                } else {
-                    throw new Error(data.messages[0]);
-                }
-            }
+            data
         );
     }
 }

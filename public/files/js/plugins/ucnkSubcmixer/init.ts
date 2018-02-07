@@ -223,12 +223,6 @@ export class SubcMixerStore extends SimplePageStore {
             this.pluginApi.createActionUrl('subcorpus/subcmixer_create_subcorpus'),
             args
 
-        ).then(
-            (resp) => {
-                if (resp.contains_errors) {
-                    throw new Error(resp.messages[0]);
-                }
-            }
         );
     }
 
@@ -267,17 +261,12 @@ export class SubcMixerStore extends SimplePageStore {
 
         ).then(
             (data) => {
-                if (!data.contains_errors) {
-                    this.currentCalculationResult = {
-                        attrs: this.importResults(data.attrs),
-                        total: data.total,
-                        ids: Immutable.List<string>(data.ids),
-                        structs: Immutable.List<string>(data.structs)
-                    };
-
-                } else {
-                    throw this.pluginApi.unpackServerError(data);
-                }
+                this.currentCalculationResult = {
+                    attrs: this.importResults(data.attrs),
+                    total: data.total,
+                    ids: Immutable.List<string>(data.ids),
+                    structs: Immutable.List<string>(data.structs)
+                };
             }
         );
     }

@@ -192,12 +192,7 @@ export class QueryInfoStore extends SimplePageStore {
             {}
         ).then(
             (data) => {
-                if (!data.contains_errors) {
-                    this.currentQueryOverview = data.Desc;
-
-                } else {
-                    throw new Error(this.pageModel.translate('global__failed_to_load_query_overview'));
-                }
+                this.currentQueryOverview = data.Desc;
             }
         );
     }
@@ -808,16 +803,11 @@ export class QueryReplayStore extends QueryInfoStore {
 
                 ).then<AjaxResponse.SortFormArgsResponse>(
                     (data) => {
-                        if (!data.contains_errors) {
-                            this.concArgsCache = this.concArgsCache.set(data.op_key, data);
-                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                            return data;
-
-                        } else {
-                            throw new Error(data.messages[0]);
-                        }
+                        this.concArgsCache = this.concArgsCache.set(data.op_key, data);
+                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                        return data;
                     }
-                )
+                );
 
             }).then<AjaxResponse.SortFormArgs>(
                 (data) => {

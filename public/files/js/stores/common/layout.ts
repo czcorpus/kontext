@@ -257,14 +257,9 @@ export class CorpusInfoStore extends SimplePageStore {
                 }
             ).then(
                 (data) => {
-                    if (!data.contains_errors) {
-                        this.corpusData = data;
-                        this.currentCorpus = corpusId;
-                        return data;
-
-                    } else {
-                        throw new Error(data.error);
-                    }
+                    this.corpusData = data;
+                    this.currentCorpus = corpusId;
+                    return data;
                 }
             );
         }
@@ -306,16 +301,11 @@ export class CorpusInfoStore extends SimplePageStore {
                         }
                     ).then(
                         (data) => {
-                            if (!data.contains_errors) {
-                                if (!data.extended_info) {
-                                    data.extended_info = {cql: '-'};
-                                }
-                                this.currentSubcorpus = subcorpusId;
-                                this.subcorpusData = data;
-
-                            } else {
-                                throw new Error(data.error);
+                            if (!data.extended_info) {
+                                data.extended_info = {cql: '-'};
                             }
+                            this.currentSubcorpus = subcorpusId;
+                            this.subcorpusData = data;
                         }
                     );
                 }

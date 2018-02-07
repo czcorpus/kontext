@@ -91,7 +91,6 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 
     } else {
         return {
-            contains_errors: false,
             messages: [],
             form_type: 'query',
             op_key: '__new__',

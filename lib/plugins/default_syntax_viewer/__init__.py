@@ -50,7 +50,7 @@ import os
 import plugins
 from plugins.abstract.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
 from actions import concordance
-from controller import exposed
+from controller import exposed, UserActionException
 from manatee_backend import ManateeBackend
 from translation import ugettext as _
 
@@ -65,13 +65,11 @@ def get_syntax_data(ctrl, request):
     """
     try:
         with plugins.runtime.SYNTAX_VIEWER as sv:
-            data = sv.search_by_token_id(ctrl.corp, ctrl.corp.corpname,
+            return sv.search_by_token_id(ctrl.corp, ctrl.corp.corpname,
                                          int(request.args.get('kwic_id')),
                                          int(request.args.get('kwic_len')))
     except MaximumContextExceeded:
-        data = dict(contains_errors=True,
-                    error=_('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
-    return data
+        raise UserActionException(_('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
 
 
 class SyntaxDataProviderError(Exception):

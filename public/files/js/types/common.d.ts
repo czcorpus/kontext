@@ -108,7 +108,6 @@ declare module Kontext {
         createActionUrl(path:string, args?:Array<[string,string]>|IMultiDict):string;
         ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
         showMessage(type:string, message:any, onClose?:()=>void);
-        unpackServerError(resp:Kontext.AjaxResponse):Error;
         translate(text:string, values?:any):string;
         formatNumber(v:number):string;
         formatDate(d:Date, timeFormat?:number):string;
@@ -391,7 +390,6 @@ declare module Kontext {
     }
 
     export interface AjaxResponse {
-        contains_errors:boolean;
         messages:Array<string>;
     }
 

@@ -643,8 +643,6 @@ class Controller(object):
         """
         if type(result) is dict:
             result['messages'] = result.get('messages', []) + self._system_messages
-            result['contains_errors'] = result.get(
-                'contains_errors', False) or self.contains_errors()
         if self._request.args.get('format') == 'json' or self._request.form.get('format') == 'json':
             action_metadata['return_type'] = 'json'
 
@@ -702,15 +700,6 @@ class Controller(object):
         else:
             new_err = err
         return new_err
-
-    def contains_errors(self):
-        """
-        Tests whether system messages contain at least one message of type 'error'
-        """
-        for item in self._system_messages:
-            if item[0] == 'error':
-                return True
-        return False
 
     def run(self, path=None):
         """
@@ -792,7 +781,6 @@ class Controller(object):
                 action_name,
                 None,
                 dict(messages=[user_msg],
-                     contains_errors=True,
                      error_code=getattr(ex, 'error_code', None),
                      error_args=getattr(ex, 'error_args', {}))
             )
