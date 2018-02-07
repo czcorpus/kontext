@@ -66,9 +66,15 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         private attrHelper:AttrHelper;
 
+        private rawAnchorIdx:number;
+
+        private rawFocusIdx:number;
+
         constructor(props:CQLEditorProps) {
             super(props);
             this.editorRoot = null;
+            this.rawAnchorIdx = null;
+            this.rawFocusIdx = null;
             this.attrHelper = new AttrHelper(props.attrList, props.structAttrList);
         }
 
@@ -88,11 +94,11 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
             return ans;
         }
 
-        private reapplySelection(root:Node, rawAnchorIdx:number, rawFocusIdx:number) {
+        private reapplySelection(rawAnchorIdx:number, rawFocusIdx:number) {
             const sel = window.getSelection();
-            const src = this.extractText(root);
-            let anchorNode = root;
-            let focusNode = root;
+            const src = this.extractText(this.editorRoot);
+            let anchorNode = this.editorRoot;
+            let focusNode = this.editorRoot;
             let currIdx = 0;
             let anchorIdx = 0;
             let focusIdx = 0;
@@ -131,26 +137,41 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
             return [rawAnchorIdx, rawFocusIdx];
         }
 
-        private updateEditor(elm) {
-            const src = this.extractText(elm);
-            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+        private transformEditedContent() {
+            const src = this.extractText(this.editorRoot);
+            [this.rawAnchorIdx, this.rawFocusIdx] = this.getRawSelection(src);
             this.props.handleInputChange(src.map(v => v[0]).join(''));
-            elm.innerHTML = highlightSyntax(
-                src.map(v => v[0]).join(''),
-                'cql',
-                he,
-                this.attrHelper,
-                this.props.onCQLEditorHintChange
-            );
-            this.reapplySelection(elm, rawAnchorIdx, rawFocusIdx);
-        };
+        }
 
         private refFn(item) {
             this.props.attachCurrInputElement(item);
             this.editorRoot = item;
         }
 
+        componentDidUpdate(prevProps, prevState) {
+            if (prevProps.query !== this.props.query) {
+                (this.editorRoot as HTMLElement).innerHTML = highlightSyntax(
+                    this.props.query,
+                    'cql',
+                    he,
+                    this.attrHelper,
+                    this.props.onCQLEditorHintChange
+                );
+                if (this.rawAnchorIdx !== null && this.rawFocusIdx !== null) {
+                    this.reapplySelection(this.rawAnchorIdx, this.rawFocusIdx);
+                    this.rawAnchorIdx = null;
+                    this.rawFocusIdx = null;
+
+                } else {
+                    this.reapplySelection(0, 0); // TODO - we should go to the last position instead
+                }
+            }
+        }
+
         componentDidMount() {
+            while (this.editorRoot.firstChild) {
+                this.editorRoot.removeChild(this.editorRoot.firstChild);
+            }
             this.editorRoot.appendChild(document.createTextNode(this.props.query));
             if (he.browserInfo.isFirefox()) {
                 this.editorRoot.addEventListener('keydown', (evt:KeyboardEvent) => {
@@ -170,7 +191,6 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                                 this.props.onCQLEditorHintChange
                             );
                             this.reapplySelection(
-                                this.editorRoot,
                                 evt.keyCode === 8 ? rawAnchorIdx - 1 : rawAnchorIdx,
                                 evt.keyCode === 8 ? rawFocusIdx - 1 : rawFocusIdx
                             );
@@ -183,7 +203,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                                 this.attrHelper,
                                 this.props.onCQLEditorHintChange
                             );
-                            this.reapplySelection(this.editorRoot, rawAnchorIdx, rawAnchorIdx);
+                            this.reapplySelection(rawAnchorIdx, rawAnchorIdx);
 
                         } else {
                             (this.editorRoot as HTMLElement).innerHTML = highlightSyntax(
@@ -193,19 +213,19 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                                 this.attrHelper,
                                 this.props.onCQLEditorHintChange
                             );
-                            this.reapplySelection(this.editorRoot, rawFocusIdx, rawFocusIdx);
+                            this.reapplySelection(rawFocusIdx, rawFocusIdx);
                         }
                         evt.preventDefault();
                     }
                 });
             }
-            this.updateEditor(this.editorRoot);
+            this.transformEditedContent();
         }
 
         render() {
             return <pre contentEditable={true}
                             spellCheck={false}
-                            onInput={(evt) => this.updateEditor(evt.target)}
+                            onInput={(evt) => this.transformEditedContent()}
                             className="cql-input"
                             style={{width: '40em', height: '5em'}}
                             ref={(item) => this.refFn(item)}

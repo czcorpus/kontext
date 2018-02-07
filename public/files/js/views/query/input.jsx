@@ -593,7 +593,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
 
         _toggleHistoryWidget() {
             this.setState({
-                query: this.state.query,
+                query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: !this.state.historyVisible,
                 cqlEditorMessage: this.state.cqlEditorMessage
             });
@@ -601,7 +601,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
 
         _handleCQLEditorHintChange(message) {
             this.setState({
-                query: this.state.query,
+                query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: this.state.historyVisible,
                 cqlEditorMessage: message
             });
