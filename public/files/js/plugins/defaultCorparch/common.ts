@@ -50,20 +50,20 @@ export interface GeneratedFavListItem {
  * corpus, subcorpus, corpus with aligned corpora.
  */
 export interface CorplistItem {
-    id?: string;
-    name: string;
-    corpus_id: string;
-    subcorpus_id: string;
-    corpora: Array<string>;
-    description: string;
-    size: number;
+    id?:string;
+    name:string;
+    corpus_id:string;
+    subcorpus_id:string;
+    corpora:Array<string>;
+    description:string;
+    size:number;
     /**
      * A simplified/human readable version of size.
      * E.g. if the size is 1,200,000 then the size_info is '1M'
      */
-    size_info: string;
-    user_item: boolean;
-    featured: boolean;
+    size_info:string;
+    fav_id:string;
+    featured:boolean;
 }
 
 

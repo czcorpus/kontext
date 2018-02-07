@@ -55,12 +55,12 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
                 props: {
                     corpusId: props.corpusId,
                     corpusName: props.corpusName,
-                    isFav: !props.isFav,
+                    favId: props.favId,
                     type: 'corpus'
                 }
             });
         };
-        const imgUrl = props.isFav ?
+        const imgUrl = props.favId !== null ?
             he.createStaticUrl('img/starred.svg') :
             he.createStaticUrl('img/starred_grey.svg');
         return <img className="starred" src={imgUrl} onClick={handleClick} />;
@@ -72,12 +72,11 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
      * A single dataset row
      */
     const CorplistRow = (props) => {
-
         const renderFavStar = () => {
             if (props.enableUserActions) {
                 return <FavStar corpusId={props.row.id}
                                     corpusName={props.row.name}
-                                    isFav={props.row.user_item} />;
+                                    favId={props.row.fav_id} />;
 
             } else {
                 return null;

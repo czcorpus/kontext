@@ -287,11 +287,11 @@ class DeafultCorplistProvider(CorplistProvider):
 
         user_items = self._corparch.user_items.get_user_items(plugin_api)
 
-        def is_fav(corpus_id):
+        def fav_id(corpus_id):
             for item in user_items:
                 if item.is_single_corpus and item.main_corpus_id == corpus_id:
-                    return True
-            return False
+                    return item.ident
+            return None
 
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
 
@@ -323,7 +323,7 @@ class DeafultCorplistProvider(CorplistProvider):
                     corp['size_info'] = l10n.simplify_num(corp['size']) if corp['size'] else None
                     corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
                     corp['found_in'] = found_in
-                    corp['user_item'] = is_fav(corp['id'])
+                    corp['fav_id'] = fav_id(corp['id'])
                     # because of client-side fav/feat/search items compatibility
                     corp['corpus_id'] = corp['id']
                     self._corparch.customize_search_result_item(self._plugin_api, corp, permitted_corpora,

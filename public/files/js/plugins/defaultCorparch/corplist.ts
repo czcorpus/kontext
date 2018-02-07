@@ -25,6 +25,15 @@ import {MultiDict} from '../../util';
 import * as common from './common';
 
 
+interface SetFavItemResponse extends Kontext.AjaxResponse {
+
+    /**
+     * An id of a newly created favorite item
+     */
+    id:string;
+}
+
+
 /**
  * A general store for processing corpus listing queries
  */
@@ -193,7 +202,7 @@ export interface CorplistData {
     keywords:Array<string>;
     nextOffset:number;
     query:string;
-    rows:Array<any>; // TODO
+    rows:Array<common.CorplistItem>;
 }
 
 export interface CorplistDataResponse extends Kontext.AjaxResponse, CorplistData {
@@ -227,7 +236,7 @@ export class CorplistTableStore extends SimplePageStore {
                 switch (payload.actionType) {
                     case 'LIST_STAR_CLICKED':
                         this.changeFavStatus(payload.props['corpusId'], payload.props['corpusName'],
-                            payload.props['type'], payload.props['isFav']).then(
+                            payload.props['type'], payload.props['favId']).then(
                                 (message) => {
                                     this.notifyChangeListeners();
                                     this.pluginApi.showMessage('info', message);
@@ -282,39 +291,37 @@ export class CorplistTableStore extends SimplePageStore {
     }
 
     private changeFavStatus(corpusId:string, corpusName:string, itemType:string,
-            isFav:boolean):RSVP.Promise<string> {
-        return (() => {
-            if (isFav) {
-                const item:common.GeneratedFavListItem = {
-                    subcorpus_id: null,
-                    corpora:[corpusId]
-                };
-                return this.pluginApi.ajax<any>(
-                    'POST',
-                    this.pluginApi.createActionUrl('user/set_favorite_item'),
-                    item
-                );
+            favId:string):RSVP.Promise<string> {
+        if (favId === null) {
+            const item:common.GeneratedFavListItem = {
+                subcorpus_id: null,
+                corpora:[corpusId]
+            };
+            return this.pluginApi.ajax<SetFavItemResponse>(
+                'POST',
+                this.pluginApi.createActionUrl('user/set_favorite_item'),
+                item
 
-            } else {
-                return this.pluginApi.ajax<any>(
-                    'POST',
-                    this.pluginApi.createActionUrl('user/unset_favorite_item'),
-                    {id: corpusId}
-                );
-            }
-
-        })().then(
-            (data) => {
-                if (!data.error) {
-                    this.updateDataItem(corpusId, {user_item: isFav});
-                    return isFav ? this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
-                        this.pluginApi.translate('defaultCorparch__item_removed_from_fav');
-
-                } else {
-                    throw new Error(this.pluginApi.translate('failed to update item'));
+            ).then(
+                (data) => {
+                    this.updateDataItem(corpusId, {fav_id: data.id});
+                    return this.pluginApi.translate('defaultCorparch__item_added_to_fav');
                 }
-            }
-        );
+            );
+
+        } else {
+            return this.pluginApi.ajax<SetFavItemResponse>(
+                'POST',
+                this.pluginApi.createActionUrl('user/unset_favorite_item'),
+                {id: favId}
+
+            ).then(
+                (data) => {
+                    this.updateDataItem(corpusId, {fav_id: null});
+                    return this.pluginApi.translate('defaultCorparch__item_removed_from_fav');
+                }
+            )
+        }
     }
 
     private loadCorpusInfo(corpusId:string):RSVP.Promise<AjaxResponse.CorpusInfo> {
@@ -370,9 +377,9 @@ export class CorplistTableStore extends SimplePageStore {
     }
 
     isFav(corpusId:string):boolean {
-        return this.data.rows.some(function (item:common.CorplistItem) {
+        return this.data.rows.some((item:common.CorplistItem) => {
             if (item.id === corpusId) {
-                return item.user_item;
+                return item.fav_id !== null;
             }
             return false;
         });
