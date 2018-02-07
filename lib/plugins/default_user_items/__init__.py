@@ -78,7 +78,7 @@ def set_favorite_item(ctrl, request):
 def unset_favorite_item(ctrl, request):
     with plugins.runtime.USER_ITEMS as uit:
         uit.delete_user_item(ctrl._plugin_api, request.form['id'])
-        return {}
+        return dict(id=request.form['id'])
 
 
 class UserItems(AbstractUserItems):

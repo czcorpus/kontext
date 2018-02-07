@@ -205,7 +205,7 @@ export function init(dispatcher, he, CorpusInfoBox, formStore, listStore) {
                 corpLink = <a href={link}>{props.row.name}</a>;
                 userAction = <defaultComponents.FavStar corpusId={props.row.id}
                                     corpusName={props.row.name}
-                                    isFav={props.row.user_item} />;
+                                    favId={props.row.fav_id} />;
             }
 
         } else {
