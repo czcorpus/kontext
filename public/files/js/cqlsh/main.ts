@@ -368,15 +368,15 @@ function escapeString(v:string):string {
 }
 
 
-export function _highlightSyntax(query:string, startRule:string, he:Kontext.ComponentHelpers, ignoreErrors:boolean,
+export function _highlightSyntax(query:string, applyRules:Array<string>, he:Kontext.ComponentHelpers, ignoreErrors:boolean,
         attrHelper:IAttrHelper, onHintChange:(message:string)=>void):string {
 
     const rcMap = new RuleCharMap(query, he, attrHelper, onHintChange);
     const stack = new ParserStack(query, rcMap);
 
     try {
-        parseQuery(query + (startRule === 'Query' ? ';' : ''), {
-            startRule: startRule,
+        parseQuery(query + (applyRules[0] === 'Query' ? ';' : ''), {
+            startRule: applyRules[0],
             tracer: {
                 trace: (v) => {
                     switch (v.type) {
@@ -403,39 +403,36 @@ export function _highlightSyntax(query:string, startRule:string, he:Kontext.Comp
     const lastPos = stack.getLastPos();
     const ans = rcMap.generate();
 
-    if (lastPos === 0) {
-        return query;
+    if (query.length === 0) {
+        return '';
 
-    } else if (lastPos < query.length) {
+    } else if (lastPos < query.length && applyRules.length > 1) {
         // try to apply a partial rule to the rest of the query
-        const srch = /^(\s*[^\s]*\s+|)(.+)$/.exec(query.substr(lastPos));
+        const srch = /^([^\s]+|)(\s+)(.+)$/.exec(query.substr(lastPos));
         if (srch !== null) {
-            const subRules = ['WithinContainingPart', 'Sequence', 'RegExpRaw'];
-            let partial = escapeString(srch[2]);
-            for (let i = 0; i < subRules.length; i += 1) {
-                try {
-                    partial = _highlightSyntax(srch[2], subRules[i], he, false, attrHelper, onHintChange);
-
-                } catch (e) {
-                    continue;
-                }
-                break;
-            }
-            return ans + escapeString(srch[1]) + partial;
+            const partial = _highlightSyntax(
+                srch[3],
+                srch[1].trim() !== '' ? applyRules.slice(1) : applyRules,
+                he,
+                true,
+                attrHelper,
+                onHintChange
+            );
+            return ans + escapeString(srch[1] + srch[2]) + partial;
         }
     }
     return ans + escapeString(query.substr(lastPos));
 }
 
-function getStartRule(queryType:string):string {
+function getApplyRules(queryType:string):Array<string> {
     switch (queryType) {
         case 'phrase':
-            return 'PhraseQuery';
+            return ['PhraseQuery'];
         case 'word':
         case 'lemma':
-            return 'RegExpRaw';
+            return ['RegExpRaw'];
         case 'cql':
-            return 'Query';
+            return ['Query', 'WithinContainingPart', 'Sequence', 'RegExpRaw'];
         default:
             throw new Error(`No parsing rule for type ${queryType}`);
     }
@@ -454,7 +451,7 @@ export function highlightSyntax(
         onHintChange:(message:string)=>void):string {
     return _highlightSyntax(
         query,
-        getStartRule(queryType),
+        getApplyRules(queryType),
         he,
         true,
         attrHelper ? attrHelper : new NullAttrHelper(),
@@ -463,5 +460,5 @@ export function highlightSyntax(
 }
 
 export function highlightSyntaxStrict(query:string, queryType:string, he:Kontext.ComponentHelpers):string {
-    return _highlightSyntax(query, getStartRule(queryType), he, false, new NullAttrHelper(), _ => undefined);
+    return _highlightSyntax(query, getApplyRules(queryType), he, false, new NullAttrHelper(), _ => undefined);
 }
