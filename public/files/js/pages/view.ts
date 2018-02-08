@@ -60,7 +60,7 @@ import queryStoragePlugin from 'plugins/queryStorage/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import {UserSettings} from '../app/userSettings';
 import * as applicationBar from 'plugins/applicationBar/init';
-import {UserInfo} from '../stores/userStores';
+import {UserInfo} from '../stores/user/info';
 import {TextTypesDistStore, TextTypesDistStoreProps, TTCrit} from '../stores/concordance/ttDistStore';
 import {init as queryFormInit, QueryFormViews} from 'views/query/main';
 import {init as filterFormInit, FilterFormViews} from '../views/query/filter';

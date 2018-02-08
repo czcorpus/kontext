@@ -43,7 +43,8 @@ module.exports = {
         view: mkpath('js/pages/view.ts'),
         wordlist: mkpath('js/pages/wordlist.ts'),
         wordlistForm: mkpath('js/pages/wordlistForm.ts'),
-        login: mkpath('js/pages/login.ts')
+        login: mkpath('js/pages/login.ts'),
+        userProfile: mkpath('js/pages/userProfile.ts')
     },
     output: {
         filename: '[name].js',

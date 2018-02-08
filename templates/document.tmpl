@@ -76,6 +76,7 @@ __conf.corpusIdent = $to_json($corpus_ident);
 __conf.baseAttr = "${base_attr}";
 __conf.currentAction = "$current_action";
 __conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
+__conf.userFullname = $to_json($user_info.fullname);
 __conf.loginUrl = $to_json($login_url);
 __conf.currentArgs = $to_json($Globals.export());
 __conf.compiledQuery = $to_json($Q);
@@ -104,6 +105,9 @@ __conf.canSendMail = $to_json($can_send_mail);
 __conf.issueReportingAction = $to_json($issue_reporting_action);
 __conf.uiTestingFlag = $to_json($ui_testing_flag);
 __conf.helpLinks = $to_json($help_links);
+__conf.UsesAppBar = #if $app_bar is not None#true#else#false#end if#;
+__conf.LoginUrl = $to_json($login_url);
+__conf.LogoutUrl = $to_json($logout_url);
 </script>
 </head>
 <body>
@@ -116,15 +120,7 @@ __conf.helpLinks = $to_json($help_links);
     $app_bar
 #end filter
 #else
-<span class="user">$_("User"):
-    #if not $_anonymous
-        $user_info.fullname
-        (<a href="$logout_url">$_('logout')</a>)
-    #else
-        $user_info.fullname
-        <a href="$login_url">($_('login'))</a>
-    #end if
-</span>
+<div id="user-pane-mount"></div>
 #end if
 </div>
 #end block

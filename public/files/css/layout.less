@@ -1534,18 +1534,9 @@ fieldset.colloc-metrics {
 }
 
 #content form.login {
-    background-color: @color-light-frame;
-    border: @input-border-style;
-    padding: 7px;
-    display: block;
-    margin: 50px auto;
-    min-width: inherit;
-    width: 250px;
-
-    button {
-        display: block;
-        margin: 0 auto;
-    }
+    height: auto;
+    overflow: auto;
+    color: @color-default-text;
 }
 
 table.results-range-and-paging {
@@ -1589,18 +1580,37 @@ a.context-help {
 #common-bar {
     height: 40px;
     overflow: hidden;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: rgba(82, 80, 78, 0.199);
+    color: #000000;
     width: 100%;
 
-    a {
-        color: #FFFFFF;
-    }
+    .UserPane {
+        color: @color-default-text;
+        background-color: transparent;
 
-    .user {
-        float: right;
-        padding-right: 10pt;
-        padding-top: 7pt;
+        a {
+            color: rgb(44, 25, 25);
+        }
+
+        .user {
+            float: right;
+            padding-right: 10pt;
+            padding-top: 7pt;
+
+            img.avatar {
+                width: 1.5em;
+                vertical-align: middle;
+                margin-right: 0.3em;
+            }
+
+            a.username {
+                text-decoration: none;
+            }
+
+            a.username:hover {
+                text-decoration: underline;
+            }
+        }
     }
 }
 

@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../vendor.d.ts/flux.d.ts" />
-/// <reference path="../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../../types/common.d.ts" />
+/// <reference path="../../vendor.d.ts/flux.d.ts" />
+/// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-import {SimplePageStore} from './base';
-import {PageModel} from '../app/main';
+import {SimplePageStore} from '../base';
+import {PageModel} from '../../app/main';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'vendor/immutable';
 
