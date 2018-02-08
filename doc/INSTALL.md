@@ -52,7 +52,7 @@ In the container, git-clone the KonText git repo to a directory of your choice (
 
 ```
 sudo apt-get update
-sudo apt-get install ca-certificates git
+sudo apt-get install -y ca-certificates git
 git clone https://github.com/czcorpus/kontext.git /opt/kontext/
 cd /opt/kontext/scripts/install
 chmod +x install.sh

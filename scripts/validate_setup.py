@@ -10,6 +10,7 @@ from functools import wraps
 from types import GeneratorType
 from lxml import etree
 import json
+import platform
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../lib'))
 import settings
@@ -420,14 +421,20 @@ def test_22_b(finfo):
 
 
 if __name__ == '__main__':
+    platf = platform.platform()
+    if "centos" in platf:
+        def_usr = "apache"
+    else:
+        def_usr = "www-data"
+
     parser = argparse.ArgumentParser(description='KonText set-up validation')
     parser.add_argument('config_file', metavar='CONF_FILE', type=str,
                         help='a path to config.xml')
     parser.add_argument('-s', '--test-setuid', action='store_true', default=False,
                         help='test setuid for files/directories')
-    parser.add_argument('-u', '--webserver-user', type=str, default='www-data',
+    parser.add_argument('-u', '--webserver-user', type=str, default=def_usr,
                         help='A system user a webserver runs under.')
-    parser.add_argument('-g', '--webserver-group', type=str, default='www-data',
+    parser.add_argument('-g', '--webserver-group', type=str, default=def_usr,
                         help='A system group a webserver runs under.')
     args = parser.parse_args()
     settings.load(args.config_file)

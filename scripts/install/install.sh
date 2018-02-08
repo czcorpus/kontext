@@ -12,7 +12,7 @@ then
     if grep -Fq "$distroDetail" $file
     then
         distro="Ubuntu"
-        packageToolDir="apt"
+        userName="www-data"
     fi
 else
     # check if CentOS 7.4
@@ -22,14 +22,14 @@ else
         distroDetail="CentOS Linux release 7.4"
         if grep -Fq "$distroDetail" $file
         then
-            distro="CentOS"
-            packageToolDir="yum"
+            distro="CentOS"            
+            userName="apache"
         fi
     fi
 fi
 
 # evaluate distro
-if  ! [ $distro=='Ubuntu' -o $distro=='CentOS' ];
+if  ! [ $distro == 'Ubuntu' -o $distro == 'CentOS' ];
 then
     echo "We are sorry, but the install script does not support your Linux distribution. Please install manually."
 else
@@ -76,12 +76,14 @@ done
 # set up environment
 # ------------------
 cd /
-trap 'exit' ERR
+# trap 'exit' ERR
 
-if [ $distro=='Ubuntu' ]
+if [ $distro == 'Ubuntu' ]
 then
-    # sudo apt-get update -y
-
+    # --------------------------------------
+    # Install prerequisites for Ubuntu 16.04
+    # --------------------------------------
+    sudo apt-get update -y
     sudo locale-gen en_US.UTF-8
 
     # install nodejs
@@ -101,29 +103,34 @@ then
     # install kontext requirements
     sudo pip install -r $INSTALL_DIR/requirements.txt
 
-# -------------------------------------
-# install & set up finlib, manatee etc.
-# -------------------------------------
-# python signal fd common for both scenarios
-    cd /var/cache/$packageToolDir
+    # -------------------------------------
+    # install & set up finlib, manatee etc.
+    # -------------------------------------
+    # python signal fd common for both scenarios    
+    cd /usr/local/bin
     wget https://corpora.fi.muni.cz/noske/deb/1604/python-signalfd/python-signalfd_0.1-1ubuntu1_amd64.deb
     sudo dpkg -i python-signalfd_0.1-1ubuntu1_amd64.deb
 else 
-    localedef -c -f UTF-8 -i en_US en_US.UTF-8
-    export LANG="en_US.UTF-8"
-    export LC_ALL=en_US.UTF-8
+    # ------------------------------------
+    # Install prerequisites for CentOS 7.4
+    # ------------------------------------
+    yum check-update
+    yum install -y curl sudo which ca-certificates
+    sudo localedef -c -f UTF-8 -i en_US en_US.UTF-8
 
     # nodejs etc.
-    yum check-update
-
-    yum install -y curl sudo which ca-certificates
     curl https://rpm.nodesource.com/setup_6.x | sudo -E bash -
     sudo yum install -y nodejs
     sudo yum install -y gcc-c++ make 
     # create symlink for nodejs, will need it along with node for KonText install
-    sudo ln -s "$(which node)" /usr/bin/nodejs
+    nodeLink=/usr/bin/nodejs
+    if [ ! -L $nodeLink ]
+    then
+      sudo ln -s "$(which node)" $nodeLink      
+    fi
+    
     npm install -g webpack
-
+    
     sudo yum install -y epel-release
     sudo yum install -y openssh-server net-tools nginx openssl wget openssl-devel redis pkgconfig pcre httpd m4 parallel patch bzip2
     sudo yum install -y python python-devel python-pip python-lxml python-cheetah python-simplejson 
@@ -141,16 +148,23 @@ else
     # install & set up finlib, manatee etc.
     # -------------------------------------
     # python signal fd common for both scenarios
-    cd /var/cache/yum
+    # cd /var/cache/yum
+    cd /usr/local/bin
     wget https://corpora.fi.muni.cz/noske/rpm/centos7/python-signalfd/python-signalfd-0.1-5.el7.centos.x86_64.rpm
-    sudo rpm -ivh python-signalfd-0.1-5.el7.centos.x86_64.rpm
+    sudo rpm -ivh --replacepkgs python-signalfd-0.1-5.el7.centos.x86_64.rpm
 fi
 
 case $INSTALL_TYPE in 
     ucnk)
+        if [ $distro == 'CentOS' ]
+        then 
+            cd /etc/ld.so.conf.d/
+            printf "/usr/local/lib\n" > /etc/ld.so.conf.d/libc.conf
+            ldconfig
+        fi
         # build from sources, use ucnk manatee patch
         # Finlib
-        cd /var/cache/$packageToolDir
+        cd /usr/local/src
         wget http://corpora.fi.muni.cz/noske/src/finlib/finlib-$FINLIB_VER.tar.gz
         tar xzvf finlib-$FINLIB_VER.tar.gz
         cd finlib-$FINLIB_VER
@@ -158,7 +172,7 @@ case $INSTALL_TYPE in
         sudo make install; ldconfig
 
         # Manatee
-        cd /var/cache/$packageToolDir
+        cd /usr/local/src
         wget http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-$MANATEE_VER.tar.gz
         tar xzvf manatee-open-$MANATEE_VER.tar.gz; cd manatee-open-$MANATEE_VER
         cp $INSTALL_DIR/scripts/install/ucnk-manatee-$MANATEE_VER.patch ./
@@ -166,8 +180,12 @@ case $INSTALL_TYPE in
         ./configure --with-pcre; make
         sudo make install; ldconfig
 
+        # move manatee files in case of CentOS
+        cd /usr/local/lib64/python2.7/site-packages/
+        cp * /usr/lib/python2.7/site-packages/
+
         # Susanne corpus
-        cd /var/cache/$packageToolDir
+        cd /usr/local/src
         wget https://corpora.fi.muni.cz/noske/src/example-corpora/susanne-example-source.tar.bz2
         tar xvjf susanne-example-source.tar.bz2
 
@@ -177,7 +195,7 @@ case $INSTALL_TYPE in
         mkdir -p /var/lib/manatee/data/susanne
 
         # copy Susanne files from sample sources
-        cd /var/cache/$packageToolDir/susanne-example-source
+        cd /usr/local/src/susanne-example-source
         sed -i 's%PATH susanne%PATH "/var/lib/manatee/data/susanne"%' ./config
         cp ./source /var/lib/manatee/vert/susanne.vert
         cp ./config /var/lib/manatee/registry/susanne
@@ -187,8 +205,8 @@ case $INSTALL_TYPE in
         ;;
 
     *)
-        # default: install from binary packages 
-        cd /var/cache/$packageToolDir
+        # default: install from binary packages         
+        cd /usr/local/bin
         if [ $distro == 'Ubuntu' ]
         then 
             wget https://corpora.fi.muni.cz/noske/deb/1604/finlib/finlib_$FINLIB_VER-1_amd64.deb
@@ -228,26 +246,26 @@ sed -i s%/opt/kontext%$INSTALL_DIR% config.xml
 
 # create directories, set permissions
 cd /var/local
-mkdir corpora
+mkdir -p corpora
 cd corpora
-mkdir registry
-mkdir subcorp
-mkdir freqs-precalc
-mkdir freqs-cache
-mkdir colls-cache
-chown www-data:www-data subcorp
-chown www-data:www-data freqs-precalc
-chown www-data:www-data freqs-cache
-chown www-data:www-data colls-cache
+mkdir -p registry
+mkdir -p subcorp
+mkdir -p freqs-precalc
+mkdir -p freqs-cache
+mkdir -p colls-cache
+chown $userName:$userName subcorp
+chown $userName:$userName freqs-precalc
+chown $userName:$userName freqs-cache
+chown $userName:$userName colls-cache
 chmod -R 775 subcorp
 
 cd /var/log
-mkdir kontext
-chown www-data: kontext
+mkdir -p kontext
+chown $userName: kontext
 
 cd /tmp
-mkdir kontext-upload
-chown www-data: kontext-upload
+mkdir -p kontext-upload
+chown $userName: kontext-upload
 chmod -R 775 kontext-upload
 
 # run config test
