@@ -76,7 +76,7 @@ class TestActions(unittest.TestCase):
         ctrl = Controller()
         req = Request(url='http://localhost/foo', form=dict(id='abcdef'))
         ans = unset_favorite_item(ctrl, req)
-        self.assertDictEqual(ans, {})
+        self.assertDictEqual(ans, dict(id='abcdef'))
         removed_obj = plugins.runtime.USER_ITEMS.instance.deleted_items[0]
         self.assertEqual(removed_obj, 'abcdef')
 
