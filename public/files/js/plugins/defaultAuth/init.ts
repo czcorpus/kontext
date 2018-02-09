@@ -25,6 +25,11 @@ import {SimplePageStore} from '../../stores/base';
 import {PageModel} from '../../app/main';
 import * as RSVP from 'vendor/rsvp';
 
+import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
+import {init as userProfileViewsFactory, UserProfileViews} from './views/profile';
+import {UserProfileStore} from './profile';
+
+
 /**
  *
  */
@@ -32,32 +37,92 @@ export class UserStatusStore extends SimplePageStore {
 
     pluginApi:Kontext.PluginApi;
 
+    private loginFormVisible:boolean;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
+        this.loginFormVisible = false;
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
-                    window.location.href = this.pluginApi.createActionUrl('user/login');
+                    this.loginFormVisible = true;
+                    this.notifyChangeListeners();
+                break;
+                case 'USER_HIDE_LOGIN_DIALOG':
+                    this.loginFormVisible = false;
+                    this.notifyChangeListeners();
+                break;
+                case 'USER_LOGOUTX':
+                    this.pluginApi.setLocationPost(this.pluginApi.createActionUrl('user/logoutx'), []);
                 break;
             }
         });
     }
+
+    getLoginFormVisible():boolean {
+        return this.loginFormVisible;
+    }
+
+    getReturnUrl():string {
+        return window.location.href;
+    }
 }
 
+/**
+ *
+ */
 export class AuthPlugin implements PluginInterfaces.IAuth {
 
     private store:UserStatusStore;
 
-    constructor(store:UserStatusStore) {
+    private profileStore:UserProfileStore;
+
+    private userPaneViews:UserPaneViews;
+
+    private userProfileViews:UserProfileViews;
+
+    constructor(profileStore:UserProfileStore, store:UserStatusStore, pluginApi:Kontext.PluginApi) {
+        this.profileStore = profileStore;
         this.store = store;
+
+        this.userPaneViews = userPaneViewsFactory(
+            pluginApi.dispatcher(),
+            pluginApi.getComponentHelpers(),
+            this.store
+        );
+
+        this.userProfileViews = userProfileViewsFactory(
+            pluginApi.dispatcher(),
+            pluginApi.getComponentHelpers(),
+            this.profileStore
+        );
+    }
+
+    getProfileView():React.ComponentClass {
+        return this.userProfileViews.UserProfileView;
+    }
+
+    getUserPaneView():React.ComponentClass {
+        return this.userPaneViews.UserPane;
     }
 }
 
 
 export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IAuth> {
-    const plugin = new AuthPlugin(new UserStatusStore(pluginApi.dispatcher(), pluginApi));
+    const plugin = new AuthPlugin(
+        new UserProfileStore(
+            pluginApi.dispatcher(),
+            pluginApi,
+            pluginApi.getConf<Kontext.UserCredentials>('User')
+        ),
+        new UserStatusStore(
+            pluginApi.dispatcher(),
+            pluginApi
+        ),
+        pluginApi
+    );
     return new RSVP.Promise((resolve:(v)=>void, reject:(err)=>void) => {
         resolve(plugin);
     });

@@ -124,6 +124,7 @@ declare module Kontext {
         registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
         resetMenuActiveItemAndNotify():void;
         getHelpLink(ident:string):string;
+        setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
     }
 
     /**
@@ -330,7 +331,7 @@ declare module Kontext {
          * http://localhost/kontext/first_form depending
          * on a concrete configuration).
          */
-        createActionLink(path:string):string;
+        createActionLink(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
 
         /**
          * Create a proper static resource URL based on normalized

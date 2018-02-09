@@ -37,24 +37,27 @@ class User(Kontext):
     def _is_anonymous_id(user_id):
         return plugins.runtime.AUTH.instance.is_anonymous(user_id)
 
-    @exposed(skip_corpus_init=True)
+    @exposed(skip_corpus_init=True, template='user/login.tmpl')
     def login(self, request):
         self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
-        return {}
+        if request.method == 'GET':
+            return {}
+        elif request.method == 'POST':
+            ans = {}
+            self._session['user'] = plugins.runtime.AUTH.instance.validate_user(self._plugin_api,
+                                                                                request.form['username'],
+                                                                                request.form['password'])
 
-    @exposed(template='user/login.tmpl', skip_corpus_init=True)
-    def loginx(self, request):
-        ans = {}
-        self._session['user'] = plugins.runtime.AUTH.instance.validate_user(self._plugin_api, request.form['username'],
-                                                                            request.form['password'])
-
-        if self._session['user'].get('id', None):
-            self.redirect('%sfirst_form' % (self.get_root_url(), ))
-        else:
-            self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
-            self.add_system_message('error', _('Incorrect username or password'))
-        self.refresh_session_id()
-        return ans
+            if self._session['user'].get('id', None):
+                if request.args.get('return_url', None):
+                    self.redirect(request.args.get('return_url'))
+                else:
+                    self.redirect(self.create_url('first_form'))
+            else:
+                self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
+                self.add_system_message('error', _('Incorrect username or password'))
+            self.refresh_session_id()
+            return ans
 
     @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True, page_model='login')
     def logoutx(self, request):
@@ -63,38 +66,37 @@ class User(Kontext):
         self.init_session()
         self.refresh_session_id()
         plugins.runtime.AUTH.instance.logout_hook(self._plugin_api)
-        return dict(message=('info', _('You have been logged out')))
-
-    @exposed(access_level=1, template='user/user_password_form.tmpl')
-    def user_password_form(self, request):
-        if not self._uses_internal_user_pages():
-            raise UserActionException(_('This function is disabled.'))
+        self.redirect(self.create_url('first_form', {}))
         return {}
 
-    @exposed(access_level=1, template='user/user_password.tmpl')
-    def user_password(self, request):
+    @exposed(access_level=0, return_type='json')
+    def validate_password_props(self, request):
         with plugins.runtime.AUTH as auth:
-            try:
-                curr_passwd = request.form['curr_passwd']
-                new_passwd = request.form['new_passwd']
-                new_passwd2 = request.form['new_passwd2']
+            if not auth.validate_new_password(request.args['password']):
+                raise UserActionException(auth.get_required_password_properties())
+        return {}
 
-                if not self._uses_internal_user_pages():
-                    raise UserActionException(_('This function is disabled.'))
-                logged_in = auth.validate_user(
-                    self._plugin_api, self.session_get('user', 'user'), curr_passwd)
+    @exposed(access_level=1, http_method='POST', skip_corpus_init=True, return_type='json')
+    def set_user_password(self, request):
+        with plugins.runtime.AUTH as auth:
+            curr_passwd = request.form['curr_passwd']
+            new_passwd = request.form['new_passwd']
+            new_passwd2 = request.form['new_passwd2']
 
-                if self._is_anonymous_id(logged_in['id']):
-                    raise UserActionException(_('Invalid user or password'))
-                if new_passwd != new_passwd2:
-                    raise UserActionException(_('New password and its confirmation do not match.'))
+            if not self._uses_internal_user_pages():
+                raise UserActionException(_('This function is disabled.'))
+            logged_in = auth.validate_user(
+                self._plugin_api, self.session_get('user', 'user'), curr_passwd)
 
-                if not auth.validate_new_password(new_passwd):
-                    raise UserActionException(auth.get_required_password_properties())
+            if self._is_anonymous_id(logged_in['id']):
+                raise UserActionException(_('Invalid user or password'))
+            if new_passwd != new_passwd2:
+                raise UserActionException(_('New password and its confirmation do not match.'))
 
-                auth.update_user_password(self.session_get('user', 'id'), new_passwd)
-            except UserActionException as e:
-                self.add_system_message('error', e)
+            if not auth.validate_new_password(new_passwd):
+                raise UserActionException(auth.get_required_password_properties())
+
+            auth.update_user_password(self.session_get('user', 'id'), new_passwd)
             return {}
 
     def _load_query_history(self, offset, limit, from_date, to_date, query_type, current_corpus, archived_only):
@@ -162,6 +164,17 @@ class User(Kontext):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_user_info(self, request):
+        with plugins.runtime.AUTH as auth:
+            user_info = auth.get_user_info(self.session_get('user', 'id'))
+            if not self.user_is_anonymous():
+                return {'user': user_info}
+            else:
+                return {'user': {'username': user_info['username']}}
+
+    @exposed(return_type='html', template='user/profile.tmpl', page_model='userProfile', skip_corpus_init=True)
+    def profile(self, request):
+        if not self._uses_internal_user_pages():
+            raise UserActionException(_('This function is disabled.'))
         with plugins.runtime.AUTH as auth:
             user_info = auth.get_user_info(self.session_get('user', 'id'))
             if not self.user_is_anonymous():

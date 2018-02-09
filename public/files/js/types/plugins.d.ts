@@ -20,6 +20,7 @@
 
 /// <reference path="./common.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
+/// <reference path="../vendor.d.ts/react.d.ts" />
 
 /**
  *
@@ -27,6 +28,8 @@
 declare module PluginInterfaces {
 
     export interface IAuth {
+        getUserPaneView():React.ComponentClass;
+        getProfileView():React.ComponentClass;
     }
 
     export interface IToolbar {

@@ -42,7 +42,7 @@ import * as ReactDOM from 'vendor/react-dom';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../util';
 import * as docStores from '../stores/common/layout';
-import {UserInfo} from '../stores/userStores';
+import {UserInfo} from '../stores/user/info';
 import {CorpusViewOptionsStore} from '../stores/options/structsAttrs';
 import {GeneralViewOptionsStore} from '../stores/options/general';
 import {L10n} from './l10n';
@@ -610,6 +610,10 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
         }
     }
 
+    getAuthPlugin():PluginInterfaces.IAuth {
+        return this.authPlugin;
+    }
+
     /**
      * Page layout initialization. Any concrete page should
      * call this before it runs its own initialization.
@@ -689,9 +693,20 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
 
         ).then(
             (authPlugin) => {
-                // no direct communication is performed
-                // with authPlugin but to keep things
-                // clear we set the attribute
+                if (this.isInstalledPlugin(authPlugin)) {
+                    const mountElm = document.getElementById('user-pane-mount');
+                    const userPaneView = authPlugin.getUserPaneView();
+                    if (userPaneView) {
+                        this.renderReactComponent(
+                            userPaneView,
+                            mountElm,
+                            {
+                                isAnonymous: this.getConf<boolean>('anonymousUser'),
+                                fullname: this.getConf<string>('userFullname')
+                            }
+                        );
+                    }
+                }
                 this.authPlugin = authPlugin;
                 return footerBar(this.pluginApi());
             }
@@ -729,7 +744,7 @@ class ComponentTools {
         return this.pageModel.translate(s, values);
     }
 
-    createActionLink(path:string, args?:Array<[string,string]>):string {
+    createActionLink(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string {
         return this.pageModel.createActionUrl(path, args);
     }
 
@@ -883,5 +898,9 @@ export class PluginApi implements Kontext.PluginApi {
 
     getHelpLink(ident:string):string {
         return this.getHelpLink(ident);
+    }
+
+    setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
+        this.pageModel.setLocationPost(path, args, blankWindow);
     }
 }

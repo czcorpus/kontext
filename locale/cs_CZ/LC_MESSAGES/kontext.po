@@ -53,9 +53,6 @@ msgstr "Nové heslo a jeho ověření nesouhlasí."
 msgid "Incorrect username or password"
 msgstr "Nesprávné uživatelské jméno nebo heslo."
 
-msgid "You have been logged out"
-msgstr "Byli jste odhlášeni."
-
 msgid "No result. Please make sure the query and selected query type are correct."
 msgstr "Žádný výsledek. Zkontrolujte prosím zadání a zvolený typ dotazu."
 
@@ -171,18 +168,6 @@ msgstr "pozitivní"
 msgid "negative"
 msgstr "negativní"
 
-msgid "Password change"
-msgstr "Změna hesla"
-
-msgid "Current password"
-msgstr "Dosavadní heslo"
-
-msgid "New password"
-msgstr "Nové heslo"
-
-msgid "New password again"
-msgstr "Potvrzení nového hesla"
-
 msgid ""
 "After a successful password update, you will be logged out and prompted to "
 "enter your new credentials."
@@ -196,8 +181,8 @@ msgstr "Uložit"
 msgid "Word list"
 msgstr "Seznam slov"
 
-msgid "Login"
-msgstr "Přihlásit se"
+msgid "Login options"
+msgstr "Možnosti přihlášení"
 
 msgid "username"
 msgstr "jméno"
@@ -302,9 +287,6 @@ msgstr "jazyky uživatelského rozhraní"
 
 msgid "version"
 msgstr "verze"
-
-msgid "Your password has been changed successfully."
-msgstr "Vaše heslo bylo úspěšně změněno."
 
 msgid "Random sample"
 msgstr "Náhodný vzorek"
@@ -449,3 +431,9 @@ msgstr "Odstranit vnořené shody"
 
 msgid "First hits in documents"
 msgstr "První nálezy v dokumentech"
+
+msgid "Open login form"
+msgstr "Otevřít přihlašovací formulář"
+
+msgid "Continue as anonymous user"
+msgstr "Pokračovat jako anonymní uživatel"

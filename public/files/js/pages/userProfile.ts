@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2017 Charles University in Prague, Faculty of Arts,
+ * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,31 +20,29 @@
 
 /// <reference path="../types/common.d.ts" />
 
+
 import {PageModel} from '../app/main';
+import authPlugin from 'plugins/auth/init';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
-require('styles/login.less');
+require('styles/userProfile.less');
+
 
 export function init(conf:Kontext.Conf):void {
     const layoutModel = new PageModel(conf);
+
     layoutModel.init().then(
         () => {
-            document.getElementById('try-login').addEventListener('click', () => {
-                layoutModel.dispatcher.dispatch({
-                    actionType: 'USER_SHOW_LOGIN_DIALOG',
-                    props: {}
-                });
-            });
-            document.getElementById('go-to-query').addEventListener('click', () => {
-                window.location.href = layoutModel.createActionUrl('first_form');
-            });
-            layoutModel.addUiTestingFlag();
+            layoutModel.renderReactComponent(
+                layoutModel.getAuthPlugin().getProfileView(),
+                document.getElementById('user-profile-mount'),
+                {}
+            );
         }
-
     ).catch(
         (err) => {
             console.error(err);
         }
-    );
+    )
 }
