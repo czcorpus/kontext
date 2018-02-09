@@ -52,7 +52,7 @@ In the container, git-clone the KonText git repo to a directory of your choice (
 
 ```
 sudo apt-get update
-sudo apt-get install ca-certificates git
+sudo apt-get install -y ca-certificates git
 git clone https://github.com/czcorpus/kontext.git /opt/kontext/
 cd /opt/kontext/scripts/install
 chmod +x install.sh
@@ -64,7 +64,9 @@ By default, the script installs Manatee and Finlib from the deb packages. If you
 
 Once the installation is complete, you can start KonText by entering the following command in the install root directory you specified above (*/opt/kontext*):
 
+```
 python public/app.py --address [container_IP_address] --port [optional, default TCP port number is 5000]
+```
 
 Now open "container_IP_address:port" (e.g. *http://10.0.3.100:5000*) in your browser on the host. You should see KonText's first_page and be able to enter a query to search in the sample Susanne corpus.
 
