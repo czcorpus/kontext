@@ -101,7 +101,7 @@ class ToolbarConf(object):
     def __init__(self, conf):
         self.server = conf.get('plugins', 'auth')['ucnk:toolbar_server']
         self.path = conf.get('plugins', 'auth')['ucnk:toolbar_path']
-        self.port = conf.get('plugins', 'auth')['ucnk:toolbar_port']
+        self.port = int(conf.get('plugins', 'auth')['ucnk:toolbar_port'])
 
 
 class AuthConf(object):
