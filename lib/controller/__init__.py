@@ -117,7 +117,10 @@ def convert_types(args, defaults, del_nondef=0, selector=0):
             elif default_type is TupleType and type(value) is ListType:
                 value = tuple(value)
             if type(value) is not default_type:
-                args[full_k] = corr_func.get(default_type, lambda x: x)(value)
+                try:
+                    args[full_k] = corr_func.get(default_type, lambda x: x)(value)
+                except ValueError as e:
+                    raise ValueError('Failed to process parameter "{0}": {1}'.format(full_k, e))
         else:
             if del_nondef:
                 del args[full_k]
