@@ -87,6 +87,7 @@ import httplib
 import json
 import logging
 import MySQLdb
+import ssl
 
 import plugins
 from plugins.abstract.auth import AbstractRemoteAuth
@@ -144,6 +145,7 @@ class CentralAuth(AbstractRemoteAuth):
         self._auth_conf = auth_conf
         self._conf = conf
         self._sync_conf = SyncDbConf(conf)
+        self._ssl_context = ssl.create_default_context() if self._toolbar_conf.port == 443 else None
 
     @staticmethod
     def _mk_user_key(user_id):
@@ -153,10 +155,19 @@ class CentralAuth(AbstractRemoteAuth):
     def _mk_list_key(user_id):
         return 'corplist:user:%s' % user_id
 
+    def _create_connection(self):
+        if self._ssl_context is not None:
+            return httplib.HTTPSConnection(self._toolbar_conf.server,
+                                           port=self._toolbar_conf.port,
+                                           timeout=self._auth_conf.toolbar_server_timeout,
+                                           context=self._ssl_context)
+        else:
+            return httplib.HTTPConnection(self._toolbar_conf.server,
+                                          port=self._toolbar_conf.port,
+                                          timeout=self._auth_conf.toolbar_server_timeout)
+
     def _fetch_toolbar_api_response(self, args):
-        connection = httplib.HTTPConnection(self._toolbar_conf.server,
-                                            port=self._toolbar_conf.port,
-                                            timeout=self._auth_conf.toolbar_server_timeout)
+        connection = self._create_connection()
         try:
             connection.request('GET', self._toolbar_conf.path + '?' + urllib.urlencode(args))
             response = connection.getresponse()
