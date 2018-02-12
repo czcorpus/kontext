@@ -33,7 +33,9 @@ export function init(conf:Kontext.Conf):void {
             document.getElementById('try-login').addEventListener('click', () => {
                 layoutModel.dispatcher.dispatch({
                     actionType: 'USER_SHOW_LOGIN_DIALOG',
-                    props: {}
+                    props: {
+                        returnUrl: layoutModel.createActionUrl('first_form')
+                    }
                 });
             });
             document.getElementById('go-to-query').addEventListener('click', () => {

@@ -43,21 +43,20 @@ class User(Kontext):
         if request.method == 'GET':
             return {}
         elif request.method == 'POST':
-            ans = {}
-            self._session['user'] = plugins.runtime.AUTH.instance.validate_user(self._plugin_api,
-                                                                                request.form['username'],
-                                                                                request.form['password'])
-
-            if self._session['user'].get('id', None):
-                if request.args.get('return_url', None):
-                    self.redirect(request.args.get('return_url'))
+            with plugins.runtime.AUTH as auth:
+                ans = {}
+                self._session['user'] = auth.validate_user(self._plugin_api, request.form['username'],
+                                                           request.form['password'])
+                if not auth.is_anonymous(self._session['user'].get('id', None)):
+                    if request.args.get('return_url', None):
+                        self.redirect(request.args.get('return_url'))
+                    else:
+                        self.redirect(self.create_url('first_form', {}))
                 else:
-                    self.redirect(self.create_url('first_form'))
-            else:
-                self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
-                self.add_system_message('error', _('Incorrect username or password'))
-            self.refresh_session_id()
-            return ans
+                    self.disabled_menu_items = USER_ACTIONS_DISABLED_ITEMS
+                    self.add_system_message('error', _('Incorrect username or password'))
+                self.refresh_session_id()
+                return ans
 
     @exposed(access_level=1, template='user/login.tmpl', skip_corpus_init=True, page_model='login')
     def logoutx(self, request):
@@ -171,7 +170,8 @@ class User(Kontext):
             else:
                 return {'user': {'username': user_info['username']}}
 
-    @exposed(return_type='html', template='user/profile.tmpl', page_model='userProfile', skip_corpus_init=True)
+    @exposed(return_type='html', template='user/profile.tmpl', page_model='userProfile',
+             skip_corpus_init=True, access_level=1)
     def profile(self, request):
         if not self._uses_internal_user_pages():
             raise UserActionException(_('This function is disabled.'))
