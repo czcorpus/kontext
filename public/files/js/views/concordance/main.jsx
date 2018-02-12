@@ -478,7 +478,9 @@ export function init(dispatcher, he, stores) {
         const handleLoginClick = (evt) => {
             dispatcher.dispatch({
                 actionType: 'USER_SHOW_LOGIN_DIALOG',
-                props: {}
+                props: {
+                    returnUrl: window.location.href
+                }
             });
             evt.preventDefault();
         };

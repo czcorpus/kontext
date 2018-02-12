@@ -132,7 +132,9 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         private handleLoginClick():void {
             dispatcher.dispatch({
                 actionType: 'USER_SHOW_LOGIN_DIALOG',
-                props: {}
+                props: {
+                    returnUrl: window.location.href
+                }
             });
         }
 

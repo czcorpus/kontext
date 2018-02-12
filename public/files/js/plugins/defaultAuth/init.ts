@@ -39,15 +39,19 @@ export class UserStatusStore extends SimplePageStore {
 
     private loginFormVisible:boolean;
 
+    private returnUrl:string;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.loginFormVisible = false;
+        this.returnUrl = null;
 
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     this.loginFormVisible = true;
+                    this.returnUrl = payload.props['returnUrl'];
                     this.notifyChangeListeners();
                 break;
                 case 'USER_HIDE_LOGIN_DIALOG':
@@ -66,7 +70,7 @@ export class UserStatusStore extends SimplePageStore {
     }
 
     getReturnUrl():string {
-        return window.location.href;
+        return this.returnUrl;
     }
 }
 
