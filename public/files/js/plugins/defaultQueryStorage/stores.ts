@@ -28,7 +28,7 @@
 import {SimplePageStore, cloneRecord} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
-import {highlightSyntax} from '../../cqlsh/main';
+import {highlightSyntax} from '../../stores/query/cqleditor/main';
 
 
 export interface InputBoxHistoryItem {
@@ -93,7 +93,25 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
                 case 'QUERY_STORAGE_SET_QUERY_TYPE':
                     this.queryType = payload.props['value'];
                     this.performLoadAction();
-                break;
+                break;/*
+                * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
+                *                    Institute of the Czech National Corpus
+                * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
+                *
+                * This program is free software; you can redistribute it and/or
+                * modify it under the terms of the GNU General Public License
+                * as published by the Free Software Foundation; version 2
+                * dated June, 1991.
+                *
+                * This program is distributed in the hope that it will be useful,
+                * but WITHOUT ANY WARRANTY; without even the implied warranty of
+                * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                * GNU General Public License for more details.
+
+                * You should have received a copy of the GNU General Public License
+                * along with this program; if not, write to the Free Software
+                * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+                */
                 case 'QUERY_STORAGE_SET_CURRENT_CORPUS_ONLY':
                     this.currentCorpusOnly = payload.props['value'];
                     this.performLoadAction();
@@ -153,7 +171,25 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
                     } else {
                         this.isBusy = true;
-                        this.notifyChangeListeners();
+                        this.notifyChangeListeners();/*
+                        * Copyright (c) 2018 Charles University in Prague, Faculty of Arts,
+                        *                    Institute of the Czech National Corpus
+                        * Copyright (c) 2018 Tomas Machalek <tomas.machalek@gmail.com>
+                        *
+                        * This program is free software; you can redistribute it and/or
+                        * modify it under the terms of the GNU General Public License
+                        * as published by the Free Software Foundation; version 2
+                        * dated June, 1991.
+                        *
+                        * This program is distributed in the hope that it will be useful,
+                        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+                        * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                        * GNU General Public License for more details.
+
+                        * You should have received a copy of the GNU General Public License
+                        * along with this program; if not, write to the Free Software
+                        * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+                        */
                         this.saveItem(this.editingQueryId, this.editingQueryName).then(
                             (msg) => {
                                 this.isBusy = false;

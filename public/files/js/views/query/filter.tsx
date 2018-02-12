@@ -70,6 +70,8 @@ export interface FilterFormState {
     filtposValue:string;
     filflValue:string;
     isLocked:boolean;
+    tagAttr:string;
+    useCQLEditor:boolean;
 }
 
 // ---------
@@ -150,7 +152,9 @@ export function init(
                 filflValue: filterStore.getFilflValues().get(this.props.filterId),
                 inclKwicValue: filterStore.getInclKwicValues().get(this.props.filterId),
                 isLocked: filterStore.getOpLocks().get(this.props.filterId),
-                withinArg: filterStore.getWithinArgs().get(this.props.filterId)
+                withinArg: filterStore.getWithinArgs().get(this.props.filterId),
+                useCQLEditor: filterStore.getUseCQLEditor(),
+                tagAttr: filterStore.getTagAttr()
             };
         }
 
@@ -275,7 +279,8 @@ export function init(
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguage}
-                                actionPrefix={this.props.actionPrefix} />
+                                actionPrefix={this.props.actionPrefix}
+                                tagAttr={this.state.tagAttr} />
                         </tbody>
                     </table>
                     <div className="buttons">

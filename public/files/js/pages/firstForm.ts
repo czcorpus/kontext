@@ -32,6 +32,7 @@ import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'vendor/immutable';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
+import {CQLEditorStore} from '../stores/query/cqleditor/store';
 import {WithinBuilderStore} from '../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../stores/query/virtualKeyboard';
 import {QueryContextStore} from '../stores/query/context';
@@ -41,6 +42,7 @@ import * as RSVP from 'vendor/rsvp';
 import {init as queryFormInit} from 'views/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
 import {init as basicOverviewViewsInit} from 'views/query/basicOverview';
+import { CQLEditorProps } from '../views/query/cqlEditor';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
@@ -58,6 +60,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
     private layoutModel:PageModel;
 
     private queryStore:QueryStore;
+
+    private cqlEditorStore:CQLEditorStore;
 
     private textTypesStore:TextTypesStore;
 
@@ -235,7 +239,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
                 selectedTextTypes: queryFormArgs.selected_text_types,
                 hasLemma: queryFormArgs.has_lemma,
                 tagsetDocs: queryFormArgs.tagset_docs,
-                useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor')
+                useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
+                tagAttr: this.layoutModel.getConf<string>('tagAttr')
             }
         );
 
@@ -245,6 +250,15 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
             this.queryStore.onSettingsChange(store);
         });
+
+        this.cqlEditorStore = new CQLEditorStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            this.queryStore.getTagAttr()
+        );
+        this.cqlEditorStore.addOnContentChangeListener(this.queryStore.externalQueryChange);
     }
 
     private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {
@@ -259,7 +273,8 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             this.queryHintStore,
             this.withinBuilderStore,
             this.virtualKeyboardStore,
-            this.queryContextStore
+            this.queryContextStore,
+            this.cqlEditorStore
         );
         this.layoutModel.renderReactComponent(
             queryFormComponents.QueryForm,
@@ -294,7 +309,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             () => {
                 this.queryHintStore = new QueryHintStore(
                     this.layoutModel.dispatcher,
-                    ['query__tip_01', 'query__tip_02', 'query__tip_03'],
+                    ['query__tip_01', 'query__tip_02', 'query__tip_03', 'query__tip_04'],
                     this.layoutModel.translate.bind(this.layoutModel)
                 );
                 this.withinBuilderStore = new WithinBuilderStore(

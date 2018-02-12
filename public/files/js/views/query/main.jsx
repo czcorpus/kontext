@@ -27,11 +27,11 @@ import {init as ttViewsInit} from '../textTypes';
 
 
 export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore, queryHintStore,
-        withinBuilderStore, virtualKeyboardStore, queryContextStore) {
-
+        withinBuilderStore, virtualKeyboardStore, queryContextStore, cqlEditorStore) {
     const inputViews = inputInit(
-        dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
-    const alignedViews = alignedInit(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+        dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore, cqlEditorStore);
+    const alignedViews = alignedInit(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore,
+            cqlEditorStore);
     const contextViews = contextInit(dispatcher, he, queryContextStore);
     const ttViews = ttViewsInit(dispatcher, he, textTypesStore);
     const layoutViews = he.getLayoutViews();
@@ -123,7 +123,8 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                 textTypesFormVisible: textTypesStore.hasSelectedItems(),
                 inputLanguages: queryStore.getInputLanguages(),
                 textTypesNotes: queryStore.getTextTypesNotes(),
-                useCQLEditor: queryStore.getUseCQLEditor()
+                useCQLEditor: queryStore.getUseCQLEditor(),
+                tagAttr: queryStore.getTagAttr()
             };
         }
 
@@ -202,7 +203,6 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 forcedAttr={this.state.forcedAttr}
                                 defaultAttr={this.state.defaultAttrValues.get(primaryCorpname)}
                                 attrList={this.state.attrList}
-                                structAttrList={this.state.structAttrList}
                                 tagsetDocUrl={this.state.tagsetDocUrls.get(primaryCorpname)}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
@@ -224,7 +224,6 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 forcedAttr={this.state.forcedAttr}
                                 defaultAttrValues={this.state.defaultAttrValues}
                                 attrList={this.state.attrList}
-                                structAttrList={this.state.structAttrList}
                                 tagsetDocUrls={this.state.tagsetDocUrls}
                                 pcqPosNegValues={this.state.pcqPosNegValues}
                                 inputLanguages={this.state.inputLanguages}
@@ -314,7 +313,6 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                 forcedAttr: queryStore.getForcedAttr(),
                 defaultAttrValues: queryStore.getDefaultAttrValues(),
                 attrList: queryStore.getAttrList(),
-                structAttrList: queryStore.getStructAttrList(),
                 tagsetDocUrls: queryStore.getTagsetDocUrls(),
                 pcqPosNegValues: queryStore.getPcqPosNegValues(),
                 lemmaWindowSizes: queryStore.getLemmaWindowSizes(),
@@ -405,7 +403,6 @@ export function init(dispatcher, he, CorparchWidget, queryStore, textTypesStore,
                                 forcedAttr={this.state.forcedAttr}
                                 defaultAttr={this.state.defaultAttrValues.get(this.props.corpname)}
                                 attrList={this.state.attrList}
-                                structAttrList={this.state.structAttrList}
                                 tagsetDocUrl={this.state.tagsetDocUrls.get(this.props.corpname)}
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}

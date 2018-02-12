@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../types/common.d.ts" />
+/// <reference path="../../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../../types/common.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
 
@@ -39,6 +39,8 @@ export interface IAttrHelper {
     getAttrsOfStruct(struct:string):Immutable.List<string>;
 
     getPosAttrs():Immutable.List<string>;
+
+    isTagAttr(attr:string):boolean;
 }
 
 
@@ -54,10 +56,14 @@ export class AttrHelper implements IAttrHelper {
 
     private availStructs:Immutable.Set<string>;
 
-    constructor(attrList:Immutable.List<Kontext.AttrItem>, structAttrList:Immutable.List<Kontext.AttrItem>) {
+    private tagAttr:string;
+
+    constructor(attrList:Immutable.List<Kontext.AttrItem>, structAttrList:Immutable.List<Kontext.AttrItem>,
+            tagAttr:string) {
         this.attrList = attrList;
         this.structAttrList = structAttrList;
         this.availStructs = Immutable.Set<string>(this.structAttrList.map(v => v.n.split('.')[0]));
+        this.tagAttr = tagAttr;
     }
 
     structExists(struct:string):boolean {
@@ -78,6 +84,10 @@ export class AttrHelper implements IAttrHelper {
 
     getPosAttrs():Immutable.List<string> {
         return this.attrList.map(v => v.n).toList();
+    }
+
+    isTagAttr(attr:string):boolean {
+        return this.tagAttr === attr;
     }
 }
 
@@ -105,5 +115,9 @@ export class NullAttrHelper implements IAttrHelper {
 
     getPosAttrs():Immutable.List<string> {
         return Immutable.List<string>();
+    }
+
+    isTagAttr(attr:string):boolean {
+        return false;
     }
 }

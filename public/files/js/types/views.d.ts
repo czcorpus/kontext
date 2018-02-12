@@ -216,7 +216,8 @@ declare module "views/query/main" {
         queryHintStore:Kontext.PageStore,
         withinBuilderStore:Kontext.PageStore,
         virtualKeyboardStore:Kontext.PageStore,
-        queryContextStore:Kontext.PageStore
+        queryContextStore:Kontext.PageStore,
+        cqlEditorStore:Kontext.PageStore
     ):QueryFormViews;
 }
 
@@ -233,7 +234,8 @@ declare module "views/query/aligned" {
         queryStore:Kontext.PageStore,
         queryHintStore:Kontext.PageStore,
         withinBuilderStore:Kontext.PageStore,
-        virtualKeyboardStore:Kontext.PageStore
+        virtualKeyboardStore:Kontext.PageStore,
+        cqlEditorStore:Kontext.PageStore
     ):AlignedQueryFormViews;
 }
 

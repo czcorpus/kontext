@@ -74,6 +74,8 @@ export class TagHelperStore extends SimplePageStore {
      */
     private data:Immutable.List<Immutable.List<PositionOptions>>;
 
+    private presetPattern:string;
+
     private _isBusy:boolean;
 
     constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
@@ -84,6 +86,13 @@ export class TagHelperStore extends SimplePageStore {
 
         TagHelperStore.DispatchToken = this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
+                    case 'TAGHELPER_PRESET_PATTERN':
+                        this.presetPattern = payload.props['pattern'];
+                        if (this.data.last().size > 0) {
+                            this.applyPresetPattern();
+                        }
+                        this.notifyChangeListeners();
+                    break;
                     case 'TAGHELPER_GET_INITIAL_DATA':
                         if (this.data.last().size === 0) {
                             this._isBusy = true;
@@ -92,8 +101,12 @@ export class TagHelperStore extends SimplePageStore {
                                 (data) => {
                                     this.importData(data.labels, data.tags);
                                     this._isBusy = false;
+                                    if (this.presetPattern) {
+                                        this.applyPresetPattern();
+                                    }
                                     this.notifyChangeListeners();
-                                },
+                                }
+                            ).catch(
                                 (err) => {
                                     this._isBusy = false;
                                     this.notifyChangeListeners();
@@ -142,6 +155,40 @@ export class TagHelperStore extends SimplePageStore {
 
     private resetSelections():void {
         this.data = this.data.slice(0, 2).toList();
+    }
+
+    /**
+     * Try to parse preset pattern and check matching checkboxes
+     * according to parsed values. This is used along with advanced
+     * CQL editor.
+     */
+    private applyPresetPattern():void {
+        if (/^\||[^\\]\|/.exec(this.presetPattern)) {
+            this.pluginApi.showMessage('warning', this.pluginApi.translate('taghelper__cannot_parse'));
+        }
+        const parsePattern = /\[[^\]]+\]|[^\]^\[^\.]|\./g;
+        const values = [];
+        let item = null;
+        while ((item = parsePattern.exec(this.presetPattern)) !== null) {
+            values.push(item[0].substr(0, 1) === '[' ? item[0].substring(1, item[0].length - 1) : item[0]);
+        }
+        for (let i = 0; i < this.data.last().size; i +=1 ) {
+            const oldPos = this.data.last().get(i);
+            const newPos:PositionOptions = {
+                label: oldPos.label,
+                values: oldPos.values.map((item:PositionValue) => {
+                    return {
+                        id: item.id,
+                        title: item.title,
+                        selected: (values[i] || '').indexOf(item.id) > -1 ? true : false,
+                        available: item.available
+                    }
+                }).toList(),
+                locked: oldPos.locked
+            };
+            this.data = this.data.push(this.data.last().set(i, newPos));
+        }
+        this.presetPattern = null;
     }
 
     /**

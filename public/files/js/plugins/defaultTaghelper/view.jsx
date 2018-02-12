@@ -132,15 +132,26 @@ export function init(dispatcher, he, tagHelperStore) {
                 });
 
             } else if (evt.target.value === 'insert') {
-                dispatcher.dispatch({
-                    actionType: props.actionPrefix + 'QUERY_INPUT_APPEND_QUERY',
-                    props: {
-                        query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`,
-                        sourceId: props.sourceId,
-                        prependSpace: true,
-                        closeWhenDone: true
-                    }
-                });
+                if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
+                    dispatcher.dispatch({
+                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        props: {
+                            sourceId: props.sourceId,
+                            query: `"${tagHelperStore.exportCurrentPattern()}"`,
+                            range: props.range
+                        }
+                    });
+
+                } else {
+                    dispatcher.dispatch({
+                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        props: {
+                            sourceId: props.sourceId,
+                            query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`,
+                            range: [0, null]
+                        }
+                    });
+                }
                 dispatcher.dispatch({
                     actionType: 'TAGHELPER_RESET',
                     props: {}
@@ -362,7 +373,8 @@ export function init(dispatcher, he, tagHelperStore) {
                     <TagButtons sourceId={this.props.sourceId}
                                 onInsert={this.props.onInsert}
                                 actionPrefix={this.props.actionPrefix}
-                                canUndo={this.state.canUndo} />
+                                canUndo={this.state.canUndo}
+                                range={this.props.range} />
                 </div>
                 <PositionList positions={this.state.positions}
                                 stateId={this.state.stateId} />

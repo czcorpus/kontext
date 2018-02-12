@@ -167,6 +167,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         this.tagsetDocs = Immutable.Map<string, string>(props.tagsetDoc);
         this.inputLanguage = props.inputLanguage;
         this.currentAction = 'filter_form';
+        this.externalQueryChange = this.externalQueryChange.bind(this);
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
@@ -223,6 +224,11 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                 break;
             }
         });
+    }
+
+    externalQueryChange(sourceId:string, query:string):void {
+        this.queries = this.queries.set(sourceId, query);
+        this.notifyChangeListeners();
     }
 
     getActiveWidget(sourceId:string):string {
