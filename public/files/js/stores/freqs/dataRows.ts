@@ -172,10 +172,6 @@ export class FreqDataRowsStore extends SimplePageStore {
                         this.notifyChangeListeners();
                      }
                 break;
-                case 'FREQ_RESULT_APPLY_QUICK_FILTER':
-                    this.applyQuickFilter(payload.props['args']);
-                    // a new page is loaded here
-                break;
             }
         });
     }
@@ -228,8 +224,8 @@ export class FreqDataRowsStore extends SimplePageStore {
                     return {
                         idx: i + this.getCurrentPageIdx() * pageSize,
                         Word: Immutable.List<string>(item.Word.map(x => x.n)),
-                        pfilter: Immutable.List<[string, string]>(item.pfilter),
-                        nfilter: Immutable.List<[string, string]>(item.nfilter),
+                        pfilter: this.createQuickFilterUrl(item.pfilter),
+                        nfilter: this.createQuickFilterUrl(item.nfilter),
                         fbar: item.fbar,
                         freqbar: item.freqbar,
                         rel: item.rel,
@@ -250,11 +246,16 @@ export class FreqDataRowsStore extends SimplePageStore {
         }
     }
 
-    private applyQuickFilter(args:Array<[string, string]>) {
-        const submitArgs = this.pageModel.getConcArgs();
-        submitArgs.remove('q2');
-        args.forEach(item => submitArgs.add(item[0], item[1]));
-        window.location.href = this.pageModel.createActionUrl('quick_filter', submitArgs.items());
+    private createQuickFilterUrl(args:Array<[string, string]>):string {
+        if (args && args.length > 0) {
+            const submitArgs = this.pageModel.getConcArgs();
+            submitArgs.remove('q2');
+            args.forEach(item => submitArgs.add(item[0], item[1]));
+            return this.pageModel.createActionUrl('quick_filter', submitArgs.items());
+
+        } else {
+            return null;
+        }
     }
 
     getBlocks():Immutable.List<ResultBlock> {
