@@ -45,38 +45,20 @@ export function init(
     // ----------------------- <DataRowPNFilter /> --------------------------------
 
     interface DataRowPNFilterProps {
-        pfilter: Immutable.List<[string, string]>;
-        nfilter: Immutable.List<[string, string]>;
+        pfilter:string;
+        nfilter:string;
     }
 
     const DataRowPNFilter:React.FuncComponent<DataRowPNFilterProps> = (props) => {
 
-        const handlePosClick = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_APPLY_QUICK_FILTER',
-                props: {
-                    args: props.pfilter
-                }
-            });
-        };
-
-        const handleNegClick = (evt) => {
-            dispatcher.dispatch({
-                actionType: 'FREQ_RESULT_APPLY_QUICK_FILTER',
-                props: {
-                    args: props.nfilter
-                }
-            });
-        };
-
-        if (props.pfilter.size + props.nfilter.size > 0) {
+        if (props.pfilter || props.nfilter) {
             return (
                 <td>
-                    {props.pfilter.size > 0 ? <a onClick={handlePosClick}
+                    {props.pfilter ? <a href={props.pfilter}
                                 title={he.translate('global__pnfilter_label_p')}>p</a> :
                             <span title={he.translate('freq__neg_filter_disabled')}>p</span>}
                     {'\u00a0/\u00a0'}
-                    {props.nfilter.size > 0 ? <a onClick={handleNegClick}
+                    {props.nfilter ? <a href={props.nfilter}
                                 title={he.translate('global__pnfilter_label_n')}>n</a> :
                             <span title={he.translate('freq__neg_filter_disabled')}>n</span>}
                 </td>
