@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../../types/common.d.ts" />
+/// <reference path="../../../vendor.d.ts/immutable.d.ts" />
 
 import {parse as parseQuery, SyntaxError, TracerItem} from 'cqlParser/parser';
 import * as Immutable from 'vendor/immutable';
@@ -177,21 +177,61 @@ class RuleCharMap {
         return ans;
     }
 
+    private findSubRuleSeqIn(ruleSeq:Array<string>, i1:number, i2:number):Array<CharsRule> {
+        const ans:Array<CharsRule> = [];
+        let ruleIdx = 0;
+        for (let i = this.nonTerminals.length - 1; i >= 0; i -= 1) {
+            if ((this.nonTerminals[i].rule === ruleSeq[ruleIdx]) &&
+                    this.nonTerminals[i].from >= i1 &&
+                    this.nonTerminals[i].to <= i2) {
+                ans.push(this.nonTerminals[i]);
+                ruleIdx += 1;
+                if (ruleSeq.length === ruleIdx) {
+                    break;
+                }
+            }
+        }
+        return ruleIdx === ruleSeq.length ? ans : [];
+    }
+
+    private createClickableTag(type:string, args:Kontext.GeneralProps, title:string=null):string {
+        const argsStr = Object.keys(args).map(k => `data-${k}="${args[k]}"`).join(' ');
+        return `<a class="sh-value-clickable" data-type="${type}" ${argsStr} title="${title}">`;
+    }
+
     private applyNonTerminals(chunks:Array<StyledChunk>, inserts:Array<Array<string>>):Array<string> {
         const errors:Array<string> = [];
         this.nonTerminals.reverse().forEach(v => {
             switch (v.rule) {
                 case 'Position':
-                    this.findSubRuleIn('AttName', v.from, v.to).forEach(pa => {
-                        const range = this.convertRange(pa.from, pa.to, chunks);
-                        const posAttrName = this.query.substring(pa.from, pa.to);
-                        if (this.attrHelper.attrExists(posAttrName)) {
-                            inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
-                            inserts[range[1]+1].push('</span>');
+                    this.findSubRuleIn('AttVal', v.from, v.to).forEach(attVal => {
+                        this.findSubRuleIn('AttName', attVal.from, attVal.to).forEach(pa => {
+                            const range = this.convertRange(pa.from, pa.to, chunks);
+                            const posAttrName = this.query.substring(pa.from, pa.to);
+                            if (this.attrHelper.attrExists(posAttrName)) {
+                                inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
+                                inserts[range[1]+1].push('</span>');
 
-                        } else {
-                            errors.push(`${this.he.translate('query__attr_does_not_exist')}: <strong>${posAttrName}</strong>`);
-                        }
+                            } else {
+                                errors.push(`${this.he.translate('query__attr_does_not_exist')}: <strong>${posAttrName}</strong>`);
+                            }
+
+                            if (this.attrHelper.isTagAttr(posAttrName)) {
+                                const tagKeyVal = this.findSubRuleSeqIn(['AttName', 'RegExp'], attVal.from, attVal.to);
+                                if (tagKeyVal.length > 0) {
+                                    const range = this.convertRange(tagKeyVal[1].from, tagKeyVal[1].to, chunks);
+                                    inserts[range[0]].push(this.createClickableTag(
+                                        'tag',
+                                        {
+                                            leftIdx: tagKeyVal[1].from,
+                                            rightIdx: tagKeyVal[1].to
+                                        },
+                                        this.he.translate('query__click_to_edit_tag')
+                                    ));
+                                    inserts[range[1]+1].push('</a>');
+                                }
+                            }
+                        });
                     });
                 break;
                 case 'Structure':
@@ -222,7 +262,7 @@ class RuleCharMap {
             }
         });
         if (errors.length > 0) {
-            this.onHintChange(errors.join('<br />')); // TODO
+            this.onHintChange(errors.join('<br />'));
 
         } else {
             this.onHintChange(null);

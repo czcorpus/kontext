@@ -81,6 +81,21 @@ declare module React {
         stopPropagation():void;
     }
 
+    export interface KeyboardEvent extends SyntheticEvent {
+        altKey:boolean;
+        charCode:number;
+        ctrlKey:boolean;
+        getModifierState(key):boolean;
+        key:string;
+        keyCode:number;
+        locale:string;
+        location:number;
+        metaKey:boolean;
+        repeat:boolean;
+        shiftKey:boolean;
+        which:number;
+    }
+
     export function createElement<T, U>(elmType:React.ComponentClass<T, U>|React.FuncComponent<T>, props:T,
                                   ...children:any[]):ReactElement;
 }

@@ -74,6 +74,7 @@ __conf.subcorpname = #if $getVar('usesubcorp')#$to_json($usesubcorp)#else# null#
 __conf.humanCorpname = $to_json($human_corpname);  ## deprecated
 __conf.corpusIdent = $to_json($corpus_ident);
 __conf.baseAttr = "${base_attr}";
+__conf.tagAttr = #if $getVar('corp_uses_tag', False)#"tag"#else#null#end if#;
 __conf.currentAction = "$current_action";
 __conf.anonymousUser = #if $_anonymous#true#else#false#end if#;
 __conf.userFullname = $to_json($user_info.fullname);

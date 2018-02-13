@@ -43,6 +43,7 @@ export interface GeneralQueryFormProperties {
     posWindowSizes:Array<number>;
     wPoSList:Array<{v:string; n:string}>;
     useCQLEditor:boolean;
+    tagAttr:string;
 }
 
 
@@ -146,6 +147,10 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected useCQLEditor:boolean;
 
+    private tagAttr:string;
+
+    private widgetArgs:Kontext.GeneralProps;
+
     // -------
 
     constructor(
@@ -164,6 +169,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.lemmaWindowSizes = Immutable.List<number>(props.lemmaWindowSizes);
         this.posWindowSizes = Immutable.List<number>(props.posWindowSizes);
         this.wPoSList = Immutable.List<{v:string; n:string}>(props.wPoSList);
+        this.tagAttr = props.tagAttr;
         this.queryTracer = {trace:(_)=>undefined};
         this.useCQLEditor = props.useCQLEditor;
 
@@ -172,11 +178,18 @@ export abstract class GeneralQueryStore extends SimplePageStore {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
                     this.setActiveWidget(payload.props['sourceId'], payload.props['value']);
+                    this.widgetArgs = payload.props['widgetArgs'] || {};
                     this.notifyChangeListeners();
                 break;
             }
         });
     }
+
+    /**
+     * A callback used to synchronize CQLEditor state with this store.
+     * Do not forget to bind this function to its object.
+     */
+    abstract externalQueryChange(sourceId:string, query:string):void;
 
     /**
      * Returns a currently active widget identifier
@@ -188,6 +201,10 @@ export abstract class GeneralQueryStore extends SimplePageStore {
      * Sets a currently active widget.
      */
     abstract setActiveWidget(sourceId:string, ident:string):void;
+
+    getWidgetArgs():Kontext.GeneralProps {
+        return this.widgetArgs;
+    }
 
     registerCorpusSelectionListener(fn:(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void):void {
         this.onCorpusSelectionChangeActions = this.onCorpusSelectionChangeActions.push(fn);
@@ -254,6 +271,14 @@ export abstract class GeneralQueryStore extends SimplePageStore {
     onSettingsChange(optsStore:ViewOptions.IGeneralViewOptionsStore):void {
         this.useCQLEditor = optsStore.getUseCQLEditor();
         this.notifyChangeListeners();
+    }
+
+    getTagAttr():string {
+        return this.tagAttr;
+    }
+
+    getUseCQLEditor():boolean {
+        return this.useCQLEditor;
     }
 }
 
@@ -349,6 +374,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
         this.setUserValues(props);
         this.currentAction = 'first_form';
+        this.externalQueryChange = this.externalQueryChange.bind(this);
 
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
@@ -431,6 +457,11 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 break;
             }
         });
+    }
+
+    externalQueryChange(sourceId:string, query:string):void {
+        this.queries = this.queries.set(sourceId, query);
+        this.notifyChangeListeners();
     }
 
     csExportState():CorpusSwitchPreserved {
@@ -729,10 +760,6 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
 
     getTagsetDocUrls():Immutable.Map<string, string> {
         return this.tagsetDocs;
-    }
-
-    getUseCQLEditor():boolean {
-        return this.useCQLEditor;
     }
 }
 

@@ -24,9 +24,8 @@ import * as React from 'vendor/react';
 import {init as inputInit} from './input';
 
 
-export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore) {
-
-    const inputViews = inputInit(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore);
+export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore, cqlEditorStore) {
+    const inputViews = inputInit(dispatcher, he, queryStore, queryHintStore, withinBuilderStore, virtualKeyboardStore, cqlEditorStore);
 
     // ------------------ <AlignedCorpBlock /> -----------------------------
 
@@ -83,7 +82,6 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                             forcedAttr={props.forcedAttr}
                             defaultAttr={props.defaultAttr}
                             attrList={props.attrList}
-                            structAttrList={props.structAttrList}
                             tagsetDocUrl={props.tagsetDocUrl}
                             inputLanguage={props.inputLanguage}
                             queryStorageView={props.queryStorageView}

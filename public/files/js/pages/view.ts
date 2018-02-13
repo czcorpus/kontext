@@ -37,6 +37,7 @@ import {LineSelectionStore} from '../stores/concordance/lineSelection';
 import {ConcDetailStore, RefsDetailStore} from '../stores/concordance/detail';
 import {ConcLineStore, CorpColumn, ServerLineData, ViewConfiguration, ServerPagination, ConcSummary, DummySyntaxViewStore} from '../stores/concordance/lines';
 import {QueryFormProperties, QueryFormUserEntries, QueryStore, QueryHintStore, fetchQueryFormArgs} from '../stores/query/main';
+import {CQLEditorStore} from '../stores/query/cqleditor/store';
 import {QueryReplayStore, LocalQueryFormData} from '../stores/query/replay';
 import {FilterStore, FilterFormProperties, fetchFilterFormArgs} from '../stores/query/filter';
 import {SampleStore, SampleFormProperties, fetchSampleFormArgs} from '../stores/query/sample';
@@ -105,6 +106,7 @@ export class QueryStores {
     switchMcStore:SwitchMainCorpStore;
     saveAsFormStore:QuerySaveAsFormStore;
     firstHitsStore:FirstHitsStore;
+    cqlEditorStore:CQLEditorStore;
 }
 
 
@@ -403,13 +405,13 @@ export class ViewPage {
                 this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
     }
 
-    private initQueryForm():void {
+    private initQueryForm(cqlEditorStore:CQLEditorStore):void {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
 
         this.queryStores.queryHintStore = new QueryHintStore(
             this.layoutModel.dispatcher,
-            ['query__tip_01', 'query__tip_02', 'query__tip_03'],
+            ['query__tip_01', 'query__tip_02', 'query__tip_03', 'query__tip_04'],
             this.layoutModel.translate.bind(this.layoutModel)
         );
         this.queryStores.withinBuilderStore = new WithinBuilderStore(this.layoutModel.dispatcher,
@@ -447,7 +449,8 @@ export class ViewPage {
             inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages'),
             textTypesNotes: this.layoutModel.getConf<string>('TextTypesNotes'),
             selectedTextTypes: queryFormArgs.selected_text_types,
-            useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor')
+            useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor'),
+            tagAttr: this.layoutModel.getConf<string>('tagAttr')
         };
 
         this.queryStores.queryStore = new QueryStore(
@@ -460,6 +463,7 @@ export class ViewPage {
         this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
             this.queryStores.queryStore.onSettingsChange(store);
         });
+        cqlEditorStore.addOnContentChangeListener(this.queryStores.queryStore.externalQueryChange);
 
         this.queryFormViews = queryFormInit(
             this.layoutModel.dispatcher,
@@ -470,12 +474,13 @@ export class ViewPage {
             this.queryStores.queryHintStore,
             this.queryStores.withinBuilderStore,
             this.queryStores.virtualKeyboardStore,
-            this.queryStores.queryContextStore
+            this.queryStores.queryContextStore,
+            this.queryStores.cqlEditorStore
         );
 
     }
 
-    private initFilterForm(firstHitsStore:FirstHitsStore):void {
+    private initFilterForm(firstHitsStore:FirstHitsStore, cqlEditorStore:CQLEditorStore):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
         const filterFormProps:FilterFormProperties = {
@@ -504,7 +509,8 @@ export class ViewPage {
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>('InputLanguages')[this.layoutModel.getConf<string>('corpname')],
             opLocks: fetchArgs<boolean>(item => item.form_type === 'locked'),
-            useCQLEditor:this.layoutModel.getConf<boolean>('UseCQLEditor')
+            useCQLEditor: this.layoutModel.getConf<boolean>('UseCQLEditor'),
+            tagAttr: this.layoutModel.getConf<string>('tagAttr')
         }
 
         this.queryStores.filterStore = new FilterStore(
@@ -514,6 +520,7 @@ export class ViewPage {
             this.queryStores.queryContextStore,
             filterFormProps
         );
+        cqlEditorStore.addOnContentChangeListener(this.queryStores.filterStore.externalQueryChange);
         this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
             this.queryStores.filterStore.notifyChangeListeners();
         });
@@ -540,6 +547,25 @@ export class ViewPage {
             this.queryStores.withinBuilderStore,
             this.queryStores.virtualKeyboardStore,
             firstHitsStore
+        );
+    }
+
+    private initCQLEditor():void {
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+        const cqlQueries = {};
+        for (let sid in queryFormArgs.curr_queries) {
+            if (queryFormArgs.curr_query_types[sid] === 'cql') {
+                cqlQueries[sid] = queryFormArgs.curr_queries[sid];
+            }
+        }
+        this.queryStores.cqlEditorStore = new CQLEditorStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            this.layoutModel.getConf<string>('tagAttr'),
+            cqlQueries
         );
     }
 
@@ -1157,9 +1183,10 @@ export class ViewPage {
         RSVP.all([ttProm, p2, queryStorageProm, tagHelperProm]).then(
             (args:any) => {
                 const [ttStore, lvprops, qs, tagh] = args;
-                this.initQueryForm();
+                this.initCQLEditor();
+                this.initQueryForm(this.queryStores.cqlEditorStore);
                 this.initFirsthitsForm();
-                this.initFilterForm(this.queryStores.firstHitsStore);
+                this.initFilterForm(this.queryStores.firstHitsStore, this.queryStores.cqlEditorStore);
                 this.initSortForm();
                 this.initSwitchMainCorpForm();
                 this.initSampleForm(this.queryStores.switchMcStore);
