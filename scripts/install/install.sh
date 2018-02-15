@@ -282,6 +282,9 @@ then
     sudo systemctl enable redis
 fi
 
+redis-cli select 1
+redis-cli set user:1 "{\"id\": 1, \"user\": \"public\", \"fullname\": \"public user\", \"pwd_hash\": \"\"}"
+
 echo "KonText installation successfully completed."
 echo "To start KonText, enter the following command in the KonText install root directory (i.e. $INSTALL_DIR):"
 echo "python public/app.py --address [IP address] --port [TCP port]"
