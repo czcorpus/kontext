@@ -573,7 +573,8 @@ export function init(dispatcher, he, stores) {
                 showAnonymousUserWarn: this.props.anonymousUser,
                 saveFormVisible: concSaveStore.getFormIsActive(),
                 supportsSyntaxView: lineStore.getSupportsSyntaxView(),
-                syntaxBoxData: null
+                syntaxBoxData: null,
+                showLineNumbers: lineStore.getShowLineNumbers()
             };
         }
 
@@ -728,7 +729,8 @@ export function init(dispatcher, he, stores) {
                             supportsSyntaxView={this.state.supportsSyntaxView}
                             onSyntaxViewClick={this._handleSyntaxBoxClick}
                             tokenDetailClickHandler={this._detailClickHandler}
-                            refsDetailClickHandler={this._refsDetailClickHandler} />
+                            refsDetailClickHandler={this._refsDetailClickHandler}
+                            showLineNumbers={this.state.showLineNumbers} />
                     </div>
                     <div id="conc-bottom-bar">
                         <div className="info-level">

@@ -960,6 +960,10 @@ export class ViewPage {
             (_) => this.viewStores.lineViewStore.updateOnViewOptsChange());
         this.layoutModel.getStores().corpusViewOptionsStore.addOnSave(
             (data) => this.viewStores.concDetailStore.setWideCtxGlobals(data.widectx_globals));
+        this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponse(() => {
+            this.viewStores.lineViewStore.updateOnGlobalViewOptsChange(
+                    this.layoutModel.getStores().generalViewOptionsStore);
+        });
         this.viewStores.lineSelectionStore = new LineSelectionStore(
                 this.layoutModel,
                 this.layoutModel.dispatcher,

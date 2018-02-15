@@ -349,7 +349,8 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                     this.props.audioPlayerIsVisible !== nextProps.audioPlayerIsVisible ||
                     this.props.catBgColor != nextProps.catBgColor ||
                     this.props.cols !== nextProps.cols ||
-                    this.props.viewMode !== nextProps.viewMode;
+                    this.props.viewMode !== nextProps.viewMode ||
+                    this.props.showLineNumbers !== nextProps.showLineNumbers;
         }
 
         componentDidMount() {
@@ -502,7 +503,7 @@ export function init(dispatcher, he, lineStore, lineSelectionStore, concDetailSt
                          baseCorpname={this.props.baseCorpname}
                          mainCorp={this.props.mainCorp}
                          corpsWithKwic={this.props.KWICCorps}
-                         showLineNumbers={this.props.ShowLineNumbers}
+                         showLineNumbers={this.props.showLineNumbers}
                          lineSelMode={this.state.lineSelMode}
                          numItemsInLockedGroups={this.state.numItemsInLockedGroups}
                          audioPlayerIsVisible={this.state.audioPlayerIsVisible}

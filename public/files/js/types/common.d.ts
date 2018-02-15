@@ -671,7 +671,8 @@ declare module ViewOptions {
     }
 
     export interface IGeneralViewOptionsStore extends Kontext.PageStore {
-        // TODO
+        addOnSubmitResponse(fn:()=>void):void;
+        getLineNumbers():boolean;
     }
 
 }
