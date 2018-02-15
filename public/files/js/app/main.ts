@@ -904,3 +904,17 @@ export class PluginApi implements Kontext.PluginApi {
         this.pageModel.setLocationPost(path, args, blankWindow);
     }
 }
+
+
+export enum PluginName {
+    AUTH = 'auth',
+    SETTINGS_STORAGE = 'settings_storage',
+    TAGHELPER = 'taghelper',
+    TOKEN_DETAIL = 'token_detail',
+    APP_BAR = 'app_bar',
+    FOOTER_BAR = 'footer_bar',
+    CORPARCH = 'corparch',
+    LIVE_ATTRIBUTES = 'live_attributes',
+    SUBCMIXER = 'subcmixer',
+    SYNTAX_VIEWER = 'syntax_viewer',
+}

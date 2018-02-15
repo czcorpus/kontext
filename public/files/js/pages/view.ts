@@ -78,7 +78,6 @@ declare var require:any;
 // weback - ensure a style (even empty one) is created for the page
 require('styles/view.less');
 
-
 export class ViewPageStores {
     lineSelectionStore:LineSelectionStore;
     lineViewStore:ConcLineStore;
@@ -107,6 +106,7 @@ export class QueryStores {
     saveAsFormStore:QuerySaveAsFormStore;
     firstHitsStore:FirstHitsStore;
     cqlEditorStore:CQLEditorStore;
+    filterCqlEditorStore:CQLEditorStore;
 }
 
 
@@ -405,7 +405,10 @@ export class ViewPage {
                 this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
     }
 
-    private initQueryForm(cqlEditorStore:CQLEditorStore):void {
+    /**
+     *
+     */
+    private initQueryForm():void {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
 
@@ -463,7 +466,18 @@ export class ViewPage {
         this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
             this.queryStores.queryStore.onSettingsChange(store);
         });
-        cqlEditorStore.addOnContentChangeListener(this.queryStores.queryStore.externalQueryChange);
+
+        this.queryStores.cqlEditorStore = new CQLEditorStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.queryStores.queryStore,
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            this.layoutModel.getConf<string>('tagAttr')
+        );
+
+        // query store listens for advanced cql editor to update its query
+        this.queryStores.cqlEditorStore.addOnContentChangeListener(this.queryStores.queryStore.externalQueryChange);
 
         this.queryFormViews = queryFormInit(
             this.layoutModel.dispatcher,
@@ -477,10 +491,9 @@ export class ViewPage {
             this.queryStores.queryContextStore,
             this.queryStores.cqlEditorStore
         );
-
     }
 
-    private initFilterForm(firstHitsStore:FirstHitsStore, cqlEditorStore:CQLEditorStore):void {
+    private initFilterForm(firstHitsStore:FirstHitsStore):void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
         const fetchArgs = <T>(key:(item:AjaxResponse.FilterFormArgs)=>T)=>fetchFilterFormArgs(concFormsArgs, key);
         const filterFormProps:FilterFormProperties = {
@@ -520,7 +533,19 @@ export class ViewPage {
             this.queryStores.queryContextStore,
             filterFormProps
         );
-        cqlEditorStore.addOnContentChangeListener(this.queryStores.filterStore.externalQueryChange);
+
+        this.queryStores.filterCqlEditorStore = new CQLEditorStore(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.queryStores.filterStore,
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            this.layoutModel.getConf<string>('tagAttr')
+        );
+
+        this.queryStores.filterCqlEditorStore.addOnContentChangeListener(
+                    this.queryStores.filterStore.externalQueryChange);
+
         this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
             this.queryStores.filterStore.notifyChangeListeners();
         });
@@ -546,26 +571,8 @@ export class ViewPage {
             this.queryStores.queryHintStore,
             this.queryStores.withinBuilderStore,
             this.queryStores.virtualKeyboardStore,
-            firstHitsStore
-        );
-    }
-
-    private initCQLEditor():void {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>('ConcFormsArgs');
-        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const cqlQueries = {};
-        for (let sid in queryFormArgs.curr_queries) {
-            if (queryFormArgs.curr_query_types[sid] === 'cql') {
-                cqlQueries[sid] = queryFormArgs.curr_queries[sid];
-            }
-        }
-        this.queryStores.cqlEditorStore = new CQLEditorStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            this.layoutModel.getConf<string>('tagAttr'),
-            cqlQueries
+            firstHitsStore,
+            this.queryStores.filterCqlEditorStore
         );
     }
 
@@ -722,6 +729,12 @@ export class ViewPage {
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
         );
+
+        this.queryStores.queryReplayStore.addOnFormEditListener(() => {
+            this.queryStores.cqlEditorStore.syncWithQueryStore();
+            this.queryStores.filterCqlEditorStore.syncWithQueryStore();
+        });
+
         this.queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
@@ -1183,10 +1196,9 @@ export class ViewPage {
         RSVP.all([ttProm, p2, queryStorageProm, tagHelperProm]).then(
             (args:any) => {
                 const [ttStore, lvprops, qs, tagh] = args;
-                this.initCQLEditor();
-                this.initQueryForm(this.queryStores.cqlEditorStore);
+                this.initQueryForm();
                 this.initFirsthitsForm();
-                this.initFilterForm(this.queryStores.firstHitsStore, this.queryStores.cqlEditorStore);
+                this.initFilterForm(this.queryStores.firstHitsStore);
                 this.initSortForm();
                 this.initSwitchMainCorpForm();
                 this.initSampleForm(this.queryStores.switchMcStore);

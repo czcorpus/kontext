@@ -29,7 +29,7 @@ import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';
-import {GeneralQueryFormProperties, GeneralQueryStore} from './main';
+import {GeneralQueryFormProperties, GeneralQueryStore, appendQuery} from './main';
 
 
 /**
@@ -169,7 +169,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         this.currentAction = 'filter_form';
         this.externalQueryChange = this.externalQueryChange.bind(this);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'FILTER_QUERY_INPUT_SELECT_TYPE':
                     this.queryTypes = this.queryTypes.set(payload.props['sourceId'], payload.props['queryType']);
@@ -180,9 +180,14 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_APPEND_QUERY':
-                    const currQuery = this.queries.get(payload.props['sourceId'])
-                    const newQuery =  currQuery + (currQuery && payload.props['prependSpace'] ? ' ' : '') + payload.props['query'];
-                    this.queries = this.queries.set(payload.props['sourceId'], newQuery);
+                    this.queries = this.queries.set(
+                        payload.props['sourceId'],
+                        appendQuery(
+                            this.queries.get(payload.props['sourceId']),
+                            payload.props['query'],
+                            !!payload.props['prependSpace']
+                        )
+                    );
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_LPOS':
@@ -341,6 +346,10 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
 
     getQuery(filterId:string):string {
         return this.queries.get(filterId);
+    }
+
+    getQueries():Immutable.Map<string, string> {
+        return this.queries;
     }
 
     getPnFilterValues():Immutable.Map<string, string> {

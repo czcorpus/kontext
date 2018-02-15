@@ -29,6 +29,7 @@ import {QueryHintStore} from '../../stores/query/main';
 import {WithinBuilderStore} from '../../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../../stores/query/virtualKeyboard';
 import {FirstHitsStore} from '../../stores/query/firstHits';
+import {CQLEditorStore} from '../../stores/query/cqleditor/store';
 
 
 
@@ -107,10 +108,11 @@ export function init(
         queryHintStore:QueryHintStore,
         withinBuilderStore:WithinBuilderStore,
         virtualKeyboardStore:VirtualKeyboardStore,
-        firstHitsStore:FirstHitsStore):FilterFormViews {
+        firstHitsStore:FirstHitsStore,
+        cqlEditorStore:CQLEditorStore):FilterFormViews {
 
     const inputViews = inputInit(dispatcher, he, filterStore, queryHintStore, withinBuilderStore,
-                virtualKeyboardStore);
+                virtualKeyboardStore, cqlEditorStore);
 
     const layoutViews = he.getLayoutViews();
 
@@ -280,7 +282,8 @@ export function init(
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguage}
                                 actionPrefix={this.props.actionPrefix}
-                                tagAttr={this.state.tagAttr} />
+                                tagAttr={this.state.tagAttr}
+                                useCQLEditor={this.state.useCQLEditor} />
                         </tbody>
                     </table>
                     <div className="buttons">
@@ -371,7 +374,9 @@ export function init(
                                 tagHelperView={this.props.tagHelperView}
                                 queryStorageView={this.props.queryStorageView}
                                 inputLanguage={this.state.inputLanguage}
-                                actionPrefix={this.props.actionPrefix} />
+                                actionPrefix={this.props.actionPrefix}
+                                tagAttr={this.state.tagAttr}
+                                useCQLEditor={this.state.useCQLEditor} />
                         </tbody>
                     </table>
                     <div className="buttons">

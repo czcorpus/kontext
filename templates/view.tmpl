@@ -85,8 +85,8 @@ __conf.FreqFormProps = $to_json($freq_form_args);
 __conf.CTFreqFormProps = $to_json($ctfreq_form_args);
 __conf.CollFormProps = $to_json($coll_form_args);
 __conf.FastAdHocIpm = $to_json($fast_adhoc_ipm);
-__conf.ShowTTOverview = $to_json($tt_overview);
-__conf.UseCQLEditor = $to_json($cql_editor);
+__conf.ShowTTOverview = $to_json($bool($tt_overview));
+__conf.UseCQLEditor = $to_json($bool($cql_editor));
 ##
 __conf.QueryHistoryPageNumRecords = $to_json($query_history_page_num_records);
 

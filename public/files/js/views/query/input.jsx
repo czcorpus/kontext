@@ -195,7 +195,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             <layoutViews.PopupBox
                     onCloseClick={props.closeClickHandler}
                     customClass="tag-builder-widget"
-                    customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}>
+                    customStyle={{position: 'absolute', left: '10em', marginTop: '6.5em'}}>
                 <props.tagHelperView
                         sourceId={props.sourceId}
                         onInsert={props.closeClickHandler}
@@ -643,11 +643,9 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
                         <cqlEditorViews.CQLEditor
                                 sourceId={this.props.sourceId}
                                 attachCurrInputElement={(v) => this._queryInputElement = v}
-                                query={this.state.query}
                                 inputKeyHandler={this._inputKeyHandler} /> :
                         <cqlEditorViews.CQLEditorFallback
                             attachCurrInputElement={item => this._queryInputElement = item}
-                            query={this.state.query}
                             inputKeyHandler={this._inputKeyHandler} />;
             }
         }
