@@ -450,6 +450,20 @@ export class ConcLineStore extends SimplePageStore {
         );
     }
 
+    updateOnGlobalViewOptsChange(store:ViewOptions.IGeneralViewOptionsStore):void {
+        this.showLineNumbers = store.getLineNumbers();
+        this.currentPage = 1;
+        this.reloadPage().then(
+            (data) => {
+                this.pushHistoryState(this.currentPage);
+                this.notifyChangeListeners();
+            },
+            (err) => {
+                this.layoutModel.showMessage('error', err);
+            }
+        );
+    }
+
     getViewAttrs():Array<string> {
         return (this.layoutModel.getConcArgs()['attrs'] || []).split(',');
     }
@@ -750,6 +764,10 @@ export class ConcLineStore extends SimplePageStore {
 
     getViewMode():string {
         return this.viewMode;
+    }
+
+    getShowLineNumbers():boolean {
+        return this.showLineNumbers;
     }
 
 }

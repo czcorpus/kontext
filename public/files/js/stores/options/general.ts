@@ -52,7 +52,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     private ctxUnit:string;
 
-    private lineNumbers:string;
+    private lineNumbers:boolean;
 
     private shuffle:boolean;
 
@@ -70,12 +70,12 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     private isBusy:boolean;
 
-    private onSubmitResponse:()=>void;
+    private onSubmitResponse:Immutable.List<()=>void>;
 
     constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, onSubmitResponse:()=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
-        this.onSubmitResponse = onSubmitResponse;
+        this.onSubmitResponse = Immutable.List<()=>void>().push(onSubmitResponse);
         this.isBusy = false;
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
@@ -115,7 +115,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                         () => {
                             this.isBusy = false;
                             this.notifyChangeListeners();
-                            this.onSubmitResponse();
+                            this.onSubmitResponse.forEach(fn => fn());
                         },
                         (err) => {
                             this.isBusy = false;
@@ -129,6 +129,10 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         });
     }
 
+    addOnSubmitResponse(fn:()=>void):void {
+        this.onSubmitResponse = this.onSubmitResponse.push(fn);
+    }
+
     loadData():RSVP.Promise<boolean> {
         return this.layoutModel.ajax<ViewOptsResponse>(
             'GET',
@@ -140,7 +144,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
                 this.pageSize = String(data.pagesize);
                 this.newCtxSize = String(data.newctxsize);
                 this.ctxUnit = data.ctxunit;
-                this.lineNumbers = String(data.line_numbers);
+                this.lineNumbers = !!Number(data.line_numbers);
                 this.shuffle = !!data.shuffle;
                 this.wlpagesize = String(data.wlpagesize);
                 this.fmaxitems = String(data.fmaxitems);
@@ -164,6 +168,12 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
             'POST',
             this.layoutModel.createActionUrl('options/viewoptsx'),
             args
+
+        ).then(
+            (d) => {
+                this.layoutModel.replaceConcArg('pagesize', [this.pageSize]);
+                return d;
+            }
         );
     }
 
@@ -175,7 +185,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         return this.newCtxSize;
     }
 
-    getLineNumbers():string {
+    getLineNumbers():boolean {
         return this.lineNumbers;
     }
 
