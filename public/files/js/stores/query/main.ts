@@ -26,13 +26,13 @@
 
 
 import * as Immutable from 'vendor/immutable';
+import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
 import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';
-import * as RSVP from 'vendor/rsvp';
 
 
 export interface GeneralQueryFormProperties {
@@ -72,6 +72,11 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
 }
 
 export type WidgetsMap = Immutable.Map<string, Immutable.List<string>>;
+
+
+export function appendQuery(origQuery:string, query:string, prependSpace:boolean):string {
+    return origQuery + (origQuery && prependSpace ? ' ' : '') + query;
+}
 
 /**
  *
@@ -141,9 +146,11 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
     protected queryTracer:ITracer;
 
-    // ----- non flux world handlers
+    // -----
 
     protected onCorpusSelectionChangeActions:Immutable.List<(corpusId:string, aligned:Immutable.List<string>, subcorpusId:string)=>void>;
+
+    // ----
 
     protected useCQLEditor:boolean;
 
@@ -152,6 +159,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
     private widgetArgs:Kontext.GeneralProps;
 
     // -------
+
 
     constructor(
             dispatcher:Kontext.FluxDispatcher,
@@ -201,6 +209,13 @@ export abstract class GeneralQueryStore extends SimplePageStore {
      * Sets a currently active widget.
      */
     abstract setActiveWidget(sourceId:string, ident:string):void;
+
+
+    abstract getQueries():Immutable.Map<string, string>;
+
+    abstract getQueryTypes():Immutable.Map<string, string>;
+
+    /// ---------
 
     getWidgetArgs():Kontext.GeneralProps {
         return this.widgetArgs;
@@ -354,7 +369,6 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
             queryContextStore:QueryContextStore,
             props:QueryFormProperties) {
         super(dispatcher, pageModel, textTypesStore, queryContextStore, props);
-        const self = this;
         this.corpora = Immutable.List<string>(props.corpora);
         this.availableAlignedCorpora = Immutable.List<Kontext.AttrItem>(props.availableAlignedCorpora);
         this.subcorpList = Immutable.List<string>(props.subcorpList);
@@ -376,83 +390,88 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.currentAction = 'first_form';
         this.externalQueryChange = this.externalQueryChange.bind(this);
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SELECT_TYPE':
                     let qType = payload.props['queryType'];
-                    if (!self.hasLemma.get(payload.props['sourceId']) &&  qType === 'lemma') {
+                    if (!this.hasLemma.get(payload.props['sourceId']) &&  qType === 'lemma') {
                         qType = 'phrase';
-                        self.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
+                        this.pageModel.showMessage('warning', 'Lemma attribute not available, using "phrase"');
                     }
-                    self.queryTypes = self.queryTypes.set(payload.props['sourceId'], qType);
-                    self.notifyChangeListeners();
+                    this.queryTypes = this.queryTypes.set(payload.props['sourceId'], qType);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SELECT_SUBCORP':
-                    self.currentSubcorp = payload.props['subcorp'];
-                    self.notifyChangeListeners();
-                    self.onCorpusSelectionChangeActions.forEach(fn =>
-                        fn(self.corpora.first(), self.corpora.rest().toList(), self.currentSubcorp)
+                    this.currentSubcorp = payload.props['subcorp'];
+                    this.notifyChangeListeners();
+                    this.onCorpusSelectionChangeActions.forEach(fn =>
+                        fn(this.corpora.first(), this.corpora.rest().toList(), this.currentSubcorp)
                     );
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
-                    self.queries = self.queries.set(payload.props['sourceId'], payload.props['query']);
-                    self.notifyChangeListeners();
+                    this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_APPEND_QUERY':
-                    const currQuery = self.queries.get(payload.props['sourceId']);
-                    const newQuery = currQuery + (currQuery && payload.props['prependSpace'] ? ' ' : '') + payload.props['query'];
-                    self.queries = self.queries.set(payload.props['sourceId'], newQuery);
+                    this.queries = this.queries.set(
+                        payload.props['sourceId'],
+                        appendQuery(
+                            this.queries.get(payload.props['sourceId']),
+                            payload.props['query'],
+                            !!payload.props['prependSpace']
+                        )
+                    );
                     if (payload.props['closeWhenDone']) {
-                        self.activeWidgets = self.activeWidgets.set(payload.props['sourceId'], null);
+                        this.activeWidgets = this.activeWidgets.set(payload.props['sourceId'], null);
                     }
-                    self.notifyChangeListeners();
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_REMOVE_LAST_CHAR':
-                    const currQuery2 = self.queries.get(payload.props['sourceId']);
+                    const currQuery2 = this.queries.get(payload.props['sourceId']);
                     if (currQuery2.length > 0) {
-                        self.queries = self.queries.set(payload.props['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
+                        this.queries = this.queries.set(payload.props['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
                     }
-                    self.notifyChangeListeners();
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_LPOS':
-                    self.lposValues = self.lposValues.set(payload.props['sourceId'], payload.props['lpos']);
-                    self.notifyChangeListeners();
+                    this.lposValues = this.lposValues.set(payload.props['sourceId'], payload.props['lpos']);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_MATCH_CASE':
-                    self.matchCaseValues = self.matchCaseValues.set(payload.props['sourceId'], payload.props['value']);
-                    self.notifyChangeListeners();
+                    this.matchCaseValues = this.matchCaseValues.set(payload.props['sourceId'], payload.props['value']);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_DEFAULT_ATTR':
-                    self.defaultAttrValues = self.defaultAttrValues.set(payload.props['sourceId'], payload.props['value']);
-                    self.notifyChangeListeners();
+                    this.defaultAttrValues = this.defaultAttrValues.set(payload.props['sourceId'], payload.props['value']);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_ADD_ALIGNED_CORPUS':
-                    self.addAlignedCorpus(payload.props['corpname']);
-                    self.notifyChangeListeners();
-                    self.onCorpusSelectionChangeActions.forEach(fn =>
-                        fn(self.corpora.first(), self.corpora.rest().toList(), self.currentSubcorp)
+                    this.addAlignedCorpus(payload.props['corpname']);
+                    this.notifyChangeListeners();
+                    this.onCorpusSelectionChangeActions.forEach(fn =>
+                        fn(this.corpora.first(), this.corpora.rest().toList(), this.currentSubcorp)
                     );
                 break;
                 case 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS':
-                    self.removeAlignedCorpus(payload.props['corpname']);
-                    self.notifyChangeListeners();
-                    self.onCorpusSelectionChangeActions.forEach(fn =>
-                        fn(self.corpora.first(), self.corpora.rest().toList(), self.currentSubcorp)
+                    this.removeAlignedCorpus(payload.props['corpname']);
+                    this.notifyChangeListeners();
+                    this.onCorpusSelectionChangeActions.forEach(fn =>
+                        fn(this.corpora.first(), this.corpora.rest().toList(), this.currentSubcorp)
                     );
                 break;
                 case 'QUERY_INPUT_SET_PCQ_POS_NEG':
-                    self.pcqPosNegValues = self.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
-                    self.notifyChangeListeners();
+                    this.pcqPosNegValues = this.pcqPosNegValues.set(payload.props['corpname'], payload.props['value']);
+                    this.notifyChangeListeners();
                     break;
                 case 'QUERY_MAKE_CORPUS_PRIMARY':
-                    self.makeCorpusPrimary(payload.props['corpname']);
+                    this.makeCorpusPrimary(payload.props['corpname']);
                     break;
                 case 'QUERY_INPUT_SUBMIT':
-                    const errors = self.corpora.map(corpname => {
-                        return self.isPossibleQueryTypeMismatch(corpname);
+                    const errors = this.corpora.map(corpname => {
+                        return this.isPossibleQueryTypeMismatch(corpname);
                     }).filter(err => !!err);
-                    if (errors.size === 0 || window.confirm(self.pageModel.translate('global__query_type_mismatch'))) {
-                        self.submitQuery();
+                    if (errors.size === 0 || window.confirm(this.pageModel.translate('global__query_type_mismatch'))) {
+                        this.submitQuery();
                     }
                 break;
             }
@@ -696,6 +715,10 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         return this.queries.get(corpname);
     }
 
+    getQueries():Immutable.Map<string, string> {
+        return this.queries;
+    }
+
     supportsParallelCorpora():boolean {
         return this.corpora.size > 1 || this.availableAlignedCorpora.size > 0;
     }
@@ -785,8 +808,8 @@ export class QueryHintStore extends SimplePageStore {
         this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
             switch (payload.actionType) {
                 case 'NEXT_QUERY_HINT':
-                    self.setNextHint();
-                    self.notifyChangeListeners();
+                    this.setNextHint();
+                    this.notifyChangeListeners();
                     break;
             }
         });

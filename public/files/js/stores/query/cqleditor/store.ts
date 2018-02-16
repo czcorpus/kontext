@@ -23,10 +23,11 @@
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../../../stores/base';
+import {GeneralQueryStore} from '../main';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
-import { init } from 'views/query/history';
+
 
 export class CQLEditorStore extends SimplePageStore {
 
@@ -50,19 +51,23 @@ export class CQLEditorStore extends SimplePageStore {
 
     private message:Immutable.Map<string, string>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, attrList:Array<Kontext.AttrItem>,
-            structAttrList:Array<Kontext.AttrItem>, tagAttr:string, initialQueries?:{[sourceId:string]:string}) {
+    private queryStore:GeneralQueryStore;
+
+    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, queryStore:GeneralQueryStore,
+            attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>, tagAttr:string) {
         super(dispatcher);
         this.pageModel = pageModel;
+        this.queryStore = queryStore;
         this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
         this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
         this.tagAttr = tagAttr;
-        this.rawCode = Immutable.Map<string, string>(initialQueries || {});
+        this.rawCode = Immutable.Map<string, string>();
         this.richCode = Immutable.Map<string, string>();
         this.attrHelper = new AttrHelper(this.attrList, this.structAttrList, this.tagAttr);
         this.onContentChangeListeners = Immutable.List<(sId:string, s:string)=>void>();
         this.message = Immutable.Map<string, string>();
         this.hintListeners = Immutable.Map<string, (msg:string)=>void>();
+        this.syncWithQueryStore = this.syncWithQueryStore.bind(this);
 
         this.rawCode.forEach((query, sourceId) => {
             this.hintListeners = this.hintListeners.set(
@@ -86,51 +91,102 @@ export class CQLEditorStore extends SimplePageStore {
         dispatcher.register((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
                 case 'CQL_EDITOR_SET_RAW_QUERY':
-                    const sourceId:string = <string>payload.props['sourceId'];
-                    const range:[number, number] = <[number, number]>payload.props['range'];
-
-                    let newQuery:string;
-
-                    if (Array.isArray(range) && range[1] === null) {
-                        newQuery = this.rawCode.get(sourceId) + payload.props['query'];
-
-                    } else if (Array.isArray(range)) {
-                        newQuery = this.rawCode.get(sourceId).substring(0, range[0]) + payload.props['query'] +
-                                this.rawCode.get(sourceId).substr(range[1]);
-
-                    } else {
-                        newQuery = payload.props['query'];
-                    }
-
-                    this.rawCode = this.rawCode.set(
-                        sourceId,
-                        newQuery
-                    );
-
-                    if (!this.hintListeners.has(sourceId)) {
-                        this.hintListeners = this.hintListeners.set(
-                            sourceId,
-                            (msg:string) => {
-                                this.message = this.message.set(sourceId, msg);
-                            }
-                        );
-                    }
-
-                    this.onContentChangeListeners.forEach(fn => fn(
-                        sourceId, newQuery));
-
-                    this.richCode = this.richCode.set(
-                        sourceId,
-                        highlightSyntax(
-                            this.rawCode.get(sourceId),
-                            'cql',
-                            this.pageModel.getComponentHelpers(),
-                            this.attrHelper,
-                            this.hintListeners.get(sourceId)
-                        )
+                    this.setRawQuery(
+                        <string>payload.props['sourceId'],
+                        <string>payload.props['query'],
+                        <[number, number]>payload.props['range']
                     );
                     this.notifyChangeListeners();
                 break;
+                case 'QUERY_INPUT_SET_QUERY':
+                case 'FILTER_QUERY_INPUT_SET_QUERY':
+                    dispatcher.waitFor([this.queryStore.getDispatcherToken()]);
+                    const sourceId = <string>payload.props['sourceId'];
+                    if (!this.rawCode.has(sourceId)) {
+                        this.rawCode = this.rawCode.set(sourceId, '');
+                    }
+                    this.setRawQuery(
+                        sourceId,
+                        <string>payload.props['query'],
+                        [0, this.rawCode.get(sourceId).length]
+                    );
+                    this.notifyChangeListeners();
+
+                break;
+                case 'QUERY_INPUT_APPEND_QUERY':
+                case 'FILTER_QUERY_INPUT_APPEND_QUERY':
+                    dispatcher.waitFor([this.queryStore.getDispatcherToken()]);
+                    const sourceId2 = <string>payload.props['sourceId'];
+                    if (!this.rawCode.has(sourceId2)) {
+                        this.rawCode = this.rawCode.set(sourceId2, '');
+                    }
+                    this.setRawQuery(
+                        sourceId2,
+                        <string>payload.props['query'],
+                        [0, null]
+                    );
+                    this.notifyChangeListeners();
+                break;
+            }
+        });
+    }
+
+    /**
+     *
+     * @param sourceId
+     * @param query
+     * @param range
+     */
+    private setRawQuery(sourceId:string, query:string, range:[number, number]):void {
+        let newQuery:string;
+
+        if (Array.isArray(range) && range[1] === null) {
+            newQuery = this.rawCode.get(sourceId) + query;
+
+        } else if (Array.isArray(range)) {
+            newQuery = this.rawCode.get(sourceId).substring(0, range[0]) + query +
+                    this.rawCode.get(sourceId).substr(range[1]);
+
+        } else {
+            newQuery = query;
+        }
+
+        this.rawCode = this.rawCode.set(
+            sourceId,
+            newQuery
+        );
+
+        if (!this.hintListeners.has(sourceId)) {
+            this.hintListeners = this.hintListeners.set(
+                sourceId,
+                (msg:string) => {
+                    this.message = this.message.set(sourceId, msg);
+                }
+            );
+        }
+
+        this.onContentChangeListeners.forEach(fn => fn(
+            sourceId, newQuery));
+
+        this.richCode = this.richCode.set(
+            sourceId,
+            highlightSyntax(
+                this.rawCode.get(sourceId),
+                'cql',
+                this.pageModel.getComponentHelpers(),
+                this.attrHelper,
+                this.hintListeners.get(sourceId)
+            )
+        );
+    }
+
+    syncWithQueryStore():void {
+        const queries = this.queryStore.getQueries();
+        const qTypes = this.queryStore.getQueryTypes();
+        queries.forEach((v, k) => {
+            if (qTypes.get(k) === 'cql') {
+                this.rawCode = this.rawCode.set(k, '');
+                this.setRawQuery(k, v, [0, 0]);
             }
         });
     }
