@@ -23,6 +23,7 @@
 
 import * as React from 'vendor/react';
 import {FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 interface AlphaLevelSelectProps {
@@ -51,7 +52,7 @@ interface ExportedComponents {
 }
 
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers):ExportedComponents {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers):ExportedComponents {
 
     const layoutViews = he.getLayoutViews();
 

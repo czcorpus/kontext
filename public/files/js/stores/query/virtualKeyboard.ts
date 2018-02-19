@@ -22,6 +22,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as kbLayouts from 'misc/keyboardLayouts';
 
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
@@ -45,7 +46,7 @@ export class VirtualKeyboardStore extends SimplePageStore {
         [32]
     ];
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currLayout = 0;

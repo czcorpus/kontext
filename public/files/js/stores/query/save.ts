@@ -24,6 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -37,7 +38,7 @@ export class QuerySaveAsFormStore extends SimplePageStore {
 
     private isBusy:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, queryId:string) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, queryId:string) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.name = '';

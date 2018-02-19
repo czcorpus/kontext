@@ -23,6 +23,7 @@
 
 import * as React from 'vendor/react';
 import {FreqResultsSaveStore} from '../../stores/freqs/save';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 interface SaveFreqFormProps {
@@ -45,7 +46,7 @@ interface ExportedViews {
 // ------------------------------------ factory -------------------------------------------
 
 export function init(
-        dispatcher:Kontext.FluxDispatcher,
+        dispatcher:ActionDispatcher,
         utils:Kontext.ComponentHelpers,
         freqSaveStore:FreqResultsSaveStore):ExportedViews {
 

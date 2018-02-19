@@ -254,12 +254,10 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         this.cqlEditorStore = new CQLEditorStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.queryStore,
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryStore.getTagAttr() : null
         );
-        this.cqlEditorStore.addOnContentChangeListener(this.queryStore.externalQueryChange);
     }
 
     private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {

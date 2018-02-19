@@ -23,6 +23,7 @@
 
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -78,13 +79,13 @@ export class TagHelperStore extends SimplePageStore {
 
     private _isBusy:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this._isBusy = false;
         this.data = Immutable.List<Immutable.List<PositionOptions>>().push(Immutable.List<PositionOptions>());
 
-        TagHelperStore.DispatchToken = this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'TAGHELPER_PRESET_PATTERN':
                         this.presetPattern = payload.props['pattern'];

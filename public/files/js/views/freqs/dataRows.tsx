@@ -24,6 +24,7 @@
 
 import * as React from 'vendor/react';
 import {FreqDataRowsStore, ResultHeader, ResultItem} from '../../stores/freqs/dataRows';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 interface DataTableProps {
     head:Immutable.List<ResultHeader>;
@@ -38,7 +39,7 @@ interface ExportedComponents {
 }
 
 export function init(
-        dispatcher:Kontext.FluxDispatcher,
+        dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
         freqDataRowsStore:FreqDataRowsStore):ExportedComponents {
 

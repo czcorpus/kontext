@@ -26,6 +26,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -52,7 +53,7 @@ export class SwitchMainCorpStore extends SimplePageStore {
 
     private maincorpValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, data:SwitchMainCorpFormProperties) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, data:SwitchMainCorpFormProperties) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.maincorpValues = Immutable.Map<string, string>(data);

@@ -26,6 +26,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 export class FirstHitsStore extends SimplePageStore {
@@ -35,7 +36,7 @@ export class FirstHitsStore extends SimplePageStore {
     private docStructValues:Immutable.Map<string, string>;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.docStructValues = Immutable.Map<string, string>();

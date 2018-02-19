@@ -22,7 +22,7 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     he:Kontext.ComponentHelpers,
     queryStorageStore:Kontext.PageStore
 ):{QueryStorage:React.ComponentClass};

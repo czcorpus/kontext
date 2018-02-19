@@ -25,6 +25,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {FreqFormInputs} from './freqForms';
@@ -88,7 +89,7 @@ export class FreqDataRowsStore extends SimplePageStore {
 
     private saveStore:FreqResultsSaveStore;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
             formProps:FreqFormInputs, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.pageModel = pageModel;

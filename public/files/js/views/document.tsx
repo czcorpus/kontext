@@ -23,12 +23,13 @@
 
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
+import {ActionDispatcher} from '../app/dispatcher';
 
 
 
 
 export function init(
-        dispatcher:Kontext.FluxDispatcher,
+        dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
         storeProvider:Kontext.LayoutStores):CoreViews.Runtime {
 

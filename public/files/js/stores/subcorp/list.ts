@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
@@ -31,6 +30,7 @@ import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from '../../app/main';
 import {SimplePageStore} from '../base';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 
@@ -76,7 +76,7 @@ export class SubcorpListStore extends SimplePageStore {
 
     private filter:SubcListFilter;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,

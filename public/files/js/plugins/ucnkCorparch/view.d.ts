@@ -27,7 +27,7 @@ export interface UcnkCorparchViews {
 }
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     componentHelper:Kontext.ComponentHelpers,
     CorpusInfoBox:React.ComponentClass,
     formStore:Kontext.PageStore,

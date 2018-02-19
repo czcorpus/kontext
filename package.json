@@ -35,5 +35,8 @@
     "webpack-dev-server": "^2.11.1",
     "webpack-merge": "^4.1.0",
     "xmldom": "~0.1.22"
+  },
+  "dependencies": {
+    "@reactivex/rxjs": "^5.5.6"
   }
 }

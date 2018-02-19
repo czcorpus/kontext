@@ -28,6 +28,7 @@ declare var $:any;
 
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -47,7 +48,7 @@ export class SyntaxTreeViewer extends SimplePageStore implements PluginInterface
 
     private resizeThrottleTimer:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
     }

@@ -22,6 +22,7 @@
 
 
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 
@@ -46,7 +47,7 @@ export class WordlistSaveStore extends SimplePageStore {
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, saveLinkFn:(string)=>void,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, saveLinkFn:(string)=>void,
             wordlistArgsProviderFn:()=>MultiDict) {
         super(dispatcher);
         this.layoutModel = layoutModel;

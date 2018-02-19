@@ -30,6 +30,7 @@ import {ContingencyTableStore, Data2DTable, ColorMappings, TableInfo} from '../.
 import {Dimensions, FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
 import {FreqQuantities, CTFreqCell} from '../../stores/freqs/generalCtable';
 import {DataPoint} from '../../charts/confIntervals';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 const enum TableViewMode {
@@ -52,7 +53,7 @@ interface Views {
 
 
 export function init(
-            dispatcher:Kontext.FluxDispatcher,
+            dispatcher:ActionDispatcher,
             he:Kontext.ComponentHelpers,
             ctFreqDataRowsStore:ContingencyTableStore,
             ctFlatFreqDataRowsStore:CTFlatStore) {

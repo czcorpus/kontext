@@ -26,5 +26,5 @@ export interface IssueReportingViews {
     IssueReportingWidget:React.ComponentClass;
 }
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:Kontext.ActionDispatcher, he:Kontext.ComponentHelpers,
             reportingStore:IssueReportingStore):IssueReportingViews;

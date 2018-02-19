@@ -24,6 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -128,7 +129,7 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -304,7 +305,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);

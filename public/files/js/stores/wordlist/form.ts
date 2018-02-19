@@ -26,6 +26,7 @@
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
+import {ActionDispatcher} from '../../app/dispatcher';
 import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
@@ -107,7 +108,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
     private includeNonwords:boolean;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
         super(dispatcher);
         this.corpusIdent = corpusIdent;

@@ -23,6 +23,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -49,7 +50,7 @@ export class SampleStore extends SimplePageStore {
 
     private rlinesValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SampleFormProperties) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:SampleFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.rlinesValues = Immutable.Map<string, string>(props.rlines);

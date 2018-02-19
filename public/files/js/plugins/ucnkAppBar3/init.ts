@@ -26,12 +26,13 @@ import * as RSVP from 'vendor/rsvp';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 export class AppBarStore extends SimplePageStore {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:Kontext.FluxDispatcher) {
+    constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);
         const self = this;
 

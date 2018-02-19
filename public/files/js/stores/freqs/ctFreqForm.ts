@@ -23,6 +23,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
 
@@ -154,7 +155,7 @@ export class CTFreqFormStore extends SimplePageStore {
 
     private ctxIndex2:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
             adhocSubcIdentifier:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
 

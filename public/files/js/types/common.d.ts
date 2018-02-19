@@ -19,11 +19,11 @@
  */
 
 /// <reference path="../vendor.d.ts/react.d.ts" />
-/// <reference path="../vendor.d.ts/flux.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 
 /// <reference path="../types/coreViews.d.ts" />
+/// <reference types="@reactivex/rxjs" />
 
 
 declare interface ObjectConstructor {
@@ -91,7 +91,11 @@ declare module Kontext {
     /**
      *
      */
-    export type FluxDispatcher = Dispatcher.Dispatcher<DispatcherPayload>;
+    export interface ActionDispatcher {
+        register(callback:(payload:Kontext.DispatcherPayload)=>void):Rx.Subscription;
+        dispatch(payload:Kontext.DispatcherPayload):void;
+        waitFor(items:Array<string>):void; // TODO REMOVE
+    }
 
     export interface FullCorpusIdent {
         id:string;
@@ -112,7 +116,7 @@ declare module Kontext {
         formatNumber(v:number):string;
         formatDate(d:Date, timeFormat?:number):string;
         userIsAnonymous():boolean;
-        dispatcher():Kontext.FluxDispatcher;
+        dispatcher():any; // TODO
         getComponentHelpers():Kontext.ComponentHelpers;
         renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
                              target:HTMLElement, props?:T):void;
@@ -158,6 +162,12 @@ declare module Kontext {
     }
 
 
+    export interface IReducer<T> {
+
+        reduce(state:T, action:Kontext.DispatcherPayload):T;
+    }
+
+
     /**
      * A Flux Store. Please note that only Flux Views are expected
      * to (un)register store's events.
@@ -168,10 +178,6 @@ declare module Kontext {
 
         removeChangeListener(fn:()=>void):void;
 
-        /**
-         * NOTE: both arguments are deprecated. There should
-         * be only a single source of state - Flux stores.
-         */
         notifyChangeListeners(eventType?:string, error?:Error):void;
     }
 
@@ -307,6 +313,8 @@ declare module Kontext {
          * object should be always used.
          */
         props:GeneralProps;
+
+        error?:Error;
     }
 
     export interface IBrowserInfo {

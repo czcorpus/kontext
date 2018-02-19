@@ -28,6 +28,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {WordlistFormStore} from './form';
 import {MultiDict} from '../../util';
 import {WordlistSaveStore} from './save';
@@ -100,7 +101,7 @@ export class WordlistResultStore extends SimplePageStore {
 
     isBusy:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
             saveStore:WordlistSaveStore, data:ResultData, headings:Array<HeadingItem>) {
         super(dispatcher);
         this.layoutModel = layoutModel;

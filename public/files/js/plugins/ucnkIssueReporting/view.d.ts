@@ -25,6 +25,6 @@ export interface IssueReportingViews {
 }
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     he:Kontext.ComponentHelpers
 ):IssueReportingViews;

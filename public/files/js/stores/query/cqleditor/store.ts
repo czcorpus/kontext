@@ -22,113 +22,131 @@
 /// <reference path="../../../vendor.d.ts/immutable.d.ts" />
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore} from '../../../stores/base';
+import {StatelessModel} from '../../../stores/base';
 import {GeneralQueryStore} from '../main';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
+import {ActionDispatcher} from '../../../app/dispatcher';
 
+/**
+ *
+ */
+export interface CQLEditorStoreState {
 
-export class CQLEditorStore extends SimplePageStore {
+    rawCode:Immutable.Map<string, string>;
+
+    richCode:Immutable.Map<string, string>;
+
+    message:Immutable.Map<string, string>;
+
+    rawAnchorIdx:number;
+
+    rawFocusIdx:number;
+
+}
+
+/**
+ *
+ */
+export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
 
     private pageModel:PageModel;
 
-    private rawCode:Immutable.Map<string, string>;
-
-    private richCode:Immutable.Map<string, string>;
+    private attrHelper:AttrHelper;
 
     private attrList:Immutable.List<Kontext.AttrItem>;
 
     private structAttrList:Immutable.List<Kontext.AttrItem>;
 
-    private tagAttr:string;
+    private hintListener:(state:CQLEditorStoreState, sourceId:string, msg:string)=>void;
 
-    private attrHelper:AttrHelper;
 
-    private onContentChangeListeners:Immutable.List<(sId:string, s:string)=>void>;
-
-    private hintListeners:Immutable.Map<string, (msg:string)=>void>;
-
-    private message:Immutable.Map<string, string>;
-
-    private queryStore:GeneralQueryStore;
-
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, queryStore:GeneralQueryStore,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
             attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>, tagAttr:string) {
-        super(dispatcher);
+        super(dispatcher, {
+            rawCode: Immutable.Map<string, string>(),
+            richCode: Immutable.Map<string, string>(),
+            message: Immutable.Map<string, string>(),
+            rawAnchorIdx: 0,
+            rawFocusIdx: 0
+        });
+        this.attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
         this.pageModel = pageModel;
-        this.queryStore = queryStore;
-        this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
-        this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
-        this.tagAttr = tagAttr;
-        this.rawCode = Immutable.Map<string, string>();
-        this.richCode = Immutable.Map<string, string>();
-        this.attrHelper = new AttrHelper(this.attrList, this.structAttrList, this.tagAttr);
-        this.onContentChangeListeners = Immutable.List<(sId:string, s:string)=>void>();
-        this.message = Immutable.Map<string, string>();
-        this.hintListeners = Immutable.Map<string, (msg:string)=>void>();
-        this.syncWithQueryStore = this.syncWithQueryStore.bind(this);
+       this.hintListener = (state, sourceId, msg) => {
+           state.message = state.message.set(sourceId, msg);
+       }
+    }
 
-        this.rawCode.forEach((query, sourceId) => {
-            this.hintListeners = this.hintListeners.set(
-                sourceId,
-                (msg:string) => {
-                    this.message = this.message.set(sourceId, msg);
-                }
-            );
-            this.richCode = this.richCode.set(
-                sourceId,
-                highlightSyntax(
-                    query,
-                    'cql',
-                    this.pageModel.getComponentHelpers(),
-                    this.attrHelper,
-                    this.hintListeners.get(sourceId)
-                )
-            );
-        });
-
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
-            switch (payload.actionType) {
-                case 'CQL_EDITOR_SET_RAW_QUERY':
-                    this.setRawQuery(
-                        <string>payload.props['sourceId'],
-                        <string>payload.props['query'],
-                        <[number, number]>payload.props['range']
-                    );
-                    this.notifyChangeListeners();
-                break;
-                case 'QUERY_INPUT_SET_QUERY':
-                case 'FILTER_QUERY_INPUT_SET_QUERY':
-                    dispatcher.waitFor([this.queryStore.getDispatcherToken()]);
-                    const sourceId = <string>payload.props['sourceId'];
-                    if (!this.rawCode.has(sourceId)) {
-                        this.rawCode = this.rawCode.set(sourceId, '');
+    reduce(state:CQLEditorStoreState, action:Kontext.DispatcherPayload):CQLEditorStoreState {
+        const newState = this.copyState(state);
+        switch (action.actionType) {
+            case 'CQL_EDITOR_SET_RAW_QUERY':
+                newState.rawAnchorIdx = action.props['rawAnchorIdx'];
+                newState.rawFocusIdx = action.props['rawFocusIdx'];
+                this.setRawQuery(
+                    newState,
+                    <string>action.props['sourceId'],
+                    <string>action.props['query'],
+                    <[number, number]>action.props['range']
+                );
+                this.synchronize({
+                    actionType: action.actionType,
+                    props: {
+                        sourceId: action.props['sourceId'],
+                        query: newState.rawCode.get(action.props['sourceId'])
                     }
-                    this.setRawQuery(
-                        sourceId,
-                        <string>payload.props['query'],
-                        [0, this.rawCode.get(sourceId).length]
-                    );
-                    this.notifyChangeListeners();
-
-                break;
-                case 'QUERY_INPUT_APPEND_QUERY':
-                case 'FILTER_QUERY_INPUT_APPEND_QUERY':
-                    dispatcher.waitFor([this.queryStore.getDispatcherToken()]);
-                    const sourceId2 = <string>payload.props['sourceId'];
-                    if (!this.rawCode.has(sourceId2)) {
-                        this.rawCode = this.rawCode.set(sourceId2, '');
-                    }
-                    this.setRawQuery(
-                        sourceId2,
-                        <string>payload.props['query'],
-                        [0, null]
-                    );
-                    this.notifyChangeListeners();
-                break;
+                });
+            break;
+            case '$QUERY_INPUT_SET_QUERY':
+                this.setRawQuery(
+                    newState,
+                    <string>action.props['sourceId'],
+                    <string>action.props['query'],
+                    null
+                );
+            break;
+            case '$QUERY_INPUT_APPEND_QUERY':
+                this.setRawQuery(
+                    newState,
+                    <string>action.props['sourceId'],
+                    <string>action.props['query'],
+                    [newState.rawCode.get(action.props['sourceId']).length, newState.rawCode.get(action.props['sourceId']).length]
+                );
+                this.moveCursorToEnd(newState, action.props['sourceId']);
+            break;
+            case '$QUERY_INPUT_REMOVE_LAST_CHAR': {
+                const queryLength = newState.rawCode.get(action.props['sourceId']).length;
+                this.setRawQuery(
+                    newState,
+                    <string>action.props['sourceId'],
+                    '',
+                    [queryLength - 1, queryLength]
+                );
+                this.moveCursorToEnd(newState, action.props['sourceId']);
             }
-        });
+            break;
+            case '$EDIT_QUERY_OPERATION':
+                for (let p in action.props['queries']) {
+                    if (action.props['queryTypes'][p] === 'cql') {
+                        this.setRawQuery(
+                            newState,
+                            p,
+                            action.props['queries'][p],
+                            null
+                        );
+                    }
+                }
+            break;
+            default:
+                return state;
+        }
+        return newState;
+    }
+
+    private moveCursorToEnd(state:CQLEditorStoreState, sourceId:string):void {
+        state.rawAnchorIdx = state.rawCode.get(sourceId).length;
+        state.rawFocusIdx = state.rawCode.get(sourceId).length;
     }
 
     /**
@@ -137,74 +155,35 @@ export class CQLEditorStore extends SimplePageStore {
      * @param query
      * @param range
      */
-    private setRawQuery(sourceId:string, query:string, range:[number, number]):void {
+    private setRawQuery(state:CQLEditorStoreState, sourceId:string, query:string, range:[number, number]):void {
         let newQuery:string;
 
-        if (Array.isArray(range) && range[1] === null) {
-            newQuery = this.rawCode.get(sourceId) + query;
-
-        } else if (Array.isArray(range)) {
-            newQuery = this.rawCode.get(sourceId).substring(0, range[0]) + query +
-                    this.rawCode.get(sourceId).substr(range[1]);
+        if (!state.rawCode.has(sourceId)) {
+            state.rawCode = state.rawCode.set(sourceId, '');
+        }
+        if (Array.isArray(range)) {
+            newQuery = state.rawCode.get(sourceId).substring(0, range[0]) + query +
+                state.rawCode.get(sourceId).substr(range[1]);
 
         } else {
             newQuery = query;
         }
 
-        this.rawCode = this.rawCode.set(
+        state.rawCode = state.rawCode.set(
             sourceId,
             newQuery
         );
 
-        if (!this.hintListeners.has(sourceId)) {
-            this.hintListeners = this.hintListeners.set(
-                sourceId,
-                (msg:string) => {
-                    this.message = this.message.set(sourceId, msg);
-                }
-            );
-        }
-
-        this.onContentChangeListeners.forEach(fn => fn(
-            sourceId, newQuery));
-
-        this.richCode = this.richCode.set(
+        state.richCode = state.richCode.set(
             sourceId,
             highlightSyntax(
-                this.rawCode.get(sourceId),
+                state.rawCode.get(sourceId),
                 'cql',
                 this.pageModel.getComponentHelpers(),
                 this.attrHelper,
-                this.hintListeners.get(sourceId)
+                (msg) => this.hintListener(state, sourceId, msg)
             )
         );
-    }
-
-    syncWithQueryStore():void {
-        const queries = this.queryStore.getQueries();
-        const qTypes = this.queryStore.getQueryTypes();
-        queries.forEach((v, k) => {
-            if (qTypes.get(k) === 'cql') {
-                this.rawCode = this.rawCode.set(k, '');
-                this.setRawQuery(k, v, [0, 0]);
-            }
-        });
-    }
-
-    getRawCode(sourceId:string):string {
-        return this.rawCode.get(sourceId);
-    }
-
-    getRichCode(sourceId:string):string {
-        return this.richCode.get(sourceId);
-    }
-
-    getMessage(sourceId:string):string {
-        return this.message.get(sourceId);
-    }
-
-    addOnContentChangeListener(fn:(sourceId:string, rawQuery:string)=>void):void {
-        this.onContentChangeListeners = this.onContentChangeListeners.push(fn);
     }
 
 }

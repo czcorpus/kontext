@@ -58,10 +58,10 @@ export class AttrHelper implements IAttrHelper {
 
     private tagAttr:string;
 
-    constructor(attrList:Immutable.List<Kontext.AttrItem>, structAttrList:Immutable.List<Kontext.AttrItem>,
+    constructor(attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
             tagAttr:string) {
-        this.attrList = attrList;
-        this.structAttrList = structAttrList;
+        this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
+        this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
         this.availStructs = Immutable.Set<string>(this.structAttrList.map(v => v.n.split('.')[0]));
         this.tagAttr = tagAttr;
     }

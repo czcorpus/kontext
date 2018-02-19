@@ -19,13 +19,13 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 
 
@@ -62,7 +62,7 @@ export class CorpusViewOptionsStore extends SimplePageStore implements ViewOptio
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.corpusIdent = corpusIdent;

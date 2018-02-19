@@ -20,11 +20,11 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 
 import {SimplePageStore} from '../base';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import rangeSelector = require('./rangeSelector');
@@ -173,7 +173,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     private _isBusy:boolean;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, data:InitialData) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi, data:InitialData) {
         super(dispatcher);
         this.attributes = Immutable.List(this.importInitialData(data));
         this.bibLabelAttr = data.bib_attr;

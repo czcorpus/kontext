@@ -23,6 +23,7 @@
 /// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../stores/freqs/ctFreqForm';
 
@@ -54,7 +55,7 @@ interface ExportedComponents {
 
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:ActionDispatcher,
     he:Kontext.ComponentHelpers,
     ctFreqFormStore:CTFreqFormStore):ExportedComponents {
 
