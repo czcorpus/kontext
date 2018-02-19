@@ -25,6 +25,7 @@
 import {MultiDict, importColor} from '../../util';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'vendor/immutable';
@@ -148,7 +149,7 @@ export class ConcDetailStore extends SimplePageStore {
     private tokenDetailPlg:PluginInterfaces.TokenDetail.IPlugin;
 
 
-    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore, structCtx:string,
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesStore:ConcLineStore, structCtx:string,
             speechOpts:SpeechOptions, speakerColors:Array<string>, wideCtxGlobals:Array<[string, string]>,
             tokenDetailPlg:PluginInterfaces.TokenDetail.IPlugin) {
         super(dispatcher);
@@ -795,7 +796,7 @@ export class RefsDetailStore extends SimplePageStore {
 
     private isBusy:boolean;
 
-    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher, linesStore:ConcLineStore) {
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher, linesStore:ConcLineStore) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.linesStore = linesStore;

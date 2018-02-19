@@ -24,6 +24,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import {GeneralCTStore, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
@@ -78,7 +79,7 @@ export class CTFlatStore extends GeneralCTStore {
 
     private sortReversed:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
             adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher, pageModel, props, adhocSubcDetector);
         this.origData = Immutable.List<FreqDataItem>();

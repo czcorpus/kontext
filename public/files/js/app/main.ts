@@ -24,22 +24,25 @@
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../vendor.d.ts/react.d.ts" />
-/// <reference path="../vendor.d.ts/flux.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
 
+
+import * as React from 'vendor/react';
+import * as ReactDOM from 'vendor/react-dom';
+import * as RSVP from 'vendor/rsvp';
+import * as Rx from '@reactivex/rxjs';
+
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
-import {Dispatcher} from 'vendor/Dispatcher';
+// import {Dispatcher} from 'vendor/Dispatcher';
+import {ActionDispatcher} from './dispatcher';
 import {init as documentViewsFactory} from '../views/document';
 import {init as commonViewsFactory} from 'views/common';
 import {init as menuViewsFactory} from 'views/menu';
 import {init as overviewAreaViewsFactory} from 'views/overview';
 import {init as viewOptionsFactory} from 'views/options/main';
-import * as React from 'vendor/react';
-import * as ReactDOM from 'vendor/react-dom';
-import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../util';
 import * as docStores from '../stores/common/layout';
 import {UserInfo} from '../stores/user/info';
@@ -78,9 +81,9 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     confChangeHandlers:Immutable.Map<string, Immutable.List<(v:any)=>void>>;
 
     /**
-     * Flux Dispatcher
+     * Action Dispatcher
      */
-    dispatcher:Dispatcher<Kontext.DispatcherPayload>;
+    dispatcher:ActionDispatcher;
 
     /**
      * Local user settings
@@ -623,7 +626,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
     init():RSVP.Promise<any> {
         return new RSVP.Promise((resolve:(v:any)=>void, reject:(e:any)=>void) => {
             try {
-                this.dispatcher = new Dispatcher<Kontext.DispatcherPayload>();
+                this.dispatcher = new ActionDispatcher();
                 this.asyncTaskChecker = new AsyncTaskChecker(
                     this.dispatcher,
                     this.pluginApi(),

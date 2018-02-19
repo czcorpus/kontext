@@ -23,6 +23,7 @@
 
 import {SimplePageStore} from './base';
 import {PageModel} from '../app/main';
+import {ActionDispatcher} from '../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
@@ -110,7 +111,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
     private data:Immutable.List<MenuEntry>;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.activeItem = null;

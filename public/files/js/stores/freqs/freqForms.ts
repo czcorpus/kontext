@@ -23,6 +23,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
@@ -84,7 +85,7 @@ export class MLFreqFormStore extends SimplePageStore {
 
     private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -268,7 +269,7 @@ export class TTFreqFormStore extends SimplePageStore {
 
     private freqSort:string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:FreqFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);

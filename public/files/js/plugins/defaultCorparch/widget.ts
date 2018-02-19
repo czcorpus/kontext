@@ -24,6 +24,7 @@
 
 import * as common from './common';
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import * as RSVP from 'vendor/rsvp';
@@ -79,7 +80,7 @@ export class CorplistWidgetStore extends SimplePageStore {
 
     private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi, corpusIdent:Kontext.FullCorpusIdent,
             anonymousUser:boolean, querySetupHandler:Kontext.QuerySetupHandler,
             searchEngine:SearchEngine,
             dataFav:Array<common.ServerFavlistItem>, dataFeat:Array<common.CorplistItem>,

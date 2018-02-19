@@ -24,6 +24,7 @@
 import * as React from 'vendor/react';
 import {SampleStore} from '../../stores/query/sample';
 import {SwitchMainCorpStore} from '../../stores/query/switchmc';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 export interface SampleFormViews {
@@ -71,7 +72,7 @@ export interface SwitchMainCorpFormState {
 
 // --------
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
         sampleStore:SampleStore, switchMcStore:SwitchMainCorpStore):SampleFormViews {
 
     // ------------------------ <SampleForm /> --------------------------------

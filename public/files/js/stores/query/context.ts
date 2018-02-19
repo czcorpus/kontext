@@ -22,6 +22,7 @@
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import {SimplePageStore} from '..//base';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 
 
@@ -29,7 +30,7 @@ export class QueryContextStore extends SimplePageStore {
 
     private formData:Immutable.Map<string, any>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher) {
+    constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);
         this.formData = Immutable.Map<string, any>({
             fc_lemword_window_type: 'both',

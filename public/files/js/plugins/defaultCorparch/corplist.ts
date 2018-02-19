@@ -21,6 +21,7 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import * as common from './common';
 
@@ -121,7 +122,7 @@ export class CorplistFormStore extends QueryProcessingStore {
         this.corplistTableStore = corplistTableStore;
         this.offset = 0;
 
-        CorplistFormStore.DispatchToken = this.dispatcher.register(
+        this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'KEYWORD_CLICKED':
@@ -228,11 +229,11 @@ export class CorplistTableStore extends SimplePageStore {
      *
      * @param pluginApi
      */
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this._isBusy = false;
-        CorplistTableStore.DispatchToken = this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
                     case 'LIST_STAR_CLICKED':
                         this.changeFavStatus(payload.props['corpusId'], payload.props['corpusName'],

@@ -144,11 +144,10 @@ export function init(dispatcher, he, tagHelperStore) {
 
                 } else {
                     dispatcher.dispatch({
-                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        actionType: 'QUERY_INPUT_APPEND_QUERY',
                         props: {
                             sourceId: props.sourceId,
-                            query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`,
-                            range: [0, null]
+                            query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`
                         }
                     });
                 }

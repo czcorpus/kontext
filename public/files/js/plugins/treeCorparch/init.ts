@@ -21,7 +21,6 @@
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 

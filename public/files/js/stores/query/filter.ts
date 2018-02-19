@@ -24,8 +24,8 @@
 
 
 import * as Immutable from 'vendor/immutable';
-import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {TextTypesStore} from '../textTypes/attrValues';
 import {QueryContextStore} from './context';
@@ -141,7 +141,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
 
 
     constructor(
-            dispatcher:Kontext.FluxDispatcher,
+            dispatcher:ActionDispatcher,
             pageModel:PageModel,
             textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore,
@@ -167,7 +167,6 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
         this.tagsetDocs = Immutable.Map<string, string>(props.tagsetDoc);
         this.inputLanguage = props.inputLanguage;
         this.currentAction = 'filter_form';
-        this.externalQueryChange = this.externalQueryChange.bind(this);
 
         this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {

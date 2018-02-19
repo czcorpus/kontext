@@ -26,6 +26,6 @@ export interface ISubcMixerViews {
 }
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
     subcmixerStore:Kontext.PageStore):ISubcMixerViews;

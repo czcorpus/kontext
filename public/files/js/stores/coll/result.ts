@@ -25,6 +25,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore, validateGzNumber} from '../../stores/base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {CollFormStore} from '../../stores/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
@@ -75,7 +76,7 @@ export class CollResultsSaveStore extends SimplePageStore {
 
     private static GLOBAL_SAVE_LINE_LIMIT = 100000;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             mainStore:CollResultStore, collArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -321,7 +322,7 @@ export class CollResultStore extends SimplePageStore {
 
     private calcWatchdog:CalcWatchdog;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             formStore:CollFormStore, initialData:CollResultData, resultHeading:CollResultHeading,
             pageSize:number, saveLinkFn:((string)=>void), saveLinesLimit:number,
             unfinished:boolean) {

@@ -24,6 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {availConfLevels} from './confIntervalCalc';
 import {sortAttrVals, isStructAttr, CTFreqFormStore, CTFormProperties, validateMinAbsFreqAttr,
     FreqFilterQuantities, roundFloat} from './ctFreqForm';
@@ -105,7 +106,7 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     private adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
             adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
         this.pageModel = pageModel;

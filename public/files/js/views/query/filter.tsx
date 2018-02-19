@@ -30,6 +30,7 @@ import {WithinBuilderStore} from '../../stores/query/withinBuilder';
 import {VirtualKeyboardStore} from '../../stores/query/virtualKeyboard';
 import {FirstHitsStore} from '../../stores/query/firstHits';
 import {CQLEditorStore} from '../../stores/query/cqleditor/store';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 
@@ -102,7 +103,7 @@ export interface FirstHitsFormState {
 // ---------
 
 export function init(
-        dispatcher:Kontext.FluxDispatcher,
+        dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
         filterStore:FilterStore,
         queryHintStore:QueryHintStore,

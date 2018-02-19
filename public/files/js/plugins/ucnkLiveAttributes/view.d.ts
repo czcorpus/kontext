@@ -28,7 +28,7 @@ export interface LiveAttributesViews {
 }
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
     subcMixerComponent:React.ComponentClass,
     textTypesStore:Kontext.PageStore,

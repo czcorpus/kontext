@@ -20,11 +20,11 @@
 
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 import * as textTypesStore from '../../stores/textTypes/attrValues';
 import * as Immutable from 'vendor/immutable';
@@ -127,14 +127,14 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
     private ttCheckStatusProvider:()=>boolean;
 
     /**
-     * @param dispatcher a Flux dispatcher instance
+     * @param dispatcher an action dispatcher instance
      * @param pluginApi KonText plugin-api provider
      * @param textTypesStore
      * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
      * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
      * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
      */
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi,
             textTypesStore:TextTypes.ITextTypesStore, selectedCorporaProvider:()=>Immutable.List<string>,
             ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs) {
         super(dispatcher);

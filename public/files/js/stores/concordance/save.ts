@@ -24,6 +24,7 @@
 import {MultiDict} from '../../util';
 import {SimplePageStore, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 
 
@@ -51,7 +52,7 @@ export class ConcSaveStore extends SimplePageStore {
 
     private saveLinkFn:(string)=>void;validateNumber
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, concSize:number, saveLinkFn:(string)=>void) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concSize:number, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveformat = 'csv';

@@ -25,9 +25,10 @@
 
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
-import {SimplePageStore} from '../base';
+import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {QueryStore, QueryFormUserEntries} from './main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {FilterStore} from './filter';
 import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';
 import {SampleStore} from './sample';
@@ -149,7 +150,7 @@ function importEncodedOperations(currentOperations:Array<Kontext.QueryOperation>
  * returning to the 'view' page in case user wants to use
  * some of its functions.
  */
-export class QueryInfoStore extends SimplePageStore {
+export class QueryInfoStore extends SynchronizedModel {
 
     /**
      * This is a little bit independent from the rest. It just
@@ -159,7 +160,7 @@ export class QueryInfoStore extends SimplePageStore {
 
     protected pageModel:PageModel;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
 
@@ -258,9 +259,7 @@ export class QueryReplayStore extends QueryInfoStore {
 
     private _editIsLocked:boolean;
 
-    private onFormEditListeners:Immutable.List<()=>void>;
-
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
             currentOperations:Array<Kontext.QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;
@@ -278,7 +277,6 @@ export class QueryReplayStore extends QueryInfoStore {
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
         this.stopAfterOpIdx = null;
-        this.onFormEditListeners = Immutable.List<()=>void>();
         this.syncCache();
 
         this._editIsLocked = this.pageModel.getConf<number>('NumLinesInGroups') > 0;
@@ -286,23 +284,29 @@ export class QueryReplayStore extends QueryInfoStore {
             this._editIsLocked = v > 0;
         });
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register(payload => {
                 switch (payload.actionType) {
                     case 'EDIT_QUERY_OPERATION':
                         this.editedOperationIdx = payload.props['operationIdx'];
                         this.notifyChangeListeners();
                         this.syncFormData(payload.props['operationIdx']).then(
                             (data) => {
-                                this.onFormEditListeners.forEach(fn => fn());
-                            }
-                        ).then(
-                            (data) => {
-                                this.notifyChangeListeners();
+                                this.synchronize({
+                                    actionType: payload.actionType,
+                                    props: {
+                                        queries: data['curr_queries'],
+                                        queryTypes: data['curr_query_types']
+                                    }
+                                });
                             },
                             (err) => {
                                 this.editedOperationIdx = null;
-                                this.notifyChangeListeners();
                                 this.pageModel.showMessage('error', err);
+                                this.synchronize({
+                                    actionType: payload.actionType,
+                                    props: {},
+                                    error: err
+                                });
                             }
                         );
                     break;
@@ -1024,10 +1028,6 @@ export class QueryReplayStore extends QueryInfoStore {
         }
     }
 
-    addOnFormEditListener(fn:()=>void):void {
-        this.onFormEditListeners = this.onFormEditListeners.push(fn);
-    }
-
     getCurrEncodedOperations():Immutable.List<Kontext.QueryOperation> {
         return this.currEncodedOperations;
     }
@@ -1067,7 +1067,7 @@ export class IndirectQueryReplayStore extends QueryInfoStore {
 
     private currEncodedOperations:Immutable.List<ExtendedQueryOperation>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
         super(dispatcher, pageModel);
         this.pageModel = pageModel;

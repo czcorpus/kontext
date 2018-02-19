@@ -25,6 +25,7 @@
 import * as RSVP from 'vendor/rsvp';
 import {createGenerator} from './ucnkTreeView';
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -44,7 +45,7 @@ class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISynt
 
     private resizeThrottleTimer:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.waitingStatus = false;

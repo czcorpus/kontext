@@ -24,6 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../../stores/base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {ContingencyTableStore} from './ctable';
 import {CTFlatStore} from './flatCtable';
@@ -53,7 +54,7 @@ export class FreqResultsSaveStore extends SimplePageStore {
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             freqArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -187,7 +188,7 @@ export class FreqCTResultsSaveStore extends SimplePageStore {
     saveMode:string;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, ctTableStore:ContingencyTableStore, ctFlatStore:CTFlatStore) {
+    constructor(dispatcher:ActionDispatcher, ctTableStore:ContingencyTableStore, ctFlatStore:CTFlatStore) {
         super(dispatcher);
         this.ctTableStore = ctTableStore;
         this.ctFlatStore = ctFlatStore;

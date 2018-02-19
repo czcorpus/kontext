@@ -21,7 +21,6 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
@@ -29,6 +28,7 @@
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
@@ -314,7 +314,7 @@ export class ConcLineStore extends SimplePageStore {
     private ttStore:TextTypes.ITextTypesStore;
 
 
-    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
             saveStore:ConcSaveStore, syntaxViewStore:PluginInterfaces.ISyntaxViewer,
             ttStore:TextTypes.ITextTypesStore, lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
         super(dispatcher);

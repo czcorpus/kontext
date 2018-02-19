@@ -20,6 +20,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';
 
@@ -31,8 +32,6 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
     protected corplistTableStore:CorplistTableStore;
 
     protected offset:number;
-
-    static DispatchToken:string;
 
     private initialKeywords:Array<string>;
 
@@ -46,7 +45,7 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
         (this.pluginApi.getConf('pluginData')['corparch']['initial_keywords'] || []).forEach(function (item) {
             self.selectedKeywords[item] = true;
         });
-        CorplistFormStore.DispatchToken = this.dispatcher.register(
+        this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'KEYWORD_CLICKED':
@@ -135,7 +134,7 @@ export class CorplistTableStore extends corplistDefault.CorplistTableStore {
     /**
      *
      */
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher, pluginApi);
     }
 }
@@ -146,11 +145,11 @@ export class CorpusAccessRequestStore extends SimplePageStore {
 
     static DispatchToken:string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(pluginApi.dispatcher());
         const self = this;
         this.pluginApi = pluginApi;
-        CorpusAccessRequestStore.DispatchToken = this.dispatcher.register(
+        this.dispatcher.register(
             function (payload:Kontext.DispatcherPayload) {
                 switch (payload.actionType) {
                     case 'CORPUS_ACCESS_REQ_SUBMITTED':

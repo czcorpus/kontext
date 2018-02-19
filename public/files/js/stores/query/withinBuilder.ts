@@ -23,6 +23,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 /**
  *
@@ -37,7 +38,7 @@ export class WithinBuilderStore extends SimplePageStore {
 
     private currAttrIdx:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<[string, string]>();

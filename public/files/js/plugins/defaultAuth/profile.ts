@@ -21,6 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {ActionDispatcher} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
@@ -38,7 +39,7 @@ export class UserProfileStore extends SimplePageStore {
 
     private userData:Kontext.UserCredentials;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, userData:Kontext.UserCredentials) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi, userData:Kontext.UserCredentials) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.userData = userData;

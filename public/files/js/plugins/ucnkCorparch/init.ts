@@ -19,7 +19,6 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../types/views.d.ts" />
 

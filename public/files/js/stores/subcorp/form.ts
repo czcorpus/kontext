@@ -19,7 +19,6 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 
@@ -27,6 +26,7 @@ import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {TextTypesStore} from '../../stores/textTypes/attrValues';
 
 export class SubcorpFormStore extends SimplePageStore {
@@ -45,7 +45,7 @@ export class SubcorpFormStore extends SimplePageStore {
 
     private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
             withinFormStore:SubcorpWithinFormStore, textTypesStore:TextTypesStore, corpname:string,
             alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
         super(dispatcher);
@@ -146,7 +146,7 @@ export class SubcorpWithinFormStore extends SimplePageStore {
 
     private lines:Immutable.List<WithinLine>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, initialStructName:string,
+    constructor(dispatcher:ActionDispatcher, initialStructName:string,
             initialState:Array<{[key:string]:string}>) {
         super(dispatcher);
         this.lines = Immutable.List<WithinLine>();

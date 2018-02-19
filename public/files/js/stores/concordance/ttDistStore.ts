@@ -27,6 +27,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {ConcLineStore} from './lines';
 
@@ -118,7 +119,7 @@ export class TextTypesDistStore extends SimplePageStore {
 
     private blockedByAsyncConc:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, concLineStore:ConcLineStore, props:TextTypesDistStoreProps) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concLineStore:ConcLineStore, props:TextTypesDistStoreProps) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.concLineStore = concLineStore;

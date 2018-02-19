@@ -19,13 +19,13 @@
  */
 
 /// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {ConcLineStore} from './lines';
 import * as RSVP from 'vendor/rsvp';
 
@@ -72,7 +72,7 @@ export class LineSelectionStore extends SimplePageStore {
 
     private emailDialogCredentials:Kontext.UserCredentials;
 
-    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
             concLineStore:ConcLineStore, userInfoStore:Kontext.IUserInfoStore, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;

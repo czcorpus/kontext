@@ -28,7 +28,7 @@ export class TreeCorparchViews {
 }
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     he:Kontext.ComponentHelpers,
     treeStore:Kontext.PageStore
 ):TreeCorparchViews;

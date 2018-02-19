@@ -23,6 +23,7 @@
 
 import {SimplePageStore} from '../../stores/base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
@@ -41,7 +42,7 @@ export class UserStatusStore extends SimplePageStore {
 
     private returnUrl:string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.loginFormVisible = false;

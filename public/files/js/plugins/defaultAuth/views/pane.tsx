@@ -24,6 +24,7 @@
 import * as React from 'vendor/react';
 import {MultiDict} from '../../../util';
 import {UserStatusStore} from '../init';
+import {ActionDispatcher} from '../../../app/dispatcher';
 
 
 export interface UserPaneViews {
@@ -38,7 +39,7 @@ export interface UserPaneState {
 /**
  *
  */
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers,
             userStore:UserStatusStore):UserPaneViews {
 
     const layoutViews = he.getLayoutViews();

@@ -25,6 +25,7 @@
 import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -78,7 +79,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
 
     private submitResponseHandlers:Immutable.List<(store:ViewOptions.IGeneralViewOptionsStore)=>void>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.submitResponseHandlers = Immutable.List<()=>void>();

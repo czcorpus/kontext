@@ -22,7 +22,9 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
+
 import {SimplePageStore} from '../base';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {MultiDict, uid} from '../../util';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'vendor/immutable';
@@ -38,7 +40,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
 
     pluginApi:Kontext.PluginApi;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.messages = Immutable.List<Kontext.UserNotification>();
         this.onClose = {};
@@ -171,7 +173,7 @@ export class CorpusInfoStore extends SimplePageStore {
     isWaiting:boolean = false;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
