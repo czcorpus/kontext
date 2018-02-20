@@ -282,10 +282,25 @@ then
     sudo systemctl enable redis
 fi
 
-redis-cli select 1
-redis-cli set user:1 "{\"id\": 1, \"user\": \"public\", \"fullname\": \"public user\", \"pwd_hash\": \"\"}"
+# set the anonymous user in Redis
+redis-cli -n 1 set user:1 "{\"id\": 1, \"user\": \"public\", \"fullname\": \"public user\", \"pwd_hash\": \"\"}"
 
+# generate random password for the "kontext" user and its hash using default parameters
+cd $INSTALL_DIR
+response=$(python scripts/generate_random_pwd.py)
+pwd=${response%-*}
+hash=${response:9}
+
+# set the "kontext" user in redis
+redis-cli -n 1 hset user_index "kontext" "\"user:2\""
+redis-cli -n 1 set user:2 "{\"username\": \"kontext\", \"firstname\": \"Kontext\", \"lastname\": \"Test\", \"id\": 2, \"pwd_hash\": \"$hash\", \"email\": \"test@example.com\"}"
+
+# print final info
 echo "KonText installation successfully completed."
 echo "To start KonText, enter the following command in the KonText install root directory (i.e. $INSTALL_DIR):"
 echo "python public/app.py --address [IP address] --port [TCP port]"
 echo "(--address and --port parameters are optional; default serving address is 127.0.0.1:5000)"
+echo "-------------"
+echo "To login as a test user, please use the following credentials:"
+echo "username: kontext"
+echo "password: $pwd"
