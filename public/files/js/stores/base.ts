@@ -23,7 +23,7 @@
 /**
  * A base class for KonText's Flux stores.
  */
-export class SimplePageStore implements Kontext.PageStore {
+export class SimplePageStore implements Kontext.PageStore, Kontext.ComposableStore {
 
     dispatcher:Kontext.FluxDispatcher;
 

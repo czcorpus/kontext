@@ -258,6 +258,8 @@ export class QueryReplayStore extends QueryInfoStore {
 
     private _editIsLocked:boolean;
 
+    private onFormEditListeners:Immutable.List<()=>void>;
+
     constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, replayStoreDeps:ReplayStoreDeps,
             currentOperations:Array<Kontext.QueryOperation>, concArgsCache:LocalQueryFormData) {
         super(dispatcher, pageModel);
@@ -276,6 +278,7 @@ export class QueryReplayStore extends QueryInfoStore {
         this.branchReplayIsRunning = false;
         this.editedOperationIdx = null;
         this.stopAfterOpIdx = null;
+        this.onFormEditListeners = Immutable.List<()=>void>();
         this.syncCache();
 
         this._editIsLocked = this.pageModel.getConf<number>('NumLinesInGroups') > 0;
@@ -289,6 +292,10 @@ export class QueryReplayStore extends QueryInfoStore {
                         this.editedOperationIdx = payload.props['operationIdx'];
                         this.notifyChangeListeners();
                         this.syncFormData(payload.props['operationIdx']).then(
+                            (data) => {
+                                this.onFormEditListeners.forEach(fn => fn());
+                            }
+                        ).then(
                             (data) => {
                                 this.notifyChangeListeners();
                             },
@@ -985,6 +992,7 @@ export class QueryReplayStore extends QueryInfoStore {
     private syncFormData(opIdx:number):RSVP.Promise<any> {
         const opId = this.currEncodedOperations.get(opIdx).opid;
         const formType = this.currEncodedOperations.get(opIdx).formType;
+
         if (this.concArgsCache.size === 0) {
             return new RSVP.Promise<any>((resolve:(v)=>void, reject:(err)=>void) => {
                 resolve(null);
@@ -1014,6 +1022,10 @@ export class QueryReplayStore extends QueryInfoStore {
         } else if (formType === 'firsthits') {
             return this.syncFirstHitsForm(opIdx);
         }
+    }
+
+    addOnFormEditListener(fn:()=>void):void {
+        this.onFormEditListeners = this.onFormEditListeners.push(fn);
     }
 
     getCurrEncodedOperations():Immutable.List<Kontext.QueryOperation> {

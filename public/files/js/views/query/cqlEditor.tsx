@@ -284,7 +284,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
             }
         }
 
-        componentWillMount() {
+        componentWillUnmount() {
             editorStore.removeChangeListener(this.handleStoreChange);
         }
 

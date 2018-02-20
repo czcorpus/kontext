@@ -26,7 +26,7 @@
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
 import * as corplistComponent from 'plugins/corparch/init';
-import {PageModel} from '../app/main';
+import {PageModel, PluginName} from '../app/main';
 import liveAttributes from 'plugins/liveAttributes/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
 import * as Immutable from 'vendor/immutable';
@@ -167,7 +167,7 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         ).then(
             (liveAttrsPlugin) => {
                 let liveAttrsViews;
-                if (liveAttrsPlugin && this.layoutModel.pluginIsActive('live_attributes')) {
+                if (liveAttrsPlugin && this.layoutModel.pluginIsActive(PluginName.LIVE_ATTRIBUTES)) {
                     // Complicated dependencies between QueryStore, TextTypesStore and LiveAttrsStore
                     // cause that LiveAttrs store needs QueryStore data but it is not available
                     // here yet. That's the reason we have to define a callback here to configure
@@ -254,9 +254,10 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
         this.cqlEditorStore = new CQLEditorStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
+            this.queryStore,
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            this.queryStore.getTagAttr()
+            this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryStore.getTagAttr() : null
         );
         this.cqlEditorStore.addOnContentChangeListener(this.queryStore.externalQueryChange);
     }
