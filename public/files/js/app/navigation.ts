@@ -56,7 +56,7 @@ export function parseUrlArgs(args:string):Array<[string, string]> {
 export class NullHistory implements Kontext.IHistory {
     replaceState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
     pushState(action:string, args:Kontext.IMultiDict, stateData?:any, title?:string):void {}
-    setOnPopState(fn:(event:{state: any})=>void):void {}
+    setOnPopState(fn:(event:PopStateEvent)=>void):void {}
 }
 
 /**
@@ -109,7 +109,7 @@ export class History implements Kontext.IHistory {
         );
     }
 
-    setOnPopState(fn:(event:{state: any})=>void):void {
+    setOnPopState(fn:(event:PopStateEvent)=>void):void {
         window.onpopstate = fn;
     }
 }
