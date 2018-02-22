@@ -125,6 +125,11 @@
                             <text />
                         </element>
                     </optional>
+                    <element name="user_filter_files_dir">
+                        <a:documentation>The path to the user filter data files (e.g. black/whitelists for the
+                            wordlist view)</a:documentation>
+                        <text />
+                    </element>
                     <element name="debug">
                         <a:documentation>Debugging mode: 0/false = no debugging,
                             1/true = standard debugging, 2 = debugging + profiling information (slowest)
