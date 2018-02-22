@@ -194,6 +194,9 @@ case $INSTALL_TYPE in
         mkdir -p /var/lib/manatee/vert
         mkdir -p /var/lib/manatee/data/susanne
 
+        # create user filter files directory
+        mkdir -p /var/local/corpora/user_filter_files
+
         # copy Susanne files from sample sources
         cd /usr/local/src/susanne-example-source
         sed -i 's%PATH susanne%PATH "/var/lib/manatee/data/susanne"%' ./config

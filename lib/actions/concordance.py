@@ -30,6 +30,7 @@ from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 import settings
 import conclib
 import corplib
+import hashlib
 from bgcalc import freq_calc, coll_calc
 import plugins
 from kwiclib import Kwic, KwicPageArgs
@@ -1350,9 +1351,32 @@ class Actions(Querying):
         else:
             return wlnums
 
+    @staticmethod
+    def load_bw_file(hash):
+        res = ''
+        fname = hash + '.txt'
+        path = os.path.join(settings.get('global', 'user_filter_files_dir'), fname)
+        rpath = os.path.realpath(path)
+        if os.path.exists(rpath):
+            f = open(rpath, 'r')
+            res = f.read()
+            f.close()
+        return res
+
+    @staticmethod
+    def save_bw_file(bwlist):
+        hash = hashlib.md5(bwlist).hexdigest()
+        fname = hash + '.txt'
+        path = os.path.join(settings.get('global', 'user_filter_files_dir'), fname)
+        rpath = os.path.realpath(path)
+        f = open(rpath, 'w')
+        f.write(bwlist)
+        f.close()
+        return hash
+
     @exposed(access_level=1, legacy=True)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
-                 ref_usesubcorp='', paginate=True):
+                 ref_usesubcorp='', paginate=True, white_hash='', black_hash=''):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
@@ -1398,8 +1422,33 @@ class Actions(Querying):
             else:  # ordinary list
                 if hasattr(self, 'wlfile') and self.args.wlpat == '.*':
                     self.args.wlsort = ''
-                whitelist = [w for w in re.split('\s+', self.args.wlwords.strip()) if w]
-                blacklist = [w for w in re.split('\s+', self.args.blacklist.strip()) if w]
+
+                white_words = self.args.wlwords
+                black_words = self.args.blacklist
+
+                if white_hash != '':
+                    white_words = self.load_bw_file(white_hash)
+
+                if black_hash != '':
+                    black_words = self.load_bw_file(black_hash)
+
+                whitelist = [w for w in re.split('\s+', white_words.strip()) if w]
+                blacklist = [w for w in re.split('\s+', black_words.strip()) if w]
+
+                if white_hash == '' and len(self.args.wlwords) > 0:
+                    white_hash = self.save_bw_file(self.args.wlwords)
+
+                if black_hash == '' and len(self.args.blacklist) > 0:
+                    black_hash = self.save_bw_file(self.args.blacklist)
+
+                result['reload_url'] = self.create_url('wordlist', {
+                    'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
+                    'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
+                    'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
+                    'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums,
+                    'white_hash': white_hash, 'black_hash': black_hash
+                })
+
                 result_list = self.call_function(corplib.wordlist,
                                                  (self.corp,),
                                                  wlmaxitems=wlmaxitems,
