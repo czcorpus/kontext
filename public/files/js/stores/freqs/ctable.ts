@@ -273,6 +273,17 @@ export class ContingencyTableStore extends GeneralCTStore {
         });
     }
 
+    private pushStateToHistory():void {
+        const args = this.getSubmitArgs();
+        args.remove('format');
+        this.pageModel.getHistory().pushState(
+            'freqct',
+            args,
+            {},
+            window.document.title
+        );
+    }
+
     private waitAndReload(resetServerMinFreq:boolean):void {
         if (this.throttleTimeout) {
             window.clearTimeout(this.throttleTimeout);
@@ -287,6 +298,7 @@ export class ContingencyTableStore extends GeneralCTStore {
                 this.updateData().then(
                     () => {
                         this.isWaiting = false;
+                        this.pushStateToHistory();
                         this.notifyChangeListeners();
                     },
                     (err) => {
@@ -489,7 +501,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         this.data = this.origData;
     }
 
-    private getSubmitArgs():MultiDict {
+    getSubmitArgs():MultiDict {
         const args = this.pageModel.getConcArgs();
         args.set('ctfcrit1', this.ctFcrit1);
         args.set('ctfcrit2', this.ctFcrit2);

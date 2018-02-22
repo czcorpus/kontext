@@ -124,6 +124,7 @@ export class FreqDataRowsStore extends SimplePageStore {
                 case 'FREQ_RESULT_APPLY_MIN_FREQ':
                     this.loadPage().then(
                         (data) => {
+                            this.pushStateToHistory();
                             this.notifyChangeListeners();
 
                         },
@@ -165,6 +166,17 @@ export class FreqDataRowsStore extends SimplePageStore {
                 break;
             }
         });
+    }
+
+    private pushStateToHistory():void {
+        const args = this.getSubmitArgs();
+        args.remove('format');
+        this.pageModel.getHistory().pushState(
+            'freqs',
+            args,
+            {},
+            window.document.title
+        );
     }
 
     validateNumber(v:string, minNum:number):boolean {

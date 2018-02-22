@@ -58,6 +58,8 @@ class FreqPage {
 
     private ttFreqStore:TTFreqFormStore;
 
+    private freqResultStore:FreqDataRowsStore;
+
     private ctFreqStore:ContingencyTableStore;
 
     private ctFlatFreqStore:CTFlatStore;
@@ -249,14 +251,14 @@ class FreqPage {
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ml':
             case 'tt':
-                const freqResultStore = new FreqDataRowsStore(
+                this.freqResultStore = new FreqDataRowsStore(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
                     this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     (s)=>this.setDownloadLink(s)
                 );
-                freqResultStore.importData(
+                this.freqResultStore.importData(
                     this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
                     this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     1
@@ -264,7 +266,7 @@ class FreqPage {
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
-                    freqResultStore
+                    this.freqResultStore
                 );
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
@@ -321,6 +323,35 @@ class FreqPage {
         return ttStore;
     }
 
+    private setupBackButtonListening():void {
+        this.layoutModel.getHistory().setOnPopState((event) => {
+            window.location.reload();
+        });
+        switch (this.layoutModel.getConf<string>('FreqType')) {
+            case 'ct': {
+                const args = this.ctFreqStore.getSubmitArgs();
+                args.remove('format');
+                this.layoutModel.getHistory().replaceState(
+                    'freqct',
+                    args,
+                    window.document.title
+                );
+            }
+            break;
+            case 'tt':
+            case 'ml': {
+                const args = this.freqResultStore.getSubmitArgs();
+                args.remove('format');
+                this.layoutModel.getHistory().replaceState(
+                    'freqs',
+                    args,
+                    window.document.title
+                );
+            }
+            break;
+        }
+    }
+
     init() {
         this.layoutModel.init().then(
             () => {
@@ -366,6 +397,7 @@ class FreqPage {
                 this.initAnalysisViews(adhocSubcIdentifier);
                 this.initQueryOpNavigation();
                 this.initFreqResult();
+                this.setupBackButtonListening();
             }
 
         ).then(
