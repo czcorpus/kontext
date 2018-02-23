@@ -1552,8 +1552,7 @@ class Actions(Querying):
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}
 
     @exposed(access_level=1, vars=('concsize',), legacy=True, return_type='plain')
-    def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0,
-                 leftctx='-40', rightctx='40'):
+    def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0):
 
         def merge_conc_line_parts(items):
             """
@@ -1609,8 +1608,8 @@ class Actions(Querying):
             kwic_args.labelmap = {}
             kwic_args.align = ()
             kwic_args.alignlist = [self.cm.get_Corpus(c) for c in self.args.align if c]
-            kwic_args.leftctx = leftctx
-            kwic_args.rightctx = rightctx
+            kwic_args.leftctx = self.args.kwicleftctx
+            kwic_args.rightctx = self.args.kwicrightctx
             kwic_args.structs = self._get_struct_opts()
 
             data = kwic.kwicpage(kwic_args)
