@@ -90,15 +90,9 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
                     <string>action.props['query'],
                     <[number, number]>action.props['range']
                 );
-                this.synchronize({
-                    actionType: action.actionType,
-                    props: {
-                        sourceId: action.props['sourceId'],
-                        query: newState.rawCode.get(action.props['sourceId'])
-                    }
-                });
+                this.synchronize(action.actionType, newState);
             break;
-            case '$QUERY_INPUT_SET_QUERY':
+            case 'QUERY_INPUT_SET_QUERY':
                 this.setRawQuery(
                     newState,
                     <string>action.props['sourceId'],
@@ -106,7 +100,7 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
                     null
                 );
             break;
-            case '$QUERY_INPUT_APPEND_QUERY':
+            case 'QUERY_INPUT_APPEND_QUERY':
                 this.setRawQuery(
                     newState,
                     <string>action.props['sourceId'],
@@ -115,7 +109,7 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
                 );
                 this.moveCursorToEnd(newState, action.props['sourceId']);
             break;
-            case '$QUERY_INPUT_REMOVE_LAST_CHAR': {
+            case 'QUERY_INPUT_REMOVE_LAST_CHAR': {
                 const queryLength = newState.rawCode.get(action.props['sourceId']).length;
                 this.setRawQuery(
                     newState,

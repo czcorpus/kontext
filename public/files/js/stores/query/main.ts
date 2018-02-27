@@ -403,13 +403,9 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                         fn(this.corpora.first(), this.corpora.rest().toList(), this.currentSubcorp)
                     );
                 break;
-                case '$CQL_EDITOR_SET_RAW_QUERY':
-                    this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
-                    this.notifyChangeListeners();
-                break;
                 case 'QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
-                    this.synchronize(payload);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_APPEND_QUERY':
                     this.queries = this.queries.set(
@@ -423,14 +419,14 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                     if (payload.props['closeWhenDone']) {
                         this.activeWidgets = this.activeWidgets.set(payload.props['sourceId'], null);
                     }
-                    this.synchronize(payload);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_REMOVE_LAST_CHAR':
                     const currQuery2 = this.queries.get(payload.props['sourceId']);
                     if (currQuery2.length > 0) {
                         this.queries = this.queries.set(payload.props['sourceId'], currQuery2.substr(0, currQuery2.length - 1));
                     }
-                    this.synchronize(payload);
+                    this.notifyChangeListeners();
                 break;
                 case 'QUERY_INPUT_SET_LPOS':
                     this.lposValues = this.lposValues.set(payload.props['sourceId'], payload.props['lpos']);

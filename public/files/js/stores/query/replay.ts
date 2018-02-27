@@ -291,22 +291,17 @@ export class QueryReplayStore extends QueryInfoStore {
                         this.notifyChangeListeners();
                         this.syncFormData(payload.props['operationIdx']).then(
                             (data) => {
-                                this.synchronize({
-                                    actionType: payload.actionType,
-                                    props: {
+                                this.synchronize(
+                                    payload.actionType,
+                                    {
                                         queries: data['curr_queries'],
                                         queryTypes: data['curr_query_types']
                                     }
-                                });
+                                );
                             },
                             (err) => {
                                 this.editedOperationIdx = null;
                                 this.pageModel.showMessage('error', err);
-                                this.synchronize({
-                                    actionType: payload.actionType,
-                                    props: {},
-                                    error: err
-                                });
                             }
                         );
                     break;

@@ -114,25 +114,25 @@ export class SimplePageStore implements Kontext.PageStore {
  * additional action '$SOME_ACTION' to which
  * dependent stores can respond.
  */
-export interface ISynchronizedModel {
-    synchronize(payload:Kontext.DispatcherPayload):void;
+export interface ISynchronizedModel<T> {
+    synchronize(action:string, payload:T):void;
 }
 
 
 /**
  *
  */
-export class SynchronizedModel extends SimplePageStore implements ISynchronizedModel {
+export class SynchronizedModel extends SimplePageStore implements ISynchronizedModel<Kontext.GeneralProps> {
 
     constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);
     }
 
-    synchronize(payload:Kontext.DispatcherPayload):void {
-        if (payload.actionType.substr(0, 1) !== '$') {
+    synchronize(action:string, props:Kontext.GeneralProps):void {
+        if (action.substr(0, 1) !== '$') {
             this.dispatcher.dispatch({
-                actionType: '$' + payload.actionType,
-                props: payload.props
+                actionType: '$' + action,
+                props: props
             });
 
         } else {
@@ -157,7 +157,7 @@ export interface StatelessModelListener<T> {
  * the state change directly. The implementation is based on Rx.js
  * streams.
  */
-export abstract class StatelessModel<T> implements ISynchronizedModel, Kontext.IReducer<T> {
+export abstract class StatelessModel<T> implements ISynchronizedModel<T>, Kontext.IReducer<T> {
 
     private state$:Rx.BehaviorSubject<T>;
 
@@ -199,11 +199,11 @@ export abstract class StatelessModel<T> implements ISynchronizedModel, Kontext.I
         }
     }
 
-    synchronize(payload:Kontext.DispatcherPayload):void {
-        if (payload.actionType.substr(0, 1) !== '$') {
+    synchronize(action:string, state:T):void {
+        if (action.substr(0, 1) !== '$') {
             this.dispatcher.dispatch({
-                actionType: '$' + payload.actionType,
-                props: payload.props
+                actionType: '$' + action,
+                props: state
             });
 
         } else {

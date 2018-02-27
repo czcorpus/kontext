@@ -21,7 +21,6 @@
 /// <reference path="../types/common.d.ts" />
 
 import * as Rx from '@reactivex/rxjs';
-import { StatelessModel } from '../stores/base';
 
 /**
  * KonText ActionDispatcher is inspired by Flux
