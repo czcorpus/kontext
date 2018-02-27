@@ -26,7 +26,7 @@
 
 
 import {MultiDict} from '../../util';
-import {SimplePageStore} from '../base';
+import {SimplePageStore, SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
@@ -265,7 +265,7 @@ export class DummySyntaxViewStore extends SimplePageStore implements PluginInter
 /**
  *
  */
-export class ConcLineStore extends SimplePageStore {
+export class ConcLineStore extends SynchronizedModel {
 
     private layoutModel:PageModel;
 
@@ -388,7 +388,12 @@ export class ConcLineStore extends SimplePageStore {
                     this.concSummary.ipm = payload.props['relconcsize'];
                     this.concSummary.arf = payload.props['arf'];
                     this.pagination.lastPage = payload.props['availPages'];
-                    this.notifyChangeListeners();
+                    this.synchronize(
+                        payload.actionType,
+                        {
+                            isUnfinished: this.isUnfinishedCalculation()
+                        }
+                    );
                 break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
                     this.calculateAdHocIpm().then(

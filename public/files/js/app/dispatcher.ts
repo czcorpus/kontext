@@ -41,10 +41,6 @@ export class ActionDispatcher {
             return this.stream$.subscribe(callback);
         }
 
-        waitFor(IDs: string[]): void {
-            throw new Error('wait for is not supported');
-        }
-
         dispatch(payload:Kontext.DispatcherPayload):void {
             this.stream$.next(payload);
         }

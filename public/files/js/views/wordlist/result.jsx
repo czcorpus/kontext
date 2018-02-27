@@ -36,6 +36,10 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
                     sortKey: props.sortKey
                 }
             });
+            dispatcher.dispatch({
+                actionType: 'WORDLIST_RESULT_RELOAD',
+                props: {}
+            });
         };
 
         const renderSortingIcon = () => {

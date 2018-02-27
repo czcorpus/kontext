@@ -129,8 +129,7 @@ export class WordlistResultStore extends SimplePageStore {
                     args.set('cql', this.createPQuery(payload.props['word']));
                     window.location.href = this.layoutModel.createActionUrl('first', args.items());
                 break;
-                case 'WORDLIST_RESULT_SET_SORT_COLUMN':
-                    dispatcher.waitFor([this.formStore.getDispatcherToken()]);
+                case 'WORDLIST_RESULT_RELOAD':
                     this.processPageLoad();
                 break;
                 case 'WORDLIST_RESULT_NEXT_PAGE':
@@ -168,14 +167,6 @@ export class WordlistResultStore extends SimplePageStore {
                 case 'WORDLIST_RESULT_CONFIRM_PAGE':
                     this.currPage = parseInt(this.currPageInput, 10);
                     this.processPageLoad();
-                break;
-                case 'MAIN_MENU_SHOW_SAVE_FORM':
-                    dispatcher.waitFor([this.saveStore.getDispatcherToken()]);
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_SAVE_FORM_HIDE':
-                    dispatcher.waitFor([this.saveStore.getDispatcherToken()]);
-                    this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_GO_TO_LAST_PAGE':
                     this.isBusy = true;

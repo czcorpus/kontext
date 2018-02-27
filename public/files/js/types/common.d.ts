@@ -94,7 +94,6 @@ declare module Kontext {
     export interface ActionDispatcher {
         register(callback:(payload:Kontext.DispatcherPayload)=>void):Rx.Subscription;
         dispatch(payload:Kontext.DispatcherPayload):void;
-        waitFor(items:Array<string>):void; // TODO REMOVE
     }
 
     export interface FullCorpusIdent {

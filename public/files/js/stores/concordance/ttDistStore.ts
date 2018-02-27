@@ -131,9 +131,8 @@ export class TextTypesDistStore extends SimplePageStore {
         this.isBusy = this.concLineStore.isUnfinishedCalculation();
         this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {
-                case 'CONCORDANCE_ASYNC_CALCULATION_UPDATED':
-                    this.dispatcher.waitFor([this.concLineStore.getDispatcherToken()]);
-                    this.blockedByAsyncConc = this.concLineStore.isUnfinishedCalculation();
+                case '$CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+                    this.blockedByAsyncConc = payload.props['isUnfinished'];
                     this.performDataLoad();
                 break;
                 case 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW':
