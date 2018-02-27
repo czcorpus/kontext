@@ -22,6 +22,8 @@
 
 import * as Rx from '@reactivex/rxjs';
 
+type ActionType = Kontext.DispatcherPayload|Rx.Observable<Kontext.DispatcherPayload>;
+
 /**
  * KonText ActionDispatcher is inspired by Flux
  * dispatcher in the sense that it is the only
@@ -31,18 +33,42 @@ import * as Rx from '@reactivex/rxjs';
  */
 export class ActionDispatcher {
 
-        private stream$:Rx.Subject<Kontext.DispatcherPayload>;
+        /**
+         * Incoming user actions - either action payload
+         * (typical for simple sync actions) or an Observable
+         * (typical for asynchronous actions).
+         */
+        private inStream$:Rx.Subject<ActionType>;
+
+        /**
+         * These are flattened user actions (i.e. even action streams
+         * are here as individual actions).
+         */
+        private action$:Rx.Observable<Kontext.DispatcherPayload>;
 
         constructor() {
-            this.stream$ = new Rx.Subject<Kontext.DispatcherPayload>();
+            this.inStream$ = new Rx.Subject<ActionType>();
+            this.action$ = this.inStream$.flatMap(v => {
+                if (v instanceof Rx.Observable) {
+                    return v;
+
+                } else {
+                    return Rx.Observable.from([v]);
+                }
+            }).share();
         }
 
         register(callback:(payload:Kontext.DispatcherPayload)=>void):Rx.Subscription {
-            return this.stream$.subscribe(callback);
+            return this.action$.subscribe(callback);
         }
 
-        dispatch(payload:Kontext.DispatcherPayload):void {
-            this.stream$.next(payload);
+        /**
+         * Dispatch an action. It can be either an
+         * action object (for synchronous actions)
+         * or an Rx.Observable (for asynchronous ones).
+         */
+        dispatch(action:ActionType):void {
+            this.inStream$.next(action);
         }
 
         /**
@@ -51,10 +77,12 @@ export class ActionDispatcher {
          */
         createStateStream$<T>(model:Kontext.IReducer<T>, initialState:T):Rx.BehaviorSubject<T> {
             const state$ = new Rx.BehaviorSubject(null);
-            this.stream$.startWith(null).scan(
-                (state:T, action:Kontext.DispatcherPayload) => action !== null  ? model.reduce(state, action) : state,
-                initialState
-            ).subscribe(state$);
+            this.action$
+                .scan(
+                    (state:T, action:Kontext.DispatcherPayload) => action !== null  ? model.reduce(state, action) : state,
+                    initialState
+                )
+                .subscribe(state$);
             return state$;
         }
 

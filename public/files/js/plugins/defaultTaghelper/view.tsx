@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,15 +19,36 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+/// <reference path="../../vendor.d.ts/immutable.d.ts" />
+/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {TagHelperStore, PositionValue} from './stores';
+import * as Rx from '@reactivex/rxjs';
 
 
-export function init(dispatcher, he, tagHelperStore) {
+export interface TagBuilderProps {
+    sourceId:string;
+    actionPrefix:string;
+    range:[number, number];
+    onEscKey:()=>void;
+    onInsert:()=>void;
+}
+
+
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, tagHelperStore:TagHelperStore) {
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
-    class TagDisplay extends React.Component {
+    class TagDisplay extends React.Component<{
+                onEscKey:()=>void,
+                tagValue:string
+            },
+            {
+                pattern:string
+            }> {
 
         constructor(props) {
             super(props);
@@ -64,7 +87,7 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <InsertButton /> ----------------------------
 
-    const InsertButton = (props) => {
+    const InsertButton:React.FuncComponent<{onClick:()=>void}> = (props) => {
         return (
             <button className="util-button" type="button"
                     value="insert" onClick={props.onClick}>
@@ -75,7 +98,7 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <UndoButton /> ----------------------------
 
-    const UndoButton = (props) => {
+    const UndoButton:React.FuncComponent<{onClick:()=>void; enabled:boolean}> = (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button" value="undo"
@@ -95,7 +118,7 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <ResetButton /> ----------------------------
 
-    const ResetButton = (props) => {
+    const ResetButton:React.FuncComponent<{onClick:()=>void; enabled:boolean}> = (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button cancel"
@@ -116,7 +139,12 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <TagButtons /> ----------------------------
 
-    const TagButtons = (props) => {
+    const TagButtons:React.FuncComponent<{
+                range:[number, number];
+                sourceId:string;
+                onInsert?:()=>void;
+                canUndo:boolean;
+            }> = (props) => {
 
         const buttonClick = (evt) => {
             if (evt.target.value === 'reset') {
@@ -172,7 +200,15 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <ValueLine /> ----------------------------
 
-    class ValueLine extends React.Component {
+    class ValueLine extends React.Component<{
+                data:{selected:boolean};
+                lineIdx:number;
+                sublineIdx:number;
+                isLocked:boolean;
+            },
+            {
+                isChecked:boolean;
+            }> {
 
         constructor(props) {
             super(props);
@@ -190,10 +226,19 @@ export function init(dispatcher, he, tagHelperStore) {
                     checked: evt.target.checked
                 }
             });
-        }
 
-        componentWillUnmount() {
-            tagHelperStore.removeChangeListener(this._changeListener);
+            const subj = new Rx.Subject<Kontext.DispatcherPayload>();
+            dispatcher.dispatch(subj);
+            subj.next({
+                actionType: 'TAGHELPER_FOO',
+                props: {xxx: 'bar'}
+            });
+            window.setTimeout(() => {
+                subj.next({
+                    actionType: 'TAGHELPER_FOO',
+                    props: {zzz: 'bar'}
+                });
+            }, 300);
         }
 
         render() {
@@ -219,7 +264,11 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <ValueList /> ----------------------------
 
-    const ValueList = (props) => {
+    const ValueList:React.FuncComponent<{
+                positionValues:Immutable.List<PositionValue>,
+                lineIdx:number;
+                isLocked:boolean;
+            }> = (props) => {
 
         const renderChildren = () => {
             return props.positionValues.map((item, i) => item.available
@@ -259,7 +308,12 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <PositionLine /> ----------------------------
 
-    const PositionLine = (props) => {
+    const PositionLine:React.FuncComponent<{
+                clickHandler:(lineIdx:number, isActive:boolean)=>void;
+                lineIdx:number;
+                isActive:boolean;
+                position:PositionValue
+            }> = (props) => {
 
         const clickHandler = () => {
             props.clickHandler(props.lineIdx, props.isActive);
@@ -292,7 +346,13 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <PositionList /> ----------------------------
 
-    class PositionList extends React.Component {
+    class PositionList extends React.Component<{
+                stateId:string;
+                positions:Immutable.List<PositionValue>;
+            },
+            {
+                activeRow:number;
+            }> {
 
         constructor(props) {
             super(props);
@@ -322,7 +382,7 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component {
+    class TagBuilder extends React.Component<TagBuilderProps, any> { // TODO type
 
         constructor(props) {
             super(props);

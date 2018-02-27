@@ -87,6 +87,9 @@ export class TagHelperStore extends SimplePageStore {
 
         this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
                 switch (payload.actionType) {
+                    case 'TAGHELPER_FOO':
+                        console.log('TAGHELPER_FOO: ', payload.props);
+                    break;
                     case 'TAGHELPER_PRESET_PATTERN':
                         this.presetPattern = payload.props['pattern'];
                         if (this.data.last().size > 0) {
