@@ -1478,8 +1478,8 @@ class Actions(Querying):
             result['form_args'] = dict(
                 wlattr=self.args.wlattr, wlpat=self.args.wlpat, wlsort=self.args.wlsort,
                 subcnorm=self.args.subcnorm, wltype=self.args.wltype, wlnums=self.args.wlnums,
-                wlminfreq=self.args.wlminfreq, wlwords=self.args.wlwords, blacklist=self.args.blacklist,
-                wlFileName='', blFileName='', includeNonwords=self.args.include_nonwords)
+                wlminfreq=self.args.wlminfreq, white_hash=white_hash, black_hash=black_hash,
+                includeNonwords=self.args.include_nonwords)
 
             self._add_flux_save_menu_item('CSV', save_format='csv')
             self._add_flux_save_menu_item('XLSX', save_format='xlsx')

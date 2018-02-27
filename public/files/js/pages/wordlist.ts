@@ -208,6 +208,14 @@ export class WordlistPage extends SimplePageStore  {
                 );
 
                 this.initCorpInfoToolbar();
+
+                var urlArgs = this.layoutModel.getConf<WordlistFormProps>('FormArgs');
+                var multiArgs = new MultiDict();
+                var keys = Object.keys(urlArgs);
+                keys.forEach(function(key){
+                    multiArgs.set(key, urlArgs[key]);
+                });
+                window.history.pushState("", "Word list", "wordlist?" + this.layoutModel.encodeURLParameters(multiArgs));
             }
 
         ).then(
