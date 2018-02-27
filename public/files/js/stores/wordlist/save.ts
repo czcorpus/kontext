@@ -57,6 +57,7 @@ export class WordlistSaveStore extends SimplePageStore {
         this.saveFormat = 'csv';
         this.includeHeading = false;
         this.includeColHeaders = false;
+        this.formIsActive = false;
 
         this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
             switch (payload.actionType) {

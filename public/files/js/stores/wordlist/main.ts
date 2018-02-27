@@ -77,8 +77,6 @@ export class WordlistResultStore extends SimplePageStore {
 
     formStore:WordlistFormStore;
 
-    saveStore:WordlistSaveStore;
-
     data:Immutable.List<IndexedResultItem>;
 
     headings:Immutable.List<HeadingItem>;
@@ -102,11 +100,10 @@ export class WordlistResultStore extends SimplePageStore {
     isBusy:boolean;
 
     constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
-            saveStore:WordlistSaveStore, data:ResultData, headings:Array<HeadingItem>) {
+            data:ResultData, headings:Array<HeadingItem>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formStore = formStore;
-        this.saveStore = saveStore;
         this.currPage = data.page;
         this.currPageInput = String(this.currPage);
         this.pageSize = data.pageSize;
@@ -300,9 +297,5 @@ export class WordlistResultStore extends SimplePageStore {
 
     getWlsort():string {
         return this.formStore.getWlsort();
-    }
-
-    getSaveFormActive():boolean {
-        return this.saveStore.getFormIsActive();
     }
 }

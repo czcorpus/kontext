@@ -381,7 +381,8 @@ declare module "views/wordlist/result" {
         componentHelpers:Kontext.ComponentHelpers,
         layoutViews:Kontext.LayoutViews,
         wordlistSaveViews:any, // TODO type
-        wordlistResultStore:Kontext.PageStore
+        wordlistResultStore:Kontext.PageStore,
+        wordlistSaveStore:Kontext.PageStore
     ):WordlistResultViews;
 }
 
