@@ -25,12 +25,15 @@ import * as React from 'vendor/react';
 
 export function init(dispatcher, he, queryStorageStore) {
 
+    const layoutViews = he.getLayoutViews();
+
     class QueryStorage extends React.Component {
 
         constructor(props) {
             super(props);
             this.state = {
                 data: queryStorageStore.getFlatData(),
+                isBusy: queryStorageStore.getIsBusy(),
                 currentItem: 0
             };
             this._keyPressHandler = this._keyPressHandler.bind(this);
@@ -47,6 +50,7 @@ export function init(dispatcher, he, queryStorageStore) {
             if (!isNaN(inc)) {
                 this.setState({
                     data: queryStorageStore.getFlatData(),
+                    isBusy: queryStorageStore.getIsBusy(),
                     currentItem: (this.state.currentItem + inc) % modulo
                 });
 
@@ -90,6 +94,7 @@ export function init(dispatcher, he, queryStorageStore) {
                     query: historyItem.query
                 }
             });
+            this.props.onCloseTrigger();
         }
 
         componentDidMount() {
@@ -108,6 +113,7 @@ export function init(dispatcher, he, queryStorageStore) {
         _handleStoreChange() {
             this.setState({
                 data: queryStorageStore.getFlatData(),
+                isBusy: queryStorageStore.getIsBusy(),
                 currentItem: this.state.currentItem
             });
         }
@@ -136,6 +142,31 @@ export function init(dispatcher, he, queryStorageStore) {
             he.removeGlobalKeyEventHandler(this._globalKeyEventHandler);
         }
 
+        _renderContents() {
+            if (this.state.isBusy) {
+                return <div style={{padding: '0.4em'}}><layoutViews.AjaxLoaderBarImage /></div>;
+
+            } else {
+                return this.state.data.map((item, i) => {
+                    return (
+                        <li key={i} title={he.formatDate(new Date(item.created * 1000), 1)}
+                                className={i === this.state.currentItem ? 'selected' : null}
+                                onClick={this._handleClickSelection.bind(this, i)}>
+                            <span className="wrapper">
+                                <em>
+                                    {item.query}
+                                </em>
+                                {'\u00a0'}
+                                <span className="corpname">
+                                    ({this._renderParams(item.query_type, item.params)})
+                                </span>
+                            </span>
+                        </li>
+                    );
+                });
+            }
+        }
+
         render() {
             return (
                 <ol className="rows"
@@ -144,23 +175,7 @@ export function init(dispatcher, he, queryStorageStore) {
                         ref={item => item ? item.focus() : null}
                         onBlur={this._handleBlurEvent}
                         onFocus={this._handleFocusEvent}>
-                    {this.state.data.map((item, i) => {
-                        return (
-                            <li key={i} title={he.formatDate(new Date(item.created * 1000), 1)}
-                                    className={i === this.state.currentItem ? 'selected' : null}
-                                    onClick={this._handleClickSelection.bind(this, i)}>
-                                <span className="wrapper">
-                                    <em>
-                                        {item.query}
-                                    </em>
-                                    {'\u00a0'}
-                                    <span className="corpname">
-                                        ({this._renderParams(item.query_type, item.params)})
-                                    </span>
-                                </span>
-                            </li>
-                        );
-                    })}
+                    {this._renderContents()}
                 </ol>
             );
         }
