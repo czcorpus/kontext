@@ -20,9 +20,9 @@
 
 import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
-import {SimplePageStore} from '../../stores/base';
+import {StatelessModel} from '../../stores/base';
 import * as Immutable from 'immutable';
-import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {ActionDispatcher, Action, ActionPayload} from '../../app/dispatcher';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -59,104 +59,207 @@ export interface PositionOptions {
     locked:boolean;
 }
 
-/**
- * This store handles a single tag-builder instance.
- */
-export class TagHelperStore extends SimplePageStore {
 
-    static DispatchToken:string;
+export interface TagHelperStoreState {
 
-    private pluginApi:IPluginApi;
-
-    private corpname:string;
+    corpname:string;
 
     /**
      * Contains all the values (inner lists) along with selection
      * status through whole user interaction (outer list).
      */
-    private data:Immutable.List<Immutable.List<PositionOptions>>;
+    data:Immutable.List<Immutable.List<PositionOptions>>;
 
-    private presetPattern:string;
+    positions:Immutable.List<PositionOptions>;
 
-    private _isBusy:boolean;
+    presetPattern:string;
+
+    displayPattern:string;
+
+    srchPattern:string;
+
+    isBusy:boolean;
+
+    canUndo:boolean;
+
+    stateId:string;
+}
+
+/**
+ * This store handles a single tag-builder instance.
+ */
+export class TagHelperStore extends StatelessModel<TagHelperStoreState> {
+
+    static DispatchToken:string;
+
+    private pluginApi:IPluginApi;
+
 
     constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpname:string) {
-        super(dispatcher);
-        this.pluginApi = pluginApi;
-        this.corpname = corpname;
-        this._isBusy = false;
-        this.data = Immutable.List<Immutable.List<PositionOptions>>().push(Immutable.List<PositionOptions>());
-
-        this.dispatcher.register((payload:ActionPayload) => {
-                switch (payload.actionType) {
-                    case 'TAGHELPER_PRESET_PATTERN':
-                        this.presetPattern = payload.props['pattern'];
-                        if (this.data.last().size > 0) {
-                            this.applyPresetPattern();
-                        }
-                        this.notifyChangeListeners();
-                    break;
+        const positions = Immutable.List<PositionOptions>();
+        super(
+            dispatcher,
+            {
+                corpname: corpname,
+                data: Immutable.List<Immutable.List<PositionOptions>>().push(positions),
+                positions: positions,
+                presetPattern: '',
+                srchPattern: '.*',
+                displayPattern: '.*',
+                isBusy: false,
+                canUndo: false,
+                stateId: ''
+            },
+            (state, action, dispatch) => { // SIDE EFFECTS
+                switch (action.actionType) {
                     case 'TAGHELPER_GET_INITIAL_DATA':
-                        if (this.data.last().size === 0) {
-                            this._isBusy = true;
-                            this.notifyChangeListeners();
-                        }
-                    break;
-                    case 'TAGHELPER_GET_INITIAL_DATA_DONE':
-                        if (!payload.error) {
-                            this.importData(payload.props['data'].labels, payload.props['data'].tags);
-                            this._isBusy = false;
-                            if (this.presetPattern) {
-                                this.applyPresetPattern();
-                            }
+                        if (state.data.last().size === 0) {
+                            this.loadInitialData(state).then(
+                                (data) => {
+                                    dispatch({
+                                        actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
+                                        props: {
+                                            labels: data.labels,
+                                            tags: data.tags
+                                        }
+                                    });
 
-                        } else {
-                            this.pluginApi.showMessage('error', payload.error);
+                                },
+                                (err) => {
+                                    dispatch({
+                                        actionType: 'TAGHELPER_GET_INITIAL_DATA_DONE',
+                                        props: {},
+                                        error: err
+                                    });
+                                }
+                            );
                         }
-                        this.notifyChangeListeners();
                     break;
                     case 'TAGHELPER_CHECKBOX_CHANGED':
-                        this.updateSelectedItem(payload.props['position'], payload.props['value'],
-                                payload.props['checked']);
-                        this.notifyChangeListeners();
-                    break;
-                    case 'TAGHELPER_LOAD_FILTERED_DATA':
-                        this._isBusy = true;
-                        this.notifyChangeListeners();
-                    break;
-                    case 'TAGHELPER_LOAD_FILTERED_DATA_DONE':
-                        this._isBusy = false;
-                        if (!payload.error) {
-                            this.mergeData(
-                                payload.props['data'].tags,
-                                payload.props['triggerRow']
-                            );
-
-                        } else {
-                            this.pluginApi.showMessage('error', payload.error);
+                    this.updateData(state, action.props['position']).then(
+                        (data) => {
+                            dispatch({
+                                actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                                props: {
+                                    tags: data.tags,
+                                    triggerRow: action.props['position']
+                                }
+                            });
+                        },
+                        (err) => {
+                            dispatch({
+                                actionType: 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
+                                props: {},
+                                error: err
+                            });
                         }
-                        this.notifyChangeListeners();
-                    break;
-                    case 'TAGHELPER_UNDO':
-                        if (this.data.size > 2) {
-                            this.data = this.data.slice(0, -1).toList();
-                            this.notifyChangeListeners();
-
-                        } else {
-                            throw new Error('Cannot undo. Already at the first item');
-                        }
-                    break;
-                    case 'TAGHELPER_RESET':
-                        this.resetSelections();
-                        this.notifyChangeListeners();
+                    );
                     break;
                 }
+            });
+        this.pluginApi = pluginApi;
+    }
+
+
+    reduce(state:TagHelperStoreState, action:ActionPayload):TagHelperStoreState {
+        const newState = this.copyState(state);
+        switch (action.actionType) {
+            case 'TAGHELPER_PRESET_PATTERN':
+                newState.presetPattern = action.props['pattern'];
+                if (newState.data.last().size > 0) {
+                    this.applyPresetPattern(newState);
+                }
+            break;
+            case 'TAGHELPER_GET_INITIAL_DATA':
+                if (newState.data.last().size === 0) {
+                    newState.isBusy = true;
+                }
+            break;
+            case 'TAGHELPER_GET_INITIAL_DATA_DONE':
+                if (!action.error) {
+                    this.importData(newState, action.props['labels'], action.props['tags']);
+                    newState.isBusy = false;
+                    if (newState.presetPattern) {
+                        this.applyPresetPattern(newState);
+                    }
+
+                } else {
+                    this.pluginApi.showMessage('error', action.error);
+                }
+            break;
+            case 'TAGHELPER_CHECKBOX_CHANGED':
+                this.updateSelectedItem(newState, action.props['position'], action.props['value'],
+                        action.props['checked']);
+                newState.isBusy = true;
+            break;
+            case 'TAGHELPER_LOAD_FILTERED_DATA_DONE':
+                newState.isBusy = false;
+                if (!action.error) {
+                    this.mergeData(
+                        newState,
+                        action.props['tags'],
+                        action.props['triggerRow']
+                    );
+
+                } else {
+                    this.pluginApi.showMessage('error', action.error);
+                }
+            break;
+            case 'TAGHELPER_UNDO':
+                this.undo(newState);
+            break;
+            case 'TAGHELPER_RESET':
+                this.resetSelections(newState);
+            break;
+            default:
+                return state;
+        }
+        return newState;
+    }
+
+    private loadInitialData(state:TagHelperStoreState):RSVP.Promise<TagDataResponse> {
+        return this.pluginApi.ajax<TagDataResponse>(
+            'GET',
+            this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
+            { corpname: state.corpname }
+        );
+    }
+
+    private updateData(state:TagHelperStoreState, triggerRow:number):RSVP.Promise<TagDataResponse> {
+        let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
+            'GET',
+            this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
+            {
+                corpname: this.pluginApi.getConf('corpname'),
+                pattern: state.srchPattern
+            }
+        );
+        return prom.then(
+            (data) => {
+                return data;
+            },
+            (err) => {
+                this.pluginApi.showMessage('error', err);
             }
         );
     }
 
-    private resetSelections():void {
-        this.data = this.data.slice(0, 2).toList();
+    private resetSelections(state:TagHelperStoreState):void {
+        state.data = state.data.slice(0, 2).toList();
+        state.positions = state.data.last();
+        state.canUndo = this.canUndo(state);
+        state.srchPattern = this.getCurrentPattern(state);
+        state.displayPattern = this.exportCurrentPattern(state);
+    }
+
+    private undo(state:TagHelperStoreState):void {
+        if (state.data.size > 2) {
+            state.data = state.data.slice(0, -1).toList();
+            state.positions = state.data.last();
+        }
+        state.canUndo = this.canUndo(state);
+        state.srchPattern = this.getCurrentPattern(state);
+        state.displayPattern = this.exportCurrentPattern(state);
     }
 
     /**
@@ -164,18 +267,18 @@ export class TagHelperStore extends SimplePageStore {
      * according to parsed values. This is used along with advanced
      * CQL editor.
      */
-    private applyPresetPattern():void {
-        if (/^\||[^\\]\|/.exec(this.presetPattern)) {
+    private applyPresetPattern(state:TagHelperStoreState):void {
+        if (/^\||[^\\]\|/.exec(state.presetPattern)) {
             this.pluginApi.showMessage('warning', this.pluginApi.translate('taghelper__cannot_parse'));
         }
         const parsePattern = /\[[^\]]+\]|[^\]^\[^\.]|\./g;
         const values = [];
         let item = null;
-        while ((item = parsePattern.exec(this.presetPattern)) !== null) {
+        while ((item = parsePattern.exec(state.presetPattern)) !== null) {
             values.push(item[0].substr(0, 1) === '[' ? item[0].substring(1, item[0].length - 1) : item[0]);
         }
-        for (let i = 0; i < this.data.last().size; i +=1 ) {
-            const oldPos = this.data.last().get(i);
+        for (let i = 0; i < state.data.last().size; i +=1 ) {
+            const oldPos = state.data.last().get(i);
             const newPos:PositionOptions = {
                 label: oldPos.label,
                 values: oldPos.values.map((item:PositionValue) => {
@@ -188,42 +291,46 @@ export class TagHelperStore extends SimplePageStore {
                 }).toList(),
                 locked: oldPos.locked
             };
-            this.data = this.data.push(this.data.last().set(i, newPos));
+            state.data = state.data.push(state.data.last().set(i, newPos));
         }
-        this.presetPattern = null;
+        state.positions = state.data.last();
+        state.canUndo = false;
+        state.srchPattern = this.getCurrentPattern(state);
+        state.displayPattern = this.exportCurrentPattern(state);
+        state.presetPattern = null;
     }
 
     /**
      * Performs an initial import (i.e. any previous data is lost)
      */
-    private importData(labels:Array<string>, data:RawTagValues):void {
-        this.data = this.data.push(Immutable.List<PositionOptions>(
-                data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
-                    let posOpts:PositionOptions = {
-                        label: labels[i],
-                        values: null,
-                        locked: false
-                    };
-                    posOpts.values = Immutable.List<PositionValue>(position.map<PositionValue>((item: Array<string>) => {
+    private importData(state:TagHelperStoreState, labels:Array<string>, data:RawTagValues):void {
+        state.data = state.data.push(Immutable.List<PositionOptions>(
+            data.map<PositionOptions>((position:Array<Array<string>>, i:number) => {
+                return {
+                    label: labels[i],
+                    locked: false,
+                    values:  Immutable.List<PositionValue>(position.map<PositionValue>((item: Array<string>) => {
                         return {
                             id: item[0],
                             title: item[1],
                             selected: false,
                             available: true
-                        };
-                    }));
-                    return posOpts;
-                })
-            )
-        );
+                        }
+                    }))
+                };
+            })
+        ));
+        state.positions = state.data.last();
+        state.stateId = this.getStateId(state);
+        state.canUndo = this.canUndo(state);
     }
 
     private hasSelectedItemsAt(opt:PositionOptions):boolean {
         return opt.values.some((item:PositionValue) => item.selected === true);
     }
 
-    private hasSelectedItems():boolean {
-        return this.data.last()
+    private hasSelectedItems(state:TagHelperStoreState):boolean {
+        return state.data.last()
             .flatMap(item => item.values
             .map(subitem => subitem.selected))
             .find(x => x === true) !== undefined;
@@ -236,20 +343,19 @@ export class TagHelperStore extends SimplePageStore {
      *    current one is locked
      * 2) any position option value not found in server response is made unavalilable
      */
-    private mergeData(data:UpdateTagValues, triggerRow:number):void {
-        const newItem = this.data.last().map((item:PositionOptions, i:number) => {
-            let newItem:PositionOptions;
-
+    private mergeData(state:TagHelperStoreState, tags:UpdateTagValues, triggerRow:number):void {
+        const newItem = state.data.last().map((item:PositionOptions, i:number) => {
+            let posOpts:PositionOptions;
             if (!item.locked && this.hasSelectedItemsAt(item) && i !== triggerRow) {
-                newItem = {
+                posOpts = {
                     label: item.label,
                     values: item.values,
                     locked: true
                 };
 
             } else if (i !== triggerRow && !item.locked) {
-                const tmp = Immutable.Map(data[i]);
-                newItem = {
+                const tmp = Immutable.Map(tags[i]);
+                posOpts = {
                     label: item.label,
                     values: item.values.map((v:PositionValue) => {
                         return {
@@ -263,19 +369,22 @@ export class TagHelperStore extends SimplePageStore {
                     locked: item.locked
                 };
             } else {
-                newItem = item;
+                posOpts = item;
             }
-            return newItem;
+            return posOpts;
         }).toList();
-        this.data = this.data.pop().push(newItem);
+        state.data = state.data.pop().push(newItem);
+        state.stateId = this.getStateId(state);
+        state.positions = state.data.last();
+        state.canUndo = this.canUndo(state);
     }
 
     /**
      * Changes the 'checked' status of an item specified by a position and a value
      * (.e.g. 2nd position (gender), F value (feminine))
      */
-    private updateSelectedItem(position:number, value:string, checked:boolean):void {
-        const oldPos = this.data.last().get(position);
+    private updateSelectedItem(state:TagHelperStoreState, position:number, value:string, checked:boolean):void {
+        const oldPos = state.data.last().get(position);
         const newPos:PositionOptions = {
             label: oldPos.label,
             values: oldPos.values.map((item:PositionValue) => {
@@ -288,32 +397,16 @@ export class TagHelperStore extends SimplePageStore {
             }).toList(),
             locked: oldPos.locked
         };
-        this.data = this.data.push(this.data.last().set(position, newPos));
+        state.data = state.data.push(state.data.last().set(position, newPos));
+        state.srchPattern = this.getCurrentPattern(state);
+        state.displayPattern = this.exportCurrentPattern(state);
     }
 
-    /**
-     * Update existing data from server based on the current
-     * tag pattern.
-     */
-    private updateData(triggerRow:number):RSVP.Promise<any> {
-        let pattern:string = this.getCurrentPattern();
-        let prom:RSVP.Promise<TagDataResponse> = this.pluginApi.ajax<TagDataResponse>(
-            'GET',
-            this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
-            { corpname: this.pluginApi.getConf('corpname'), pattern: pattern }
-        );
-        return prom.then(
-            (data) => {
-                this.mergeData(data.tags, triggerRow);
-                return data;
-            },
-            (err) => {
-                this.pluginApi.showMessage('error', err);
-            }
-        );
+    private canUndo(state:TagHelperStoreState):boolean {
+        return state.data.size > 2;
     }
 
-    getCurrentPattern():string {
+    private getCurrentPattern(state:TagHelperStoreState):string {
         function exportPosition(v) {
             if (v.size > 1) {
                 return '[' + v.join('') + ']';
@@ -325,8 +418,8 @@ export class TagHelperStore extends SimplePageStore {
                 return '.';
             }
         }
-        if (this.hasSelectedItems()) {
-            return this.data.last().map<string>((item:PositionOptions) => {
+        if (this.hasSelectedItems(state)) {
+            return state.data.last().map<string>((item:PositionOptions) => {
                 return exportPosition(item.values
                             .filter((s:PositionValue) => s.selected)
                             .map<string>((s:PositionValue) => s.id)
@@ -338,41 +431,25 @@ export class TagHelperStore extends SimplePageStore {
         }
     }
 
-    exportCurrentPattern():string {
-        return this.getCurrentPattern().replace(/\.\.+$/,  '.*');
+    private exportCurrentPattern(state:TagHelperStoreState):string {
+        return this.getCurrentPattern(state).replace(/\.\.+$/,  '.*');
     }
 
     /**
      * Return options for a selected position (e.g. position 2: M, I, F, N, X)
      */
-    getOptions(position:number):PositionOptions {
-        return this.data.last().get(position);
-    }
-
-    getPositions():Immutable.List<PositionOptions> {
-        return this.data.last();
+    getOptions(state:TagHelperStoreState, position:number):PositionOptions {
+        return state.data.last().get(position);
     }
 
     /**
      * Return an unique state identifier
      */
-    getStateId():string {
-        return this.data.last().map<string>((item:PositionOptions) => {
-            let ans = item.values.filter((s:PositionValue) => s.selected)
+    private getStateId(state:TagHelperStoreState):string {
+        return state.data.last().map<string>((item:PositionOptions) => {
+            const ans = item.values.filter((s:PositionValue) => s.selected)
                     .map<string>((s:PositionValue) => s.id);
             return ans.size > 0 ? '[' + ans.join('') + ']' : ''
         }).join('');
-    }
-
-    isBusy():boolean {
-        return this._isBusy;
-    }
-
-    canUndo():boolean {
-        return this.data.size > 2;
-    }
-
-    getCorpname():string {
-        return this.corpname;
     }
 }

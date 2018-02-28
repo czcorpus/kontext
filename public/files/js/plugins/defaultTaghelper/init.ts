@@ -22,7 +22,6 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperStore} from './stores';
-import {TagHelperActions} from './actions';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
@@ -43,7 +42,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 
     getWidgetView():React.ComponentClass {
         return viewInit(
-            new TagHelperActions(this.pluginApi.dispatcher(), this.pluginApi, this.store),
+            this.pluginApi.dispatcher(),
             this.pluginApi.getComponentHelpers(),
             this.store
         ).TagBuilder;
