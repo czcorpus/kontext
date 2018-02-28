@@ -18,18 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
-/// <reference path="../types/ajaxResponses.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../types/common';
+import {AjaxResponse} from '../types/ajaxResponses';
 import * as corplistComponent from 'plugins/corparch/init';
 import {PageModel, PluginName} from '../app/main';
 import liveAttributes from 'plugins/liveAttributes/init';
 import {ConcLinesStorage, openStorage} from '../conclines';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {TextTypesStore} from '../stores/textTypes/attrValues';
 import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
 import {CQLEditorStore} from '../stores/query/cqleditor/store';

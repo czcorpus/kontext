@@ -20,7 +20,6 @@
  */
 
 /// <reference path="./aai.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
 /// <amd-dependency path="aai" />
 

@@ -18,12 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-
+import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import * as kbLayouts from 'misc/keyboardLayouts';
+
+declare var kbLayouts:Array<Kontext.VirtualKeyboardLayout>; // generated on compile time
+
 
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
 

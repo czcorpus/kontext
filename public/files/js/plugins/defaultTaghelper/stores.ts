@@ -16,13 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
-
+import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 

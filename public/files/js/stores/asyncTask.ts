@@ -18,13 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../types/common';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from './base';
 import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
-
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {

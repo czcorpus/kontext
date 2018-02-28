@@ -18,25 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
 /// <reference path="../types/coreViews.d.ts" />
-/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/views.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
+/// <reference path="../types/compat.d.ts" />
 /// <reference path="../vendor.d.ts/react.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
-
 
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 import * as RSVP from 'vendor/rsvp';
 import * as Rx from '@reactivex/rxjs';
 
+import {PluginInterfaces} from '../types/plugins';
+import {Kontext, ViewOptions} from '../types/common';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
-// import {Dispatcher} from 'vendor/Dispatcher';
 import {ActionDispatcher} from './dispatcher';
 import {init as documentViewsFactory} from '../views/document';
 import {init as commonViewsFactory} from 'views/common';
@@ -49,7 +47,7 @@ import {UserInfo} from '../stores/user/info';
 import {CorpusViewOptionsStore} from '../stores/options/structsAttrs';
 import {GeneralViewOptionsStore} from '../stores/options/general';
 import {L10n} from './l10n';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {AsyncTaskChecker} from '../stores/asyncTask';
 import {UserSettings} from './userSettings';
 import {MainMenuStore, InitialMenuData} from '../stores/mainMenu';

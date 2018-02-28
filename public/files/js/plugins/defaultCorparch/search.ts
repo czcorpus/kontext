@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
+import {Kontext} from '../../types/common';
 
 
 /**

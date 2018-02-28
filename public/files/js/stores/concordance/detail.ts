@@ -18,17 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import {MultiDict, importColor} from '../../util';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
+import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
 /**

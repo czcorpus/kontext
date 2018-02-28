@@ -16,10 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
+import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';

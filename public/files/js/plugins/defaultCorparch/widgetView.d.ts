@@ -19,8 +19,8 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 
 export function init(
     dispatcher:Kontext.ActionDispatcher,

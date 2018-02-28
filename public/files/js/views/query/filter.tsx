@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
 import {init as inputInit} from './input';
 import {FilterStore} from '../../stores/query/filter';
 import {QueryHintStore} from '../../stores/query/main';

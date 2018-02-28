@@ -19,9 +19,9 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import {Kontext} from '../../types/common';
 import {FreqResultsSaveStore} from '../../stores/freqs/save';
 import {ActionDispatcher} from '../../app/dispatcher';
 

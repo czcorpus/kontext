@@ -17,9 +17,9 @@
  */
 
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../types/ajaxResponses.d.ts" />
 
+import {Kontext} from '../types/common';
+import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginApi} from '../app/main';
 import * as corplist from 'plugins/corparch/init';
 import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';

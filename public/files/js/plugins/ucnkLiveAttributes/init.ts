@@ -18,15 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 
+import {Kontext, TextTypes} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 import textTypesStore = require('../../stores/textTypes/attrValues');
 import liveAttrsStore = require('./store');
 import * as RSVP from 'vendor/rsvp';
+import * as Immutable from 'immutable';
 import common = require('./common');
 import {init as viewInit} from './view';
 import createSubcMixer from 'plugins/subcmixer/init';

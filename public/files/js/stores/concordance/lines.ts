@@ -18,18 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 
+import {Kontext, TextTypes, ViewOptions} from '../../types/common';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {SimplePageStore, SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
 import {AudioPlayer} from './media';

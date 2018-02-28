@@ -19,9 +19,10 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
+import {Kontext} from '../../types/common';
 import {SampleStore} from '../../stores/query/sample';
 import {SwitchMainCorpStore} from '../../stores/query/switchmc';
 import {ActionDispatcher} from '../../app/dispatcher';

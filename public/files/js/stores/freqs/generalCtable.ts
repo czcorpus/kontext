@@ -18,10 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {TextTypes} from '../../types/common';
+import {FreqResultResponse} from '../../types/ajaxResponses';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher} from '../../app/dispatcher';

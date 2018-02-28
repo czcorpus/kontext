@@ -17,10 +17,10 @@
  */
 
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import * as RSVP from 'vendor/rsvp';
+import {Kontext} from '../../types/common';
 
 declare var require:any;
 require('./style.less'); // webpack

@@ -18,12 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
 import {SimplePageStore} from '..//base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 
 
 export class QueryContextStore extends SimplePageStore {

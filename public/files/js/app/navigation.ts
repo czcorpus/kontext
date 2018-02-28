@@ -20,12 +20,12 @@
 
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp-ajax.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../types/common.d.ts" />
 
 import * as rsvpAjax from 'vendor/rsvp-ajax';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 
+import {AjaxResponse} from '../types/ajaxResponses';
+import {Kontext} from '../types/common';
 import {MultiDict} from '../util';
 
 

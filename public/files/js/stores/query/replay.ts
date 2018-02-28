@@ -19,11 +19,10 @@
  */
 
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
 
-import * as Immutable from 'vendor/immutable';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import {Kontext} from '../../types/common';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';

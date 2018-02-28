@@ -24,6 +24,8 @@
 /// <reference path="./corplistView.d.ts" />
 /// <reference path="./widgetView.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 import {CorplistWidgetStore} from './widget';
 import {CorplistPage} from './corplist';
 import {init as viewInit} from './corplistView';

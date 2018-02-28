@@ -19,6 +19,8 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 import {SimplePageStore} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as common from './common';

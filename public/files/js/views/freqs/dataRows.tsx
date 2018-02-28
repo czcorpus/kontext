@@ -19,10 +19,10 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
 import {FreqDataRowsStore, ResultHeader, ResultItem} from '../../stores/freqs/dataRows';
 import {ActionDispatcher} from '../../app/dispatcher';
 

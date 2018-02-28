@@ -16,11 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
 /// <reference path="../types/coreViews.d.ts" />
 /// <reference path="../vendor.d.ts/react.d.ts" />
 
-
+import {Kontext} from '../types/common';
 import * as React from 'vendor/react';
 import * as ReactDOM from 'vendor/react-dom';
 import {ActionDispatcher} from '../app/dispatcher';

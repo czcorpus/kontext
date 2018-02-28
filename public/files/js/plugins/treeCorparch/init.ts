@@ -16,17 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {init as viewInit, TreeCorparchViews} from './view';
 import {QueryStore} from '../../stores/query/main';
 

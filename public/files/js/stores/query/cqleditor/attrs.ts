@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../../types/common.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../../../types/common';
+import * as Immutable from 'immutable';
 
 /**
  * IAttrHelper defines a general object able to

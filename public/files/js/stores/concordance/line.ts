@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-import Immutable = require('vendor/immutable');
+import * as Immutable from 'immutable';
 
 
 export class TextChunk {

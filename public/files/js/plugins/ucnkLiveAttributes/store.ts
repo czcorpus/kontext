@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
+import {Kontext, TextTypes} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
+import {PluginInterfaces} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 import * as textTypesStore from '../../stores/textTypes/attrValues';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 
 
 interface ServerBibData {

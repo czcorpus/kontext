@@ -19,10 +19,10 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
 import {CTFlatStore, FreqDataItem} from '../../stores/freqs/flatCtable';
 import {FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
 import {init as ctViewOptsFactory} from './ctViewOpts';

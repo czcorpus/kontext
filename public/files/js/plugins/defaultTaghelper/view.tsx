@@ -19,14 +19,13 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TagHelperStore, PositionValue} from './stores';
 import * as Rx from '@reactivex/rxjs';
+import {Kontext} from '../../types/common';
 
 
 export interface TagBuilderProps {

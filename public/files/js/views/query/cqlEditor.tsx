@@ -18,12 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
 import {CQLEditorStore, CQLEditorStoreState} from '../../stores/query/cqleditor/store';
 import {ActionDispatcher} from '../../app/dispatcher';
 import {CQLEditorActions} from '../../stores/query/cqleditor/actions';

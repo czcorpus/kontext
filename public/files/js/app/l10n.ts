@@ -18,11 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../vendor.d.ts/intl-messageformat.d.ts" />
 /// <reference path="../vendor.d.ts/translations.d.ts" />
 
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import * as translations from 'translations';
 import IntlMessageFormat = require('vendor/intl-messageformat');
 

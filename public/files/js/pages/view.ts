@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 /// <reference path="../types/views.d.ts" />
@@ -28,7 +26,10 @@
 import * as SoundManager from 'vendor/SoundManager';
 import * as RSVP from 'vendor/rsvp';
 
+import {Kontext, TextTypes} from '../types/common';
+import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel} from '../app/main';
+import {PluginInterfaces} from '../types/plugins';
 import {parseUrlArgs} from '../app/navigation';
 import {ActionPayload} from '../app/dispatcher';
 import {MultiDict, updateProps} from '../util';

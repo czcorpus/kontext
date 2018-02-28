@@ -18,14 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext, ViewOptions} from '../../types/common';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import * as Rx from '@reactivex/rxjs';
 import {SynchronizedModel, SimplePageStore} from '../base';

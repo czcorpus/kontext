@@ -20,21 +20,17 @@
 
 /// <reference path="../vendor.d.ts/react.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
 
 /// <reference path="../types/coreViews.d.ts" />
-/// <reference types="@reactivex/rxjs" />
 
-
-declare interface ObjectConstructor {
-    assign(target: any, ...sources: any[]): any;
-}
+import * as Immutable from 'immutable';
+import * as Rx from '@reactivex/rxjs';
 
 
 /**
  *
  */
-declare module Kontext {
+export namespace Kontext {
 
     /**
      *
@@ -596,7 +592,7 @@ declare module Kontext {
 }
 
 
-declare module ViewOptions {
+export namespace ViewOptions {
 
     export interface AttrDesc {
         n: string;
@@ -680,7 +676,7 @@ declare module ViewOptions {
  * This module contains types used along with text type
  * selection component (e.g. when creating a subcorpus).
  */
-declare module TextTypes {
+export namespace TextTypes {
 
     /**
      *
@@ -852,7 +848,7 @@ declare module TextTypes {
     /**
      *
      */
-    interface ITextInputAttributeSelection extends AttributeSelection {
+    export interface ITextInputAttributeSelection extends AttributeSelection {
 
         getTextFieldValue():string;
 
@@ -1082,9 +1078,4 @@ declare module Legacy {
         getContentElement():HTMLElement;
         close():void;
     }
-}
-
-declare module "misc/keyboardLayouts" {
-    var kb:Array<Kontext.VirtualKeyboardLayout>;
-    export = kb;
 }
