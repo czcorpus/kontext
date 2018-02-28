@@ -101,6 +101,12 @@ export class ActionDispatcher {
             this.inStream$.next(action);
         }
 
+        dispatch$(action:(subj:Rx.Subject<ActionPayload>)=>void):void {
+            const subj = new Rx.Subject<ActionPayload>();
+            this.inStream$.next(subj);
+            action(subj);
+        }
+
         /**
          * Create a state Observable stream for a store with
          * defined initial state.
