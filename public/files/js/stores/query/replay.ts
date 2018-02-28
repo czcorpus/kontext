@@ -28,7 +28,7 @@ import * as RSVP from 'vendor/rsvp';
 import {SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
 import {QueryStore, QueryFormUserEntries} from './main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {FilterStore} from './filter';
 import {SortStore, MultiLevelSortStore, fetchSortFormArgs, ISubmitableSortStore} from './sort';
 import {SampleStore} from './sample';
@@ -164,7 +164,7 @@ export class QueryInfoStore extends SynchronizedModel {
         super(dispatcher);
         this.pageModel = pageModel;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'CLEAR_QUERY_OVERVIEW_DATA':
                     this.currentQueryOverview = null;
@@ -1068,7 +1068,7 @@ export class IndirectQueryReplayStore extends QueryInfoStore {
         this.pageModel = pageModel;
         this.currEncodedOperations = importEncodedOperations(currentOperations);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'REDIRECT_TO_EDIT_QUERY_OPERATION':
                     window.location.replace(

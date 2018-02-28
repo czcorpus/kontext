@@ -24,7 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -45,7 +45,7 @@ export class QuerySaveAsFormStore extends SimplePageStore {
         this.queryId = queryId;
         this.isBusy = false;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_SAVE_AS_FORM_SET_NAME':
                     this.name = payload.props['value'];

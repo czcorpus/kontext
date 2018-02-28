@@ -24,7 +24,7 @@
 
 
 import {SimplePageStore} from '../base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import rangeSelector = require('./rangeSelector');
@@ -192,7 +192,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.textInputPlaceholder = null;
         this._isBusy = false;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
                     this.changeValueSelection(payload.props['attrName'], payload.props['itemIdx']);

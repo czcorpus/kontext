@@ -26,7 +26,7 @@
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
@@ -134,7 +134,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         this.includeNonwords = false;
 
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
                 this.currentSubcorpus = payload.props['subcorp'];

@@ -30,7 +30,7 @@ import * as RSVP from 'vendor/rsvp';
 import * as Rx from '@reactivex/rxjs';
 import {SynchronizedModel, SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
 import {TextTypesStore} from '../textTypes/attrValues';
@@ -795,7 +795,7 @@ export class QueryHintStore extends SimplePageStore {
         this.translatorFn = translatorFn;
         this.currentHint = this.randomIndex();
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'NEXT_QUERY_HINT':
                     this.setNextHint();

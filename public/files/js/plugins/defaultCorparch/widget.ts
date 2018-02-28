@@ -24,7 +24,7 @@
 
 import * as common from './common';
 import {SimplePageStore} from '../../stores/base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import * as RSVP from 'vendor/rsvp';
@@ -100,7 +100,7 @@ export class CorplistWidgetStore extends SimplePageStore {
         this.currSearchPhrase = '';
         this.currSearchResult = Immutable.List<SearchResultRow>();
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK':
                     this.isWaitingToSwitch = true;

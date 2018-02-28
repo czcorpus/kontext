@@ -29,8 +29,9 @@ import * as SoundManager from 'vendor/SoundManager';
 import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from '../app/main';
-import {MultiDict, updateProps} from '../util';
 import {parseUrlArgs} from '../app/navigation';
+import {ActionPayload} from '../app/dispatcher';
+import {MultiDict, updateProps} from '../util';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceViews} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
@@ -183,13 +184,13 @@ export class ViewPage {
         return this.layoutModel.translate(s, values);
     }
 
-    private deserializeHashAction(v:string):Kontext.DispatcherPayload {
+    private deserializeHashAction(v:string):ActionPayload {
         const tmp = v.substr(1).split('/');
         const args = tmp[1] ? new MultiDict(parseUrlArgs(tmp[1])) : undefined;
         return this.createFormAction(tmp[0], args);
     }
 
-    private createFormAction(actionName:string, args:Kontext.IMultiDict):Kontext.DispatcherPayload {
+    private createFormAction(actionName:string, args:Kontext.IMultiDict):ActionPayload {
         switch (actionName) {
             case 'filter':
                 return {

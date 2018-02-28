@@ -22,7 +22,7 @@
 
 
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 
@@ -59,7 +59,7 @@ export class WordlistSaveStore extends SimplePageStore {
         this.includeColHeaders = false;
         this.formIsActive = false;
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;

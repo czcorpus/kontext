@@ -23,7 +23,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
 
@@ -171,7 +171,7 @@ export class CTFreqFormStore extends SimplePageStore {
         [this.ctxIndex2, this.alignType2] = this.importCtxValue(props.ctfcrit2);
         this.adhocSubcDetector = adhocSubcIdentifier;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_CT_FORM_SET_DIMENSION_ATTR':
                     this.setDimensionAttr(payload.props['dimension'], payload.props['value']);

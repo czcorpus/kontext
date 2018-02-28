@@ -28,7 +28,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {WordlistFormStore} from './form';
 import {MultiDict} from '../../util';
 import {WordlistSaveStore} from './save';
@@ -114,7 +114,7 @@ export class WordlistResultStore extends SimplePageStore {
         this.numItems = null;
 
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'WORDLIST_RESULT_VIEW_CONC':
                     const args = new MultiDict();

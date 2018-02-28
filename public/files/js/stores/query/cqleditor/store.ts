@@ -27,7 +27,7 @@ import {GeneralQueryStore} from '../main';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
-import {ActionDispatcher} from '../../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../../app/dispatcher';
 
 /**
  *
@@ -78,7 +78,7 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
        }
     }
 
-    reduce(state:CQLEditorStoreState, action:Kontext.DispatcherPayload):CQLEditorStoreState {
+    reduce(state:CQLEditorStoreState, action:ActionPayload):CQLEditorStoreState {
         const newState = this.copyState(state);
         switch (action.actionType) {
             case 'CQL_EDITOR_SET_RAW_QUERY':

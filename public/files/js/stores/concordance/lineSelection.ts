@@ -25,7 +25,7 @@ import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {ConcLineStore} from './lines';
 import * as RSVP from 'vendor/rsvp';
 
@@ -95,7 +95,7 @@ export class LineSelectionStore extends SimplePageStore {
         this._isBusy = false;
         this.emailDialogCredentials = null;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'LINE_SELECTION_SELECT_LINE':
                     let val = payload.props['value'];

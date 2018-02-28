@@ -26,7 +26,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -58,7 +58,7 @@ export class SwitchMainCorpStore extends SimplePageStore {
         this.layoutModel = layoutModel;
         this.maincorpValues = Immutable.Map<string, string>(data);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SWITCH_MC_FORM_SUBMIT':
                     window.location.href = this.getSubmitUrl(payload.props['operationId']);

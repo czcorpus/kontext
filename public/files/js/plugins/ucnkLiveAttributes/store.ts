@@ -24,7 +24,7 @@
 /// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 import * as textTypesStore from '../../stores/textTypes/attrValues';
 import * as Immutable from 'vendor/immutable';
@@ -164,7 +164,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         // initial enabled/disabled state:
         this.setControlsEnabled(args.refineEnabled);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
                     this.isBusy = true;

@@ -23,7 +23,7 @@
 
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from './base';
-import {ActionDispatcher} from '../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 
 
 
@@ -70,7 +70,7 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
         this.asyncTaskCheckerInterval = null;
         this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register(function (payload:ActionPayload) {
             switch (payload.actionType) {
                 case 'INBOX_CLEAR_FINISHED_TASKS':
                     self.deleteFinishedTaskInfo().then(

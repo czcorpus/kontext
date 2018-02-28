@@ -23,7 +23,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
@@ -97,7 +97,7 @@ export class MLFreqFormStore extends SimplePageStore {
         this.alignType = Immutable.List<string>(props.alignType);
         this.maxNumLevels = maxNumLevels;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_ML_SET_FLIMIT':
                     if (validateGzNumber(payload.props['value'])) {
@@ -278,7 +278,7 @@ export class TTFreqFormStore extends SimplePageStore {
         this.flimit = props.flimit;
         this.freqSort = props.freq_sort;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_TT_SET_FTTATTR':
                     if (this.fttattr.contains(payload.props['value'])) {

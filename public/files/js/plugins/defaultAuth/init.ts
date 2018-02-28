@@ -23,7 +23,7 @@
 
 import {SimplePageStore} from '../../stores/base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
@@ -48,7 +48,7 @@ export class UserStatusStore extends SimplePageStore {
         this.loginFormVisible = false;
         this.returnUrl = null;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     this.loginFormVisible = true;

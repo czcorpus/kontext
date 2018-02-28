@@ -22,7 +22,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as kbLayouts from 'misc/keyboardLayouts';
 
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
@@ -51,7 +51,7 @@ export class VirtualKeyboardStore extends SimplePageStore {
         this.pageModel = pageModel;
         this.currLayout = 0;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
 
             switch (payload.actionType) {
                 case 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY':

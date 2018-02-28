@@ -24,7 +24,7 @@
 
 
 import {SimplePageStore} from '../base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict, uid} from '../../util';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'vendor/immutable';
@@ -46,7 +46,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
         this.onClose = {};
         this.pluginApi = pluginApi;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'MESSAGE_FADE_OUT_ITEM':
                     this.fadeOutMessage(payload.props['messageId']);
@@ -178,7 +178,7 @@ export class CorpusInfoStore extends SimplePageStore {
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'OVERVIEW_CLOSE':
                     this.currentInfoType = null;

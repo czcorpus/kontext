@@ -23,7 +23,7 @@
 
 
 import {SimplePageStore} from '../../stores/base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {init as viewInit} from './view';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
@@ -97,7 +97,7 @@ export class SubcMixerStore extends SimplePageStore {
         this.getCurrentSubcnameFn = getCurrentSubcnameFn; // connects us with and old, non-React form
         this.getAlignedCorporaFn = getAlignedCorporaFn;
         this.corpusIdAttr = corpusIdAttr;
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'UCNK_SUBCMIXER_SET_RATIO':
                     try {

@@ -28,7 +28,7 @@
 import {MultiDict} from '../../util';
 import {SimplePageStore, SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
@@ -352,7 +352,7 @@ export class ConcLineStore extends SynchronizedModel {
             }
         );
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
                     this.changeMainCorpus(payload.props['maincorp']);

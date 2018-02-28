@@ -23,6 +23,7 @@
 /// <reference path="./view.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
@@ -44,7 +45,7 @@ export class IssueReportingStore extends SimplePageStore {
         this._isBusy = false;
         this._isActive = false;
 
-        pluginApi.dispatcher().register((payload:Kontext.DispatcherPayload) => {
+        pluginApi.dispatcher().register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'ISSUE_REPORTING_SET_VISIBILITY':
                     this._isActive = payload.props['value'];

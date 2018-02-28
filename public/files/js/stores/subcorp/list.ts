@@ -30,7 +30,7 @@ import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from '../../app/main';
 import {SimplePageStore} from '../base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
 
@@ -103,7 +103,7 @@ export class SubcorpListStore extends SimplePageStore {
             }
         });
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SUBCORP_LIST_SELECT_LINE':
                     this.selectLine(payload.props['idx']);

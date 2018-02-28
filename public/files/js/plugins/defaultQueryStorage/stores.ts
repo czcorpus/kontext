@@ -25,6 +25,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 
+import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore, cloneRecord} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
@@ -88,7 +89,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         this.editingQueryId = null;
         this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_STORAGE_SET_QUERY_TYPE':
                     this.queryType = payload.props['value'];

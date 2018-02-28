@@ -23,7 +23,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 /**
  *
@@ -46,7 +46,7 @@ export class WithinBuilderStore extends SimplePageStore {
         this.currAttrIdx = 0;
         const self = this;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register(function (payload:ActionPayload) {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
                     self.loadAttrs().then(

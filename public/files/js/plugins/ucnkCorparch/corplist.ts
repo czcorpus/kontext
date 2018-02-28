@@ -20,7 +20,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 import {SimplePageStore} from '../../stores/base';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';
 
@@ -46,7 +46,7 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
             self.selectedKeywords[item] = true;
         });
         this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
+            function (payload:ActionPayload) {
                 switch (payload.actionType) {
                     case 'KEYWORD_CLICKED':
                         self.offset = 0;
@@ -150,7 +150,7 @@ export class CorpusAccessRequestStore extends SimplePageStore {
         const self = this;
         this.pluginApi = pluginApi;
         this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
+            function (payload:ActionPayload) {
                 switch (payload.actionType) {
                     case 'CORPUS_ACCESS_REQ_SUBMITTED':
                         self.askForAccess(payload.props).then(

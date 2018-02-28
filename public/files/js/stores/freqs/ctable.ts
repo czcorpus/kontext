@@ -24,7 +24,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
@@ -213,7 +213,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         // TODO attrs from form store:
         // 1.
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
                     this.alphaLevel = payload.props['value'];

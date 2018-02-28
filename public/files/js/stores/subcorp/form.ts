@@ -26,7 +26,7 @@ import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TextTypesStore} from '../../stores/textTypes/attrValues';
 
 export class SubcorpFormStore extends SimplePageStore {
@@ -57,7 +57,7 @@ export class SubcorpFormStore extends SimplePageStore {
         this.inputMode = 'gui';
         this.subcname = '';
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SUBCORP_FORM_SET_INPUT_MODE':
                     this.inputMode = payload.props['value'];
@@ -157,7 +157,7 @@ export class SubcorpWithinFormStore extends SimplePageStore {
         if (this.lines.size === 0) {
             this.lines = this.lines.push(new WithinLine(this.lines.size, false, initialStructName, ''));
         }
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SUBCORP_FORM_WITHIN_LINE_ADDED':
                     this.addLine(payload.props);

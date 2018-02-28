@@ -24,7 +24,7 @@
 
 import * as React from 'vendor/react';
 import * as Immutable from 'vendor/immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TagHelperStore, PositionValue} from './stores';
 import * as Rx from '@reactivex/rxjs';
 
@@ -227,7 +227,7 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, t
                 }
             });
 
-            const subj = new Rx.Subject<Kontext.DispatcherPayload>();
+            const subj = new Rx.Subject<ActionPayload>(); // TODO remove
             dispatcher.dispatch(subj);
             subj.next({
                 actionType: 'TAGHELPER_FOO',

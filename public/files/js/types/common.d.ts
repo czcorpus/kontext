@@ -89,11 +89,11 @@ declare module Kontext {
     }
 
     /**
-     *
+     * TODO remove once all the JSX templates are transformed to TSX
      */
     export interface ActionDispatcher {
-        register(callback:(payload:Kontext.DispatcherPayload)=>void):Rx.Subscription;
-        dispatch(payload:Kontext.DispatcherPayload):void;
+        register(callback:(payload:any)=>void):Rx.Subscription;
+        dispatch(payload:any):void;
     }
 
     export interface FullCorpusIdent {
@@ -159,13 +159,6 @@ declare module Kontext {
     export interface PluginFactory<T> {
         (api:PluginApi):RSVP.Promise<T>;
     }
-
-
-    export interface IReducer<T> {
-
-        reduce(state:T, action:Kontext.DispatcherPayload):T;
-    }
-
 
     /**
      * A Flux Store. Please note that only Flux Views are expected
@@ -295,25 +288,6 @@ declare module Kontext {
      */
     export interface StoreListener {
         (err?:Error):void;
-    }
-
-    /**
-     * Flux event dispatcher payload.
-     */
-    export interface DispatcherPayload {
-
-        /**
-         * Upper case action identifier
-         */
-        actionType:string;
-
-        /**
-         * Action's arguments. A defined, non-null
-         * object should be always used.
-         */
-        props:GeneralProps;
-
-        error?:Error;
     }
 
     export interface IBrowserInfo {

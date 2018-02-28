@@ -23,7 +23,7 @@
 
 import {SimplePageStore} from './base';
 import {PageModel} from '../app/main';
-import {ActionDispatcher} from '../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 
@@ -118,7 +118,7 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
         this.selectionListeners = Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>();
         this.data = importMenuData(initialData);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             if (payload.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
                 this.activeItem = null;
                 this.notifyChangeListeners();

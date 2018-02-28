@@ -25,7 +25,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {FreqFormInputs} from './freqForms';
@@ -111,7 +111,7 @@ export class FreqDataRowsStore extends SimplePageStore {
             saveLinkFn
         );
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_RESULT_SET_MIN_FREQ_VAL':
                     if (this.validateNumber(payload.props['value'], 0)) {

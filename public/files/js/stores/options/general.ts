@@ -25,7 +25,7 @@
 import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -85,7 +85,7 @@ export class GeneralViewOptionsStore extends SimplePageStore implements ViewOpti
         this.submitResponseHandlers = Immutable.List<()=>void>();
         this.isBusy = false;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE':
                     this.pageSize = payload.props['value'];

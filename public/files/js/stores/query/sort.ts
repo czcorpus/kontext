@@ -24,7 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -141,7 +141,7 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
         this.sposValues = Immutable.Map<string, string>(props.spos);
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx']));
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SORT_SET_ACTIVE_STORE':
                     this.isActiveActionValues = this.isActiveActionValues.set(
@@ -328,7 +328,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
 
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'mlsortx']));
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'ML_SORT_FORM_SUBMIT':
                     this.submit(payload.props['sortId']);

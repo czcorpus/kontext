@@ -24,6 +24,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
+import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
 import {init as viewInit, TreeCorparchViews} from './view';
@@ -70,7 +71,7 @@ export class TreeWidgetStore extends SimplePageStore {
         this.querySetupHandler = querySetupHandler;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
                 switch (payload.actionType) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
                         let item = this.idMap.get(payload.props['nodeId']);

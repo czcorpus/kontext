@@ -23,7 +23,7 @@
 
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'vendor/immutable';
 
@@ -40,7 +40,7 @@ export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore 
         this.layoutModel = layoutModel;
         this.userData = null;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'USER_INFO_REQUESTED':
                     this.loadUserInfo().then(

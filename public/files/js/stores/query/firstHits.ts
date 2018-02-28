@@ -26,7 +26,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
 export class FirstHitsStore extends SimplePageStore {
@@ -40,7 +40,7 @@ export class FirstHitsStore extends SimplePageStore {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.docStructValues = Immutable.Map<string, string>();
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FILTER_FIRST_HITS_SUBMIT':
                     this.submitForm(payload.props['opKey']);

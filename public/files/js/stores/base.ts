@@ -21,7 +21,7 @@
 /// <reference path="../types/common.d.ts" />
 
 import * as Rx from '@reactivex/rxjs';
-import {ActionDispatcher} from '../app/dispatcher';
+import {ActionDispatcher, ActionPayload, IReducer} from '../app/dispatcher';
 
 /**
  * A base class for KonText's Flux stores.
@@ -39,12 +39,8 @@ export class SimplePageStore implements Kontext.PageStore {
         this.changeListeners = [];
     }
 
-    dispatcherRegister(fn:(payload:Kontext.DispatcherPayload)=>void|Rx.Observable<Kontext.DispatcherPayload>):void {
+    dispatcherRegister(fn:(payload:ActionPayload)=>void):void {
         this.dispatcher.register(fn);
-    }
-
-    getDispatcherToken():string {
-        return ''; // TODO !!!! REMOVE
     }
 
     /**
@@ -157,7 +153,7 @@ export interface StatelessModelListener<T> {
  * the state change directly. The implementation is based on Rx.js
  * streams.
  */
-export abstract class StatelessModel<T> implements ISynchronizedModel<T>, Kontext.IReducer<T> {
+export abstract class StatelessModel<T> implements ISynchronizedModel<T>, IReducer<T> {
 
     private state$:Rx.BehaviorSubject<T>;
 
@@ -178,7 +174,7 @@ export abstract class StatelessModel<T> implements ISynchronizedModel<T>, Kontex
      * response is the original state (which makes React rendering
      * more effective).
      */
-    abstract reduce(state:T, action:Kontext.DispatcherPayload):T;
+    abstract reduce(state:T, action:ActionPayload):T;
 
     /**
      * A function used by React component to listen for

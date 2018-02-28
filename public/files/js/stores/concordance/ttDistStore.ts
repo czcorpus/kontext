@@ -27,7 +27,7 @@ import * as Immutable from 'vendor/immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {ConcLineStore} from './lines';
 
@@ -129,7 +129,7 @@ export class TextTypesDistStore extends SimplePageStore {
         this.sampleSize = 0;
         this.blockedByAsyncConc = this.concLineStore.isUnfinishedCalculation();
         this.isBusy = this.concLineStore.isUnfinishedCalculation();
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case '$CONCORDANCE_ASYNC_CALCULATION_UPDATED':
                     this.blockedByAsyncConc = payload.props['isUnfinished'];

@@ -22,7 +22,38 @@
 
 import * as Rx from '@reactivex/rxjs';
 
-type ActionType = Kontext.DispatcherPayload|Rx.Observable<Kontext.DispatcherPayload>;
+type Action = ActionPayload|Rx.Observable<ActionPayload>;
+
+
+export interface ActionPayload {
+
+    /**
+     * Upper case action identifier
+     */
+    actionType:string;
+
+    /**
+     * Action's arguments. A defined, non-null
+     * object should be always used.
+     */
+    props:Kontext.GeneralProps;
+
+    /**
+     * An optional action error. If not empty
+     * then all the props should be considered
+     * unreliable.
+     */
+    error?:Error;
+}
+
+/**
+ *
+ */
+export interface IReducer<T> {
+
+    reduce(state:T, action:ActionPayload):T;
+
+}
 
 /**
  * KonText ActionDispatcher is inspired by Flux
@@ -38,16 +69,16 @@ export class ActionDispatcher {
          * (typical for simple sync actions) or an Observable
          * (typical for asynchronous actions).
          */
-        private inStream$:Rx.Subject<ActionType>;
+        private inStream$:Rx.Subject<Action>;
 
         /**
          * These are flattened user actions (i.e. even action streams
          * are here as individual actions).
          */
-        private action$:Rx.Observable<Kontext.DispatcherPayload>;
+        private action$:Rx.Observable<ActionPayload>;
 
         constructor() {
-            this.inStream$ = new Rx.Subject<ActionType>();
+            this.inStream$ = new Rx.Subject<Action>();
             this.action$ = this.inStream$.flatMap(v => {
                 if (v instanceof Rx.Observable) {
                     return v;
@@ -58,7 +89,7 @@ export class ActionDispatcher {
             }).share();
         }
 
-        register(callback:(payload:Kontext.DispatcherPayload)=>void):Rx.Subscription {
+        register(callback:(payload:ActionPayload)=>void):Rx.Subscription {
             return this.action$.subscribe(callback);
         }
 
@@ -67,7 +98,7 @@ export class ActionDispatcher {
          * action object (for synchronous actions)
          * or an Rx.Observable (for asynchronous ones).
          */
-        dispatch(action:ActionType):void {
+        dispatch(action:Action):void {
             this.inStream$.next(action);
         }
 
@@ -75,11 +106,11 @@ export class ActionDispatcher {
          * Create a state Observable stream for a store with
          * defined initial state.
          */
-        createStateStream$<T>(model:Kontext.IReducer<T>, initialState:T):Rx.BehaviorSubject<T> {
+        createStateStream$<T>(model:IReducer<T>, initialState:T):Rx.BehaviorSubject<T> {
             const state$ = new Rx.BehaviorSubject(null);
             this.action$
                 .scan(
-                    (state:T, action:Kontext.DispatcherPayload) => action !== null  ? model.reduce(state, action) : state,
+                    (state:T, action:ActionPayload) => action !== null  ? model.reduce(state, action) : state,
                     initialState
                 )
                 .subscribe(state$);

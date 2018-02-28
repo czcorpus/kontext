@@ -25,7 +25,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore, validateGzNumber} from '../../stores/base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {CollFormStore} from '../../stores/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
@@ -90,7 +90,7 @@ export class CollResultsSaveStore extends SimplePageStore {
         this.collArgsProviderFn = collArgsProviderFn;
         this.saveLinkFn = saveLinkFn;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
@@ -364,7 +364,7 @@ export class CollResultStore extends SimplePageStore {
             this.calcWatchdog.startWatching();
         }
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'COLL_RESULT_SET_PAGE_INPUT_VAL':
                     this.currPageInput = payload.props['value'];

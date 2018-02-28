@@ -24,7 +24,7 @@
 import * as Immutable from 'vendor/immutable';
 import {SimplePageStore} from '../../stores/base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {ContingencyTableStore} from './ctable';
 import {CTFlatStore} from './flatCtable';
@@ -67,7 +67,7 @@ export class FreqResultsSaveStore extends SimplePageStore {
         this.freqArgsProviderFn = freqArgsProviderFn;
         this.saveLinkFn = saveLinkFn;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
@@ -193,7 +193,7 @@ export class FreqCTResultsSaveStore extends SimplePageStore {
         this.ctTableStore = ctTableStore;
         this.ctFlatStore = ctFlatStore;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_CT_SET_SAVE_MODE':
                     this.saveMode = payload.props['value'];

@@ -23,7 +23,7 @@
 
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'vendor/immutable';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
 type RawTagValues = Array<Array<Array<string>>>;
@@ -85,7 +85,7 @@ export class TagHelperStore extends SimplePageStore {
         this._isBusy = false;
         this.data = Immutable.List<Immutable.List<PositionOptions>>().push(Immutable.List<PositionOptions>());
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
                 switch (payload.actionType) {
                     case 'TAGHELPER_FOO':
                         console.log('TAGHELPER_FOO: ', payload.props);

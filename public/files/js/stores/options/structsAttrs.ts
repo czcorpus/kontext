@@ -25,7 +25,7 @@
 import {SimplePageStore} from '../base';
 import * as Immutable from 'vendor/immutable';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 
 
@@ -70,7 +70,7 @@ export class CorpusViewOptionsStore extends SimplePageStore implements ViewOptio
         this.updateHandlers = Immutable.List<()=>void>();
         this.isWaiting = false;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'VIEW_OPTIONS_LOAD_DATA':
                     this.loadData().then(

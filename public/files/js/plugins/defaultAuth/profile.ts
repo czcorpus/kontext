@@ -21,7 +21,7 @@
 /// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
@@ -46,7 +46,7 @@ export class UserProfileStore extends SimplePageStore {
         this.currPasswd = '';
         this.newPasswd = '';
         this.newPasswd2 = '';
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'USER_PROFILE_SET_CURR_PASSWD':
                     this.currPasswd = payload.props['value'];

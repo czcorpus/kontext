@@ -25,7 +25,7 @@
 import {MultiDict, importColor} from '../../util';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import {ActionDispatcher} from '../../app/dispatcher';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {ConcLineStore} from './lines';
 import {AudioPlayer} from './media';
 import * as Immutable from 'vendor/immutable';
@@ -192,7 +192,7 @@ export class ConcDetailStore extends SimplePageStore {
         this.isBusy = false;
         this.tokenDetailIsBusy = false;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_EXPAND_KWIC_DETAIL':
                     this.expaningSide = payload.props['position'];
@@ -804,7 +804,7 @@ export class RefsDetailStore extends SimplePageStore {
         this.data = Immutable.List<RefsColumn>();
         this.isBusy = false;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_SHOW_REF_DETAIL':
                     this.isBusy = true;
