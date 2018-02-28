@@ -20,6 +20,46 @@
 
 import {Kontext, TextTypes} from '../types/common';
 import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../app/dispatcher';
+
+
+
+/**
+ * An interface used by KonText plug-ins to access
+ * core functionality (for core components, this is
+ * typically provided by PageModel).
+ */
+export interface IPluginApi {
+    getConf<T>(key:string):T;
+    createStaticUrl(path:string):string;
+    createActionUrl(path:string, args?:Array<[string,string]>|Kontext.IMultiDict):string;
+    ajax<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):RSVP.Promise<T>;
+    showMessage(type:string, message:any, onClose?:()=>void);
+    translate(text:string, values?:any):string;
+    formatNumber(v:number):string;
+    formatDate(d:Date, timeFormat?:number):string;
+    userIsAnonymous():boolean;
+    dispatcher():any; // TODO
+    getComponentHelpers():Kontext.ComponentHelpers;
+    renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
+                            target:HTMLElement, props?:T):void;
+    unmountReactComponent(element:HTMLElement):boolean;
+    getStores():Kontext.LayoutStores;
+    getViews():CoreViews.Runtime;
+    pluginIsActive(name:string):boolean;
+    getConcArgs():Kontext.IMultiDict;
+    registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
+    resetMenuActiveItemAndNotify():void;
+    getHelpLink(ident:string):string;
+    setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
+}
+
+/**
+ * General specification of a plug-in object.
+ */
+export interface PluginFactory<T> {
+    (api:IPluginApi):RSVP.Promise<T>;
+}
 
 /**
  *

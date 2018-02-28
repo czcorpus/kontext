@@ -20,7 +20,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {SimplePageStore} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as common from './common';
@@ -38,7 +38,7 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
     private initialKeywords:Array<string>;
 
 
-    constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
+    constructor(pluginApi:IPluginApi, corplistTableStore:CorplistTableStore) {
         super(pluginApi);
         const self = this;
         this.corplistTableStore = corplistTableStore;
@@ -136,18 +136,18 @@ export class CorplistTableStore extends corplistDefault.CorplistTableStore {
     /**
      *
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher, pluginApi);
     }
 }
 
 export class CorpusAccessRequestStore extends SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     static DispatchToken:string;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(pluginApi.dispatcher());
         const self = this;
         this.pluginApi = pluginApi;
@@ -189,7 +189,7 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     components:any;
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     protected corpusAccessRequestStore:CorpusAccessRequestStore;
 
@@ -197,7 +197,7 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     protected corplistTableStore:CorplistTableStore;
 
-    constructor(pluginApi:Kontext.PluginApi, viewsInit:((...args:any[])=>any)) {
+    constructor(pluginApi:IPluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
         this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi.dispatcher(), pluginApi);
         this.corplistTableStore = new CorplistTableStore(pluginApi.dispatcher(), pluginApi);

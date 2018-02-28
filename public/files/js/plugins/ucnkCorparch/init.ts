@@ -24,6 +24,7 @@
 import {Kontext} from '../../types/common';
 import {CorplistItemUcnk} from './common';
 import {CorplistPage} from './corplist';
+import {IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
@@ -35,7 +36,7 @@ import * as dcInit from '../defaultCorparch/init';
  * @param pluginApi
  * @returns {CorplistPage}
  */
-export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage {
+export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
     const overviewViews = overviewViewInit(
         pluginApi.dispatcher(),
         pluginApi.getComponentHelpers(),
@@ -62,7 +63,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
  * @param querySetupHandler
  * @param options
  */
-export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+export function createWidget(targetAction:string, pluginApi:IPluginApi,
         queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
     return dcInit.createWidget(targetAction, pluginApi, queryStore, querySetupHandler, options);
 }

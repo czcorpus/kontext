@@ -25,7 +25,7 @@
 declare var $:any;
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../../stores/base';
 import {ActionDispatcher} from '../../app/dispatcher';
@@ -38,7 +38,7 @@ require('./style.less'); // webpack
  */
 export class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private waitingStatus:boolean;
 
@@ -48,7 +48,7 @@ export class SyntaxTreeViewer extends SimplePageStore implements PluginInterface
 
     private resizeThrottleTimer:number;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
     }
@@ -113,7 +113,7 @@ export class SyntaxTreeViewer extends SimplePageStore implements PluginInterface
 
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<SyntaxTreeViewer> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<SyntaxTreeViewer> {
     return new RSVP.Promise<SyntaxTreeViewer>((resolve:(val:SyntaxTreeViewer)=>void, reject:(e:any)=>void) => {
         resolve(new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi));
     });

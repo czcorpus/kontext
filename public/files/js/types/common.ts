@@ -99,34 +99,6 @@ export namespace Kontext {
     }
 
     /**
-     * An interface used by KonText plug-ins
-     */
-    export interface PluginApi {
-        getConf<T>(key:string):T;
-        createStaticUrl(path:string):string;
-        createActionUrl(path:string, args?:Array<[string,string]>|IMultiDict):string;
-        ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
-        showMessage(type:string, message:any, onClose?:()=>void);
-        translate(text:string, values?:any):string;
-        formatNumber(v:number):string;
-        formatDate(d:Date, timeFormat?:number):string;
-        userIsAnonymous():boolean;
-        dispatcher():any; // TODO
-        getComponentHelpers():Kontext.ComponentHelpers;
-        renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
-                             target:HTMLElement, props?:T):void;
-        unmountReactComponent(element:HTMLElement):boolean;
-        getStores():Kontext.LayoutStores;
-        getViews():CoreViews.Runtime;
-        pluginIsActive(name:string):boolean;
-        getConcArgs():IMultiDict;
-        registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
-        resetMenuActiveItemAndNotify():void;
-        getHelpLink(ident:string):string;
-        setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
-    }
-
-    /**
      * This interface is used by legacy non-React code in corparch plug-ins.
      * It attaches miscellaneous events which may happen in the query form
      * and to which these plug-ins must react to.
@@ -147,13 +119,6 @@ export namespace Kontext {
      */
     export interface CorplistItemClick {
         (corpora:Array<string>, subcorpId:string):RSVP.Promise<any>;
-    }
-
-    /**
-     * General specification of a plug-in object.
-     */
-    export interface PluginFactory<T> {
-        (api:PluginApi):RSVP.Promise<T>;
     }
 
     /**

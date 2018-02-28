@@ -22,6 +22,7 @@
 
 import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../base';
+import {IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict, uid} from '../../util';
 import * as RSVP from 'vendor/rsvp';
@@ -36,9 +37,9 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
 
     onClose:{[id:string]:()=>void};
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.messages = Immutable.List<Kontext.UserNotification>();
         this.onClose = {};
@@ -156,7 +157,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
  */
 export class CorpusInfoStore extends SimplePageStore {
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     corpusData:any;
 
@@ -171,7 +172,7 @@ export class CorpusInfoStore extends SimplePageStore {
     isWaiting:boolean = false;
 
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;

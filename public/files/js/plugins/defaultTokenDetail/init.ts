@@ -24,7 +24,7 @@
 /// <reference path="./view.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as initView, DefaultTokenDetailRenderers} from './view';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
@@ -33,13 +33,13 @@ import * as Immutable from 'immutable';
 
 export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.IPlugin {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private views:DefaultTokenDetailRenderers;
 
     alignedCorpora:Immutable.List<string>;
 
-    constructor(pluginApi:Kontext.PluginApi, views:DefaultTokenDetailRenderers, alignedCorpora:Array<string>) {
+    constructor(pluginApi:IPluginApi, views:DefaultTokenDetailRenderers, alignedCorpora:Array<string>) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.alignedCorpora = Immutable.List<string>(alignedCorpora);
@@ -83,7 +83,7 @@ export class DefaultTokenDetailBackend implements PluginInterfaces.TokenDetail.I
 }
 
 
-export default function create(pluginApi:Kontext.PluginApi,
+export default function create(pluginApi:IPluginApi,
         alignedCorpora:Array<string>):RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin> {
     return new RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin>(
         (resolve:(d)=>void, reject:(err)=>void) => {

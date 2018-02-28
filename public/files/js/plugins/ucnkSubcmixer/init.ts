@@ -21,7 +21,7 @@
 
 import {Kontext, TextTypes} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {init as viewInit} from './view';
 import * as Immutable from 'immutable';
@@ -68,7 +68,7 @@ export class SubcMixerStore extends SimplePageStore {
 
     static CATEGORY_SIZE_ERROR_TOLERANCE = 1.0; // in %
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     private shares:Immutable.List<SubcMixerExpression>;
 
@@ -86,7 +86,7 @@ export class SubcMixerStore extends SimplePageStore {
 
     private errorTolerance:number = SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi,
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
             textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
             getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>, corpusIdAttr:string) {
         super(dispatcher);
@@ -379,11 +379,11 @@ export class SubcMixerStore extends SimplePageStore {
 
 class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
 
-    pluginApi:Kontext.PluginApi
+    pluginApi:IPluginApi
 
     private store:SubcMixerStore;
 
-    constructor(pluginApi:Kontext.PluginApi, store:SubcMixerStore) {
+    constructor(pluginApi:IPluginApi, store:SubcMixerStore) {
         this.pluginApi = pluginApi;
         this.store = store;
     }
@@ -404,7 +404,7 @@ class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
 
 
 export default function create(
-        pluginApi:Kontext.PluginApi,
+        pluginApi:IPluginApi,
         textTypesStore:TextTypes.ITextTypesStore,
         getCurrentSubcnameFn:()=>string,
         getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,

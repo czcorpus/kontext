@@ -20,7 +20,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperStore} from './stores';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
@@ -31,11 +31,11 @@ require('./style.less'); // webpack
 
 export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private store:TagHelperStore;
 
-    constructor(pluginApi:Kontext.PluginApi, store:TagHelperStore) {
+    constructor(pluginApi:IPluginApi, store:TagHelperStore) {
         this.pluginApi = pluginApi;
         this.store = store;
     }
@@ -49,7 +49,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
     }
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
     const plugin = new TagHelperPlugin(pluginApi, new TagHelperStore(pluginApi.dispatcher(), pluginApi));
     return new RSVP.Promise<PluginInterfaces.ITagHelper>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
         resolve(plugin);

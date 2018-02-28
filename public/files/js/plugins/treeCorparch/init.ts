@@ -22,7 +22,7 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'immutable';
@@ -47,7 +47,7 @@ export class TreeWidgetStore extends SimplePageStore {
 
     static DispatchToken:string;
 
-    protected pluginApi:Kontext.PluginApi;
+    protected pluginApi:IPluginApi;
 
     private data:Node;
 
@@ -61,7 +61,7 @@ export class TreeWidgetStore extends SimplePageStore {
 
     private querySetupHandler:Kontext.QuerySetupHandler
 
-    constructor(pluginApi:Kontext.PluginApi, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
                 querySetupHandler:Kontext.QuerySetupHandler,
                 corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
         super(pluginApi.dispatcher());
@@ -160,7 +160,7 @@ export class TreeWidgetStore extends SimplePageStore {
  * @param querySetupHandler - query form functions
  * @param options A configuration of the widget
  */
-export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+export function createWidget(targetAction:string, pluginApi:IPluginApi,
             queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
     const widgetWrapper = window.document.createElement('div');
 
@@ -176,13 +176,13 @@ export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
 
 export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private treeStore:TreeWidgetStore;
 
     private viewsLib:TreeCorparchViews;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
         this.treeStore = new TreeWidgetStore(
             pluginApi,
@@ -218,6 +218,6 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 }
 
 
-export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage {
+export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
     return new CorplistPage(pluginApi);
 }

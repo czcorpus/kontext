@@ -22,7 +22,7 @@
 import * as RSVP from 'vendor/rsvp';
 import * as aai from './aai-config';
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -30,7 +30,7 @@ require('./style.less'); // webpack
 export class LindatAppBar implements PluginInterfaces.IToolbar {
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
     return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
         aai.init();
         resolve(new LindatAppBar());

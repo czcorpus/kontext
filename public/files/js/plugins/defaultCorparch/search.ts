@@ -22,6 +22,7 @@
 
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
+import {IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../util';
 import {Kontext} from '../../types/common';
 
@@ -97,14 +98,14 @@ export class SearchEngine {
 
     private cache:Cache;
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private onWaiting:()=>void;
 
     private onDone:()=>void;
 
 
-    constructor(pluginApi:Kontext.PluginApi, cacheCapacity:number, keywords:Array<[string, string, string]>) {
+    constructor(pluginApi:IPluginApi, cacheCapacity:number, keywords:Array<[string, string, string]>) {
         this.pluginApi = pluginApi;
         this.cache = new Cache(cacheCapacity);
         this.currKeywords = Immutable.List<string>();

@@ -51,24 +51,24 @@ declare module 'plugins/applicationBar/toolbar' {
 
 declare module 'plugins/applicationBar/init' {
 
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
+    export default function create(pluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
 }
 
 declare module 'plugins/footerBar/init' {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
 }
 
 declare module "plugins/corparch/init" {
 
-    export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+    export function createWidget(targetAction:string, pluginApi:IPluginApi,
         queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.ComponentClass;
 
-    export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):PluginInterfaces.ICorplistPage;
+    export function initCorplistPageComponents(pluginApi:IPluginApi):PluginInterfaces.ICorplistPage;
 }
 
 declare module "plugins/liveAttributes/init" {
 
-    export default function create(pluginApi:Kontext.PluginApi,
+    export default function create(pluginApi:IPluginApi,
                      textTypesStore:TextTypes.ITextTypesStore,
                      selectedCorporaProvider:()=>Immutable.List<string>,
                      ttCheckStatusProvider:()=>boolean,
@@ -77,26 +77,26 @@ declare module "plugins/liveAttributes/init" {
 }
 
 declare module "plugins/queryStorage/init" {
-    export default function create(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage>;
+    export default function create(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage>;
 }
 
 declare module "plugins/taghelper/init" {
-    let create:(pluginApi:Kontext.PluginApi)=>RSVP.Promise<PluginInterfaces.ITagHelper>;
+    let create:(pluginApi:IPluginApi)=>RSVP.Promise<PluginInterfaces.ITagHelper>;
     export default create;
 }
 
 declare module "plugins/auth/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IAuth>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IAuth>;
 }
 
 declare module "plugins/syntaxViewer/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer>;
 }
 
 
 declare module "plugins/subcmixer/init" {
 
-    export default function create(pluginApi:Kontext.PluginApi,
+    export default function create(pluginApi:IPluginApi,
             textTypesStore:TextTypes.ITextTypesStore,
             getCurrentSubcnameFn:()=>string,
             getAlignedCoroporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
@@ -105,13 +105,13 @@ declare module "plugins/subcmixer/init" {
 
 
 declare module "plugins/issueReporting/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting>;
 }
 
 
 declare module "plugins/tokenDetail/init" {
     export default function create(
-        pluginApi:Kontext.PluginApi,
+        pluginApi:IPluginApi,
         alignedCorpora:Array<string>
     ):RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin>;
 }

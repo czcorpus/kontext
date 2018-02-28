@@ -21,6 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext, TextTypes} from '../../types/common';
+import {IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'immutable';
 
@@ -41,7 +42,7 @@ enum IntervalChar {
  */
 export class RangeSelector {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private textTypesStore:TextTypes.ITextTypesStore;
 
@@ -51,7 +52,7 @@ export class RangeSelector {
      */
     private modeStatus:Immutable.Map<string, boolean>;
 
-    constructor(pluginApi:Kontext.PluginApi, textTypesStore:TextTypes.ITextTypesStore) {
+    constructor(pluginApi:IPluginApi, textTypesStore:TextTypes.ITextTypesStore) {
         this.pluginApi = pluginApi;
         this.textTypesStore = textTypesStore;
         this.modeStatus = Immutable.Map<string, boolean>(textTypesStore.getAttributes().map(

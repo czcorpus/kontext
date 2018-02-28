@@ -24,7 +24,7 @@
 
 import {ActionPayload} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore, cloneRecord} from '../../stores/base';
 import * as Immutable from 'immutable';
@@ -50,7 +50,7 @@ const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) =>
 
 export class QueryStorageStore extends SimplePageStore implements PluginInterfaces.IQueryStorageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private data:Immutable.List<Kontext.QueryHistoryItem>;
 
@@ -74,7 +74,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     private editingQueryName:string;
 
-    constructor(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number) {
+    constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this.data = Immutable.List<Kontext.QueryHistoryItem>();

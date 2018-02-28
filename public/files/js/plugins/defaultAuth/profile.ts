@@ -22,6 +22,7 @@
 
 import {Kontext} from '../../types/common';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {IPluginApi} from '../../types/plugins';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
@@ -29,7 +30,7 @@ import * as RSVP from 'vendor/rsvp';
 
 export class UserProfileStore extends SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private currPasswd:string;
 
@@ -39,7 +40,7 @@ export class UserProfileStore extends SimplePageStore {
 
     private userData:Kontext.UserCredentials;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi, userData:Kontext.UserCredentials) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.userData = userData;

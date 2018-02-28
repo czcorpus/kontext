@@ -21,6 +21,7 @@
 import {Kontext, TextTypes} from '../../types/common';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore} from '../base';
+import {IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
@@ -138,7 +139,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
      */
     private rangeSelector:rangeSelector.RangeSelector;
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     /**
      * Represents meta information related to the whole attribute
@@ -170,7 +171,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     private _isBusy:boolean;
 
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi, data:InitialData) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, data:InitialData) {
         super(dispatcher);
         this.attributes = Immutable.List(this.importInitialData(data));
         this.bibLabelAttr = data.bib_attr;

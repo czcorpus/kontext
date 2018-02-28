@@ -22,7 +22,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
@@ -62,7 +62,7 @@ export class AppBarPlugin implements PluginInterfaces.IToolbar {
     }
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IToolbar> {
     return new RSVP.Promise((resolve:(ans:PluginInterfaces.IToolbar)=>void, reject:(e:any)=>void) => {
         toolbar.init();
         const appBarStore = new AppBarStore(pluginApi.dispatcher());

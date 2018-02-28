@@ -25,7 +25,7 @@
 /// <reference path="./widgetView.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {CorplistWidgetStore} from './widget';
 import {CorplistPage} from './corplist';
 import {init as viewInit} from './corplistView';
@@ -43,7 +43,7 @@ require('./style.less'); // webpack
  * @param pluginApi
  * @returns {CorplistPage}
  */
-export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage {
+export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
     const overviewViews = overviewViewInit(
         pluginApi.dispatcher(),
         pluginApi.getComponentHelpers(),
@@ -71,7 +71,7 @@ export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):Corplist
  * @param pluginApi
  * @param options A configuration for the widget
  */
-export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+export function createWidget(targetAction:string, pluginApi:IPluginApi,
         queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass { // TODO opts type
 
     const pluginData = pluginApi.getConf<any>('pluginData')['corparch'] || {}; // TODO type

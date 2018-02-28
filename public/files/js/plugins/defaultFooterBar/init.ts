@@ -21,6 +21,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 import * as RSVP from 'vendor/rsvp';
+import {IPluginApi} from '../../types/plugins';
 import {Kontext} from '../../types/common';
 
 declare var require:any;
@@ -29,7 +30,7 @@ require('./style.less'); // webpack
 export class FooterPlugin {
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<FooterPlugin> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<FooterPlugin> {
     return new RSVP.Promise<FooterPlugin>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
         resolve(new FooterPlugin());
     });

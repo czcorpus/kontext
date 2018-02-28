@@ -20,6 +20,7 @@
 
 import {Kontext} from '../types/common';
 import * as Immutable from 'immutable';
+import {IPluginApi} from '../types/plugins';
 import {SimplePageStore} from './base';
 import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 
@@ -38,7 +39,7 @@ interface AsyncTaskResponse extends Kontext.AjaxResponse {
  */
 export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncTaskStore {
 
-    private pageModel:Kontext.PluginApi;
+    private pageModel:IPluginApi;
 
     private asyncTasks:Immutable.List<Kontext.AsyncTaskInfo>;
 
@@ -49,7 +50,7 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
     static CHECK_INTERVAL = 10000;
 
 
-    constructor(dispatcher:ActionDispatcher, pageModel:Kontext.PluginApi, conf:any) {
+    constructor(dispatcher:ActionDispatcher, pageModel:IPluginApi, conf:any) {
         super(dispatcher);
         const self = this;
         this.pageModel = pageModel;

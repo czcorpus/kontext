@@ -23,7 +23,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {init as viewInit} from './view';
@@ -32,7 +32,7 @@ import * as RSVP from 'vendor/rsvp';
 
 export class IssueReportingStore extends SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private issueBody:string;
 
@@ -40,7 +40,7 @@ export class IssueReportingStore extends SimplePageStore {
 
     private _isActive:boolean;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(pluginApi:IPluginApi) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this._isBusy = false;
@@ -126,7 +126,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 
 
 
-export default function init(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
+export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
     const store = new IssueReportingStore(pluginApi);
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), store);
     return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {

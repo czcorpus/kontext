@@ -23,7 +23,7 @@
 /// <reference path="./view.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
@@ -43,7 +43,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 }
 
 
-export default function init(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
+export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers());
     return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {
         resolve(new IssueReportingPlugin(view.IssueReportingWidget));

@@ -22,7 +22,7 @@
 
 import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
@@ -37,13 +37,13 @@ import {UserProfileStore} from './profile';
  */
 export class UserStatusStore extends SimplePageStore {
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     private loginFormVisible:boolean;
 
     private returnUrl:string;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.loginFormVisible = false;
@@ -89,7 +89,7 @@ export class AuthPlugin implements PluginInterfaces.IAuth {
 
     private userProfileViews:UserProfileViews;
 
-    constructor(profileStore:UserProfileStore, store:UserStatusStore, pluginApi:Kontext.PluginApi) {
+    constructor(profileStore:UserProfileStore, store:UserStatusStore, pluginApi:IPluginApi) {
         this.profileStore = profileStore;
         this.store = store;
 
@@ -116,7 +116,7 @@ export class AuthPlugin implements PluginInterfaces.IAuth {
 }
 
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IAuth> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IAuth> {
     const plugin = new AuthPlugin(
         new UserProfileStore(
             pluginApi.dispatcher(),

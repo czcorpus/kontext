@@ -20,7 +20,7 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore} from '../../stores/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -50,9 +50,9 @@ export class QueryProcessingStore extends SimplePageStore {
 
     protected searchedCorpName:string;
 
-    protected pluginApi:Kontext.PluginApi;
+    protected pluginApi:IPluginApi;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(pluginApi:IPluginApi) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this.data = {rows: [], filters: []};
@@ -118,7 +118,7 @@ export class CorplistFormStore extends QueryProcessingStore {
 
     static DispatchToken:string;
 
-    constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
+    constructor(pluginApi:IPluginApi, corplistTableStore:CorplistTableStore) {
         super(pluginApi);
         var self = this;
         this.corplistTableStore = corplistTableStore;
@@ -217,7 +217,7 @@ export interface CorplistDataResponse extends Kontext.AjaxResponse, CorplistData
  */
 export class CorplistTableStore extends SimplePageStore {
 
-    protected pluginApi:Kontext.PluginApi;
+    protected pluginApi:IPluginApi;
 
     protected data:CorplistData;
 
@@ -231,7 +231,7 @@ export class CorplistTableStore extends SimplePageStore {
      *
      * @param pluginApi
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this._isBusy = false;
@@ -425,13 +425,13 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage  {
 
     components:any;
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     protected corplistFormStore:CorplistFormStore;
 
     protected corplistTableStore:CorplistTableStore;
 
-    constructor(pluginApi:Kontext.PluginApi, viewsInit:((...args:any[])=>any)) {
+    constructor(pluginApi:IPluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
         this.corplistTableStore = new CorplistTableStore(pluginApi.dispatcher(), pluginApi);
         this.corplistFormStore = new CorplistFormStore(pluginApi, this.corplistTableStore);

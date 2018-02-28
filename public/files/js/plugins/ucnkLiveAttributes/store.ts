@@ -23,7 +23,7 @@
 
 import {Kontext, TextTypes} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
-import {PluginInterfaces} from '../../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 import * as textTypesStore from '../../stores/textTypes/attrValues';
@@ -94,7 +94,7 @@ function isArr(v) {
  */
 export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrValueTextInputListener {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private userData:Kontext.UserCredentials;
 
@@ -134,7 +134,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
      * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
      * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
      */
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi,
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
             textTypesStore:TextTypes.ITextTypesStore, selectedCorporaProvider:()=>Immutable.List<string>,
             ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs) {
         super(dispatcher);

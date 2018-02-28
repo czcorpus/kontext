@@ -31,7 +31,7 @@ import * as ReactDOM from 'vendor/react-dom';
 import * as RSVP from 'vendor/rsvp';
 import * as Rx from '@reactivex/rxjs';
 
-import {PluginInterfaces} from '../types/plugins';
+import {PluginInterfaces, IPluginApi} from '../types/plugins';
 import {Kontext, ViewOptions} from '../types/common';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
@@ -808,7 +808,7 @@ class ComponentTools {
  * stores and 'models'. For React component helpers see
  * 'ComponentTools'
  */
-export class PluginApi implements Kontext.PluginApi {
+export class PluginApi implements IPluginApi {
 
     pageModel:PageModel;
 

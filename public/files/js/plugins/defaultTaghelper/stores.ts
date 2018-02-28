@@ -19,6 +19,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
+import {IPluginApi} from '../../types/plugins';
 import {SimplePageStore} from '../../stores/base';
 import * as Immutable from 'immutable';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
@@ -65,7 +66,7 @@ export class TagHelperStore extends SimplePageStore {
 
     static DispatchToken:string;
 
-    protected pluginApi:Kontext.PluginApi;
+    protected pluginApi:IPluginApi;
 
     /**
      * Contains all the values (inner lists) along with selection
@@ -77,7 +78,7 @@ export class TagHelperStore extends SimplePageStore {
 
     private _isBusy:boolean;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this._isBusy = false;
