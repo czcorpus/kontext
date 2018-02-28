@@ -19,13 +19,13 @@
  */
 
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
+import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -52,12 +52,12 @@ export class SwitchMainCorpStore extends SimplePageStore {
 
     private maincorpValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, data:SwitchMainCorpFormProperties) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, data:SwitchMainCorpFormProperties) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.maincorpValues = Immutable.Map<string, string>(data);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SWITCH_MC_FORM_SUBMIT':
                     window.location.href = this.getSubmitUrl(payload.props['operationId']);

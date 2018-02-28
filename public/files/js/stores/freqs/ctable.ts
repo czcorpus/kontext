@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {TextTypes} from '../../types/common';
 import {PageModel} from '../../app/main';
-import * as Immutable from 'vendor/immutable';
+import {FreqResultResponse} from '../../types/ajaxResponses';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 import {GeneralCTStore, CTFreqCell, FreqQuantities} from './generalCtable';
@@ -193,7 +193,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         '#ffffff', '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
     ];
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
                 adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher, pageModel, props, adhocSubcDetector);
         this.d1Labels = Immutable.List<[string, boolean]>();
@@ -212,7 +212,7 @@ export class ContingencyTableStore extends GeneralCTStore {
         // TODO attrs from form store:
         // 1.
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_CT_SET_ALPHA_LEVEL':
                     this.alphaLevel = payload.props['value'];

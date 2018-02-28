@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+
+import {Kontext} from '../../types/common';
 
 export interface ISubcMixerViews {
     Widget:React.ComponentClass;
 }
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
     subcmixerStore:Kontext.PageStore):ISubcMixerViews;

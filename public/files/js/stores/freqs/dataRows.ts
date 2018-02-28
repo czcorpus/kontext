@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {FreqResultResponse} from '../../types/ajaxResponses';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {FreqFormInputs} from './freqForms';
 import {FreqResultsSaveStore} from './save';
@@ -88,7 +88,7 @@ export class FreqDataRowsStore extends SimplePageStore {
 
     private saveStore:FreqResultsSaveStore;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, freqCrit:Array<[string, string]>,
             formProps:FreqFormInputs, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.pageModel = pageModel;
@@ -110,7 +110,7 @@ export class FreqDataRowsStore extends SimplePageStore {
             saveLinkFn
         );
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_RESULT_SET_MIN_FREQ_VAL':
                     if (this.validateNumber(payload.props['value'], 0)) {

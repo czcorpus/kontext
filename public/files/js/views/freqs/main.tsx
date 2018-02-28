@@ -19,12 +19,14 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
+import {Kontext} from '../../types/common';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
 import {FreqDataRowsStore, ResultBlock} from '../../stores/freqs/dataRows';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 // --------------------------- exported types --------------------------------------
 
@@ -49,7 +51,7 @@ interface ExportedComponents {
 // ------------------------ factory --------------------------------
 
 export function init(
-        dispatcher:Kontext.FluxDispatcher,
+        dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
         freqDataRowsStore:FreqDataRowsStore) {
 

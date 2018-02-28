@@ -18,11 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-
+import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import * as kbLayouts from 'misc/keyboardLayouts';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+
+declare var kbLayouts:Array<Kontext.VirtualKeyboardLayout>; // generated on compile time
+
 
 export type VirtualKeyboardLayouts = Array<Kontext.VirtualKeyboardLayout>;
 
@@ -45,12 +47,12 @@ export class VirtualKeyboardStore extends SimplePageStore {
         [32]
     ];
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.currLayout = 0;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
 
             switch (payload.actionType) {
                 case 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY':

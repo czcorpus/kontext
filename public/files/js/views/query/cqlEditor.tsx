@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
-import {CQLEditorStore} from '../../stores/query/cqleditor/store';
+import * as Immutable from 'immutable';
+import {CQLEditorStore, CQLEditorStoreState} from '../../stores/query/cqleditor/store';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {CQLEditorActions} from '../../stores/query/cqleditor/actions';
 
 
 export interface CQLEditorProps {
@@ -39,25 +40,23 @@ export interface CQLEditorViews {
 }
 
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers, editorStore:CQLEditorStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, editorStore:CQLEditorStore) {
+
+    const actions = new CQLEditorActions(dispatcher);
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
 
-    class CQLEditorFallback extends React.Component<CQLEditorProps, {code:string}> {
+    class CQLEditorFallback extends React.PureComponent<CQLEditorProps, CQLEditorStoreState> {
 
         constructor(props) {
             super(props);
-            this.state = {
-                code: editorStore.getRawCode(this.props.sourceId)
-            };
+            this.state = editorStore.getState();
             this.handleStoreChange = this.handleStoreChange.bind(this);
         }
 
-        private handleStoreChange() {
-            this.setState({
-                code: editorStore.getRawCode(this.props.sourceId)
-            });
+        private handleStoreChange(state:CQLEditorStoreState) {
+            this.setState(state);
         }
 
         componentDidMount() {
@@ -71,7 +70,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         render():React.ReactElement {
             return <textarea className="cql-input" rows="2" cols="60" name="cql"
                                 ref={item => this.props.attachCurrInputElement(item)}
-                                value={this.state.code}
+                                value={this.state.rawCode.get(this.props.sourceId)}
                                 onKeyDown={this.props.inputKeyHandler}
                                 spellCheck={false} />;
         }
@@ -79,32 +78,20 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
     // ------------------- <CQLEditor /> -----------------------------
 
-    class CQLEditor extends React.Component<CQLEditorProps, {rawCode:string, richCode:string}> {
+    class CQLEditor extends React.PureComponent<CQLEditorProps, CQLEditorStoreState> {
 
         private editorRoot:Node;
-
-        private rawAnchorIdx:number;
-
-        private rawFocusIdx:number;
 
         constructor(props:CQLEditorProps) {
             super(props);
             this.editorRoot = null;
-            this.rawAnchorIdx = null;
-            this.rawFocusIdx = null
-            this.state = {
-                rawCode: editorStore.getRawCode(this.props.sourceId),
-                richCode: editorStore.getRichCode(this.props.sourceId)
-            };
+            this.state = editorStore.getState();
             this.handleStoreChange = this.handleStoreChange.bind(this);
             this.handleEditorClick = this.handleEditorClick.bind(this);
         }
 
-        private handleStoreChange() {
-            this.setState({
-                rawCode: editorStore.getRawCode(this.props.sourceId),
-                richCode: editorStore.getRichCode(this.props.sourceId)
-            });
+        private handleStoreChange(state:CQLEditorStoreState) {
+            this.setState(state);
         }
 
         private extractText(root:Node) {
@@ -168,13 +155,12 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
 
         private handleInputChange() {
             const src = this.extractText(this.editorRoot);
-            [this.rawAnchorIdx, this.rawFocusIdx] = this.getRawSelection(src);
-            dispatcher.dispatch({
-                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                props: {
-                    sourceId: this.props.sourceId,
-                    query: src.map(v => v[0]).join('')
-                }
+            const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
+            actions.CQL_EDITOR_SET_RAW_QUERY({
+                sourceId: this.props.sourceId,
+                query: src.map(v => v[0]).join(''),
+                rawAnchorIdx: rawAnchorIdx,
+                rawFocusIdx: rawFocusIdx
             });
         }
 
@@ -201,7 +187,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                             actionType: 'TAGHELPER_PRESET_PATTERN',
                             props: {
                                 sourceId: this.props.sourceId,
-                                pattern: this.state.rawCode.substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
+                                pattern: this.state.rawCode.get(this.props.sourceId).substring(leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }
                         });
                         dispatcher.dispatch({
@@ -226,13 +212,8 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
         }
 
         componentDidUpdate(prevProps, prevState) {
-            if (this.rawAnchorIdx !== null && this.rawFocusIdx !== null) {
-                this.reapplySelection(this.rawAnchorIdx, this.rawFocusIdx);
-                this.rawAnchorIdx = null;
-                this.rawFocusIdx = null;
-
-            } else {
-                this.reapplySelection(0, 0); // TODO - we should go to the last position instead
+            if (this.state.rawAnchorIdx !== null && this.state.rawFocusIdx !== null) {
+                this.reapplySelection(this.state.rawAnchorIdx, this.state.rawFocusIdx);
             }
         }
 
@@ -247,13 +228,13 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                         const rawSrc = src.map(v => v[0]).join('');
 
                         if (rawAnchorIdx === rawFocusIdx) {
-                            dispatcher.dispatch({
-                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                                props: {
+                            actions.CQL_EDITOR_SET_RAW_QUERY({
                                     query: evt.keyCode === 8 ?
                                         rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                                         rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
-                                }
+                                    sourceId: this.props.sourceId,
+                                    rawAnchorIdx: 0, // TODO
+                                    rawFocusIdx: 0 // TODO
                             });
                             this.reapplySelection(
                                 evt.keyCode === 8 ? rawAnchorIdx - 1 : rawAnchorIdx,
@@ -261,20 +242,20 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                             );
 
                         } else if (rawAnchorIdx < rawFocusIdx) {
-                            dispatcher.dispatch({
-                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                                props: {
-                                    query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
-                                }
+                            actions.CQL_EDITOR_SET_RAW_QUERY({
+                                query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
+                                sourceId: this.props.sourceId,
+                                rawAnchorIdx: 0, // TODO
+                                rawFocusIdx: 0 // TODO
                             });
                             this.reapplySelection(rawAnchorIdx, rawAnchorIdx);
 
                         } else {
-                            dispatcher.dispatch({
-                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                                props: {
-                                    query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
-                                }
+                            actions.CQL_EDITOR_SET_RAW_QUERY({
+                                query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
+                                sourceId: this.props.sourceId,
+                                rawAnchorIdx: 0, // TODO
+                                rawFocusIdx: 0 // TODO
                             });
                             this.reapplySelection(rawFocusIdx, rawFocusIdx);
                         }
@@ -296,7 +277,7 @@ export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelp
                             className="cql-input"
                             style={{width: '40em', height: '5em'}}
                             ref={(item) => this.refFn(item)}
-                            dangerouslySetInnerHTML={{__html: this.state.richCode}}
+                            dangerouslySetInnerHTML={{__html: this.state.richCode.get(this.props.sourceId)}}
                             onKeyDown={this.props.inputKeyHandler} />;
         }
     }

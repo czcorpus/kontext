@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {TextTypes} from '../../types/common';
+import {FreqResultResponse} from '../../types/ajaxResponses';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher} from '../../app/dispatcher';
 import {availConfLevels} from './confIntervalCalc';
 import {sortAttrVals, isStructAttr, CTFreqFormStore, CTFormProperties, validateMinAbsFreqAttr,
     FreqFilterQuantities, roundFloat} from './ctFreqForm';
@@ -105,7 +105,7 @@ export abstract class GeneralCTStore extends SimplePageStore {
 
     private adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
             adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher);
         this.pageModel = pageModel;

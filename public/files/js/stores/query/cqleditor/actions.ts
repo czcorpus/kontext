@@ -18,29 +18,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../types/common';
-import {PageModel} from '../app/main';
-import authPlugin from 'plugins/auth/init';
+import {ActionDispatcher} from '../../../app/dispatcher';
 
-declare var require:any;
-// weback - ensure a style (even empty one) is created for the page
-require('styles/userProfile.less');
+export class CQLEditorActions {
 
+    dispatcher:ActionDispatcher;
 
-export function init(conf:Kontext.Conf):void {
-    const layoutModel = new PageModel(conf);
+    constructor(dispatcher:ActionDispatcher) {
+        this.dispatcher = dispatcher;
+    }
 
-    layoutModel.init().then(
-        () => {
-            layoutModel.renderReactComponent(
-                layoutModel.getAuthPlugin().getProfileView(),
-                document.getElementById('user-profile-mount'),
-                {}
-            );
-        }
-    ).catch(
-        (err) => {
-            console.error(err);
-        }
-    )
+    CQL_EDITOR_SET_RAW_QUERY(props:{
+            query:string,
+            sourceId:string,
+            rawAnchorIdx:number,
+            rawFocusIdx:number}):void {
+
+        this.dispatcher.dispatch({
+            actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+            props: props
+        });
+        this.dispatcher.dispatch({
+            actionType: 'QUERY_INPUT_SET_QUERY',
+            props: {
+                sourceId: props.sourceId,
+                query: props.query
+            }
+        });
+    }
 }

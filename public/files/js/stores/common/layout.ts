@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
+import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../base';
+import {IPluginApi} from '../../types/plugins';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict, uid} from '../../util';
 import * as RSVP from 'vendor/rsvp';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 
 /**
  *
@@ -36,15 +37,15 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
 
     onClose:{[id:string]:()=>void};
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.messages = Immutable.List<Kontext.UserNotification>();
         this.onClose = {};
         this.pluginApi = pluginApi;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'MESSAGE_FADE_OUT_ITEM':
                     this.fadeOutMessage(payload.props['messageId']);
@@ -156,7 +157,7 @@ export class MessageStore extends SimplePageStore implements Kontext.MessagePage
  */
 export class CorpusInfoStore extends SimplePageStore {
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     corpusData:any;
 
@@ -171,12 +172,12 @@ export class CorpusInfoStore extends SimplePageStore {
     isWaiting:boolean = false;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.dispatcher = dispatcher;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'OVERVIEW_CLOSE':
                     this.currentInfoType = null;

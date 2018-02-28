@@ -16,16 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 
-
+import {Kontext, TextTypes} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {init as viewInit} from './view';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
 declare var require:any;
@@ -69,7 +68,7 @@ export class SubcMixerStore extends SimplePageStore {
 
     static CATEGORY_SIZE_ERROR_TOLERANCE = 1.0; // in %
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     private shares:Immutable.List<SubcMixerExpression>;
 
@@ -87,7 +86,7 @@ export class SubcMixerStore extends SimplePageStore {
 
     private errorTolerance:number = SubcMixerStore.CATEGORY_SIZE_ERROR_TOLERANCE;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
             textTypesStore:TextTypes.ITextTypesStore, getCurrentSubcnameFn:()=>string,
             getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>, corpusIdAttr:string) {
         super(dispatcher);
@@ -97,7 +96,7 @@ export class SubcMixerStore extends SimplePageStore {
         this.getCurrentSubcnameFn = getCurrentSubcnameFn; // connects us with and old, non-React form
         this.getAlignedCorporaFn = getAlignedCorporaFn;
         this.corpusIdAttr = corpusIdAttr;
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'UCNK_SUBCMIXER_SET_RATIO':
                     try {
@@ -380,11 +379,11 @@ export class SubcMixerStore extends SimplePageStore {
 
 class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
 
-    pluginApi:Kontext.PluginApi
+    pluginApi:IPluginApi
 
     private store:SubcMixerStore;
 
-    constructor(pluginApi:Kontext.PluginApi, store:SubcMixerStore) {
+    constructor(pluginApi:IPluginApi, store:SubcMixerStore) {
         this.pluginApi = pluginApi;
         this.store = store;
     }
@@ -405,7 +404,7 @@ class SubcmixerPlugin implements PluginInterfaces.ISubcMixer {
 
 
 export default function create(
-        pluginApi:Kontext.PluginApi,
+        pluginApi:IPluginApi,
         textTypesStore:TextTypes.ITextTypesStore,
         getCurrentSubcnameFn:()=>string,
         getAlignedCorporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,

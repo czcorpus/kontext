@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from '../base';
+import {AjaxResponse} from '../../types/ajaxResponses';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 /**
  *
@@ -37,7 +37,7 @@ export class WithinBuilderStore extends SimplePageStore {
 
     private currAttrIdx:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.data = Immutable.List<[string, string]>();
@@ -45,7 +45,7 @@ export class WithinBuilderStore extends SimplePageStore {
         this.currAttrIdx = 0;
         const self = this;
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register(function (payload:ActionPayload) {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA':
                     self.loadAttrs().then(

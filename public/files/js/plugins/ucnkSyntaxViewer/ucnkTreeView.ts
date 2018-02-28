@@ -19,8 +19,8 @@
  */
 
 /// <reference path="../../vendor.d.ts/d3.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as d3 from 'vendor/d3';
 
 

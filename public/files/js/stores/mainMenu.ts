@@ -18,12 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
-
+import {Kontext} from '../types/common';
 import {SimplePageStore} from './base';
 import {PageModel} from '../app/main';
-import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
 export interface SubmenuItem {
@@ -110,14 +109,14 @@ export class MainMenuStore extends SimplePageStore implements Kontext.IMainMenuS
     private data:Immutable.List<MenuEntry>;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, initialData:InitialMenuData) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.activeItem = null;
         this.selectionListeners = Immutable.Map<string, Immutable.List<(args:Kontext.GeneralProps)=>RSVP.Promise<any>>>();
         this.data = importMenuData(initialData);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             if (payload.actionType === 'MAIN_MENU_CLEAR_ACTIVE_ITEM') {
                 this.activeItem = null;
                 this.notifyChangeListeners();

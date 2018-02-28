@@ -18,11 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
@@ -30,7 +32,7 @@ import * as RSVP from 'vendor/rsvp';
 
 export class IssueReportingStore extends SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private issueBody:string;
 
@@ -38,13 +40,13 @@ export class IssueReportingStore extends SimplePageStore {
 
     private _isActive:boolean;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(pluginApi:IPluginApi) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this._isBusy = false;
         this._isActive = false;
 
-        pluginApi.dispatcher().register((payload:Kontext.DispatcherPayload) => {
+        pluginApi.dispatcher().register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'ISSUE_REPORTING_SET_VISIBILITY':
                     this._isActive = payload.props['value'];
@@ -124,7 +126,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 
 
 
-export default function init(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
+export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
     const store = new IssueReportingStore(pluginApi);
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers(), store);
     return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {

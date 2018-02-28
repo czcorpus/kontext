@@ -18,12 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../types/common';
+import * as Immutable from 'immutable';
+import {IPluginApi} from '../types/plugins';
 import {SimplePageStore} from './base';
-
+import {ActionDispatcher, ActionPayload} from '../app/dispatcher';
 
 
 interface AsyncTaskResponse extends Kontext.AjaxResponse {
@@ -40,7 +39,7 @@ interface AsyncTaskResponse extends Kontext.AjaxResponse {
  */
 export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncTaskStore {
 
-    private pageModel:Kontext.PluginApi;
+    private pageModel:IPluginApi;
 
     private asyncTasks:Immutable.List<Kontext.AsyncTaskInfo>;
 
@@ -51,7 +50,7 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
     static CHECK_INTERVAL = 10000;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:Kontext.PluginApi, conf:any) {
+    constructor(dispatcher:ActionDispatcher, pageModel:IPluginApi, conf:any) {
         super(dispatcher);
         const self = this;
         this.pageModel = pageModel;
@@ -69,7 +68,7 @@ export class AsyncTaskChecker extends SimplePageStore implements Kontext.IAsyncT
         this.asyncTaskCheckerInterval = null;
         this.onUpdate = Immutable.List<Kontext.AsyncTaskOnUpdate>();
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register(function (payload:ActionPayload) {
             switch (payload.actionType) {
                 case 'INBOX_CLEAR_FINISHED_TASKS':
                     self.deleteFinishedTaskInfo().then(

@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {TextTypes} from '../../types/common';
 import {PageModel} from '../../app/main';
-import * as Immutable from 'vendor/immutable';
+import {FreqResultResponse} from '../../types/ajaxResponses';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 import {GeneralCTStore, CTFreqCell} from './generalCtable';
 import {CTFormProperties,  FreqFilterQuantities, roundFloat} from './ctFreqForm';
 import {wilsonConfInterval} from './confIntervalCalc';
@@ -78,14 +78,14 @@ export class CTFlatStore extends GeneralCTStore {
 
     private sortReversed:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CTFormProperties,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CTFormProperties,
             adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector) {
         super(dispatcher, pageModel, props, adhocSubcDetector);
         this.origData = Immutable.List<FreqDataItem>();
         this.sortBy = 'ipm';
         this.sortReversed = true;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_CT_SET_MIN_FREQ':
                     if (this.validateMinAbsFreqAttr(payload.props['value'])) {

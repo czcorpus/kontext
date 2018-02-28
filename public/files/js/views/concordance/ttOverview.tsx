@@ -19,13 +19,14 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/d3-color.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as d3Color from 'vendor/d3-color';
+import * as Immutable from 'immutable';
 import {TextTypesDistStore, FreqItem, FreqBlock} from '../../stores/concordance/ttDistStore';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 export interface TextTypesProps {
@@ -45,7 +46,7 @@ export interface Views {
 }
 
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers, ttDistStore:TextTypesDistStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, ttDistStore:TextTypesDistStore) {
 
     const layoutViews = he.getLayoutViews();
 

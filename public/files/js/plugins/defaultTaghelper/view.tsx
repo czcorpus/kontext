@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016 Institute of the Czech National Corpus
+ * Copyright (c) 2016 Charles University in Prague, Faculty of Arts,
+ *                    Institute of the Czech National Corpus
+ * Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,13 +21,36 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
+import {ActionPayload} from '../../app/dispatcher';
+import {TagHelperStore, PositionValue} from './stores';
+import * as Rx from '@reactivex/rxjs';
+import {Kontext} from '../../types/common';
+import {TagHelperActions} from './actions';
 
 
-export function init(dispatcher, he, tagHelperStore) {
+export interface TagBuilderProps {
+    sourceId:string;
+    actionPrefix:string;
+    range:[number, number];
+    onEscKey:()=>void;
+    onInsert:()=>void;
+}
+
+type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
+
+
+export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers, tagHelperStore:TagHelperStore) {
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
-    class TagDisplay extends React.Component {
+    class TagDisplay extends React.Component<{
+                onEscKey:()=>void,
+                tagValue:string
+            },
+            {
+                pattern:string
+            }> {
 
         constructor(props) {
             super(props);
@@ -64,7 +89,7 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <InsertButton /> ----------------------------
 
-    const InsertButton = (props) => {
+    const InsertButton:React.FuncComponent<{onClick:()=>void}> = (props) => {
         return (
             <button className="util-button" type="button"
                     value="insert" onClick={props.onClick}>
@@ -75,7 +100,7 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <UndoButton /> ----------------------------
 
-    const UndoButton = (props) => {
+    const UndoButton:React.FuncComponent<{onClick:()=>void; enabled:boolean}> = (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button" value="undo"
@@ -95,7 +120,7 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <ResetButton /> ----------------------------
 
-    const ResetButton = (props) => {
+    const ResetButton:React.FuncComponent<{onClick:()=>void; enabled:boolean}> = (props) => {
         if (props.enabled) {
             return (
                 <button type="button" className="util-button cancel"
@@ -116,46 +141,35 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <TagButtons /> ----------------------------
 
-    const TagButtons = (props) => {
+    const TagButtons:React.FuncComponent<{
+                range:[number, number];
+                sourceId:string;
+                onInsert?:()=>void;
+                canUndo:boolean;
+            }> = (props) => {
 
         const buttonClick = (evt) => {
             if (evt.target.value === 'reset') {
-                dispatcher.dispatch({
-                    actionType: 'TAGHELPER_RESET',
-                    props: {}
-                });
+                actionCreator.taghelperReset();
 
             } else if (evt.target.value === 'undo') {
-                dispatcher.dispatch({
-                    actionType: 'TAGHELPER_UNDO',
-                    props: {}
-                });
+                actionCreator.taghelperUndo();
 
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
-                    dispatcher.dispatch({
-                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                        props: {
-                            sourceId: props.sourceId,
-                            query: `"${tagHelperStore.exportCurrentPattern()}"`,
-                            range: props.range
-                        }
-                    });
+                    actionCreator.injectQuery(
+                        props.sourceId,
+                        `"${tagHelperStore.exportCurrentPattern()}"`,
+                        props.range
+                    );
 
                 } else {
-                    dispatcher.dispatch({
-                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
-                        props: {
-                            sourceId: props.sourceId,
-                            query: `[tag="${tagHelperStore.exportCurrentPattern()}"]`,
-                            range: [0, null]
-                        }
-                    });
+                    actionCreator.appendQuery(
+                        props.sourceId,
+                        `[tag="${tagHelperStore.exportCurrentPattern()}"]`
+                    );
                 }
-                dispatcher.dispatch({
-                    actionType: 'TAGHELPER_RESET',
-                    props: {}
-                });
+                actionCreator.taghelperReset();
                 if (typeof props.onInsert === 'function') {
                     props.onInsert();
                 }
@@ -173,7 +187,16 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <ValueLine /> ----------------------------
 
-    class ValueLine extends React.Component {
+    class ValueLine extends React.Component<{
+                data:{selected:boolean};
+                lineIdx:number;
+                sublineIdx:number;
+                isLocked:boolean;
+                checkboxHandler:CheckboxHandler;
+            },
+            {
+                isChecked:boolean;
+            }> {
 
         constructor(props) {
             super(props);
@@ -183,18 +206,12 @@ export function init(dispatcher, he, tagHelperStore) {
 
         _checkboxHandler(evt) {
             this.setState({isChecked: !this.state.isChecked});
-            dispatcher.dispatch({
-                actionType: 'TAGHELPER_CHECKBOX_CHANGED',
-                props: {
-                    position: this.props.lineIdx,
-                    value: this.props.data['id'],
-                    checked: evt.target.checked
-                }
-            });
-        }
+            this.props.checkboxHandler(
+                this.props.lineIdx,
+                this.props.data['id'],
+                evt.target.checked
+            );
 
-        componentWillUnmount() {
-            tagHelperStore.removeChangeListener(this._changeListener);
         }
 
         render() {
@@ -220,12 +237,17 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <ValueList /> ----------------------------
 
-    const ValueList = (props) => {
+    const ValueList:React.FuncComponent<{
+                positionValues:Immutable.List<PositionValue>,
+                lineIdx:number;
+                isLocked:boolean;
+                checkboxHandler:CheckboxHandler;
+            }> = (props) => {
 
         const renderChildren = () => {
             return props.positionValues.map((item, i) => item.available
                 ? <ValueLine key={i} data={item} lineIdx={props.lineIdx} sublineIdx={i}
-                                isLocked={props.isLocked} />
+                                isLocked={props.isLocked} checkboxHandler={props.checkboxHandler} />
                 : null);
         };
 
@@ -241,7 +263,6 @@ export function init(dispatcher, he, tagHelperStore) {
                 </tr>
             );
         };
-
         return (
             props.positionValues.filter(item => item.available).size > 0 ?
             (
@@ -260,7 +281,13 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <PositionLine /> ----------------------------
 
-    const PositionLine = (props) => {
+    const PositionLine:React.FuncComponent<{
+                clickHandler:(lineIdx:number, isActive:boolean)=>void;
+                lineIdx:number;
+                isActive:boolean;
+                position:PositionValue;
+                checkboxHandler:CheckboxHandler;
+            }> = (props) => {
 
         const clickHandler = () => {
             props.clickHandler(props.lineIdx, props.isActive);
@@ -286,14 +313,22 @@ export function init(dispatcher, he, tagHelperStore) {
                 {props.isActive ?
                 <ValueList positionValues={getAvailableChildren()}
                             isLocked={props.position['locked']}
-                            lineIdx={props.lineIdx} /> : null }
+                            lineIdx={props.lineIdx}
+                            checkboxHandler={props.checkboxHandler} /> : null }
             </li>
         );
     };
 
     // ------------------------------ <PositionList /> ----------------------------
 
-    class PositionList extends React.Component {
+    class PositionList extends React.Component<{
+                stateId:string;
+                positions:Immutable.List<PositionValue>;
+                checkboxHandler:CheckboxHandler;
+            },
+            {
+                activeRow:number;
+            }> {
 
         constructor(props) {
             super(props);
@@ -315,7 +350,8 @@ export function init(dispatcher, he, tagHelperStore) {
                     {this.props.positions.map(
                         (item, i) => <PositionLine key={this._mkid(i)} position={item}
                                                     lineIdx={i} clickHandler={this._lineClickHandler}
-                                                    isActive={i === this.state.activeRow} />)}
+                                                    isActive={i === this.state.activeRow}
+                                                    checkboxHandler={this.props.checkboxHandler} />)}
                 </ul>
             );
         }
@@ -323,12 +359,13 @@ export function init(dispatcher, he, tagHelperStore) {
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component {
+    class TagBuilder extends React.Component<TagBuilderProps, any> { // TODO type
 
         constructor(props) {
             super(props);
-            this._changeListener = this._changeListener.bind(this);
             this.state = this._fetchStoreState();
+            this._changeListener = this._changeListener.bind(this);
+            this.checkboxHandler = this.checkboxHandler.bind(this);
         }
 
         _fetchStoreState() {
@@ -338,7 +375,8 @@ export function init(dispatcher, he, tagHelperStore) {
                 stateId: tagHelperStore.getStateId(),
                 newState: tagHelperStore.exportCurrentPattern(),
                 tagValue: tagHelperStore.exportCurrentPattern(),
-                canUndo: tagHelperStore.canUndo()
+                canUndo: tagHelperStore.canUndo(),
+                corpname: tagHelperStore.getCorpname()
             };
         }
 
@@ -348,14 +386,15 @@ export function init(dispatcher, he, tagHelperStore) {
 
         componentDidMount() {
             tagHelperStore.addChangeListener(this._changeListener);
-            dispatcher.dispatch({
-                actionType: 'TAGHELPER_GET_INITIAL_DATA',
-                props: {}
-            });
+            actionCreator.getInitialData();
         }
 
         componentWillUnmount() {
             tagHelperStore.removeChangeListener(this._changeListener);
+        }
+
+        private checkboxHandler(lineIdx:number, value:string, checked:boolean) {
+            actionCreator.checkboxChanged(lineIdx, value, checked, this.state.corpname);
         }
 
         render() {
@@ -377,7 +416,8 @@ export function init(dispatcher, he, tagHelperStore) {
                                 range={this.props.range} />
                 </div>
                 <PositionList positions={this.state.positions}
-                                stateId={this.state.stateId} />
+                                stateId={this.state.stateId}
+                                checkboxHandler={this.checkboxHandler} />
             </div>;
         }
     }

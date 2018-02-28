@@ -18,12 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from '../../stores/base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {ContingencyTableStore} from './ctable';
 import {CTFlatStore} from './flatCtable';
@@ -53,7 +51,7 @@ export class FreqResultsSaveStore extends SimplePageStore {
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             freqArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -66,7 +64,7 @@ export class FreqResultsSaveStore extends SimplePageStore {
         this.freqArgsProviderFn = freqArgsProviderFn;
         this.saveLinkFn = saveLinkFn;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
@@ -187,12 +185,12 @@ export class FreqCTResultsSaveStore extends SimplePageStore {
     saveMode:string;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, ctTableStore:ContingencyTableStore, ctFlatStore:CTFlatStore) {
+    constructor(dispatcher:ActionDispatcher, ctTableStore:ContingencyTableStore, ctFlatStore:CTFlatStore) {
         super(dispatcher);
         this.ctTableStore = ctTableStore;
         this.ctFlatStore = ctFlatStore;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_CT_SET_SAVE_MODE':
                     this.saveMode = payload.props['value'];

@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="./view.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
@@ -43,7 +43,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IIssueReporting {
 }
 
 
-export default function init(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
+export default function init(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting> {
     const view = viewInit(pluginApi.dispatcher(), pluginApi.getComponentHelpers());
     return new RSVP.Promise((resolve:(data)=>void, reject:(err)=>void) => {
         resolve(new IssueReportingPlugin(view.IssueReportingWidget));

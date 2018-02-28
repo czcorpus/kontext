@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-
+import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
@@ -48,6 +47,8 @@ export class WordlistPage extends SimplePageStore  {
     private numNoChange:number;
 
     private lastStatus:number;
+
+    private saveStore:WordlistSaveStore;
 
     static MAX_NUM_NO_CHANGE = 20;
 
@@ -120,7 +121,8 @@ export class WordlistPage extends SimplePageStore  {
             this.layoutModel.getComponentHelpers(),
             this.layoutModel.layoutViews,
             null, // TODO corparch widget view !!!!
-            this
+            this,
+
         );
         this.layoutModel.renderReactComponent(
             views.CorpInfoToolbar,
@@ -155,7 +157,7 @@ export class WordlistPage extends SimplePageStore  {
                 );
                 formStore.csSetState(this.layoutModel.getConf<WordlistFormProps>('FormArgs'));
 
-                const saveStore = new WordlistSaveStore(
+                this.saveStore = new WordlistSaveStore(
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     url => this.setDownloadLink(url),
@@ -166,7 +168,6 @@ export class WordlistPage extends SimplePageStore  {
                     this.layoutModel.dispatcher,
                     this.layoutModel,
                     formStore,
-                    saveStore,
                     {
                         data: this.layoutModel.getConf<Array<ResultItem>>('Data'),
                         page: this.layoutModel.getConf<number>('PageNum'),
@@ -190,7 +191,7 @@ export class WordlistPage extends SimplePageStore  {
                     this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     this.layoutModel.commonViews,
-                    saveStore
+                    this.saveStore
                 );
 
                 const view = wordlistResultViewInit(
@@ -198,7 +199,8 @@ export class WordlistPage extends SimplePageStore  {
                     this.layoutModel.getComponentHelpers(),
                     this.layoutModel.layoutViews,
                     saveViews,
-                    resultStore
+                    resultStore,
+                    this.saveStore
                 );
 
                 this.layoutModel.renderReactComponent(

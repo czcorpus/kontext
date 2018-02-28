@@ -18,15 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-
+import {TextTypes} from '../../types/common';
 import {SimplePageStore} from '../base';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {TextTypesStore} from '../../stores/textTypes/attrValues';
 
 export class SubcorpFormStore extends SimplePageStore {
@@ -45,7 +42,7 @@ export class SubcorpFormStore extends SimplePageStore {
 
     private alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
             withinFormStore:SubcorpWithinFormStore, textTypesStore:TextTypesStore, corpname:string,
             alignedCorporaProvider:()=>Immutable.List<TextTypes.AlignedLanguageItem>) {
         super(dispatcher);
@@ -57,7 +54,7 @@ export class SubcorpFormStore extends SimplePageStore {
         this.inputMode = 'gui';
         this.subcname = '';
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SUBCORP_FORM_SET_INPUT_MODE':
                     this.inputMode = payload.props['value'];
@@ -146,7 +143,7 @@ export class SubcorpWithinFormStore extends SimplePageStore {
 
     private lines:Immutable.List<WithinLine>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, initialStructName:string,
+    constructor(dispatcher:ActionDispatcher, initialStructName:string,
             initialState:Array<{[key:string]:string}>) {
         super(dispatcher);
         this.lines = Immutable.List<WithinLine>();
@@ -157,7 +154,7 @@ export class SubcorpWithinFormStore extends SimplePageStore {
         if (this.lines.size === 0) {
             this.lines = this.lines.push(new WithinLine(this.lines.size, false, initialStructName, ''));
         }
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SUBCORP_FORM_WITHIN_LINE_ADDED':
                     this.addLine(payload.props);

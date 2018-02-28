@@ -16,11 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperStore} from './stores';
+import {TagHelperActions} from './actions';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
@@ -30,26 +32,33 @@ require('./style.less'); // webpack
 
 export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private store:TagHelperStore;
 
-    constructor(pluginApi:Kontext.PluginApi, store:TagHelperStore) {
+    constructor(pluginApi:IPluginApi, store:TagHelperStore) {
         this.pluginApi = pluginApi;
         this.store = store;
     }
 
     getWidgetView():React.ComponentClass {
         return viewInit(
-            this.pluginApi.dispatcher(),
+            new TagHelperActions(this.pluginApi.dispatcher(), this.pluginApi, this.store),
             this.pluginApi.getComponentHelpers(),
             this.store
         ).TagBuilder;
     }
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
-    const plugin = new TagHelperPlugin(pluginApi, new TagHelperStore(pluginApi.dispatcher(), pluginApi));
+export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
+    const plugin = new TagHelperPlugin(
+        pluginApi,
+        new TagHelperStore(
+            pluginApi.dispatcher(),
+            pluginApi,
+            pluginApi.getConf<string>('corpname')
+        )
+    );
     return new RSVP.Promise<PluginInterfaces.ITagHelper>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
         resolve(plugin);
     });

@@ -61,6 +61,9 @@ declare module React {
         forceUpdate(callback?:() => any);
     }
 
+    class PureComponent<T, U> extends Component<T, U> {
+    }
+
     export interface FuncComponent<T> {
         (Props:T, context?:any):ReactElement;
     }

@@ -18,9 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import {IPluginApi} from '../../types/plugins';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
@@ -28,7 +30,7 @@ import * as RSVP from 'vendor/rsvp';
 
 export class UserProfileStore extends SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private currPasswd:string;
 
@@ -38,14 +40,14 @@ export class UserProfileStore extends SimplePageStore {
 
     private userData:Kontext.UserCredentials;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, userData:Kontext.UserCredentials) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, userData:Kontext.UserCredentials) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.userData = userData;
         this.currPasswd = '';
         this.newPasswd = '';
         this.newPasswd2 = '';
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'USER_PROFILE_SET_CURR_PASSWD':
                     this.currPasswd = payload.props['value'];

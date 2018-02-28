@@ -16,17 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="./view.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {init as viewInit, TreeCorparchViews} from './view';
 import {QueryStore} from '../../stores/query/main';
 
@@ -48,7 +47,7 @@ export class TreeWidgetStore extends SimplePageStore {
 
     static DispatchToken:string;
 
-    protected pluginApi:Kontext.PluginApi;
+    protected pluginApi:IPluginApi;
 
     private data:Node;
 
@@ -62,7 +61,7 @@ export class TreeWidgetStore extends SimplePageStore {
 
     private querySetupHandler:Kontext.QuerySetupHandler
 
-    constructor(pluginApi:Kontext.PluginApi, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
                 querySetupHandler:Kontext.QuerySetupHandler,
                 corpusClickHandler:Kontext.CorplistItemClick) { // TODO type !!!!
         super(pluginApi.dispatcher());
@@ -71,7 +70,7 @@ export class TreeWidgetStore extends SimplePageStore {
         this.querySetupHandler = querySetupHandler;
         this.corpusClickHandler = corpusClickHandler;
         this.idMap = Immutable.Map<string, Node>();
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
                 switch (payload.actionType) {
                     case 'TREE_CORPARCH_SET_NODE_STATUS':
                         let item = this.idMap.get(payload.props['nodeId']);
@@ -161,7 +160,7 @@ export class TreeWidgetStore extends SimplePageStore {
  * @param querySetupHandler - query form functions
  * @param options A configuration of the widget
  */
-export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+export function createWidget(targetAction:string, pluginApi:IPluginApi,
             queryStore:QueryStore, querySetupHandler:Kontext.QuerySetupHandler, options:any):React.ComponentClass {
     const widgetWrapper = window.document.createElement('div');
 
@@ -177,13 +176,13 @@ export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
 
 export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private treeStore:TreeWidgetStore;
 
     private viewsLib:TreeCorparchViews;
 
-    constructor(pluginApi:Kontext.PluginApi) {
+    constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
         this.treeStore = new TreeWidgetStore(
             pluginApi,
@@ -219,6 +218,6 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 }
 
 
-export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):CorplistPage {
+export function initCorplistPageComponents(pluginApi:IPluginApi):CorplistPage {
     return new CorplistPage(pluginApi);
 }

@@ -18,19 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
-
-
-import * as Immutable from 'vendor/immutable';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import {Kontext} from '../../types/common';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
 import {PageModel} from '../../app/main';
 import {SimplePageStore} from '../base';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 
 
@@ -76,7 +73,7 @@ export class SubcorpListStore extends SimplePageStore {
 
     private filter:SubcListFilter;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,
@@ -103,7 +100,7 @@ export class SubcorpListStore extends SimplePageStore {
             }
         });
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SUBCORP_LIST_SELECT_LINE':
                     this.selectLine(payload.props['idx']);

@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../../types/common';
+import * as Immutable from 'immutable';
 import {SimplePageStore, validateGzNumber} from '../../stores/base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {CollFormStore} from '../../stores/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
@@ -75,7 +75,7 @@ export class CollResultsSaveStore extends SimplePageStore {
 
     private static GLOBAL_SAVE_LINE_LIMIT = 100000;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             mainStore:CollResultStore, collArgsProviderFn:()=>MultiDict, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -89,7 +89,7 @@ export class CollResultsSaveStore extends SimplePageStore {
         this.collArgsProviderFn = collArgsProviderFn;
         this.saveLinkFn = saveLinkFn;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'MAIN_MENU_SHOW_SAVE_FORM':
                     this.formIsActive = true;
@@ -321,7 +321,7 @@ export class CollResultStore extends SimplePageStore {
 
     private calcWatchdog:CalcWatchdog;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel,
             formStore:CollFormStore, initialData:CollResultData, resultHeading:CollResultHeading,
             pageSize:number, saveLinkFn:((string)=>void), saveLinesLimit:number,
             unfinished:boolean) {
@@ -363,7 +363,7 @@ export class CollResultStore extends SimplePageStore {
             this.calcWatchdog.startWatching();
         }
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'COLL_RESULT_SET_PAGE_INPUT_VAL':
                     this.currPageInput = payload.props['value'];

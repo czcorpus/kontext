@@ -18,34 +18,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
+import {Kontext} from '../types/common';
+import * as Rx from '@reactivex/rxjs';
+import {ActionDispatcher, ActionPayload, IReducer} from '../app/dispatcher';
 
 /**
  * A base class for KonText's Flux stores.
  */
-export class SimplePageStore implements Kontext.PageStore, Kontext.ComposableStore {
+export class SimplePageStore implements Kontext.PageStore {
 
-    dispatcher:Kontext.FluxDispatcher;
+    dispatcher:ActionDispatcher;
 
     private changeListeners:Array<Kontext.StoreListener>;
 
     public static CHANGE_EVENT:string = 'change';
 
-    private static THROTTLING_TIMEOUT_MS = 300;
-
-    private dispatcherToken:string;
-
-    constructor(dispatcher:Kontext.FluxDispatcher) {
+    constructor(dispatcher:ActionDispatcher) {
         this.dispatcher = dispatcher;
         this.changeListeners = [];
     }
 
-    dispatcherRegister(fn:(payload:Kontext.DispatcherPayload)=>void):void {
-        this.dispatcherToken = this.dispatcher.register(fn);
-    }
-
-    getDispatcherToken():string {
-        return this.dispatcherToken;
+    dispatcherRegister(fn:(payload:ActionPayload)=>void):void {
+        this.dispatcher.register(fn);
     }
 
     /**
@@ -94,6 +88,150 @@ export class SimplePageStore implements Kontext.PageStore, Kontext.ComposableSto
                 console.error(e);
                 throw e;
             }
+        }
+    }
+}
+
+
+/**
+ * Synchronized model represents a way how to synchronize
+ * different models in case of asynchronous operations
+ * even in case we cannot intercept core action chain
+ * (e.g. in case a plug-in needs to attach itself to
+ * a core action - this is probably the case even ActionCreator
+ * cannot be used for).
+ *
+ * If a model is expected to be a master for some
+ * synchronization it is recommended to use one of
+ * basic model classes supporting this method and
+ * call the function once async operations are
+ * done. For an action 'SOME_ACTION' this produces
+ * additional action '$SOME_ACTION' to which
+ * dependent stores can respond.
+ */
+export interface ISynchronizedModel<T> {
+    synchronize(action:string, payload:T):void;
+}
+
+
+/**
+ *
+ */
+export class SynchronizedModel extends SimplePageStore implements ISynchronizedModel<Kontext.GeneralProps> {
+
+    constructor(dispatcher:ActionDispatcher) {
+        super(dispatcher);
+    }
+
+    synchronize(action:string, props:Kontext.GeneralProps):void {
+        if (action.substr(0, 1) !== '$') {
+            this.dispatcher.dispatch({
+                actionType: '$' + action,
+                props: props
+            });
+
+        } else {
+            throw new Error('Cannot commit synchronization action');
+        }
+        this.notifyChangeListeners();
+    }
+}
+
+/**
+ * A function implemented by a React component
+ * to listen for changes in a stateless model.
+ */
+export interface StatelessModelListener<T> {
+    (state:T, error?:Error):void;
+}
+
+/**
+ * StatelessModel is a most recent component model implementation
+ * inspired by some Flux/Redux ideas. The model is expected to
+ * provide state transformation methods but it does not control
+ * the state change directly. The implementation is based on Rx.js
+ * streams.
+ */
+export abstract class StatelessModel<T> implements ISynchronizedModel<T>, IReducer<T> {
+
+    private state$:Rx.BehaviorSubject<T>;
+
+    private dispatcher:ActionDispatcher;
+
+    private subscriptions:Array<[StatelessModelListener<T>, Rx.Subscription]>;
+
+    constructor(dispatcher:ActionDispatcher, initialState:T) {
+        this.dispatcher = dispatcher;
+        this.subscriptions = [];
+        this.state$ = dispatcher.createStateStream$(this, initialState);
+    }
+
+    /**
+     * This function defines how a model responds to different
+     * actions. Please make sure that the function returns a
+     * state for any action - for unsupported actions the best
+     * response is the original state (which makes React rendering
+     * more effective).
+     */
+    abstract reduce(state:T, action:ActionPayload):T;
+
+    /**
+     * A function used by React component to listen for
+     * changes in a state handled by this model.
+     */
+    addChangeListener(fn:StatelessModelListener<T>):void {
+        const subsc = this.state$.subscribe(fn);
+        this.subscriptions.push([fn, subsc]);
+    }
+
+    removeChangeListener(fn:StatelessModelListener<T>):void {
+        for (var i = 0; i < this.subscriptions.length; i += 1) {
+            if (this.subscriptions[i][0] === fn) {
+                this.subscriptions[i][1].unsubscribe();
+                this.subscriptions.splice(i, 1);
+                break;
+            }
+        }
+    }
+
+    synchronize(action:string, state:T):void {
+        if (action.substr(0, 1) !== '$') {
+            this.dispatcher.dispatch({
+                actionType: '$' + action,
+                props: state
+            });
+
+        } else {
+            throw new Error('Cannot commit synchronization action');
+        }
+    }
+
+    /**
+     * Return current state. This is typically used only
+     * in React components' constructors to set their initial
+     * state.
+     */
+    getState():T {
+        return this.state$.getValue();
+    }
+
+    /**
+     * A helper function to create a shallow copy
+     * of a provided state. It is expected that
+     * all the values inside are immutable.
+     */
+    copyState(state:T):T {
+        if (Object.assign) {
+            return <T>Object.assign({}, state);
+
+        } else {
+            const ans:{[key:string]:any} = {};
+            for (let p in state) {
+                if (state.hasOwnProperty(p)) {
+                    ans[p] = state[p];
+                }
+            }
+            return <T>ans;
         }
     }
 }

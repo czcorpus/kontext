@@ -18,163 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="./common.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../vendor.d.ts/react.d.ts" />
-
-/**
- *
- */
-declare module PluginInterfaces {
-
-    export interface IAuth {
-        getUserPaneView():React.ComponentClass;
-        getProfileView():React.ComponentClass;
-    }
-
-    export interface IToolbar {
-    }
-
-    export interface IFooterBar {
-    }
-
-    export interface ISubcMixer {
-        refreshData():void;
-        getWidgetView():React.ComponentClass;
-    }
-
-    export interface ISyntaxViewer extends Kontext.PageStore {
-        render(target:HTMLElement, tokenNumber:number, kwicLength:number):void;
-        close():void;
-        onPageResize():void;
-        isWaiting():boolean;
-    }
-
-    export interface ITagHelper {
-        getWidgetView():React.ComponentClass;
-    }
-
-    export interface IQueryStorageStore extends Kontext.PageStore {
-
-        /**
-         *
-         */
-        getData():Immutable.List<Kontext.QueryHistoryItem>;
-    }
-
-    export interface IQueryStorage {
-
-        /**
-         * Import data to store. This is meant to be used right
-         * after plug-in initialization and it should never
-         * notify listeners.
-         */
-        importData(data:Array<Kontext.QueryHistoryItem>):void;
-
-        getWidgetView():React.ComponentClass;
-
-        getStore():IQueryStorageStore;
-    }
-
-    export interface ICorparchStore {
-        getCurrentSubcorpus():string;
-        getAvailableSubcorpora():Immutable.List<string>;
-        addChangeListener(fn:Kontext.StoreListener):void;
-        removeChangeListener(fn:Kontext.StoreListener):void;
-    }
-
-    export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
-        getViews(subcMixerView:React.ComponentClass, textTypesStore:TextTypes.ITextTypesStore):any; // TODO types
-        getAlignedCorpora():Immutable.List<TextTypes.AlignedLanguageItem>;
-        notifyChangeListeners():void;
-    }
-
-    /**
-     *
-     */
-    export interface ILiveAttrsInitArgs {
-
-        /**
-         * A structural attribute used to uniquely identify a bibliographic
-         * item (i.e. a book). Typically something like "doc.id".
-         */
-        bibAttr:string;
-
-        /**
-         * A list of aligned corpora available to be attached to
-         * the current corpus.
-         */
-        availableAlignedCorpora:Array<Kontext.AttrItem>;
-
-        /**
-         * Enable "refine" button when component is initialized?
-         * (e.g. for restoring some previous state where user
-         * already selected some values).
-         */
-        refineEnabled:boolean;
-
-        /**
-         * If manual mode is disabled then the list of
-         * aligned corpora is synced automatically from
-         * the query form (i.e. if user selects/drops an aligned
-         * corpus then the store's internal list is updated
-         * accordingly)
-         */
-        manualAlignCorporaMode:boolean;
-    }
-
-    /**
-     * A factory class for generating corplist page. The page is expected
-     * to contain two blocks
-     *  - a form (typically a filter)
-     *  - a dataset (= list of matching corpora)
-     *
-     */
-    export interface ICorplistPage {
-
-        setData(data:any):void; // TODO type
-
-        getForm():React.ComponentClass;
-
-        getList():React.ComponentClass;
-    }
-
-
-    export interface IIssueReporting {
-
-        getWidgetView():React.ComponentClass;
-
-    }
-
-
-    export namespace TokenDetail {
-
-
-        export interface Response {
-            items:Array<{
-                renderer:string;
-                contents:Array<[string, string]>;
-                found:boolean;
-                heading:string;
-            }>;
-        }
-
-        export interface DataAndRenderer {
-            renderer:React.ComponentClass;
-            contents:Array<[string, string]>;
-            found:boolean;
-            heading:string;
-        }
-
-
-        export interface IPlugin {
-
-            fetchTokenDetail(corpusId:string, tokenId:number):RSVP.Promise<Array<DataAndRenderer>>;
-
-            selectRenderer(typeId:string):React.ComponentClass;
-        }
-    }
-}
 
 /*
 The following part contains "fake" plugin modules representing
@@ -189,6 +34,10 @@ e.g.: "plugins/myOrganizationApplicationBar/init".
 To be able to compile the project, TypeScript compiler must be
 persuaded that general names actually exist. At runtime, RequireJS
 remaps these names to custom ones.
+
+The actual 'generic name' => 'actual name' mapping is
+performed during webpack compilation where proper
+aliases are defined for TS compiler.
 */
 
 /**
@@ -202,24 +51,24 @@ declare module 'plugins/applicationBar/toolbar' {
 
 declare module 'plugins/applicationBar/init' {
 
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
+    export default function create(pluginApi):RSVP.Promise<PluginInterfaces.IToolbar>;
 }
 
 declare module 'plugins/footerBar/init' {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IFooterBar>;
 }
 
 declare module "plugins/corparch/init" {
 
-    export function createWidget(targetAction:string, pluginApi:Kontext.PluginApi,
+    export function createWidget(targetAction:string, pluginApi:IPluginApi,
         queryStore:PluginInterfaces.ICorparchStore, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.ComponentClass;
 
-    export function initCorplistPageComponents(pluginApi:Kontext.PluginApi):PluginInterfaces.ICorplistPage;
+    export function initCorplistPageComponents(pluginApi:IPluginApi):PluginInterfaces.ICorplistPage;
 }
 
 declare module "plugins/liveAttributes/init" {
 
-    export default function create(pluginApi:Kontext.PluginApi,
+    export default function create(pluginApi:IPluginApi,
                      textTypesStore:TextTypes.ITextTypesStore,
                      selectedCorporaProvider:()=>Immutable.List<string>,
                      ttCheckStatusProvider:()=>boolean,
@@ -228,26 +77,26 @@ declare module "plugins/liveAttributes/init" {
 }
 
 declare module "plugins/queryStorage/init" {
-    export default function create(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage>;
+    export default function create(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage>;
 }
 
 declare module "plugins/taghelper/init" {
-    let create:(pluginApi:Kontext.PluginApi)=>RSVP.Promise<PluginInterfaces.ITagHelper>;
+    let create:(pluginApi:IPluginApi)=>RSVP.Promise<PluginInterfaces.ITagHelper>;
     export default create;
 }
 
 declare module "plugins/auth/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IAuth>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IAuth>;
 }
 
 declare module "plugins/syntaxViewer/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer>;
 }
 
 
 declare module "plugins/subcmixer/init" {
 
-    export default function create(pluginApi:Kontext.PluginApi,
+    export default function create(pluginApi:IPluginApi,
             textTypesStore:TextTypes.ITextTypesStore,
             getCurrentSubcnameFn:()=>string,
             getAlignedCoroporaFn:()=>Immutable.List<TextTypes.AlignedLanguageItem>,
@@ -256,13 +105,13 @@ declare module "plugins/subcmixer/init" {
 
 
 declare module "plugins/issueReporting/init" {
-    export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting>;
+    export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IIssueReporting>;
 }
 
 
 declare module "plugins/tokenDetail/init" {
     export default function create(
-        pluginApi:Kontext.PluginApi,
+        pluginApi:IPluginApi,
         alignedCorpora:Array<string>
     ):RSVP.Promise<PluginInterfaces.TokenDetail.IPlugin>;
 }

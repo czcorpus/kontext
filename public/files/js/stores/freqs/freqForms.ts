@@ -18,12 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
+import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
-import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
 
@@ -84,7 +83,7 @@ export class MLFreqFormStore extends SimplePageStore {
 
     private static POSITION_LABELS = ['6L', '5L', '4L', '3L', '2L', '1L', 'Node', '1R', '2R', '3R', '4R', '5R', '6R'];
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:FreqFormProps, maxNumLevels:number) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -96,7 +95,7 @@ export class MLFreqFormStore extends SimplePageStore {
         this.alignType = Immutable.List<string>(props.alignType);
         this.maxNumLevels = maxNumLevels;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_ML_SET_FLIMIT':
                     if (validateGzNumber(payload.props['value'])) {
@@ -268,7 +267,7 @@ export class TTFreqFormStore extends SimplePageStore {
 
     private freqSort:string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:FreqFormProps) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:FreqFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.structAttrList = Immutable.List<Kontext.AttrItem>(props.structAttrList);
@@ -277,7 +276,7 @@ export class TTFreqFormStore extends SimplePageStore {
         this.flimit = props.flimit;
         this.freqSort = props.freq_sort;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'FREQ_TT_SET_FTTATTR':
                     if (this.fttattr.contains(payload.props['value'])) {

@@ -18,12 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
-
+import {Kontext} from '../types/common';
 import {PageModel, PluginApi} from '../app/main';
 import {createWidget as createCorparch} from 'plugins/corparch/init';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {SimplePageStore} from '../stores/base';
 import {WordlistFormStore} from '../stores/wordlist/form';

@@ -18,18 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
 
+import {Kontext, TextTypes, ViewOptions} from '../../types/common';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import {PluginInterfaces} from '../../types/plugins';
 import {MultiDict} from '../../util';
-import {SimplePageStore} from '../base';
+import {SimplePageStore, SynchronizedModel} from '../base';
 import {PageModel} from '../../app/main';
-import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 import {Line, LangSection, KWICSection, TextChunk} from './line';
 import * as RSVP from 'vendor/rsvp';
 import {AudioPlayer} from './media';
@@ -265,7 +265,7 @@ export class DummySyntaxViewStore extends SimplePageStore implements PluginInter
 /**
  *
  */
-export class ConcLineStore extends SimplePageStore {
+export class ConcLineStore extends SynchronizedModel {
 
     private layoutModel:PageModel;
 
@@ -314,7 +314,7 @@ export class ConcLineStore extends SimplePageStore {
     private ttStore:TextTypes.ITextTypesStore;
 
 
-    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
             saveStore:ConcSaveStore, syntaxViewStore:PluginInterfaces.ISyntaxViewer,
             ttStore:TextTypes.ITextTypesStore, lineViewProps:ViewConfiguration, initialData:Array<ServerLineData>) {
         super(dispatcher);
@@ -352,7 +352,7 @@ export class ConcLineStore extends SimplePageStore {
             }
         );
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'CONCORDANCE_CHANGE_MAIN_CORPUS':
                     this.changeMainCorpus(payload.props['maincorp']);
@@ -388,7 +388,12 @@ export class ConcLineStore extends SimplePageStore {
                     this.concSummary.ipm = payload.props['relconcsize'];
                     this.concSummary.arf = payload.props['arf'];
                     this.pagination.lastPage = payload.props['availPages'];
-                    this.notifyChangeListeners();
+                    this.synchronize(
+                        payload.actionType,
+                        {
+                            isUnfinished: this.isUnfinishedCalculation()
+                        }
+                    );
                 break;
                 case 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC':
                     this.calculateAdHocIpm().then(

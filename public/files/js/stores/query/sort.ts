@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../../types/common';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -128,7 +128,7 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -140,7 +140,7 @@ export class SortStore extends SimplePageStore implements ISubmitableSortStore {
         this.sposValues = Immutable.Map<string, string>(props.spos);
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'sortx']));
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SORT_SET_ACTIVE_STORE':
                     this.isActiveActionValues = this.isActiveActionValues.set(
@@ -304,7 +304,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
      */
     private isActiveActionValues:Immutable.Map<string, boolean>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SortFormProperties) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:SortFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.availAttrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -327,7 +327,7 @@ export class MultiLevelSortStore extends SimplePageStore implements ISubmitableS
 
         this.isActiveActionValues = Immutable.Map<string, boolean>(props.defaultFormAction.map(item => [item[0], item[1] === 'mlsortx']));
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'ML_SORT_FORM_SUBMIT':
                     this.submit(payload.props['sortId']);

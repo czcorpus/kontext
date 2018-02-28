@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -49,12 +49,12 @@ export class SampleStore extends SimplePageStore {
 
     private rlinesValues:Immutable.Map<string, string>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:SampleFormProperties) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:SampleFormProperties) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.rlinesValues = Immutable.Map<string, string>(props.rlines);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'SAMPLE_FORM_SET_RLINES':
                     const v = payload.props['value'];

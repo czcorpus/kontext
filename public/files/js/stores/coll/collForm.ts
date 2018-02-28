@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../../types/common';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 /**
@@ -71,7 +70,7 @@ export class CollFormStore extends SimplePageStore {
     private csortfn:string;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pageModel:PageModel, props:CollFormProps) {
+    constructor(dispatcher:ActionDispatcher, pageModel:PageModel, props:CollFormProps) {
         super(dispatcher);
         this.pageModel = pageModel;
         this.attrList = Immutable.List<Kontext.AttrItem>(props.attrList);
@@ -83,7 +82,7 @@ export class CollFormStore extends SimplePageStore {
         this.cbgrfns = Immutable.Set<string>(props.cbgrfns);
         this.csortfn = props.csortfn;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'COLL_FORM_SET_CATTR':
                     this.cattr = payload.props['value'];

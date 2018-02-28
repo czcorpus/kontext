@@ -20,10 +20,11 @@
 
 
 import * as React from 'vendor/react';
+import { WordlistSaveStore } from '../../stores/wordlist/save';
 
 /**
  */
-export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlistResultStore) {
+export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlistResultStore, wordlistSaveStore) {
 
     // ---------------------- <THSortableColumn /> -------------------
 
@@ -35,6 +36,10 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
                 props: {
                     sortKey: props.sortKey
                 }
+            });
+            dispatcher.dispatch({
+                actionType: 'WORDLIST_RESULT_RELOAD',
+                props: {}
             });
         };
 
@@ -239,7 +244,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
                 storeIsBusy: wordlistResultStore.getIsBusy(),
                 usesStructAttr: wordlistResultStore.usesStructAttr(),
                 wlsort: wordlistResultStore.getWlsort(),
-                saveFormActive: wordlistResultStore.getSaveFormActive(),
+                saveFormActive: wordlistSaveStore.getFormIsActive(),
                 isLastPage: wordlistResultStore.getIsLastPage()
             };
         }
@@ -250,10 +255,12 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
         componentDidMount() {
             wordlistResultStore.addChangeListener(this._handleStoreChange);
+            wordlistSaveStore.addChangeListener(this._handleStoreChange);
         }
 
         componentWillUnmount() {
             wordlistResultStore.removeChangeListener(this._handleStoreChange);
+            wordlistSaveStore.removeChangeListener(this._handleStoreChange);
         }
 
         render() {

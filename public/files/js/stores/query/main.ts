@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/cqlParser.d.ts" />
 
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext, ViewOptions} from '../../types/common';
+import {AjaxResponse} from '../../types/ajaxResponses';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
-import {SimplePageStore} from '../base';
+import * as Rx from '@reactivex/rxjs';
+import {SynchronizedModel, SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 import {parse as parseQuery, ITracer} from 'cqlParser/parser';
 import {TextTypesStore} from '../textTypes/attrValues';
@@ -120,7 +120,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
 /**
  *
  */
-export abstract class GeneralQueryStore extends SimplePageStore {
+export abstract class GeneralQueryStore extends SynchronizedModel {
 
     protected pageModel:PageModel;
 
@@ -162,7 +162,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
 
 
     constructor(
-            dispatcher:Kontext.FluxDispatcher,
+            dispatcher:ActionDispatcher,
             pageModel:PageModel,
             textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore,
@@ -182,7 +182,7 @@ export abstract class GeneralQueryStore extends SimplePageStore {
         this.useCQLEditor = props.useCQLEditor;
 
         this.onCorpusSelectionChangeActions = Immutable.List<(subcname:string)=>void>();
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register(payload => {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SET_ACTIVE_WIDGET':
                     this.setActiveWidget(payload.props['sourceId'], payload.props['value']);
@@ -192,12 +192,6 @@ export abstract class GeneralQueryStore extends SimplePageStore {
             }
         });
     }
-
-    /**
-     * A callback used to synchronize CQLEditor state with this store.
-     * Do not forget to bind this function to its object.
-     */
-    abstract externalQueryChange(sourceId:string, query:string):void;
 
     /**
      * Returns a currently active widget identifier
@@ -363,7 +357,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
     // ----------------------
 
     constructor(
-            dispatcher:Kontext.FluxDispatcher,
+            dispatcher:ActionDispatcher,
             pageModel:PageModel,
             textTypesStore:TextTypesStore,
             queryContextStore:QueryContextStore,
@@ -388,9 +382,8 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
         this.activeWidgets = Immutable.Map<string, string>(props.corpora.map(item => null));
         this.setUserValues(props);
         this.currentAction = 'first_form';
-        this.externalQueryChange = this.externalQueryChange.bind(this);
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register(payload => {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SELECT_TYPE':
                     let qType = payload.props['queryType'];
@@ -476,11 +469,6 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                 break;
             }
         });
-    }
-
-    externalQueryChange(sourceId:string, query:string):void {
-        this.queries = this.queries.set(sourceId, query);
-        this.notifyChangeListeners();
     }
 
     csExportState():CorpusSwitchPreserved {
@@ -798,14 +786,14 @@ export class QueryHintStore extends SimplePageStore {
 
     private translatorFn:(s:string)=>string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, hints:Array<string>, translatorFn:(s:string)=>string) {
+    constructor(dispatcher:ActionDispatcher, hints:Array<string>, translatorFn:(s:string)=>string) {
         super(dispatcher);
         const self = this;
         this.hints = hints ? hints : [];
         this.translatorFn = translatorFn;
         this.currentHint = this.randomIndex();
 
-        this.dispatcher.register(function (payload:Kontext.DispatcherPayload) {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'NEXT_QUERY_HINT':
                     this.setNextHint();

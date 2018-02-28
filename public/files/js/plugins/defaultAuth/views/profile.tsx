@@ -19,11 +19,12 @@
  */
 
 /// <reference path="../../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import {Kontext} from '../../../types/common';
 import {UserProfileStore} from '../profile';
 import { ReactElement } from 'vendor/react';
+import {ActionDispatcher} from '../../../app/dispatcher';
 
 export interface UserProfileViews {
     UserProfileView:React.ComponentClass;
@@ -42,7 +43,7 @@ export interface UserProfileViewState {
     email:string;
 }
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers, profileStore:UserProfileStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, profileStore:UserProfileStore) {
 
     /**
      *

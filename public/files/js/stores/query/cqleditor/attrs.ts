@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../../types/common.d.ts" />
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../../../types/common';
+import * as Immutable from 'immutable';
 
 /**
  * IAttrHelper defines a general object able to
@@ -58,10 +56,10 @@ export class AttrHelper implements IAttrHelper {
 
     private tagAttr:string;
 
-    constructor(attrList:Immutable.List<Kontext.AttrItem>, structAttrList:Immutable.List<Kontext.AttrItem>,
+    constructor(attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>,
             tagAttr:string) {
-        this.attrList = attrList;
-        this.structAttrList = structAttrList;
+        this.attrList = Immutable.List<Kontext.AttrItem>(attrList);
+        this.structAttrList = Immutable.List<Kontext.AttrItem>(structAttrList);
         this.availStructs = Immutable.Set<string>(this.structAttrList.map(v => v.n.split('.')[0]));
         this.tagAttr = tagAttr;
     }

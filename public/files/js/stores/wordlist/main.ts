@@ -18,16 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-
-import * as Immutable from 'vendor/immutable';
+import {Kontext} from '../../types/common';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {WordlistFormStore} from './form';
 import {MultiDict} from '../../util';
 import {WordlistSaveStore} from './save';
@@ -76,8 +74,6 @@ export class WordlistResultStore extends SimplePageStore {
 
     formStore:WordlistFormStore;
 
-    saveStore:WordlistSaveStore;
-
     data:Immutable.List<IndexedResultItem>;
 
     headings:Immutable.List<HeadingItem>;
@@ -100,12 +96,11 @@ export class WordlistResultStore extends SimplePageStore {
 
     isBusy:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
-            saveStore:WordlistSaveStore, data:ResultData, headings:Array<HeadingItem>) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, formStore:WordlistFormStore,
+            data:ResultData, headings:Array<HeadingItem>) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.formStore = formStore;
-        this.saveStore = saveStore;
         this.currPage = data.page;
         this.currPageInput = String(this.currPage);
         this.pageSize = data.pageSize;
@@ -116,7 +111,7 @@ export class WordlistResultStore extends SimplePageStore {
         this.numItems = null;
 
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'WORDLIST_RESULT_VIEW_CONC':
                     const args = new MultiDict();
@@ -128,8 +123,7 @@ export class WordlistResultStore extends SimplePageStore {
                     args.set('cql', this.createPQuery(payload.props['word']));
                     window.location.href = this.layoutModel.createActionUrl('first', args.items());
                 break;
-                case 'WORDLIST_RESULT_SET_SORT_COLUMN':
-                    dispatcher.waitFor([this.formStore.getDispatcherToken()]);
+                case 'WORDLIST_RESULT_RELOAD':
                     this.processPageLoad();
                 break;
                 case 'WORDLIST_RESULT_NEXT_PAGE':
@@ -167,14 +161,6 @@ export class WordlistResultStore extends SimplePageStore {
                 case 'WORDLIST_RESULT_CONFIRM_PAGE':
                     this.currPage = parseInt(this.currPageInput, 10);
                     this.processPageLoad();
-                break;
-                case 'MAIN_MENU_SHOW_SAVE_FORM':
-                    dispatcher.waitFor([this.saveStore.getDispatcherToken()]);
-                    this.notifyChangeListeners();
-                break;
-                case 'WORDLIST_SAVE_FORM_HIDE':
-                    dispatcher.waitFor([this.saveStore.getDispatcherToken()]);
-                    this.notifyChangeListeners();
                 break;
                 case 'WORDLIST_GO_TO_LAST_PAGE':
                     this.isBusy = true;
@@ -308,9 +294,5 @@ export class WordlistResultStore extends SimplePageStore {
 
     getWlsort():string {
         return this.formStore.getWlsort();
-    }
-
-    getSaveFormActive():boolean {
-        return this.saveStore.getFormIsActive();
     }
 }

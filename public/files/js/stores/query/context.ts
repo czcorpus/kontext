@@ -18,18 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
 import {SimplePageStore} from '..//base';
-import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 
 
 export class QueryContextStore extends SimplePageStore {
 
     private formData:Immutable.Map<string, any>;
 
-    constructor(dispatcher:Kontext.FluxDispatcher) {
+    constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);
         this.formData = Immutable.Map<string, any>({
             fc_lemword_window_type: 'both',
@@ -42,7 +40,7 @@ export class QueryContextStore extends SimplePageStore {
             fc_pos_type: 'all'
         });
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_INPUT_SELECT_CONTEXT_FORM_ITEM':
                     this.formData = this.formData.set(payload.props['name'], payload.props['value']);

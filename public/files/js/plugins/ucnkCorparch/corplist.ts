@@ -19,7 +19,10 @@
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';
 
@@ -32,12 +35,10 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
 
     protected offset:number;
 
-    static DispatchToken:string;
-
     private initialKeywords:Array<string>;
 
 
-    constructor(pluginApi:Kontext.PluginApi, corplistTableStore:CorplistTableStore) {
+    constructor(pluginApi:IPluginApi, corplistTableStore:CorplistTableStore) {
         super(pluginApi);
         const self = this;
         this.corplistTableStore = corplistTableStore;
@@ -46,8 +47,8 @@ export class CorplistFormStore extends corplistDefault.QueryProcessingStore {
         (this.pluginApi.getConf('pluginData')['corparch']['initial_keywords'] || []).forEach(function (item) {
             self.selectedKeywords[item] = true;
         });
-        CorplistFormStore.DispatchToken = this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register(
+            function (payload:ActionPayload) {
                 switch (payload.actionType) {
                     case 'KEYWORD_CLICKED':
                         self.offset = 0;
@@ -135,23 +136,23 @@ export class CorplistTableStore extends corplistDefault.CorplistTableStore {
     /**
      *
      */
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher, pluginApi);
     }
 }
 
 export class CorpusAccessRequestStore extends SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     static DispatchToken:string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(pluginApi.dispatcher());
         const self = this;
         this.pluginApi = pluginApi;
-        CorpusAccessRequestStore.DispatchToken = this.dispatcher.register(
-            function (payload:Kontext.DispatcherPayload) {
+        this.dispatcher.register(
+            function (payload:ActionPayload) {
                 switch (payload.actionType) {
                     case 'CORPUS_ACCESS_REQ_SUBMITTED':
                         self.askForAccess(payload.props).then(
@@ -188,7 +189,7 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     components:any;
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     protected corpusAccessRequestStore:CorpusAccessRequestStore;
 
@@ -196,7 +197,7 @@ export class CorplistPage implements PluginInterfaces.ICorplistPage {
 
     protected corplistTableStore:CorplistTableStore;
 
-    constructor(pluginApi:Kontext.PluginApi, viewsInit:((...args:any[])=>any)) {
+    constructor(pluginApi:IPluginApi, viewsInit:((...args:any[])=>any)) {
         this.pluginApi = pluginApi;
         this.corpusAccessRequestStore = new CorpusAccessRequestStore(pluginApi.dispatcher(), pluginApi);
         this.corplistTableStore = new CorplistTableStore(pluginApi.dispatcher(), pluginApi);

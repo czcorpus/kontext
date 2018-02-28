@@ -19,22 +19,18 @@
  */
 
 /// <reference path="../vendor.d.ts/react.d.ts" />
-/// <reference path="../vendor.d.ts/flux.d.ts" />
 /// <reference path="../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../vendor.d.ts/immutable.d.ts" />
 
 /// <reference path="../types/coreViews.d.ts" />
 
-
-declare interface ObjectConstructor {
-    assign(target: any, ...sources: any[]): any;
-}
+import * as Immutable from 'immutable';
+import * as Rx from '@reactivex/rxjs';
 
 
 /**
  *
  */
-declare module Kontext {
+export namespace Kontext {
 
     /**
      *
@@ -89,42 +85,17 @@ declare module Kontext {
     }
 
     /**
-     *
+     * TODO remove once all the JSX templates are transformed to TSX
      */
-    export type FluxDispatcher = Dispatcher.Dispatcher<DispatcherPayload>;
+    export interface ActionDispatcher {
+        register(callback:(payload:any)=>void):Rx.Subscription;
+        dispatch(payload:any):void;
+    }
 
     export interface FullCorpusIdent {
         id:string;
         variant:string;
         name:string;
-    }
-
-    /**
-     * An interface used by KonText plug-ins
-     */
-    export interface PluginApi {
-        getConf<T>(key:string):T;
-        createStaticUrl(path:string):string;
-        createActionUrl(path:string, args?:Array<[string,string]>|IMultiDict):string;
-        ajax<T>(method:string, url:string, args:any, options?:AjaxOptions):RSVP.Promise<T>;
-        showMessage(type:string, message:any, onClose?:()=>void);
-        translate(text:string, values?:any):string;
-        formatNumber(v:number):string;
-        formatDate(d:Date, timeFormat?:number):string;
-        userIsAnonymous():boolean;
-        dispatcher():Kontext.FluxDispatcher;
-        getComponentHelpers():Kontext.ComponentHelpers;
-        renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
-                             target:HTMLElement, props?:T):void;
-        unmountReactComponent(element:HTMLElement):boolean;
-        getStores():Kontext.LayoutStores;
-        getViews():CoreViews.Runtime;
-        pluginIsActive(name:string):boolean;
-        getConcArgs():IMultiDict;
-        registerSwitchCorpAwareObject(obj:Kontext.ICorpusSwitchAware<any>):void;
-        resetMenuActiveItemAndNotify():void;
-        getHelpLink(ident:string):string;
-        setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
     }
 
     /**
@@ -151,14 +122,6 @@ declare module Kontext {
     }
 
     /**
-     * General specification of a plug-in object.
-     */
-    export interface PluginFactory<T> {
-        (api:PluginApi):RSVP.Promise<T>;
-    }
-
-
-    /**
      * A Flux Store. Please note that only Flux Views are expected
      * to (un)register store's events.
      */
@@ -168,10 +131,6 @@ declare module Kontext {
 
         removeChangeListener(fn:()=>void):void;
 
-        /**
-         * NOTE: both arguments are deprecated. There should
-         * be only a single source of state - Flux stores.
-         */
         notifyChangeListeners(eventType?:string, error?:Error):void;
     }
 
@@ -290,23 +249,6 @@ declare module Kontext {
      */
     export interface StoreListener {
         (err?:Error):void;
-    }
-
-    /**
-     * Flux event dispatcher payload.
-     */
-    export interface DispatcherPayload {
-
-        /**
-         * Upper case action identifier
-         */
-        actionType:string;
-
-        /**
-         * Action's arguments. A defined, non-null
-         * object should be always used.
-         */
-        props:GeneralProps;
     }
 
     export interface IBrowserInfo {
@@ -615,7 +557,7 @@ declare module Kontext {
 }
 
 
-declare module ViewOptions {
+export namespace ViewOptions {
 
     export interface AttrDesc {
         n: string;
@@ -699,7 +641,7 @@ declare module ViewOptions {
  * This module contains types used along with text type
  * selection component (e.g. when creating a subcorpus).
  */
-declare module TextTypes {
+export namespace TextTypes {
 
     /**
      *
@@ -871,7 +813,7 @@ declare module TextTypes {
     /**
      *
      */
-    interface ITextInputAttributeSelection extends AttributeSelection {
+    export interface ITextInputAttributeSelection extends AttributeSelection {
 
         getTextFieldValue():string;
 
@@ -1101,9 +1043,4 @@ declare module Legacy {
         getContentElement():HTMLElement;
         close():void;
     }
-}
-
-declare module "misc/keyboardLayouts" {
-    var kb:Array<Kontext.VirtualKeyboardLayout>;
-    export = kb;
 }

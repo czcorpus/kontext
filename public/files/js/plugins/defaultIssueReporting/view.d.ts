@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-
 import {IssueReportingStore} from './init';
+import {Kontext} from '../../types/common';
 
 export interface IssueReportingViews {
     IssueReportingWidget:React.ComponentClass;
 }
 
-export function init(dispatcher:Kontext.FluxDispatcher, he:Kontext.ComponentHelpers,
+export function init(dispatcher:Kontext.ActionDispatcher, he:Kontext.ComponentHelpers,
             reportingStore:IssueReportingStore):IssueReportingViews;

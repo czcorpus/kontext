@@ -18,15 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 
 
+import {ActionPayload} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore, cloneRecord} from '../../stores/base';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {highlightSyntax} from '../../stores/query/cqleditor/main';
 
@@ -49,7 +50,7 @@ const attachSh = (he:Kontext.ComponentHelpers, item:Kontext.QueryHistoryItem) =>
 
 export class QueryStorageStore extends SimplePageStore implements PluginInterfaces.IQueryStorageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private data:Immutable.List<Kontext.QueryHistoryItem>;
 
@@ -73,7 +74,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
 
     private editingQueryName:string;
 
-    constructor(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number) {
+    constructor(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number) {
         super(pluginApi.dispatcher());
         this.pluginApi = pluginApi;
         this.data = Immutable.List<Kontext.QueryHistoryItem>();
@@ -88,7 +89,7 @@ export class QueryStorageStore extends SimplePageStore implements PluginInterfac
         this.editingQueryId = null;
         this.editingQueryName = null; // null is ok here, a value is attached once the editor is opened
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_STORAGE_SET_QUERY_TYPE':
                     this.queryType = payload.props['value'];

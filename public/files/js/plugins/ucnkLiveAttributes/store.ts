@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 
+import {Kontext, TextTypes} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 import * as textTypesStore from '../../stores/textTypes/attrValues';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 
 
 interface ServerBibData {
@@ -94,7 +94,7 @@ function isArr(v) {
  */
 export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrValueTextInputListener {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private userData:Kontext.UserCredentials;
 
@@ -127,14 +127,14 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
     private ttCheckStatusProvider:()=>boolean;
 
     /**
-     * @param dispatcher a Flux dispatcher instance
+     * @param dispatcher an action dispatcher instance
      * @param pluginApi KonText plugin-api provider
      * @param textTypesStore
      * @param selectedCorporaProvider a function returning currently selected corpora (including the primary one)
      * @param ttCheckStatusProvider a function returning true if at least one item is checked within text types
      * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
      */
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi,
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi,
             textTypesStore:TextTypes.ITextTypesStore, selectedCorporaProvider:()=>Immutable.List<string>,
             ttCheckStatusProvider:()=>boolean, args:PluginInterfaces.ILiveAttrsInitArgs) {
         super(dispatcher);
@@ -164,7 +164,7 @@ export class LiveAttrsStore extends SimplePageStore implements TextTypes.AttrVal
         // initial enabled/disabled state:
         this.setControlsEnabled(args.refineEnabled);
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'LIVE_ATTRIBUTES_REFINE_CLICKED':
                     this.isBusy = true;

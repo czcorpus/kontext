@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../types/common.d.ts" />
-/// <reference path="../types/ajaxResponses.d.ts" />
 /// <reference path="../types/plugins.d.ts" />
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 /// <reference path="../types/views.d.ts" />
@@ -28,9 +26,13 @@
 import * as SoundManager from 'vendor/SoundManager';
 import * as RSVP from 'vendor/rsvp';
 
+import {Kontext, TextTypes} from '../types/common';
+import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel} from '../app/main';
-import {MultiDict, updateProps} from '../util';
+import {PluginInterfaces} from '../types/plugins';
 import {parseUrlArgs} from '../app/navigation';
+import {ActionPayload} from '../app/dispatcher';
+import {MultiDict, updateProps} from '../util';
 import * as conclines from '../conclines';
 import {init as concViewsInit, ConcordanceViews} from 'views/concordance/main';
 import {LineSelectionStore} from '../stores/concordance/lineSelection';
@@ -183,13 +185,13 @@ export class ViewPage {
         return this.layoutModel.translate(s, values);
     }
 
-    private deserializeHashAction(v:string):Kontext.DispatcherPayload {
+    private deserializeHashAction(v:string):ActionPayload {
         const tmp = v.substr(1).split('/');
         const args = tmp[1] ? new MultiDict(parseUrlArgs(tmp[1])) : undefined;
         return this.createFormAction(tmp[0], args);
     }
 
-    private createFormAction(actionName:string, args:Kontext.IMultiDict):Kontext.DispatcherPayload {
+    private createFormAction(actionName:string, args:Kontext.IMultiDict):ActionPayload {
         switch (actionName) {
             case 'filter':
                 return {
@@ -470,14 +472,46 @@ export class ViewPage {
         this.queryStores.cqlEditorStore = new CQLEditorStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.queryStores.queryStore,
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             this.layoutModel.getConf<string>('tagAttr')
         );
 
-        // query store listens for advanced cql editor to update its query
-        this.queryStores.cqlEditorStore.addOnContentChangeListener(this.queryStores.queryStore.externalQueryChange);
+        // TODO !!!
+        /*
+        this.layoutModel.storeSyncOn('CQL_EDITOR_SET_RAW_QUERY', (req) => {
+            this.queryStores.queryStore.externalQueryChange(
+                req.payload['sourceId'],
+                this.queryStores.cqlEditorStore.getRawCode(req.payload['sourceId'])
+            );
+        });
+
+        this.layoutModel.storeSyncOn('QUERY_INPUT_APPEND_QUERY', (req) => {
+            this.queryStores.cqlEditorStore.externalSetQuery(
+                req.payload['sourceId'],
+                req.payload['query'],
+                true
+            );
+        });
+
+        this.layoutModel.storeSyncOn('QUERY_INPUT_SET_QUERY', (req) => {
+            this.queryStores.cqlEditorStore.externalSetQuery(
+                req.payload['sourceId'],
+                req.payload['query'],
+                false
+            );
+        });
+
+        this.layoutModel.storeSyncOn('EDIT_QUERY_OPERATION', (req) => {
+            const queries = this.queryStores.queryStore.getQueries();
+            const qTypes = this.queryStores.queryStore.getQueryTypes();
+            queries.forEach((query, sourceId) => {
+                if (qTypes.get(sourceId) === 'cql') {
+                    this.queryStores.cqlEditorStore.externalSetQuery(sourceId, query, false);
+                }
+            });
+        });
+        */
 
         this.queryFormViews = queryFormInit(
             this.layoutModel.dispatcher,
@@ -537,14 +571,10 @@ export class ViewPage {
         this.queryStores.filterCqlEditorStore = new CQLEditorStore(
             this.layoutModel.dispatcher,
             this.layoutModel,
-            this.queryStores.filterStore,
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
             this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
             this.layoutModel.getConf<string>('tagAttr')
         );
-
-        this.queryStores.filterCqlEditorStore.addOnContentChangeListener(
-                    this.queryStores.filterStore.externalQueryChange);
 
         this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
             this.queryStores.filterStore.notifyChangeListeners();
@@ -729,11 +759,6 @@ export class ViewPage {
             this.layoutModel.getConf<Array<Kontext.QueryOperation>>('queryOverview') || [],
             this.layoutModel.getConf<LocalQueryFormData>('ConcFormsArgs')
         );
-
-        this.queryStores.queryReplayStore.addOnFormEditListener(() => {
-            this.queryStores.cqlEditorStore.syncWithQueryStore();
-            this.queryStores.filterCqlEditorStore.syncWithQueryStore();
-        });
 
         this.queryOverviewViews = queryOverviewInit(
             this.layoutModel.dispatcher,

@@ -18,13 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
 import {MultiDict} from '../../util';
 import {SimplePageStore, validateNumber} from '../base';
 import {PageModel} from '../../app/main';
-import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 
 
 export class ConcSaveStore extends SimplePageStore {
@@ -51,7 +49,7 @@ export class ConcSaveStore extends SimplePageStore {
 
     private saveLinkFn:(string)=>void;validateNumber
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, concSize:number, saveLinkFn:(string)=>void) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, concSize:number, saveLinkFn:(string)=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.saveformat = 'csv';
@@ -63,7 +61,7 @@ export class ConcSaveStore extends SimplePageStore {
         this.concSize = concSize;
         this.saveLinkFn = saveLinkFn;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;

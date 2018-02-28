@@ -18,15 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
 import {MultiDict} from '../../util';
 import {SimplePageStore} from '../base';
 import {ConcLinesStorage} from '../../conclines';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {ConcLineStore} from './lines';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
 
@@ -72,7 +73,7 @@ export class LineSelectionStore extends SimplePageStore {
 
     private emailDialogCredentials:Kontext.UserCredentials;
 
-    constructor(layoutModel:PageModel, dispatcher:Kontext.FluxDispatcher,
+    constructor(layoutModel:PageModel, dispatcher:ActionDispatcher,
             concLineStore:ConcLineStore, userInfoStore:Kontext.IUserInfoStore, clStorage:ConcLinesStorage, onLeavePage:()=>void) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -95,7 +96,7 @@ export class LineSelectionStore extends SimplePageStore {
         this._isBusy = false;
         this.emailDialogCredentials = null;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'LINE_SELECTION_SELECT_LINE':
                     let val = payload.props['value'];

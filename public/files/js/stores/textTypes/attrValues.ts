@@ -18,14 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../types/ajaxResponses.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-
-
+import {Kontext, TextTypes} from '../../types/common';
+import {AjaxResponse} from '../../types/ajaxResponses';
 import {SimplePageStore} from '../base';
-import * as Immutable from 'vendor/immutable';
+import {IPluginApi} from '../../types/plugins';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 import rangeSelector = require('./rangeSelector');
 import {TextInputAttributeSelection, FullAttributeSelection} from './valueSelections';
@@ -141,7 +139,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
      */
     private rangeSelector:rangeSelector.RangeSelector;
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     /**
      * Represents meta information related to the whole attribute
@@ -173,7 +171,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
     private _isBusy:boolean;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, data:InitialData) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, data:InitialData) {
         super(dispatcher);
         this.attributes = Immutable.List(this.importInitialData(data));
         this.bibLabelAttr = data.bib_attr;
@@ -192,7 +190,7 @@ export class TextTypesStore extends SimplePageStore implements TextTypes.ITextTy
         this.textInputPlaceholder = null;
         this._isBusy = false;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'TT_VALUE_CHECKBOX_CLICKED':
                     this.changeValueSelection(payload.props['attrName'], payload.props['itemIdx']);

@@ -19,8 +19,9 @@
  */
 
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
+
+import {Kontext} from '../../types/common';
 
 export interface LiveAttributesViews {
     LiveAttrsView:any;
@@ -28,7 +29,7 @@ export interface LiveAttributesViews {
 }
 
 export function init(
-    dispatcher:Kontext.FluxDispatcher,
+    dispatcher:Kontext.ActionDispatcher,
     componentHelpers:Kontext.ComponentHelpers,
     subcMixerComponent:React.ComponentClass,
     textTypesStore:Kontext.PageStore,

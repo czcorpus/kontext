@@ -18,11 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../../stores/base';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
 
 import {init as userPaneViewsFactory, UserPaneViews} from './views/pane';
@@ -35,19 +37,19 @@ import {UserProfileStore} from './profile';
  */
 export class UserStatusStore extends SimplePageStore {
 
-    pluginApi:Kontext.PluginApi;
+    pluginApi:IPluginApi;
 
     private loginFormVisible:boolean;
 
     private returnUrl:string;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.loginFormVisible = false;
         this.returnUrl = null;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'USER_SHOW_LOGIN_DIALOG':
                     this.loginFormVisible = true;
@@ -87,7 +89,7 @@ export class AuthPlugin implements PluginInterfaces.IAuth {
 
     private userProfileViews:UserProfileViews;
 
-    constructor(profileStore:UserProfileStore, store:UserStatusStore, pluginApi:Kontext.PluginApi) {
+    constructor(profileStore:UserProfileStore, store:UserStatusStore, pluginApi:IPluginApi) {
         this.profileStore = profileStore;
         this.store = store;
 
@@ -114,7 +116,7 @@ export class AuthPlugin implements PluginInterfaces.IAuth {
 }
 
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.IAuth> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.IAuth> {
     const plugin = new AuthPlugin(
         new UserProfileStore(
             pluginApi.dispatcher(),

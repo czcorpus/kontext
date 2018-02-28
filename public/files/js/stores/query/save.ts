@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {MultiDict} from '../../util';
 
 
@@ -37,14 +37,14 @@ export class QuerySaveAsFormStore extends SimplePageStore {
 
     private isBusy:boolean;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, queryId:string) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, queryId:string) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.name = '';
         this.queryId = queryId;
         this.isBusy = false;
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'QUERY_SAVE_AS_FORM_SET_NAME':
                     this.name = payload.props['value'];

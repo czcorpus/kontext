@@ -16,11 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import {QueryStorageStore} from './stores';
 import {init as viewsInit} from './view';
@@ -30,11 +31,11 @@ require('./style.less'); // webpack
 
 export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private store:QueryStorageStore;
 
-    constructor(pluginApi:Kontext.PluginApi, store:QueryStorageStore) {
+    constructor(pluginApi:IPluginApi, store:QueryStorageStore) {
         this.pluginApi = pluginApi;
         this.store = store;
     }
@@ -57,7 +58,7 @@ export class QueryStoragePlugin implements PluginInterfaces.IQueryStorage {
 
 }
 
-export default function create(pluginApi:Kontext.PluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage> {
+export default function create(pluginApi:IPluginApi, offset:number, limit:number, pageSize:number):RSVP.Promise<PluginInterfaces.IQueryStorage> {
     return new RSVP.Promise<PluginInterfaces.IQueryStorage>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
         resolve(new QueryStoragePlugin(pluginApi, new QueryStorageStore(pluginApi, offset, limit, pageSize)));
     });

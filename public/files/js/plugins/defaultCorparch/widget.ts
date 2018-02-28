@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
+import {Kontext} from '../../types/common';
 import * as common from './common';
+import {IPluginApi} from '../../types/plugins';
 import {SimplePageStore} from '../../stores/base';
-import * as Immutable from 'vendor/immutable';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
+import * as Immutable from 'immutable';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import * as RSVP from 'vendor/rsvp';
 
@@ -49,7 +50,7 @@ export interface Options  {
  */
 export class CorplistWidgetStore extends SimplePageStore {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
@@ -79,7 +80,7 @@ export class CorplistWidgetStore extends SimplePageStore {
 
     private static MIN_SEARCH_PHRASE_ACTIVATION_LENGTH = 3;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
             anonymousUser:boolean, querySetupHandler:Kontext.QuerySetupHandler,
             searchEngine:SearchEngine,
             dataFav:Array<common.ServerFavlistItem>, dataFeat:Array<common.CorplistItem>,
@@ -99,7 +100,7 @@ export class CorplistWidgetStore extends SimplePageStore {
         this.currSearchPhrase = '';
         this.currSearchResult = Immutable.List<SearchResultRow>();
 
-        dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'DEFAULT_CORPARCH_FAV_ITEM_CLICK':
                     this.isWaitingToSwitch = true;

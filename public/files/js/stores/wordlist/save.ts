@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-
-
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore} from '../../stores/base';
 import {MultiDict} from '../../util';
 
@@ -46,7 +44,7 @@ export class WordlistSaveStore extends SimplePageStore {
 
     private static QUICK_SAVE_LINE_LIMIT = 10000;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, saveLinkFn:(string)=>void,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, saveLinkFn:(string)=>void,
             wordlistArgsProviderFn:()=>MultiDict) {
         super(dispatcher);
         this.layoutModel = layoutModel;
@@ -56,8 +54,9 @@ export class WordlistSaveStore extends SimplePageStore {
         this.saveFormat = 'csv';
         this.includeHeading = false;
         this.includeColHeaders = false;
+        this.formIsActive = false;
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
             case 'MAIN_MENU_SHOW_SAVE_FORM':
                 this.formIsActive = true;

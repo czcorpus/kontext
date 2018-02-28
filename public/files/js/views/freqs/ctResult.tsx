@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../vendor.d.ts/react.d.ts" />
 
+import {Kontext, TextTypes} from '../../types/common';
+import * as Immutable from 'immutable';
 import * as React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 import {init as ctFlatResultFactory} from './ctFlatResult';
@@ -30,6 +31,7 @@ import {ContingencyTableStore, Data2DTable, ColorMappings, TableInfo} from '../.
 import {Dimensions, FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
 import {FreqQuantities, CTFreqCell} from '../../stores/freqs/generalCtable';
 import {DataPoint} from '../../charts/confIntervals';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 
 const enum TableViewMode {
@@ -52,7 +54,7 @@ interface Views {
 
 
 export function init(
-            dispatcher:Kontext.FluxDispatcher,
+            dispatcher:ActionDispatcher,
             he:Kontext.ComponentHelpers,
             ctFreqDataRowsStore:ContingencyTableStore,
             ctFlatFreqDataRowsStore:CTFlatStore) {

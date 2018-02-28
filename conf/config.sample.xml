@@ -21,6 +21,7 @@
             <language label="English">en_US</language>
         </translations>
         <upload_cache_dir>/tmp/kontext-upload</upload_cache_dir>
+        <user_filter_files_dir>/path/to/user/filter/files/dir</user_filter_files_dir>
         <periodic_tasks conf="/path/to/beatconfig.py">celery</periodic_tasks>
         <conc_line_max_group_num>99</conc_line_max_group_num>
         <calc_backend conf="/path/to/celeryconfig.py">celery</calc_backend>

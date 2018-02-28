@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 import * as RSVP from 'vendor/rsvp';
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces} from '../../types/plugins';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {SimplePageStore, validateGzNumber} from '../base';
 import {PageModel} from '../../app/main';
 import {MultiDict} from '../../util';
@@ -107,7 +108,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
     private includeNonwords:boolean;
 
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel, corpusIdent:Kontext.FullCorpusIdent,
             subcorpList:Array<string>, attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>) {
         super(dispatcher);
         this.corpusIdent = corpusIdent;
@@ -133,7 +134,7 @@ export class WordlistFormStore extends SimplePageStore implements Kontext.ICorpu
         this.includeNonwords = false;
 
 
-        this.dispatcherRegister((payload:Kontext.DispatcherPayload) => {
+        this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
             case 'QUERY_INPUT_SELECT_SUBCORP':
                 this.currentSubcorpus = payload.props['subcorp'];

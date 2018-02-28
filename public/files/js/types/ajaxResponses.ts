@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="./common.d.ts" />
+import {Kontext, TextTypes} from '../types/common';
 
-declare module AjaxResponse {
+export namespace AjaxResponse {
 
     export interface CitationInfo {
 
@@ -236,7 +236,7 @@ declare module AjaxResponse {
 }
 
 
-declare module FreqResultResponse {
+export namespace FreqResultResponse {
 
     export interface Item {
         Word:Array<{n:string}>;

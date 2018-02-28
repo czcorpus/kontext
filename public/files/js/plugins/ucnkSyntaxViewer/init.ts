@@ -18,13 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
 /// <reference path="../../types/plugins.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
+import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import {createGenerator} from './ucnkTreeView';
 import {SimplePageStore} from '../../stores/base';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;
 require('./style.less'); // webpack
@@ -34,7 +36,7 @@ require('./style.less'); // webpack
  */
 class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISyntaxViewer {
 
-    private pluginApi:Kontext.PluginApi;
+    private pluginApi:IPluginApi;
 
     private waitingStatus:boolean;
 
@@ -44,7 +46,7 @@ class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISynt
 
     private resizeThrottleTimer:number;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, pluginApi:Kontext.PluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
         super(dispatcher);
         this.pluginApi = pluginApi;
         this.waitingStatus = false;
@@ -134,7 +136,7 @@ class SyntaxTreeViewer extends SimplePageStore implements PluginInterfaces.ISynt
     }
 }
 
-export default function create(pluginApi:Kontext.PluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer> {
+export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ISyntaxViewer> {
     return new RSVP.Promise<PluginInterfaces.ISyntaxViewer>((resolve:(val:PluginInterfaces.ISyntaxViewer)=>void, reject:(e:any)=>void) => {
         resolve(new SyntaxTreeViewer(pluginApi.dispatcher(), pluginApi));
     });

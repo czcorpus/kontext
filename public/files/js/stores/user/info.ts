@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../types/common.d.ts" />
-/// <reference path="../../vendor.d.ts/flux.d.ts" />
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
+import {Kontext} from '../../types/common';
 import {SimplePageStore} from '../base';
 import {PageModel} from '../../app/main';
+import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
-import * as Immutable from 'vendor/immutable';
+import * as Immutable from 'immutable';
 
 /**
  */
@@ -35,12 +35,12 @@ export class UserInfo extends SimplePageStore implements Kontext.IUserInfoStore 
 
     private userData:Kontext.UserCredentials;
 
-    constructor(dispatcher:Kontext.FluxDispatcher, layoutModel:PageModel) {
+    constructor(dispatcher:ActionDispatcher, layoutModel:PageModel) {
         super(dispatcher);
         this.layoutModel = layoutModel;
         this.userData = null;
 
-        this.dispatcher.register((payload:Kontext.DispatcherPayload) => {
+        this.dispatcher.register((payload:ActionPayload) => {
             switch (payload.actionType) {
                 case 'USER_INFO_REQUESTED':
                     this.loadUserInfo().then(

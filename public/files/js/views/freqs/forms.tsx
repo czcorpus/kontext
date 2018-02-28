@@ -19,14 +19,15 @@
  */
 
 /// <reference path="../../vendor.d.ts/react.d.ts" />
-/// <reference path="../../vendor.d.ts/immutable.d.ts" />
-/// <reference path="../../types/common.d.ts" />
 
 import * as React from 'vendor/react';
+import * as Immutable from 'immutable';
 
+import {Kontext} from '../../types/common';
 import {MLFreqFormStore, TTFreqFormStore} from '../../stores/freqs/freqForms';
 import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../stores/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
+import {ActionDispatcher} from '../../app/dispatcher';
 
 // -------------------------- exported component ----------
 
@@ -44,7 +45,7 @@ export interface FreqFormViews {
 
 
 export function init(
-        dispatcher:Kontext.FluxDispatcher,
+        dispatcher:ActionDispatcher,
         he:Kontext.ComponentHelpers,
         mlFreqFormStore:MLFreqFormStore,
         ttFreqFormStore:TTFreqFormStore,
