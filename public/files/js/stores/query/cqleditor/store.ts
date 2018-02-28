@@ -103,7 +103,10 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
                     newState,
                     <string>action.props['sourceId'],
                     <string>action.props['query'],
-                    [newState.rawCode.get(action.props['sourceId']).length, newState.rawCode.get(action.props['sourceId']).length]
+                    [
+                        this.getQueryLength(newState, action.props['sourceId']),
+                        this.getQueryLength(newState, action.props['sourceId'])
+                    ]
                 );
                 this.moveCursorToEnd(newState, action.props['sourceId']);
             break;
@@ -134,6 +137,10 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
                 return state;
         }
         return newState;
+    }
+
+    private getQueryLength(state:CQLEditorStoreState, sourceId:string):number {
+        return state.rawCode.has(sourceId) ? state.rawCode.get(sourceId).length : 0;
     }
 
     private moveCursorToEnd(state:CQLEditorStoreState, sourceId:string):void {

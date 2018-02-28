@@ -108,6 +108,7 @@ export class ActionDispatcher {
         createStateStream$<T>(model:IReducer<T>, initialState:T):Rx.BehaviorSubject<T> {
             const state$ = new Rx.BehaviorSubject(null);
             this.action$
+                .startWith(null)
                 .scan(
                     (state:T, action:ActionPayload) => action !== null  ? model.reduce(state, action) : state,
                     initialState
