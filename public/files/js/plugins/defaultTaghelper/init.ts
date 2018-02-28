@@ -22,6 +22,7 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {TagHelperStore} from './stores';
+import {TagHelperActions} from './actions';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 
@@ -42,7 +43,7 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 
     getWidgetView():React.ComponentClass {
         return viewInit(
-            this.pluginApi.dispatcher(),
+            new TagHelperActions(this.pluginApi.dispatcher(), this.pluginApi, this.store),
             this.pluginApi.getComponentHelpers(),
             this.store
         ).TagBuilder;
@@ -50,7 +51,14 @@ export class TagHelperPlugin implements PluginInterfaces.ITagHelper {
 }
 
 export default function create(pluginApi:IPluginApi):RSVP.Promise<PluginInterfaces.ITagHelper> {
-    const plugin = new TagHelperPlugin(pluginApi, new TagHelperStore(pluginApi.dispatcher(), pluginApi));
+    const plugin = new TagHelperPlugin(
+        pluginApi,
+        new TagHelperStore(
+            pluginApi.dispatcher(),
+            pluginApi,
+            pluginApi.getConf<string>('corpname')
+        )
+    );
     return new RSVP.Promise<PluginInterfaces.ITagHelper>((resolve:(d:any)=>void, reject:(e:any)=>void) => {
         resolve(plugin);
     });

@@ -32,7 +32,7 @@ type UpdateTagValues = {[idx:number]:Array<Array<string>>};
 /**
  * Defines a JSON format used by server
  */
-interface TagDataResponse {
+export interface TagDataResponse {
     containsErrors:boolean;
     messages:Array<string>;
     labels:Array<string>;
@@ -66,7 +66,9 @@ export class TagHelperStore extends SimplePageStore {
 
     static DispatchToken:string;
 
-    protected pluginApi:IPluginApi;
+    private pluginApi:IPluginApi;
+
+    private corpname:string;
 
     /**
      * Contains all the values (inner lists) along with selection
@@ -78,17 +80,15 @@ export class TagHelperStore extends SimplePageStore {
 
     private _isBusy:boolean;
 
-    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi) {
+    constructor(dispatcher:ActionDispatcher, pluginApi:IPluginApi, corpname:string) {
         super(dispatcher);
         this.pluginApi = pluginApi;
+        this.corpname = corpname;
         this._isBusy = false;
         this.data = Immutable.List<Immutable.List<PositionOptions>>().push(Immutable.List<PositionOptions>());
 
         this.dispatcher.register((payload:ActionPayload) => {
                 switch (payload.actionType) {
-                    case 'TAGHELPER_FOO':
-                        console.log('TAGHELPER_FOO: ', payload.props);
-                    break;
                     case 'TAGHELPER_PRESET_PATTERN':
                         this.presetPattern = payload.props['pattern'];
                         if (this.data.last().size > 0) {
@@ -100,43 +100,42 @@ export class TagHelperStore extends SimplePageStore {
                         if (this.data.last().size === 0) {
                             this._isBusy = true;
                             this.notifyChangeListeners();
-                            this.loadInitialData().then(
-                                (data) => {
-                                    this.importData(data.labels, data.tags);
-                                    this._isBusy = false;
-                                    if (this.presetPattern) {
-                                        this.applyPresetPattern();
-                                    }
-                                    this.notifyChangeListeners();
-                                }
-                            ).catch(
-                                (err) => {
-                                    this._isBusy = false;
-                                    this.notifyChangeListeners();
-                                    this.pluginApi.showMessage('error', err);
-                                }
-                            );
+                        }
+                    break;
+                    case 'TAGHELPER_GET_INITIAL_DATA_DONE':
+                        if (!payload.error) {
+                            this.importData(payload.props['data'].labels, payload.props['data'].tags);
+                            this._isBusy = false;
+                            if (this.presetPattern) {
+                                this.applyPresetPattern();
+                            }
 
                         } else {
-                            this.notifyChangeListeners();
+                            this.pluginApi.showMessage('error', payload.error);
                         }
+                        this.notifyChangeListeners();
                     break;
                     case 'TAGHELPER_CHECKBOX_CHANGED':
                         this.updateSelectedItem(payload.props['position'], payload.props['value'],
                                 payload.props['checked']);
+                        this.notifyChangeListeners();
+                    break;
+                    case 'TAGHELPER_LOAD_FILTERED_DATA':
                         this._isBusy = true;
                         this.notifyChangeListeners();
-                        this.updateData(payload.props['position']).then(
-                            (data) => {
-                                this._isBusy = false;
-                                this.notifyChangeListeners();
-                            },
-                            (err) => {
-                                this._isBusy = false;
-                                this.notifyChangeListeners();
-                                this.pluginApi.showMessage('error', err);
-                            }
-                        );
+                    break;
+                    case 'TAGHELPER_LOAD_FILTERED_DATA_DONE':
+                        this._isBusy = false;
+                        if (!payload.error) {
+                            this.mergeData(
+                                payload.props['data'].tags,
+                                payload.props['triggerRow']
+                            );
+
+                        } else {
+                            this.pluginApi.showMessage('error', payload.error);
+                        }
+                        this.notifyChangeListeners();
                     break;
                     case 'TAGHELPER_UNDO':
                         if (this.data.size > 2) {
@@ -271,15 +270,6 @@ export class TagHelperStore extends SimplePageStore {
         this.data = this.data.pop().push(newItem);
     }
 
-
-    private loadInitialData():RSVP.Promise<TagDataResponse> {
-        return this.pluginApi.ajax<TagDataResponse>(
-            'GET',
-            this.pluginApi.createActionUrl('corpora/ajax_get_tag_variants'),
-            { corpname: this.pluginApi.getConf('corpname') }
-        );
-    }
-
     /**
      * Changes the 'checked' status of an item specified by a position and a value
      * (.e.g. 2nd position (gender), F value (feminine))
@@ -380,5 +370,9 @@ export class TagHelperStore extends SimplePageStore {
 
     canUndo():boolean {
         return this.data.size > 2;
+    }
+
+    getCorpname():string {
+        return this.corpname;
     }
 }

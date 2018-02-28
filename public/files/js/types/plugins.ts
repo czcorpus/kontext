@@ -39,7 +39,7 @@ export interface IPluginApi {
     formatNumber(v:number):string;
     formatDate(d:Date, timeFormat?:number):string;
     userIsAnonymous():boolean;
-    dispatcher():any; // TODO
+    dispatcher():ActionDispatcher;
     getComponentHelpers():Kontext.ComponentHelpers;
     renderReactComponent<T, U>(reactClass:React.ComponentClass<T, U>|React.FuncComponent<T>,
                             target:HTMLElement, props?:T):void;
@@ -54,15 +54,10 @@ export interface IPluginApi {
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean);
 }
 
-/**
- * General specification of a plug-in object.
- */
-export interface PluginFactory<T> {
-    (api:IPluginApi):RSVP.Promise<T>;
-}
 
 /**
- *
+ * PluginInterfaces contains individual interfaces KonText expect
+ * from plug-ins to be implemented.
  */
 export namespace PluginInterfaces {
 
