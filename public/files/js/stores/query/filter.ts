@@ -172,6 +172,7 @@ export class FilterStore extends GeneralQueryStore implements Kontext.QuerySetup
                     this.notifyChangeListeners();
                 break;
                 case 'FILTER_QUERY_INPUT_SET_QUERY':
+                case '@FILTER_QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
                     this.notifyChangeListeners();
                 break;

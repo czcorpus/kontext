@@ -25,7 +25,6 @@ import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 import {CQLEditorStore, CQLEditorStoreState} from '../../stores/query/cqleditor/store';
 import {ActionDispatcher} from '../../app/dispatcher';
-import {CQLEditorActions} from '../../stores/query/cqleditor/actions';
 
 
 export interface CQLEditorProps {
@@ -41,8 +40,6 @@ export interface CQLEditorViews {
 
 
 export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, editorStore:CQLEditorStore) {
-
-    const actions = new CQLEditorActions(dispatcher);
 
 
     // ------------------- <CQLEditorFallback /> -----------------------------
@@ -156,11 +153,15 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
         private handleInputChange() {
             const src = this.extractText(this.editorRoot);
             const [rawAnchorIdx, rawFocusIdx] = this.getRawSelection(src);
-            actions.CQL_EDITOR_SET_RAW_QUERY({
-                sourceId: this.props.sourceId,
-                query: src.map(v => v[0]).join(''),
-                rawAnchorIdx: rawAnchorIdx,
-                rawFocusIdx: rawFocusIdx
+
+            dispatcher.dispatch({
+                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                props: {
+                    sourceId: this.props.sourceId,
+                    query: src.map(v => v[0]).join(''),
+                    rawAnchorIdx: rawAnchorIdx,
+                    rawFocusIdx: rawFocusIdx
+                }
             });
         }
 
@@ -228,13 +229,16 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
                         const rawSrc = src.map(v => v[0]).join('');
 
                         if (rawAnchorIdx === rawFocusIdx) {
-                            actions.CQL_EDITOR_SET_RAW_QUERY({
+                            dispatcher.dispatch({
+                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                                props: {
                                     query: evt.keyCode === 8 ?
                                         rawSrc.substring(0, rawAnchorIdx - 1) + rawSrc.substring(rawFocusIdx) :
                                         rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx + 1),
                                     sourceId: this.props.sourceId,
                                     rawAnchorIdx: 0, // TODO
                                     rawFocusIdx: 0 // TODO
+                                }
                             });
                             this.reapplySelection(
                                 evt.keyCode === 8 ? rawAnchorIdx - 1 : rawAnchorIdx,
@@ -242,20 +246,26 @@ export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, e
                             );
 
                         } else if (rawAnchorIdx < rawFocusIdx) {
-                            actions.CQL_EDITOR_SET_RAW_QUERY({
-                                query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
-                                sourceId: this.props.sourceId,
-                                rawAnchorIdx: 0, // TODO
-                                rawFocusIdx: 0 // TODO
+                            dispatcher.dispatch({
+                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                                props: {
+                                    query: rawSrc.substring(0, rawAnchorIdx) + rawSrc.substring(rawFocusIdx),
+                                    sourceId: this.props.sourceId,
+                                    rawAnchorIdx: 0, // TODO
+                                    rawFocusIdx: 0 // TODO
+                                }
                             });
                             this.reapplySelection(rawAnchorIdx, rawAnchorIdx);
 
                         } else {
-                            actions.CQL_EDITOR_SET_RAW_QUERY({
-                                query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
-                                sourceId: this.props.sourceId,
-                                rawAnchorIdx: 0, // TODO
-                                rawFocusIdx: 0 // TODO
+                            dispatcher.dispatch({
+                                actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                                props: {
+                                    query: rawSrc.substring(0, rawFocusIdx) + rawSrc.substring(rawAnchorIdx),
+                                    sourceId: this.props.sourceId,
+                                    rawAnchorIdx: 0, // TODO
+                                    rawFocusIdx: 0 // TODO
+                                }
                             });
                             this.reapplySelection(rawFocusIdx, rawFocusIdx);
                         }

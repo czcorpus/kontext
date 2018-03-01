@@ -78,6 +78,11 @@ export function appendQuery(origQuery:string, query:string, prependSpace:boolean
     return origQuery + (origQuery && prependSpace ? ' ' : '') + query;
 }
 
+export interface QueryInputSetQueryProps {
+    sourceId:string;
+    query:string;
+}
+
 /**
  *
  * @param data
@@ -402,6 +407,7 @@ export class QueryStore extends GeneralQueryStore implements Kontext.QuerySetupH
                     );
                 break;
                 case 'QUERY_INPUT_SET_QUERY':
+                case '@QUERY_INPUT_SET_QUERY':
                     this.queries = this.queries.set(payload.props['sourceId'], payload.props['query']);
                     this.notifyChangeListeners();
                 break;

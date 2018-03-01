@@ -469,49 +469,14 @@ export class ViewPage {
             this.queryStores.queryStore.onSettingsChange(store);
         });
 
-        this.queryStores.cqlEditorStore = new CQLEditorStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            this.layoutModel.getConf<string>('tagAttr')
-        );
-
-        // TODO !!!
-        /*
-        this.layoutModel.storeSyncOn('CQL_EDITOR_SET_RAW_QUERY', (req) => {
-            this.queryStores.queryStore.externalQueryChange(
-                req.payload['sourceId'],
-                this.queryStores.cqlEditorStore.getRawCode(req.payload['sourceId'])
-            );
+        this.queryStores.cqlEditorStore = new CQLEditorStore({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            actionPrefix: ''
         });
-
-        this.layoutModel.storeSyncOn('QUERY_INPUT_APPEND_QUERY', (req) => {
-            this.queryStores.cqlEditorStore.externalSetQuery(
-                req.payload['sourceId'],
-                req.payload['query'],
-                true
-            );
-        });
-
-        this.layoutModel.storeSyncOn('QUERY_INPUT_SET_QUERY', (req) => {
-            this.queryStores.cqlEditorStore.externalSetQuery(
-                req.payload['sourceId'],
-                req.payload['query'],
-                false
-            );
-        });
-
-        this.layoutModel.storeSyncOn('EDIT_QUERY_OPERATION', (req) => {
-            const queries = this.queryStores.queryStore.getQueries();
-            const qTypes = this.queryStores.queryStore.getQueryTypes();
-            queries.forEach((query, sourceId) => {
-                if (qTypes.get(sourceId) === 'cql') {
-                    this.queryStores.cqlEditorStore.externalSetQuery(sourceId, query, false);
-                }
-            });
-        });
-        */
 
         this.queryFormViews = queryFormInit(
             this.layoutModel.dispatcher,
@@ -568,13 +533,14 @@ export class ViewPage {
             filterFormProps
         );
 
-        this.queryStores.filterCqlEditorStore = new CQLEditorStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            this.layoutModel.getConf<string>('tagAttr')
-        );
+        this.queryStores.filterCqlEditorStore = new CQLEditorStore({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            tagAttr: this.layoutModel.getConf<string>('tagAttr'),
+            actionPrefix: 'FILTER_'
+        });
 
         this.layoutModel.getStores().generalViewOptionsStore.addOnSubmitResponseHandler(store => {
             this.queryStores.filterStore.notifyChangeListeners();

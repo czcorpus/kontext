@@ -95,38 +95,33 @@ export class SimplePageStore implements Kontext.PageStore {
 
 /**
  * Synchronized model represents a way how to synchronize
- * different models in case of asynchronous operations
- * even in case we cannot intercept core action chain
- * (e.g. in case a plug-in needs to attach itself to
- * a core action - this is probably the case even ActionCreator
- * cannot be used for).
+ * (as master) non-stateless legacy model with its depending
+ * models (both legacy and stateless) in case we do not
+ * want (or cannot) intercept master's action processing.
  *
  * If a model is expected to be a master for some
  * synchronization it is recommended to use one of
  * basic model classes supporting this method and
  * call the function once async operations are
  * done. For an action 'SOME_ACTION' this produces
- * additional action '$SOME_ACTION' to which
+ * additional action '@SOME_ACTION' to which
  * dependent stores can respond.
- */
-export interface ISynchronizedModel<T> {
-    synchronize(action:string, payload:T):void;
-}
-
-
-/**
  *
+ * Please note that in case of StatelessModel<T>
+ * this is accomplished via its side-effect handler
+ * function which is more general but it can easily
+ * handle synchronization too.
  */
-export class SynchronizedModel extends SimplePageStore implements ISynchronizedModel<Kontext.GeneralProps> {
+export class SynchronizedModel extends SimplePageStore {
 
     constructor(dispatcher:ActionDispatcher) {
         super(dispatcher);
     }
 
     synchronize(action:string, props:Kontext.GeneralProps):void {
-        if (action.substr(0, 1) !== '$') {
+        if (action.substr(0, 1) !== '@') {
             this.dispatcher.dispatch({
-                actionType: '$' + action,
+                actionType: '@' + action,
                 props: props
             });
 
@@ -146,13 +141,19 @@ export interface StatelessModelListener<T> {
 }
 
 /**
- * StatelessModel is a most recent component model implementation
- * inspired by some Flux/Redux ideas. The model is expected to
- * provide state transformation methods but it does not control
- * the state change directly. The implementation is based on Rx.js
- * streams.
+ * StatelessModel is a most recent (and recommended) component
+ * model implementation inspired by some Flux/Redux ideas. The
+ * model is expected to provide state transformation methods but
+ * it does not control the state change directly (it even cannot
+ * notify views about a change). The implementation is based on
+ * Observable streams.
+ *
+ * In case side-effects are needed (both synchronous & asynchronous),
+ * it is possible to register a callback function which is called
+ * once the model reduction is performed. The callback can produce
+ * additional actions based on the current action and state.
  */
-export abstract class StatelessModel<T> implements ISynchronizedModel<T>, IReducer<T> {
+export abstract class StatelessModel<T> implements IReducer<T> {
 
     private state$:Rx.BehaviorSubject<T>;
 
@@ -197,18 +198,6 @@ export abstract class StatelessModel<T> implements ISynchronizedModel<T>, IReduc
                 this.subscriptions.splice(i, 1);
                 break;
             }
-        }
-    }
-
-    synchronize(action:string, state:T):void {
-        if (action.substr(0, 1) !== '$') {
-            this.dispatcher.dispatch({
-                actionType: '$' + action,
-                props: state
-            });
-
-        } else {
-            throw new Error('Cannot commit synchronization action');
         }
     }
 

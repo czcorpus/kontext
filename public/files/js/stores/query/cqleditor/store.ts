@@ -25,7 +25,8 @@ import {GeneralQueryStore} from '../main';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
-import {ActionDispatcher, ActionPayload} from '../../../app/dispatcher';
+import {QueryInputSetQueryProps} from '../../../stores/query/main';
+import {ActionDispatcher, ActionPayload, typedProps} from '../../../app/dispatcher';
 
 /**
  *
@@ -44,6 +45,25 @@ export interface CQLEditorStoreState {
 
 }
 
+interface CQLEditorSetRawQueryProps {
+    sourceId:string;
+    query:string;
+    range?:[number, number];
+    rawFocusIdx:number;
+    rawAnchorIdx:number;
+}
+
+
+export interface CQLEditorStoreInitArgs {
+    dispatcher:ActionDispatcher;
+    pageModel:PageModel;
+    attrList:Array<Kontext.AttrItem>;
+    structAttrList:Array<Kontext.AttrItem>;
+    tagAttr:string;
+    actionPrefix:string;
+}
+
+
 /**
  *
  */
@@ -57,38 +77,59 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
 
     private structAttrList:Immutable.List<Kontext.AttrItem>;
 
+    private actionPrefix:string;
+
     private hintListener:(state:CQLEditorStoreState, sourceId:string, msg:string)=>void;
 
 
-    constructor(dispatcher:ActionDispatcher, pageModel:PageModel,
-            attrList:Array<Kontext.AttrItem>, structAttrList:Array<Kontext.AttrItem>, tagAttr:string) {
-        super(dispatcher, {
-            rawCode: Immutable.Map<string, string>(),
-            richCode: Immutable.Map<string, string>(),
-            message: Immutable.Map<string, string>(),
-            rawAnchorIdx: 0,
-            rawFocusIdx: 0
-        });
+    constructor({dispatcher, pageModel, attrList, structAttrList, tagAttr, actionPrefix}:CQLEditorStoreInitArgs) {
+        super(
+            dispatcher,
+            {
+                rawCode: Immutable.Map<string, string>(),
+                richCode: Immutable.Map<string, string>(),
+                message: Immutable.Map<string, string>(),
+                rawAnchorIdx: 0,
+                rawFocusIdx: 0
+            },
+            (state, action, dispatch) => { // SIDE EFFECTS
+                switch (action.actionType) {
+                    case 'CQL_EDITOR_SET_RAW_QUERY': {
+                        const args = typedProps<QueryInputSetQueryProps>(action.props);
+                        dispatch({
+                            actionType: `@${this.actionPrefix}QUERY_INPUT_SET_QUERY`,
+                            props: {
+                                sourceId: args.sourceId,
+                                query: args.query
+                            }
+                        });
+                    }
+                    break;
+                }
+            }
+        );
         this.attrHelper = new AttrHelper(attrList, structAttrList, tagAttr);
         this.pageModel = pageModel;
-       this.hintListener = (state, sourceId, msg) => {
-           state.message = state.message.set(sourceId, msg);
-       }
+        this.actionPrefix = actionPrefix;
+        this.hintListener = (state, sourceId, msg) => {
+            state.message = state.message.set(sourceId, msg);
+        }
     }
 
     reduce(state:CQLEditorStoreState, action:ActionPayload):CQLEditorStoreState {
         const newState = this.copyState(state);
         switch (action.actionType) {
-            case 'CQL_EDITOR_SET_RAW_QUERY':
-                newState.rawAnchorIdx = action.props['rawAnchorIdx'];
-                newState.rawFocusIdx = action.props['rawFocusIdx'];
+            case 'CQL_EDITOR_SET_RAW_QUERY': {
+                const args = typedProps<CQLEditorSetRawQueryProps>(action.props);
+                newState.rawAnchorIdx = args.rawAnchorIdx;
+                newState.rawFocusIdx = args.rawFocusIdx;
                 this.setRawQuery(
                     newState,
-                    <string>action.props['sourceId'],
-                    <string>action.props['query'],
-                    <[number, number]>action.props['range']
+                    args.sourceId,
+                    args.query,
+                    args.range
                 );
-                this.synchronize(action.actionType, newState);
+            }
             break;
             case 'QUERY_INPUT_SET_QUERY':
                 this.setRawQuery(
@@ -121,16 +162,14 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
                 this.moveCursorToEnd(newState, action.props['sourceId']);
             }
             break;
-            case '$EDIT_QUERY_OPERATION':
-                for (let p in action.props['queries']) {
-                    if (action.props['queryTypes'][p] === 'cql') {
-                        this.setRawQuery(
-                            newState,
-                            p,
-                            action.props['queries'][p],
-                            null
-                        );
-                    }
+            case '@EDIT_QUERY_OPERATION':
+                if (action.props['queryType'] === 'cql') {
+                    this.setRawQuery(
+                        newState,
+                        action.props['sourceId'],
+                        action.props['query'],
+                        null
+                    );
                 }
             break;
             default:
@@ -150,9 +189,6 @@ export class CQLEditorStore extends StatelessModel<CQLEditorStoreState> {
 
     /**
      *
-     * @param sourceId
-     * @param query
-     * @param range
      */
     private setRawQuery(state:CQLEditorStoreState, sourceId:string, query:string, range:[number, number]):void {
         let newQuery:string;

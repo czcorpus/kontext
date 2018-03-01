@@ -129,7 +129,7 @@ export class TextTypesDistStore extends SimplePageStore {
         this.isBusy = this.concLineStore.isUnfinishedCalculation();
         this.dispatcherRegister((payload:ActionPayload) => {
             switch (payload.actionType) {
-                case '$CONCORDANCE_ASYNC_CALCULATION_UPDATED':
+                case '@CONCORDANCE_ASYNC_CALCULATION_UPDATED':
                     this.blockedByAsyncConc = payload.props['isUnfinished'];
                     this.performDataLoad();
                 break;
