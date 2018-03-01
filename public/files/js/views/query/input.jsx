@@ -566,7 +566,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             this.state = {
                 query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: false,
-                cqlEditorState: cqlEditorStore.getState()
+                cqlEditorMessage: cqlEditorStore.getState().message.get(this.props.sourceId)
             };
         }
 
@@ -584,7 +584,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             this.setState({
                 query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: false,
-                cqlEditorState: this.cqlEditorState
+                cqlEditorMessage: this.state.cqlEditorMessage
             });
         }
 
@@ -592,7 +592,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             this.setState({
                 query: this.state.query,
                 historyVisible: this.state.historyVisible,
-                cqlEditorState: state
+                cqlEditorMessage: state.message.get(this.props.sourceId)
             })
         }
 
@@ -614,7 +614,7 @@ export function init(dispatcher, he, queryStore, queryHintStore, withinBuilderSt
             this.setState({
                 query: queryStore.getQuery(this.props.sourceId),
                 historyVisible: !this.state.historyVisible,
-                cqlEditorMessage: this.state.cqlEditorStore
+                cqlEditorMessage: this.state.cqlEditorMessage
             });
         }
 
