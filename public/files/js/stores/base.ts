@@ -20,7 +20,7 @@
 
 import {Kontext} from '../types/common';
 import * as Rx from '@reactivex/rxjs';
-import {ActionDispatcher, ActionPayload, IReducer} from '../app/dispatcher';
+import {ActionDispatcher, ActionPayload, IReducer, SideEffectHandler} from '../app/dispatcher';
 
 /**
  * A base class for KonText's Flux stores.
@@ -160,10 +160,13 @@ export abstract class StatelessModel<T> implements ISynchronizedModel<T>, IReduc
 
     private subscriptions:Array<[StatelessModelListener<T>, Rx.Subscription]>;
 
-    constructor(dispatcher:ActionDispatcher, initialState:T) {
+    private sideEffects:SideEffectHandler<T>;
+
+    constructor(dispatcher:ActionDispatcher, initialState:T, sideEffects?:SideEffectHandler<T>) {
         this.dispatcher = dispatcher;
         this.subscriptions = [];
-        this.state$ = dispatcher.createStateStream$(this, initialState);
+        this.sideEffects = sideEffects;
+        this.state$ = dispatcher.createStateStream$(this, initialState, sideEffects);
     }
 
     /**
@@ -180,7 +183,10 @@ export abstract class StatelessModel<T> implements ISynchronizedModel<T>, IReduc
      * changes in a state handled by this model.
      */
     addChangeListener(fn:StatelessModelListener<T>):void {
-        const subsc = this.state$.subscribe(fn);
+        const subsc = this.state$.subscribe({
+            next: fn,
+            error: (err) => console.error(err)
+        });
         this.subscriptions.push([fn, subsc]);
     }
 

@@ -22,11 +22,10 @@
 
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
-import {ActionPayload} from '../../app/dispatcher';
-import {TagHelperStore, PositionValue} from './stores';
+import {ActionPayload, ActionDispatcher} from '../../app/dispatcher';
+import {TagHelperStore, PositionValue, PositionOptions, TagHelperStoreState} from './stores';
 import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../../types/common';
-import {TagHelperActions} from './actions';
 
 
 export interface TagBuilderProps {
@@ -40,51 +39,27 @@ export interface TagBuilderProps {
 type CheckboxHandler = (lineIdx:number, value:string, checked:boolean)=>void;
 
 
-export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers, tagHelperStore:TagHelperStore) {
+export function init(dispatcher:ActionDispatcher, he:Kontext.ComponentHelpers, tagHelperStore:TagHelperStore) {
 
     // ------------------------------ <TagDisplay /> ----------------------------
 
-    class TagDisplay extends React.Component<{
-                onEscKey:()=>void,
-                tagValue:string
-            },
-            {
-                pattern:string
-            }> {
+    const TagDisplay:React.FuncComponent<{
+                onEscKey:()=>void;
+                displayPattern:string;
+            }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._changeListener = this._changeListener.bind(this);
-            this._keyEventHandler = this._keyEventHandler.bind(this);
-            this.state = {pattern: this.props.tagValue};
-        }
 
-        _changeListener() {
-            this.setState({pattern: tagHelperStore.exportCurrentPattern()});
-        }
-
-        _keyEventHandler(evt) {
+        const keyEventHandler = (evt) => {
             evt.preventDefault();
             evt.stopPropagation();
-            if (typeof this.props.onEscKey === 'function' && evt.keyCode === 27) {
-                this.props.onEscKey();
+            if (typeof props.onEscKey === 'function' && evt.keyCode === 27) {
+                props.onEscKey();
             }
-        }
+        };
 
-        componentDidMount() {
-            tagHelperStore.addChangeListener(this._changeListener);
-        }
-
-        componentWillUnmount() {
-            tagHelperStore.removeChangeListener(this._changeListener);
-        }
-
-
-        render() {
-            return <input type="text" className="tag-display-box" value={this.state.pattern}
-                        onKeyDown={this._keyEventHandler} readOnly
-                        ref={item => item ? item.focus() : null} />;
-        }
+        return <input type="text" className="tag-display-box" value={props.displayPattern}
+                    onKeyDown={this._keyEventHandler} readOnly
+                    ref={item => item ? item.focus() : null} />;
     }
 
     // ------------------------------ <InsertButton /> ----------------------------
@@ -146,30 +121,46 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
                 sourceId:string;
                 onInsert?:()=>void;
                 canUndo:boolean;
+                displayPattern:string;
             }> = (props) => {
 
         const buttonClick = (evt) => {
             if (evt.target.value === 'reset') {
-                actionCreator.taghelperReset();
+                dispatcher.dispatch({
+                    actionType: 'TAGHELPER_RESET',
+                    props: {}
+                });
 
             } else if (evt.target.value === 'undo') {
-                actionCreator.taghelperUndo();
+                dispatcher.dispatch({
+                    actionType: 'TAGHELPER_UNDO',
+                    props: {}
+                });
 
             } else if (evt.target.value === 'insert') {
                 if (Array.isArray(props.range) && props.range[0] && props.range[1]) {
-                    actionCreator.injectQuery(
-                        props.sourceId,
-                        `"${tagHelperStore.exportCurrentPattern()}"`,
-                        props.range
-                    );
+                    dispatcher.dispatch({
+                        actionType: 'CQL_EDITOR_SET_RAW_QUERY',
+                        props: {
+                            sourceId: props.sourceId,
+                            query: `"${props.displayPattern}"`,
+                            range: props.range
+                        }
+                    });
 
                 } else {
-                    actionCreator.appendQuery(
-                        props.sourceId,
-                        `[tag="${tagHelperStore.exportCurrentPattern()}"]`
-                    );
+                    dispatcher.dispatch({
+                        actionType: 'QUERY_INPUT_APPEND_QUERY',
+                        props: {
+                            sourceId: props.sourceId,
+                            query: `[tag="${props.displayPattern}"]`
+                        }
+                    });
                 }
-                actionCreator.taghelperReset();
+                dispatcher.dispatch({
+                    actionType: 'TAGHELPER_RESET',
+                    props: {}
+                });
                 if (typeof props.onInsert === 'function') {
                     props.onInsert();
                 }
@@ -187,52 +178,40 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
 
     // ------------------------------ <ValueLine /> ----------------------------
 
-    class ValueLine extends React.Component<{
+    const ValueLine:React.FuncComponent<{
                 data:{selected:boolean};
                 lineIdx:number;
                 sublineIdx:number;
                 isLocked:boolean;
-                checkboxHandler:CheckboxHandler;
-            },
-            {
                 isChecked:boolean;
-            }> {
+                checkboxHandler:CheckboxHandler;
+            }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._checkboxHandler = this._checkboxHandler.bind(this);
-            this.state = {isChecked: this.props.data['selected']};
-        }
-
-        _checkboxHandler(evt) {
-            this.setState({isChecked: !this.state.isChecked});
-            this.props.checkboxHandler(
-                this.props.lineIdx,
-                this.props.data['id'],
+        const checkboxHandler = (evt) => {
+            props.checkboxHandler(
+                props.lineIdx,
+                props.data['id'],
                 evt.target.checked
             );
+        };
 
-        }
-
-        render() {
-            const inputId = 'c_position_' + this.props.lineIdx + '_' + this.props.sublineIdx;
-            const label = this.props.data['title'] ?
-                        this.props.data['title'] : he.translate('taghelper__unfulfilled');
-            return (
-            <tr>
-                <td className="checkbox-cell">
-                    <input type="checkbox"
-                            id={inputId}
-                            checked={this.state.isChecked}
-                            onChange={this._checkboxHandler}
-                            disabled={this.props.isLocked ? true : false } />
-                </td>
-                <td>
-                    <label htmlFor={inputId}>{label}</label>
-                </td>
-            </tr>
-            );
-        }
+        const inputId = 'c_position_' + props.lineIdx + '_' + props.sublineIdx;
+        const label = props.data['title'] ?
+                    props.data['title'] : he.translate('taghelper__unfulfilled');
+        return (
+        <tr>
+            <td className="checkbox-cell">
+                <input type="checkbox"
+                        id={inputId}
+                        checked={props.isChecked}
+                        onChange={checkboxHandler}
+                        disabled={props.isLocked ? true : false } />
+            </td>
+            <td>
+                <label htmlFor={inputId}>{label}</label>
+            </td>
+        </tr>
+        );
     };
 
     // ------------------------------ <ValueList /> ----------------------------
@@ -247,7 +226,8 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
         const renderChildren = () => {
             return props.positionValues.map((item, i) => item.available
                 ? <ValueLine key={i} data={item} lineIdx={props.lineIdx} sublineIdx={i}
-                                isLocked={props.isLocked} checkboxHandler={props.checkboxHandler} />
+                                isLocked={props.isLocked} isChecked={item.selected}
+                                checkboxHandler={props.checkboxHandler} />
                 : null);
         };
 
@@ -285,7 +265,7 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
                 clickHandler:(lineIdx:number, isActive:boolean)=>void;
                 lineIdx:number;
                 isActive:boolean;
-                position:PositionValue;
+                position:PositionOptions;
                 checkboxHandler:CheckboxHandler;
             }> = (props) => {
 
@@ -304,6 +284,7 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
         } else if (props.position['locked']) {
             linkClass += ' used';
         }
+
         return (
             <li style={{margin: '0px', overflow: 'hidden', clear: 'both'}}>
                 <a className={linkClass} onClick={clickHandler}>
@@ -312,7 +293,7 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
                 </a>
                 {props.isActive ?
                 <ValueList positionValues={getAvailableChildren()}
-                            isLocked={props.position['locked']}
+                            isLocked={props.position.locked}
                             lineIdx={props.lineIdx}
                             checkboxHandler={props.checkboxHandler} /> : null }
             </li>
@@ -359,34 +340,25 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
 
     // ------------------------------ <TagBuilder /> ----------------------------
 
-    class TagBuilder extends React.Component<TagBuilderProps, any> { // TODO type
+    class TagBuilder extends React.Component<TagBuilderProps, TagHelperStoreState> { // TODO type
 
         constructor(props) {
             super(props);
-            this.state = this._fetchStoreState();
+            this.state = tagHelperStore.getState();
             this._changeListener = this._changeListener.bind(this);
             this.checkboxHandler = this.checkboxHandler.bind(this);
         }
 
-        _fetchStoreState() {
-            return {
-                isWaiting: tagHelperStore.isBusy(),
-                positions: tagHelperStore.getPositions(),
-                stateId: tagHelperStore.getStateId(),
-                newState: tagHelperStore.exportCurrentPattern(),
-                tagValue: tagHelperStore.exportCurrentPattern(),
-                canUndo: tagHelperStore.canUndo(),
-                corpname: tagHelperStore.getCorpname()
-            };
-        }
-
-        _changeListener() {
-            this.setState(this._fetchStoreState());
+        _changeListener(state:TagHelperStoreState) {
+            this.setState(state);
         }
 
         componentDidMount() {
             tagHelperStore.addChangeListener(this._changeListener);
-            actionCreator.getInitialData();
+            dispatcher.dispatch({
+                actionType: 'TAGHELPER_GET_INITIAL_DATA',
+                props: {}
+            });
         }
 
         componentWillUnmount() {
@@ -394,26 +366,34 @@ export function init(actionCreator:TagHelperActions, he:Kontext.ComponentHelpers
         }
 
         private checkboxHandler(lineIdx:number, value:string, checked:boolean) {
-            actionCreator.checkboxChanged(lineIdx, value, checked, this.state.corpname);
+            dispatcher.dispatch({
+                actionType: 'TAGHELPER_CHECKBOX_CHANGED',
+                props: {
+                    position: lineIdx,
+                    value: value,
+                    checked: checked
+                }
+            });
         }
 
         render() {
             return <div>
                 <h3>{he.translate('taghelper__create_tag_heading')}</h3>
                 {
-                    this.state.isWaiting ?
+                    this.state.isBusy ?
                     <img className="loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                             title={he.translate('global__loading')}
                             alt={he.translate('global__loading')} /> :
                     null
                 }
                 <div className="tag-header">
-                    <TagDisplay tagValue={this.state.tagValue} onEscKey={this.props.onEscKey} />
+                    <TagDisplay displayPattern={this.state.displayPattern} onEscKey={this.props.onEscKey} />
                     <TagButtons sourceId={this.props.sourceId}
                                 onInsert={this.props.onInsert}
                                 actionPrefix={this.props.actionPrefix}
                                 canUndo={this.state.canUndo}
-                                range={this.props.range} />
+                                range={this.props.range}
+                                displayPattern={this.state.displayPattern} />
                 </div>
                 <PositionList positions={this.state.positions}
                                 stateId={this.state.stateId}

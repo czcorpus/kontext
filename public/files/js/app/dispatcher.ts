@@ -21,9 +21,10 @@
 import * as Rx from '@reactivex/rxjs';
 import {Kontext} from '../types/common';
 
-type Action = ActionPayload|Rx.Observable<ActionPayload>;
 
-
+/**
+ * A general flux/redux-like action object.
+ */
 export interface ActionPayload {
 
     /**
@@ -43,6 +44,22 @@ export interface ActionPayload {
      * unreliable.
      */
     error?:Error;
+}
+
+/**
+ * In KonText, an action can be also an observable
+ * stream (e.g. for asynchronous actions
+ * [fetch data]...[apply data])).
+ */
+export type Action = ActionPayload|Rx.Observable<ActionPayload>;
+
+/**
+ * A function which may, based on current state
+ * (which is a result of the most recent reduction)
+ * and action, produce a new action.
+ */
+export interface SideEffectHandler<T> {
+    (state:T, action:ActionPayload, dispatch:(a2:ActionPayload)=>void):void;
 }
 
 /**
@@ -86,6 +103,7 @@ export class ActionDispatcher {
                     return Rx.Observable.from([v]);
                 }
             }).share();
+            this.dispatch = this.dispatch.bind(this);
         }
 
         register(callback:(payload:ActionPayload)=>void):Rx.Subscription {
@@ -101,22 +119,26 @@ export class ActionDispatcher {
             this.inStream$.next(action);
         }
 
-        dispatch$(action:(subj:Rx.Subject<ActionPayload>)=>void):void {
-            const subj = new Rx.Subject<ActionPayload>();
-            this.inStream$.next(subj);
-            action(subj);
-        }
-
         /**
          * Create a state Observable stream for a store with
-         * defined initial state.
+         * defined initial state and optional side effect handler.
+         *
+         * @param sideEffects a function which reacts to different
+         * actions (typically using a 'switch') and performs another
+         * action (typically an async one).
          */
-        createStateStream$<T>(model:IReducer<T>, initialState:T):Rx.BehaviorSubject<T> {
+        createStateStream$<T>(model:IReducer<T>, initialState:T, sideEffects?:SideEffectHandler<T>):Rx.BehaviorSubject<T> {
             const state$ = new Rx.BehaviorSubject(null);
             this.action$
                 .startWith(null)
                 .scan(
-                    (state:T, action:ActionPayload) => action !== null  ? model.reduce(state, action) : state,
+                    (state:T, action:ActionPayload) => {
+                        const newState = action !== null ? model.reduce(state, action) : state;
+                        sideEffects && action !== null ?
+                            sideEffects(newState, action, this.dispatch) :
+                            null;
+                        return newState;
+                    },
                     initialState
                 )
                 .subscribe(state$);
