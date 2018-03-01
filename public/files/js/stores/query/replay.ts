@@ -288,16 +288,7 @@ export class QueryReplayStore extends QueryInfoStore {
                     case 'EDIT_QUERY_OPERATION':
                         this.editedOperationIdx = payload.props['operationIdx'];
                         this.notifyChangeListeners();
-                        this.syncFormData(payload.props['operationIdx']).then(
-                            (data) => {
-                                this.synchronize(
-                                    payload.actionType,
-                                    {
-                                        queries: data['curr_queries'],
-                                        queryTypes: data['curr_query_types']
-                                    }
-                                );
-                            },
+                        this.syncFormData(payload.props['operationIdx']).catch(
                             (err) => {
                                 this.editedOperationIdx = null;
                                 this.pageModel.showMessage('error', err);
@@ -691,46 +682,60 @@ export class QueryReplayStore extends QueryInfoStore {
      */
     private syncQueryForm(opIdx:number):RSVP.Promise<AjaxResponse.QueryFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        if (queryKey !== undefined) { // cache hit
-            return this.queryStore.syncFrom(() => {
-                return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
-                    resolve(this.concArgsCache.get(queryKey));
+        return (() => {
+            if (queryKey !== undefined) { // cache hit
+                return this.queryStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.QueryFormArgs>((resolve:(data)=>void, reject:(err)=>void) => {
+                        resolve(this.concArgsCache.get(queryKey));
+                    });
                 });
-            });
 
-        } else {
-            return this.queryStore.syncFrom(() => {
-                return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
-                    'GET',
-                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+            } else {
+                return this.queryStore.syncFrom(() => {
+                    return this.pageModel.ajax<AjaxResponse.QueryFormArgsResponse>(
+                        'GET',
+                        this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                        {
+                            corpname: this.getActualCorpname(),
+                            last_key: this.getCurrentQueryKey(),
+                            idx: opIdx
+                        }
+
+                    ).then(
+                        (data) => {
+                            this.concArgsCache = this.concArgsCache.set(
+                                data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+                        }
+
+                    ).then(
+                        (data) => {
+                            // syncFrom
+                            return this.textTypesStore.syncFrom(() => {
+                                return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
+                                    (resolve:(d)=>void, reject:(err)=>void) => {
+                                        resolve(data);
+                                    }
+                                );
+                            });
+                        }
+                    );
+                });
+            }
+        })().then(
+            (data) => {
+                this.synchronize(
+                    'EDIT_QUERY_OPERATION',
                     {
-                        corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
-                        idx: opIdx
-                    }
-
-                ).then(
-                    (data) => {
-                        this.concArgsCache = this.concArgsCache.set(
-                            data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
-                    }
-
-                ).then(
-                    (data) => {
-                        // syncFrom
-                        return this.textTypesStore.syncFrom(() => {
-                            return new RSVP.Promise<AjaxResponse.QueryFormArgs>(
-                                (resolve:(d)=>void, reject:(err)=>void) => {
-                                    resolve(data);
-                                }
-                            );
-                        });
+                        sourceId: this.getActualCorpname(),
+                        query: data.curr_queries[this.getActualCorpname()],
+                        queryType: data.curr_query_types[this.getActualCorpname()]
                     }
                 );
-            });
-        }
+                return data;
+            }
+        );
     }
 
     /**
@@ -739,36 +744,50 @@ export class QueryReplayStore extends QueryInfoStore {
      */
     private syncFilterForm(opIdx:number):RSVP.Promise<AjaxResponse.FilterFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(opIdx);
-        if (queryKey !== undefined) { // cache hit
-            return this.filterStore.syncFrom(() => {
-                return new RSVP.Promise<AjaxResponse.FilterFormArgs>(
-                    (resolve:(data)=>void, reject:(err)=>void) => {
-                        resolve(this.concArgsCache.get(queryKey));
-                    }
-                );
-            });
+        return (() => {
+            if (queryKey !== undefined) { // cache hit
+                return this.filterStore.syncFrom(() => {
+                    return new RSVP.Promise<AjaxResponse.FilterFormArgs>(
+                        (resolve:(data)=>void, reject:(err)=>void) => {
+                            resolve(this.concArgsCache.get(queryKey));
+                        }
+                    );
+                });
 
-        } else {
-            return this.filterStore.syncFrom(() => {
-                return this.pageModel.ajax<AjaxResponse.FilterFormArgsResponse>(
-                    'GET',
-                    this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+            } else {
+                return this.filterStore.syncFrom(() => {
+                    return this.pageModel.ajax<AjaxResponse.FilterFormArgsResponse>(
+                        'GET',
+                        this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
+                        {
+                            corpname: this.getActualCorpname(),
+                            last_key: this.getCurrentQueryKey(),
+                            idx: opIdx
+                        }
+
+                    ).then(
+                        (data) => {
+                            this.concArgsCache = this.concArgsCache.set(
+                                data.op_key, data);
+                            this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
+                            return data;
+                        }
+                    )
+                });
+            }
+        })().then(
+            (data) => {
+                this.synchronize(
+                    'EDIT_QUERY_OPERATION',
                     {
-                        corpname: this.getActualCorpname(),
-                        last_key: this.getCurrentQueryKey(),
-                        idx: opIdx
-                    }
-
-                ).then(
-                    (data) => {
-                        this.concArgsCache = this.concArgsCache.set(
-                            data.op_key, data);
-                        this.replayOperations = this.replayOperations.set(opIdx, data.op_key);
-                        return data;
+                        sourceId: data.op_key,
+                        query: data.query,
+                        queryType: data.query_type
                     }
                 );
-            });
-        }
+                return data;
+            }
+        );
     }
 
     /**

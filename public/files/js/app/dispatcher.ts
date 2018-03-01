@@ -46,6 +46,8 @@ export interface ActionPayload {
     error?:Error;
 }
 
+export const typedProps = <T>(props) => <T>props;
+
 /**
  * In KonText, an action can be also an observable
  * stream (e.g. for asynchronous actions

@@ -250,13 +250,14 @@ export class FirstFormPage implements Kontext.QuerySetupHandler {
             this.queryStore.onSettingsChange(store);
         });
 
-        this.cqlEditorStore = new CQLEditorStore(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryStore.getTagAttr() : null
-        );
+        this.cqlEditorStore = new CQLEditorStore({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
+            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            tagAttr: this.layoutModel.pluginIsActive(PluginName.TAGHELPER) ? this.queryStore.getTagAttr() : null,
+            actionPrefix: ''
+        });
     }
 
     private attachQueryForm(properties:{[key:string]:any}, corparchWidget:React.ComponentClass):void {
