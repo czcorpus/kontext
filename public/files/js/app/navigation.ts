@@ -429,7 +429,7 @@ export class AppNavigation implements Kontext.IURLHandler {
      * @param appendArgs a list of arguments which will be appended to the existing ones
      */
     exportConcArgs(overwriteArgs:Kontext.MultiDictSrc, appendArgs?:Kontext.MultiDictSrc):string {
-        const tmp = new MultiDict(this.conf.getConf<Array<Array<string>>>('currentArgs'));
+        const tmp = new MultiDict(this.conf.getConf<Kontext.ListOfPairs>('currentArgs'));
 
         function importArgs(args:Kontext.MultiDictSrc):Array<[string,string]> {
             if (!args) {

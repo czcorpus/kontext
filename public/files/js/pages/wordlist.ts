@@ -21,7 +21,7 @@
 import {Kontext} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
-import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
+import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {init as wordlistResultViewInit} from 'views/wordlist/result';
 import {init as wordlistSaveViewInit} from 'views/wordlist/save';
 import {StatefulModel} from '../models/base';
@@ -49,6 +49,8 @@ export class WordlistPage extends StatefulModel  {
     private lastStatus:number;
 
     private saveModel:WordlistSaveModel;
+
+    private wordlistViews:WordlistFormExportViews;
 
     static MAX_NUM_NO_CHANGE = 20;
 
@@ -83,7 +85,10 @@ export class WordlistPage extends StatefulModel  {
             (data:Kontext.AjaxResponse) => {
                 if (data['status'] === 100) {
                     this.stopWatching(); // just for sure
-                    window.location.href = this.layoutModel.getConf<string>('reloadUrl');
+                    window.location.href = this.layoutModel.createActionUrl(
+                        'wordlist',
+                        new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs'))
+                    );
 
                 } else if (this.numNoChange >= WordlistPage.MAX_NUM_NO_CHANGE) {
                     this.stopWithError();
@@ -116,16 +121,14 @@ export class WordlistPage extends StatefulModel  {
     }
 
     private initCorpInfoToolbar():void {
-        const views:WordlistFormViews = wordlistFormInit(
-            this.layoutModel.dispatcher,
-            this.layoutModel.getComponentHelpers(),
-            this.layoutModel.layoutViews,
-            null, // TODO corparch widget view !!!!
-            this,
-
-        );
+        this.wordlistViews = wordlistFormInit({
+            dispatcher: this.layoutModel.dispatcher,
+            he: this.layoutModel.getComponentHelpers(),
+            CorparchWidget: null,
+            wordlistFormModel: null
+        });
         this.layoutModel.renderReactComponent(
-            views.CorpInfoToolbar,
+            this.wordlistViews.CorpInfoToolbar,
             window.document.getElementById('query-overview-mount'),
             {
                 corpname: this.layoutModel.getConf<string>('corpname'),
@@ -210,6 +213,13 @@ export class WordlistPage extends StatefulModel  {
                 );
 
                 this.initCorpInfoToolbar();
+
+                this.layoutModel.getHistory().replaceState(
+                    'wordlist',
+                    new MultiDict(this.layoutModel.getConf<Kontext.ListOfPairs>('reloadArgs')),
+                    {},
+                    ''
+                )
             }
 
         ).then(

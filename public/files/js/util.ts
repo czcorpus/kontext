@@ -82,7 +82,7 @@ export class MultiDict implements Kontext.IMultiDict {
 
     private _data:any;
 
-    constructor(data?:Array<Array<string>>) {
+    constructor(data?:Kontext.ListOfPairs) {
         this._data = {};
         if (data !== undefined) {
             for (let i = 0; i < data.length; i += 1) {

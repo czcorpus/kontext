@@ -117,6 +117,11 @@ export namespace PluginInterfaces {
         removeChangeListener(fn:Kontext.ModelListener):void;
     }
 
+    export type CorparchWidgetView = React.ComponentClass<{
+        subcorpList:Immutable.List<string>;
+        currSubcorpus:string;
+    }>;
+
     export interface ILiveAttributes extends TextTypes.AttrValueTextInputListener {
         getAutoCompleteTrigger():(attrName:string, value:string)=>RSVP.Promise<any>;
         setControlsEnabled(v:boolean):void;

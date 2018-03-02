@@ -20,9 +20,10 @@
 
 import {Kontext} from '../types/common';
 import {PageModel, PluginApi} from '../app/main';
+import {PluginInterfaces} from '../types/plugins';
 import {createWidget as createCorparch} from 'plugins/corparch/init';
 import * as Immutable from 'immutable';
-import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
+import {init as wordlistFormInit, WordlistFormExportViews} from '../views/wordlist/form';
 import {StatefulModel} from '../models/base';
 import {WordlistFormModel} from '../models/wordlist/form';
 
@@ -39,7 +40,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
 
     private corpusIdent:Kontext.FullCorpusIdent;
 
-    private views:WordlistFormViews;
+    private views:WordlistFormExportViews;
 
     private wordlistFormModel:WordlistFormModel;
 
@@ -73,7 +74,7 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
         );
     }
 
-    private initCorparchPlugin():React.ComponentClass {
+    private initCorparchPlugin():PluginInterfaces.CorparchWidgetView {
         return createCorparch(
             'wordlist_form',
             this.layoutModel.pluginApi(),
@@ -112,13 +113,12 @@ class WordlistFormPage implements Kontext.QuerySetupHandler {
                 );
                 this.layoutModel.registerSwitchCorpAwareObject(this.wordlistFormModel);
                 const corparchWidget = this.initCorparchPlugin();
-                this.views = wordlistFormInit(
-                    this.layoutModel.dispatcher,
-                    this.layoutModel.getComponentHelpers(),
-                    this.layoutModel.layoutViews,
-                    corparchWidget,
-                    this.wordlistFormModel
-                );
+                this.views = wordlistFormInit({
+                    dispatcher: this.layoutModel.dispatcher,
+                    he: this.layoutModel.getComponentHelpers(),
+                    CorparchWidget: corparchWidget,
+                    wordlistFormModel: this.wordlistFormModel
+                });
 
                 this.layoutModel.renderReactComponent(
                     this.views.WordListForm,

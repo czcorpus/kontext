@@ -19,10 +19,57 @@
  */
 
 import * as React from 'react';
+import * as Immutable from 'immutable';
+import {ActionDispatcher} from '../../app/dispatcher';
+import {Kontext} from '../../types/common';
+import {WordlistFormModel, WLFilterEditorData} from '../../models/wordlist/form';
+import {PluginInterfaces} from '../../types/plugins';
+
+export interface WordlistFormViewArgs {
+    dispatcher:ActionDispatcher;
+    he:Kontext.ComponentHelpers;
+    CorparchWidget:PluginInterfaces.CorparchWidgetView;
+    wordlistFormModel:WordlistFormModel
+}
+
+export interface CorpInfoToolbarProps {
+    corpname:string;
+    humanCorpname:string;
+    usesubcorp:string;
+}
+
+export interface WordlistFormExportViews {
+    WordListForm:React.ComponentClass<{}>;
+    CorpInfoToolbar:React.SFC<CorpInfoToolbarProps>;
+}
 
 
-export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormModel) {
+export interface WordListFormState {
+    wltype:string;
+    currentSubcorp:string;
+    subcorpList:Immutable.List<string>;
+    attrList:Immutable.List<Kontext.AttrItem>;
+    structAttrList:Immutable.List<Kontext.AttrItem>;
+    wlattr:string;
+    wlpat:string;
+    wlnums:string;
+    wposattr1:string;
+    wposattr2:string;
+    wposattr3:string;
+    wlminfreq:string;
+    filterEditorData:WLFilterEditorData;
+    hasWlwords:boolean;
+    hasBlacklist:boolean;
+    wlFileName:string;
+    blFileName:string;
+    includeNonwords:boolean;
+    allowsMultilevelWltype:boolean;
+}
 
+
+export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:WordlistFormViewArgs):WordlistFormExportViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ---------------- <TRCorpusField /> -----------------------
 
@@ -30,7 +77,12 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
      *
      * @param {*} props
      */
-    const TRCorpusField = (props) => {
+    const TRCorpusField:React.SFC<{
+        corparchWidget:PluginInterfaces.CorparchWidgetView;
+        subcorpList:Immutable.List<string>;
+        currentSubcorp:string;
+
+    }> = (props) => {
         return (
             <tr>
                 <th>{he.translate('global__corpus')}:</th>
@@ -44,7 +96,12 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // ---------------- <TRAttrSelector /> -----------------------
 
-    const TRAttrSelector = (props) => {
+    const TRAttrSelector:React.SFC<{
+        wlattr:string;
+        attrList:Immutable.List<Kontext.AttrItem>;
+        structAttrList:Immutable.List<Kontext.AttrItem>;
+
+    }> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -77,7 +134,7 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // ------------------- <CorpInfoToolbar /> -----------------------------
 
-    const CorpInfoToolbar = (props) => {
+    const CorpInfoToolbar:React.SFC<CorpInfoToolbarProps> = (props) => {
         return (
             <ul id="query-overview-bar">
                 <layoutViews.CorpnameInfoTrigger corpname={props.corpname}
@@ -89,7 +146,10 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // ---------------------- <TRWlpatternInput /> -------------------
 
-    const TRWlpatternInput = (props) => {
+    const TRWlpatternInput:React.SFC<{
+        wlpat:string;
+
+    }> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -116,7 +176,10 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // ------------------ <TRFrequencyFigures /> -------------------------------
 
-    const TRFrequencyFigures = (props) => {
+    const TRFrequencyFigures:React.SFC<{
+        wlnums:string;
+
+    }> = (props) => {
 
         const handleRadioChange = (evt) => {
             dispatcher.dispatch({
@@ -163,7 +226,12 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // --------------------- <OutTypeAttrSel /> -------------------------------
 
-    const OutTypeAttrSel = (props) => {
+    const OutTypeAttrSel:React.SFC<{
+        position:number;
+        attrList:Immutable.List<Kontext.AttrItem>;
+        disabled:boolean;
+
+    }> = (props) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch({
@@ -185,7 +253,16 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // --------------------- <TROutputType /> -------------------------------
 
-    const TROutputType = (props) => {
+    const TROutputType:React.SFC<{
+        wltype:string;
+        allowsMultilevelWltype:boolean;
+        wlattr:string;
+        attrList:Immutable.List<Kontext.AttrItem>;
+        wposattr1:string;
+        wposattr2:string;
+        wposattr3:string;
+
+    }> = (props) => {
 
         const handleOutTypeChange = (evt) => {
             dispatcher.dispatch({
@@ -221,13 +298,13 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
                                     {he.translate('wordlist__out_type_multi_label')}
                                 </label>:
                                 {'\u00a0'}
-                                <OutTypeAttrSel attrList={props.attrList} value={props.wposattr1} position={1}
+                                <OutTypeAttrSel attrList={props.attrList} position={1}
                                         disabled={props.wltype !== 'multilevel'} />
                                 {'\u00a0'}
-                                <OutTypeAttrSel attrList={props.attrList} value={props.wposattr2} position={2}
+                                <OutTypeAttrSel attrList={props.attrList} position={2}
                                         disabled={props.wltype !== 'multilevel'} />
                                 {'\u00a0'}
-                                <OutTypeAttrSel attrList={props.attrList} value={props.wposattr3} position={3}
+                                <OutTypeAttrSel attrList={props.attrList} position={3}
                                         disabled={props.wltype !== 'multilevel'} />
                                 {props.wltype === 'multilevel' ?
                                     (<p className="hint">
@@ -253,7 +330,17 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // --------------------- <FieldsetOutputOptions /> ----------------------
 
-    const FieldsetOutputOptions = (props) => {
+    const FieldsetOutputOptions:React.SFC<{
+        wlnums:string;
+        attrList:Immutable.List<Kontext.AttrItem>;
+        wposattr1:string;
+        wposattr2:string;
+        wposattr3:string;
+        wltype:string;
+        wlattr:string;
+        allowsMultilevelWltype:boolean;
+
+    }> = (props) => {
         return (
             <fieldset className="FieldsetOutputOptions">
                 <legend>
@@ -274,7 +361,10 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // --------------------- <TRWlminfreqInput /> ----------------------------------
 
-    const TRWlminfreqInput = (props) => {
+    const TRWlminfreqInput:React.SFC<{
+        wlminfreq:string;
+
+    }> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch({
@@ -301,13 +391,16 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // -------------------- <TRFilterFileUploadInput /> ----------------------------------------
 
-    const TDFilterFileUploadInput = (props) => {
+    const TDFilterFileUploadInput:React.SFC<{
+        target:string;
 
-        const handleInputChange = (evt) => {
+    }> = (props) => {
+
+        const handleInputChange = (evt:React.ChangeEvent<{}>) => {
             dispatcher.dispatch({
                 actionType: 'WORDLIST_FORM_SET_FILTER_FILE',
                 props: {
-                    value: evt.target.files[0],
+                    value: evt.target['files'][0],
                     target: props.target
                 }
             });
@@ -323,7 +416,11 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // -------------------- <TDExistingFileOps /> ----------------------------------------
 
-    const TDExistingFileOps = (props) => {
+    const TDExistingFileOps:React.SFC<{
+        target:string;
+        fileName:string;
+
+    }> = (props) => {
 
         const handleRemoveClick = (evt) => {
             dispatcher.dispatch({
@@ -360,7 +457,13 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // -------------------- <ListUploadInput /> ----------------------------------------
 
-    const TRFilterFile = (props) => {
+    const TRFilterFile:React.SFC<{
+        label:string;
+        hasValue:boolean;
+        target:string;
+        fileName:string;
+
+    }> = (props) => {
 
         return (
             <tr>
@@ -380,7 +483,12 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
     /**
      *
      */
-    const FileEditor = (props) => {
+    const FileEditor:React.SFC<{
+        data:{
+            fileName:string;
+            data:string;
+        }
+    }> = (props) => {
 
         const handleClose = () => {
             dispatcher.dispatch({
@@ -398,11 +506,30 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
             });
         };
 
+        const handleKeyDown = (evt:React.KeyboardEvent<{}>) => {
+            if (evt.keyCode === 13) {
+                if (evt.shiftKey) {
+                    dispatcher.dispatch({
+                        actionType: 'WORDLIST_FORM_UPDATE_EDITOR',
+                        props: {
+                            value: props.data.data + '\n'
+                        }
+                    });
+
+                } else {
+                    handleClose();
+                }
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
+        };
+
         return (
             <layoutViews.ModalOverlay onCloseKey={handleClose}>
                 <layoutViews.CloseableFrame onCloseClick={handleClose}
                         label={props.data.fileName}>
-                    <textarea rows="30" cols="80" value={props.data.data} onChange={handleWriting} />
+                    <textarea rows={30} cols={80} value={props.data.data} onChange={handleWriting}
+                        onKeyDown={handleKeyDown} ref={item => item ? item.focus() : null} />
                     <button className="default-button" onClick={handleClose}>
                         {he.translate('global__ok')}
                     </button>
@@ -413,9 +540,12 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // --------------- <TRIncludeNonWordsCheckbox /> ------------------------
 
-    const TRIncludeNonWordsCheckbox = (props) => {
+    const TRIncludeNonWordsCheckbox:React.SFC<{
+        value:boolean;
 
-        const handleChange = (evt) => {
+    }> = (props) => {
+
+        const handleChange = (evt:React.ChangeEvent<{}>) => {
             dispatcher.dispatch({
                 actionType: 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
                 props: {
@@ -441,7 +571,10 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // --------------- <TRFileFormatHint /> ------------------------
 
-    class TRFileFormatHint extends React.Component {
+    class TRFileFormatHint extends React.Component<{},
+    {
+        hintVisible:boolean;
+    }> {
 
         constructor(props) {
             super(props);
@@ -480,7 +613,7 @@ export function init(dispatcher, he, layoutViews, CorparchWidget, wordlistFormMo
 
     // --------------- <WordListForm /> ------------------------
 
-    class WordListForm extends React.Component {
+    class WordListForm extends React.Component<{}, WordListFormState> {
 
         constructor(props) {
             super(props);
