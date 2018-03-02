@@ -127,7 +127,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
 
         return (
             <span className="curr-page">
-                {props.storeIsBusy ?
+                {props.modelIsBusy ?
                     <img className="ajax-loader-bar" src={utils.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={utils.translate('global__loading')} /> :
                     <input type="text" value={props.value}
@@ -218,7 +218,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
                 <form onKeyDown={handleKeyPress}>
                     {props.currPage > 1 ? <PaginatorLeftArrows /> : null}
                     <div className="bonito-pagination-core">
-                        <PaginatorTextInput value={props.currPage} storeIsBusy={props.storeIsBusy} />
+                        <PaginatorTextInput value={props.currPage} modelIsBusy={props.modelIsBusy} />
                     </div>
                     {!props.isLastPage ? <PaginatorRightArrows /> : null}
                 </form>
@@ -241,7 +241,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
                 data: wordlistResultModel.getData(),
                 headings: wordlistResultModel.getHeadings(),
                 currPageInput: wordlistResultModel.getCurrPageInput(),
-                storeIsBusy: wordlistResultModel.getIsBusy(),
+                modelIsBusy: wordlistResultModel.getIsBusy(),
                 usesStructAttr: wordlistResultModel.usesStructAttr(),
                 wlsort: wordlistResultModel.getWlsort(),
                 saveFormActive: wordlistSaveModel.getFormIsActive(),
@@ -266,7 +266,7 @@ export function init(dispatcher, utils, layoutViews, wordlistSaveViews, wordlist
         render() {
             return (
                 <div className="WordlistResult">
-                    <Paginator currPage={this.state.currPageInput} storeIsBusy={this.state.storeIsBusy}
+                    <Paginator currPage={this.state.currPageInput} modelIsBusy={this.state.modelIsBusy}
                                 isLastPage={this.state.isLastPage} />
                     <table className="data">
                         <thead>
