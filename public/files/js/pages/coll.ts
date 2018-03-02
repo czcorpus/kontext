@@ -21,18 +21,18 @@
 import {Kontext, TextTypes} from '../types/common';
 import {PageModel} from '../app/main';
 import {MultiDict, dictToPairs} from '../util';
-import {CollFormStore, CollFormProps, CollFormInputs} from '../stores/coll/collForm';
-import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../stores/freqs/freqForms';
-import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../stores/freqs/ctFreqForm';
-import {QueryReplayStore, IndirectQueryReplayStore} from '../stores/query/replay';
-import {QuerySaveAsFormStore} from '../stores/query/save';
-import {CollResultStore, CollResultData, CollResultHeading} from '../stores/coll/result';
+import {CollFormStore, CollFormProps, CollFormInputs} from '../models/coll/collForm';
+import {MLFreqFormStore, TTFreqFormStore, FreqFormInputs, FreqFormProps} from '../models/freqs/freqForms';
+import {CTFormProperties, CTFormInputs, CTFreqFormStore} from '../models/freqs/ctFreqForm';
+import {QueryReplayStore, IndirectQueryReplayStore} from '../models/query/replay';
+import {QuerySaveAsFormStore} from '../models/query/save';
+import {CollResultStore, CollResultData, CollResultHeading} from '../models/coll/result';
 import {init as analysisFrameInit, AnalysisFrameViews} from 'views/analysis';
 import {init as collFormInit, CollFormViews} from 'views/coll/forms';
 import {init as collResultViewInit} from 'views/coll/result';
 import {init as freqFormInit, FreqFormViews} from '../views/freqs/forms';
 import {init as queryOverviewInit, QueryToolbarViews} from 'views/query/overview';
-import {TextTypesStore} from '../stores/textTypes/attrValues';
+import {TextTypesStore} from '../models/textTypes/attrValues';
 
 
 declare var require:any;

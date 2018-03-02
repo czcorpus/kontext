@@ -28,7 +28,7 @@ import {IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 import {init as overviewViewInit} from 'views/overview';
 import {CorplistFormStore, CorplistTableStore} from './corplist';
-import {QueryStore} from '../../stores/query/main';
+import {QueryStore} from '../../models/query/main';
 import * as dcInit from '../defaultCorparch/init';
 
 /**

@@ -22,10 +22,10 @@
 
 import {Kontext} from '../../types/common';
 import * as Immutable from 'immutable';
-import {StatefulModel, validateGzNumber} from '../../stores/base';
+import {StatefulModel, validateGzNumber} from '../../models/base';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {CollFormStore} from '../../stores/coll/collForm';
+import {CollFormStore} from '../../models/coll/collForm';
 import * as RSVP from 'vendor/rsvp';
 import {MultiDict} from '../../util';
 

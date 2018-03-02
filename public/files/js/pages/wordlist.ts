@@ -24,10 +24,10 @@ import {MultiDict} from '../util';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
 import {init as wordlistResultViewInit} from 'views/wordlist/result';
 import {init as wordlistSaveViewInit} from 'views/wordlist/save';
-import {StatefulModel} from '../stores/base';
-import {WordlistResultStore, ResultData, ResultItem, HeadingItem} from '../stores/wordlist/main';
-import {WordlistFormStore, WordlistFormProps} from '../stores/wordlist/form';
-import {WordlistSaveStore} from '../stores/wordlist/save';
+import {StatefulModel} from '../models/base';
+import {WordlistResultStore, ResultData, ResultItem, HeadingItem} from '../models/wordlist/main';
+import {WordlistFormStore, WordlistFormProps} from '../models/wordlist/form';
+import {WordlistSaveStore} from '../models/wordlist/save';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page

@@ -24,10 +24,10 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import {init as viewInit, TreeCorparchViews} from './view';
-import {QueryStore} from '../../stores/query/main';
+import {QueryStore} from '../../models/query/main';
 
 declare var require:any;
 require('./style.less'); // webpack

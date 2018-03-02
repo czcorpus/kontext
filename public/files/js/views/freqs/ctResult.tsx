@@ -26,10 +26,10 @@ import * as React from 'vendor/react';
 import {calcTextColorFromBg, importColor, color2str} from '../../util';
 import {init as ctFlatResultFactory} from './ctFlatResult';
 import {init as ctViewOptsFactory} from './ctViewOpts';
-import {CTFlatStore} from '../../stores/freqs/flatCtable';
-import {ContingencyTableStore, Data2DTable, ColorMappings, TableInfo} from '../../stores/freqs/ctable';
-import {Dimensions, FreqFilterQuantities} from '../../stores/freqs/ctFreqForm';
-import {FreqQuantities, CTFreqCell} from '../../stores/freqs/generalCtable';
+import {CTFlatStore} from '../../models/freqs/flatCtable';
+import {ContingencyTableStore, Data2DTable, ColorMappings, TableInfo} from '../../models/freqs/ctable';
+import {Dimensions, FreqFilterQuantities} from '../../models/freqs/ctFreqForm';
+import {FreqQuantities, CTFreqCell} from '../../models/freqs/generalCtable';
 import {DataPoint} from '../../charts/confIntervals';
 import {ActionDispatcher} from '../../app/dispatcher';
 

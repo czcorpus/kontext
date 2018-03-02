@@ -25,7 +25,7 @@
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionPayload} from '../../app/dispatcher';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {init as viewInit} from './view';
 import * as RSVP from 'vendor/rsvp';
 

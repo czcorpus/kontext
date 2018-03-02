@@ -26,7 +26,7 @@ import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import {PageModel} from '../../app/main';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 
 export class AppBarStore extends StatefulModel {

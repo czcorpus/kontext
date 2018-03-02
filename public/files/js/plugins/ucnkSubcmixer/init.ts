@@ -20,7 +20,7 @@
 /// <reference path="../../types/plugins.d.ts" />
 
 import {Kontext, TextTypes} from '../../types/common';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {init as viewInit} from './view';

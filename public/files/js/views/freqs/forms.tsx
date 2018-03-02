@@ -24,8 +24,8 @@ import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 
 import {Kontext} from '../../types/common';
-import {MLFreqFormStore, TTFreqFormStore} from '../../stores/freqs/freqForms';
-import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../stores/freqs/ctFreqForm';
+import {MLFreqFormStore, TTFreqFormStore} from '../../models/freqs/freqForms';
+import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
 import {init as ctFreqFormFactory} from './ctFreqForm';
 import {ActionDispatcher} from '../../app/dispatcher';
 

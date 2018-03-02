@@ -23,8 +23,8 @@ import {PageModel, PluginApi} from '../app/main';
 import {createWidget as createCorparch} from 'plugins/corparch/init';
 import * as Immutable from 'immutable';
 import {init as wordlistFormInit, WordlistFormViews} from 'views/wordlist/form';
-import {StatefulModel} from '../stores/base';
-import {WordlistFormStore} from '../stores/wordlist/form';
+import {StatefulModel} from '../models/base';
+import {WordlistFormStore} from '../models/wordlist/form';
 
 declare var require:any;
 // weback - ensure a style (even empty one) is created for the page

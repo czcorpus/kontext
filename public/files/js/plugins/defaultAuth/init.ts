@@ -21,7 +21,7 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext} from '../../types/common';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';

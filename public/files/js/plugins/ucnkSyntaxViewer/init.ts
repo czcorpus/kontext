@@ -25,7 +25,7 @@ import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import * as RSVP from 'vendor/rsvp';
 import {createGenerator} from './ucnkTreeView';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 declare var require:any;

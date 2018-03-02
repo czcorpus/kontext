@@ -25,7 +25,7 @@ import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 import {ActionDispatcher} from '../../app/dispatcher';
 
-import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../stores/freqs/ctFreqForm';
+import {CTFreqFormStore, FreqFilterQuantities, AlignTypes, Dimensions} from '../../models/freqs/ctFreqForm';
 
 
 interface CTFreqFormProps {

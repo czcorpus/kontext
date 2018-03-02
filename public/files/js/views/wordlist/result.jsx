@@ -20,7 +20,7 @@
 
 
 import * as React from 'vendor/react';
-import { WordlistSaveStore } from '../../stores/wordlist/save';
+import { WordlistSaveStore } from '../../models/wordlist/save';
 
 /**
  */

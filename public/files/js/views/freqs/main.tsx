@@ -25,7 +25,7 @@ import * as Immutable from 'immutable';
 import {Kontext} from '../../types/common';
 import {init as dataRowsInit} from './dataRows';
 import {init as initSaveViews} from './save';
-import {FreqDataRowsStore, ResultBlock} from '../../stores/freqs/dataRows';
+import {FreqDataRowsStore, ResultBlock} from '../../models/freqs/dataRows';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 // --------------------------- exported types --------------------------------------

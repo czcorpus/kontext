@@ -20,12 +20,12 @@
 
 import {Kontext} from '../../../types/common';
 import * as Immutable from 'immutable';
-import {StatelessModel} from '../../../stores/base';
+import {StatelessModel} from '../../../models/base';
 import {GeneralQueryStore} from '../main';
 import {PageModel} from '../../../app/main';
 import {AttrHelper} from './attrs';
 import {highlightSyntax} from './main';
-import {QueryInputSetQueryProps} from '../../../stores/query/main';
+import {QueryInputSetQueryProps} from '../../../models/query/main';
 import {ActionDispatcher, ActionPayload, typedProps} from '../../../app/dispatcher';
 
 /**

@@ -20,7 +20,7 @@
 
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
 
 

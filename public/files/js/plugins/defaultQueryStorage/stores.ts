@@ -26,10 +26,10 @@ import {ActionPayload} from '../../app/dispatcher';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {AjaxResponse} from '../../types/ajaxResponses';
-import {StatefulModel, cloneRecord} from '../../stores/base';
+import {StatefulModel, cloneRecord} from '../../models/base';
 import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
-import {highlightSyntax} from '../../stores/query/cqleditor/main';
+import {highlightSyntax} from '../../models/query/cqleditor/main';
 
 
 export interface InputBoxHistoryItem {

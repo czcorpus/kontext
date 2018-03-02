@@ -24,7 +24,7 @@ import * as Immutable from 'immutable';
 import {MultiDict} from '../../util';
 import {PageModel} from '../../app/main';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
-import {TextTypesStore} from '../../stores/textTypes/attrValues';
+import {TextTypesStore} from '../../models/textTypes/attrValues';
 
 export class SubcorpFormStore extends StatefulModel {
 

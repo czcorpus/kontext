@@ -25,7 +25,7 @@
 
 import {Kontext, TextTypes} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import textTypesStore = require('../../stores/textTypes/attrValues');
+import textTypesStore = require('../../models/textTypes/attrValues');
 import liveAttrsStore = require('./store');
 import * as RSVP from 'vendor/rsvp';
 import * as Immutable from 'immutable';

@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
-import {FreqDataRowsStore, ResultHeader, ResultItem} from '../../stores/freqs/dataRows';
+import {FreqDataRowsStore, ResultHeader, ResultItem} from '../../models/freqs/dataRows';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 interface DataTableProps {

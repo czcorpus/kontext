@@ -20,7 +20,7 @@
 
 import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
-import {StatelessModel} from '../../stores/base';
+import {StatelessModel} from '../../models/base';
 import * as Immutable from 'immutable';
 import {ActionDispatcher, Action, ActionPayload} from '../../app/dispatcher';
 

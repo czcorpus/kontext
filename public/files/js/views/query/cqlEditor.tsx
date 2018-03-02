@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
-import {CQLEditorStore, CQLEditorStoreState} from '../../stores/query/cqleditor/store';
+import {CQLEditorStore, CQLEditorStoreState} from '../../models/query/cqleditor/store';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 

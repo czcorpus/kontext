@@ -22,11 +22,11 @@
 /// <reference path="../../vendor.d.ts/rsvp.d.ts" />
 
 import {Kontext, TextTypes} from '../../types/common';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as RSVP from 'vendor/rsvp';
-import * as textTypesStore from '../../stores/textTypes/attrValues';
+import * as textTypesStore from '../../models/textTypes/attrValues';
 import * as Immutable from 'immutable';
 
 

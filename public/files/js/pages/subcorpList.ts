@@ -22,7 +22,7 @@ import {Kontext} from '../types/common';
 import {AjaxResponse} from '../types/ajaxResponses';
 import {PageModel, PluginApi} from '../app/main';
 import * as corplist from 'plugins/corparch/init';
-import {SubcorpListStore, SortKey, SubcListFilter} from '../stores/subcorp/list';
+import {SubcorpListStore, SortKey, SubcListFilter} from '../models/subcorp/list';
 import {init as listViewInit} from 'views/subcorp/list';
 
 declare var require:any;

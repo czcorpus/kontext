@@ -23,7 +23,7 @@
 import {Kontext} from '../../types/common';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import {IPluginApi} from '../../types/plugins';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {MultiDict} from '../../util';
 import * as RSVP from 'vendor/rsvp';
 

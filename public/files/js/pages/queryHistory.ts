@@ -25,7 +25,7 @@ import {PageModel} from '../app/main';
 import {MultiDict} from '../util';
 import queryStoragePlugin from 'plugins/queryStorage/init';
 import {init as initQueryHistoryViews} from 'views/query/history';
-import {QueryFormProperties, QueryStore, QueryHintStore} from '../stores/query/main';
+import {QueryFormProperties, QueryStore, QueryHintStore} from '../models/query/main';
 import {init as corpnameLinkInit} from 'views/overview';
 import {init as basicOverviewViewsInit} from 'views/query/basicOverview';
 

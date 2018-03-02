@@ -24,12 +24,12 @@ import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as Immutable from 'immutable';
 import {init as inputInit} from './input';
-import {FilterStore} from '../../stores/query/filter';
-import {QueryHintStore} from '../../stores/query/main';
-import {WithinBuilderStore} from '../../stores/query/withinBuilder';
-import {VirtualKeyboardStore} from '../../stores/query/virtualKeyboard';
-import {FirstHitsStore} from '../../stores/query/firstHits';
-import {CQLEditorStore} from '../../stores/query/cqleditor/store';
+import {FilterStore} from '../../models/query/filter';
+import {QueryHintStore} from '../../models/query/main';
+import {WithinBuilderStore} from '../../models/query/withinBuilder';
+import {VirtualKeyboardStore} from '../../models/query/virtualKeyboard';
+import {FirstHitsStore} from '../../models/query/firstHits';
+import {CQLEditorStore} from '../../models/query/cqleditor/store';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 

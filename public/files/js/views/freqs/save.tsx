@@ -22,7 +22,7 @@
 
 import * as React from 'vendor/react';
 import {Kontext} from '../../types/common';
-import {FreqResultsSaveStore} from '../../stores/freqs/save';
+import {FreqResultsSaveStore} from '../../models/freqs/save';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 

@@ -21,7 +21,7 @@
 
 import {Kontext} from '../../types/common';
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {StatefulModel} from '../../stores/base';
+import {StatefulModel} from '../../models/base';
 import {ActionDispatcher, ActionPayload} from '../../app/dispatcher';
 import * as common from './common';
 import * as corplistDefault from '../defaultCorparch/corplist';

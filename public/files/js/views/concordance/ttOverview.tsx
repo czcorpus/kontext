@@ -25,7 +25,7 @@ import {Kontext} from '../../types/common';
 import * as React from 'vendor/react';
 import * as d3Color from 'vendor/d3-color';
 import * as Immutable from 'immutable';
-import {TextTypesDistStore, FreqItem, FreqBlock} from '../../stores/concordance/ttDistStore';
+import {TextTypesDistStore, FreqItem, FreqBlock} from '../../models/concordance/ttDistStore';
 import {ActionDispatcher} from '../../app/dispatcher';
 
 
