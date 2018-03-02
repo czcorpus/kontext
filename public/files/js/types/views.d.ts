@@ -349,23 +349,6 @@ declare module "views/wordlist/save" {
     ):WordlistSaveViews;
 }
 
-
-declare module "views/wordlist/form" {
-
-    export interface WordlistFormViews {
-        WordListForm:React.ComponentClass;
-        CorpInfoToolbar:React.ComponentClass;
-    }
-
-    export function init(
-        dispatcher:Kontext.ActionDispatcher,
-        componentHelpers:Kontext.ComponentHelpers,
-        layoutViews:Kontext.LayoutViews,
-        CorparchWidget:React.ComponentClass,
-        wordlistFormModel:Kontext.EventEmitter
-    ):WordlistFormViews;
-}
-
 declare module "views/wordlist/result" {
 
     export interface WordlistResultViews {

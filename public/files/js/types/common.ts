@@ -32,6 +32,8 @@ export namespace Kontext {
      */
     export type GeneralProps = {[key:string]:any};
 
+    export type ListOfPairs = Array<[string, string]>;
+
     /**
      * Represents possible sources for MultiDict
      * (either a list of 2-tuples or a dict).

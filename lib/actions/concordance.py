@@ -1376,7 +1376,7 @@ class Actions(Querying):
 
     @exposed(access_level=1, legacy=True)
     def wordlist(self, wlpat='', wltype='simple', usesubcorp='', ref_corpname='',
-                 ref_usesubcorp='', paginate=True, white_hash='', black_hash=''):
+                 ref_usesubcorp='', paginate=True, wlhash='', blhash=''):
         """
         """
         self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
@@ -1396,12 +1396,12 @@ class Actions(Querying):
             wlmaxitems = sys.maxint
         wlstart = (self.args.wlpage - 1) * self.args.wlpagesize
         result = {
-            'reload_url': self.create_url('wordlist', {
+            'reload_args': {
                 'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
                 'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
                 'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
                 'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums
-            })}
+            }.items()}
         try:
             if wltype == 'keywords':
                 args = (self.cm.get_Corpus(self.args.corpname, subcname=usesubcorp),
@@ -1426,28 +1426,28 @@ class Actions(Querying):
                 white_words = self.args.wlwords
                 black_words = self.args.blacklist
 
-                if white_hash != '':
-                    white_words = self.load_bw_file(white_hash)
+                if wlhash != '':
+                    white_words = self.load_bw_file(wlhash)
 
-                if black_hash != '':
-                    black_words = self.load_bw_file(black_hash)
+                if blhash != '':
+                    black_words = self.load_bw_file(blhash)
 
                 whitelist = [w for w in re.split('\s+', white_words.strip()) if w]
                 blacklist = [w for w in re.split('\s+', black_words.strip()) if w]
 
-                if white_hash == '' and len(self.args.wlwords) > 0:
-                    white_hash = self.save_bw_file(self.args.wlwords)
+                if wlhash == '' and len(self.args.wlwords) > 0:
+                    wlhash = self.save_bw_file(self.args.wlwords)
 
-                if black_hash == '' and len(self.args.blacklist) > 0:
-                    black_hash = self.save_bw_file(self.args.blacklist)
+                if blhash == '' and len(self.args.blacklist) > 0:
+                    blhash = self.save_bw_file(self.args.blacklist)
 
-                result['reload_url'] = self.create_url('wordlist', {
+                result['reload_args'] = {
                     'corpname': self.args.corpname, 'usesubcorp': self.args.usesubcorp,
                     'wlattr': self.args.wlattr, 'wlpat': self.args.wlpat,
                     'wlminfreq': self.args.wlminfreq, 'include_nonwords': self.args.include_nonwords,
                     'wlsort': self.args.wlsort, 'wlnums': self.args.wlnums,
-                    'white_hash': white_hash, 'black_hash': black_hash
-                })
+                    'wlhash': wlhash, 'blhash': blhash
+                }.items()
 
                 result_list = self.call_function(corplib.wordlist,
                                                  (self.corp,),

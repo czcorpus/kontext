@@ -58,7 +58,7 @@ declare module 'plugins/footerBar/init' {
 declare module "plugins/corparch/init" {
 
     export function createWidget(targetAction:string, pluginApi:IPluginApi,
-        queryModel:PluginInterfaces.ICorparchModel, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):React.ComponentClass;
+        queryModel:PluginInterfaces.ICorparchModel, querySetupHandler:Kontext.QuerySetupHandler, conf:Kontext.GeneralProps):PluginInterfaces.CorparchWidgetView;
 
     export function initCorplistPageComponents(pluginApi:IPluginApi):PluginInterfaces.ICorplistPage;
 }

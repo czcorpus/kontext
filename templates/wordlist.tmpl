@@ -30,7 +30,7 @@ $_("Word list")#slurp
 
 #def bodyonload
 __conf.attrname = "$wlattr";
-__conf.reloadUrl = "$reload_url";
+__conf.reloadArgs = $to_json($reload_args);
 __conf.IsUnfinished = #if $processing is not None#true#else#false#end if#;
 __conf.WorkerTasks = $to_json($tasks);
 __conf.SubcorpList = $to_json($SubcorpList);

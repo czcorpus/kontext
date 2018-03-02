@@ -453,7 +453,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      * Output format: [[k1, v1_1], [k1, v1_2], ...., [kn, vn_1], ..., [kn, vn_m]]
      */
     getConcArgs():MultiDict {
-        return new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        return new MultiDict(this.getConf<Kontext.ListOfPairs>('currentArgs'));
     }
 
     /**
@@ -461,7 +461,7 @@ export class PageModel implements Kontext.IURLHandler, Kontext.IConcArgsHandler,
      * triggers an event calling all the config change handlers.
      */
     replaceConcArg(name:string, values:Array<string>):void {
-        let tmp = new MultiDict(this.getConf<Array<Array<string>>>('currentArgs'));
+        let tmp = new MultiDict(this.getConf<Kontext.ListOfPairs>('currentArgs'));
         tmp.replace(name, values);
         this.setConf('currentArgs', tmp.items());
     }
